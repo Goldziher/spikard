@@ -427,7 +427,7 @@ mod tests {
             })
         }
 
-        fn service_name(&self) -> &'static str {
+        fn service_name(&self) -> &str {
             "test.EchoService"
         }
     }

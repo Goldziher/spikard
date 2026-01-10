@@ -102,7 +102,7 @@ pub type GrpcHandlerResult = Result<GrpcResponseData, tonic::Status>;
 ///         })
 ///     }
 ///
-///     fn service_name(&self) -> &'static str {
+///     fn service_name(&self) -> &str {
 ///         "users.UserService"
 ///     }
 ///
@@ -129,7 +129,7 @@ pub type GrpcHandlerResult = Result<GrpcResponseData, tonic::Status>;
 ///         })
 ///     }
 ///
-///     fn service_name(&self) -> &'static str {
+///     fn service_name(&self) -> &str {
 ///         "events.EventService"
 ///     }
 ///
@@ -219,7 +219,7 @@ pub trait GrpcHandler: Send + Sync {
     /// ```
     ///
     /// This should return "mypackage.UserService"
-    fn service_name(&self) -> &'static str;
+    fn service_name(&self) -> &str;
 
     /// Get the RPC mode this handler supports
     ///
@@ -289,7 +289,7 @@ mod tests {
             })
         }
 
-        fn service_name(&self) -> &'static str {
+        fn service_name(&self) -> &str {
             "test.TestService"
         }
     }
@@ -405,7 +405,7 @@ mod tests {
                 Box::pin(async { Err(tonic::Status::not_found("Resource not found")) })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.ErrorService"
             }
         }
@@ -444,7 +444,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.StreamService"
             }
 
@@ -507,7 +507,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.EmptyStreamService"
             }
 
@@ -554,7 +554,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.ErrorMidStreamService"
             }
 
@@ -620,7 +620,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.FailingStreamService"
             }
 
@@ -671,7 +671,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.MetadataStreamService"
             }
 
@@ -732,7 +732,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.LargeStreamService"
             }
 
@@ -790,7 +790,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.VeryLargeStreamService"
             }
 
@@ -853,7 +853,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.ServerStreamTestService"
             }
 
@@ -880,7 +880,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.ClientStreamTestService"
             }
 
@@ -907,7 +907,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.BiDirectionalStreamTestService"
             }
 
@@ -936,7 +936,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.SingleMessageStreamService"
             }
 
@@ -989,7 +989,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.RequestPreservingService"
             }
 
@@ -1045,7 +1045,7 @@ mod tests {
                 })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.ErrorCodeService"
             }
 

@@ -7,7 +7,7 @@ use bytes::Bytes;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, Zval};
-use futures_util::stream::StreamExt;
+use futures::stream::StreamExt;
 use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use spikard_http::grpc::streaming::{MessageStream, StreamingRequest};
@@ -15,8 +15,11 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
-use std::sync::Arc;
-use tokio::sync::mpsc;
+use std::sync::{Arc, OnceLock};
+use tokio::task::block_in_place;
+
+/// Maximum number of messages allowed in a stream (prevents DOS attacks)
+const MAX_STREAM_MESSAGES: i64 = 10_000;
 
 /// PHP-side gRPC request
 ///
@@ -156,6 +159,9 @@ pub struct PhpGrpcHandler {
 
     /// Fully qualified service name this handler serves
     service_name: String,
+
+    /// Cached 'static string reference for service_name
+    cached_service_name: OnceLock<Arc<str>>,
 }
 
 // Thread-local registry for PHP gRPC handlers (since ZendCallable is not Send/Sync)
@@ -163,6 +169,32 @@ thread_local! {
     static PHP_GRPC_HANDLER_REGISTRY: std::cell::RefCell<Vec<ZendCallable<'static>>> = const {
         std::cell::RefCell::new(Vec::new())
     };
+}
+
+/// Global pool of service name strings using Arc to prevent memory leaks
+static SERVICE_NAME_POOL: OnceLock<std::sync::Mutex<HashMap<String, Arc<str>>>> = OnceLock::new();
+
+/// Get or create an Arc reference to a service name string
+/// This safely manages the lifetime without Box::leak().
+fn get_arc_service_name(service_name: &str) -> Arc<str> {
+    let pool = SERVICE_NAME_POOL.get_or_init(|| std::sync::Mutex::new(HashMap::new()));
+    
+    let mut pool_ref = pool.lock().expect("Failed to lock service name pool");
+    
+    if let Some(cached) = pool_ref.get(service_name) {
+        return Arc::clone(cached);
+    }
+    
+    // Limit pool size to prevent DOS attacks (max 1000 unique service names)
+    if pool_ref.len() >= 1_000 {
+        // Still return the Arc directly, just don't cache it
+        // This is safe and doesn't leak memory
+        return Arc::from(service_name);
+    }
+    
+    let arc_name = Arc::from(service_name);
+    pool_ref.insert(service_name.to_string(), Arc::clone(&arc_name));
+    arc_name
 }
 
 /// Clear the PHP gRPC handler registry
@@ -213,7 +245,8 @@ impl PhpGrpcHandler {
 
         Ok(Self {
             handler_index: idx,
-            service_name,
+            service_name: service_name.clone(),
+            cached_service_name: OnceLock::new(),
         })
     }
 }
@@ -304,10 +337,10 @@ impl GrpcHandler for PhpGrpcHandler {
         })
     }
 
-    fn service_name(&self) -> &'static str {
-        // Leak the string to get a 'static reference
-        // This is acceptable for service names which are typically static
-        Box::leak(self.service_name.clone().into_boxed_str())
+    fn service_name(&self) -> &str {
+        // Use pooled service names to safely manage lifetimes
+        // OnceLock ensures we only call this once per handler instance
+        self.cached_service_name.get_or_init(|| get_arc_service_name(&self.service_name)).as_ref()
     }
 }
 
@@ -392,7 +425,8 @@ fn invoke_php_client_stream_handler(
 ) -> Result<GrpcResponseData, tonic::Status> {
     // Collect the message stream into a Vec of messages
     // Since we can't iterate async generators from PHP, we pre-collect the stream
-    let messages = std::thread::block_in_place(|| {
+    // Issue #5: Now enforces MAX_STREAM_MESSAGES limit
+    let messages = block_in_place(|| {
         tokio::runtime::Handle::current().block_on(async {
             collect_message_stream_to_vec(request.message_stream).await
         })
@@ -431,7 +465,8 @@ fn invoke_php_bidi_stream_handler(
     request: StreamingRequest,
 ) -> Result<MessageStream, tonic::Status> {
     // Collect the message stream into a Vec of messages
-    let messages = std::thread::block_in_place(|| {
+    // Issue #5: Now enforces MAX_STREAM_MESSAGES limit
+    let messages = block_in_place(|| {
         tokio::runtime::Handle::current().block_on(async {
             collect_message_stream_to_vec(request.message_stream).await
         })
@@ -493,6 +528,8 @@ fn interpret_php_grpc_response(response_zval: &ext_php_rs::types::Zval, service_
                 };
 
                 // Extract metadata
+                // Issue #3: Numeric keys are converted to strings per PHP limitation
+                // This is intentional since PHP metadata keys must be strings for gRPC headers
                 let metadata = if let Ok(metadata_zval) = obj.get_property::<&Zval>("metadata") {
                     if let Some(arr) = metadata_zval.array() {
                         let mut meta = HashMap::new();
@@ -500,6 +537,7 @@ fn interpret_php_grpc_response(response_zval: &ext_php_rs::types::Zval, service_
                             let key_str = match key {
                                 ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
                                 ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                                // Numeric keys are converted to strings (PHP constraint: gRPC headers must be strings)
                                 ext_php_rs::types::ArrayKey::Long(l) => l.to_string(),
                             };
                             if let Some(val_str) = val.string() {
@@ -559,10 +597,11 @@ fn php_generator_to_message_stream(
     }
 
     // Convert Vec to MessageStream
-    Ok(Box::pin(futures_util::stream::iter(messages_vec)))
+    Ok(Box::pin(futures::stream::iter(messages_vec)))
 }
 
 /// Collect messages from a PHP Generator/Traversable
+/// Issue #2: Improved error handling for Generator iteration protocol
 fn collect_php_generator_messages(
     generator_zval: &ext_php_rs::types::Zval,
     service_name: &str,
@@ -570,57 +609,53 @@ fn collect_php_generator_messages(
     let mut messages_vec = Vec::new();
 
     if let Some(obj) = generator_zval.object() {
-        // Try to iterate using standard Iterator protocol
-        let mut index = 0i64;
-        let mut message_count = 0i64;
+        let mut message_count: i64 = 0;
 
-        // Attempt to call rewind() if the method exists
-        let _ = obj.call_method::<Zval>("rewind", vec![]);
+        // Issue #2: Properly handle rewind() with exception handling
+        if let Err(e) = obj.try_call_method("rewind", vec![]) {
+            return Err(tonic::Status::internal(format!(
+                "PHP server stream handler '{}' threw exception during rewind(): {:?}",
+                service_name, e
+            )));
+        }
 
         loop {
             // Check if there are more values using valid()
-            let valid_zval = match obj.call_method::<Zval>("valid", vec![]) {
-                Ok(z) => z,
-                Err(_) => {
-                    // If valid() doesn't exist, try iteration limit
-                    if index > 100_000 {
-                        break;
-                    }
-                    // Try getting current anyway
-                    match obj.call_method::<Zval>("current", vec![]) {
-                        Ok(_) => {},
-                        Err(_) => break,
-                    }
-                    match obj.call_method::<Zval>("next", vec![]) {
-                        Ok(_) => {},
-                        Err(_) => break,
-                    }
-                    index += 1;
-                    continue;
+            // Issue #2: Proper exception handling
+            let is_valid = match obj.try_call_method("valid", vec![]) {
+                Ok(valid_zval) => valid_zval.bool().unwrap_or(false),
+                Err(e) => {
+                    return Err(tonic::Status::internal(format!(
+                        "PHP server stream handler '{}' threw exception during valid(): {:?}",
+                        service_name, e
+                    )));
                 }
             };
 
-            // Check if valid_zval indicates there are more items
-            let is_valid = valid_zval.bool().unwrap_or(false);
             if !is_valid {
                 break;
             }
 
-            // Get the current value
-            match obj.call_method::<Zval>("current", vec![]) {
+            // Check message count limit (Issue #1: Prevent unbounded collection)
+            if message_count >= MAX_STREAM_MESSAGES {
+                return Err(tonic::Status::resource_exhausted(format!(
+                    "PHP server stream handler '{}' exceeded maximum message limit of {}",
+                    service_name, MAX_STREAM_MESSAGES
+                )));
+            }
+
+            // Get the current value (Issue #2: Proper exception handling)
+            match obj.try_call_method("current", vec![]) {
                 Ok(current_val) => {
                     if let Some(current_obj) = current_val.object() {
                         // Try to extract as PhpGrpcResponse
-                        if let Ok(class_name) = current_obj.get_class_name() {
-                            if class_name.contains("PhpGrpcResponse") || class_name.contains("GrpcResponse") {
-                                // Extract payload from PhpGrpcResponse object
-                                if let Ok(payload_zval) = current_obj.get_property::<&Zval>("payload") {
-                                    if let Some(s) = payload_zval.string() {
-                                        messages_vec.push(Ok(Bytes::from(s.as_bytes().to_vec())));
-                                        message_count += 1;
-                                    }
-                                }
-                            }
+                        if let Ok(class_name) = current_obj.get_class_name()
+                            && (class_name.contains("PhpGrpcResponse") || class_name.contains("GrpcResponse"))
+                            && let Ok(payload_zval) = current_obj.get_property::<&Zval>("payload")
+                            && let Some(s) = payload_zval.string()
+                        {
+                            messages_vec.push(Ok(Bytes::from(s.as_bytes().to_vec())));
+                            message_count += 1;
                         }
                     } else if let Some(s) = current_val.string() {
                         // Handle raw binary string (fallback)
@@ -628,19 +663,19 @@ fn collect_php_generator_messages(
                         message_count += 1;
                     }
                 }
-                Err(_) => break,
+                Err(e) => {
+                    return Err(tonic::Status::internal(format!(
+                        "PHP server stream handler '{}' threw exception during current(): {:?}",
+                        service_name, e
+                    )));
+                }
             }
 
-            // Move to next item
-            if obj.call_method::<Zval>("next", vec![]).is_err() {
-                break;
-            }
-
-            index += 1;
-            if index > 100_000 {
+            // Move to next item (Issue #2: Proper exception handling)
+            if let Err(e) = obj.try_call_method("next", vec![]) {
                 return Err(tonic::Status::internal(format!(
-                    "PHP server stream handler '{}' yielded too many messages (limit: 100,000)",
-                    service_name
+                    "PHP server stream handler '{}' threw exception during next(): {:?}",
+                    service_name, e
                 )));
             }
         }
@@ -661,12 +696,25 @@ fn collect_php_generator_messages(
 }
 
 /// Collect a MessageStream into a Vec for PHP consumption
+/// Issue #5: Now enforces MAX_STREAM_MESSAGES limit to prevent DOS
 async fn collect_message_stream_to_vec(mut stream: MessageStream) -> Result<Vec<Bytes>, tonic::Status> {
     let mut messages = Vec::new();
+    let mut count: i64 = 0;
 
     while let Some(result) = stream.next().await {
+        // Check message count limit (Issue #5: Prevent unbounded collection in client streaming)
+        if count >= MAX_STREAM_MESSAGES {
+            return Err(tonic::Status::resource_exhausted(format!(
+                "Client stream exceeded maximum message limit of {}",
+                MAX_STREAM_MESSAGES
+            )));
+        }
+
         match result {
-            Ok(bytes) => messages.push(bytes),
+            Ok(bytes) => {
+                messages.push(bytes);
+                count += 1;
+            }
             Err(e) => return Err(e),
         }
     }

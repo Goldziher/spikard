@@ -419,7 +419,7 @@ mod tests {
             })
         }
 
-        fn service_name(&self) -> &'static str {
+        fn service_name(&self) -> &str {
             "test.TestService"
         }
     }
@@ -601,7 +601,7 @@ mod tests {
                 Box::pin(async { Err(Status::not_found("Resource not found")) })
             }
 
-            fn service_name(&self) -> &'static str {
+            fn service_name(&self) -> &str {
                 "test.ErrorService"
             }
         }

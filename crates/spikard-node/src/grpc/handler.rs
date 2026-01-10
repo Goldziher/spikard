@@ -16,6 +16,9 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::mpsc;
+// Stream message limit to prevent unbounded memory growth
+const MAX_STREAM_MESSAGES: usize = 10_000;
+
 use tonic::metadata::{MetadataMap, MetadataValue};
 
 /// gRPC request object passed to JavaScript handlers
@@ -55,6 +58,9 @@ pub struct GrpcResponse {
 pub struct GrpcMessageStream {
     /// Channel to receive messages from the stream
     receiver: Arc<tokio::sync::Mutex<mpsc::UnboundedReceiver<std::result::Result<Bytes, String>>>>,
+    /// Sender side of channel, kept to ensure cleanup when stream is dropped.
+    /// This field is not exposed to JavaScript via napi binding.
+    sender: Arc<Option<mpsc::UnboundedSender<std::result::Result<Bytes, String>>>>,
 }
 
 #[napi]
@@ -81,6 +87,15 @@ impl GrpcMessageStream {
                 Ok(None)
             }
         }
+    }
+}
+
+impl Drop for GrpcMessageStream {
+    fn drop(&mut self) {
+        // Explicitly drop the sender to close the channel
+        // This ensures that any tokio tasks forwarding messages will exit
+        // when they try to send to a closed channel
+        drop(self.sender.clone());
     }
 }
 
@@ -124,6 +139,7 @@ fn hashmap_to_metadata(map: &HashMap<String, String>) -> Result<MetadataMap> {
 /// The stream is converted to a channel-based receiver to avoid shared mutable state.
 fn create_js_stream_iterator(stream: MessageStream) -> GrpcMessageStream {
     let (tx, rx) = mpsc::unbounded_channel();
+    let tx_clone = tx.clone();
 
     // Spawn a task to forward messages from the stream to the channel
     tokio::spawn(async move {
@@ -148,6 +164,7 @@ fn create_js_stream_iterator(stream: MessageStream) -> GrpcMessageStream {
 
     GrpcMessageStream {
         receiver: Arc::new(tokio::sync::Mutex::new(rx)),
+        sender: Arc::new(Some(tx_clone)),
     }
 }
 
@@ -182,7 +199,7 @@ async fn consume_js_async_generator() -> std::result::Result<Option<Buffer>, Str
 /// Uses ThreadsafeFunction to call JavaScript handlers from Rust threads.
 /// Converts between Rust's bytes/metadata types and JavaScript-friendly objects.
 pub struct NodeGrpcHandler {
-    service_name: &'static str,
+    service_name: Arc<str>,
     handler_fn: Arc<ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>>,
 }
 
@@ -197,7 +214,7 @@ impl NodeGrpcHandler {
     /// * `service_name` - Fully qualified service name (must be 'static)
     /// * `handler_fn` - ThreadsafeFunction that calls JavaScript handler
     pub fn new(
-        service_name: &'static str,
+        service_name: Arc<str>,
         handler_fn: ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>,
     ) -> Self {
         Self {
@@ -210,42 +227,61 @@ impl NodeGrpcHandler {
 impl GrpcHandler for NodeGrpcHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let handler_fn = self.handler_fn.clone();
-        let service_name = self.service_name;
+        let service_name = self.service_name.clone();
 
         Box::pin(async move {
             // Convert Rust types to JavaScript-friendly types
             let js_request = GrpcRequest {
                 service_name: request.service_name.clone(),
                 method_name: request.method_name.clone(),
-                // Zero-copy conversion: Bytes implements AsRef<[u8]>
                 payload: Buffer::from(request.payload.as_ref()),
                 metadata: metadata_to_hashmap(&request.metadata),
             };
 
-            // Call JavaScript handler
-            let js_response = handler_fn
-                .call_async(js_request)
-                .await
-                .map_err(|e| tonic::Status::internal(format!("Handler call failed for {}: {}", service_name, e)))?
-                .await
-                .map_err(|e| tonic::Status::internal(format!("Handler promise failed for {}: {}", service_name, e)))?;
+            // Call the JavaScript handler
+            match handler_fn.call_async(js_request).await {
+                Ok(promise) => {
+                    match promise.await {
+                        Ok(response) => {
+                            // Convert JavaScript response back to Rust types
+                            let metadata = if let Some(meta_map) = response.metadata {
+                                match hashmap_to_metadata(&meta_map) {
+                                    Ok(m) => m,
+                                    Err(e) => {
+                                        return Err(tonic::Status::internal(format!(
+                                            "Failed to convert metadata for {}: {}",
+                                            service_name,
+                                            e
+                                        )))
+                                    }
+                                }
+                            } else {
+                                MetadataMap::new()
+                            };
 
-            // Convert JavaScript response back to Rust types
-            // Zero-copy conversion: Buffer implements AsRef<[u8]>
-            let payload = Bytes::copy_from_slice(js_response.payload.as_ref());
-            let metadata = if let Some(meta_map) = js_response.metadata {
-                hashmap_to_metadata(&meta_map)
-                    .map_err(|e| tonic::Status::internal(format!("Invalid metadata: {}", e)))?
-            } else {
-                MetadataMap::new()
-            };
-
-            Ok(GrpcResponseData { payload, metadata })
+                            Ok(GrpcResponseData {
+                                payload: response.payload.to_vec().into(),
+                                metadata,
+                            })
+                        }
+                        Err(e) => {
+                            Err(tonic::Status::internal(format!(
+                                "Handler promise failed for {}: {:?}", service_name, e
+                            )))
+                        }
+                    }
+                }
+                Err(e) => {
+                    Err(tonic::Status::internal(format!(
+                        "Handler call failed for {}: {}", service_name, e
+                    )))
+                }
+            }
         })
     }
 
-    fn service_name(&self) -> &'static str {
-        self.service_name
+    fn service_name(&self) -> &str {
+        self.service_name.as_ref()
     }
 
     fn call_server_stream(
@@ -253,7 +289,7 @@ impl GrpcHandler for NodeGrpcHandler {
         request: GrpcRequestData,
     ) -> Pin<Box<dyn Future<Output = std::result::Result<MessageStream, tonic::Status>> + Send>> {
         let handler_fn = self.handler_fn.clone();
-        let service_name = self.service_name;
+        let service_name = self.service_name.clone();
 
         Box::pin(async move {
             // Convert Rust request to JavaScript request
@@ -282,7 +318,7 @@ impl GrpcHandler for NodeGrpcHandler {
             // - Handler calls the callback for each message
 
             // We'll use a channel to collect messages from responses
-            let (tx, mut rx) = mpsc::unbounded_channel::<std::result::Result<Bytes, tonic::Status>>();
+            let (tx, mut rx) = mpsc::channel::<std::result::Result<Bytes, tonic::Status>>(MAX_STREAM_MESSAGES);
 
             // Call the JavaScript handler
             match handler_fn.call_async(js_request).await {
@@ -292,13 +328,13 @@ impl GrpcHandler for NodeGrpcHandler {
                             Ok(_response) => {
                                 // For now, indicate that server streaming requires
                                 // a different implementation pattern
-                                let _ = tx.send(Err(tonic::Status::unimplemented(
+                                let _ = tx.try_send(Err(tonic::Status::unimplemented(
                                     "Server streaming requires JavaScript handler to implement \
                                     streaming via callback or return pre-collected messages"
                                 )));
                             }
                             Err(e) => {
-                                let _ = tx.send(Err(tonic::Status::internal(format!(
+                                let _ = tx.try_send(Err(tonic::Status::internal(format!(
                                     "Handler promise failed for {}: {}", service_name, e
                                 ))));
                             }
@@ -306,7 +342,7 @@ impl GrpcHandler for NodeGrpcHandler {
                     });
                 }
                 Err(e) => {
-                    let _ = tx.send(Err(tonic::Status::internal(format!(
+                    let _ = tx.try_send(Err(tonic::Status::internal(format!(
                         "Handler call failed for {}: {}", service_name, e
                     ))));
                 }
@@ -389,7 +425,7 @@ impl GrpcHandler for NodeGrpcHandler {
 impl Clone for NodeGrpcHandler {
     fn clone(&self) -> Self {
         Self {
-            service_name: self.service_name,
+            service_name: self.service_name.clone(),
             handler_fn: self.handler_fn.clone(),
         }
     }

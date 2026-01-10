@@ -505,14 +505,8 @@ impl GrpcHandler for PyGrpcHandler {
         })
     }
 
-    fn service_name(&self) -> &'static str {
-        // SAFETY: We leak the Arc<str> to get a 'static reference.
-        // This is necessary because the GrpcHandler trait requires &'static str,
-        // but service names are dynamic. The Arc ensures the string lives long enough,
-        // and we intentionally leak it since handlers are typically long-lived.
-        // Note: This still leaks memory but it's a single leak per handler instance
-        // rather than per call as before.
-        unsafe { std::mem::transmute::<&str, &'static str>(self.service_name.as_ref()) }
+    fn service_name(&self) -> &str {
+        self.service_name.as_ref()
     }
 
     fn call_server_stream(

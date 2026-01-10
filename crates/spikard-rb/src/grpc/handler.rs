@@ -105,6 +105,8 @@ impl RubyGrpcResponse {
         let payload_str = RString::try_convert(payload_value)
             .map_err(|_| Error::new(magnus::exception::arg_error(), "payload must be a String (binary)"))?;
 
+        // SAFETY: RString::as_slice is safe; Magnus ensures the RString is valid UTF-8 or binary data.
+        // We're cloning the bytes into a Vec immediately, so lifetime issues are not a concern.
         let payload_bytes = unsafe { payload_str.as_slice() }.to_vec();
 
         *self.payload.borrow_mut() = payload_bytes;
@@ -211,6 +213,11 @@ impl RubyGrpcHandler {
     }
 
     /// Handle a gRPC request by calling into Ruby
+    ///
+    /// # GVL Safety
+    ///
+    /// This method acquires the GVL via `with_gvl()` before executing Ruby code.
+    /// The underlying request handling is protected from panics via catch_unwind.
     fn handle_request(&self, request: GrpcRequestData) -> GrpcHandlerResult {
         with_gvl(|| {
             let result = std::panic::catch_unwind(AssertUnwindSafe(|| self.handle_request_inner(request)));
@@ -364,8 +371,23 @@ impl RubyGrpcHandler {
 
 /// Convert a Ruby enumerator to a Rust MessageStream
 ///
-/// This helper iterates over the Ruby enumerator and converts each yielded
-/// response into a message byte sequence that can be sent to the client.
+/// This helper eagerly collects all messages from the Ruby enumerator into a Vec,
+/// which is then converted to a stream via `futures_util::stream::iter()`.
+///
+/// # Eager Collection
+///
+/// Messages are collected eagerly rather than lazily to avoid holding Ruby's GVL
+/// during stream consumption. The Ruby handler returns an Enumerator or Array,
+/// which is converted to an Array and collected in one synchronous pass.
+/// This prevents blocking the Tokio executor with GVL-locked operations.
+///
+/// # Arguments
+///
+/// * `enumerator` - A Ruby Enumerator or Array value that yields Response objects or binary strings
+///
+/// # Returns
+///
+/// A MessageStream containing all collected messages, or an error if conversion fails.
 fn ruby_enumerator_to_message_stream(enumerator: Value) -> Result<MessageStream, tonic::Status> {
     // Check if the value responds to 'to_a' method (convert to array)
     if !enumerator
@@ -398,6 +420,8 @@ fn ruby_enumerator_to_message_stream(enumerator: Value) -> Result<MessageStream,
             let payload = response.payload.borrow().clone();
             messages_vec.push(Ok(Bytes::from(payload)));
         } else if let Ok(bytes_str) = RString::try_convert(element) {
+            // SAFETY: RString::as_slice is safe; Magnus ensures the RString is valid.
+            // We clone the bytes immediately into a Vec, so there's no lifetime concern.
             let payload = unsafe { bytes_str.as_slice() }.to_vec();
             messages_vec.push(Ok(Bytes::from(payload)));
         } else {
@@ -441,11 +465,8 @@ impl GrpcHandler for RubyGrpcHandler {
         Box::pin(async move { handler.handle_bidi_stream(request) })
     }
 
-    fn service_name(&self) -> &'static str {
-        // We need to return a 'static str, but we have a String.
-        // For now, we'll leak the string to get a 'static reference.
-        // This is acceptable because service names are registered once at startup.
-        Box::leak(self.inner.service_name.clone().into_boxed_str())
+    fn service_name(&self) -> &str {
+        &self.inner.service_name
     }
 }
 
