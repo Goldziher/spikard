@@ -57,10 +57,7 @@ pub struct GrpcResponse {
 #[napi]
 pub struct GrpcMessageStream {
     /// Channel to receive messages from the stream
-    receiver: Arc<tokio::sync::Mutex<mpsc::UnboundedReceiver<std::result::Result<Bytes, String>>>>,
-    /// Sender side of channel, kept to ensure cleanup when stream is dropped.
-    /// This field is not exposed to JavaScript via napi binding.
-    sender: Arc<Option<mpsc::UnboundedSender<std::result::Result<Bytes, String>>>>,
+    receiver: Arc<tokio::sync::Mutex<mpsc::Receiver<std::result::Result<Bytes, String>>>>,
 }
 
 #[napi]
@@ -90,14 +87,6 @@ impl GrpcMessageStream {
     }
 }
 
-impl Drop for GrpcMessageStream {
-    fn drop(&mut self) {
-        // Explicitly drop the sender to close the channel
-        // This ensures that any tokio tasks forwarding messages will exit
-        // when they try to send to a closed channel
-        drop(self.sender.clone());
-    }
-}
 
 /// Convert tonic MetadataMap to JavaScript-friendly HashMap
 fn metadata_to_hashmap(metadata: &MetadataMap) -> HashMap<String, String> {
@@ -138,23 +127,21 @@ fn hashmap_to_metadata(map: &HashMap<String, String>) -> Result<MetadataMap> {
 /// Returns a GrpcMessageStream that JavaScript code can consume using `for await`.
 /// The stream is converted to a channel-based receiver to avoid shared mutable state.
 fn create_js_stream_iterator(stream: MessageStream) -> GrpcMessageStream {
-    let (tx, rx) = mpsc::unbounded_channel();
-    let tx_clone = tx.clone();
-
+    let (tx, rx) = mpsc::channel(MAX_STREAM_MESSAGES);
     // Spawn a task to forward messages from the stream to the channel
     tokio::spawn(async move {
         let mut stream = stream;
         while let Some(result) = stream.next().await {
             match result {
                 Ok(bytes) => {
-                    if tx.send(Ok(bytes)).is_err() {
+                    if tx.send(Ok(bytes)).await.is_err() {
                         // Receiver dropped, stop forwarding
                         break;
                     }
                 }
                 Err(status) => {
                     // Send error and stop
-                    let _ = tx.send(Err(status.message().to_string()));
+                    let _ = tx.send(Err(status.message().to_string())).await;
                     break;
                 }
             }
@@ -164,7 +151,6 @@ fn create_js_stream_iterator(stream: MessageStream) -> GrpcMessageStream {
 
     GrpcMessageStream {
         receiver: Arc::new(tokio::sync::Mutex::new(rx)),
-        sender: Arc::new(Some(tx_clone)),
     }
 }
 
