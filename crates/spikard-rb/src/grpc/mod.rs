@@ -1,7 +1,11 @@
 //! Ruby gRPC bindings for Spikard
 //!
-//! This module provides a placeholder for Ruby gRPC handler integration.
-//! TODO: Implement Ruby gRPC handlers following the pattern established
-//! in the Python and TypeScript bindings.
+//! This module provides Ruby gRPC handler integration with full streaming support:
+//! - Unary RPCs (single request, single response)
+//! - Server streaming RPCs (single request, stream of responses)
+//! - Client streaming RPCs (stream of requests, single response)
+//! - Bidirectional streaming RPCs (stream of requests, stream of responses)
 
 pub mod handler;
+
+pub use handler::{RubyGrpcHandler, RubyGrpcRequest, RubyGrpcResponse};
