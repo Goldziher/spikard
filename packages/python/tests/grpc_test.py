@@ -392,19 +392,24 @@ class TestGrpcHandlerProtocol:
                 return GrpcResponse(payload=request.payload)
 
         handler = TestHandler()
-        assert isinstance(handler, GrpcHandler)
+        assert hasattr(handler, "handle_request")
+        assert callable(handler.handle_request)
 
     def test_grpc_handler_protocol_duck_typing(self) -> None:
         """Test GrpcHandler protocol with duck typing."""
-        from spikard import GrpcHandler, GrpcRequest, GrpcResponse
+        from spikard import GrpcHandler, GrpcRequest, GrpcResponse, GrpcService
 
         class CustomHandler:
             async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
                 return GrpcResponse(payload=b"custom")
 
         handler = CustomHandler()
+        # Duck-typing works: handler has the required method
         assert hasattr(handler, "handle_request")
-        assert isinstance(handler, GrpcHandler)
+        # Handlers with all required methods work with GrpcService
+        service = GrpcService()
+        service.register_handler("test.Service", handler)
+        assert service.get_handler("test.Service") is handler
 
     @pytest.mark.asyncio
     async def test_grpc_handler_can_be_called(self) -> None:

@@ -288,7 +288,7 @@ class GrpcService:
             TypeError: If handler doesn't implement GrpcHandler protocol
             ValueError: If service_name is already registered
         """
-        if not isinstance(handler, GrpcHandler):
+        if not hasattr(handler, "handle_request"):
             raise TypeError(f"Handler must implement GrpcHandler protocol, got {type(handler).__name__}")
 
         if service_name in self._handlers:
