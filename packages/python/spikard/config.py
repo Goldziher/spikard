@@ -582,7 +582,7 @@ class ServerConfig:
         """
         return cast("dict[str, Any]", msgspec.to_builtins(self))
 
-    def copy(self, **updates: Any) -> "ServerConfig":
+    def copy(self, **updates: Any) -> ServerConfig:
         """Create a copy of the config with updates applied.
 
         Args:

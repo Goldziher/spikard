@@ -9,8 +9,8 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, Zval};
 use futures::stream::StreamExt;
 use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
-use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use spikard_http::grpc::streaming::{MessageStream, StreamingRequest};
+use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use std::collections::HashMap;
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
@@ -170,16 +170,38 @@ pub struct PhpGrpcHandler {
     cached_service_name: OnceLock<Arc<str>>,
 }
 
+/// Wrapper type for ZendCallable that allows sharing across threads
+///
+/// # Safety
+/// This is safe because:
+/// 1. Access to the ZendCallable is always through a Mutex, providing synchronization
+/// 2. The ZendCallable is only invoked via block_in_place, ensuring proper PHP runtime context
+/// 3. The raw pointer in ZendCallable points to PHP-managed memory valid for the request lifetime
+struct SyncZendCallable(ZendCallable<'static>);
+
+// SAFETY: ZendCallable is only accessed through Mutex (which provides synchronization)
+// and is only invoked when we're on a thread with the PHP runtime available (via block_in_place).
+// The raw pointer in ZendCallable points to PHP-managed memory that is valid for the
+// lifetime of the PHP request.
+unsafe impl Sync for SyncZendCallable {}
+
+// SAFETY: ZendCallable contains raw pointers to PHP zval structures. This is safe because:
+// 1. Access is always synchronized via Mutex
+// 2. Invocation only happens via block_in_place on a thread with the PHP runtime
+// 3. The wrapper is only used within the handler registry's lifetime
+#[allow(clippy::non_send_fields_in_send_ty)]
+unsafe impl Send for SyncZendCallable {}
+
 // Thread-safe registry for PHP gRPC handlers
 // Using Arc<Mutex<>> instead of thread_local! ensures handlers can be accessed from any thread.
 // This is necessary because gRPC requests may be handled by different tokio executor threads,
 // and handlers need to be accessible regardless of which thread processes them.
 // The actual PHP invocation is wrapped in block_in_place to ensure we execute on a thread
 // where the PHP runtime is available.
-static PHP_GRPC_HANDLER_REGISTRY: OnceLock<Arc<Mutex<Vec<ZendCallable<'static>>>>> = OnceLock::new();
+static PHP_GRPC_HANDLER_REGISTRY: OnceLock<Arc<Mutex<Vec<SyncZendCallable>>>> = OnceLock::new();
 
 /// Get or initialize the global handler registry
-fn get_registry() -> Arc<Mutex<Vec<ZendCallable<'static>>>> {
+fn get_registry() -> Arc<Mutex<Vec<SyncZendCallable>>> {
     PHP_GRPC_HANDLER_REGISTRY
         .get_or_init(|| Arc::new(Mutex::new(Vec::new())))
         .clone()
@@ -192,20 +214,20 @@ static SERVICE_NAME_POOL: OnceLock<std::sync::Mutex<HashMap<String, Arc<str>>>> 
 /// This safely manages the lifetime without Box::leak().
 fn get_arc_service_name(service_name: &str) -> Arc<str> {
     let pool = SERVICE_NAME_POOL.get_or_init(|| std::sync::Mutex::new(HashMap::new()));
-    
+
     let mut pool_ref = pool.lock().expect("Failed to lock service name pool");
-    
+
     if let Some(cached) = pool_ref.get(service_name) {
         return Arc::clone(cached);
     }
-    
+
     // Limit pool size to prevent DOS attacks (max 1000 unique service names)
     if pool_ref.len() >= 1_000 {
         // Still return the Arc directly, just don't cache it
         // This is safe and doesn't leak memory
         return Arc::from(service_name);
     }
-    
+
     let arc_name = Arc::from(service_name);
     pool_ref.insert(service_name.to_string(), Arc::clone(&arc_name));
     arc_name
@@ -238,9 +260,9 @@ impl PhpGrpcHandler {
         }
 
         let registry = get_registry();
-        let mut registry_guard = registry.lock().map_err(|e| {
-            format!("Failed to lock handler registry for service '{}': {}", service_name, e)
-        })?;
+        let mut registry_guard = registry
+            .lock()
+            .map_err(|e| format!("Failed to lock handler registry for service '{}': {}", service_name, e))?;
 
         let idx = registry_guard.len();
 
@@ -255,7 +277,7 @@ impl PhpGrpcHandler {
                 service_name, e
             )
         })?;
-        registry_guard.push(callable);
+        registry_guard.push(SyncZendCallable(callable));
 
         Ok(Self {
             handler_index: idx,
@@ -275,9 +297,7 @@ impl GrpcHandler for PhpGrpcHandler {
                 // Use block_in_place to ensure PHP handler is invoked on a thread where
                 // the PHP runtime is available. This is necessary because ZendCallable
                 // requires thread-local PHP state.
-                block_in_place(|| {
-                    invoke_php_grpc_handler(handler_index, &service_name, request)
-                })
+                block_in_place(|| invoke_php_grpc_handler(handler_index, &service_name, request))
             }));
 
             match result {
@@ -299,9 +319,7 @@ impl GrpcHandler for PhpGrpcHandler {
 
         Box::pin(async move {
             let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
-                block_in_place(|| {
-                    invoke_php_server_stream_handler(handler_index, &service_name, request)
-                })
+                block_in_place(|| invoke_php_server_stream_handler(handler_index, &service_name, request))
             }));
 
             match result {
@@ -323,9 +341,7 @@ impl GrpcHandler for PhpGrpcHandler {
 
         Box::pin(async move {
             let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
-                block_in_place(|| {
-                    invoke_php_client_stream_handler(handler_index, &service_name, request)
-                })
+                block_in_place(|| invoke_php_client_stream_handler(handler_index, &service_name, request))
             }));
 
             match result {
@@ -347,9 +363,7 @@ impl GrpcHandler for PhpGrpcHandler {
 
         Box::pin(async move {
             let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
-                block_in_place(|| {
-                    invoke_php_bidi_stream_handler(handler_index, &service_name, request)
-                })
+                block_in_place(|| invoke_php_bidi_stream_handler(handler_index, &service_name, request))
             }));
 
             match result {
@@ -365,7 +379,9 @@ impl GrpcHandler for PhpGrpcHandler {
     fn service_name(&self) -> &str {
         // Use pooled service names to safely manage lifetimes
         // OnceLock ensures we only call this once per handler instance
-        self.cached_service_name.get_or_init(|| get_arc_service_name(&self.service_name)).as_ref()
+        self.cached_service_name
+            .get_or_init(|| get_arc_service_name(&self.service_name))
+            .as_ref()
     }
 }
 
@@ -398,14 +414,15 @@ fn invoke_php_grpc_handler(
             ))
         })?;
 
-        let Some(callable) = registry_guard.get(handler_index) else {
+        let Some(sync_callable) = registry_guard.get(handler_index) else {
             return Err(tonic::Status::internal(format!(
                 "PHP gRPC handler not found for service '{}': index {}",
                 service_name, handler_index
             )));
         };
 
-        callable
+        sync_callable
+            .0
             .try_call(vec![&request_zval])
             .map_err(|e| tonic::Status::internal(format!("PHP gRPC handler '{}' failed: {:?}", service_name, e)))
     }?;
@@ -439,18 +456,15 @@ fn invoke_php_server_stream_handler(
             ))
         })?;
 
-        let Some(callable) = registry_guard.get(handler_index) else {
+        let Some(sync_callable) = registry_guard.get(handler_index) else {
             return Err(tonic::Status::internal(format!(
                 "PHP gRPC handler not found for service '{}': index {}",
                 service_name, handler_index
             )));
         };
 
-        callable.try_call(vec![&request_zval]).map_err(|e| {
-            tonic::Status::internal(format!(
-                "PHP server stream handler '{}' failed: {:?}",
-                service_name, e
-            ))
+        sync_callable.0.try_call(vec![&request_zval]).map_err(|e| {
+            tonic::Status::internal(format!("PHP server stream handler '{}' failed: {:?}", service_name, e))
         })
     }?;
 
@@ -468,9 +482,8 @@ fn invoke_php_client_stream_handler(
     // Since we can't iterate async generators from PHP, we pre-collect the stream
     // Issue #5: Now enforces MAX_STREAM_MESSAGES limit
     let messages = block_in_place(|| {
-        tokio::runtime::Handle::current().block_on(async {
-            collect_message_stream_to_vec(request.message_stream).await
-        })
+        tokio::runtime::Handle::current()
+            .block_on(async { collect_message_stream_to_vec(request.message_stream).await })
     })?;
 
     // Convert Vec of messages to PHP array of PhpGrpcRequest objects
@@ -486,20 +499,17 @@ fn invoke_php_client_stream_handler(
             ))
         })?;
 
-        let Some(callable) = registry_guard.get(handler_index) else {
+        let Some(sync_callable) = registry_guard.get(handler_index) else {
             return Err(tonic::Status::internal(format!(
                 "PHP gRPC handler not found for service '{}': index {}",
                 service_name, handler_index
             )));
         };
 
-        callable.try_call(vec![&php_array]).map_err(|e| {
-            tonic::Status::internal(format!(
-                    "PHP client stream handler '{}' failed: {:?}",
-                    service_name, e
-                )
-            })
-        })?;
+        sync_callable.0.try_call(vec![&php_array]).map_err(|e| {
+            tonic::Status::internal(format!("PHP client stream handler '{}' failed: {:?}", service_name, e))
+        })?
+    };
 
     // Convert PHP response back to Rust response
     interpret_php_grpc_response(&response_zval, service_name)
@@ -514,9 +524,8 @@ fn invoke_php_bidi_stream_handler(
     // Collect the message stream into a Vec of messages
     // Issue #5: Now enforces MAX_STREAM_MESSAGES limit
     let messages = block_in_place(|| {
-        tokio::runtime::Handle::current().block_on(async {
-            collect_message_stream_to_vec(request.message_stream).await
-        })
+        tokio::runtime::Handle::current()
+            .block_on(async { collect_message_stream_to_vec(request.message_stream).await })
     })?;
 
     // Convert Vec of messages to PHP array of PhpGrpcRequest objects
@@ -532,19 +541,17 @@ fn invoke_php_bidi_stream_handler(
             ))
         })?;
 
-        let Some(callable) = registry_guard.get(handler_index) else {
+        let Some(sync_callable) = registry_guard.get(handler_index) else {
             return Err(tonic::Status::internal(format!(
                 "PHP gRPC handler not found for service '{}': index {}",
                 service_name, handler_index
             )));
         };
 
-        callable.try_call(vec![&php_array]).map_err(|e| {
-            tonic::Status::internal(format!(
-                "PHP bidi stream handler '{}' failed: {:?}",
-                service_name, e
-            ))
-        })
+        sync_callable
+            .0
+            .try_call(vec![&php_array])
+            .map_err(|e| tonic::Status::internal(format!("PHP bidi stream handler '{}' failed: {:?}", service_name, e)))
     }?;
 
     // Convert PHP Generator/Traversable to MessageStream
@@ -584,7 +591,9 @@ fn interpret_php_grpc_response(response_zval: &ext_php_rs::types::Zval, service_
                 if payload.len() > MAX_PAYLOAD_BYTES {
                     return Err(tonic::Status::resource_exhausted(format!(
                         "PHP gRPC handler '{}' returned payload exceeding max size ({} > {} bytes)",
-                        service_name, payload.len(), MAX_PAYLOAD_BYTES
+                        service_name,
+                        payload.len(),
+                        MAX_PAYLOAD_BYTES
                     )));
                 }
 
@@ -597,7 +606,9 @@ fn interpret_php_grpc_response(response_zval: &ext_php_rs::types::Zval, service_
                         if arr.len() > MAX_METADATA_ENTRIES {
                             return Err(tonic::Status::resource_exhausted(format!(
                                 "PHP gRPC handler '{}' metadata exceeds max entries ({} > {})",
-                                service_name, arr.len(), MAX_METADATA_ENTRIES
+                                service_name,
+                                arr.len(),
+                                MAX_METADATA_ENTRIES
                             )));
                         }
 
@@ -806,9 +817,9 @@ fn messages_to_php_request_array(messages: &[Bytes]) -> Result<Zval, tonic::Stat
     }
 
     // Convert to Zval array
-    let zval = php_requests.into_zval(false).map_err(|e| {
-        tonic::Status::internal(format!("Failed to convert message stream to PHP array: {:?}", e))
-    })?;
+    let zval = php_requests
+        .into_zval(false)
+        .map_err(|e| tonic::Status::internal(format!("Failed to convert message stream to PHP array: {:?}", e)))?;
 
     Ok(zval)
 }

@@ -126,7 +126,7 @@ def check_with_retry(version: str) -> tuple[bool | None, int]:
             logger.info("Successfully checked RubyGems: version exists=%s", exists)
             return exists, 0 if exists else 1
 
-        except (  # noqa: PERF203
+        except (
             urllib.error.HTTPError,
             urllib.error.URLError,
             json.JSONDecodeError,

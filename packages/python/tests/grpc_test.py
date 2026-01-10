@@ -385,7 +385,7 @@ class TestGrpcHandlerProtocol:
 
     def test_grpc_handler_protocol_implementation(self) -> None:
         """Test that a class implementing GrpcHandler is recognized."""
-        from spikard import GrpcHandler, GrpcRequest, GrpcResponse
+        from spikard import GrpcRequest, GrpcResponse
 
         class TestHandler:
             async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
@@ -397,7 +397,7 @@ class TestGrpcHandlerProtocol:
 
     def test_grpc_handler_protocol_duck_typing(self) -> None:
         """Test GrpcHandler protocol with duck typing."""
-        from spikard import GrpcHandler, GrpcRequest, GrpcResponse, GrpcService
+        from spikard import GrpcRequest, GrpcResponse, GrpcService
 
         class CustomHandler:
             async def handle_request(self, request: GrpcRequest) -> GrpcResponse:

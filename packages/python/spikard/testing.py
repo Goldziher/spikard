@@ -89,7 +89,7 @@ class TestClient:
 
     __test__ = False
 
-    def __init__(self, app: "Spikard", port: int = 0) -> None:
+    def __init__(self, app: Spikard, port: int = 0) -> None:
         """Create a new test client.
 
         Args:
@@ -124,7 +124,7 @@ class TestClient:
             raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
         return self._port
 
-    async def __aenter__(self) -> "TestClient":
+    async def __aenter__(self) -> TestClient:
         """Start the server and return the client."""
         await self._start_server()
         return self

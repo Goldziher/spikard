@@ -22,10 +22,10 @@ Usage:
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import grpc
     from grpc import aio
 
 

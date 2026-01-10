@@ -38,7 +38,7 @@ class ParsedSignature:
     """The raw signature as returned by :func:`inspect.signature`"""
 
     @classmethod
-    def from_fn(cls, fn: Callable[..., Any]) -> "ParsedSignature":
+    def from_fn(cls, fn: Callable[..., Any]) -> ParsedSignature:
         """Parse a function signature.
 
         Args:
@@ -57,7 +57,7 @@ class ParsedSignature:
         return cls.from_signature(signature, fn_type_hints)
 
     @classmethod
-    def from_signature(cls, signature: Signature, fn_type_hints: dict[str, type]) -> "ParsedSignature":
+    def from_signature(cls, signature: Signature, fn_type_hints: dict[str, type]) -> ParsedSignature:
         """Parse an :class:`inspect.Signature` instance.
 
         Args:

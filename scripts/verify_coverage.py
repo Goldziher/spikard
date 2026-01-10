@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Phase 5: Coverage Verification Script
+"""Phase 5: Coverage Verification Script
 Verifies code coverage across all 4 languages (Python, TypeScript, Ruby, PHP).
 """
 
@@ -9,7 +8,6 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Tuple
 from xml.etree import ElementTree as ET
 
 
@@ -17,11 +15,11 @@ from xml.etree import ElementTree as ET
 class CoverageResult:
     """Represents coverage result for a single language."""
     language: str
-    percentage: Optional[float]
+    percentage: float | None
     threshold: float
     passed: bool
     report_path: str
-    error: Optional[str] = None
+    error: str | None = None
 
     def __str__(self) -> str:
         """Format result as output line."""
@@ -53,8 +51,7 @@ class CoverageVerifier:
         self.results: list[CoverageResult] = []
 
     def verify_all(self) -> int:
-        """
-        Verify coverage for all languages.
+        """Verify coverage for all languages.
 
         Returns:
             Exit code (0 if all pass, 1 if any fail)
@@ -314,7 +311,7 @@ class CoverageVerifier:
         self.results.append(result)
 
     @staticmethod
-    def _parse_python_coverage_file(coverage_file: Path) -> Optional[float]:
+    def _parse_python_coverage_file(coverage_file: Path) -> float | None:
         """Parse Python .coverage file (requires coverage.py to read binary format)."""
         try:
             # Try to use coverage library if available
@@ -332,7 +329,7 @@ class CoverageVerifier:
             return None
 
     @staticmethod
-    def _parse_lcov_file(lcov_file: Path) -> Optional[float]:
+    def _parse_lcov_file(lcov_file: Path) -> float | None:
         """Parse LCOV format coverage file."""
         try:
             with open(lcov_file, encoding="utf-8") as f:
@@ -356,7 +353,7 @@ class CoverageVerifier:
             return None
 
     @staticmethod
-    def _parse_html_coverage(html_file: Path) -> Optional[float]:
+    def _parse_html_coverage(html_file: Path) -> float | None:
         """Parse HTML coverage report (from coverage.py or PHPUnit)."""
         try:
             with open(html_file, encoding="utf-8") as f:
@@ -374,7 +371,7 @@ class CoverageVerifier:
                 return float(match.group(1))
 
             # Fallback: look for any percentage pattern in header
-            match = re.search(r'(\d+\.?\d*?)%\s*covered', content)
+            match = re.search(r"(\d+\.?\d*?)%\s*covered", content)
             if match:
                 return float(match.group(1))
 
@@ -383,7 +380,7 @@ class CoverageVerifier:
             return None
 
     @staticmethod
-    def _parse_typescript_coverage(coverage_file: Path) -> Optional[float]:
+    def _parse_typescript_coverage(coverage_file: Path) -> float | None:
         """Parse TypeScript coverage-summary.json."""
         try:
             with open(coverage_file, encoding="utf-8") as f:
@@ -401,7 +398,7 @@ class CoverageVerifier:
             return None
 
     @staticmethod
-    def _parse_vitest_coverage(coverage_file: Path) -> Optional[float]:
+    def _parse_vitest_coverage(coverage_file: Path) -> float | None:
         """Parse vitest coverage-final.json."""
         try:
             with open(coverage_file, encoding="utf-8") as f:
@@ -429,7 +426,7 @@ class CoverageVerifier:
             return None
 
     @staticmethod
-    def _parse_ruby_resultset(resultset_file: Path) -> Optional[float]:
+    def _parse_ruby_resultset(resultset_file: Path) -> float | None:
         """Parse Ruby SimpleCov .resultset.json."""
         try:
             with open(resultset_file, encoding="utf-8") as f:
@@ -462,7 +459,7 @@ class CoverageVerifier:
             return None
 
     @staticmethod
-    def _parse_clover_xml(clover_file: Path) -> Optional[float]:
+    def _parse_clover_xml(clover_file: Path) -> float | None:
         """Parse Clover XML coverage format (used by PHPUnit)."""
         try:
             tree = ET.parse(clover_file)

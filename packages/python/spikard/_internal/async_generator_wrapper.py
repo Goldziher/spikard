@@ -8,9 +8,7 @@ Based on Robyn's proven implementation.
 
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator, Iterator
-from typing import TypeVar
-
-from typing_extensions import Self
+from typing import Self, TypeVar
 
 T = TypeVar("T")
 
@@ -33,7 +31,7 @@ class AsyncGeneratorWrapper(Iterator[T]):
         ...     print(item)
     """
 
-    def __init__(self, async_gen: AsyncGenerator[T, None]) -> None:
+    def __init__(self, async_gen: AsyncGenerator[T]) -> None:
         """Initialize the wrapper with an async generator.
 
         Args:

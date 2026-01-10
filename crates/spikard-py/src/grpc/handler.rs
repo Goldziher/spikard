@@ -7,8 +7,8 @@ use bytes::Bytes;
 use futures::stream::StreamExt;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict};
-use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use spikard_http::grpc::streaming::{MessageStream, StreamingRequest};
+use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
@@ -59,9 +59,10 @@ impl PyGrpcMessageStream {
                     }
                     Some(Err(status)) => {
                         // Convert tonic::Status to Python exception
-                        Err(PyErr::new::<pyo3::exceptions::PyException, _>(
-                            format!("gRPC error: {}", status.message()),
-                        ))
+                        Err(PyErr::new::<pyo3::exceptions::PyException, _>(format!(
+                            "gRPC error: {}",
+                            status.message()
+                        )))
                     }
                     None => {
                         // Stream exhausted
@@ -75,8 +76,7 @@ impl PyGrpcMessageStream {
         };
 
         // Schedule the future on the Python event loop and return the coroutine object
-        pyo3_async_runtimes::tokio::future_into_py(py, future)
-            .map(|bound| bound.unbind())
+        pyo3_async_runtimes::tokio::future_into_py(py, future).map(|bound| bound.unbind())
     }
 }
 
@@ -561,8 +561,8 @@ impl GrpcHandler for PyGrpcHandler {
             let (py_generator, task_locals) = py_generator_and_locals;
 
             // Convert Python async generator to MessageStream
-            let message_stream = python_async_generator_to_message_stream(py_generator, task_locals)
-                .map_err(pyerr_to_grpc_status)?;
+            let message_stream =
+                python_async_generator_to_message_stream(py_generator, task_locals).map_err(pyerr_to_grpc_status)?;
 
             Ok(message_stream)
         })
@@ -705,8 +705,8 @@ impl GrpcHandler for PyGrpcHandler {
             let (py_generator, task_locals) = generator_future;
 
             // Convert Python async generator to MessageStream
-            let message_stream = python_async_generator_to_message_stream(py_generator, task_locals)
-                .map_err(pyerr_to_grpc_status)?;
+            let message_stream =
+                python_async_generator_to_message_stream(py_generator, task_locals).map_err(pyerr_to_grpc_status)?;
 
             Ok(message_stream)
         })

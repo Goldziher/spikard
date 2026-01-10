@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from functools import wraps
 from pathlib import Path
 from threading import Lock
-from typing import Optional, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class MetricsCollector:
     to a JSON file on shutdown.
     """
 
-    _instance: Optional["MetricsCollector"] = None
+    _instance: MetricsCollector | None = None
     _lock = Lock()
 
     def __init__(self) -> None:
@@ -91,7 +91,7 @@ class MetricsCollector:
             )
 
     @classmethod
-    def instance(cls) -> "MetricsCollector":
+    def instance(cls) -> MetricsCollector:
         """Get the singleton instance."""
         if cls._instance is None:
             with cls._lock:
@@ -116,7 +116,7 @@ class MetricsCollector:
             self.metrics.gc.total_collections = gen0 + gen1 + gen2
 
     @contextmanager
-    def measure_handler(self) -> Generator[None, None, None]:
+    def measure_handler(self) -> Generator[None]:
         """Context manager to measure handler execution time."""
         start = time.perf_counter()
         try:
@@ -129,7 +129,7 @@ class MetricsCollector:
                 self.metrics.timing.handler_time_ms = (self.metrics.timing.handler_time_ms * (n - 1) + elapsed_ms) / n
 
     @contextmanager
-    def measure_serialization(self) -> Generator[None, None, None]:
+    def measure_serialization(self) -> Generator[None]:
         """Context manager to measure serialization time."""
         start = time.perf_counter()
         try:

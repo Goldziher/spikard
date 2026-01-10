@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections import Counter
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
 
@@ -213,7 +213,7 @@ async def example_client_streaming():
     response = await handler.handle_client_stream(request_stream)
 
     summary = json.loads(response.payload)
-    print(f"\n📊 Summary Report:")
+    print("\n📊 Summary Report:")
     print(f"   Total logs: {summary['total_logs']}")
     print(f"   Level breakdown: {summary['level_counts']}")
     print(f"   Time range: {summary['time_range']['start']} - {summary['time_range']['end']}")
@@ -227,7 +227,7 @@ async def example_client_streaming():
     upload_response = await upload_handler.handle_client_stream(upload_stream)
 
     upload_result = json.loads(upload_response.payload)
-    print(f"\n📦 Upload Result:")
+    print("\n📦 Upload Result:")
     print(f"   File ID: {upload_result['file_id']}")
     print(f"   Total chunks: {upload_result['total_chunks']}")
     print(f"   Total bytes: {upload_result['total_bytes']}")

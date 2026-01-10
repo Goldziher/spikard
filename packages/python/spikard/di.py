@@ -118,7 +118,7 @@ class Provide(Generic[T]):
 
     def __init__(
         self,
-        dependency: Callable[..., T] | Callable[..., AsyncGenerator[T, None]] | Callable[..., Generator[T, None, None]],
+        dependency: Callable[..., T] | Callable[..., AsyncGenerator[T]] | Callable[..., Generator[T]],
         *,
         depends_on: list[str] | None = None,
         use_cache: bool = False,

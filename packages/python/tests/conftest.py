@@ -767,26 +767,23 @@ def grpc_server():
 
                                         if client_streaming and server_streaming:
                                             return handlers["bidi"]
-                                        elif client_streaming:
+                                        if client_streaming:
                                             return handlers["client_stream"]
-                                        elif server_streaming:
+                                        if server_streaming:
                                             return handlers["server_stream"]
-                                        else:
-                                            return handlers["unary"]
+                                        return handlers["unary"]
 
             # Fallback: infer from method name
             method_lower = method_name.lower()
             if "stream" in method_lower:
                 if "client" in method_lower or "upload" in method_lower or "send" in method_lower:
                     return handlers["client_stream"]
-                elif "bidi" in method_lower or "exchange" in method_lower or "chat" in method_lower:
+                if "bidi" in method_lower or "exchange" in method_lower or "chat" in method_lower:
                     return handlers["bidi"]
-                else:
-                    # Default to server streaming if method has "stream" in name
-                    return handlers["server_stream"]
-            else:
-                # Default to unary
-                return handlers["unary"]
+                # Default to server streaming if method has "stream" in name
+                return handlers["server_stream"]
+            # Default to unary
+            return handlers["unary"]
 
     # Server lifecycle management
     server = None

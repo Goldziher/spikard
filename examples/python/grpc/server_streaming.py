@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 import json
 import random
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
 
@@ -46,7 +46,7 @@ class StockPriceHandler(GrpcHandler):
 
     async def handle_server_stream(
         self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Server streaming RPC - Stream stock price updates.
 
         Client sends:
@@ -108,7 +108,7 @@ class StockTickerAdvanced(GrpcHandler):
 
     async def handle_server_stream(
         self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Stream multiple stock prices concurrently.
 
         Client sends:

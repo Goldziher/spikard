@@ -8,4 +8,6 @@
 
 pub mod handler;
 
+// Re-export types for when the API is integrated
+#[allow(unused_imports)]
 pub use handler::{RubyGrpcHandler, RubyGrpcRequest, RubyGrpcResponse};

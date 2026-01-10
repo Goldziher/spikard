@@ -21,7 +21,7 @@ HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS",
 class Spikard:
     """Main application class for Spikard framework."""
 
-    current_instance: "Spikard | None" = None
+    current_instance: Spikard | None = None
 
     def __init__(self, config: ServerConfig | None = None) -> None:
         """Initialize Spikard application.
@@ -493,7 +493,7 @@ class Spikard:
         """
         return {hook_type: hooks.copy() for hook_type, hooks in self._lifecycle_hooks.items()}
 
-    def provide(self, key: str, dependency: Any) -> "Spikard":
+    def provide(self, key: str, dependency: Any) -> Spikard:
         """Register a dependency for injection into handlers.
 
         Dependencies can be static values or factory functions wrapped in `Provide`.
@@ -583,7 +583,7 @@ class Spikard:
 
         return decorator
 
-    def sse(self, path: str) -> Callable[[Callable[[], "SseEventProducer"]], Callable[[], "SseEventProducer"]]:
+    def sse(self, path: str) -> Callable[[Callable[[], SseEventProducer]], Callable[[], SseEventProducer]]:
         """Register a Server-Sent Events endpoint.
 
         Args:
@@ -606,7 +606,7 @@ class Spikard:
             ```
         """
 
-        def decorator(factory: Callable[[], "SseEventProducer"]) -> Callable[[], "SseEventProducer"]:
+        def decorator(factory: Callable[[], SseEventProducer]) -> Callable[[], SseEventProducer]:
             self._sse_producers[path] = factory
             return factory
 
@@ -620,7 +620,7 @@ class Spikard:
         """
         return self._websocket_handlers.copy()
 
-    def get_sse_producers(self) -> dict[str, Callable[[], "SseEventProducer"]]:
+    def get_sse_producers(self) -> dict[str, Callable[[], SseEventProducer]]:
         """Get all registered SSE producers.
 
         Returns:

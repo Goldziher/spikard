@@ -15,8 +15,8 @@ use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use tokio::sync::mpsc;
 use tokio::sync::Mutex as TokioMutex;
+use tokio::sync::mpsc;
 
 // Stream message limit to prevent unbounded memory growth
 const MAX_STREAM_MESSAGES: usize = 10_000;
@@ -137,7 +137,6 @@ impl GrpcMessageStream {
     }
 }
 
-
 /// Convert tonic MetadataMap to JavaScript-friendly HashMap
 fn metadata_to_hashmap(metadata: &MetadataMap) -> HashMap<String, String> {
     let mut map = HashMap::new();
@@ -205,6 +204,19 @@ fn create_js_stream_iterator(stream: MessageStream) -> GrpcMessageStream {
     }
 }
 
+/// Type alias for client stream handler ThreadsafeFunction
+type ClientStreamHandler =
+    ThreadsafeFunction<GrpcClientStreamRequest, Promise<GrpcResponse>, GrpcClientStreamRequest, napi::Status, false>;
+
+/// Type alias for bidirectional stream handler ThreadsafeFunction
+type BidiStreamHandler = ThreadsafeFunction<
+    GrpcBidiStreamRequest,
+    Promise<GrpcBidiStreamResponse>,
+    GrpcBidiStreamRequest,
+    napi::Status,
+    false,
+>;
+
 /// Node.js gRPC handler wrapper that implements spikard_http::grpc::GrpcHandler
 ///
 /// Uses ThreadsafeFunction to call JavaScript handlers from Rust threads.
@@ -213,8 +225,8 @@ fn create_js_stream_iterator(stream: MessageStream) -> GrpcMessageStream {
 pub struct NodeGrpcHandler {
     service_name: Arc<str>,
     handler_fn: Arc<ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>>,
-    client_stream_fn: Option<Arc<ThreadsafeFunction<GrpcClientStreamRequest, Promise<GrpcResponse>, GrpcClientStreamRequest, napi::Status, false>>>,
-    bidi_stream_fn: Option<Arc<ThreadsafeFunction<GrpcBidiStreamRequest, Promise<GrpcBidiStreamResponse>, GrpcBidiStreamRequest, napi::Status, false>>>,
+    client_stream_fn: Option<Arc<ClientStreamHandler>>,
+    bidi_stream_fn: Option<Arc<BidiStreamHandler>>,
 }
 
 unsafe impl Send for NodeGrpcHandler {}
@@ -244,10 +256,8 @@ impl NodeGrpcHandler {
     /// # Arguments
     ///
     /// * `client_stream_fn` - ThreadsafeFunction for client streaming requests
-    pub fn with_client_stream(
-        mut self,
-        client_stream_fn: ThreadsafeFunction<GrpcClientStreamRequest, Promise<GrpcResponse>, GrpcClientStreamRequest, napi::Status, false>,
-    ) -> Self {
+    #[must_use]
+    pub fn with_client_stream(mut self, client_stream_fn: ClientStreamHandler) -> Self {
         self.client_stream_fn = Some(Arc::new(client_stream_fn));
         self
     }
@@ -257,10 +267,8 @@ impl NodeGrpcHandler {
     /// # Arguments
     ///
     /// * `bidi_stream_fn` - ThreadsafeFunction for bidirectional streaming requests
-    pub fn with_bidi_stream(
-        mut self,
-        bidi_stream_fn: ThreadsafeFunction<GrpcBidiStreamRequest, Promise<GrpcBidiStreamResponse>, GrpcBidiStreamRequest, napi::Status, false>,
-    ) -> Self {
+    #[must_use]
+    pub fn with_bidi_stream(mut self, bidi_stream_fn: BidiStreamHandler) -> Self {
         self.bidi_stream_fn = Some(Arc::new(bidi_stream_fn));
         self
     }
@@ -292,9 +300,8 @@ impl GrpcHandler for NodeGrpcHandler {
                                     Err(e) => {
                                         return Err(tonic::Status::internal(format!(
                                             "Failed to convert metadata for {}: {}",
-                                            service_name,
-                                            e
-                                        )))
+                                            service_name, e
+                                        )));
                                     }
                                 }
                             } else {
@@ -306,18 +313,16 @@ impl GrpcHandler for NodeGrpcHandler {
                                 metadata,
                             })
                         }
-                        Err(e) => {
-                            Err(tonic::Status::internal(format!(
-                                "Handler promise failed for {}: {:?}", service_name, e
-                            )))
-                        }
+                        Err(e) => Err(tonic::Status::internal(format!(
+                            "Handler promise failed for {}: {:?}",
+                            service_name, e
+                        ))),
                     }
                 }
-                Err(e) => {
-                    Err(tonic::Status::internal(format!(
-                        "Handler call failed for {}: {}", service_name, e
-                    )))
-                }
+                Err(e) => Err(tonic::Status::internal(format!(
+                    "Handler call failed for {}: {}",
+                    service_name, e
+                ))),
             }
         })
     }
@@ -361,7 +366,8 @@ impl GrpcHandler for NodeGrpcHandler {
                             }
                             Err(e) => {
                                 let _ = tx.try_send(Err(tonic::Status::internal(format!(
-                                    "Handler promise failed for {}: {}", service_name_clone, e
+                                    "Handler promise failed for {}: {}",
+                                    service_name_clone, e
                                 ))));
                             }
                         }
@@ -369,7 +375,8 @@ impl GrpcHandler for NodeGrpcHandler {
                 }
                 Err(e) => {
                     let _ = tx.try_send(Err(tonic::Status::internal(format!(
-                        "Handler call failed for {}: {}", service_name, e
+                        "Handler call failed for {}: {}",
+                        service_name, e
                     ))));
                 }
             }
@@ -395,9 +402,10 @@ impl GrpcHandler for NodeGrpcHandler {
         Box::pin(async move {
             // Check if client streaming handler is registered
             let Some(handler_fn) = handler_fn else {
-                return Err(tonic::Status::unimplemented(
-                    format!("Client streaming not implemented for service '{}'", service_name)
-                ));
+                return Err(tonic::Status::unimplemented(format!(
+                    "Client streaming not implemented for service '{}'",
+                    service_name
+                )));
             };
 
             // Step 1: Collect all messages from input stream into a vector
@@ -445,9 +453,8 @@ impl GrpcHandler for NodeGrpcHandler {
                                     Err(e) => {
                                         return Err(tonic::Status::internal(format!(
                                             "Failed to convert metadata for {}: {}",
-                                            service_name,
-                                            e
-                                        )))
+                                            service_name, e
+                                        )));
                                     }
                                 }
                             } else {
@@ -459,18 +466,16 @@ impl GrpcHandler for NodeGrpcHandler {
                                 metadata,
                             })
                         }
-                        Err(e) => {
-                            Err(tonic::Status::internal(format!(
-                                "Handler promise failed for {}: {:?}", service_name, e
-                            )))
-                        }
+                        Err(e) => Err(tonic::Status::internal(format!(
+                            "Handler promise failed for {}: {:?}",
+                            service_name, e
+                        ))),
                     }
                 }
-                Err(e) => {
-                    Err(tonic::Status::internal(format!(
-                        "Handler call failed for {}: {}", service_name, e
-                    )))
-                }
+                Err(e) => Err(tonic::Status::internal(format!(
+                    "Handler call failed for {}: {}",
+                    service_name, e
+                ))),
             }
         })
     }
@@ -485,9 +490,10 @@ impl GrpcHandler for NodeGrpcHandler {
         Box::pin(async move {
             // Check if bidirectional streaming handler is registered
             let Some(handler_fn) = handler_fn else {
-                return Err(tonic::Status::unimplemented(
-                    format!("Bidirectional streaming not implemented for service '{}'", service_name)
-                ));
+                return Err(tonic::Status::unimplemented(format!(
+                    "Bidirectional streaming not implemented for service '{}'",
+                    service_name
+                )));
             };
 
             // Step 1: Collect all input messages into a vector
@@ -530,7 +536,8 @@ impl GrpcHandler for NodeGrpcHandler {
                         Ok(response) => {
                             // Step 4: Convert response messages array to MessageStream
                             // Create channel to send messages to the stream consumer
-                            let (tx, mut rx) = mpsc::channel::<std::result::Result<Bytes, tonic::Status>>(MAX_STREAM_MESSAGES);
+                            let (tx, mut rx) =
+                                mpsc::channel::<std::result::Result<Bytes, tonic::Status>>(MAX_STREAM_MESSAGES);
 
                             // Spawn task to forward collected response messages to channel
                             tokio::spawn(async move {
@@ -552,18 +559,16 @@ impl GrpcHandler for NodeGrpcHandler {
 
                             Ok(Box::pin(message_stream) as MessageStream)
                         }
-                        Err(e) => {
-                            Err(tonic::Status::internal(format!(
-                                "Handler promise failed for {}: {:?}", service_name, e
-                            )))
-                        }
+                        Err(e) => Err(tonic::Status::internal(format!(
+                            "Handler promise failed for {}: {:?}",
+                            service_name, e
+                        ))),
                     }
                 }
-                Err(e) => {
-                    Err(tonic::Status::internal(format!(
-                        "Handler call failed for {}: {}", service_name, e
-                    )))
-                }
+                Err(e) => Err(tonic::Status::internal(format!(
+                    "Handler call failed for {}: {}",
+                    service_name, e
+                ))),
             }
         })
     }

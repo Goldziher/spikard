@@ -72,17 +72,17 @@
 //! }
 //! ```
 
+use async_stream::stream;
 use bytes::Bytes;
+use futures_util::StreamExt;
+use js_sys::{Object, Promise, Reflect, Uint8Array};
+use spikard_http::grpc::streaming::{MessageStream, StreamingRequest};
+use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
+use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use js_sys::{Object, Promise, Reflect, Uint8Array};
-use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
-use spikard_http::grpc::streaming::{MessageStream, StreamingRequest};
-use std::future::Future;
-use async_stream::stream;
-use futures_util::StreamExt;
+use wasm_bindgen::prelude::*;
 
 /// Maximum number of messages allowed in a stream
 const MAX_STREAM_MESSAGES: usize = 10_000;
@@ -398,11 +398,7 @@ impl GrpcMessageStream {
             // Lock the mutex to access the stream
             let mut stream_guard = match inner.lock() {
                 Ok(guard) => guard,
-                Err(_) => {
-                    return Err(JsValue::from_str(
-                        "Failed to acquire lock on message stream",
-                    ))
-                }
+                Err(_) => return Err(JsValue::from_str("Failed to acquire lock on message stream")),
             };
 
             // Get mutable reference to the stream
@@ -425,16 +421,8 @@ impl GrpcMessageStream {
                 Some(Err(status)) => {
                     // Stream produced an error
                     let error_obj = Object::new();
-                    let _ = Reflect::set(
-                        &error_obj,
-                        &"code".into(),
-                        &JsValue::from(status.code),
-                    );
-                    let _ = Reflect::set(
-                        &error_obj,
-                        &"message".into(),
-                        &JsValue::from_str(&status.message),
-                    );
+                    let _ = Reflect::set(&error_obj, &"code".into(), &JsValue::from(status.code));
+                    let _ = Reflect::set(&error_obj, &"message".into(), &JsValue::from_str(&status.message));
                     Err(error_obj.into())
                 }
                 None => {
@@ -488,9 +476,7 @@ pub fn message_stream_to_grpc_message_stream(stream: MessageStream) -> GrpcMessa
 ///   yield new Uint8Array([4, 5, 6]);
 /// }
 /// ```
-pub fn javascript_async_generator_to_message_stream(
-    js_generator: JsValue,
-) -> Result<MessageStream, String> {
+pub fn javascript_async_generator_to_message_stream(js_generator: JsValue) -> Result<MessageStream, String> {
     // Verify the generator has a next method
     if !js_generator.is_object() {
         return Err("Generator must be an object".to_string());
@@ -629,9 +615,9 @@ fn metadata_map_to_object(metadata: &tonic::metadata::MetadataMap) -> Result<Obj
     for key_value in metadata.iter() {
         if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value {
             let key_str = key.as_str();
-            let value_str = value.to_str().map_err(|e| {
-                format!("Invalid metadata value for key {}: {}", key_str, e)
-            })?;
+            let value_str = value
+                .to_str()
+                .map_err(|e| format!("Invalid metadata value for key {}: {}", key_str, e))?;
 
             Reflect::set(&obj, &JsValue::from_str(key_str), &JsValue::from_str(value_str))
                 .map_err(|_| format!("Failed to set metadata key '{}'", key_str))?;
@@ -693,11 +679,10 @@ impl GrpcHandler for WasmGrpcHandler {
             let js_request_val = serde_wasm_bindgen::to_value(&js_request)
                 .map_err(|e| tonic::Status::internal(format!("Failed to serialize request: {}", e)))?;
 
-            let result = handler_fn.call1(&JsValue::undefined(), &js_request_val)
-                .map_err(|e| {
-                    let msg = extract_error_message(&e);
-                    tonic::Status::internal(format!("Handler call failed: {}", msg))
-                })?;
+            let result = handler_fn.call1(&JsValue::undefined(), &js_request_val).map_err(|e| {
+                let msg = extract_error_message(&e);
+                tonic::Status::internal(format!("Handler call failed: {}", msg))
+            })?;
 
             // Check if result is a Promise
             if let Ok(promise) = Promise::resolve(&result).into::<Promise>().ok() {
@@ -776,11 +761,10 @@ impl GrpcHandler for WasmGrpcHandler {
                 .map_err(|e| tonic::Status::internal(format!("Failed to serialize request: {}", e)))?;
 
             // Call the JavaScript handler
-            let result = handler_fn.call1(&JsValue::undefined(), &js_request_val)
-                .map_err(|e| {
-                    let msg = extract_error_message(&e);
-                    tonic::Status::internal(format!("Handler call failed: {}", msg))
-                })?;
+            let result = handler_fn.call1(&JsValue::undefined(), &js_request_val).map_err(|e| {
+                let msg = extract_error_message(&e);
+                tonic::Status::internal(format!("Handler call failed: {}", msg))
+            })?;
 
             // Convert Promise to future
             let promise = Promise::resolve(&result);
@@ -873,11 +857,10 @@ impl GrpcHandler for WasmGrpcHandler {
             let js_request_val = serde_wasm_bindgen::to_value(&client_stream_request)
                 .map_err(|e| tonic::Status::internal(format!("Failed to serialize request: {}", e)))?;
 
-            let result = handler_fn.call1(&JsValue::undefined(), &js_request_val)
-                .map_err(|e| {
-                    let msg = extract_error_message(&e);
-                    tonic::Status::internal(format!("Handler call failed: {}", msg))
-                })?;
+            let result = handler_fn.call1(&JsValue::undefined(), &js_request_val).map_err(|e| {
+                let msg = extract_error_message(&e);
+                tonic::Status::internal(format!("Handler call failed: {}", msg))
+            })?;
 
             // Convert Promise to future
             let promise = Promise::resolve(&result);
@@ -966,11 +949,10 @@ impl GrpcHandler for WasmGrpcHandler {
             let js_request_val = serde_wasm_bindgen::to_value(&bidi_request)
                 .map_err(|e| tonic::Status::internal(format!("Failed to serialize request: {}", e)))?;
 
-            let result = handler_fn.call1(&JsValue::undefined(), &js_request_val)
-                .map_err(|e| {
-                    let msg = extract_error_message(&e);
-                    tonic::Status::internal(format!("Handler call failed: {}", msg))
-                })?;
+            let result = handler_fn.call1(&JsValue::undefined(), &js_request_val).map_err(|e| {
+                let msg = extract_error_message(&e);
+                tonic::Status::internal(format!("Handler call failed: {}", msg))
+            })?;
 
             // Convert Promise to future
             let promise = Promise::resolve(&result);

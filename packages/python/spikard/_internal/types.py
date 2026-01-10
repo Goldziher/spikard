@@ -17,10 +17,10 @@ class Empty:
     def __repr__(self) -> str:
         return "Empty"
 
-    def __copy__(self) -> "Empty":
+    def __copy__(self) -> Empty:
         return self
 
-    def __deepcopy__(self, _: Any) -> "Empty":
+    def __deepcopy__(self, _: Any) -> Empty:
         return self
 
 

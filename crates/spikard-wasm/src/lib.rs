@@ -7,11 +7,11 @@
 //! edge runtimes. The bindings expose a [`TestClient`] that receives the JSON
 //! route metadata and handler map that the generated E2E apps produce.
 
+#[cfg(feature = "grpc")]
+pub mod grpc;
 mod lifecycle;
 mod matching;
 mod types;
-#[cfg(feature = "grpc")]
-pub mod grpc;
 
 use crate::lifecycle::{
     WasmLifecycleHooks, parse_hooks, request_from_payload, request_into_payload, response_from_value,

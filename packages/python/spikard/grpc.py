@@ -28,7 +28,8 @@ Example:
 
 from __future__ import annotations
 
-from typing import AsyncGenerator, AsyncIterator, Protocol, runtime_checkable
+from collections.abc import AsyncGenerator, AsyncIterator
+from typing import Protocol, runtime_checkable
 
 from _spikard import GrpcRequest, GrpcResponse  # type: ignore[attr-defined]
 
@@ -127,7 +128,7 @@ class GrpcHandler(Protocol):
 
     async def handle_server_stream(
         self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Handle a server-streaming gRPC request.
 
         This method is optional and handles the server-streaming RPC pattern
@@ -203,7 +204,7 @@ class GrpcHandler(Protocol):
 
     async def handle_bidi_stream(
         self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Handle a bidirectional-streaming gRPC request.
 
         This method is optional and handles the bidirectional-streaming RPC

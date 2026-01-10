@@ -33,7 +33,7 @@ class DatabasePool:
         self.connection_count = 0
         logger.info("[DB Pool] Created pool for %s (max: %s)", self.db_url, self.max_connections)
 
-    async def create_session(self) -> "DatabaseSession":
+    async def create_session(self) -> DatabaseSession:
         """Create a new database session.
 
         Returns:
@@ -108,7 +108,7 @@ async def create_db_pool(config: dict) -> DatabasePool:
     return DatabasePool(config)
 
 
-async def create_db_session(db_pool: DatabasePool) -> AsyncGenerator[DatabaseSession, None]:
+async def create_db_session(db_pool: DatabasePool) -> AsyncGenerator[DatabaseSession]:
     """Factory for database session with cleanup (per-request).
 
     This uses the async generator pattern to ensure cleanup.

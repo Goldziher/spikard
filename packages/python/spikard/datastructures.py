@@ -10,10 +10,9 @@ from __future__ import annotations
 
 import io
 from tempfile import SpooledTemporaryFile
-from typing import Annotated, Any
+from typing import Annotated, Any, Self
 
 import msgspec
-from typing_extensions import Self
 
 __all__ = ("UploadFile",)
 

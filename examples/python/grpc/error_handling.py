@@ -14,8 +14,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections import defaultdict
-from typing import AsyncGenerator, AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
 
@@ -34,7 +33,7 @@ class RateLimitedHandler(GrpcHandler):
 
     async def handle_server_stream(
         self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Server streaming with rate limiting.
 
         Raises:
@@ -76,7 +75,7 @@ class TimeoutHandler(GrpcHandler):
 
     async def handle_server_stream(
         self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Server streaming with timeout enforcement.
 
         Raises:
@@ -183,7 +182,7 @@ class PermissionHandler(GrpcHandler):
 
     async def handle_server_stream(
         self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Server streaming with permission checks.
 
         Raises:
@@ -232,7 +231,7 @@ class MidStreamErrorHandler(GrpcHandler):
 
     async def handle_server_stream(
         self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Server streaming that may encounter errors mid-stream.
 
         Yields partial results before raising error.

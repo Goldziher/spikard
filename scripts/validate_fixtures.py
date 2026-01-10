@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Validate gRPC streaming fixture files against JSON schema.
+"""Validate gRPC streaming fixture files against JSON schema.
 
 This script validates all fixture files in testing_data/protobuf/streaming/
 against the schema defined in testing_data/protobuf/streaming/schema.json.
@@ -9,18 +8,16 @@ against the schema defined in testing_data/protobuf/streaming/schema.json.
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
-def load_schema(schema_path: Path) -> Dict:
+def load_schema(schema_path: Path) -> dict:
     """Load the JSON schema from file."""
-    with open(schema_path, encoding='utf-8') as f:
+    with open(schema_path, encoding="utf-8") as f:
         return json.load(f)
 
 
-def validate_semantic(fixture_data: Dict, fixture_path: Path) -> List[str]:
-    """
-    Validate semantic correctness beyond JSON Schema capabilities.
+def validate_semantic(fixture_data: dict, fixture_path: Path) -> list[str]:
+    """Validate semantic correctness beyond JSON Schema capabilities.
 
     Checks:
     - handler.service matches a service in protobuf.services
@@ -123,9 +120,8 @@ def validate_semantic(fixture_data: Dict, fixture_path: Path) -> List[str]:
     return errors
 
 
-def validate_fixture(fixture_data: Dict, schema: Dict, fixture_path: Path) -> List[str]:
-    """
-    Validate a single fixture against the schema and semantic rules.
+def validate_fixture(fixture_data: dict, schema: dict, fixture_path: Path) -> list[str]:
+    """Validate a single fixture against the schema and semantic rules.
 
     Returns a list of validation error messages (empty if valid).
     """
@@ -159,9 +155,8 @@ def validate_fixture(fixture_data: Dict, schema: Dict, fixture_path: Path) -> Li
     return errors
 
 
-def validate_all_fixtures() -> Tuple[int, int]:
-    """
-    Validate all fixtures in the streaming directory.
+def validate_all_fixtures() -> tuple[int, int]:
+    """Validate all fixtures in the streaming directory.
 
     Returns tuple of (valid_count, error_count).
     """
@@ -203,7 +198,7 @@ def validate_all_fixtures() -> Tuple[int, int]:
 
     for fixture_path in fixture_files:
         try:
-            with open(fixture_path, encoding='utf-8') as f:
+            with open(fixture_path, encoding="utf-8") as f:
                 fixture_data = json.load(f)
 
             errors = validate_fixture(fixture_data, schema, fixture_path)

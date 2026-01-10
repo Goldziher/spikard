@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Start standalone gRPC test server for cross-language fixture testing.
+"""Start standalone gRPC test server for cross-language fixture testing.
 
 This server loads fixtures from testing_data/protobuf/streaming/ and
 serves responses based on the fixture definitions. All language bindings
@@ -246,7 +245,7 @@ class GenericHandler(grpc.GenericRpcHandler):
                                         response_serializer=json_serializer,
                                     )
 
-                                elif not client_streaming and server_streaming:
+                                if not client_streaming and server_streaming:
                                     # Server streaming
                                     async def server_stream_handler(request: dict, context: Any):
                                         async for msg in self.servicer.handle_server_stream(request, context, method_path):
@@ -258,7 +257,7 @@ class GenericHandler(grpc.GenericRpcHandler):
                                         response_serializer=json_serializer,
                                     )
 
-                                elif client_streaming and not server_streaming:
+                                if client_streaming and not server_streaming:
                                     # Client streaming
                                     async def client_stream_handler(request_iterator: Any, context: Any) -> dict:
                                         return await self.servicer.handle_client_stream(
@@ -271,7 +270,7 @@ class GenericHandler(grpc.GenericRpcHandler):
                                         response_serializer=json_serializer,
                                     )
 
-                                elif client_streaming and server_streaming:
+                                if client_streaming and server_streaming:
                                     # Bidirectional streaming
                                     async def bidi_handler(request_iterator: Any, context: Any):
                                         async for msg in self.servicer.handle_bidi_stream(

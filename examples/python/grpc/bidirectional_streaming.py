@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import AsyncGenerator, AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
 
@@ -40,7 +40,7 @@ class ChatHandler(GrpcHandler):
 
     async def handle_bidi_stream(
         self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Bidirectional streaming RPC - Real-time chat.
 
         Client streams:
@@ -95,7 +95,7 @@ class CollaborativeEditorHandler(GrpcHandler):
 
     async def handle_bidi_stream(
         self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Bidirectional streaming RPC - Collaborative editing.
 
         Client streams operations:
@@ -168,7 +168,7 @@ class MultiplayerGameHandler(GrpcHandler):
 
     async def handle_bidi_stream(
         self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> AsyncGenerator[GrpcResponse, None]:
+    ) -> AsyncGenerator[GrpcResponse]:
         """Bidirectional streaming RPC - Multiplayer game.
 
         Client streams player actions:

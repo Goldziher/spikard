@@ -3,6 +3,9 @@
 //! This module provides Magnus bindings for gRPC request/response handling,
 //! enabling Ruby code to implement gRPC service handlers with full streaming support.
 
+// Allow dead code - these types are exported but not yet integrated into the main Ruby API
+#![allow(dead_code)]
+
 use bytes::Bytes;
 use futures::stream::StreamExt;
 use magnus::prelude::*;
@@ -42,12 +45,7 @@ pub struct RubyGrpcRequest {
 
 impl RubyGrpcRequest {
     /// Create a new Ruby gRPC request
-    pub fn new(
-        service_name: String,
-        method_name: String,
-        payload: Vec<u8>,
-        metadata: HashMap<String, String>,
-    ) -> Self {
+    pub fn new(service_name: String, method_name: String, payload: Vec<u8>, metadata: HashMap<String, String>) -> Self {
         Self {
             service_name,
             method_name,
@@ -184,7 +182,11 @@ impl RubyGrpcResponse {
         if meta.len() > MAX_METADATA_ENTRIES {
             return Err(Error::new(
                 magnus::exception::arg_error(),
-                format!("Metadata entries {} exceeds maximum {}", meta.len(), MAX_METADATA_ENTRIES),
+                format!(
+                    "Metadata entries {} exceeds maximum {}",
+                    meta.len(),
+                    MAX_METADATA_ENTRIES
+                ),
             ));
         }
         *self.metadata.borrow_mut() = meta;
@@ -230,10 +232,10 @@ fn ruby_hash_to_string_map(hash: &RHash) -> Result<HashMap<String, String>, Erro
 fn metadata_map_to_hashmap(metadata: &MetadataMap) -> HashMap<String, String> {
     let mut map = HashMap::new();
     for key_value in metadata.iter() {
-        if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value {
-            if let Ok(value_str) = value.to_str() {
-                map.insert(key.as_str().to_string(), value_str.to_string());
-            }
+        if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value
+            && let Ok(value_str) = value.to_str()
+        {
+            map.insert(key.as_str().to_string(), value_str.to_string());
         }
     }
     map
@@ -243,18 +245,12 @@ fn metadata_map_to_hashmap(metadata: &MetadataMap) -> HashMap<String, String> {
 fn hashmap_to_metadata_map(map: &HashMap<String, String>) -> Result<MetadataMap, tonic::Status> {
     let mut metadata = MetadataMap::new();
     for (key, value) in map {
-        let metadata_key = key.parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>().map_err(
-            |e| tonic::Status::invalid_argument(format!("Invalid metadata key '{}': {}", key, e)),
-        )?;
-        let metadata_value =
-            value
-                .parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
-                .map_err(|e| {
-                    tonic::Status::invalid_argument(format!(
-                        "Invalid metadata value for key '{}': {}",
-                        key, e
-                    ))
-                })?;
+        let metadata_key = key
+            .parse::<tonic::metadata::MetadataKey<tonic::metadata::Ascii>>()
+            .map_err(|e| tonic::Status::invalid_argument(format!("Invalid metadata key '{}': {}", key, e)))?;
+        let metadata_value = value
+            .parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
+            .map_err(|e| tonic::Status::invalid_argument(format!("Invalid metadata value for key '{}': {}", key, e)))?;
         metadata.insert(metadata_key, metadata_value);
     }
     Ok(metadata)
@@ -327,10 +323,7 @@ impl RubyGrpcHandler {
     }
 
     /// Create a RubyGrpcRequest from GrpcRequestData
-    fn create_ruby_request(
-        _ruby: &Ruby,
-        request: &GrpcRequestData,
-    ) -> Result<RubyGrpcRequest, Error> {
+    fn create_ruby_request(_ruby: &Ruby, request: &GrpcRequestData) -> Result<RubyGrpcRequest, Error> {
         let metadata = metadata_map_to_hashmap(&request.metadata);
         Ok(RubyGrpcRequest::new(
             request.service_name.clone(),
@@ -341,11 +334,7 @@ impl RubyGrpcHandler {
     }
 
     /// Call the Ruby handler with a request
-    fn call_ruby_handler(
-        ruby: &Ruby,
-        handler: Value,
-        request: RubyGrpcRequest,
-    ) -> Result<Value, Error> {
+    fn call_ruby_handler(ruby: &Ruby, handler: Value, request: RubyGrpcRequest) -> Result<Value, Error> {
         let request_value = ruby.wrap(request);
 
         // Check if handler is callable or has handle_request method
@@ -362,11 +351,7 @@ impl RubyGrpcHandler {
     }
 
     /// Call the Ruby handler for server streaming
-    fn call_ruby_server_stream(
-        ruby: &Ruby,
-        handler: Value,
-        request: RubyGrpcRequest,
-    ) -> Result<Value, Error> {
+    fn call_ruby_server_stream(ruby: &Ruby, handler: Value, request: RubyGrpcRequest) -> Result<Value, Error> {
         let request_value = ruby.wrap(request);
 
         // Check for handle_server_stream method first, then fall back to call
@@ -383,11 +368,7 @@ impl RubyGrpcHandler {
     }
 
     /// Call the Ruby handler for client streaming
-    fn call_ruby_client_stream(
-        ruby: &Ruby,
-        handler: Value,
-        messages: Vec<Vec<u8>>,
-    ) -> Result<Value, Error> {
+    fn call_ruby_client_stream(ruby: &Ruby, handler: Value, messages: Vec<Vec<u8>>) -> Result<Value, Error> {
         // Convert messages to Ruby array of binary strings
         let array = ruby.ary_new_capa(messages.len());
         for msg in messages {
@@ -408,11 +389,7 @@ impl RubyGrpcHandler {
     }
 
     /// Call the Ruby handler for bidirectional streaming
-    fn call_ruby_bidi_stream(
-        ruby: &Ruby,
-        handler: Value,
-        messages: Vec<Vec<u8>>,
-    ) -> Result<Value, Error> {
+    fn call_ruby_bidi_stream(ruby: &Ruby, handler: Value, messages: Vec<Vec<u8>>) -> Result<Value, Error> {
         // Convert messages to Ruby array of binary strings
         let array = ruby.ary_new_capa(messages.len());
         for msg in messages {
@@ -506,26 +483,20 @@ impl GrpcHandler for RubyGrpcHandler {
 
         Box::pin(async move {
             // Execute Ruby handler in a blocking context
-            let result = tokio::task::spawn_blocking(move || {
+            tokio::task::spawn_blocking(move || {
                 let ruby = match Ruby::get() {
                     Ok(r) => r,
-                    Err(e) => {
-                        return Err(tonic::Status::internal(format!(
-                            "Failed to get Ruby VM: {}",
-                            e
-                        )))
-                    }
+                    Err(e) => return Err(tonic::Status::internal(format!("Failed to get Ruby VM: {}", e))),
                 };
 
                 let handler_value = handler.get_inner_with(&ruby);
 
                 // Create Ruby request
-                let ruby_request = Self::create_ruby_request(&ruby, &request)
-                    .map_err(ruby_error_to_grpc_status)?;
+                let ruby_request = Self::create_ruby_request(&ruby, &request).map_err(ruby_error_to_grpc_status)?;
 
                 // Call handler
-                let response_value = Self::call_ruby_handler(&ruby, handler_value, ruby_request)
-                    .map_err(ruby_error_to_grpc_status)?;
+                let response_value =
+                    Self::call_ruby_handler(&ruby, handler_value, ruby_request).map_err(ruby_error_to_grpc_status)?;
 
                 // Extract response
                 let (payload, metadata_map) =
@@ -539,9 +510,7 @@ impl GrpcHandler for RubyGrpcHandler {
                 })
             })
             .await
-            .map_err(|e| tonic::Status::internal(format!("Task join error: {}", e)))?;
-
-            result
+            .map_err(|e| tonic::Status::internal(format!("Task join error: {}", e)))?
         })
     }
 
@@ -560,24 +529,17 @@ impl GrpcHandler for RubyGrpcHandler {
             let messages = tokio::task::spawn_blocking(move || {
                 let ruby = match Ruby::get() {
                     Ok(r) => r,
-                    Err(e) => {
-                        return Err(tonic::Status::internal(format!(
-                            "Failed to get Ruby VM: {}",
-                            e
-                        )))
-                    }
+                    Err(e) => return Err(tonic::Status::internal(format!("Failed to get Ruby VM: {}", e))),
                 };
 
                 let handler_value = handler.get_inner_with(&ruby);
 
                 // Create Ruby request
-                let ruby_request = Self::create_ruby_request(&ruby, &request)
-                    .map_err(ruby_error_to_grpc_status)?;
+                let ruby_request = Self::create_ruby_request(&ruby, &request).map_err(ruby_error_to_grpc_status)?;
 
                 // Call handler for server streaming
-                let stream_value =
-                    Self::call_ruby_server_stream(&ruby, handler_value, ruby_request)
-                        .map_err(ruby_error_to_grpc_status)?;
+                let stream_value = Self::call_ruby_server_stream(&ruby, handler_value, ruby_request)
+                    .map_err(ruby_error_to_grpc_status)?;
 
                 // Collect stream messages
                 Self::collect_ruby_stream(&ruby, stream_value).map_err(ruby_error_to_grpc_status)
@@ -612,9 +574,9 @@ impl GrpcHandler for RubyGrpcHandler {
                 }
                 match result {
                     Ok(bytes) => {
-                        total_bytes = total_bytes.checked_add(bytes.len()).ok_or_else(|| {
-                            tonic::Status::resource_exhausted("Stream total size overflow")
-                        })?;
+                        total_bytes = total_bytes
+                            .checked_add(bytes.len())
+                            .ok_or_else(|| tonic::Status::resource_exhausted("Stream total size overflow"))?;
 
                         if total_bytes > MAX_STREAM_TOTAL_BYTES {
                             return Err(tonic::Status::resource_exhausted(format!(
@@ -630,42 +592,35 @@ impl GrpcHandler for RubyGrpcHandler {
             }
 
             // Execute Ruby handler in blocking context with timeout
-            let result = tokio::time::timeout(
+            tokio::time::timeout(
                 Duration::from_secs(HANDLER_TIMEOUT_SECS),
                 tokio::task::spawn_blocking(move || {
-                let ruby = match Ruby::get() {
-                    Ok(r) => r,
-                    Err(e) => {
-                        return Err(tonic::Status::internal(format!(
-                            "Failed to get Ruby VM: {}",
-                            e
-                        )))
-                    }
-                };
+                    let ruby = match Ruby::get() {
+                        Ok(r) => r,
+                        Err(e) => return Err(tonic::Status::internal(format!("Failed to get Ruby VM: {}", e))),
+                    };
 
-                let handler_value = handler.get_inner_with(&ruby);
+                    let handler_value = handler.get_inner_with(&ruby);
 
-                // Call handler with collected messages
-                let response_value = Self::call_ruby_client_stream(&ruby, handler_value, messages)
-                    .map_err(ruby_error_to_grpc_status)?;
+                    // Call handler with collected messages
+                    let response_value = Self::call_ruby_client_stream(&ruby, handler_value, messages)
+                        .map_err(ruby_error_to_grpc_status)?;
 
-                // Extract response
-                let (payload, metadata_map) =
-                    extract_ruby_response(response_value).map_err(ruby_error_to_grpc_status)?;
+                    // Extract response
+                    let (payload, metadata_map) =
+                        extract_ruby_response(response_value).map_err(ruby_error_to_grpc_status)?;
 
-                let metadata = hashmap_to_metadata_map(&metadata_map)?;
+                    let metadata = hashmap_to_metadata_map(&metadata_map)?;
 
-                Ok(GrpcResponseData {
-                    payload: Bytes::from(payload),
-                    metadata,
-                })
-            }),
+                    Ok(GrpcResponseData {
+                        payload: Bytes::from(payload),
+                        metadata,
+                    })
+                }),
             )
             .await
             .map_err(|_| tonic::Status::deadline_exceeded("Handler timeout"))?
-            .map_err(|e| tonic::Status::internal(format!("Task join error: {}", e)))?;
-
-            result
+            .map_err(|e| tonic::Status::internal(format!("Task join error: {}", e)))?
         })
     }
 
@@ -690,9 +645,9 @@ impl GrpcHandler for RubyGrpcHandler {
                 }
                 match result {
                     Ok(bytes) => {
-                        total_bytes = total_bytes.checked_add(bytes.len()).ok_or_else(|| {
-                            tonic::Status::resource_exhausted("Stream total size overflow")
-                        })?;
+                        total_bytes = total_bytes
+                            .checked_add(bytes.len())
+                            .ok_or_else(|| tonic::Status::resource_exhausted("Stream total size overflow"))?;
 
                         if total_bytes > MAX_STREAM_TOTAL_BYTES {
                             return Err(tonic::Status::resource_exhausted(format!(
@@ -711,25 +666,20 @@ impl GrpcHandler for RubyGrpcHandler {
             let response_messages = tokio::time::timeout(
                 Duration::from_secs(HANDLER_TIMEOUT_SECS),
                 tokio::task::spawn_blocking(move || {
-                let ruby = match Ruby::get() {
-                    Ok(r) => r,
-                    Err(e) => {
-                        return Err(tonic::Status::internal(format!(
-                            "Failed to get Ruby VM: {}",
-                            e
-                        )))
-                    }
-                };
+                    let ruby = match Ruby::get() {
+                        Ok(r) => r,
+                        Err(e) => return Err(tonic::Status::internal(format!("Failed to get Ruby VM: {}", e))),
+                    };
 
-                let handler_value = handler.get_inner_with(&ruby);
+                    let handler_value = handler.get_inner_with(&ruby);
 
-                // Call handler for bidirectional streaming
-                let stream_value = Self::call_ruby_bidi_stream(&ruby, handler_value, messages)
-                    .map_err(ruby_error_to_grpc_status)?;
+                    // Call handler for bidirectional streaming
+                    let stream_value = Self::call_ruby_bidi_stream(&ruby, handler_value, messages)
+                        .map_err(ruby_error_to_grpc_status)?;
 
-                // Collect response stream
-                Self::collect_ruby_stream(&ruby, stream_value).map_err(ruby_error_to_grpc_status)
-            }),
+                    // Collect response stream
+                    Self::collect_ruby_stream(&ruby, stream_value).map_err(ruby_error_to_grpc_status)
+                }),
             )
             .await
             .map_err(|_| tonic::Status::deadline_exceeded("Handler timeout"))?

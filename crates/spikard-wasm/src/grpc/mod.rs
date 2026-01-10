@@ -104,4 +104,4 @@
 
 pub mod handler;
 
-pub use handler::{GrpcRequest, GrpcResponse, GrpcMessageStream, GrpcStatus, MessageStream};
+pub use handler::{GrpcMessageStream, GrpcRequest, GrpcResponse, GrpcStatus, MessageStream};
