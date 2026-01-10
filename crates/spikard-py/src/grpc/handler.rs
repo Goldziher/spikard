@@ -189,14 +189,11 @@ fn python_async_generator_to_message_stream(
                                         e.is_instance_of::<pyo3::exceptions::PyStopAsyncIteration>(py)
                                     });
 
-                                    if is_stop_iteration {
-                                        // Normal end of stream
-                                        break;
-                                    } else {
+                                    if !is_stop_iteration {
                                         // Error during iteration
                                         yield Err(pyerr_to_grpc_status(e));
-                                        break;
                                     }
+                                    break;
                                 }
                             }
                         }

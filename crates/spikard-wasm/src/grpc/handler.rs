@@ -68,6 +68,7 @@
 
 use bytes::Bytes;
 use std::pin::Pin;
+use std::sync::{Arc, Mutex};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use js_sys::{Object, Promise, Reflect, Uint8Array};
@@ -181,39 +182,125 @@ impl GrpcResponse {
 /// Wraps a Rust `MessageStream` and exposes a JavaScript async iterator interface
 /// so JavaScript handlers can consume incoming messages using `for await`.
 ///
-/// # Note
+/// # Design
 ///
-/// In practice, this type is used when converting a Rust MessageStream to a
-/// JavaScript async iterable. The actual implementation in production would be
-/// handled by a WASM-compatible runtime.
+/// This struct stores the actual `MessageStream` internally and provides a `.next()`
+/// method that returns a Promise resolving to the next message or null if exhausted.
+///
+/// # Example
+///
+/// ```javascript
+/// const stream = new GrpcMessageStream(); // Created by runtime
+/// const nextMessage = await stream.next();
+/// if (nextMessage === null) {
+///   console.log("Stream exhausted");
+/// } else {
+///   console.log("Received bytes:", nextMessage);
+/// }
+/// ```
 #[wasm_bindgen]
 pub struct GrpcMessageStream {
-    // Placeholder structure for type compatibility with wasm-bindgen
+    /// Internal message stream storage.
+    /// Uses Arc<Mutex<>> for shared ownership and interior mutability in WASM context.
+    inner: Arc<Mutex<Option<MessageStream>>>,
 }
 
 #[wasm_bindgen]
 impl GrpcMessageStream {
     /// Create a new message stream iterator
     ///
-    /// Note: This is primarily for documentation and type safety.
-    /// In actual use, message streams are created by the runtime.
+    /// Note: In typical use, this is created internally by the WASM runtime
+    /// when converting Rust MessageStream to JavaScript. Direct construction
+    /// creates an empty stream.
     #[wasm_bindgen(constructor)]
     pub fn new() -> GrpcMessageStream {
-        GrpcMessageStream {}
+        GrpcMessageStream {
+            inner: Arc::new(Mutex::new(None)),
+        }
     }
 
     /// Get the next message from the stream
     ///
     /// Returns a Promise that resolves to a Uint8Array for the next message,
-    /// or null if the stream is exhausted. Rejects if the stream encounters an error.
+    /// or null if the stream is exhausted. Rejects with a JsValue error if
+    /// the stream encounters a GrpcStatus error.
     ///
-    /// # Note
+    /// # Returns
     ///
-    /// This method is a placeholder. The actual implementation would be provided
-    /// by the WASM runtime when creating message streams from gRPC requests.
+    /// A Promise that resolves to:
+    /// - `Uint8Array`: The next message from the stream
+    /// - `null`: If the stream has been exhausted
+    ///
+    /// The Promise rejects if:
+    /// - The stream encounters a GrpcStatus error during polling
+    /// - The internal stream has been consumed
+    ///
+    /// # Example
+    ///
+    /// ```javascript
+    /// try {
+    ///   const msg = await stream.next();
+    ///   if (msg === null) {
+    ///     console.log("End of stream");
+    ///   } else {
+    ///     console.log("Received message:", msg);
+    ///   }
+    /// } catch (error) {
+    ///   console.error("Stream error:", error.message);
+    /// }
+    /// ```
     pub fn next(&self) -> Promise {
+        let inner = Arc::clone(&self.inner);
+
         wasm_bindgen_futures::future_to_promise(async move {
-            Ok(JsValue::NULL)
+            // Lock the mutex to access the stream
+            let mut stream_guard = match inner.lock() {
+                Ok(guard) => guard,
+                Err(_) => {
+                    return Err(JsValue::from_str(
+                        "Failed to acquire lock on message stream",
+                    ))
+                }
+            };
+
+            // Get mutable reference to the stream
+            let stream = match stream_guard.as_mut() {
+                Some(s) => s,
+                None => {
+                    // Stream is empty or already consumed
+                    return Ok(JsValue::NULL);
+                }
+            };
+
+            // Poll the stream for the next item using futures::stream::StreamExt::next
+            use futures::stream::StreamExt;
+            match stream.next().await {
+                Some(Ok(bytes)) => {
+                    // Convert Bytes to Uint8Array
+                    let array = Uint8Array::new_with_length(bytes.len() as u32);
+                    array.copy_from(&bytes);
+                    Ok(array.into())
+                }
+                Some(Err(status)) => {
+                    // Stream produced an error
+                    let error_obj = Object::new();
+                    let _ = Reflect::set(
+                        &error_obj,
+                        &"code".into(),
+                        &JsValue::from(status.code),
+                    );
+                    let _ = Reflect::set(
+                        &error_obj,
+                        &"message".into(),
+                        &JsValue::from_str(&status.message),
+                    );
+                    Err(error_obj.into())
+                }
+                None => {
+                    // Stream exhausted
+                    Ok(JsValue::NULL)
+                }
+            }
         })
     }
 
@@ -229,11 +316,37 @@ impl Default for GrpcMessageStream {
     }
 }
 
+/// Create a `GrpcMessageStream` from a Rust `MessageStream`
+///
+/// This is an internal helper function that wraps a Rust MessageStream
+/// in a GrpcMessageStream for JavaScript consumption.
+pub fn message_stream_to_grpc_message_stream(stream: MessageStream) -> GrpcMessageStream {
+    GrpcMessageStream {
+        inner: Arc::new(Mutex::new(Some(stream))),
+    }
+}
+
 /// Convert JavaScript async generator to Rust MessageStream
 ///
 /// Takes a JavaScript async generator (with a `next()` method that returns
 /// a Promise<{ value, done }>) and converts it to a Rust `MessageStream`.
 /// The generator should yield Uint8Array objects representing serialized protobuf messages.
+///
+/// # Error Handling
+///
+/// The returned stream will yield errors if:
+/// - The generator's `next()` method is missing or not callable
+/// - The generator's `next()` method throws an error (extracts `.message` if available)
+/// - The yielded value is not a valid Uint8Array
+///
+/// # Example JavaScript Generator
+///
+/// ```javascript
+/// async function* messageGenerator() {
+///   yield new Uint8Array([1, 2, 3]);
+///   yield new Uint8Array([4, 5, 6]);
+/// }
+/// ```
 pub fn javascript_async_generator_to_message_stream(
     js_generator: JsValue,
 ) -> Result<MessageStream, String> {
@@ -304,8 +417,8 @@ pub fn javascript_async_generator_to_message_stream(
                             yield Ok(bytes);
                         }
                         Err(e) => {
-                            let msg = e.as_string()
-                                .unwrap_or_else(|| "Unknown error in generator".to_string());
+                            // Extract error message from error object or string representation
+                            let msg = extract_error_message(&e);
                             yield Err(GrpcStatus::internal(format!("Generator error: {}", msg)));
                             break;
                         }
@@ -320,6 +433,30 @@ pub fn javascript_async_generator_to_message_stream(
     };
 
     Ok(Box::pin(message_stream))
+}
+
+/// Extract error message from JavaScript error object
+///
+/// Attempts to extract the `.message` property from an error object.
+/// Falls back to string representation if `.message` is not available.
+///
+/// # Precedence
+///
+/// 1. If error has `.message` property, use that
+/// 2. If error is a string, use it directly
+/// 3. Otherwise, use generic fallback message
+fn extract_error_message(error: &JsValue) -> String {
+    // Try to extract .message property from error object
+    if let Ok(message) = Reflect::get(error, &JsValue::from_str("message")) {
+        if let Some(msg_str) = message.as_string() {
+            return msg_str;
+        }
+    }
+
+    // Fallback to string representation
+    error
+        .as_string()
+        .unwrap_or_else(|| "Unknown error in generator".to_string())
 }
 
 /// Convert JavaScript object metadata to a serializable key-value map
@@ -354,5 +491,11 @@ mod tests {
     fn test_grpc_response_creation() {
         // This test would require wasm-pack test
         // For now, we document the expected behavior
+    }
+
+    #[test]
+    fn test_grpc_message_stream_creation() {
+        let stream = GrpcMessageStream::new();
+        assert_eq!(stream.__repr__(), "GrpcMessageStream(async_iterator)");
     }
 }

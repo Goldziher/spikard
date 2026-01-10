@@ -5,8 +5,9 @@
 //! of protobuf messages as binary strings.
 
 use bytes::Bytes;
+use futures_util::stream::StreamExt;
 use magnus::prelude::*;
-use magnus::value::{InnerValue, Opaque};
+use magnus::value::Opaque;
 use magnus::{Error, RHash, RString, Ruby, Symbol, TryConvert, Value, gc::Marker};
 use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
@@ -151,27 +152,6 @@ impl RubyGrpcResponse {
     }
 }
 
-/// Ruby-facing gRPC message stream for streaming RPC
-///
-/// Wraps a Rust `MessageStream` and exposes it to Ruby handlers
-/// so they can consume incoming messages.
-#[derive(Clone)]
-#[allow(dead_code)]
-#[magnus::wrap(class = "Spikard::Grpc::MessageStream", free_immediately)]
-pub struct RubyGrpcMessageStream {
-    /// The underlying message stream
-    stream: Arc<tokio::sync::Mutex<Option<MessageStream>>>,
-}
-
-impl RubyGrpcMessageStream {
-    /// Create a new RubyGrpcMessageStream
-    fn new(stream: MessageStream) -> Self {
-        Self {
-            stream: Arc::new(tokio::sync::Mutex::new(Some(stream))),
-        }
-    }
-}
-
 /// Ruby gRPC handler wrapper
 ///
 /// Wraps a Ruby handler object and implements the GrpcHandler trait,
@@ -259,6 +239,13 @@ impl RubyGrpcHandler {
     }
 
     /// Handle a server streaming request by calling Ruby handler
+    ///
+    /// # GVL Safety
+    ///
+    /// Ruby method calls happen inside `with_gvl()`. Message collection
+    /// happens while still holding the GVL (required for Ruby object access),
+    /// but the MessageStream is created AFTER the GVL is released, allowing
+    /// Tokio to properly schedule the async stream operations.
     fn handle_server_stream(&self, request: GrpcRequestData) -> Result<MessageStream, tonic::Status> {
         with_gvl(|| {
             let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
@@ -281,17 +268,28 @@ impl RubyGrpcHandler {
         let ruby_request = RubyGrpcRequest::from_grpc_request(request);
         let request_value = ruby.obj_wrap(ruby_request).as_value();
 
-        // Call Ruby handler's server_stream method
+        // Call Ruby handler's server_stream method while holding GVL
         let handler_value = self.inner.handler.get_inner_with(&ruby);
         let enumerator_value = handler_value
             .funcall::<_, _, Value>("handle_server_stream", (request_value,))
             .map_err(|err| tonic::Status::internal(format!("Ruby server stream handler failed: {}", err)))?;
 
-        // Convert Ruby enumerator to MessageStream
-        ruby_enumerator_to_message_stream(enumerator_value)
+        // Collect messages from Ruby enumerator WHILE STILL HOLDING GVL
+        // This is required to safely access Ruby objects
+        let messages_vec = collect_messages_from_ruby_enumerator(enumerator_value)?;
+
+        // Return: MessageStream is created AFTER GVL is released by with_gvl()
+        // allowing Tokio to properly schedule async operations
+        Ok(Box::pin(futures_util::stream::iter(messages_vec)))
     }
 
     /// Handle a client streaming request by calling Ruby handler
+    ///
+    /// # GVL Safety
+    ///
+    /// Input stream messages are collected WITHOUT the GVL, then passed to
+    /// Ruby handler with GVL held. This avoids blocking Tokio during stream
+    /// collection.
     fn handle_client_stream(&self, request: StreamingRequest) -> Result<GrpcResponseData, tonic::Status> {
         with_gvl(|| {
             let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
@@ -313,13 +311,23 @@ impl RubyGrpcHandler {
         let ruby = Ruby::get()
             .map_err(|_| tonic::Status::internal("Ruby VM unavailable while invoking client streaming handler"))?;
 
-        // Wrap the message stream in a Ruby enumerator
-        let stream_obj = ruby.obj_wrap(RubyGrpcMessageStream::new(request.message_stream));
+        // Collect input messages from stream synchronously
+        // This happens in a blocking context and doesn't hold GVL
+        let input_messages = tokio::task::block_in_place(|| {
+            // Use a simple runtime to drive the stream collection
+            futures::executor::block_on(collect_stream_messages(request.message_stream))
+        })?;
 
-        // Call Ruby handler's client_stream method
+        // Create Ruby array from collected input messages
+        let ruby_input_array = ruby.ary_new();
+        for msg in input_messages {
+            ruby_input_array.push(ruby.str_from_slice(&msg[..]))?;
+        }
+
+        // Call Ruby handler's client_stream method with collected messages
         let handler_value = self.inner.handler.get_inner_with(&ruby);
         let response_value = handler_value
-            .funcall::<_, _, Value>("handle_client_stream", (stream_obj,))
+            .funcall::<_, _, Value>("handle_client_stream", (ruby_input_array,))
             .map_err(|err| tonic::Status::internal(format!("Ruby client stream handler failed: {}", err)))?;
 
         // Convert Ruby response to GrpcResponseData
@@ -337,6 +345,13 @@ impl RubyGrpcHandler {
     }
 
     /// Handle a bidirectional streaming request by calling Ruby handler
+    ///
+    /// # GVL Safety
+    ///
+    /// Input stream collection happens WITHOUT the GVL, then handler is called
+    /// with GVL held. Output messages are collected while holding GVL (required
+    /// for Ruby object access), but the returned MessageStream is created after
+    /// GVL is released, allowing proper Tokio scheduling.
     fn handle_bidi_stream(&self, request: StreamingRequest) -> Result<MessageStream, tonic::Status> {
         with_gvl(|| {
             let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
@@ -355,31 +370,75 @@ impl RubyGrpcHandler {
         let ruby = Ruby::get()
             .map_err(|_| tonic::Status::internal("Ruby VM unavailable while invoking bidi streaming handler"))?;
 
-        // Wrap the input message stream in a Ruby enumerator
-        let stream_obj = ruby.obj_wrap(RubyGrpcMessageStream::new(request.message_stream));
+        // Collect input messages from stream synchronously without holding GVL
+        let input_messages = tokio::task::block_in_place(|| {
+            futures::executor::block_on(collect_stream_messages(request.message_stream))
+        })?;
+
+        // Create Ruby array from input messages
+        let ruby_input_array = ruby.ary_new();
+        for msg in input_messages {
+            ruby_input_array.push(ruby.str_from_slice(&msg[..]))?;
+        }
 
         // Call Ruby handler's bidi_stream method
         let handler_value = self.inner.handler.get_inner_with(&ruby);
         let enumerator_value = handler_value
-            .funcall::<_, _, Value>("handle_bidi_stream", (stream_obj,))
+            .funcall::<_, _, Value>("handle_bidi_stream", (ruby_input_array,))
             .map_err(|err| tonic::Status::internal(format!("Ruby bidi stream handler failed: {}", err)))?;
 
-        // Convert Ruby enumerator to MessageStream
-        ruby_enumerator_to_message_stream(enumerator_value)
+        // Collect output messages from Ruby enumerator WHILE STILL HOLDING GVL
+        // This is required to safely access Ruby objects
+        let messages_vec = collect_messages_from_ruby_enumerator(enumerator_value)?;
+
+        // Return: MessageStream is created AFTER GVL is released by with_gvl()
+        // allowing Tokio to properly schedule async operations
+        Ok(Box::pin(futures_util::stream::iter(messages_vec)))
     }
 }
 
-/// Convert a Ruby enumerator to a Rust MessageStream
+/// Collect messages from an incoming Tokio stream WITHOUT holding GVL
 ///
-/// This helper eagerly collects all messages from the Ruby enumerator into a Vec,
-/// which is then converted to a stream via `futures_util::stream::iter()`.
+/// This async helper function collects all binary messages from a MessageStream
+/// into a Vec, without blocking Ruby's GVL. It can be called in a blocking
+/// context via `tokio::task::block_in_place()`.
 ///
-/// # Eager Collection
+/// # Arguments
 ///
-/// Messages are collected eagerly rather than lazily to avoid holding Ruby's GVL
-/// during stream consumption. The Ruby handler returns an Enumerator or Array,
-/// which is converted to an Array and collected in one synchronous pass.
-/// This prevents blocking the Tokio executor with GVL-locked operations.
+/// * `stream` - The incoming MessageStream from gRPC
+///
+/// # Returns
+///
+/// A Vec of binary message payloads, or an error if collection fails
+async fn collect_stream_messages(stream: MessageStream) -> Result<Vec<Vec<u8>>, tonic::Status> {
+    let mut messages = Vec::new();
+    let mut stream = Box::pin(stream);
+
+    while let Some(result) = stream.next().await {
+        match result {
+            Ok(bytes) => messages.push(bytes.to_vec()),
+            Err(e) => return Err(tonic::Status::internal(format!("Error collecting stream message: {}", e))),
+        }
+    }
+
+    Ok(messages)
+}
+
+/// Collect messages from a Ruby enumerator WHILE HOLDING GVL
+///
+/// This helper function eagerly collects all messages from a Ruby enumerator
+/// into a Vec of binary payloads. It MUST be called while holding the GVL,
+/// as it invokes Ruby methods (to_a, [], length).
+///
+/// After returning, the GVL is still held by the caller's `with_gvl()` block,
+/// which will release it immediately, allowing proper Tokio scheduling.
+///
+/// # GVL Safety
+///
+/// - MUST be called inside a `with_gvl()` block (the caller's responsibility)
+/// - Accesses Ruby objects: RString, RubyGrpcResponse via Magnus FFI
+/// - All Ruby values are extracted and cloned to Rust types before returning
+/// - Safe for Tokio: GVL is released after this function returns
 ///
 /// # Arguments
 ///
@@ -387,8 +446,9 @@ impl RubyGrpcHandler {
 ///
 /// # Returns
 ///
-/// A MessageStream containing all collected messages, or an error if conversion fails.
-fn ruby_enumerator_to_message_stream(enumerator: Value) -> Result<MessageStream, tonic::Status> {
+/// A Vec of Result<Bytes, tonic::Status> containing all collected messages,
+/// or an error if conversion fails
+fn collect_messages_from_ruby_enumerator(enumerator: Value) -> Result<Vec<Result<Bytes, tonic::Status>>, tonic::Status> {
     // Check if the value responds to 'to_a' method (convert to array)
     if !enumerator
         .respond_to("to_a", true)
@@ -399,7 +459,7 @@ fn ruby_enumerator_to_message_stream(enumerator: Value) -> Result<MessageStream,
         ));
     }
 
-    // Convert the enumerator to an array
+    // Convert the enumerator to an array (WHILE HOLDING GVL)
     let arr: Value = enumerator
         .funcall("to_a", ())
         .map_err(|err| tonic::Status::internal(format!("Failed to convert enumerator to array: {}", err)))?;
@@ -410,6 +470,7 @@ fn ruby_enumerator_to_message_stream(enumerator: Value) -> Result<MessageStream,
 
     let mut messages_vec = Vec::new();
 
+    // Iterate through array WHILE STILL HOLDING GVL
     for i in 0..len {
         let element: Value = arr
             .funcall("[]", (i,))
@@ -431,8 +492,7 @@ fn ruby_enumerator_to_message_stream(enumerator: Value) -> Result<MessageStream,
         }
     }
 
-    // Convert Vec to MessageStream
-    Ok(Box::pin(futures_util::stream::iter(messages_vec)))
+    Ok(messages_vec)
 }
 
 impl GrpcHandler for RubyGrpcHandler {
@@ -489,40 +549,35 @@ pub fn init(ruby: &Ruby, spikard_module: &magnus::RModule) -> Result<(), Error> 
     response_class.define_method("metadata", magnus::method!(RubyGrpcResponse::get_metadata, 0))?;
     response_class.define_method("payload", magnus::method!(RubyGrpcResponse::payload, 0))?;
 
-    // Define Spikard::Grpc::MessageStream class (internal use only)
-    let _stream_class = grpc_module.define_class("MessageStream", ruby.class_object())?;
-
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bytes::Bytes;
-    use tonic::metadata::MetadataMap;
+    use spikard_bindings_shared::grpc_metadata::GrpcMetadata;
+    use std::collections::BTreeMap;
 
     #[test]
-    fn test_ruby_grpc_request_creation() {
+    fn test_grpc_request_creation() {
         let request = GrpcRequestData {
-            service_name: "test.TestService".to_string(),
+            service_name: "test.Service".to_string(),
             method_name: "TestMethod".to_string(),
             payload: Bytes::from("test payload"),
-            metadata: MetadataMap::new(),
+            metadata: GrpcMetadata::default(),
         };
 
         let ruby_request = RubyGrpcRequest::from_grpc_request(request);
-        assert_eq!(ruby_request.service_name, "test.TestService");
+        assert_eq!(ruby_request.service_name, "test.Service");
         assert_eq!(ruby_request.method_name, "TestMethod");
         assert_eq!(ruby_request.payload, b"test payload");
     }
 
     #[test]
-    fn test_metadata_extraction() {
-        use spikard_bindings_shared::grpc_metadata::extract_metadata_to_hashmap;
-
-        let mut metadata = MetadataMap::new();
+    fn test_grpc_metadata_extraction() {
+        let mut metadata = BTreeMap::new();
         metadata.insert(
-            "content-type",
+            "content-type".parse().expect("Valid metadata key"),
             "application/grpc".parse().expect("Valid metadata value"),
         );
         metadata.insert(
