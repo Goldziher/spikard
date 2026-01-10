@@ -7,12 +7,16 @@ use bytes::Bytes;
 use ext_php_rs::convert::IntoZval;
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, Zval};
+use futures_util::stream::StreamExt;
 use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
+use spikard_http::grpc::streaming::{MessageStream, StreamingRequest};
 use std::collections::HashMap;
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
+use std::sync::Arc;
+use tokio::sync::mpsc;
 
 /// PHP-side gRPC request
 ///
@@ -234,6 +238,72 @@ impl GrpcHandler for PhpGrpcHandler {
         })
     }
 
+    fn call_server_stream(
+        &self,
+        request: GrpcRequestData,
+    ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
+        let handler_index = self.handler_index;
+        let service_name = self.service_name.clone();
+
+        Box::pin(async move {
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                invoke_php_server_stream_handler(handler_index, &service_name, request)
+            }));
+
+            match result {
+                Ok(inner) => inner,
+                Err(_) => Err(tonic::Status::internal(format!(
+                    "Unexpected panic while executing PHP server streaming gRPC handler for service '{}'",
+                    service_name
+                ))),
+            }
+        })
+    }
+
+    fn call_client_stream(
+        &self,
+        request: StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
+        let handler_index = self.handler_index;
+        let service_name = self.service_name.clone();
+
+        Box::pin(async move {
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                invoke_php_client_stream_handler(handler_index, &service_name, request)
+            }));
+
+            match result {
+                Ok(inner) => inner,
+                Err(_) => Err(tonic::Status::internal(format!(
+                    "Unexpected panic while executing PHP client streaming gRPC handler for service '{}'",
+                    service_name
+                ))),
+            }
+        })
+    }
+
+    fn call_bidi_stream(
+        &self,
+        request: StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
+        let handler_index = self.handler_index;
+        let service_name = self.service_name.clone();
+
+        Box::pin(async move {
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                invoke_php_bidi_stream_handler(handler_index, &service_name, request)
+            }));
+
+            match result {
+                Ok(inner) => inner,
+                Err(_) => Err(tonic::Status::internal(format!(
+                    "Unexpected panic while executing PHP bidirectional streaming gRPC handler for service '{}'",
+                    service_name
+                ))),
+            }
+        })
+    }
+
     fn service_name(&self) -> &'static str {
         // Leak the string to get a 'static reference
         // This is acceptable for service names which are typically static
@@ -241,7 +311,7 @@ impl GrpcHandler for PhpGrpcHandler {
     }
 }
 
-/// Invoke the PHP gRPC handler
+/// Invoke the PHP unary gRPC handler
 fn invoke_php_grpc_handler(
     handler_index: usize,
     service_name: &str,
@@ -274,6 +344,123 @@ fn invoke_php_grpc_handler(
 
     // Convert PHP response back to Rust response
     interpret_php_grpc_response(&response_zval, service_name)
+}
+
+/// Invoke the PHP server streaming gRPC handler
+fn invoke_php_server_stream_handler(
+    handler_index: usize,
+    service_name: &str,
+    request_data: GrpcRequestData,
+) -> Result<MessageStream, tonic::Status> {
+    // Convert Rust request to PHP request
+    let php_request = PhpGrpcRequest::from_request_data(&request_data);
+    let request_zval = php_request.into_zval(false).map_err(|e| {
+        tonic::Status::internal(format!(
+            "Failed to convert request for PHP server stream handler '{}': {:?}",
+            service_name, e
+        ))
+    })?;
+
+    // Call the PHP handler and expect a Generator
+    let generator_zval =
+        PHP_GRPC_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, tonic::Status> {
+            let registry = registry.borrow();
+            let Some(callable) = registry.get(handler_index) else {
+                return Err(tonic::Status::internal(format!(
+                    "PHP gRPC handler not found for service '{}': index {}",
+                    service_name, handler_index
+                )));
+            };
+
+            callable.try_call(vec![&request_zval]).map_err(|e| {
+                tonic::Status::internal(format!(
+                    "PHP server stream handler '{}' failed: {:?}",
+                    service_name, e
+                ))
+            })
+        })?;
+
+    // Convert PHP Generator/Traversable to MessageStream
+    php_generator_to_message_stream(&generator_zval, service_name)
+}
+
+/// Invoke the PHP client streaming gRPC handler
+fn invoke_php_client_stream_handler(
+    handler_index: usize,
+    service_name: &str,
+    request: StreamingRequest,
+) -> Result<GrpcResponseData, tonic::Status> {
+    // Collect the message stream into a Vec of messages
+    // Since we can't iterate async generators from PHP, we pre-collect the stream
+    let messages = std::thread::block_in_place(|| {
+        tokio::runtime::Handle::current().block_on(async {
+            collect_message_stream_to_vec(request.message_stream).await
+        })
+    })?;
+
+    // Convert Vec of messages to PHP array of PhpGrpcRequest objects
+    let php_array = messages_to_php_request_array(&messages)?;
+
+    // Call the PHP handler with the array of requests
+    let response_zval =
+        PHP_GRPC_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, tonic::Status> {
+            let registry = registry.borrow();
+            let Some(callable) = registry.get(handler_index) else {
+                return Err(tonic::Status::internal(format!(
+                    "PHP gRPC handler not found for service '{}': index {}",
+                    service_name, handler_index
+                )));
+            };
+
+            callable.try_call(vec![&php_array]).map_err(|e| {
+                tonic::Status::internal(format!(
+                    "PHP client stream handler '{}' failed: {:?}",
+                    service_name, e
+                ))
+            })
+        })?;
+
+    // Convert PHP response back to Rust response
+    interpret_php_grpc_response(&response_zval, service_name)
+}
+
+/// Invoke the PHP bidirectional streaming gRPC handler
+fn invoke_php_bidi_stream_handler(
+    handler_index: usize,
+    service_name: &str,
+    request: StreamingRequest,
+) -> Result<MessageStream, tonic::Status> {
+    // Collect the message stream into a Vec of messages
+    let messages = std::thread::block_in_place(|| {
+        tokio::runtime::Handle::current().block_on(async {
+            collect_message_stream_to_vec(request.message_stream).await
+        })
+    })?;
+
+    // Convert Vec of messages to PHP array of PhpGrpcRequest objects
+    let php_array = messages_to_php_request_array(&messages)?;
+
+    // Call the PHP handler with the array of requests and expect a Generator
+    let generator_zval =
+        PHP_GRPC_HANDLER_REGISTRY.with(|registry| -> Result<ext_php_rs::types::Zval, tonic::Status> {
+            let registry = registry.borrow();
+            let Some(callable) = registry.get(handler_index) else {
+                return Err(tonic::Status::internal(format!(
+                    "PHP gRPC handler not found for service '{}': index {}",
+                    service_name, handler_index
+                )));
+            };
+
+            callable.try_call(vec![&php_array]).map_err(|e| {
+                tonic::Status::internal(format!(
+                    "PHP bidi stream handler '{}' failed: {:?}",
+                    service_name, e
+                ))
+            })
+        })?;
+
+    // Convert PHP Generator/Traversable to MessageStream
+    php_generator_to_message_stream(&generator_zval, service_name)
 }
 
 /// Interpret a PHP return value as a gRPC response
@@ -342,6 +529,173 @@ fn interpret_php_grpc_response(response_zval: &ext_php_rs::types::Zval, service_
         "PHP gRPC handler '{}' did not return a valid PhpGrpcResponse object",
         service_name
     )))
+}
+
+/// Convert a PHP Generator or Traversable to a Rust MessageStream
+///
+/// This helper iterates over the PHP Generator and converts each yielded
+/// response into a message byte sequence that can be sent to the client.
+/// Supports both PHP Generators and objects implementing Iterator interface.
+fn php_generator_to_message_stream(
+    generator_zval: &ext_php_rs::types::Zval,
+    service_name: &str,
+) -> Result<MessageStream, tonic::Status> {
+    if !generator_zval.is_object() {
+        return Err(tonic::Status::invalid_argument(
+            "Handler must return a Generator or Iterator for server/bidi streaming",
+        ));
+    }
+
+    // Collect all messages from the PHP Generator
+    let messages_vec = PHP_GRPC_HANDLER_REGISTRY.with(|_registry| {
+        collect_php_generator_messages(generator_zval, service_name)
+    })?;
+
+    if messages_vec.is_empty() {
+        return Err(tonic::Status::internal(format!(
+            "PHP server stream handler '{}' returned empty generator",
+            service_name
+        )));
+    }
+
+    // Convert Vec to MessageStream
+    Ok(Box::pin(futures_util::stream::iter(messages_vec)))
+}
+
+/// Collect messages from a PHP Generator/Traversable
+fn collect_php_generator_messages(
+    generator_zval: &ext_php_rs::types::Zval,
+    service_name: &str,
+) -> Result<Vec<Result<Bytes, tonic::Status>>, tonic::Status> {
+    let mut messages_vec = Vec::new();
+
+    if let Some(obj) = generator_zval.object() {
+        // Try to iterate using standard Iterator protocol
+        let mut index = 0i64;
+        let mut message_count = 0i64;
+
+        // Attempt to call rewind() if the method exists
+        let _ = obj.call_method::<Zval>("rewind", vec![]);
+
+        loop {
+            // Check if there are more values using valid()
+            let valid_zval = match obj.call_method::<Zval>("valid", vec![]) {
+                Ok(z) => z,
+                Err(_) => {
+                    // If valid() doesn't exist, try iteration limit
+                    if index > 100_000 {
+                        break;
+                    }
+                    // Try getting current anyway
+                    match obj.call_method::<Zval>("current", vec![]) {
+                        Ok(_) => {},
+                        Err(_) => break,
+                    }
+                    match obj.call_method::<Zval>("next", vec![]) {
+                        Ok(_) => {},
+                        Err(_) => break,
+                    }
+                    index += 1;
+                    continue;
+                }
+            };
+
+            // Check if valid_zval indicates there are more items
+            let is_valid = valid_zval.bool().unwrap_or(false);
+            if !is_valid {
+                break;
+            }
+
+            // Get the current value
+            match obj.call_method::<Zval>("current", vec![]) {
+                Ok(current_val) => {
+                    if let Some(current_obj) = current_val.object() {
+                        // Try to extract as PhpGrpcResponse
+                        if let Ok(class_name) = current_obj.get_class_name() {
+                            if class_name.contains("PhpGrpcResponse") || class_name.contains("GrpcResponse") {
+                                // Extract payload from PhpGrpcResponse object
+                                if let Ok(payload_zval) = current_obj.get_property::<&Zval>("payload") {
+                                    if let Some(s) = payload_zval.string() {
+                                        messages_vec.push(Ok(Bytes::from(s.as_bytes().to_vec())));
+                                        message_count += 1;
+                                    }
+                                }
+                            }
+                        }
+                    } else if let Some(s) = current_val.string() {
+                        // Handle raw binary string (fallback)
+                        messages_vec.push(Ok(Bytes::from(s.as_bytes().to_vec())));
+                        message_count += 1;
+                    }
+                }
+                Err(_) => break,
+            }
+
+            // Move to next item
+            if obj.call_method::<Zval>("next", vec![]).is_err() {
+                break;
+            }
+
+            index += 1;
+            if index > 100_000 {
+                return Err(tonic::Status::internal(format!(
+                    "PHP server stream handler '{}' yielded too many messages (limit: 100,000)",
+                    service_name
+                )));
+            }
+        }
+
+        if message_count == 0 {
+            return Err(tonic::Status::internal(format!(
+                "PHP server stream handler '{}' returned empty generator",
+                service_name
+            )));
+        }
+    } else {
+        return Err(tonic::Status::invalid_argument(
+            "Handler must return a Generator or Iterator for server/bidi streaming",
+        ));
+    }
+
+    Ok(messages_vec)
+}
+
+/// Collect a MessageStream into a Vec for PHP consumption
+async fn collect_message_stream_to_vec(mut stream: MessageStream) -> Result<Vec<Bytes>, tonic::Status> {
+    let mut messages = Vec::new();
+
+    while let Some(result) = stream.next().await {
+        match result {
+            Ok(bytes) => messages.push(bytes),
+            Err(e) => return Err(e),
+        }
+    }
+
+    Ok(messages)
+}
+
+/// Convert a Vec of message bytes to a PHP array of PhpGrpcRequest objects
+fn messages_to_php_request_array(messages: &[Bytes]) -> Result<Zval, tonic::Status> {
+    let mut php_requests = Vec::new();
+
+    for message_bytes in messages {
+        // Create a PhpGrpcRequest from each message payload
+        let php_request = PhpGrpcRequest {
+            service_name: String::new(),
+            method_name: String::new(),
+            payload: message_bytes.to_vec(),
+            metadata: HashMap::new(),
+        };
+
+        php_requests.push(php_request);
+    }
+
+    // Convert to Zval array
+    let zval = php_requests.into_zval(false).map_err(|e| {
+        tonic::Status::internal(format!("Failed to convert message stream to PHP array: {:?}", e))
+    })?;
+
+    Ok(zval)
 }
 
 #[cfg(test)]

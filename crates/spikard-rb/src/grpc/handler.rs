@@ -10,6 +10,7 @@ use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, Symbol, TryConvert, Value, gc::Marker};
 use spikard_bindings_shared::grpc_metadata::{extract_metadata_to_hashmap, hashmap_to_metadata};
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
+use spikard_http::grpc::streaming::{MessageStream, StreamingRequest};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::future::Future;
@@ -148,6 +149,27 @@ impl RubyGrpcResponse {
     }
 }
 
+/// Ruby-facing gRPC message stream for streaming RPC
+///
+/// Wraps a Rust `MessageStream` and exposes it to Ruby handlers
+/// so they can consume incoming messages.
+#[derive(Clone)]
+#[allow(dead_code)]
+#[magnus::wrap(class = "Spikard::Grpc::MessageStream", free_immediately)]
+pub struct RubyGrpcMessageStream {
+    /// The underlying message stream
+    stream: Arc<tokio::sync::Mutex<Option<MessageStream>>>,
+}
+
+impl RubyGrpcMessageStream {
+    /// Create a new RubyGrpcMessageStream
+    fn new(stream: MessageStream) -> Self {
+        Self {
+            stream: Arc::new(tokio::sync::Mutex::new(Some(stream))),
+        }
+    }
+}
+
 /// Ruby gRPC handler wrapper
 ///
 /// Wraps a Ruby handler object and implements the GrpcHandler trait,
@@ -228,12 +250,195 @@ impl RubyGrpcHandler {
             .into_grpc_response()
             .map_err(|err| tonic::Status::internal(format!("Failed to build gRPC response: {}", err)))
     }
+
+    /// Handle a server streaming request by calling Ruby handler
+    fn handle_server_stream(&self, request: GrpcRequestData) -> Result<MessageStream, tonic::Status> {
+        with_gvl(|| {
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.handle_server_stream_inner(request)
+            }));
+            match result {
+                Ok(res) => res,
+                Err(_) => Err(tonic::Status::internal(
+                    "Unexpected panic while executing Ruby server streaming gRPC handler",
+                )),
+            }
+        })
+    }
+
+    fn handle_server_stream_inner(&self, request: GrpcRequestData) -> Result<MessageStream, tonic::Status> {
+        let ruby = Ruby::get()
+            .map_err(|_| tonic::Status::internal("Ruby VM unavailable while invoking server streaming handler"))?;
+
+        // Convert request to Ruby object
+        let ruby_request = RubyGrpcRequest::from_grpc_request(request);
+        let request_value = ruby.obj_wrap(ruby_request).as_value();
+
+        // Call Ruby handler's server_stream method
+        let handler_value = self.inner.handler.get_inner_with(&ruby);
+        let enumerator_value = handler_value
+            .funcall::<_, _, Value>("handle_server_stream", (request_value,))
+            .map_err(|err| tonic::Status::internal(format!("Ruby server stream handler failed: {}", err)))?;
+
+        // Convert Ruby enumerator to MessageStream
+        ruby_enumerator_to_message_stream(enumerator_value)
+    }
+
+    /// Handle a client streaming request by calling Ruby handler
+    fn handle_client_stream(&self, request: StreamingRequest) -> Result<GrpcResponseData, tonic::Status> {
+        with_gvl(|| {
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.handle_client_stream_inner(request)
+            }));
+            match result {
+                Ok(res) => res,
+                Err(_) => Err(tonic::Status::internal(
+                    "Unexpected panic while executing Ruby client streaming gRPC handler",
+                )),
+            }
+        })
+    }
+
+    fn handle_client_stream_inner(
+        &self,
+        request: StreamingRequest,
+    ) -> Result<GrpcResponseData, tonic::Status> {
+        let ruby = Ruby::get()
+            .map_err(|_| tonic::Status::internal("Ruby VM unavailable while invoking client streaming handler"))?;
+
+        // Wrap the message stream in a Ruby enumerator
+        let stream_obj = ruby.obj_wrap(RubyGrpcMessageStream::new(request.message_stream));
+
+        // Call Ruby handler's client_stream method
+        let handler_value = self.inner.handler.get_inner_with(&ruby);
+        let response_value = handler_value
+            .funcall::<_, _, Value>("handle_client_stream", (stream_obj,))
+            .map_err(|err| tonic::Status::internal(format!("Ruby client stream handler failed: {}", err)))?;
+
+        // Convert Ruby response to GrpcResponseData
+        let ruby_response = <&RubyGrpcResponse>::try_convert(response_value).map_err(|err| {
+            tonic::Status::internal(format!(
+                "Client stream handler must return Spikard::Grpc::Response, got error: {}",
+                err
+            ))
+        })?;
+
+        ruby_response
+            .clone()
+            .into_grpc_response()
+            .map_err(|err| tonic::Status::internal(format!("Failed to build gRPC response: {}", err)))
+    }
+
+    /// Handle a bidirectional streaming request by calling Ruby handler
+    fn handle_bidi_stream(&self, request: StreamingRequest) -> Result<MessageStream, tonic::Status> {
+        with_gvl(|| {
+            let result = std::panic::catch_unwind(AssertUnwindSafe(|| {
+                self.handle_bidi_stream_inner(request)
+            }));
+            match result {
+                Ok(res) => res,
+                Err(_) => Err(tonic::Status::internal(
+                    "Unexpected panic while executing Ruby bidirectional streaming gRPC handler",
+                )),
+            }
+        })
+    }
+
+    fn handle_bidi_stream_inner(&self, request: StreamingRequest) -> Result<MessageStream, tonic::Status> {
+        let ruby = Ruby::get()
+            .map_err(|_| tonic::Status::internal("Ruby VM unavailable while invoking bidi streaming handler"))?;
+
+        // Wrap the input message stream in a Ruby enumerator
+        let stream_obj = ruby.obj_wrap(RubyGrpcMessageStream::new(request.message_stream));
+
+        // Call Ruby handler's bidi_stream method
+        let handler_value = self.inner.handler.get_inner_with(&ruby);
+        let enumerator_value = handler_value
+            .funcall::<_, _, Value>("handle_bidi_stream", (stream_obj,))
+            .map_err(|err| tonic::Status::internal(format!("Ruby bidi stream handler failed: {}", err)))?;
+
+        // Convert Ruby enumerator to MessageStream
+        ruby_enumerator_to_message_stream(enumerator_value)
+    }
+}
+
+/// Convert a Ruby enumerator to a Rust MessageStream
+///
+/// This helper iterates over the Ruby enumerator and converts each yielded
+/// response into a message byte sequence that can be sent to the client.
+fn ruby_enumerator_to_message_stream(enumerator: Value) -> Result<MessageStream, tonic::Status> {
+    // Check if the value responds to 'to_a' method (convert to array)
+    if !enumerator
+        .respond_to("to_a", true)
+        .map_err(|_| tonic::Status::internal("Enumerator does not respond to 'to_a'"))?
+    {
+        return Err(tonic::Status::invalid_argument(
+            "Handler must return an Enumerator or object that responds to 'to_a'",
+        ));
+    }
+
+    // Convert the enumerator to an array
+    let arr: Value = enumerator
+        .funcall("to_a", ())
+        .map_err(|err| tonic::Status::internal(format!("Failed to convert enumerator to array: {}", err)))?;
+
+    let len: i64 = arr
+        .funcall("length", ())
+        .map_err(|err| tonic::Status::internal(format!("Failed to get array length: {}", err)))?;
+
+    let mut messages_vec = Vec::new();
+
+    for i in 0..len {
+        let element: Value = arr
+            .funcall("[]", (i,))
+            .map_err(|err| tonic::Status::internal(format!("Failed to access array element {}: {}", i, err)))?;
+
+        // Try to extract as RubyGrpcResponse
+        if let Ok(response) = <&RubyGrpcResponse>::try_convert(element) {
+            let payload = response.payload.borrow().clone();
+            messages_vec.push(Ok(Bytes::from(payload)));
+        } else if let Ok(bytes_str) = RString::try_convert(element) {
+            let payload = unsafe { bytes_str.as_slice() }.to_vec();
+            messages_vec.push(Ok(Bytes::from(payload)));
+        } else {
+            return Err(tonic::Status::internal(
+                "Each yielded value must be a Spikard::Grpc::Response or binary string",
+            ));
+        }
+    }
+
+    // Convert Vec to MessageStream
+    Ok(Box::pin(futures_util::stream::iter(messages_vec)))
 }
 
 impl GrpcHandler for RubyGrpcHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
         let handler = self.clone();
         Box::pin(async move { handler.handle_request(request) })
+    }
+
+    fn call_server_stream(
+        &self,
+        request: GrpcRequestData,
+    ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
+        let handler = self.clone();
+        Box::pin(async move { handler.handle_server_stream(request) })
+    }
+
+    fn call_client_stream(
+        &self,
+        request: StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
+        let handler = self.clone();
+        Box::pin(async move { handler.handle_client_stream(request) })
+    }
+
+    fn call_bidi_stream(
+        &self,
+        request: StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
+        let handler = self.clone();
+        Box::pin(async move { handler.handle_bidi_stream(request) })
     }
 
     fn service_name(&self) -> &'static str {
@@ -262,6 +467,9 @@ pub fn init(ruby: &Ruby, spikard_module: &magnus::RModule) -> Result<(), Error> 
     response_class.define_method("metadata=", magnus::method!(RubyGrpcResponse::set_metadata, 1))?;
     response_class.define_method("metadata", magnus::method!(RubyGrpcResponse::get_metadata, 0))?;
     response_class.define_method("payload", magnus::method!(RubyGrpcResponse::payload, 0))?;
+
+    // Define Spikard::Grpc::MessageStream class (internal use only)
+    let _stream_class = grpc_module.define_class("MessageStream", ruby.class_object())?;
 
     Ok(())
 }
