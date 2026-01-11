@@ -206,7 +206,7 @@ mod tests {
         let metadata_204 = TestResponseMetadata::new(204, headers.clone(), 0, 50);
         let metadata_299 = TestResponseMetadata::new(299, headers.clone(), 100, 50);
         let metadata_300 = TestResponseMetadata::new(300, headers.clone(), 100, 50);
-        let metadata_400 = TestResponseMetadata::new(400, headers.clone(), 100, 50);
+        let metadata_400 = TestResponseMetadata::new(400, headers, 100, 50);
 
         assert!(metadata_200.is_success());
         assert!(metadata_201.is_success());
@@ -223,7 +223,7 @@ mod tests {
         let metadata_400 = TestResponseMetadata::new(400, headers.clone(), 100, 50);
         let metadata_404 = TestResponseMetadata::new(404, headers.clone(), 100, 50);
         let metadata_499 = TestResponseMetadata::new(499, headers.clone(), 100, 50);
-        let metadata_500 = TestResponseMetadata::new(500, headers.clone(), 100, 50);
+        let metadata_500 = TestResponseMetadata::new(500, headers, 100, 50);
 
         assert!(!metadata_399.is_client_error());
         assert!(metadata_400.is_client_error());
@@ -239,7 +239,7 @@ mod tests {
         let metadata_500 = TestResponseMetadata::new(500, headers.clone(), 100, 50);
         let metadata_502 = TestResponseMetadata::new(502, headers.clone(), 100, 50);
         let metadata_599 = TestResponseMetadata::new(599, headers.clone(), 100, 50);
-        let metadata_600 = TestResponseMetadata::new(600, headers.clone(), 100, 50);
+        let metadata_600 = TestResponseMetadata::new(600, headers, 100, 50);
 
         assert!(!metadata_499.is_server_error());
         assert!(metadata_500.is_server_error());
@@ -252,7 +252,7 @@ mod tests {
     fn test_response_metadata_debug() {
         let headers = HashMap::new();
         let metadata = TestResponseMetadata::new(200, headers, 100, 50);
-        let debug_str = format!("{:?}", metadata);
+        let debug_str = format!("{metadata:?}");
         assert!(debug_str.contains("200"));
         assert!(debug_str.contains("100"));
         assert!(debug_str.contains("50"));

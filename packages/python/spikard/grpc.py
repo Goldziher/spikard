@@ -28,10 +28,12 @@ Example:
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, AsyncIterator
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from _spikard import GrpcRequest, GrpcResponse  # type: ignore[attr-defined]
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, AsyncIterator
 
 __all__ = [
     "GrpcHandler",
@@ -94,7 +96,9 @@ class GrpcHandler(Protocol):
                 response = my_pb2.AggregateResponse(data=result)
                 return GrpcResponse(payload=response.SerializeToString())
 
-            async def handle_bidi_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> AsyncGenerator[GrpcResponse, None]:
+            async def handle_bidi_stream(
+                self, request_stream: AsyncIterator[GrpcRequest]
+            ) -> AsyncGenerator[GrpcResponse, None]:
                 # Bidirectional streaming RPC
                 async for request in request_stream:
                     req = my_pb2.BidiRequest()
@@ -126,9 +130,7 @@ class GrpcHandler(Protocol):
         """
         ...
 
-    async def handle_server_stream(
-        self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_server_stream(self, request: GrpcRequest) -> AsyncGenerator[GrpcResponse]:
         """Handle a server-streaming gRPC request.
 
         This method is optional and handles the server-streaming RPC pattern
@@ -161,9 +163,7 @@ class GrpcHandler(Protocol):
         """
         ...
 
-    async def handle_client_stream(
-        self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> GrpcResponse:
+    async def handle_client_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> GrpcResponse:
         """Handle a client-streaming gRPC request.
 
         This method is optional and handles the client-streaming RPC pattern
@@ -202,9 +202,7 @@ class GrpcHandler(Protocol):
         """
         ...
 
-    async def handle_bidi_stream(
-        self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_bidi_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> AsyncGenerator[GrpcResponse]:
         """Handle a bidirectional-streaming gRPC request.
 
         This method is optional and handles the bidirectional-streaming RPC

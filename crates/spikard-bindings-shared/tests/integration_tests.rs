@@ -1,18 +1,12 @@
-//! Comprehensive coverage tests for all spikard-bindings-shared modules
+//! Full integration tests for all spikard-bindings-shared modules
 //!
 //! This test file ensures full code coverage across all modules in the crate,
 //! testing edge cases, error paths, and integration scenarios.
-#![allow(
-    clippy::doc_markdown,
-    clippy::items_after_statements,
-    clippy::uninlined_format_args,
-    clippy::redundant_clone,
-    reason = "Integration test with many coverage scenarios"
-)]
 
 use axum::http::{Request, StatusCode};
 use pretty_assertions::assert_eq;
 use serde_json::json;
+use spikard_bindings_shared::conversion_traits::{FromLanguage, ToLanguage};
 use spikard_bindings_shared::response_builder::ResponseBuilder;
 use spikard_bindings_shared::*;
 use spikard_core::RequestData as CoreRequestData;
@@ -21,6 +15,30 @@ use spikard_core::problem::ProblemDetails;
 use spikard_core::validation::{ValidationError, ValidationErrorDetail};
 use std::collections::HashMap;
 use std::sync::Arc;
+
+#[derive(Debug)]
+struct CustomType {
+    value: i32,
+}
+
+impl FromLanguage for CustomType {
+    type Error = String;
+
+    fn from_any(value: &(dyn std::any::Any + Send + Sync)) -> Result<Self, Self::Error> {
+        value
+            .downcast_ref::<i32>()
+            .map(|&v| Self { value: v })
+            .ok_or_else(|| "Type mismatch".to_string())
+    }
+}
+
+impl ToLanguage for CustomType {
+    type Error = String;
+
+    fn to_any(&self) -> Result<Box<dyn std::any::Any + Send + Sync>, Self::Error> {
+        Ok(Box::new(self.value))
+    }
+}
 
 #[test]
 fn test_error_response_all_status_codes_coverage() {
@@ -82,7 +100,7 @@ fn test_error_response_all_status_codes_coverage() {
 }
 
 #[test]
-fn test_validation_error_comprehensive() {
+fn test_validation_error_with_multiple_errors() {
     let validation_error = ValidationError {
         errors: vec![
             ValidationErrorDetail {
@@ -111,7 +129,7 @@ fn test_validation_error_comprehensive() {
 }
 
 #[test]
-fn test_problem_details_comprehensive() {
+fn test_problem_details_with_extensions() {
     let mut problem = ProblemDetails::internal_server_error("System error");
     problem.instance = Some("/api/users/123".to_string());
     problem.extensions.insert("trace_id".to_string(), json!("abc-123"));
@@ -155,7 +173,7 @@ fn test_structured_error_with_complex_details() {
 }
 
 #[test]
-fn test_response_builder_comprehensive() {
+fn test_response_builder_with_multiple_headers() {
     let (status, headers, body) = ResponseBuilder::new()
         .status(StatusCode::CREATED)
         .body(json!({
@@ -208,10 +226,12 @@ fn test_lifecycle_hook_types() {
     }
 
     let continue_result = HookResult::Continue;
-    assert!(matches!(continue_result.clone(), HookResult::Continue));
+    let cloned_continue = continue_result;
+    assert!(matches!(cloned_continue, HookResult::Continue));
 
     let short_circuit = HookResult::ShortCircuit(json!({"status": "error"}));
-    assert!(matches!(short_circuit.clone(), HookResult::ShortCircuit(_)));
+    let cloned_short = short_circuit;
+    assert!(matches!(cloned_short, HookResult::ShortCircuit(_)));
 }
 
 #[test]
@@ -242,7 +262,7 @@ fn test_validation_helpers_all_field_types() {
 }
 
 #[test]
-fn test_test_client_comprehensive() {
+fn test_test_client_with_configuration() {
     use test_client_base::{TestClientConfig, TestResponseMetadata};
 
     let config = TestClientConfig::new("http://example.com")
@@ -277,7 +297,7 @@ fn test_test_client_comprehensive() {
 }
 
 #[tokio::test]
-async fn test_di_traits_comprehensive() {
+async fn test_di_traits_with_value_and_factory_adapters() {
     use di_traits::{FactoryDependencyAdapter, FactoryDependencyBridge, ValueDependencyAdapter, ValueDependencyBridge};
     use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -380,7 +400,7 @@ async fn test_di_traits_comprehensive() {
 }
 
 #[test]
-fn test_conversion_traits_comprehensive() {
+fn test_conversion_traits_with_json_and_language_conversion() {
     use conversion_traits::{FromLanguage, JsonConversionError, JsonConvertible, ToLanguage};
 
     let error = JsonConversionError("Test error message".to_string());
@@ -405,30 +425,6 @@ fn test_conversion_traits_comprehensive() {
         let to_result = test_value.to_json();
         assert!(to_result.is_ok());
         assert_eq!(to_result.unwrap(), test_value);
-    }
-
-    #[derive(Debug)]
-    struct CustomType {
-        value: i32,
-    }
-
-    impl FromLanguage for CustomType {
-        type Error = String;
-
-        fn from_any(value: &(dyn std::any::Any + Send + Sync)) -> Result<Self, Self::Error> {
-            value
-                .downcast_ref::<i32>()
-                .map(|&v| Self { value: v })
-                .ok_or_else(|| "Type mismatch".to_string())
-        }
-    }
-
-    impl ToLanguage for CustomType {
-        type Error = String;
-
-        fn to_any(&self) -> Result<Box<dyn std::any::Any + Send + Sync>, Self::Error> {
-            Ok(Box::new(self.value))
-        }
     }
 
     let any_value: Box<dyn std::any::Any + Send + Sync> = Box::new(42i32);

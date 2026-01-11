@@ -15,10 +15,9 @@ import sys
 import tempfile
 import threading
 import time
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 import cloudpickle
 import httpx
@@ -27,6 +26,8 @@ from websockets.asyncio.client import ClientConnection
 from websockets.asyncio.client import connect as ws_connect
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from spikard.app import Spikard
 
 __all__ = [
@@ -124,7 +125,7 @@ class TestClient:
             raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
         return self._port
 
-    async def __aenter__(self) -> TestClient:
+    async def __aenter__(self) -> Self:
         """Start the server and return the client."""
         await self._start_server()
         return self

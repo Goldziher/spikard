@@ -1,7 +1,7 @@
 //! Integration tests for gRPC client streaming
 //!
-//! Tests end-to-end client streaming functionality through GenericGrpcService
-//! and grpc_routing, including:
+//! Tests end-to-end client streaming functionality through `GenericGrpcService`
+//! and `grpc_routing`, including:
 //! - Stream of multiple messages aggregation
 //! - Message validation during streaming
 //! - Empty streams
@@ -10,6 +10,12 @@
 //! - Large payloads (100+ messages)
 //! - Message ordering preservation
 //! - Concurrent client streaming requests
+#![allow(
+    clippy::uninlined_format_args,
+    clippy::doc_markdown,
+    clippy::option_if_let_else,
+    reason = "Integration test for streaming with many test cases"
+)]
 
 use bytes::Bytes;
 use futures_util::StreamExt;

@@ -344,7 +344,7 @@ mod tests {
             body: None,
         };
 
-        let result = HookResultData::modify_request(mods.clone());
+        let result = HookResultData::modify_request(mods);
         assert!(result.continue_execution);
         assert_eq!(result.status_code, None);
         assert_eq!(
@@ -563,7 +563,7 @@ mod tests {
     #[tokio::test]
     async fn test_apply_request_modifications_invalid_method() {
         let mods = RequestModifications {
-            method: Some("".to_string()),
+            method: Some(String::new()),
             path: None,
             headers: None,
             body: None,

@@ -1,3 +1,10 @@
+#![allow(
+    clippy::needless_raw_string_hashes,
+    clippy::doc_markdown,
+    clippy::uninlined_format_args,
+    reason = "GraphQL schemas contain identifiers like ID! that need raw strings"
+)]
+
 //! Comprehensive integration tests for GraphQL code generation
 //!
 //! Tests the full GraphQL schema parsing and code generation pipeline across
@@ -1292,7 +1299,7 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
     // Extract just the imports section (first 1000 chars usually)
     let imports_section = &result[..std::cmp::min(1000, result.len())];
     let has_broken_import = imports_section.lines().any(|line| {
-        !line.trim_start().starts_with("*") &&  // Not a comment
+        !line.trim_start().starts_with('*') &&  // Not a comment
              !line.trim_start().starts_with("//") &&  // Not a comment
              line.contains("import { resolvers } from './resolvers'")
     });

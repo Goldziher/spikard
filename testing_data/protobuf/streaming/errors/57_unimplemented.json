@@ -7,15 +7,11 @@
 		"messages": [
 			{
 				"name": "FeatureRequest",
-				"fields": [
-					{ "name": "feature_name", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "feature_name", "type": "string", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "FeatureResponse",
-				"fields": [
-					{ "name": "available", "type": "bool", "number": 1, "label": "optional" }
-				]
+				"fields": [{ "name": "available", "type": "bool", "number": 1, "label": "optional" }]
 			}
 		],
 		"services": [

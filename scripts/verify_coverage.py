@@ -8,12 +8,14 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import ClassVar
 from xml.etree import ElementTree as ET
 
 
 @dataclass
 class CoverageResult:
     """Represents coverage result for a single language."""
+
     language: str
     percentage: float | None
     threshold: float
@@ -28,10 +30,7 @@ class CoverageResult:
 
         status = "PASS" if self.passed else "FAIL"
         symbol = "✓" if self.passed else "✗"
-        return (
-            f"  {symbol} {status} {self.language}: {self.percentage:.1f}% "
-            f"(target: {self.threshold:.0f}%+)"
-        )
+        return f"  {symbol} {status} {self.language}: {self.percentage:.1f}% (target: {self.threshold:.0f}%+)"
 
 
 class CoverageVerifier:
@@ -39,14 +38,14 @@ class CoverageVerifier:
 
     BASE_PATH = Path(__file__).parent.parent
 
-    THRESHOLDS = {
+    THRESHOLDS: ClassVar[dict[str, float]] = {
         "Python": 80.0,
         "TypeScript": 80.0,
         "Ruby": 80.0,
         "PHP": 85.0,
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the verifier."""
         self.results: list[CoverageResult] = []
 
@@ -56,20 +55,18 @@ class CoverageVerifier:
         Returns:
             Exit code (0 if all pass, 1 if any fail)
         """
-        print("Coverage Results:")
         self._verify_python()
         self._verify_typescript()
         self._verify_ruby()
         self._verify_php()
 
         # Print results
-        for result in self.results:
-            print(result)
+        for _result in self.results:
+            pass
 
         # Summary
-        passed = sum(1 for r in self.results if r.passed or r.error)
-        total = len(self.results)
-        print(f"\nOverall: {passed}/{total} passed")
+        sum(1 for r in self.results if r.passed or r.error)
+        len(self.results)
 
         # Exit code
         failed = any(not r.passed and not r.error for r in self.results)
@@ -142,9 +139,7 @@ class CoverageVerifier:
         threshold = self.THRESHOLDS[language]
 
         # Try coverage/coverage-summary.json
-        coverage_file = (
-            self.BASE_PATH / "packages" / "node" / "coverage" / "coverage-summary.json"
-        )
+        coverage_file = self.BASE_PATH / "packages" / "node" / "coverage" / "coverage-summary.json"
         if coverage_file.exists():
             coverage_pct = self._parse_typescript_coverage(coverage_file)
             if coverage_pct is not None:
@@ -205,9 +200,7 @@ class CoverageVerifier:
         threshold = self.THRESHOLDS[language]
 
         # Try SimpleCov .resultset.json
-        resultset_file = (
-            self.BASE_PATH / "packages" / "ruby" / "coverage" / ".resultset.json"
-        )
+        resultset_file = self.BASE_PATH / "packages" / "ruby" / "coverage" / ".resultset.json"
         if resultset_file.exists():
             coverage_pct = self._parse_ruby_resultset(resultset_file)
             if coverage_pct is not None:
@@ -268,9 +261,7 @@ class CoverageVerifier:
                 return
 
         # Try htmlcov/index.html (PHPUnit coverage HTML)
-        htmlcov_file = (
-            self.BASE_PATH / "packages" / "php" / "packages" / "php" / "htmlcov" / "index.html"
-        )
+        htmlcov_file = self.BASE_PATH / "packages" / "php" / "packages" / "php" / "htmlcov" / "index.html"
         if htmlcov_file.exists():
             coverage_pct = self._parse_html_coverage(htmlcov_file)
             if coverage_pct is not None:
@@ -315,13 +306,12 @@ class CoverageVerifier:
         """Parse Python .coverage file (requires coverage.py to read binary format)."""
         try:
             # Try to use coverage library if available
-            from coverage import Coverage
+            from coverage import Coverage  # noqa: PLC0415
 
             cov = Coverage(data_file=str(coverage_file))
             cov.load()
             # Get total coverage percentage
-            total_coverage = cov.report(skip_covered=False, precision=2)
-            return total_coverage
+            return cov.report(skip_covered=False, precision=2)
         except ImportError:
             # Fallback: coverage library not available
             return None
@@ -332,7 +322,7 @@ class CoverageVerifier:
     def _parse_lcov_file(lcov_file: Path) -> float | None:
         """Parse LCOV format coverage file."""
         try:
-            with open(lcov_file, encoding="utf-8") as f:
+            with lcov_file.open(encoding="utf-8") as f:
                 content = f.read()
 
             # Extract line coverage summary
@@ -356,7 +346,7 @@ class CoverageVerifier:
     def _parse_html_coverage(html_file: Path) -> float | None:
         """Parse HTML coverage report (from coverage.py or PHPUnit)."""
         try:
-            with open(html_file, encoding="utf-8") as f:
+            with html_file.open(encoding="utf-8") as f:
                 content = f.read()
 
             # Look for percentage in various formats
@@ -383,7 +373,7 @@ class CoverageVerifier:
     def _parse_typescript_coverage(coverage_file: Path) -> float | None:
         """Parse TypeScript coverage-summary.json."""
         try:
-            with open(coverage_file, encoding="utf-8") as f:
+            with coverage_file.open(encoding="utf-8") as f:
                 data = json.load(f)
 
             # Coverage summary is in 'total' key
@@ -401,19 +391,19 @@ class CoverageVerifier:
     def _parse_vitest_coverage(coverage_file: Path) -> float | None:
         """Parse vitest coverage-final.json."""
         try:
-            with open(coverage_file, encoding="utf-8") as f:
+            with coverage_file.open(encoding="utf-8") as f:
                 data = json.load(f)
 
             # Aggregate coverage from all files
             total_lines = 0
             covered_lines = 0
 
-            for file_path, file_coverage in data.items():
+            for file_coverage in data.values():
                 if not isinstance(file_coverage, dict):
                     continue
 
                 lines = file_coverage.get("l", {})
-                for line_num, hit_count in lines.items():
+                for hit_count in lines.values():
                     total_lines += 1
                     if hit_count > 0:
                         covered_lines += 1
@@ -429,11 +419,11 @@ class CoverageVerifier:
     def _parse_ruby_resultset(resultset_file: Path) -> float | None:
         """Parse Ruby SimpleCov .resultset.json."""
         try:
-            with open(resultset_file, encoding="utf-8") as f:
+            with resultset_file.open(encoding="utf-8") as f:
                 data = json.load(f)
 
             # Find RSpec or other test framework results
-            for framework, framework_data in data.items():
+            for framework_data in data.values():
                 if "coverage" not in framework_data:
                     continue
 
@@ -441,7 +431,7 @@ class CoverageVerifier:
                 total_lines = 0
                 covered_lines = 0
 
-                for file_path, file_coverage in coverage.items():
+                for file_coverage in coverage.values():
                     lines = file_coverage.get("lines", [])
                     for hit_count in lines:
                         if hit_count is not None:
@@ -462,7 +452,7 @@ class CoverageVerifier:
     def _parse_clover_xml(clover_file: Path) -> float | None:
         """Parse Clover XML coverage format (used by PHPUnit)."""
         try:
-            tree = ET.parse(clover_file)
+            tree = ET.parse(clover_file)  # noqa: S314
             root = tree.getroot()
 
             # Find the project metrics

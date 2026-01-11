@@ -1243,7 +1243,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_empty_comprehensive() {
+    fn test_is_empty_before_and_after_adding_hooks() {
         let mut hooks: LifecycleHooks<String, String> = LifecycleHooks::new();
         assert!(hooks.is_empty());
 

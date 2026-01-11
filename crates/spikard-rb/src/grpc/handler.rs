@@ -729,7 +729,7 @@ mod tests {
         map.insert("authorization".to_string(), "Bearer token".to_string());
         map.insert("content-type".to_string(), "application/grpc".to_string());
 
-        let metadata = hashmap_to_metadata_map(&map).unwrap();
+        let metadata = hashmap_to_metadata_map(&map).expect("valid metadata map");
         let converted = metadata_map_to_hashmap(&metadata);
 
         assert_eq!(converted.get("authorization"), Some(&"Bearer token".to_string()));

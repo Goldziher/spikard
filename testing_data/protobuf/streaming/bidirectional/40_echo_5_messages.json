@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "EchoMessage",
-				"fields": [
-					{ "name": "text", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "text", "type": "string", "number": 1, "label": "required" }]
 			}
 		],
 		"services": [

@@ -9,6 +9,12 @@
 //! - Large payloads (100+ messages in both directions)
 //! - Message ordering preservation
 //! - Concurrent bidirectional streaming requests
+#![allow(
+    clippy::doc_markdown,
+    clippy::uninlined_format_args,
+    clippy::redundant_closure_for_method_calls,
+    reason = "Integration test for streaming with many test cases"
+)]
 
 use bytes::Bytes;
 use futures_util::StreamExt;

@@ -14,6 +14,11 @@ including:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from spikard import GrpcHandler
+
 import pytest
 
 # ============================================================================
@@ -408,7 +413,7 @@ class TestGrpcHandlerProtocol:
         assert hasattr(handler, "handle_request")
         # Handlers with all required methods work with GrpcService
         service = GrpcService()
-        service.register_handler("test.Service", handler)
+        service.register_handler("test.Service", cast("GrpcHandler", handler))
         assert service.get_handler("test.Service") is handler
 
     @pytest.mark.asyncio
@@ -477,7 +482,7 @@ class TestGrpcServiceRegistration:
         service = GrpcService()
         handler = TestHandler()
 
-        service.register_handler("test.TestService", handler)
+        service.register_handler("test.TestService", cast("GrpcHandler", handler))
 
         assert service.get_handler("test.TestService") is handler
         assert "test.TestService" in service.list_services()
@@ -496,8 +501,8 @@ class TestGrpcServiceRegistration:
 
         service = GrpcService()
 
-        service.register_handler("test.Service1", Handler1())
-        service.register_handler("test.Service2", Handler2())
+        service.register_handler("test.Service1", cast("GrpcHandler", Handler1()))
+        service.register_handler("test.Service2", cast("GrpcHandler", Handler2()))
 
         assert len(service.list_services()) == 2
         assert "test.Service1" in service.list_services()
@@ -514,10 +519,10 @@ class TestGrpcServiceRegistration:
         service = GrpcService()
         handler = TestHandler()
 
-        service.register_handler("test.Service", handler)
+        service.register_handler("test.Service", cast("GrpcHandler", handler))
 
         with pytest.raises(ValueError, match="already registered"):
-            service.register_handler("test.Service", handler)
+            service.register_handler("test.Service", cast("GrpcHandler", handler))
 
     def test_grpc_service_invalid_handler_raises_error(self) -> None:
         """Test that registering an invalid handler raises an error."""
@@ -575,7 +580,7 @@ class TestGrpcServiceUnregistration:
         service = GrpcService()
         handler = TestHandler()
 
-        service.register_handler("test.Service", handler)
+        service.register_handler("test.Service", cast("GrpcHandler", handler))
         service.unregister_handler("test.Service")
 
         assert service.get_handler("test.Service") is None
@@ -591,8 +596,8 @@ class TestGrpcServiceUnregistration:
 
         service = GrpcService()
 
-        service.register_handler("test.Service1", TestHandler())
-        service.register_handler("test.Service2", TestHandler())
+        service.register_handler("test.Service1", cast("GrpcHandler", TestHandler()))
+        service.register_handler("test.Service2", cast("GrpcHandler", TestHandler()))
 
         assert len(service.list_services()) == 2
 
@@ -626,7 +631,7 @@ class TestGrpcServiceRouting:
         service = GrpcService()
         handler = EchoHandler()
 
-        service.register_handler("test.EchoService", handler)
+        service.register_handler("test.EchoService", cast("GrpcHandler", handler))
 
         request = GrpcRequest(
             service_name="test.EchoService",
@@ -652,8 +657,8 @@ class TestGrpcServiceRouting:
 
         service = GrpcService()
 
-        service.register_handler("test.Service1", Handler1())
-        service.register_handler("test.Service2", Handler2())
+        service.register_handler("test.Service1", cast("GrpcHandler", Handler1()))
+        service.register_handler("test.Service2", cast("GrpcHandler", Handler2()))
 
         request1 = GrpcRequest(
             service_name="test.Service1",
@@ -705,7 +710,7 @@ class TestGrpcServiceRouting:
         service = GrpcService()
         handler = MultiMethodHandler()
 
-        service.register_handler("test.UserService", handler)
+        service.register_handler("test.UserService", cast("GrpcHandler", handler))
 
         # Test GetUser
         request = GrpcRequest(service_name="test.UserService", method_name="GetUser", payload=b"")
@@ -1256,7 +1261,7 @@ class TestLargePayloads:
                 return GrpcResponse(payload=request.payload)
 
         service = GrpcService()
-        service.register_handler("test.Service", Handler())
+        service.register_handler("test.Service", cast("GrpcHandler", Handler()))
 
         payload = b"a" * (1024 * 1024)
         request = GrpcRequest(
@@ -1423,7 +1428,7 @@ class TestEdgeCases:
                 return response
 
         service = GrpcService()
-        service.register_handler("test.Service", FullHandler())
+        service.register_handler("test.Service", cast("GrpcHandler", FullHandler()))
 
         request = GrpcRequest(
             service_name="test.Service",
@@ -1476,7 +1481,7 @@ class TestIntegration:
                 raise NotImplementedError(f"Method {request.method_name}")
 
         service = GrpcService()
-        service.register_handler("test.UserService", UserHandler())
+        service.register_handler("test.UserService", cast("GrpcHandler", UserHandler()))
 
         # Create request
         req = Struct()
@@ -1518,7 +1523,7 @@ class TestIntegration:
                 raise NotImplementedError(f"Method {request.method_name}")
 
         service = GrpcService()
-        service.register_handler("test.CrudService", MultiServiceHandler())
+        service.register_handler("test.CrudService", cast("GrpcHandler", MultiServiceHandler()))
 
         methods = ["Create", "Read", "Update", "Delete"]
         expected = [b"created", b"read", b"updated", b"deleted"]
@@ -1547,8 +1552,8 @@ class TestIntegration:
                 return GrpcResponse(payload=b"product_response")
 
         service = GrpcService()
-        service.register_handler("test.UserService", UserHandler())
-        service.register_handler("test.ProductService", ProductHandler())
+        service.register_handler("test.UserService", cast("GrpcHandler", UserHandler()))
+        service.register_handler("test.ProductService", cast("GrpcHandler", ProductHandler()))
 
         user_request = GrpcRequest(
             service_name="test.UserService",

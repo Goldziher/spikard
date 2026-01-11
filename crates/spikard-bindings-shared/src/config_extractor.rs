@@ -587,7 +587,7 @@ mod tests {
         assert_eq!(config.port, 3000);
         assert_eq!(config.workers, 4);
         assert!(!config.enable_request_id);
-        assert_eq!(config.max_body_size, Some(5242880));
+        assert_eq!(config.max_body_size, Some(5_242_880));
         assert_eq!(config.request_timeout, Some(60));
         assert!(!config.graceful_shutdown);
         assert_eq!(config.shutdown_timeout, 10);

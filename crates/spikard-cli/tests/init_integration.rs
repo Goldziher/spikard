@@ -1,3 +1,13 @@
+#![allow(
+    clippy::needless_raw_string_hashes,
+    clippy::too_many_arguments,
+    clippy::similar_names,
+    clippy::doc_markdown,
+    clippy::uninlined_format_args,
+    clippy::redundant_clone,
+    reason = "Test file with many GraphQL schemas and test parameters"
+)]
+
 //! Comprehensive integration tests for the `spikard init` command.
 //!
 //! These tests verify that the project initialization workflow correctly scaffolds
@@ -904,7 +914,7 @@ fn test_init_readme_content() -> anyhow::Result<()> {
 
     let content = std::fs::read_to_string(&readme_path)?;
     assert!(!content.is_empty());
-    assert!(content.contains("#"));
+    assert!(content.contains('#'));
 
     Ok(())
 }

@@ -402,8 +402,8 @@ mod tests {
     fn test_error_message_safe_for_display() {
         let result = validate_jsonrpc_method_name("method@host");
         let err = result.unwrap_err();
-        assert!(!err.contains("\0"));
-        assert!(!err.contains("\n"));
+        assert!(!err.contains('\0'));
+        assert!(!err.contains('\n'));
     }
 
     #[test]

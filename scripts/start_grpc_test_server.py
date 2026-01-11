@@ -21,8 +21,12 @@ import asyncio
 import json
 import signal
 import sys
+import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 # Add packages/python to path so we can import from conftest
 sys.path.insert(0, str(Path(__file__).parent.parent / "packages" / "python"))
@@ -31,7 +35,6 @@ try:
     import grpc
     from grpc import aio
 except ImportError:
-    print("ERROR: grpcio not installed. Install with: pip install grpcio", file=sys.stderr)
     sys.exit(1)
 
 
@@ -64,7 +67,7 @@ def load_fixture(fixture_path: Path) -> dict[str, Any]:
 class FixtureDrivenServicer:
     """Fixture-driven test service supporting all four streaming modes."""
 
-    def __init__(self, fixtures: dict[str, dict[str, Any]]):
+    def __init__(self, fixtures: dict[str, dict[str, Any]]) -> None:
         self.fixtures = fixtures
 
     def get_fixture_for_method(self, method_path: str) -> dict[str, Any] | None:
@@ -98,10 +101,8 @@ class FixtureDrivenServicer:
                     return message
         return request
 
-    async def handle_server_stream(self, request: dict, context: Any, method_path: str):
+    async def handle_server_stream(self, request: dict, context: Any, method_path: str) -> AsyncIterator[dict]:
         """Server streaming RPC: yield messages from fixture or raise error."""
-        import time
-
         fixture = self.get_fixture_for_method(method_path)
         if fixture:
             expected = fixture.get("expected_response", {})
@@ -126,9 +127,7 @@ class FixtureDrivenServicer:
                                         if isinstance(error, dict)
                                         else "Deadline exceeded"
                                     )
-                                    status = getattr(
-                                        grpc.StatusCode, status_code, grpc.StatusCode.DEADLINE_EXCEEDED
-                                    )
+                                    status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.DEADLINE_EXCEEDED)
                                     await context.abort(status, error_message)
                                     return
 
@@ -148,9 +147,7 @@ class FixtureDrivenServicer:
 
     async def handle_client_stream(self, request_iterator: Any, context: Any, method_path: str) -> dict:
         """Client streaming RPC: aggregate messages and return fixture response or raise error."""
-        messages = []
-        async for msg in request_iterator:
-            messages.append(msg)
+        messages = [msg async for msg in request_iterator]
 
         fixture = self.get_fixture_for_method(method_path)
         if fixture:
@@ -169,14 +166,12 @@ class FixtureDrivenServicer:
                     return message
         return {"count": len(messages)}
 
-    async def handle_bidi_stream(self, request_iterator: Any, context: Any, method_path: str):
+    async def handle_bidi_stream(self, request_iterator: Any, context: Any, method_path: str) -> AsyncIterator[dict]:
         """Bidirectional streaming RPC: echo messages or return fixture stream."""
         fixture = self.get_fixture_for_method(method_path)
 
         # Collect all request messages first
-        messages = []
-        async for msg in request_iterator:
-            messages.append(msg)
+        messages = [msg async for msg in request_iterator]
 
         if fixture:
             expected = fixture.get("expected_response", {})
@@ -204,10 +199,10 @@ class FixtureDrivenServicer:
 class GenericHandler(grpc.GenericRpcHandler):
     """Generic RPC handler that routes all methods to the fixture servicer."""
 
-    def __init__(self, servicer: FixtureDrivenServicer):
+    def __init__(self, servicer: FixtureDrivenServicer) -> None:
         self.servicer = servicer
 
-    def service(self, handler_call_details: Any):
+    def service(self, handler_call_details: Any) -> Any:  # noqa: C901
         """Route method call to appropriate handler based on streaming mode."""
         method_path = handler_call_details.method
 
@@ -247,8 +242,10 @@ class GenericHandler(grpc.GenericRpcHandler):
 
                                 if not client_streaming and server_streaming:
                                     # Server streaming
-                                    async def server_stream_handler(request: dict, context: Any):
-                                        async for msg in self.servicer.handle_server_stream(request, context, method_path):
+                                    async def server_stream_handler(request: dict, context: Any) -> AsyncIterator[dict]:
+                                        async for msg in self.servicer.handle_server_stream(
+                                            request, context, method_path
+                                        ):
                                             yield msg
 
                                     return grpc.unary_stream_rpc_method_handler(
@@ -272,7 +269,7 @@ class GenericHandler(grpc.GenericRpcHandler):
 
                                 if client_streaming and server_streaming:
                                     # Bidirectional streaming
-                                    async def bidi_handler(request_iterator: Any, context: Any):
+                                    async def bidi_handler(request_iterator: Any, context: Any) -> AsyncIterator[dict]:
                                         async for msg in self.servicer.handle_bidi_stream(
                                             request_iterator, context, method_path
                                         ):
@@ -288,15 +285,14 @@ class GenericHandler(grpc.GenericRpcHandler):
         return None
 
 
-async def serve(port: int = 50051):
+async def serve(port: int = 50051) -> None:
     """Start the gRPC test server."""
     # Load all fixtures
-    print("Loading fixtures...")
     fixture_map: dict[str, dict[str, Any]] = {}
     fixtures_by_category = discover_protobuf_fixtures()
 
     fixture_count = 0
-    for subcategory, paths in fixtures_by_category.items():
+    for paths in fixtures_by_category.values():
         for fixture_path in paths:
             fixture_data = load_fixture(fixture_path)
             handler_info = fixture_data.get("handler", {})
@@ -308,8 +304,6 @@ async def serve(port: int = 50051):
                     fixture_map[key] = fixture_data
                     fixture_count += 1
 
-    print(f"Loaded {fixture_count} fixtures from {len(fixtures_by_category)} categories")
-
     # Create servicer and server
     servicer = FixtureDrivenServicer(fixture_map)
     server = aio.server()
@@ -318,15 +312,11 @@ async def serve(port: int = 50051):
 
     # Start server
     await server.start()
-    print(f"\n✓ gRPC test server listening on 0.0.0.0:{port}")
-    print("\nReady to accept fixture-driven test requests from all language bindings.")
-    print("Press Ctrl+C to stop.\n")
 
     # Setup graceful shutdown
     stop_event = asyncio.Event()
 
-    def signal_handler(sig, frame):
-        print("\n\nShutting down server...")
+    def signal_handler(_sig: int, _frame: Any) -> None:
         stop_event.set()
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -337,12 +327,7 @@ async def serve(port: int = 50051):
 
     # Stop server gracefully
     await server.stop(grace=2.0)
-    print("Server stopped.")
 
 
 if __name__ == "__main__":
-    print("=" * 70)
-    print("gRPC Fixture Test Server")
-    print("=" * 70)
-
     asyncio.run(serve())

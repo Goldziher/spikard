@@ -42,7 +42,6 @@ async fn spawn_test_server() -> (u16, tokio::task::JoinHandle<()>) {
                 }
                 Err(e) => {
                     last_error = Some(e);
-                    continue;
                 }
             }
         }
@@ -59,19 +58,19 @@ async fn test_full_benchmark_flow() {
     }
 
     let (port, server_handle) = spawn_test_server().await;
-    let base_url = format!("http://localhost:{}", port);
+    let base_url = format!("http://localhost:{port}");
 
     let client = reqwest::Client::new();
     let mut attempts = 0;
     let max_attempts = 10;
     loop {
-        match client.get(format!("{}/health", base_url)).send().await {
+        match client.get(format!("{base_url}/health")).send().await {
             Ok(response) if response.status().is_success() => break,
             _ if attempts < max_attempts => {
                 attempts += 1;
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
-            _ => panic!("Server not reachable after {} attempts", max_attempts),
+            _ => panic!("Server not reachable after {max_attempts} attempts"),
         }
     }
 
@@ -100,7 +99,7 @@ async fn test_full_benchmark_flow() {
             return;
         }
         Err(e) => {
-            eprintln!("Load test failed: {}", e);
+            eprintln!("Load test failed: {e}");
             eprintln!("This might happen if the server isn't fully ready or if there's a connection issue");
             server_handle.abort();
             return;
@@ -165,7 +164,7 @@ async fn test_benchmark_with_fixture() {
     }
 
     let (port, server_handle) = spawn_test_server().await;
-    let base_url = format!("http://localhost:{}", port);
+    let base_url = format!("http://localhost:{port}");
 
     let fixture_json = json!({
         "name": "simple_get",
@@ -202,7 +201,7 @@ async fn test_benchmark_with_fixture() {
             assert!(throughput.total_requests > 0, "Should have some requests");
         }
         Err(e) => {
-            eprintln!("Load test with fixture failed (expected in some environments): {}", e);
+            eprintln!("Load test with fixture failed (expected in some environments): {e}");
         }
     }
 }
@@ -217,6 +216,7 @@ async fn test_monitor_during_load() {
     tokio::time::sleep(Duration::from_millis(500)).await;
 
     for _ in 0..10 {
+        #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
         let _v: Vec<u8> = (0..100_000).map(|x| (x % 256) as u8).collect();
         tokio::time::sleep(Duration::from_millis(10)).await;
     }
@@ -241,7 +241,7 @@ async fn test_concurrent_benchmarks() {
     }
 
     let (port, server_handle) = spawn_test_server().await;
-    let base_url = format!("http://localhost:{}", port);
+    let base_url = format!("http://localhost:{port}");
 
     let generator = find_load_generator().unwrap();
 
@@ -258,7 +258,7 @@ async fn test_concurrent_benchmarks() {
         if result.is_ok() {
             successes += 1;
         } else if let Err(e) = result {
-            eprintln!("Benchmark {} encountered error (may be expected): {}", i, e);
+            eprintln!("Benchmark {i} encountered error (may be expected): {e}");
         }
     }
 
@@ -267,7 +267,7 @@ async fn test_concurrent_benchmarks() {
     if successes == 0 {
         eprintln!("Warning: No benchmarks succeeded (this can happen in constrained test environments)");
     } else {
-        println!("Successfully completed {} out of 2 benchmarks", successes);
+        println!("Successfully completed {successes} out of 2 benchmarks");
     }
 }
 

@@ -7,15 +7,11 @@
 		"messages": [
 			{
 				"name": "Request",
-				"fields": [
-					{ "name": "message", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "message", "type": "string", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "Response",
-				"fields": [
-					{ "name": "message", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "message", "type": "string", "number": 1, "label": "required" }]
 			}
 		],
 		"services": [
@@ -45,9 +41,7 @@
 	},
 	"expected_response": {
 		"status_code": "OK",
-		"stream": [
-			{ "message": "empty_request_received" }
-		]
+		"stream": [{ "message": "empty_request_received" }]
 	},
 	"tags": ["bidirectional_streaming", "empty", "request_stream"]
 }

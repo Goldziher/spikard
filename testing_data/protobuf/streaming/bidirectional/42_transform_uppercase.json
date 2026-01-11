@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "TextMessage",
-				"fields": [
-					{ "name": "content", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "content", "type": "string", "number": 1, "label": "required" }]
 			}
 		],
 		"services": [
@@ -35,19 +33,11 @@
 		"metadata": {
 			"content-type": "application/grpc"
 		},
-		"stream": [
-			{ "content": "hello" },
-			{ "content": "world" },
-			{ "content": "test" }
-		]
+		"stream": [{ "content": "hello" }, { "content": "world" }, { "content": "test" }]
 	},
 	"expected_response": {
 		"status_code": "OK",
-		"stream": [
-			{ "content": "HELLO" },
-			{ "content": "WORLD" },
-			{ "content": "TEST" }
-		]
+		"stream": [{ "content": "HELLO" }, { "content": "WORLD" }, { "content": "TEST" }]
 	},
 	"tags": ["bidirectional_streaming", "transform", "uppercase"]
 }

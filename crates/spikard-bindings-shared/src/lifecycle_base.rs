@@ -210,24 +210,24 @@ mod tests {
     fn test_get_hooks_multiple_calls() {
         let mut config = LifecycleConfig::new();
 
-        let hook1 = Arc::new(TestHook {
+        let hook_a = Arc::new(TestHook {
             hook_type: LifecycleHookType::OnResponse,
             result: HookResult::Continue,
         });
 
-        let hook2 = Arc::new(TestHook {
+        let hook_b = Arc::new(TestHook {
             hook_type: LifecycleHookType::OnResponse,
             result: HookResult::Continue,
         });
 
-        config.register(hook1);
-        config.register(hook2);
+        config.register(hook_a);
+        config.register(hook_b);
 
-        let hooks1 = config.get_hooks(LifecycleHookType::OnResponse);
-        let hooks2 = config.get_hooks(LifecycleHookType::OnResponse);
+        let hooks_on_response_first = config.get_hooks(LifecycleHookType::OnResponse);
+        let hooks_on_response_second = config.get_hooks(LifecycleHookType::OnResponse);
 
-        assert_eq!(hooks1.len(), 2);
-        assert_eq!(hooks2.len(), 2);
+        assert_eq!(hooks_on_response_first.len(), 2);
+        assert_eq!(hooks_on_response_second.len(), 2);
     }
 
     #[test]
@@ -269,7 +269,7 @@ mod tests {
 
         let mut config = LifecycleConfig::new();
 
-        for hook_type in hook_types.iter() {
+        for hook_type in &hook_types {
             let hook = Arc::new(TestHook {
                 hook_type: *hook_type,
                 result: HookResult::Continue,
@@ -286,13 +286,13 @@ mod tests {
     #[test]
     fn test_hook_result_clone() {
         let original = HookResult::ShortCircuit(json!({ "key": "value" }));
-        let cloned = original.clone();
+        let cloned = original;
 
         match cloned {
             HookResult::ShortCircuit(response) => {
                 assert_eq!(response["key"], "value");
             }
-            _ => panic!("Expected ShortCircuit"),
+            HookResult::Continue => panic!("Expected ShortCircuit"),
         }
     }
 }

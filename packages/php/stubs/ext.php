@@ -35,6 +35,15 @@ namespace {
         {
             return true;
         }
+
+        /**
+         * Create a gRPC channel to a server.
+         *
+         * @param string $target Server address (e.g., "localhost:50051")
+         * @param array<string, mixed> $options Channel options
+         * @return resource|false Channel resource or false on error
+         */
+        function grpc_channel_create(string $target, array $options) {}
     }
 }
 

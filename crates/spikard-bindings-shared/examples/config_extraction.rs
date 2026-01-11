@@ -1,12 +1,12 @@
-//! Example of implementing ConfigSource for a language binding
+//! Example of implementing `ConfigSource` for a language binding
 //!
 //! This example demonstrates how a language binding (e.g., Python, Node.js, Ruby, PHP)
-//! would implement the `ConfigSource` trait to extract ServerConfig from language-specific objects.
+//! would implement the `ConfigSource` trait to extract `ServerConfig` from language-specific objects.
 
 use spikard_bindings_shared::{ConfigExtractor, ConfigSource};
 use std::collections::HashMap;
 
-/// Example: PyO3 Python dict wrapper
+/// Example: `PyO3` Python dict wrapper
 struct PyDictWrapper {
     data: HashMap<String, String>,
 }
@@ -74,7 +74,7 @@ fn main() {
             println!("   min_size: {}", config.min_size);
             println!("   quality: {}\n", config.quality);
         }
-        Err(e) => println!("   Error: {}\n", e),
+        Err(e) => println!("   Error: {e}\n"),
     }
 
     println!("2. Extracting JWT authentication configuration:");
@@ -89,7 +89,7 @@ fn main() {
             println!("   algorithm: {}", config.algorithm);
             println!("   leeway: {}\n", config.leeway);
         }
-        Err(e) => println!("   Error: {}\n", e),
+        Err(e) => println!("   Error: {e}\n"),
     }
 
     println!("3. Extracting API Key authentication configuration:");
@@ -102,7 +102,7 @@ fn main() {
             println!("   keys: {:?}", config.keys);
             println!("   header_name: {}\n", config.header_name);
         }
-        Err(e) => println!("   Error: {}\n", e),
+        Err(e) => println!("   Error: {e}\n"),
     }
 
     println!("4. Extracting rate limit configuration:");
@@ -117,7 +117,7 @@ fn main() {
             println!("   burst: {}", config.burst);
             println!("   ip_based: {}\n", config.ip_based);
         }
-        Err(e) => println!("   Error: {}\n", e),
+        Err(e) => println!("   Error: {e}\n"),
     }
 
     println!("5. Testing error handling (missing 'burst' field):");
@@ -125,7 +125,7 @@ fn main() {
 
     match ConfigExtractor::extract_rate_limit_config(&rate_limit_config) {
         Ok(_config) => println!("   Success (unexpected!)"),
-        Err(e) => println!("   Expected error: {}\n", e),
+        Err(e) => println!("   Expected error: {e}\n"),
     }
 
     println!("=== Example Complete ===");

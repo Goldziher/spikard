@@ -60,10 +60,7 @@ export class GrpcTestClient {
 		} catch (error) {
 			// If grpc-js is not available, the grpc reference will be null
 			// and API calls will fail with proper error
-			console.error(
-				`Failed to initialize gRPC module:`,
-				error instanceof Error ? error.message : String(error),
-			);
+			console.error(`Failed to initialize gRPC module:`, error instanceof Error ? error.message : String(error));
 		}
 	}
 

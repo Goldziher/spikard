@@ -1,3 +1,9 @@
+#![allow(
+    clippy::doc_markdown,
+    clippy::items_after_statements,
+    reason = "Test file for CLI commands"
+)]
+
 use anyhow::Result;
 use std::path::PathBuf;
 use tempfile::TempDir;

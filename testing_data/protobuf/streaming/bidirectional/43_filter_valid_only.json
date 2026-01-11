@@ -36,18 +36,11 @@
 		"metadata": {
 			"content-type": "application/grpc"
 		},
-		"stream": [
-			{ "id": "point-1", "value": 10 },
-			{ "id": "point-2", "value": -5 },
-			{ "id": "point-3", "value": 25 }
-		]
+		"stream": [{ "id": "point-1", "value": 10 }, { "id": "point-2", "value": -5 }, { "id": "point-3", "value": 25 }]
 	},
 	"expected_response": {
 		"status_code": "OK",
-		"stream": [
-			{ "id": "point-1", "value": 10 },
-			{ "id": "point-3", "value": 25 }
-		]
+		"stream": [{ "id": "point-1", "value": 10 }, { "id": "point-3", "value": 25 }]
 	},
 	"tags": ["bidirectional_streaming", "filter", "validation"]
 }

@@ -101,7 +101,7 @@ mod tests {
     #[test]
     fn test_response_builder_body() {
         let body_data = json!({ "id": 123, "name": "test" });
-        let (_, _, body) = ResponseBuilder::new().body(body_data.clone()).build();
+        let (_, _, body) = ResponseBuilder::new().body(body_data).build();
 
         let parsed: serde_json::Value = serde_json::from_str(&body).unwrap();
         assert_eq!(parsed["id"], 123);

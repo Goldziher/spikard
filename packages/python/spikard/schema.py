@@ -3,12 +3,14 @@
 import dataclasses
 import inspect
 import types
-from collections.abc import Callable
-from typing import Any, Protocol, Union, get_args, get_origin, get_type_hints, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, Union, get_args, get_origin, get_type_hints, runtime_checkable
 
 import msgspec
 
 from spikard.datastructures import UploadFile
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @runtime_checkable

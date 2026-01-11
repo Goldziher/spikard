@@ -10,13 +10,15 @@ Modifications for Spikard:
 - Focused on parameter extraction for JSON Schema generation
 """
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from inspect import Signature
-from typing import Any, get_type_hints
+from typing import TYPE_CHECKING, Any, get_type_hints
 
 from spikard._internal.field_definition import FieldDefinition
 from spikard._internal.types import Empty
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 __all__ = ("ParsedSignature", "parse_fn_signature")
 

@@ -64,7 +64,7 @@ fn codegen_engine_asyncapi_all_writes_fixtures_and_apps() {
     let outcome = CodegenEngine::execute(request).expect("engine run");
     let assets = match outcome {
         spikard_cli::codegen::CodegenOutcome::Files(files) => files,
-        other => panic!("expected files, got {other:?}"),
+        other @ spikard_cli::codegen::CodegenOutcome::InMemory(_) => panic!("expected files, got {other:?}"),
     };
 
     assert!(assets.iter().any(|a| a.description.contains("fixture")));

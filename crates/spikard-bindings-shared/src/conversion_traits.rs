@@ -87,7 +87,7 @@ mod tests {
         fn from_any(value: &(dyn Any + Send + Sync)) -> Result<Self, Self::Error> {
             value
                 .downcast_ref::<i32>()
-                .map(|&v| TestType { value: v })
+                .map(|&v| Self { value: v })
                 .ok_or_else(|| "Invalid type".to_string())
         }
     }
@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn test_json_null_conversion() {
         let null_value = serde_json::Value::Null;
-        let result = serde_json::Value::from_json(null_value.clone());
+        let result = serde_json::Value::from_json(null_value);
         assert!(result.is_ok());
         assert!(result.unwrap().is_null());
     }
@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn test_json_array_conversion() {
         let array = json!([1, 2, 3, 4, 5]);
-        let result = serde_json::Value::from_json(array.clone());
+        let result = serde_json::Value::from_json(array);
         assert!(result.is_ok());
         let converted = result.unwrap();
         assert!(converted.is_array());
@@ -196,7 +196,7 @@ mod tests {
             }
         });
 
-        let result = serde_json::Value::from_json(nested.clone());
+        let result = serde_json::Value::from_json(nested);
         assert!(result.is_ok());
         let converted = result.unwrap();
         assert_eq!(converted["level1"]["level2"]["level3"]["value"], "deep");

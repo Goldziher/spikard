@@ -1,3 +1,12 @@
+#![allow(
+    clippy::needless_raw_string_hashes,
+    clippy::too_many_arguments,
+    clippy::similar_names,
+    clippy::doc_markdown,
+    clippy::uninlined_format_args,
+    clippy::redundant_clone,
+    reason = "Test file with many GraphQL schemas and test parameters"
+)]
 use std::env;
 use std::ffi::OsString;
 use std::fs;
@@ -415,7 +424,7 @@ assert instance.message == "hello"
 
     let pythonpath = pythonpath_value(&stub_dir);
     let status = Command::new("uv")
-        .args(&["run", "python"])
+        .args(["run", "python"])
         .env("PYTHONPATH", pythonpath)
         .arg("-c")
         .arg(script)
@@ -433,7 +442,7 @@ fn compile_python_file(code: &str) -> Result<()> {
     fs::write(&module_path, code)?;
     let pythonpath = pythonpath_value(&stub_dir);
     let status = Command::new("uv")
-        .args(&["run", "python"])
+        .args(["run", "python"])
         .env("PYTHONPATH", pythonpath)
         .arg("-m")
         .arg("py_compile")

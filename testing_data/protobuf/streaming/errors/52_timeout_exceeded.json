@@ -7,15 +7,11 @@
 		"messages": [
 			{
 				"name": "TimeoutRequest",
-				"fields": [
-					{ "name": "delay_ms", "type": "int32", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "delay_ms", "type": "int32", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "TimeoutResponse",
-				"fields": [
-					{ "name": "data", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "data", "type": "string", "number": 1, "label": "required" }]
 			}
 		],
 		"services": [

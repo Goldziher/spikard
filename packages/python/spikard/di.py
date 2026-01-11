@@ -54,13 +54,15 @@ Async generator cleanup::
 
 import asyncio
 import inspect
-from collections.abc import AsyncGenerator, Callable, Generator
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Callable, Generator
 
 T = TypeVar("T")
 
 
-class Provide(Generic[T]):
+class Provide[T]:
     """Wrapper for dependency factories.
 
     This class wraps a factory function that will be called to create a dependency

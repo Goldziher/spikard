@@ -1,4 +1,4 @@
-//! Integration tests for handler_base module
+//! Integration tests for `handler_base` module
 //!
 //! These tests cover the validation paths and error handling that aren't
 //! covered by unit tests in the module itself.
@@ -41,7 +41,7 @@ impl LanguageHandler for MockHandler {
             if should_fail {
                 Err(HandlerError::Execution("Handler failed".to_string()))
             } else {
-                Ok(format!("output:{}", input))
+                Ok(format!("output:{input}"))
             }
         })
     }

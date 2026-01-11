@@ -1,3 +1,9 @@
+#![allow(
+    clippy::doc_markdown,
+    clippy::redundant_clone,
+    reason = "Test file with code generation"
+)]
+
 use spikard_cli::codegen::{
     CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, SchemaKind, TargetLanguage,
 };

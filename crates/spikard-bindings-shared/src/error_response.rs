@@ -260,7 +260,7 @@ mod tests {
             StatusCode::BAD_REQUEST,
             "validation_error",
             "Invalid email format",
-            details.clone(),
+            details,
         );
         assert_eq!(status, StatusCode::BAD_REQUEST);
         let parsed: Value = serde_json::from_str(&body).unwrap();
@@ -287,7 +287,7 @@ mod tests {
                 error_type: "missing".to_string(),
                 loc: vec!["body".to_string(), "username".to_string()],
                 msg: "Field required".to_string(),
-                input: Value::String("".to_string()),
+                input: Value::String(String::new()),
                 ctx: None,
             }],
         };

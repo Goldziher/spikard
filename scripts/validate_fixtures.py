@@ -9,10 +9,15 @@ import json
 import sys
 from pathlib import Path
 
+try:
+    from jsonschema import Draft7Validator
+except ImportError:
+    Draft7Validator = None  # type: ignore[assignment]
+
 
 def load_schema(schema_path: Path) -> dict:
     """Load the JSON schema from file."""
-    with open(schema_path, encoding="utf-8") as f:
+    with schema_path.open(encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -39,11 +44,7 @@ def validate_semantic(fixture_data: dict, fixture_path: Path) -> list[str]:
         message_names = {msg["name"] for msg in messages if isinstance(msg, dict) and "name" in msg}
 
         # Build service name -> service dict
-        services_by_name = {
-            svc["name"]: svc
-            for svc in services
-            if isinstance(svc, dict) and "name" in svc
-        }
+        services_by_name = {svc["name"]: svc for svc in services if isinstance(svc, dict) and "name" in svc}
 
         # Validate handler.service exists in protobuf.services
         handler_service = handler.get("service", "")
@@ -52,10 +53,7 @@ def validate_semantic(fixture_data: dict, fixture_path: Path) -> list[str]:
             service_short_name = handler_service.split(".")[-1] if "." in handler_service else handler_service
 
             # Check if service exists (match on short name or full name)
-            matching_services = [
-                name for name in services_by_name
-                if name == service_short_name or name == handler_service
-            ]
+            matching_services = [name for name in services_by_name if name in (service_short_name, handler_service)]
 
             if not matching_services:
                 errors.append(
@@ -68,9 +66,7 @@ def validate_semantic(fixture_data: dict, fixture_path: Path) -> list[str]:
                     service = services_by_name[matching_services[0]]
                     methods = service.get("methods", [])
                     method_names = {
-                        method["name"]
-                        for method in methods
-                        if isinstance(method, dict) and "name" in method
+                        method["name"] for method in methods if isinstance(method, dict) and "name" in method
                     }
 
                     if handler_method not in method_names:
@@ -128,9 +124,9 @@ def validate_fixture(fixture_data: dict, schema: dict, fixture_path: Path) -> li
     errors = []
 
     try:
-        # Import jsonschema lazily to provide better error message if not installed
-        import jsonschema
-        from jsonschema import Draft7Validator
+        # Check if jsonschema is available
+        if Draft7Validator is None:
+            raise ImportError("jsonschema not installed")
 
         # JSON Schema validation
         validator = Draft7Validator(schema)
@@ -147,7 +143,6 @@ def validate_fixture(fixture_data: dict, schema: dict, fixture_path: Path) -> li
             errors.extend(semantic_errors)
 
     except ImportError:
-        print("Error: jsonschema library not found. Install with: pip install jsonschema")
         sys.exit(1)
     except Exception as e:
         errors.append(f"{fixture_path.name}: Unexpected validation error: {e}")
@@ -167,18 +162,15 @@ def validate_all_fixtures() -> tuple[int, int]:
     fixtures_dir = project_root / "testing_data" / "protobuf" / "streaming"
 
     if not schema_path.exists():
-        print(f"Error: Schema file not found at {schema_path}")
         return 0, 1
 
     if not fixtures_dir.exists():
-        print(f"Error: Fixtures directory not found at {fixtures_dir}")
         return 0, 1
 
     # Load schema
     try:
         schema = load_schema(schema_path)
-    except Exception as e:
-        print(f"Error loading schema: {e}")
+    except Exception:
         return 0, 1
 
     # Find all fixture files
@@ -189,7 +181,6 @@ def validate_all_fixtures() -> tuple[int, int]:
             fixture_files.extend(sorted(category_dir.glob("*.json")))
 
     if not fixture_files:
-        print("Warning: No fixture files found")
         return 0, 0
 
     # Validate each fixture
@@ -198,7 +189,7 @@ def validate_all_fixtures() -> tuple[int, int]:
 
     for fixture_path in fixture_files:
         try:
-            with open(fixture_path, encoding="utf-8") as f:
+            with fixture_path.open(encoding="utf-8") as f:
                 fixture_data = json.load(f)
 
             errors = validate_fixture(fixture_data, schema, fixture_path)
@@ -218,13 +209,11 @@ def validate_all_fixtures() -> tuple[int, int]:
     error_count = total_count - valid_count
 
     if all_errors:
-        print(f"❌ Fixture validation errors ({error_count}/{total_count} failed):\n")
-        for error in all_errors:
-            print(f"  - {error}")
-        print()
+        for _error in all_errors:
+            pass
 
     if valid_count > 0:
-        print(f"✓ {valid_count}/{total_count} fixtures valid")
+        pass
 
     return valid_count, error_count
 
@@ -237,7 +226,6 @@ def main() -> int:
         return 1
 
     if valid_count == 0:
-        print("Warning: No fixtures validated")
         return 1
 
     return 0

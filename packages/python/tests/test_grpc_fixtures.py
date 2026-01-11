@@ -25,15 +25,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import grpc
 import pytest
-from grpc_test_client import GrpcTestClient
 
-if TYPE_CHECKING:
-    import grpc
-
+from .grpc_test_client import GrpcTestClient
 
 # Load all fixtures once
 FIXTURES_DIR = Path(__file__).parents[3] / "testing_data" / "protobuf" / "streaming"
@@ -85,11 +82,13 @@ def generate_stream(stream_generator: str, stream_size: int) -> list[dict[str, A
     if "random" in generator_lower:
         # Generate messages with random data
         import random
+
         return [{"index": i, "random_value": random.randint(0, 1000)} for i in range(stream_size)]
 
     if "timestamp" in generator_lower:
         # Generate messages with timestamps
         import time
+
         return [{"index": i, "timestamp": time.time()} for i in range(stream_size)]
 
     # Default: simple indexed messages
@@ -133,7 +132,9 @@ def extract_service_method(
     return service_name, method_name, method
 
 
-def extract_request_data(fixture: dict[str, object], is_streaming: bool = False) -> dict[str, object] | list[dict[str, object]]:
+def extract_request_data(
+    fixture: dict[str, object], is_streaming: bool = False
+) -> dict[str, object] | list[dict[str, object]]:
     """
     Extract and prepare request data from fixture.
 
@@ -188,12 +189,10 @@ def validate_stream_response(
         return
 
     # Validate stream length
-    assert len(responses) == len(expected_messages), (
-        f"Expected {len(expected_messages)} messages, got {len(responses)}"
-    )
+    assert len(responses) == len(expected_messages), f"Expected {len(expected_messages)} messages, got {len(responses)}"
 
     # Validate each message
-    for i, (actual, expected_msg) in enumerate(zip(responses, expected_messages)):
+    for i, (actual, expected_msg) in enumerate(zip(responses, expected_messages, strict=False)):
         assert actual == expected_msg, f"Message {i} mismatch: {actual} != {expected_msg}"
 
 
@@ -290,7 +289,7 @@ async def test_server_streaming_fixture(
     """
     async with GrpcTestClient() as client:
         # Extract service and method
-        service_name, method_name, method = extract_service_method(fixture, "server_streaming")
+        service_name, method_name, _method = extract_service_method(fixture, "server_streaming")
 
         # Extract request data
         request_message = extract_request_data(fixture, is_streaming=False)
@@ -326,7 +325,7 @@ async def test_server_streaming_fixture(
                 assert len(responses) == len(expected_stream), (
                     f"Expected {len(expected_stream)} partial messages, got {len(responses)}"
                 )
-                for i, (actual, expected_msg) in enumerate(zip(responses, expected_stream)):
+                for i, (actual, expected_msg) in enumerate(zip(responses, expected_stream, strict=False)):
                     assert actual == expected_msg, f"Partial message {i} mismatch: {actual} != {expected_msg}"
         else:
             # Normal case: expect complete stream without error
@@ -363,7 +362,7 @@ async def test_client_streaming_fixture(
     """
     async with GrpcTestClient() as client:
         # Extract service and method
-        service_name, method_name, method = extract_service_method(fixture, "client_streaming")
+        service_name, method_name, _method = extract_service_method(fixture, "client_streaming")
 
         # Extract request data (stream of messages)
         request_messages = extract_request_data(fixture, is_streaming=True)
@@ -409,7 +408,7 @@ async def test_bidirectional_fixture(
     """
     async with GrpcTestClient() as client:
         # Extract service and method
-        service_name, method_name, method = extract_service_method(fixture)
+        service_name, method_name, _method = extract_service_method(fixture)
 
         # Extract request data (stream of messages)
         request_messages = extract_request_data(fixture, is_streaming=True)
@@ -472,7 +471,7 @@ async def test_error_handling_fixture(
         timeout_ms = handler.get("timeout_ms")
 
         # Execute RPC and expect error
-        with pytest.raises(grpc.RpcError) as exc_info:
+        async def execute_rpc() -> None:
             if is_server_streaming and not is_client_streaming:
                 # Server streaming
                 await client.execute_server_streaming(
@@ -500,6 +499,9 @@ async def test_error_handling_fixture(
                     metadata=metadata,
                     timeout=timeout_ms / 1000 if timeout_ms else None,
                 )
+
+        with pytest.raises(grpc.RpcError) as exc_info:
+            await execute_rpc()
 
         # Validate error
         expected_response = fixture["expected_response"]

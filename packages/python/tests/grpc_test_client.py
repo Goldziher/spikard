@@ -22,10 +22,11 @@ Usage:
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from grpc import aio
 
 
@@ -42,7 +43,7 @@ class GrpcTestClient:
         self.server_address = server_address
         self.channel: aio.Channel | None = None
 
-    async def __aenter__(self) -> GrpcTestClient:
+    async def __aenter__(self) -> Self:
         """Async context manager entry."""
         # Import grpc here to avoid import errors when grpcio not installed
         from grpc import aio
@@ -151,8 +152,7 @@ class GrpcTestClient:
         )
 
         try:
-            async for response in call:
-                responses.append(response)
+            responses.extend([response async for response in call])
         except Exception:
             # If an error occurs during streaming, we still collected partial messages
             # Re-raise the exception but the partial responses are available
@@ -239,14 +239,10 @@ class GrpcTestClient:
             for req in requests:
                 yield req
 
-        responses: list[dict[str, object]] = []
         call = stub(
             request_iterator(),
             metadata=self._prepare_metadata(metadata),
             timeout=timeout,
         )
 
-        async for response in call:
-            responses.append(response)
-
-        return responses
+        return [response async for response in call]

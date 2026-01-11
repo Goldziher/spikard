@@ -1,7 +1,107 @@
 # frozen_string_literal: true
 
-require "grpc"
-require "json"
+require 'grpc'
+require 'json'
+
+##
+# Module for JSON marshaling/unmarshaling in gRPC calls.
+#
+module GrpcMarshal
+  ##
+  # Marshal function: converts Hash to JSON bytes.
+  #
+  # @param obj [Hash] Object to marshal
+  #
+  # @return [String] JSON-encoded bytes
+  #
+  def self.marshal(obj)
+    JSON.generate(obj).encode('UTF-8')
+  end
+
+  ##
+  # Unmarshal function: converts JSON bytes to Hash.
+  #
+  # @param bytes [String] JSON-encoded bytes
+  #
+  # @return [Hash] Parsed object
+  #
+  def self.unmarshal(bytes)
+    JSON.parse(bytes.b)
+  end
+end
+
+##
+# Module for gRPC test client utilities.
+#
+module GrpcTestClientUtils
+  ##
+  # Prepare metadata for gRPC call.
+  #
+  # @param metadata [Hash<String, String>, nil] Metadata dictionary from fixture
+  #
+  # @return [Hash<String, String>, nil] Metadata hash or nil
+  #
+  def self.prepare_metadata(metadata)
+    return nil if metadata.nil? || metadata.empty?
+
+    result = {}
+    metadata.each do |key, value|
+      result[key.to_s] = value.to_s
+    end
+    result
+  end
+
+  ##
+  # Build RPC call options including deadline and metadata.
+  #
+  # @param metadata [Hash<String, String>, nil] Optional metadata headers
+  # @param timeout [Float, nil] Optional timeout in seconds
+  #
+  # @return [Hash] Options hash for gRPC call
+  #
+  def self.build_rpc_options(metadata, timeout)
+    options = { deadline: compute_deadline(timeout) }
+    options[:metadata] = prepare_metadata(metadata) if metadata
+    options
+  end
+
+  ##
+  # Compute deadline from timeout in seconds.
+  #
+  # @param timeout [Float, nil] Timeout in seconds
+  #
+  # @return [Time, nil] Deadline time or nil for no timeout
+  #
+  def self.compute_deadline(timeout)
+    return nil if timeout.nil?
+
+    Time.now + timeout
+  end
+
+  ##
+  # Create a request enumerator from a list of requests.
+  #
+  # @param requests [Array<Hash>] List of request messages
+  #
+  # @return [Enumerator] Enumerator that yields each request
+  #
+  def self.create_request_enumerator(requests)
+    Enumerator.new do |yielder|
+      requests.each { |req| yielder.yield req }
+    end
+  end
+
+  ##
+  # Collect all responses from a stream enumerator.
+  #
+  # @param enum [Enumerator] Stream enumerator from gRPC call
+  #
+  # @return [Array<Hash>] List of collected responses
+  #
+  def self.collect_stream_responses(enum)
+    enum.map { |response| response }
+  end
+end
 
 ##
 # gRPC Test Client for executing fixtures against running gRPC server.
@@ -29,7 +129,7 @@ class GrpcTestClient
   #
   # @param server_address [String] Server address in format "host:port"
   #
-  def initialize(server_address = "localhost:50051")
+  def initialize(server_address = 'localhost:50051')
     @server_address = server_address
     @stub = nil
   end
@@ -73,48 +173,6 @@ class GrpcTestClient
   end
 
   ##
-  # Prepare metadata for gRPC call.
-  #
-  # Converts metadata Hash to gRPC metadata format (Hash of strings).
-  #
-  # @param metadata [Hash<String, String>, nil] Metadata dictionary from fixture
-  #
-  # @return [Hash<String, String>, nil] Metadata hash or nil
-  #
-  def prepare_metadata(metadata)
-    return nil if metadata.nil? || metadata.empty?
-
-    # Convert all keys and values to strings for gRPC
-    result = {}
-    metadata.each do |key, value|
-      result[key.to_s] = value.to_s
-    end
-    result
-  end
-
-  ##
-  # Marshal function: converts Hash to JSON bytes.
-  #
-  # @param obj [Hash] Object to marshal
-  #
-  # @return [String] JSON-encoded bytes
-  #
-  def self.marshal(obj)
-    JSON.generate(obj).encode("UTF-8")
-  end
-
-  ##
-  # Unmarshal function: converts JSON bytes to Hash.
-  #
-  # @param bytes [String] JSON-encoded bytes
-  #
-  # @return [Hash] Parsed object
-  #
-  def self.unmarshal(bytes)
-    JSON.parse(bytes.b)
-  end
-
-  ##
   # Execute unary RPC from fixture.
   #
   # @param service_name [String] Fully qualified service name (e.g., "example.v1.Service")
@@ -126,26 +184,19 @@ class GrpcTestClient
   # @return [Hash] Response data as dictionary
   #
   def execute_unary(service_name, method_name, request, metadata: nil, timeout: nil)
-    raise "Stub not initialized. Use with_connection block." unless @stub
+    raise 'Stub not initialized. Use with_connection block.' unless @stub
 
     method_path = "/#{service_name}/#{method_name}"
-
-    # Build options hash
-    options = {
-      deadline: compute_deadline(timeout)
-    }
-    options[:metadata] = prepare_metadata(metadata) if metadata
+    options = GrpcTestClientUtils.build_rpc_options(metadata, timeout)
 
     # Call unary RPC using ClientStub
-    response = @stub.request_response(
+    @stub.request_response(
       method_path,
       request,
-      self.class.method(:marshal),
-      self.class.method(:unmarshal),
+      GrpcMarshal.method(:marshal),
+      GrpcMarshal.method(:unmarshal),
       **options
     )
-
-    response
   rescue StandardError => e
     raise_grpc_error(e)
   end
@@ -162,32 +213,20 @@ class GrpcTestClient
   # @return [Array<Hash>] List of response messages
   #
   def execute_server_streaming(service_name, method_name, request, metadata: nil, timeout: nil)
-    raise "Stub not initialized. Use with_connection block." unless @stub
+    raise 'Stub not initialized. Use with_connection block.' unless @stub
 
     method_path = "/#{service_name}/#{method_name}"
+    options = GrpcTestClientUtils.build_rpc_options(metadata, timeout)
 
-    # Build options hash
-    options = {
-      deadline: compute_deadline(timeout)
-    }
-    options[:metadata] = prepare_metadata(metadata) if metadata
-
-    # Call server streaming RPC using ClientStub
-    responses = []
     enum = @stub.server_streamer(
       method_path,
       request,
-      self.class.method(:marshal),
-      self.class.method(:unmarshal),
+      GrpcMarshal.method(:marshal),
+      GrpcMarshal.method(:unmarshal),
       **options
     )
 
-    # Collect all responses from the stream
-    enum.each do |response|
-      responses << response
-    end
-
-    responses
+    GrpcTestClientUtils.collect_stream_responses(enum)
   rescue StandardError => e
     raise_grpc_error(e)
   end
@@ -204,31 +243,19 @@ class GrpcTestClient
   # @return [Hash] Response data as dictionary
   #
   def execute_client_streaming(service_name, method_name, requests, metadata: nil, timeout: nil)
-    raise "Stub not initialized. Use with_connection block." unless @stub
+    raise 'Stub not initialized. Use with_connection block.' unless @stub
 
     method_path = "/#{service_name}/#{method_name}"
+    request_enum = GrpcTestClientUtils.create_request_enumerator(requests)
+    options = GrpcTestClientUtils.build_rpc_options(metadata, timeout)
 
-    # Create request enumerator
-    request_enum = Enumerator.new do |yielder|
-      requests.each { |req| yielder.yield req }
-    end
-
-    # Build options hash
-    options = {
-      deadline: compute_deadline(timeout)
-    }
-    options[:metadata] = prepare_metadata(metadata) if metadata
-
-    # Call client streaming RPC using ClientStub
-    response = @stub.client_streamer(
+    @stub.client_streamer(
       method_path,
       request_enum,
-      self.class.method(:marshal),
-      self.class.method(:unmarshal),
+      GrpcMarshal.method(:marshal),
+      GrpcMarshal.method(:unmarshal),
       **options
     )
-
-    response
   rescue StandardError => e
     raise_grpc_error(e)
   end
@@ -245,55 +272,26 @@ class GrpcTestClient
   # @return [Array<Hash>] List of response messages
   #
   def execute_bidirectional(service_name, method_name, requests, metadata: nil, timeout: nil)
-    raise "Stub not initialized. Use with_connection block." unless @stub
+    raise 'Stub not initialized. Use with_connection block.' unless @stub
 
     method_path = "/#{service_name}/#{method_name}"
+    request_enum = GrpcTestClientUtils.create_request_enumerator(requests)
+    options = GrpcTestClientUtils.build_rpc_options(metadata, timeout)
 
-    # Create request enumerator
-    request_enum = Enumerator.new do |yielder|
-      requests.each { |req| yielder.yield req }
-    end
-
-    # Build options hash
-    options = {
-      deadline: compute_deadline(timeout)
-    }
-    options[:metadata] = prepare_metadata(metadata) if metadata
-
-    # Call bidirectional streaming RPC using ClientStub
-    responses = []
     enum = @stub.bidi_streamer(
       method_path,
       request_enum,
-      self.class.method(:marshal),
-      self.class.method(:unmarshal),
+      GrpcMarshal.method(:marshal),
+      GrpcMarshal.method(:unmarshal),
       **options
     )
 
-    # Collect all responses from the stream
-    enum.each do |response|
-      responses << response
-    end
-
-    responses
+    GrpcTestClientUtils.collect_stream_responses(enum)
   rescue StandardError => e
     raise_grpc_error(e)
   end
 
   private
-
-  ##
-  # Compute deadline from timeout in seconds.
-  #
-  # @param timeout [Float, nil] Timeout in seconds
-  #
-  # @return [Time, nil] Deadline time or nil for no timeout
-  #
-  def compute_deadline(timeout)
-    return nil if timeout.nil?
-
-    Time.now + timeout
-  end
 
   ##
   # Convert standard errors to gRPC error for consistent error handling.

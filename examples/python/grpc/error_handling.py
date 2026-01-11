@@ -1,4 +1,4 @@
-"""Error Handling gRPC Example - Robust Streaming Services
+"""Error Handling gRPC Example - Robust Streaming Services.
 
 This example demonstrates proper error handling, timeouts, and rate limiting
 in gRPC streaming services.
@@ -14,15 +14,18 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import AsyncGenerator, AsyncIterator
+from typing import TYPE_CHECKING
 
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, AsyncIterator
 
 
 class RateLimitedHandler(GrpcHandler):
     """Handler with rate limiting to prevent resource exhaustion."""
 
-    def __init__(self, max_requests_per_second: int = 10):
+    def __init__(self, max_requests_per_second: int = 10) -> None:
         """Initialize rate limiter.
 
         Args:
@@ -31,9 +34,7 @@ class RateLimitedHandler(GrpcHandler):
         self.max_requests = max_requests_per_second
         self.request_timestamps: list[float] = []
 
-    async def handle_server_stream(
-        self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_server_stream(self, request: GrpcRequest) -> AsyncGenerator[GrpcResponse]:
         """Server streaming with rate limiting.
 
         Raises:
@@ -42,9 +43,7 @@ class RateLimitedHandler(GrpcHandler):
         current_time = time.time()
 
         # Clean old timestamps (older than 1 second)
-        self.request_timestamps = [
-            ts for ts in self.request_timestamps if current_time - ts < 1.0
-        ]
+        self.request_timestamps = [ts for ts in self.request_timestamps if current_time - ts < 1.0]
 
         # Check rate limit
         if len(self.request_timestamps) >= self.max_requests:
@@ -62,8 +61,6 @@ class RateLimitedHandler(GrpcHandler):
         req_data = json.loads(request.payload)
         count = req_data.get("count", 5)
 
-        print(f"✅ Processing request within rate limit ({len(self.request_timestamps)}/{self.max_requests})")
-
         for i in range(count):
             resp_data = {"index": i, "data": f"message_{i}"}
             yield GrpcResponse(payload=json.dumps(resp_data).encode())
@@ -73,9 +70,7 @@ class RateLimitedHandler(GrpcHandler):
 class TimeoutHandler(GrpcHandler):
     """Handler demonstrating timeout handling in streaming RPCs."""
 
-    async def handle_server_stream(
-        self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_server_stream(self, request: GrpcRequest) -> AsyncGenerator[GrpcResponse]:
         """Server streaming with timeout enforcement.
 
         Raises:
@@ -84,8 +79,6 @@ class TimeoutHandler(GrpcHandler):
         req_data = json.loads(request.payload)
         timeout_seconds = req_data.get("timeout_seconds", 5)
         delay_ms = req_data.get("delay_ms", 100)
-
-        print(f"⏱️  Starting operation with {timeout_seconds}s timeout")
 
         start_time = time.time()
 
@@ -109,16 +102,12 @@ class TimeoutHandler(GrpcHandler):
 class ValidationHandler(GrpcHandler):
     """Handler demonstrating input validation and error responses."""
 
-    async def handle_client_stream(
-        self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> GrpcResponse:
+    async def handle_client_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> GrpcResponse:
         """Client streaming with input validation.
 
         Raises:
             Exception: INVALID_ARGUMENT for validation failures
         """
-        print("🔍 Validating input stream...")
-
         valid_items = []
         item_count = 0
 
@@ -156,9 +145,6 @@ class ValidationHandler(GrpcHandler):
                 raise Exception(json.dumps(error_data))
 
             valid_items.append(item_data)
-            print(f"  ✅ Item #{item_count} valid")
-
-        print(f"✅ All {len(valid_items)} items validated successfully")
 
         result = {
             "status": "success",
@@ -172,7 +158,7 @@ class ValidationHandler(GrpcHandler):
 class PermissionHandler(GrpcHandler):
     """Handler demonstrating authentication and authorization checks."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize with user permissions."""
         self.user_permissions = {
             "admin": ["read", "write", "delete"],
@@ -180,9 +166,7 @@ class PermissionHandler(GrpcHandler):
             "guest": ["read"],
         }
 
-    async def handle_server_stream(
-        self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_server_stream(self, request: GrpcRequest) -> AsyncGenerator[GrpcResponse]:
         """Server streaming with permission checks.
 
         Raises:
@@ -217,8 +201,6 @@ class PermissionHandler(GrpcHandler):
             }
             raise Exception(json.dumps(error_data))
 
-        print(f"✅ User '{user_role}' authorized for '{required_permission}'")
-
         # Stream results
         for i in range(5):
             resp_data = {"index": i, "data": f"secure_data_{i}"}
@@ -229,9 +211,7 @@ class PermissionHandler(GrpcHandler):
 class MidStreamErrorHandler(GrpcHandler):
     """Handler demonstrating mid-stream error handling."""
 
-    async def handle_server_stream(
-        self, request: GrpcRequest
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_server_stream(self, request: GrpcRequest) -> AsyncGenerator[GrpcResponse]:
         """Server streaming that may encounter errors mid-stream.
 
         Yields partial results before raising error.
@@ -240,12 +220,9 @@ class MidStreamErrorHandler(GrpcHandler):
         total_items = req_data.get("count", 10)
         error_at = req_data.get("error_at_index", -1)
 
-        print(f"📊 Streaming {total_items} items (error at index {error_at})")
-
         for i in range(total_items):
             # Simulate error condition
             if i == error_at:
-                print(f"  ❌ Error encountered at index {i}")
                 error_data = {
                     "error": "INTERNAL",
                     "message": f"Processing failed at item {i}",
@@ -254,7 +231,6 @@ class MidStreamErrorHandler(GrpcHandler):
                 raise Exception(json.dumps(error_data))
 
             resp_data = {"index": i, "data": f"item_{i}"}
-            print(f"  ✅ Streamed item {i}")
             yield GrpcResponse(payload=json.dumps(resp_data).encode())
 
             await asyncio.sleep(0.05)
@@ -293,14 +269,9 @@ async def simulate_invalid_items() -> AsyncIterator[GrpcRequest]:
         )
 
 
-async def example_error_handling():
+async def example_error_handling() -> None:
     """Demonstrate error handling patterns."""
-    print("\n" + "=" * 60)
-    print("Error Handling Example - Robust Streaming Services")
-    print("=" * 60 + "\n")
-
     # Example 1: Rate limiting
-    print("Example 1: Rate limiting\n")
     rate_limiter = RateLimitedHandler(max_requests_per_second=3)
 
     request = GrpcRequest(
@@ -312,34 +283,26 @@ async def example_error_handling():
 
     try:
         async for response in rate_limiter.handle_server_stream(request):
-            resp_data = json.loads(response.payload)
-            print(f"  📦 Received: {resp_data}")
-    except Exception as e:
-        print(f"  ❌ Error: {e}")
+            json.loads(response.payload)
+    except Exception:
+        pass
 
     # Example 2: Validation
-    print("\n" + "-" * 60)
-    print("Example 2: Input validation (valid)\n")
     validator = ValidationHandler()
 
     try:
         valid_stream = simulate_valid_items()
-        result = await validator.handle_client_stream(valid_stream)
-        print(f"  ✅ Result: {json.loads(result.payload)}")
-    except Exception as e:
-        print(f"  ❌ Validation error: {e}")
+        await validator.handle_client_stream(valid_stream)
+    except Exception:
+        pass
 
-    print("\nExample 2b: Input validation (invalid)\n")
     try:
         invalid_stream = simulate_invalid_items()
-        result = await validator.handle_client_stream(invalid_stream)
+        await validator.handle_client_stream(invalid_stream)
     except Exception as e:
-        error_data = json.loads(str(e))
-        print(f"  ❌ {error_data['error']}: {error_data['message']}")
+        json.loads(str(e))
 
     # Example 3: Permissions
-    print("\n" + "-" * 60)
-    print("Example 3: Permission checks\n")
     perm_handler = PermissionHandler()
 
     # Authorized request
@@ -352,15 +315,11 @@ async def example_error_handling():
 
     try:
         async for response in perm_handler.handle_server_stream(auth_request):
-            resp_data = json.loads(response.payload)
-            print(f"  🔒 Received: {resp_data}")
+            json.loads(response.payload)
     except Exception as e:
-        error_data = json.loads(str(e))
-        print(f"  ❌ {error_data['error']}: {error_data['message']}")
+        json.loads(str(e))
 
     # Example 4: Mid-stream error
-    print("\n" + "-" * 60)
-    print("Example 4: Mid-stream error handling\n")
     error_handler = MidStreamErrorHandler()
 
     error_request = GrpcRequest(
@@ -372,16 +331,10 @@ async def example_error_handling():
 
     try:
         async for response in error_handler.handle_server_stream(error_request):
-            resp_data = json.loads(response.payload)
+            json.loads(response.payload)
             # Partial results received before error
     except Exception as e:
-        error_data = json.loads(str(e))
-        print(f"  ❌ {error_data['error']}: {error_data['message']}")
-        print(f"     Items processed before error: {error_data['items_successfully_processed']}")
-
-    print("\n" + "=" * 60)
-    print("✅ Error handling examples completed!")
-    print("=" * 60 + "\n")
+        json.loads(str(e))
 
 
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
     let generator = TypeScriptGenerator::new(spec, NodeDtoStyle::Zod);
     let output = generator.generate().expect("Failed to generate TypeScript");
 
-    println!("Generated TypeScript code:\n{}", output);
+    println!("Generated TypeScript code:\n{output}");
 
     // Verify that all expected schemas were generated
     assert!(

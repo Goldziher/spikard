@@ -7,15 +7,11 @@
 		"messages": [
 			{
 				"name": "SecureRequest",
-				"fields": [
-					{ "name": "resource", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "resource", "type": "string", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "SecureResponse",
-				"fields": [
-					{ "name": "data", "type": "string", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "data", "type": "string", "number": 1, "label": "required" }]
 			}
 		],
 		"services": [

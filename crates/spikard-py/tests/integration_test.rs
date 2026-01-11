@@ -1,6 +1,6 @@
-//! Integration tests for PythonHandler
+//! Integration tests for `PythonHandler`
 //!
-//! These tests verify that PythonHandler correctly implements the Handler trait
+//! These tests verify that `PythonHandler` correctly implements the Handler trait
 //! and properly bridges Python code to Rust.
 
 use axum::body::Body;
@@ -218,7 +218,7 @@ def sync_handler(path_params, query_params, body, headers, cookies):
 
     let response = handler.call(request, request_data).await;
 
-    eprintln!("sync handler result: {:?}", response);
+    eprintln!("sync handler result: {response:?}");
     assert!(response.is_ok());
     let resp = response.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
@@ -271,7 +271,7 @@ async def async_handler(path_params, query_params, body, headers, cookies):
 
     let response = handler.call(request, request_data).await;
 
-    eprintln!("async handler result: {:?}", response);
+    eprintln!("async handler result: {response:?}");
     assert!(response.is_ok());
     let resp = response.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
@@ -417,7 +417,7 @@ def echo_handler(path_params, query_params, body, headers, cookies):
 
     let result = handler.call(request, request_data).await;
 
-    eprintln!("headers/cookies handler result: {:?}", result);
+    eprintln!("headers/cookies handler result: {result:?}");
     assert!(result.is_ok());
     let resp = result.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);

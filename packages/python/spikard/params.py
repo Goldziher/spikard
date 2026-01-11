@@ -5,8 +5,10 @@ and to specify default values and factories for query/body/path parameters.
 """
 
 import re
-from collections.abc import Callable
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 T = TypeVar("T")
 
@@ -55,7 +57,7 @@ class ParamBase:
         return self.default is not ... or self.default_factory is not None
 
 
-class Query(ParamBase, Generic[T]):
+class Query[T](ParamBase):
     """Query parameter with optional default or default_factory.
 
     Use this to specify defaults for query string parameters, similar to FastAPI.
@@ -91,7 +93,7 @@ class Query(ParamBase, Generic[T]):
     """
 
 
-class Body(ParamBase, Generic[T]):
+class Body[T](ParamBase):
     """Request body parameter with optional default or default_factory.
 
     Use this to specify defaults for request body parameters.
@@ -115,7 +117,7 @@ class Body(ParamBase, Generic[T]):
     """
 
 
-class Path(ParamBase, Generic[T]):
+class Path[T](ParamBase):
     """Path parameter metadata.
 
     Note: Path parameters are typically required and don't use defaults,

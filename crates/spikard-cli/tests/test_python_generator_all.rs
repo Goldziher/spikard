@@ -1,10 +1,8 @@
 #![allow(
     clippy::needless_raw_string_hashes,
+    clippy::doc_markdown,
+    clippy::uninlined_format_args,
     reason = "GraphQL schemas contain identifiers like ID! that need raw strings"
-)]
-#![allow(
-    unknown_prefix,
-    reason = "GraphQL schemas contain identifiers like ID! in docstrings"
 )]
 
 //! Full integration tests for Python GraphQL code generation
@@ -571,7 +569,7 @@ fn test_python_complex_nested_types() -> Result<()> {
 
     // Nested list handling
     assert!(
-        result.contains("list[") || result.contains("["),
+        result.contains("list[") || result.contains('['),
         "list notation should be Python 3.10+ style (list[T])"
     );
 

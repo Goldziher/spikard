@@ -220,7 +220,7 @@ mod tests {
 
     #[test]
     fn handles_various_filenames_and_content() {
-        let file = UploadFile::new("".to_string(), Bytes::from("content"), None, None, None);
+        let file = UploadFile::new(String::new(), Bytes::from("content"), None, None, None);
         assert_eq!(file.filename, "");
 
         let file = UploadFile::new(
@@ -237,7 +237,7 @@ mod tests {
         assert_eq!(file.as_bytes().len(), 0);
 
         let large_content = Bytes::from(vec![42u8; 1_000_000]);
-        let file = UploadFile::new("large.bin".to_string(), large_content.clone(), None, None, None);
+        let file = UploadFile::new("large.bin".to_string(), large_content, None, None, None);
         assert_eq!(file.size, Some(1_000_000));
         assert_eq!(file.as_bytes().len(), 1_000_000);
 

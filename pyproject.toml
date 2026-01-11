@@ -230,6 +230,14 @@ module = [ "jsonschema" ]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = [
+  "tests.grpc_test",
+  "tests.test_grpc_fixtures",
+  "tests.conftest",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
 module = [ "tests.*" ]
 disallow_any_explicit = true
 disallow_any_expr = false

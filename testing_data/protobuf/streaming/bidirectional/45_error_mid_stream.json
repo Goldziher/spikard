@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "Request",
-				"fields": [
-					{ "name": "id", "type": "int32", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "id", "type": "int32", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "Response",
@@ -42,12 +40,7 @@
 		"metadata": {
 			"content-type": "application/grpc"
 		},
-		"stream": [
-			{ "id": 1 },
-			{ "id": 2 },
-			{ "id": 3 },
-			{ "id": 4 }
-		]
+		"stream": [{ "id": 1 }, { "id": 2 }, { "id": 3 }, { "id": 4 }]
 	},
 	"expected_response": {
 		"status_code": "INTERNAL",

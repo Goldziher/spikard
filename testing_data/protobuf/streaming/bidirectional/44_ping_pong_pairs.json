@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "Ping",
-				"fields": [
-					{ "name": "sequence", "type": "int32", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "sequence", "type": "int32", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "Pong",
@@ -42,11 +40,7 @@
 		"metadata": {
 			"content-type": "application/grpc"
 		},
-		"stream": [
-			{ "sequence": 1 },
-			{ "sequence": 2 },
-			{ "sequence": 3 }
-		]
+		"stream": [{ "sequence": 1 }, { "sequence": 2 }, { "sequence": 3 }]
 	},
 	"expected_response": {
 		"status_code": "OK",

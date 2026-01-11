@@ -8,6 +8,12 @@
 //! - Metadata in streaming responses
 //! - Large payloads
 //! - Routing and mode validation
+#![allow(
+    clippy::doc_markdown,
+    clippy::uninlined_format_args,
+    clippy::single_match_else,
+    reason = "Integration test for streaming with many test cases"
+)]
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};

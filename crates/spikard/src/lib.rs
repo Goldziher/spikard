@@ -818,7 +818,7 @@ mod tests {
             path: "/users/{id}".to_string(),
             headers: std::sync::Arc::new(headers),
             cookies: std::sync::Arc::new(cookies),
-            query_params: Value::Object(Default::default()),
+            query_params: Value::Object(serde_json::Map::new()),
             validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
             path_params: std::sync::Arc::new(path_params),

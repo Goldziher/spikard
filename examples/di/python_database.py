@@ -8,10 +8,13 @@ This example demonstrates:
 """
 
 import logging
-from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING
 
 from spikard import Spikard
 from spikard.di import Provide
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

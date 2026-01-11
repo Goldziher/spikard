@@ -2,17 +2,18 @@
 
 import functools
 import inspect
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Literal
 
 from spikard.config import ServerConfig
 from spikard.introspection import extract_parameter_schema
-from spikard.jsonrpc import JsonRpcMethodInfo
 from spikard.params import ParamBase
 from spikard.schema import extract_schemas
 from spikard.types import Route
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from spikard.jsonrpc import JsonRpcMethodInfo
     from spikard.sse import SseEventProducer
 
 HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"]

@@ -354,9 +354,7 @@ def protobuf_client_fixtures(protobuf_fixtures: dict[str, list[dict[str, object]
 
 
 @pytest.fixture
-def protobuf_bidirectional_fixtures(
-    protobuf_fixtures: dict[str, list[dict[str, object]]]
-) -> list[dict[str, object]]:
+def protobuf_bidirectional_fixtures(protobuf_fixtures: dict[str, list[dict[str, object]]]) -> list[dict[str, object]]:
     """Fixture data for bidirectional streaming tests."""
     return protobuf_fixtures["bidirectional"]
 
@@ -454,7 +452,7 @@ def fixture_validator(testing_data_root: Path) -> FixtureValidator:
 
 
 @pytest.fixture(scope="session")
-def grpc_server():
+def grpc_server() -> object:
     """
     Start fixture-driven test gRPC server.
 
@@ -479,7 +477,7 @@ def grpc_server():
     # Load all fixtures into memory
     fixture_map: dict[str, dict[str, object]] = {}
     fixtures_by_category = discover_protobuf_fixtures()
-    for subcategory, paths in fixtures_by_category.items():
+    for paths in fixtures_by_category.values():
         for fixture_path in paths:
             fixture_data = load_fixture(fixture_path)
             # Extract handler info
@@ -516,7 +514,9 @@ def grpc_server():
                 return self.fixtures.get(key)
             return None
 
-        async def handle_unary(self, request: dict, context, method_path: str) -> dict:
+        async def handle_unary(
+            self, request: dict[str, object], context: object, method_path: str
+        ) -> dict[str, object]:
             """Unary RPC: return expected response from fixture or raise error."""
             fixture = self.get_fixture_for_method(method_path)
             if fixture:
@@ -529,7 +529,7 @@ def grpc_server():
                         error_message = error.get("message", "Unknown error")
                         # Map status code string to grpc.StatusCode
                         status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
-                        await context.abort(status, error_message)
+                        await context.abort(status, error_message)  # type: ignore[attr-defined]
                         return {}  # Unreachable, but needed for type checker
 
                     message = expected.get("message")
@@ -538,7 +538,7 @@ def grpc_server():
             # Fallback: echo request
             return request
 
-        async def handle_server_stream(self, request: dict, context, method_path: str):
+        async def handle_server_stream(self, request: dict[str, object], context: object, method_path: str):  # type: ignore[no-untyped-def]
             """Server streaming RPC: yield messages from fixture or raise error."""
             import asyncio
             import time
@@ -570,9 +570,15 @@ def grpc_server():
                                         # Timeout exceeded: abort with DEADLINE_EXCEEDED
                                         status_code = expected.get("status_code", "DEADLINE_EXCEEDED")
                                         error = expected.get("error", {})
-                                        error_message = error.get("message", "Deadline exceeded while streaming messages") if isinstance(error, dict) else "Deadline exceeded"
-                                        status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.DEADLINE_EXCEEDED)
-                                        await context.abort(status, error_message)
+                                        error_message = (
+                                            error.get("message", "Deadline exceeded while streaming messages")
+                                            if isinstance(error, dict)
+                                            else "Deadline exceeded"
+                                        )
+                                        status = getattr(
+                                            grpc.StatusCode, status_code, grpc.StatusCode.DEADLINE_EXCEEDED
+                                        )
+                                        await context.abort(status, error_message)  # type: ignore[attr-defined]
                                         return
 
                                 # Yield the message
@@ -590,7 +596,7 @@ def grpc_server():
                         error_message = error.get("message", "Unknown error")
                         # Map status code string to grpc.StatusCode
                         status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
-                        await context.abort(status, error_message)
+                        await context.abort(status, error_message)  # type: ignore[attr-defined]
             # Fallback: empty stream
             return
             yield  # unreachable, but needed for async generator syntax
@@ -598,9 +604,7 @@ def grpc_server():
         async def handle_client_stream(self, request_iterator, context, method_path: str) -> dict:
             """Client streaming RPC: aggregate messages and return fixture response or raise error."""
             # Consume the stream
-            messages = []
-            async for msg in request_iterator:
-                messages.append(msg)
+            messages = [msg async for msg in request_iterator]
 
             # Return fixture response
             fixture = self.get_fixture_for_method(method_path)
@@ -614,7 +618,7 @@ def grpc_server():
                         error_message = error.get("message", "Unknown error")
                         # Map status code string to grpc.StatusCode
                         status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
-                        await context.abort(status, error_message)
+                        await context.abort(status, error_message)  # type: ignore[attr-defined]
 
                     message = expected.get("message")
                     if isinstance(message, dict):
@@ -683,42 +687,45 @@ def grpc_server():
     # Create handler functions
     servicer = FixtureDrivenServicer(fixture_map)
 
-    def deserialize(data: bytes) -> dict:
-        return json.loads(data.decode("utf-8"))
+    def deserialize(data: bytes) -> dict[str, object]:
+        result = json.loads(data.decode("utf-8"))
+        if isinstance(result, dict):
+            return result
+        return {}
 
-    def serialize(obj: dict) -> bytes:
+    def serialize(obj: dict[str, object]) -> bytes:
         return json.dumps(obj).encode("utf-8")
 
     # Generic RPC handler that routes ALL methods dynamically
     class GenericHandler(grpc.GenericRpcHandler):
         """Route RPC calls to appropriate handler based on streaming mode."""
 
-        def service(self, handler_call_details):
-            method = handler_call_details.method
+        def service(self, handler_call_details: object) -> object:  # type: ignore[override]
+            method = getattr(handler_call_details, "method", "")
             # Extract service and method names from full method path
             # Format: /service.package.ServiceName/MethodName
             parts = method.strip("/").split("/")
             if len(parts) != 2:
                 return None
 
-            service_name, method_name = parts
+            _service_name, method_name = parts
 
             # For now, route based on common patterns and method introspection
             # Since we don't have the protobuf definitions, we detect based on RPC call type
             # Return a generic handler that adapts based on call signature
 
             # Create adaptive handlers for this specific method
-            async def adaptive_unary_handler(request: dict, context):
+            async def adaptive_unary_handler(request: dict[str, object], context: object) -> dict[str, object]:
                 return await servicer.handle_unary(request, context, method)
 
-            async def adaptive_server_stream_handler(request: dict, context):
+            async def adaptive_server_stream_handler(request: dict[str, object], context: object):  # type: ignore[no-untyped-def,misc]
                 async for msg in servicer.handle_server_stream(request, context, method):
                     yield msg
 
-            async def adaptive_client_stream_handler(request_iterator, context):
+            async def adaptive_client_stream_handler(request_iterator: object, context: object) -> dict[str, object]:  # type: ignore[no-untyped-def,misc]
                 return await servicer.handle_client_stream(request_iterator, context, method)
 
-            async def adaptive_bidi_stream_handler(request_iterator, context):
+            async def adaptive_bidi_stream_handler(request_iterator: object, context: object):  # type: ignore[no-untyped-def,misc]
                 async for msg in servicer.handle_bidi_stream(request_iterator, context, method):
                     yield msg
 
@@ -792,7 +799,7 @@ def grpc_server():
     server_error = None
     server_loop = None
 
-    async def run_server():
+    async def run_server() -> None:
         """Run the server in its own async event loop."""
         nonlocal server, server_error
         try:
@@ -812,7 +819,7 @@ def grpc_server():
             server_error = e
             server_ready.set()
 
-    def run_in_thread():
+    def run_in_thread() -> None:
         """Run the async server in a background thread."""
         nonlocal server_loop
         loop = asyncio.new_event_loop()

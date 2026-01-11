@@ -15,13 +15,15 @@ import signal
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from functools import wraps
 from pathlib import Path
 from threading import Lock
-from typing import ParamSpec, TypeVar
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
 
 LOGGER = logging.getLogger(__name__)
 
@@ -228,7 +230,7 @@ def enable_profiling() -> MetricsCollector:
     return collector
 
 
-def measure_handler(func: Callable[P, R]) -> Callable[P, R]:
+def measure_handler[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """Decorator to measure handler execution time.
 
     Usage:
@@ -246,7 +248,7 @@ def measure_handler(func: Callable[P, R]) -> Callable[P, R]:
     return wrapper
 
 
-def measure_serialization(func: Callable[P, R]) -> Callable[P, R]:
+def measure_serialization[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """Decorator to measure serialization time.
 
     Usage:

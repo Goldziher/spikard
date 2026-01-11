@@ -1,4 +1,4 @@
-"""Bidirectional Streaming gRPC Example - Real-Time Chat
+"""Bidirectional Streaming gRPC Example - Real-Time Chat.
 
 This example demonstrates bidirectional streaming where clients and server
 exchange messages concurrently in real-time.
@@ -13,9 +13,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-from collections.abc import AsyncGenerator, AsyncIterator
+from typing import TYPE_CHECKING
 
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, AsyncIterator
 
 
 class ChatHandler(GrpcHandler):
@@ -26,21 +29,18 @@ class ChatHandler(GrpcHandler):
     to clients as they arrive from other users.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize chat handler with message history."""
         self.message_history: list[dict] = []
 
     async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
         """Unary RPC - Send single chat message."""
-        msg_data = json.loads(request.payload)
-        print(f"💬 {msg_data.get('user')}: {msg_data.get('text')}")
+        json.loads(request.payload)
 
         resp_data = {"status": "delivered", "message_id": len(self.message_history)}
         return GrpcResponse(payload=json.dumps(resp_data).encode())
 
-    async def handle_bidi_stream(
-        self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_bidi_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> AsyncGenerator[GrpcResponse]:
         """Bidirectional streaming RPC - Real-time chat.
 
         Client streams:
@@ -55,16 +55,12 @@ class ChatHandler(GrpcHandler):
 
         Messages flow bidirectionally and concurrently.
         """
-        print("💬 Chat session started")
-
         async for request in request_stream:
             msg_data = json.loads(request.payload)
 
             user = msg_data.get("user", "Anonymous")
             text = msg_data.get("text", "")
-            timestamp = msg_data.get("timestamp", 0)
-
-            print(f"  📨 {user}: {text}")
+            msg_data.get("timestamp", 0)
 
             # Store message
             self.message_history.append(msg_data)
@@ -82,20 +78,16 @@ class ChatHandler(GrpcHandler):
             # Simulate processing delay
             await asyncio.sleep(0.05)
 
-        print(f"✅ Chat session ended. Total messages: {len(self.message_history)}")
-
 
 class CollaborativeEditorHandler(GrpcHandler):
     """Handler for collaborative document editing with operational transforms."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize editor with document state."""
         self.document_content = ""
         self.operation_count = 0
 
-    async def handle_bidi_stream(
-        self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_bidi_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> AsyncGenerator[GrpcResponse]:
         """Bidirectional streaming RPC - Collaborative editing.
 
         Client streams operations:
@@ -107,8 +99,6 @@ class CollaborativeEditorHandler(GrpcHandler):
             {"operation_id": 1, "status": "applied", "document_version": 1}
             {"broadcast": true, "operation": {...}, "from_user": "Alice"}
         """
-        print("📝 Collaborative editing session started")
-
         async for request in request_stream:
             op_data = json.loads(request.payload)
 
@@ -119,30 +109,18 @@ class CollaborativeEditorHandler(GrpcHandler):
             # Apply operation to document
             if op_type == "insert":
                 text = op_data.get("text", "")
-                self.document_content = (
-                    self.document_content[:position]
-                    + text
-                    + self.document_content[position:]
-                )
-                print(f"  ✏️  INSERT at {position}: '{text}'")
+                self.document_content = self.document_content[:position] + text + self.document_content[position:]
 
             elif op_type == "delete":
                 length = op_data.get("length", 0)
-                self.document_content = (
-                    self.document_content[:position]
-                    + self.document_content[position + length :]
-                )
-                print(f"  🗑️  DELETE at {position}, length {length}")
+                self.document_content = self.document_content[:position] + self.document_content[position + length :]
 
             elif op_type == "replace":
                 length = op_data.get("length", 0)
                 text = op_data.get("text", "")
                 self.document_content = (
-                    self.document_content[:position]
-                    + text
-                    + self.document_content[position + length :]
+                    self.document_content[:position] + text + self.document_content[position + length :]
                 )
-                print(f"  🔄 REPLACE at {position}: '{text}'")
 
             # Send acknowledgment
             ack_data = {
@@ -154,21 +132,16 @@ class CollaborativeEditorHandler(GrpcHandler):
 
             yield GrpcResponse(payload=json.dumps(ack_data).encode())
 
-        print(f"\n📄 Final document: '{self.document_content}'")
-        print(f"✅ Editing session ended. Total operations: {self.operation_count}")
-
 
 class MultiplayerGameHandler(GrpcHandler):
     """Handler for multiplayer game with real-time state synchronization."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize game state."""
         self.player_positions: dict[str, dict] = {}
         self.game_tick = 0
 
-    async def handle_bidi_stream(
-        self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> AsyncGenerator[GrpcResponse]:
+    async def handle_bidi_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> AsyncGenerator[GrpcResponse]:
         """Bidirectional streaming RPC - Multiplayer game.
 
         Client streams player actions:
@@ -178,8 +151,6 @@ class MultiplayerGameHandler(GrpcHandler):
         Server streams game state updates:
             {"tick": 123, "players": {...}, "events": [...]}
         """
-        print("🎮 Game session started")
-
         async for request in request_stream:
             action_data = json.loads(request.payload)
 
@@ -191,11 +162,9 @@ class MultiplayerGameHandler(GrpcHandler):
                 x = action_data.get("x", 0)
                 y = action_data.get("y", 0)
                 self.player_positions[player_id] = {"x": x, "y": y}
-                print(f"  🏃 {player_id} moved to ({x}, {y})")
 
             elif action == "shoot":
-                direction = action_data.get("direction", "north")
-                print(f"  🎯 {player_id} shot {direction}")
+                action_data.get("direction", "north")
 
             self.game_tick += 1
 
@@ -210,8 +179,6 @@ class MultiplayerGameHandler(GrpcHandler):
 
             # Game tick delay
             await asyncio.sleep(0.1)
-
-        print(f"✅ Game session ended at tick {self.game_tick}")
 
 
 async def simulate_chat_messages() -> AsyncIterator[GrpcRequest]:
@@ -261,35 +228,21 @@ async def simulate_editing_operations() -> AsyncIterator[GrpcRequest]:
         await asyncio.sleep(0.3)
 
 
-async def example_bidirectional_streaming():
+async def example_bidirectional_streaming() -> None:
     """Demonstrate bidirectional streaming with mock requests."""
-    print("\n" + "=" * 60)
-    print("Bidirectional Streaming Example - Real-Time Applications")
-    print("=" * 60 + "\n")
-
     # Example 1: Chat
-    print("Example 1: Real-time chat\n")
     chat_handler = ChatHandler()
 
     message_stream = simulate_chat_messages()
     async for response in chat_handler.handle_bidi_stream(message_stream):
-        resp_data = json.loads(response.payload)
-        print(f"  📩 Server: {resp_data['text']}")
+        json.loads(response.payload)
 
     # Example 2: Collaborative editing
-    print("\n" + "-" * 60)
-    print("Example 2: Collaborative document editing\n")
     editor_handler = CollaborativeEditorHandler()
 
     edit_stream = simulate_editing_operations()
     async for response in editor_handler.handle_bidi_stream(edit_stream):
-        ack_data = json.loads(response.payload)
-        print(f"  ✅ Operation {ack_data['operation_id']} applied")
-        print(f"     Current: '{ack_data['current_content']}'")
-
-    print("\n" + "=" * 60)
-    print("✅ Bidirectional streaming examples completed!")
-    print("=" * 60 + "\n")
+        json.loads(response.payload)
 
 
 if __name__ == "__main__":

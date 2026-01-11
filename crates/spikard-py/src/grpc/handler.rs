@@ -724,7 +724,7 @@ mod tests {
     // to execute these tests when the Python environment is properly initialized.
 
     #[test]
-    #[ignore]
+    #[ignore = "requires Python environment"]
     fn test_py_grpc_request_creation() {
         Python::attach(|py| {
             let request = PyGrpcRequest::new(
@@ -743,7 +743,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "requires Python environment"]
     fn test_py_grpc_request_with_metadata() {
         Python::attach(|py| {
             let mut metadata = HashMap::new();
@@ -764,7 +764,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "requires Python environment"]
     fn test_py_grpc_response_creation() {
         Python::attach(|py| {
             let response = PyGrpcResponse::new(py, vec![5, 6, 7, 8], None).unwrap();
@@ -774,7 +774,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "requires Python environment"]
     fn test_py_grpc_response_with_metadata() {
         Python::attach(|py| {
             let mut metadata = std::collections::HashMap::new();
@@ -794,7 +794,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "requires Python environment"]
     fn test_py_grpc_request_repr() {
         Python::attach(|py| {
             let request = PyGrpcRequest::new(
@@ -814,7 +814,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore = "requires Python environment"]
     fn test_py_grpc_response_repr() {
         Python::attach(|py| {
             let response = PyGrpcResponse::new(py, vec![1, 2, 3, 4, 5], None).unwrap();

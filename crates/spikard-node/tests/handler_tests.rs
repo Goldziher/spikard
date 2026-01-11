@@ -1,14 +1,14 @@
 //! Integration tests for Node.js handler implementation
 //!
-//! Tests the NodeHandler's implementation of the Handler trait,
-//! verifying ThreadsafeFunction integration and request/response handling.
+//! Tests the `NodeHandler`'s implementation of the Handler trait,
+//! verifying `ThreadsafeFunction` integration and request/response handling.
 
 use serde_json::json;
 use spikard_http::RequestData;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Test that NodeHandler properly serializes RequestData for JavaScript
+/// Test that `NodeHandler` properly serializes `RequestData` for JavaScript
 #[tokio::test]
 async fn test_request_data_serialization() {
     let mut path_params = HashMap::new();

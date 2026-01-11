@@ -3,10 +3,7 @@ use std::process::Command;
 
 fn count_json_files(dir: &Path) -> usize {
     let mut count = 0;
-    let entries = match std::fs::read_dir(dir) {
-        Ok(entries) => entries,
-        Err(_) => return 0,
-    };
+    let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
 
     for entry in entries.flatten() {
         let path = entry.path();

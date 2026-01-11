@@ -2,6 +2,12 @@
 //!
 //! These tests cover serialization edge cases and ensure fallback
 //! behavior works correctly when serialization fails.
+#![allow(
+    clippy::redundant_clone,
+    clippy::uninlined_format_args,
+    clippy::doc_markdown,
+    reason = "Edge case tests for error handling"
+)]
 
 use axum::http::StatusCode;
 use pretty_assertions::assert_eq;
@@ -201,23 +207,17 @@ fn test_all_convenience_methods_return_valid_json() {
     ];
 
     for (status, body) in test_cases {
-        let parsed: Value = serde_json::from_str(&body)
-            .unwrap_or_else(|_| panic!("Failed to parse JSON for status {}: {}", status, body));
+        let parsed: Value =
+            serde_json::from_str(&body).unwrap_or_else(|_| panic!("Failed to parse JSON for status {status}: {body}"));
 
         assert!(
             parsed.get("error").is_some(),
-            "Missing 'error' field for status {}",
-            status
+            "Missing 'error' field for status {status}"
         );
-        assert!(
-            parsed.get("code").is_some(),
-            "Missing 'code' field for status {}",
-            status
-        );
+        assert!(parsed.get("code").is_some(), "Missing 'code' field for status {status}");
         assert!(
             parsed.get("details").is_some(),
-            "Missing 'details' field for status {}",
-            status
+            "Missing 'details' field for status {status}"
         );
     }
 }
@@ -336,7 +336,7 @@ fn test_error_message_types() {
     let (_, body) = ErrorResponseBuilder::bad_request("test");
     assert!(body.contains("test"));
 
-    let (_, body) = ErrorResponseBuilder::bad_request(format!("Error: {}", 123));
+    let (_, body) = ErrorResponseBuilder::bad_request(format!("Error: {0}", 123));
     assert!(body.contains("Error: 123"));
 }
 

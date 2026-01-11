@@ -1,3 +1,10 @@
+#![allow(
+    clippy::doc_markdown,
+    clippy::missing_const_for_fn,
+    clippy::default_trait_access,
+    reason = "Test file with API specifications"
+)]
+
 use anyhow::Result;
 use openapiv3::{MediaType, OpenAPI, Operation, PathItem, ReferenceOr, RequestBody, Response, Responses, Schema};
 use spikard_cli::codegen::{OpenApiGenerator, SchemaRegistry};

@@ -1,4 +1,4 @@
-"""Client Streaming gRPC Example - Log Aggregation
+"""Client Streaming gRPC Example - Log Aggregation.
 
 This example demonstrates client streaming where a client streams log entries
 to the server and receives a summary report after all logs are processed.
@@ -14,9 +14,12 @@ from __future__ import annotations
 import asyncio
 import json
 from collections import Counter
-from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING
 
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 
 class LogAggregationHandler(GrpcHandler):
@@ -28,15 +31,12 @@ class LogAggregationHandler(GrpcHandler):
 
     async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
         """Unary RPC - Submit single log entry."""
-        req_data = json.loads(request.payload)
-        print(f"📝 Received single log: {req_data.get('level')} - {req_data.get('message')}")
+        json.loads(request.payload)
 
         resp_data = {"status": "accepted", "log_id": "12345"}
         return GrpcResponse(payload=json.dumps(resp_data).encode())
 
-    async def handle_client_stream(
-        self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> GrpcResponse:
+    async def handle_client_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> GrpcResponse:
         """Client streaming RPC - Aggregate log entries.
 
         Client streams:
@@ -52,8 +52,6 @@ class LogAggregationHandler(GrpcHandler):
                 "time_range": {"start": 1234567890, "end": 1234567990}
             }
         """
-        print("📊 Receiving log stream from client...")
-
         # Aggregate logs
         logs = []
         level_counts = Counter()
@@ -64,7 +62,7 @@ class LogAggregationHandler(GrpcHandler):
             log_data = json.loads(request.payload)
 
             level = log_data.get("level", "UNKNOWN")
-            message = log_data.get("message", "")
+            log_data.get("message", "")
             timestamp = log_data.get("timestamp", 0)
 
             logs.append(log_data)
@@ -75,10 +73,7 @@ class LogAggregationHandler(GrpcHandler):
 
             # Show progress
             if len(logs) % 10 == 0:
-                print(f"  📝 Received {len(logs)} logs...")
-
-        print(f"\n✅ Received total of {len(logs)} logs")
-        print(f"   Level breakdown: {dict(level_counts)}")
+                pass
 
         # Generate summary report
         summary = {
@@ -97,9 +92,7 @@ class LogAggregationHandler(GrpcHandler):
 class BatchUploadHandler(GrpcHandler):
     """Handler for batch file uploads with progress tracking."""
 
-    async def handle_client_stream(
-        self, request_stream: AsyncIterator[GrpcRequest]
-    ) -> GrpcResponse:
+    async def handle_client_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> GrpcResponse:
         """Client streaming RPC - Upload file in chunks.
 
         Client streams:
@@ -110,15 +103,13 @@ class BatchUploadHandler(GrpcHandler):
         Server returns:
             {"file_id": "abc123", "total_chunks": 3, "total_bytes": 1024}
         """
-        print("📦 Receiving file upload stream...")
-
         chunks = []
         total_bytes = 0
 
         async for request in request_stream:
             chunk_data = json.loads(request.payload)
 
-            chunk_id = chunk_data.get("chunk_id", 0)
+            chunk_data.get("chunk_id", 0)
             data = chunk_data.get("data", "")
             is_last = chunk_data.get("is_last", False)
 
@@ -126,12 +117,8 @@ class BatchUploadHandler(GrpcHandler):
             total_bytes += chunk_size
             chunks.append(chunk_data)
 
-            print(f"  📦 Chunk {chunk_id}: {chunk_size} bytes")
-
             if is_last:
                 break
-
-        print(f"\n✅ Upload complete: {len(chunks)} chunks, {total_bytes} total bytes")
 
         # Return upload summary
         result = {
@@ -199,43 +186,23 @@ async def simulate_file_upload() -> AsyncIterator[GrpcRequest]:
         await asyncio.sleep(0.1)
 
 
-async def example_client_streaming():
+async def example_client_streaming() -> None:
     """Demonstrate client streaming with mock requests."""
-    print("\n" + "=" * 60)
-    print("Client Streaming Example - Log Aggregation")
-    print("=" * 60 + "\n")
-
     # Example 1: Log aggregation
-    print("Example 1: Streaming 25 log entries\n")
     handler = LogAggregationHandler()
 
     request_stream = simulate_log_stream()
     response = await handler.handle_client_stream(request_stream)
 
-    summary = json.loads(response.payload)
-    print("\n📊 Summary Report:")
-    print(f"   Total logs: {summary['total_logs']}")
-    print(f"   Level breakdown: {summary['level_counts']}")
-    print(f"   Time range: {summary['time_range']['start']} - {summary['time_range']['end']}")
+    json.loads(response.payload)
 
     # Example 2: File upload
-    print("\n" + "-" * 60)
-    print("Example 2: Batch file upload in chunks\n")
     upload_handler = BatchUploadHandler()
 
     upload_stream = simulate_file_upload()
     upload_response = await upload_handler.handle_client_stream(upload_stream)
 
-    upload_result = json.loads(upload_response.payload)
-    print("\n📦 Upload Result:")
-    print(f"   File ID: {upload_result['file_id']}")
-    print(f"   Total chunks: {upload_result['total_chunks']}")
-    print(f"   Total bytes: {upload_result['total_bytes']}")
-    print(f"   Status: {upload_result['status']}")
-
-    print("\n" + "=" * 60)
-    print("✅ Client streaming examples completed!")
-    print("=" * 60 + "\n")
+    json.loads(upload_response.payload)
 
 
 if __name__ == "__main__":

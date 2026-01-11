@@ -7,9 +7,7 @@
 		"messages": [
 			{
 				"name": "StreamRequest",
-				"fields": [
-					{ "name": "count", "type": "int32", "number": 1, "label": "required" }
-				]
+				"fields": [{ "name": "count", "type": "int32", "number": 1, "label": "required" }]
 			},
 			{
 				"name": "StreamResponse",

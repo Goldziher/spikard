@@ -7,6 +7,7 @@ struct JsonSource {
 }
 
 impl JsonSource {
+    #[allow(clippy::missing_const_for_fn)]
     fn new(value: serde_json::Value) -> Self {
         Self { value }
     }
@@ -44,7 +45,7 @@ impl ConfigSource for JsonSource {
 
     fn get_nested(&self, key: &str) -> Option<Box<dyn ConfigSource + '_>> {
         let nested = self.get(key)?.as_object()?;
-        Some(Box::new(JsonSource {
+        Some(Box::new(Self {
             value: serde_json::Value::Object(nested.clone()),
         }))
     }
@@ -60,7 +61,7 @@ impl ConfigSource for JsonSource {
     fn get_array_element(&self, key: &str, index: usize) -> Option<Box<dyn ConfigSource + '_>> {
         let array = self.get(key)?.as_array()?;
         let element = array.get(index)?.as_object()?;
-        Some(Box::new(JsonSource {
+        Some(Box::new(Self {
             value: serde_json::Value::Object(element.clone()),
         }))
     }

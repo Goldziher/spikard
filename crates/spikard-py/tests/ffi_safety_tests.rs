@@ -6,6 +6,16 @@
 //! - Event loop lifecycle management
 //!
 //! Priority 1 critical test cases that must pass before production deployment.
+#![allow(
+    clippy::needless_raw_string_hashes,
+    clippy::too_many_arguments,
+    clippy::similar_names,
+    clippy::too_many_lines,
+    clippy::uninlined_format_args,
+    clippy::doc_markdown,
+    clippy::redundant_closure_for_method_calls,
+    reason = "Test file with many GraphQL schemas, test parameters, and large integration tests"
+)]
 
 use axum::body::Body;
 use axum::http::{Method, Request, StatusCode};
@@ -182,14 +192,14 @@ async def handler(path_params, query_params, body, headers, cookies):
                 headers: HashMap::new().into(),
                 cookies: HashMap::new().into(),
                 method: "GET".to_string(),
-                path: format!("/items/{}", i),
+                path: format!("/items/{i}"),
                 #[cfg(feature = "di")]
                 dependencies: None,
             };
 
             let req = Request::builder()
                 .method(Method::GET)
-                .uri(format!("/items/{}", i))
+                .uri(format!("/items/{i}"))
                 .body(Body::empty())
                 .unwrap();
 
@@ -204,7 +214,7 @@ async def handler(path_params, query_params, body, headers, cookies):
 
     let mut success_count = 0;
     for (i, result) in results.iter().enumerate() {
-        assert!(result.is_ok(), "handler task {} panicked", i);
+        assert!(result.is_ok(), "handler task {i} panicked");
         let handler_result = result.as_ref().unwrap();
         assert!(
             handler_result.is_ok(),
@@ -290,7 +300,7 @@ def handler(path_params, query_params, body, headers, cookies):
         Err(e) => panic!("response is not valid JSON: {} (body: {})", e, body),
     };
 
-    assert!(json.get("error").is_some(), "response missing 'error' field: {}", json);
+    assert!(json.get("error").is_some(), "response missing 'error' field: {json}");
 
     let error_value = json.get("error");
     assert!(error_value.is_some(), "error field should exist");
@@ -359,7 +369,7 @@ def handler(path_params, query_params, body, headers, cookies):
         .expect("handlers timed out with null values");
 
     for (i, result) in results.iter().enumerate() {
-        assert!(result.is_ok(), "task {} panicked", i);
+        assert!(result.is_ok(), "task {i} panicked");
         assert!(
             result.as_ref().unwrap().is_ok(),
             "handler {} failed with null values",
@@ -607,7 +617,7 @@ async def concurrent_handler(path_params, query_params, body, headers, cookies):
 
             let req = Request::builder()
                 .method(Method::GET)
-                .uri(format!("/concurrent/{}", i))
+                .uri(format!("/concurrent/{i}"))
                 .body(Body::empty())
                 .unwrap();
 
@@ -621,8 +631,8 @@ async def concurrent_handler(path_params, query_params, body, headers, cookies):
         .expect("concurrent handlers timed out - event loop may be blocked");
 
     for (i, result) in results.iter().enumerate() {
-        assert!(result.is_ok(), "task {} panicked", i);
-        assert!(result.as_ref().unwrap().is_ok(), "concurrent handler {} failed", i);
+        assert!(result.is_ok(), "task {i} panicked");
+        assert!(result.as_ref().unwrap().is_ok(), "concurrent handler {i} failed");
     }
 }
 
@@ -790,7 +800,7 @@ def di_aware_handler(path_params, query_params, body, headers, cookies):
         di_json
             .get("body")
             .and_then(|b| b.get("di_ready"))
-            .and_then(|d| d.as_bool()),
+            .and_then(serde_json::Value::as_bool),
         Some(true),
         "DI should be ready after validation passes"
     );
@@ -808,7 +818,7 @@ def concurrent_handler(path_params, query_params, body, headers, cookies):
         let h = build_python_handler(concurrent_validation_code, "concurrent_handler", false);
         let handle = tokio::spawn(async move {
             let mut params = HashMap::new();
-            params.insert("id".to_string(), format!("req_{}", i));
+            params.insert("id".to_string(), format!("req_{i}"));
 
             let req_data = RequestData {
                 path_params: params.into(),
@@ -817,7 +827,7 @@ def concurrent_handler(path_params, query_params, body, headers, cookies):
 
             let req = Request::builder()
                 .method(Method::GET)
-                .uri(format!("/requests/{}", i))
+                .uri(format!("/requests/{i}"))
                 .body(Body::empty())
                 .unwrap();
 
@@ -832,8 +842,8 @@ def concurrent_handler(path_params, query_params, body, headers, cookies):
             .expect("concurrent validation timed out");
 
     for (i, result) in concurrent_results.iter().enumerate() {
-        assert!(result.is_ok(), "concurrent task {} panicked", i);
-        assert!(result.as_ref().unwrap().is_ok(), "concurrent handler {} failed", i);
+        assert!(result.is_ok(), "concurrent task {i} panicked");
+        assert!(result.as_ref().unwrap().is_ok(), "concurrent handler {i} failed");
     }
 
     let error_handler_code = r#"
@@ -1047,7 +1057,7 @@ def handler(path_params, query_params, body, headers, cookies):
 
             let req = Request::builder()
                 .method(Method::GET)
-                .uri(format!("/item/{}", i))
+                .uri(format!("/item/{i}"))
                 .body(Body::empty())
                 .unwrap();
 
@@ -1061,9 +1071,9 @@ def handler(path_params, query_params, body, headers, cookies):
         .expect("concurrent marshalling timed out");
 
     for (i, result) in results.into_iter().enumerate() {
-        assert!(result.is_ok(), "concurrent task {} panicked", i);
+        assert!(result.is_ok(), "concurrent task {i} panicked");
         let handler_result = result.unwrap();
-        assert!(handler_result.is_ok(), "handler {} should succeed", i);
+        assert!(handler_result.is_ok(), "handler {i} should succeed");
 
         let resp = handler_result.unwrap();
         let body_str = get_response_body(resp).await;
@@ -1411,7 +1421,7 @@ async def async_handler(path_params, query_params, body, headers, cookies):
 
         let handle = tokio::spawn(async move {
             let mut path_params = HashMap::new();
-            path_params.insert("id".to_string(), format!("handler-{}", i));
+            path_params.insert("id".to_string(), format!("handler-{i}"));
 
             let req_data = RequestData {
                 path_params: path_params.into(),
@@ -1420,7 +1430,7 @@ async def async_handler(path_params, query_params, body, headers, cookies):
 
             let req = Request::builder()
                 .method(Method::GET)
-                .uri(format!("/handler/{}", i))
+                .uri(format!("/handler/{i}"))
                 .body(Body::empty())
                 .unwrap();
 
@@ -1435,7 +1445,7 @@ async def async_handler(path_params, query_params, body, headers, cookies):
         .expect("concurrent handlers timed out");
 
     for (i, result) in results.iter().enumerate() {
-        assert!(result.is_ok(), "handler {} task panicked", i);
+        assert!(result.is_ok(), "handler {i} task panicked");
         let handler_result = result.as_ref().unwrap();
         assert!(
             handler_result.is_ok(),
@@ -1469,7 +1479,7 @@ def error_handler(path_params, query_params, body, headers, cookies):
             let req_data = default_request_data();
             let req = Request::builder()
                 .method(Method::GET)
-                .uri(format!("/test/{}", i))
+                .uri(format!("/test/{i}"))
                 .body(Body::empty())
                 .unwrap();
 
@@ -1481,7 +1491,7 @@ def error_handler(path_params, query_params, body, headers, cookies):
 
     for (idx, handle) in error_tasks {
         let result = handle.await;
-        assert!(result.is_ok(), "task {} should not panic despite handler errors", idx);
+        assert!(result.is_ok(), "task {idx} should not panic despite handler errors");
 
         let handler_result = result.unwrap();
         if idx % 2 == 0 {
