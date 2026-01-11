@@ -1,4 +1,13 @@
-//! Comprehensive tests for Python GraphQL code generation
+#![allow(
+    clippy::needless_raw_string_hashes,
+    reason = "GraphQL schemas contain identifiers like ID! that need raw strings"
+)]
+#![allow(
+    unknown_prefix,
+    reason = "GraphQL schemas contain identifiers like ID! in docstrings"
+)]
+
+//! Full integration tests for Python GraphQL code generation
 //!
 //! Validates that the Python generator produces code conforming to CLAUDE.md requirements:
 //! - Python 3.10+ syntax (union types with |, not Optional)
@@ -15,7 +24,7 @@ use spikard_cli::codegen::generate_python_graphql;
 /// Test 1: Helper methods - map_scalar_type
 #[test]
 fn test_python_scalar_type_mapping() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type Query {
             name: String!
             count: Int!
@@ -30,7 +39,7 @@ fn test_python_scalar_type_mapping() -> Result<()> {
             active: Boolean!
             id: ID!
         }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "types")?;
 
@@ -47,7 +56,7 @@ fn test_python_scalar_type_mapping() -> Result<()> {
 /// Test 2: Helper methods - map_type_with_list_item_nullability
 #[test]
 fn test_python_type_nullability_handling() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type Query {
             required: [String!]!
             nullable: [String!]
@@ -57,7 +66,7 @@ fn test_python_type_nullability_handling() -> Result<()> {
         type TestType {
             id: ID!
         }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "types")?;
 
@@ -72,7 +81,7 @@ fn test_python_type_nullability_handling() -> Result<()> {
 /// Test 3: Helper methods - to_snake_case
 #[test]
 fn test_python_snake_case_conversion() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type Query {
             getUser(userId: ID!): User
             createUserProfile(input: String!): User
@@ -82,7 +91,7 @@ fn test_python_snake_case_conversion() -> Result<()> {
             id: ID!
             firstName: String!
         }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "resolvers")?;
 
@@ -103,11 +112,11 @@ fn test_python_snake_case_conversion() -> Result<()> {
 #[test]
 fn test_python_reconstruct_sdl() -> Result<()> {
     let schema = r#"
-        """A user in the system"""
+        """A user in the system """
         type User {
-            """User ID"""
+            """User ID """
             id: ID!
-            """User name"""
+            """User name """
             name: String!
         }
         type Query {
@@ -133,13 +142,13 @@ fn test_python_reconstruct_sdl() -> Result<()> {
 #[test]
 fn test_python_generate_object_types() -> Result<()> {
     let schema = r#"
-        """A user in the system"""
+        """A user in the system """
         type User {
-            """Unique identifier"""
+            """Unique identifier """
             id: ID!
-            """User display name"""
+            """User display name """
             name: String!
-            """Optional email address"""
+            """Optional email address """
             email: String
         }
         type Query { user: User }
@@ -177,13 +186,13 @@ fn test_python_generate_object_types() -> Result<()> {
 #[test]
 fn test_python_generate_enum_types() -> Result<()> {
     let schema = r#"
-        """User status enumeration"""
+        """User status enumeration """
         enum UserStatus {
-            """Active user"""
+            """Active user """
             ACTIVE
-            """Inactive user"""
+            """Inactive user """
             INACTIVE
-            """Pending approval"""
+            """Pending approval """
             PENDING
         }
         type Query { status: UserStatus! }
@@ -219,13 +228,13 @@ fn test_python_generate_enum_types() -> Result<()> {
 #[test]
 fn test_python_generate_input_types() -> Result<()> {
     let schema = r#"
-        """Input for creating a user"""
+        """Input for creating a user """
         input CreateUserInput {
-            """User's full name"""
+            """User's full name """
             name: String!
-            """User's email address"""
+            """User's email address """
             email: String!
-            """Optional age"""
+            """Optional age """
             age: Int
         }
         type Query { dummy: String }
@@ -250,13 +259,13 @@ fn test_python_generate_input_types() -> Result<()> {
 /// Test 8: generate_types() - Union types
 #[test]
 fn test_python_generate_union_types() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type User { id: ID! name: String! }
         type Post { id: ID! title: String! }
         type Comment { id: ID! text: String! }
         union SearchResult = User | Post | Comment
         type Query { search: SearchResult }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "types")?;
 
@@ -283,7 +292,7 @@ fn test_python_generate_union_types() -> Result<()> {
 #[test]
 fn test_python_generate_scalar_aliases() -> Result<()> {
     // Test with a schema that actually generates types (not just Query with scalars)
-    let schema = r#"
+    let schema = r"
         scalar DateTime
         scalar JSON
         scalar UUID
@@ -298,7 +307,7 @@ fn test_python_generate_scalar_aliases() -> Result<()> {
         type Query {
             user(id: UUID!): User
         }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "types")?;
 
@@ -330,9 +339,9 @@ fn test_python_generate_scalar_aliases() -> Result<()> {
 fn test_python_generate_query_resolvers() -> Result<()> {
     let schema = r#"
         type Query {
-            """Get user by ID"""
+            """Get user by ID """
             user(id: ID!, name: String): User
-            """List all users"""
+            """List all users """
             users(limit: Int, offset: Int): [User!]!
         }
         type User { id: ID! name: String! }
@@ -370,9 +379,9 @@ fn test_python_generate_mutation_resolvers() -> Result<()> {
     let schema = r#"
         type Query { dummy: String }
         type Mutation {
-            """Create a new user"""
+            """Create a new user """
             createUser(input: CreateUserInput!): User!
-            """Update user"""
+            """Update user """
             updateUser(id: ID!, name: String!): User
         }
         input CreateUserInput {
@@ -400,7 +409,7 @@ fn test_python_generate_mutation_resolvers() -> Result<()> {
 /// Test 12: generate_schema_definition() - Ariadne setup
 #[test]
 fn test_python_generate_ariadne_schema() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type Query {
             hello: String!
             user(id: ID!): User
@@ -412,7 +421,7 @@ fn test_python_generate_ariadne_schema() -> Result<()> {
             id: ID!
             name: String!
         }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "schema")?;
 
@@ -451,26 +460,26 @@ fn test_python_generate_ariadne_schema() -> Result<()> {
 #[test]
 fn test_python_complete_output() -> Result<()> {
     let schema = r#"
-        """User type"""
+        """User type """
         type User {
-            """User ID"""
+            """User ID """
             id: ID!
-            """User name"""
+            """User name """
             name: String!
         }
 
-        """Create user input"""
+        """Create user input """
         input CreateUserInput {
             name: String!
         }
 
         type Query {
-            """Get user"""
+            """Get user """
             user(id: ID!): User
         }
 
         type Mutation {
-            """Create user"""
+            """Create user """
             createUser(input: CreateUserInput!): User!
         }
     "#;
@@ -499,9 +508,9 @@ fn test_python_complete_output() -> Result<()> {
 fn test_python_deprecation_with_docstrings() -> Result<()> {
     let schema = r#"
         type Query {
-            """Old field - use newField instead"""
+            """Old field - use newField instead """
             oldField: String @deprecated(reason: "Use newField instead")
-            """New field"""
+            """New field """
             newField: String!
         }
     "#;
@@ -524,7 +533,7 @@ fn test_python_deprecation_with_docstrings() -> Result<()> {
 /// Test 15: Complex nested types
 #[test]
 fn test_python_complex_nested_types() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type User {
             id: ID!
             posts: [Post!]!
@@ -542,7 +551,7 @@ fn test_python_complex_nested_types() -> Result<()> {
         type Query {
             user(id: ID!): User
         }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "types")?;
 
@@ -572,10 +581,10 @@ fn test_python_complex_nested_types() -> Result<()> {
 /// Test 16: Proper header and imports
 #[test]
 fn test_python_header_and_imports() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type Query { hello: String! }
         type User { id: ID! }
-    "#;
+    ";
 
     let types_result = generate_python_graphql(schema, "types")?;
     assert!(types_result.contains("#!/usr/bin/env python3"), "shebang required");
@@ -603,9 +612,9 @@ fn test_python_header_and_imports() -> Result<()> {
 /// Test 17: Edge case - minimal types
 #[test]
 fn test_python_empty_types_with_pass() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type Query { dummy: String }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "types")?;
 
@@ -618,13 +627,13 @@ fn test_python_empty_types_with_pass() -> Result<()> {
 /// Test 18: Proper Struct configuration following CLAUDE.md
 #[test]
 fn test_python_struct_configuration_per_claude() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type User {
             id: ID!
             name: String!
         }
         type Query { user: User }
-    "#;
+    ";
 
     let result = generate_python_graphql(schema, "types")?;
 
@@ -641,7 +650,7 @@ fn test_python_struct_configuration_per_claude() -> Result<()> {
 /// Ensures generated Python code has NO Any type usage
 #[test]
 fn test_python_no_any_type_usage() -> Result<()> {
-    let schema = r#"
+    let schema = r"
         type Query {
             user(id: ID!, name: String): User
             users(limit: Int, offset: Int): [User!]!
@@ -656,7 +665,7 @@ fn test_python_no_any_type_usage() -> Result<()> {
             title: String!
         }
         union SearchResult = User | Post
-    "#;
+    ";
 
     // Test resolvers
     let resolvers = generate_python_graphql(schema, "resolvers")?;

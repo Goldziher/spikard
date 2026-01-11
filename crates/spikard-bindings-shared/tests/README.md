@@ -40,7 +40,7 @@ Key scenarios:
 - All HTTP status code builders
 - RFC 9457 Problem Details format
 
-#### `comprehensive_coverage.rs` (12 tests)
+#### `full_coverage.rs` (12 tests)
 Full-coverage tests across all modules:
 - Tests all remaining code paths
 - Comprehensive lifecycle hook tests
