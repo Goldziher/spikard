@@ -1,5 +1,6 @@
 ---
 priority: critical
+description: "Cross-Language Error Handling"
 ---
 
 # Cross-Language Error Handling

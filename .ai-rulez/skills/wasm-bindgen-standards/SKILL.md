@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "WebAssembly & wasm-bindgen Standards"
 ---
 
 # WebAssembly & wasm-bindgen Standards

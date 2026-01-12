@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "DI Pattern Implementation - Dependency Injection via Feature Gates"
 ---
 
 # DI Pattern Implementation - Dependency Injection via Feature Gates

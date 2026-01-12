@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Spikard Workspace Architecture"
 ---
 
 # Spikard Workspace Architecture

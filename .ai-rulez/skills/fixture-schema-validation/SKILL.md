@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Fixture Schema Validation - 35+ Fixture Directory Enforcement"
 ---
 
 # Fixture Schema Validation - 35+ Fixture Directory Enforcement

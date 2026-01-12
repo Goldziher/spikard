@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "PHP 8.2+ with PHPStan & PSR Standards"
 ---
 
 # PHP 8.2+ with PHPStan & PSR Standards

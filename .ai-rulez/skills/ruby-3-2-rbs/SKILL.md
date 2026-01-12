@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Ruby 3.2+ with RBS & Steep"
 ---
 
 # Ruby 3.2+ with RBS & Steep

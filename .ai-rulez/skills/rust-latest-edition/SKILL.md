@@ -1,5 +1,6 @@
 ---
 priority: critical
+description: "Rust Latest Edition Standards"
 ---
 
 # Rust Latest Edition Standards

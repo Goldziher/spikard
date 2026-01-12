@@ -1,5 +1,6 @@
 ---
 priority: critical
+description: "TypeScript Strictest Standards"
 ---
 
 # TypeScript Strictest Standards

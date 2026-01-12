@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Handler Trait Design - Language-Agnostic HTTP Handlers"
 ---
 
 # Handler Trait Design - Language-Agnostic HTTP Handlers

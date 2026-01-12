@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Async Runtime Integration - pyo3-async-runtimes & Tokio Coordination"
 ---
 
 # Async Runtime Integration - pyo3-async-runtimes & Tokio Coordination

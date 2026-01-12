@@ -1,6 +1,6 @@
 {
 	"name": "@spikard/wasm",
-	"version": "0.9.0",
+	"version": "0.9.1",
 	"description": "Spikard HTTP framework for WebAssembly and edge runtimes with full TypeScript support, targeting browsers, Deno, Cloudflare Workers, and Node.js.",
 	"main": "dist/index.js",
 	"module": "dist/index.mjs",

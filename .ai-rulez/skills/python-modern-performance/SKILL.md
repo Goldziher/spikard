@@ -1,5 +1,6 @@
 ---
 priority: critical
+description: "Python Modern & Performance Standards"
 ---
 
 # Python Modern & Performance Standards

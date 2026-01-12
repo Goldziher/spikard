@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Tower Middleware Patterns - Spikard HTTP Stack"
 ---
 
 # Tower Middleware Patterns - Spikard HTTP Stack

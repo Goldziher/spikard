@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Documentation & Architecture Decision Records"
 ---
 
 # Documentation & Architecture Decision Records

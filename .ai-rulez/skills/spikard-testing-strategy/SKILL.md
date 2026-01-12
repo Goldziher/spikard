@@ -1,5 +1,6 @@
 ---
 priority: critical
+description: "Fixture-First Testing Strategy"
 ---
 
 # Fixture-First Testing Strategy

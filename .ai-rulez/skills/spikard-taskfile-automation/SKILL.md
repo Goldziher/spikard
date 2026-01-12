@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Task Automation & Build Orchestration"
 ---
 
 # Task Automation & Build Orchestration

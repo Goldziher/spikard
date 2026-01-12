@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-01-12
+
+### Fixed
+
+- Added skill descriptions to AI-Rulez metadata so Codex skill YAML satisfies the required `description` field.
+
 ## [0.9.0] - 2026-01-10
 
 ### Added

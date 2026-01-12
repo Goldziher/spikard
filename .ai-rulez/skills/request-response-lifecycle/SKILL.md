@@ -1,5 +1,6 @@
 ---
 priority: high
+description: "Request-Response Lifecycle - Hooks & Middleware Chain"
 ---
 
 # Request-Response Lifecycle - Hooks & Middleware Chain
