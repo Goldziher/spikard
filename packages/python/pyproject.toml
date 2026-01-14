@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "maturin"
-requires = [ "maturin>=1.4,<2" ]
+requires = [ "maturin>=1.11.5,<2" ]
 
 [project]
 name = "spikard"
@@ -53,14 +53,14 @@ classifiers = [
 
 dependencies = [
   "cloudpickle>=3.1.2",
-  "granian>=2.6",
+  "granian>=2.6.1",
   "grpcio>=1.76",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
   "msgspec>=0.19",
   "typing-extensions>=4",
   "uvloop>=0.22; sys_platform!='win32'",
-  "websockets>=15.0.1",
+  "websockets>=16",
 ]
 
 optional-dependencies.uvloop = [

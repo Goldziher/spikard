@@ -12,7 +12,7 @@
 		"@morojs/moro": "^1.7.14"
 	},
 	"devDependencies": {
-		"@types/node": "^25.0.3",
+		"@types/node": "^25.0.8",
 		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	},

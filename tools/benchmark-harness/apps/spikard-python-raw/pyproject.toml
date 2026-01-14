@@ -19,12 +19,12 @@ classifiers = [
 ]
 dependencies = [
   "cloudpickle>=3.1.2",
-  "granian>=2.6",
+  "granian>=2.6.1",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
   "msgspec>=0.20",
   "spikard",
-  "websockets>=15.0.1",
+  "websockets>=16",
 ]
 
 [tool.uv.sources]

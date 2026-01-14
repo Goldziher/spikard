@@ -67,6 +67,23 @@ final class GrpcCallWrapper
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function normalizeMetadata(mixed $metadata): array
+    {
+        if (!\is_array($metadata)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($metadata as $key => $value) {
+            $normalized[(string) $key] = $value;
+        }
+
+        return $normalized;
+    }
+
+    /**
      * Fetch final gRPC status when available.
      *
      * @return array{code: int, details: string, metadata: array<string, mixed>}
@@ -81,7 +98,7 @@ final class GrpcCallWrapper
                 return [
                     'code' => \is_numeric($status['code'] ?? null) ? (int) $status['code'] : 0,
                     'details' => \is_string($status['details'] ?? null) ? (string) $status['details'] : '',
-                    'metadata' => \is_array($status['metadata'] ?? null) ? (array) $status['metadata'] : [],
+                    'metadata' => $this->normalizeMetadata($status['metadata'] ?? null),
                 ];
             }
 
@@ -110,11 +127,9 @@ final class GrpcCallWrapper
 
                 if (\method_exists($status, 'getMetadata')) {
                     $metaVal = $status->getMetadata();
-                    if (\is_array($metaVal)) {
-                        $metadata = $metaVal;
-                    }
-                } elseif (\property_exists($status, 'metadata') && \is_array($status->metadata)) {
-                    $metadata = $status->metadata;
+                    $metadata = $this->normalizeMetadata($metaVal);
+                } elseif (\property_exists($status, 'metadata')) {
+                    $metadata = $this->normalizeMetadata($status->metadata);
                 }
 
                 return [
@@ -175,7 +190,11 @@ final class GrpcChannelWrapper
     public function createCall(string $method, float $timeout): object
     {
         if (\method_exists($this->channel, 'createCall')) {
-            return $this->channel->createCall($method, $timeout);
+            $callResult = $this->channel->createCall($method, $timeout);
+            if (!\is_object($callResult)) {
+                throw new RuntimeException('gRPC channel createCall() did not return an object');
+            }
+            return $callResult;
         }
 
         throw new RuntimeException('gRPC channel does not support createCall()');
