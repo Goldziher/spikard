@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import io
 from tempfile import SpooledTemporaryFile
-from typing import Annotated, Any, Self
+from typing import Annotated, Any
 
 import msgspec
 
@@ -236,7 +236,7 @@ class UploadFile:
         if hasattr(self, "_file") and not self._file.closed:
             self._file.close()
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> UploadFile:
         """Enter context manager (sync)."""
         return self
 
@@ -244,7 +244,7 @@ class UploadFile:
         """Exit context manager (sync)."""
         self.close()
 
-    async def __aenter__(self) -> Self:
+    async def __aenter__(self) -> UploadFile:
         """Enter async context manager."""
         return self
 

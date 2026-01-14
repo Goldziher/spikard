@@ -17,7 +17,7 @@ import threading
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any
 
 import cloudpickle
 import httpx
@@ -125,7 +125,7 @@ class TestClient:
             raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
         return self._port
 
-    async def __aenter__(self) -> Self:
+    async def __aenter__(self) -> "TestClient":
         """Start the server and return the client."""
         await self._start_server()
         return self

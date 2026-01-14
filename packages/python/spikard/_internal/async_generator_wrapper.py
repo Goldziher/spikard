@@ -8,7 +8,7 @@ Based on Robyn's proven implementation.
 
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator, Iterator
-from typing import Self, TypeVar
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -42,7 +42,7 @@ class AsyncGeneratorWrapper(Iterator[T]):
         self._iterator: AsyncIterator[T] | None = None
         self._exhausted = False
 
-    def __iter__(self) -> Self:
+    def __iter__(self) -> "AsyncGeneratorWrapper[T]":
         """Return self as iterator."""
         return self
 

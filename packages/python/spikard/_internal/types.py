@@ -5,6 +5,8 @@ Original source: https://github.com/litestar-org/litestar
 License: MIT (see ATTRIBUTIONS.md in project root)
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 
