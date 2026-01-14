@@ -77,8 +77,9 @@ namespace Spikard\Native {
         /**
          * @param array<int, array{method: string, path: string, handler_name: string, handler?: object, websocket?: bool, sse?: bool}>|null $routes
          * @param array<string, mixed>|null $config
+         * @param \Spikard\DI\DependencyContainer|null $dependencies
          */
-        public function __construct(?array $routes = null, ?array $config = null) {}
+        public function __construct(?array $routes = null, ?array $config = null, ?\Spikard\DI\DependencyContainer $dependencies = null) {}
         /** @param array<string, mixed> $options */
         public function request(string $method, string $path, array $options = []): \Spikard\Response {}
         /** @param array<string, mixed>|null $variables */

@@ -8,6 +8,7 @@ use function file_get_contents;
 use function json_decode;
 
 use RuntimeException;
+use Spikard\DI\DependencyContainer;
 use Spikard\Http\Response;
 
 /**
@@ -21,12 +22,13 @@ final class TestClient
      *
      * @param array<int, array{method: string, path: string, handler_name: string, handler?: object, websocket?: bool, sse?: bool}>|null $routes HTTP routes configuration
      * @param array<string, mixed>|null $config Server configuration options
+     * @param DependencyContainer|null $dependencies Dependency container
      *
      * @throws RuntimeException if Spikard PHP extension is not loaded
      */
-    public function __construct(?array $routes = null, ?array $config = null)
+    public function __construct(?array $routes = null, ?array $config = null, ?DependencyContainer $dependencies = null)
     {
-        unset($routes, $config);
+        unset($routes, $config, $dependencies);
         if (!\function_exists('spikard_version')) {
             throw new RuntimeException('Spikard PHP extension is not loaded.');
         }

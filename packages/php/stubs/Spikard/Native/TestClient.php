@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Spikard\Native;
 
+use Spikard\DI\DependencyContainer;
 use Spikard\Response;
 use Spikard\Testing\WebSocketTestConnection;
 use Spikard\Testing\SseStream;
@@ -21,10 +22,11 @@ class TestClient
      *
      * @param array<int, array{method: string, path: string, handler_name: string, handler?: object, websocket?: bool, sse?: bool}> $routes HTTP routes configuration
      * @param array<string, mixed> $config Optional server configuration
+     * @param DependencyContainer|null $dependencies Dependency container
      *
      * @throws \Exception if routes or config are invalid
      */
-    public function __construct(array $routes, ?array $config = null)
+    public function __construct(array $routes, ?array $config = null, ?DependencyContainer $dependencies = null)
     {
     }
 
