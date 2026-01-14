@@ -129,9 +129,9 @@ jobs:
       - name: Start gRPC fixture server
         shell: bash
         run: |
-          uv run --directory packages/python python scripts/start_grpc_test_server.py >/tmp/grpc_server.log 2>&1 &
+          uv run python scripts/start_grpc_test_server.py >/tmp/grpc_server.log 2>&1 &
           echo $! > /tmp/grpc_server.pid
-          python - <<'PY'
+          if ! python - <<'PY'
           import socket
           import time
 
@@ -145,6 +145,11 @@ jobs:
           else:
               raise SystemExit("gRPC server did not start on :50051")
           PY
+          then
+            echo "gRPC server log:"
+            cat /tmp/grpc_server.log || true
+            exit 1
+          fi
 
       - name: Run Ruby specs
         working-directory: packages/ruby
