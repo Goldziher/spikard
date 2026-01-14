@@ -6,8 +6,6 @@ instead of having to manage Python event loops in Rust.
 Based on Robyn's proven implementation.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator, Iterator
 from typing import TypeVar
