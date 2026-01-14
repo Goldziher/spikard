@@ -172,12 +172,14 @@ final class GrpcChannelWrapper
     /**
      */
     private object $channel;
+    private string $target;
 
     /**
      */
-    public function __construct(object $channel)
+    public function __construct(object $channel, string $target)
     {
         $this->channel = $channel;
+        $this->target = $target;
     }
 
     /**
@@ -190,7 +192,15 @@ final class GrpcChannelWrapper
     public function createCall(string $method, float $timeout): object
     {
         if (\method_exists($this->channel, 'createCall')) {
-            $callResult = $this->channel->createCall($method, $timeout);
+            $reflection = new \ReflectionMethod($this->channel, 'createCall');
+            $required = $reflection->getNumberOfRequiredParameters();
+            $args = match (true) {
+                $required <= 2 => [$method, $timeout],
+                $required === 3 => [$method, $this->target, ['timeout' => $timeout]],
+                $required === 4 => [$method, $this->target, ['timeout' => $timeout], []],
+                default => [$method, $this->target, ['timeout' => $timeout], [], []],
+            };
+            $callResult = $reflection->invokeArgs($this->channel, $args);
             if (!\is_object($callResult)) {
                 throw new RuntimeException('gRPC channel createCall() did not return an object');
             }
@@ -287,8 +297,7 @@ final class GrpcTestClient
             );
         }
 
-        // Create the channel using grpc_channel_create (gRPC PHP extension)
-        // The gRPC PHP extension returns a resource-like object that we treat as GrpcChannelInterface for type safety
+        // Create the channel using the available gRPC API
         if (\function_exists('grpc_channel_create')) {
             /** @var object|false $channelResult */
             $channelResult = grpc_channel_create($host . ':' . $portInt, []);
@@ -297,12 +306,27 @@ final class GrpcTestClient
                     \sprintf('Failed to create gRPC channel to %s', $this->serverAddress)
                 );
             }
-            $this->channel = new GrpcChannelWrapper($channelResult);
-        } else {
-            throw new RuntimeException(
-                'grpc_channel_create function not available (gRPC PHP extension issue)'
-            );
+            $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
+            return;
         }
+
+        if (\class_exists('\\Grpc\\Channel')) {
+            $options = [];
+            if (\class_exists('\\Grpc\\ChannelCredentials')
+                && \method_exists('\\Grpc\\ChannelCredentials', 'createInsecure')
+            ) {
+                $options['credentials'] = \Grpc\ChannelCredentials::createInsecure();
+            }
+
+            /** @var object $channelResult */
+            $channelResult = new \Grpc\Channel($host . ':' . $portInt, $options);
+            $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
+            return;
+        }
+
+        throw new RuntimeException(
+            'grpc_channel_create function not available (gRPC PHP extension issue)'
+        );
     }
 
     /**
