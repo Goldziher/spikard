@@ -45,7 +45,6 @@ final class Grpc
      * @param string $payload Serialized protobuf payload
      * @param array<string, string> $metadata Optional gRPC metadata
      *
-     * @return Request
      */
     public static function createRequest(
         string $serviceName,
@@ -62,7 +61,6 @@ final class Grpc
      * @param string $payload Serialized protobuf payload
      * @param array<string, string> $metadata Optional gRPC metadata
      *
-     * @return Response
      */
     public static function createResponse(string $payload, array $metadata = []): Response
     {
@@ -75,7 +73,6 @@ final class Grpc
      * @param string $message Error message
      * @param array<string, string> $metadata Optional gRPC metadata
      *
-     * @return Response
      */
     public static function createErrorResponse(string $message, array $metadata = []): Response
     {

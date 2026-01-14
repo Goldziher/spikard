@@ -50,7 +50,7 @@ final class FfiTypeSafetyTest extends TestCase
             if (!\is_callable($handler) && \method_exists($handler, 'handle')) {
                 $wrappedHandler = $handler;
                 $finalHandler = new class ($wrappedHandler) implements \Spikard\Handlers\HandlerInterface {
-                    /** @var object */
+                    /**  */
                     private object $handler;
 
                     public function __construct(object $handler)
@@ -68,7 +68,7 @@ final class FfiTypeSafetyTest extends TestCase
                         if (!\is_callable($this->handler)) {
                             return Response::json(['error' => 'Handler is not callable'], 500);
                         }
-                        /** @var mixed $result */
+                        /**  */
                         $result = ($this->handler)($request);
                         if ($result instanceof Response) {
                             return $result;
@@ -158,7 +158,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'GET',
                 'path' => '/null-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         // Return response with optional header that would be None in Rust
@@ -191,7 +191,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/int-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -242,7 +242,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/keys-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -304,7 +304,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/bool-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -375,16 +375,16 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/large-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<int, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
                         $count = \count($body);
 
-                        /** @var mixed $firstId */
+                        /**  */
                         $firstId = null;
-                        /** @var mixed $lastId */
+                        /**  */
                         $lastId = null;
                         if ($count > 0) {
                             $first = $body[0] ?? null;
@@ -434,7 +434,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/unicode-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -483,7 +483,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/circular-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -537,7 +537,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/cleanup-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         // Attempt to process body that may be invalid
@@ -589,7 +589,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/type-mismatch-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -633,7 +633,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/float-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -688,13 +688,13 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/empty-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
                         $body = \is_array($request->body) ? $request->body : [];
                         $empty = $body['empty_array'] ?? 'missing';
-                        /** @var mixed $null */
+                        /**  */
                         $null = \array_key_exists('null_value', $body) ? $body['null_value'] : 'missing';
 
                         return Response::json([
@@ -740,7 +740,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/nested-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -807,7 +807,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/exception-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -862,7 +862,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/mixed-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */
@@ -925,7 +925,7 @@ final class FfiTypeSafetyTest extends TestCase
             [
                 'method' => 'POST',
                 'path' => '/boundary-test',
-                'handler' => new class {
+                'handler' => new class () {
                     public function handle(Request $request): Response
                     {
                         /** @var array<string, mixed> $body */

@@ -75,7 +75,7 @@ final class GrpcRequestTest extends TestCase
             $payload
         );
 
-        self::assertSame(strlen($payload), $request->getPayloadSize());
+        self::assertSame(\strlen($payload), $request->getPayloadSize());
     }
 
     public function testGetPayloadSizeEmpty(): void
@@ -147,7 +147,7 @@ final class GrpcRequestTest extends TestCase
 
     public function testLargePayload(): void
     {
-        $largePayload = str_repeat('x', 10000);
+        $largePayload = \str_repeat('x', 10000);
         $request = new Request('test.Service', 'TestMethod', $largePayload);
 
         self::assertSame(10000, $request->getPayloadSize());

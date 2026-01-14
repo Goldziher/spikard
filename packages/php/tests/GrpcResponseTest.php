@@ -35,7 +35,7 @@ final class GrpcResponseTest extends TestCase
         $payload = 'test_response_data';
         $response = new Response($payload);
 
-        self::assertSame(strlen($payload), $response->getPayloadSize());
+        self::assertSame(\strlen($payload), $response->getPayloadSize());
     }
 
     public function testGetPayloadSizeEmpty(): void
@@ -125,7 +125,7 @@ final class GrpcResponseTest extends TestCase
 
     public function testLargePayload(): void
     {
-        $largePayload = str_repeat('x', 100000);
+        $largePayload = \str_repeat('x', 100000);
         $response = new Response($largePayload);
 
         self::assertSame(100000, $response->getPayloadSize());

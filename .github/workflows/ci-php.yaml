@@ -155,7 +155,7 @@ jobs:
       - name: Install PHP extension
         run: |
           # Find the extension file
-          EXT_FILE=$(find target/release -name 'libspikard_php*.so' | head -1)
+          EXT_FILE=$(find target/release -type f \( -name 'libspikard_php*.so' -o -name 'spikard_php*.so' \) | head -1)
           if [ -z "$EXT_FILE" ]; then
             echo "Error: Could not find PHP extension (.so file)"
             exit 1
@@ -237,7 +237,7 @@ jobs:
       - name: Install PHP extension
         run: |
           # Find the extension file
-          EXT_FILE=$(find target/release -name 'libspikard_php*.so' | head -1)
+          EXT_FILE=$(find target/release -type f \( -name 'libspikard_php*.so' -o -name 'spikard_php*.so' \) | head -1)
           if [ -z "$EXT_FILE" ]; then
             echo "Error: Could not find PHP extension (.so file)"
             exit 1

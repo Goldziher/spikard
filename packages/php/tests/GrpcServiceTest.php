@@ -162,8 +162,10 @@ final class GrpcServiceTest extends TestCase
         $expectedResponse = new Response('response_payload');
 
         // Pass the response via constructor
-        $handler = new class($expectedResponse) implements HandlerInterface {
-            public function __construct(private Response $response) {}
+        $handler = new class ($expectedResponse) implements HandlerInterface {
+            public function __construct(private Response $response)
+            {
+            }
 
             public function handleRequest(Request $request): Response
             {
@@ -237,7 +239,7 @@ final class GrpcServiceTest extends TestCase
      */
     private function createMockHandler(): HandlerInterface
     {
-        return new class implements HandlerInterface {
+        return new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 return new Response('default_response');

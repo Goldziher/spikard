@@ -21,7 +21,8 @@ final class Response
     public function __construct(
         public readonly string $payload,
         public readonly array $metadata = []
-    ) {}
+    ) {
+    }
 
     /**
      * Create a response with error status.
@@ -45,7 +46,7 @@ final class Response
      */
     public function getPayloadSize(): int
     {
-        return strlen($this->payload);
+        return \strlen($this->payload);
     }
 
     /**
@@ -83,6 +84,6 @@ final class Response
      */
     public function __toString(): string
     {
-        return sprintf('Response(payloadSize=%d)', $this->getPayloadSize());
+        return \sprintf('Response(payloadSize=%d)', $this->getPayloadSize());
     }
 }

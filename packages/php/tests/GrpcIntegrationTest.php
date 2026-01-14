@@ -27,7 +27,7 @@ final class GrpcIntegrationTest extends TestCase
     public function testUserServiceHandler(): void
     {
         // Create a mock user service handler
-        $userServiceHandler = new class implements HandlerInterface {
+        $userServiceHandler = new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 // In a real scenario, this would deserialize the protobuf payload
@@ -38,7 +38,7 @@ final class GrpcIntegrationTest extends TestCase
                     // Real code would deserialize the request protobuf
 
                     // Simulate a response (in real code, serialize a protobuf message)
-                    $userData = json_encode([
+                    $userData = \json_encode([
                         'id' => 123,
                         'name' => 'John Doe',
                         'email' => 'john@example.com',
@@ -59,14 +59,14 @@ final class GrpcIntegrationTest extends TestCase
         $request = Grpc::createRequest(
             'example.UserService',
             'GetUser',
-            json_encode(['id' => 123], JSON_THROW_ON_ERROR)
+            \json_encode(['id' => 123], JSON_THROW_ON_ERROR)
         );
 
         $response = $service->handleRequest($request);
 
         // Verify the response
         self::assertNotEmpty($response->payload);
-        $userData = json_decode($response->payload, true, 512, JSON_THROW_ON_ERROR);
+        $userData = \json_decode($response->payload, true, 512, JSON_THROW_ON_ERROR);
         self::assertIsArray($userData);
         self::assertSame('John Doe', $userData['name']);
     }
@@ -80,7 +80,7 @@ final class GrpcIntegrationTest extends TestCase
         $service = Grpc::createService();
 
         // Register UserService handler
-        $service->registerHandler('example.UserService', new class implements HandlerInterface {
+        $service->registerHandler('example.UserService', new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 return new Response('user_response');
@@ -88,7 +88,7 @@ final class GrpcIntegrationTest extends TestCase
         });
 
         // Register PostService handler
-        $service->registerHandler('example.PostService', new class implements HandlerInterface {
+        $service->registerHandler('example.PostService', new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 return new Response('post_response');
@@ -96,7 +96,7 @@ final class GrpcIntegrationTest extends TestCase
         });
 
         // Register CommentService handler
-        $service->registerHandler('example.CommentService', new class implements HandlerInterface {
+        $service->registerHandler('example.CommentService', new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 return new Response('comment_response');
@@ -124,7 +124,7 @@ final class GrpcIntegrationTest extends TestCase
     {
         $service = Grpc::createService();
 
-        $errorHandler = new class implements HandlerInterface {
+        $errorHandler = new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 if ($request->methodName === 'InvalidMethod') {
@@ -157,7 +157,7 @@ final class GrpcIntegrationTest extends TestCase
     {
         $service = Grpc::createService();
 
-        $metadataAwareHandler = new class implements HandlerInterface {
+        $metadataAwareHandler = new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 // Extract authorization from metadata
@@ -194,7 +194,7 @@ final class GrpcIntegrationTest extends TestCase
     {
         $service = Grpc::createService();
 
-        $binaryHandler = new class implements HandlerInterface {
+        $binaryHandler = new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 // In a real scenario, this would be protobuf serialization
@@ -203,7 +203,7 @@ final class GrpcIntegrationTest extends TestCase
                 $payloadSize = $request->getPayloadSize();
 
                 // Create a response with size information encoded
-                $responseData = pack('I', $payloadSize);
+                $responseData = \pack('I', $payloadSize);
 
                 return new Response($responseData);
             }
@@ -222,7 +222,7 @@ final class GrpcIntegrationTest extends TestCase
         $response = $service->handleRequest($request);
 
         // Verify response contains the payload size
-        $sizeData = unpack('I', $response->payload);
+        $sizeData = \unpack('I', $response->payload);
         self::assertIsArray($sizeData);
         self::assertArrayHasKey(1, $sizeData);
         $responseSize = $sizeData[1];
@@ -236,14 +236,14 @@ final class GrpcIntegrationTest extends TestCase
     {
         $service = Grpc::createService();
 
-        $handler1 = new class implements HandlerInterface {
+        $handler1 = new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 return new Response('handler1');
             }
         };
 
-        $handler2 = new class implements HandlerInterface {
+        $handler2 = new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 return new Response('handler2');
@@ -279,8 +279,10 @@ final class GrpcIntegrationTest extends TestCase
         ];
 
         foreach ($services as $serviceName) {
-            $service->registerHandler($serviceName, new class($serviceName) implements HandlerInterface {
-                public function __construct(private string $serviceName) {}
+            $service->registerHandler($serviceName, new class ($serviceName) implements HandlerInterface {
+                public function __construct(private string $serviceName)
+                {
+                }
 
                 public function handleRequest(Request $request): Response
                 {
@@ -304,7 +306,7 @@ final class GrpcIntegrationTest extends TestCase
     {
         $service = Grpc::createService();
 
-        $handler = new class implements HandlerInterface {
+        $handler = new class () implements HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 return new Response('response');

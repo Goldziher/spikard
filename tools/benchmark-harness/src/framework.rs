@@ -6,6 +6,7 @@
 
 use crate::Result;
 use std::path::Path;
+use std::process::Command;
 
 /// Configuration for a framework
 #[derive(Debug, Clone)]
@@ -73,8 +74,22 @@ impl FrameworkConfig {
 }
 
 /// Registry of all supported frameworks
+fn php_extension_available(extension: &str) -> bool {
+    let output = Command::new("php").arg("-m").output();
+    let Ok(output) = output else {
+        return false;
+    };
+    if !output.status.success() {
+        return false;
+    }
+    let Ok(stdout) = String::from_utf8(output.stdout) else {
+        return false;
+    };
+    stdout.lines().any(|line| line.trim().eq_ignore_ascii_case(extension))
+}
+
 fn framework_registry() -> Vec<FrameworkConfig> {
-    vec![
+    let mut frameworks = vec![
         FrameworkConfig::new(
             "spikard-rust-validation",
             vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
@@ -381,22 +396,29 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "php server.php {port}",
             None,
         ),
-        FrameworkConfig::new(
+    ];
+
+    if php_extension_available("phalcon") {
+        frameworks.push(FrameworkConfig::new(
             "phalcon-raw",
             vec!["server.php".to_string(), "composer.json".to_string()],
             Some("composer install --no-dev --optimize-autoloader".to_string()),
             "php -S 0.0.0.0:{port} server.php",
             None,
-        ),
-        FrameworkConfig::new(
-            "phalcon-validation",
-            vec!["server.php".to_string(), "composer.json".to_string()],
-            Some("composer install --no-dev --optimize-autoloader".to_string()),
-            "php -S 0.0.0.0:{port} server.php",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-    ]
+        ));
+        frameworks.push(
+            FrameworkConfig::new(
+                "phalcon-validation",
+                vec!["server.php".to_string(), "composer.json".to_string()],
+                Some("composer install --no-dev --optimize-autoloader".to_string()),
+                "php -S 0.0.0.0:{port} server.php",
+                None,
+            )
+            .with_supported_categories(vec!["json-bodies".to_string()]),
+        );
+    }
+
+    frameworks
 }
 
 /// Detects the framework used in the given application directory
@@ -575,10 +597,16 @@ mod tests {
         assert!(names.contains(&"roda-raw"));
 
         assert!(names.contains(&"trongate-raw"));
-        assert!(names.contains(&"phalcon-raw"));
-        assert!(names.contains(&"phalcon-validation"));
+        if php_extension_available("phalcon") {
+            assert!(names.contains(&"phalcon-raw"));
+            assert!(names.contains(&"phalcon-validation"));
+        } else {
+            assert!(!names.contains(&"phalcon-raw"));
+            assert!(!names.contains(&"phalcon-validation"));
+        }
 
-        assert_eq!(registry.len(), 44);
+        let expected_len = if php_extension_available("phalcon") { 44 } else { 42 };
+        assert_eq!(registry.len(), expected_len);
     }
 
     #[test]

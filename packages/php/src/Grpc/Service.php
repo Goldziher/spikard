@@ -51,9 +51,9 @@ final class Service
         }
 
         // Validate service name format (must contain a dot for fully qualified name)
-        if (strpos($serviceName, '.') === false) {
+        if (\strpos($serviceName, '.') === false) {
             throw new InvalidArgumentException(
-                sprintf(
+                \sprintf(
                     'Service name "%s" must be fully qualified (contain a dot)',
                     $serviceName
                 )
@@ -95,7 +95,7 @@ final class Service
      */
     public function getServiceNames(): array
     {
-        return array_keys($this->handlers);
+        return \array_keys($this->handlers);
     }
 
     /**
@@ -105,7 +105,7 @@ final class Service
      */
     public function getHandlerCount(): int
     {
-        return count($this->handlers);
+        return \count($this->handlers);
     }
 
     /**
@@ -143,7 +143,7 @@ final class Service
         $handler = $this->getHandler($request->serviceName);
         if ($handler === null) {
             throw new RuntimeException(
-                sprintf(
+                \sprintf(
                     'No gRPC handler registered for service "%s"',
                     $request->serviceName
                 )

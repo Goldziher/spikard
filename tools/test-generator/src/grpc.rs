@@ -161,7 +161,10 @@ pub fn load_grpc_fixtures(fixtures_dir: &Path) -> Result<Vec<GrpcFixture>> {
         let entry = entry.context("Failed to read directory entry")?;
         let path = entry.path();
 
-        if path.is_file() && path.extension().is_some_and(|e| e == "json") {
+        if path.is_file()
+            && path.extension().is_some_and(|e| e == "json")
+            && path.file_name().is_some_and(|name| name != "schema.json")
+        {
             let content = fs::read_to_string(&path)
                 .with_context(|| format!("Failed to read {}", path.display()))?;
             let fixture = parse_grpc_fixture(&content)
@@ -180,7 +183,10 @@ pub fn load_grpc_fixtures(fixtures_dir: &Path) -> Result<Vec<GrpcFixture>> {
                 let sub_entry = sub_entry.context("Failed to read sub-entry")?;
                 let file_path = sub_entry.path();
 
-                if file_path.is_file() && file_path.extension().is_some_and(|e| e == "json") {
+                if file_path.is_file()
+                    && file_path.extension().is_some_and(|e| e == "json")
+                    && file_path.file_name().is_some_and(|name| name != "schema.json")
+                {
                     let content = fs::read_to_string(&file_path)
                         .with_context(|| format!("Failed to read {}", file_path.display()))?;
                     let fixture = parse_grpc_fixture(&content)

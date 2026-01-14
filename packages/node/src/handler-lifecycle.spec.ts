@@ -38,8 +38,6 @@ const logExecution = (hookName: string, phase: string): void => {
 	executionLog.push({ hookName, timestamp: Date.now(), phase });
 };
 
-const getPhaseOrder = (): string[] => executionLog.map((entry) => entry.hookName);
-
 // ============================================================================
 // Test 1: onRequest Hook Executes Before Handler
 // ============================================================================
@@ -48,7 +46,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	beforeEach(() => clearLog());
 
 	it("should execute onRequest hook before handler", async () => {
-		const handler: HandlerFunction = async (req) => {
+		const handler: HandlerFunction = async (_req) => {
 			logExecution("handler", "execute");
 			return { status: 200, body: { result: "ok" } };
 		};
@@ -77,7 +75,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should execute multiple hooks on same event in registration order", async () => {
-		const handler: HandlerFunction = async (req) => {
+		const handler: HandlerFunction = async (_req) => {
 			logExecution("handler", "execute");
 			return { status: 200, body: { result: "ok" } };
 		};
@@ -105,7 +103,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should execute handler and return response body", async () => {
-		const handler: HandlerFunction = async (req) => {
+		const handler: HandlerFunction = async (_req) => {
 			return {
 				status: 200,
 				body: {
@@ -142,7 +140,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should support async hooks with await", async () => {
-		const handler: HandlerFunction = async (req) => {
+		const handler: HandlerFunction = async (_req) => {
 			logExecution("handler", "execute");
 			// Simulate async delay
 			await new Promise((resolve) => setTimeout(resolve, 10));
@@ -173,7 +171,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should allow hooks to access request context (params, headers, body)", async () => {
-		const handler: HandlerFunction = async (req: Request) => {
+		const handler: HandlerFunction = async (_req: Request) => {
 			const userId = req.params.id as string;
 			const authHeader = req.headers.authorization ?? "none";
 			return {
@@ -217,7 +215,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should allow hooks to add headers to request context", async () => {
-		const handler: HandlerFunction = async (req: Request) => {
+		const handler: HandlerFunction = async (_req: Request) => {
 			// Verify hook-modified headers are present
 			const customHeader = req.headers["x-custom-header"] ?? "not-found";
 			return {
@@ -342,7 +340,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should handle structured response objects with status and body", async () => {
-		const handler: HandlerFunction = async (req: Request) => {
+		const handler: HandlerFunction = async (_req: Request) => {
 			return {
 				status: 201,
 				body: {
@@ -554,7 +552,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should handle POST with JSON body in hooks context", async () => {
-		const handler: HandlerFunction = async (req: Request) => {
+		const handler: HandlerFunction = async (_req: Request) => {
 			return {
 				status: 200,
 				body: {
@@ -591,7 +589,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should extract route parameters in hook context", async () => {
-		const handler: HandlerFunction = async (req: Request) => {
+		const handler: HandlerFunction = async (_req: Request) => {
 			const id = req.params.id as string;
 			const action = req.params.action as string;
 			return {
@@ -627,7 +625,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should access query parameters in hook context", async () => {
-		const handler: HandlerFunction = async (req: Request) => {
+		const handler: HandlerFunction = async (_req: Request) => {
 			return {
 				status: 200,
 				body: {
@@ -661,7 +659,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	it("should execute multiple hooks like middleware chain", async () => {
 		const executionOrder: string[] = [];
 
-		const handler: HandlerFunction = async (req: Request) => {
+		const handler: HandlerFunction = async (_req: Request) => {
 			executionOrder.push("handler");
 			return { status: 200, body: { order: executionOrder } };
 		};

@@ -61,12 +61,12 @@ final class GrpcFixturesTest extends TestCase
     private static function loadFixtures(string $category): array
     {
         $categoryDir = self::FIXTURES_DIR . '/' . $category;
-        if (!is_dir($categoryDir)) {
+        if (!\is_dir($categoryDir)) {
             return [];
         }
 
         $fixtures = [];
-        $files = glob($categoryDir . '/*.json');
+        $files = \glob($categoryDir . '/*.json');
 
         if ($files === false) {
             return [];
@@ -74,13 +74,13 @@ final class GrpcFixturesTest extends TestCase
 
         foreach ($files as $file) {
             try {
-                $content = file_get_contents($file);
+                $content = \file_get_contents($file);
                 if ($content === false) {
                     continue;
                 }
 
                 /** @var array<string, mixed> $fixture */
-                $fixture = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+                $fixture = \json_decode($content, true, 512, JSON_THROW_ON_ERROR);
 
                 // Skip fixtures marked with "skip": true
                 if (isset($fixture['skip']) && $fixture['skip'] === true) {
@@ -88,9 +88,9 @@ final class GrpcFixturesTest extends TestCase
                 }
 
                 // Ensure fixture has a valid name
-                /** @var mixed $fixtureNameVal */
+                /**  */
                 $fixtureNameVal = $fixture['name'] ?? null;
-                if (!is_string($fixtureNameVal)) {
+                if (!\is_string($fixtureNameVal)) {
                     continue;
                 }
 
@@ -101,7 +101,7 @@ final class GrpcFixturesTest extends TestCase
             }
         }
 
-        ksort($fixtures);
+        \ksort($fixtures);
 
         return $fixtures;
     }
@@ -116,9 +116,9 @@ final class GrpcFixturesTest extends TestCase
      */
     private function generateStream(string $streamGenerator, int $streamSize): array
     {
-        $generatorLower = strtolower($streamGenerator);
+        $generatorLower = \strtolower($streamGenerator);
 
-        if (str_contains($generatorLower, 'sequential') || str_contains($generatorLower, 'counter')) {
+        if (\str_contains($generatorLower, 'sequential') || \str_contains($generatorLower, 'counter')) {
             // Generate sequential integer messages
             $result = [];
             for ($i = 0; $i < $streamSize; ++$i) {
@@ -131,26 +131,26 @@ final class GrpcFixturesTest extends TestCase
             return $result;
         }
 
-        if (str_contains($generatorLower, 'random')) {
+        if (\str_contains($generatorLower, 'random')) {
             // Generate messages with random data
             $result = [];
             for ($i = 0; $i < $streamSize; ++$i) {
                 $result[] = [
                     'index' => $i,
-                    'random_value' => random_int(0, 1000),
+                    'random_value' => \random_int(0, 1000),
                 ];
             }
 
             return $result;
         }
 
-        if (str_contains($generatorLower, 'timestamp')) {
+        if (\str_contains($generatorLower, 'timestamp')) {
             // Generate messages with timestamps
             $result = [];
             for ($i = 0; $i < $streamSize; ++$i) {
                 $result[] = [
                     'index' => $i,
-                    'timestamp' => microtime(true),
+                    'timestamp' => \microtime(true),
                 ];
             }
 
@@ -272,7 +272,7 @@ final class GrpcFixturesTest extends TestCase
      */
     private function validateStreamResponse(array $responses, array $expectedResponse): void
     {
-        /** @var mixed $expectedMessages */
+        /**  */
         $expectedMessages = $expectedResponse['stream'] ?? null;
 
         if ($expectedMessages === null) {
@@ -284,12 +284,12 @@ final class GrpcFixturesTest extends TestCase
 
         // Validate stream length
         $this->assertCount(
-            count($expectedMessages),
+            \count($expectedMessages),
             $responses,
-            sprintf(
+            \sprintf(
                 'Expected %d messages, got %d',
-                count($expectedMessages),
-                count($responses),
+                \count($expectedMessages),
+                \count($responses),
             ),
         );
 
@@ -300,7 +300,7 @@ final class GrpcFixturesTest extends TestCase
             $this->assertEquals(
                 $expectedMsg,
                 $actual,
-                sprintf('Message %d mismatch', $i),
+                \sprintf('Message %d mismatch', $i),
             );
         }
     }
@@ -313,7 +313,7 @@ final class GrpcFixturesTest extends TestCase
      */
     private function validateSingleResponse(array $response, array $expectedResponse): void
     {
-        /** @var mixed $expectedMessage */
+        /**  */
         $expectedMessage = $expectedResponse['message'] ?? null;
 
         if ($expectedMessage === null) {
@@ -322,7 +322,7 @@ final class GrpcFixturesTest extends TestCase
         }
 
         // Skip string descriptions (used for documentation)
-        if (is_string($expectedMessage)) {
+        if (\is_string($expectedMessage)) {
             return;
         }
 
@@ -383,8 +383,8 @@ final class GrpcFixturesTest extends TestCase
     {
         // Extract service and method
         [$serviceName, $methodName, $method] = $this->extractServiceMethod($fixture, 'server_streaming');
-        assert(is_string($serviceName));
-        assert(is_string($methodName));
+        \assert(\is_string($serviceName));
+        \assert(\is_string($methodName));
 
         // Extract request data (return type ensures it's an array)
         $requestMessageMixed = $this->extractRequestData($fixture, isStreaming: false);
@@ -392,21 +392,21 @@ final class GrpcFixturesTest extends TestCase
         $requestMessage = $requestMessageMixed;
 
         // Extract metadata and timeout
-        /** @var mixed $request */
+        /**  */
         $request = $fixture['request'];
-        assert(is_array($request));
+        \assert(\is_array($request));
 
         /** @var array<string, string> $metadata */
-        $metadata = is_array($request['metadata'] ?? null) ? (array) $request['metadata'] : [];
+        $metadata = \is_array($request['metadata'] ?? null) ? (array) $request['metadata'] : [];
 
-        /** @var mixed $handler */
+        /**  */
         $handler = $request['handler'] ?? [];
-        assert(is_array($handler));
+        \assert(\is_array($handler));
 
-        /** @var mixed $timeoutMs */
+        /**  */
         $timeoutMs = $handler['timeout_ms'] ?? null;
         /** @var float|null $timeout */
-        $timeout = $timeoutMs !== null && is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
+        $timeout = $timeoutMs !== null && \is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
 
         // Execute RPC
         $responses = $this->client->executeServerStreaming(
@@ -418,10 +418,10 @@ final class GrpcFixturesTest extends TestCase
         );
 
         // Validate response
-        /** @var mixed $expectedResponse */
+        /**  */
         $expectedResponse = $fixture['expected_response'];
         /** @var array<string, mixed> $expectedResponseArray */
-        $expectedResponseArray = is_array($expectedResponse) ? $expectedResponse : [];
+        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $this->validateStreamResponse($responses, $expectedResponseArray);
     }
 
@@ -438,8 +438,8 @@ final class GrpcFixturesTest extends TestCase
     {
         // Extract service and method
         [$serviceName, $methodName, $method] = $this->extractServiceMethod($fixture, 'client_streaming');
-        assert(is_string($serviceName));
-        assert(is_string($methodName));
+        \assert(\is_string($serviceName));
+        \assert(\is_string($methodName));
 
         // Extract request data (stream of messages, return type ensures it's an array)
         $requestMessagesMixed = $this->extractRequestData($fixture, isStreaming: true);
@@ -447,21 +447,21 @@ final class GrpcFixturesTest extends TestCase
         $requestMessages = $requestMessagesMixed;
 
         // Extract metadata and timeout
-        /** @var mixed $request */
+        /**  */
         $request = $fixture['request'];
-        assert(is_array($request));
+        \assert(\is_array($request));
 
         /** @var array<string, string> $metadata */
-        $metadata = is_array($request['metadata'] ?? null) ? (array) $request['metadata'] : [];
+        $metadata = \is_array($request['metadata'] ?? null) ? (array) $request['metadata'] : [];
 
-        /** @var mixed $handler */
+        /**  */
         $handler = $request['handler'] ?? [];
-        assert(is_array($handler));
+        \assert(\is_array($handler));
 
-        /** @var mixed $timeoutMs */
+        /**  */
         $timeoutMs = $handler['timeout_ms'] ?? null;
         /** @var float|null $timeout */
-        $timeout = $timeoutMs !== null && is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
+        $timeout = $timeoutMs !== null && \is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
 
         // Execute RPC
         $response = $this->client->executeClientStreaming(
@@ -473,10 +473,10 @@ final class GrpcFixturesTest extends TestCase
         );
 
         // Validate response
-        /** @var mixed $expectedResponse */
+        /**  */
         $expectedResponse = $fixture['expected_response'];
         /** @var array<string, mixed> $expectedResponseArray */
-        $expectedResponseArray = is_array($expectedResponse) ? $expectedResponse : [];
+        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $this->validateSingleResponse($response, $expectedResponseArray);
     }
 
@@ -493,8 +493,8 @@ final class GrpcFixturesTest extends TestCase
     {
         // Extract service and method
         [$serviceName, $methodName, $method] = $this->extractServiceMethod($fixture);
-        assert(is_string($serviceName));
-        assert(is_string($methodName));
+        \assert(\is_string($serviceName));
+        \assert(\is_string($methodName));
 
         // Extract request data (stream of messages, return type ensures it's an array)
         $requestMessagesMixed = $this->extractRequestData($fixture, isStreaming: true);
@@ -502,21 +502,21 @@ final class GrpcFixturesTest extends TestCase
         $requestMessages = $requestMessagesMixed;
 
         // Extract metadata and timeout
-        /** @var mixed $request */
+        /**  */
         $request = $fixture['request'];
-        assert(is_array($request));
+        \assert(\is_array($request));
 
         /** @var array<string, string> $metadata */
-        $metadata = is_array($request['metadata'] ?? null) ? (array) $request['metadata'] : [];
+        $metadata = \is_array($request['metadata'] ?? null) ? (array) $request['metadata'] : [];
 
-        /** @var mixed $handler */
+        /**  */
         $handler = $request['handler'] ?? [];
-        assert(is_array($handler));
+        \assert(\is_array($handler));
 
-        /** @var mixed $timeoutMs */
+        /**  */
         $timeoutMs = $handler['timeout_ms'] ?? null;
         /** @var float|null $timeout */
-        $timeout = $timeoutMs !== null && is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
+        $timeout = $timeoutMs !== null && \is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
 
         // Execute RPC
         $responses = $this->client->executeBidirectional(
@@ -528,10 +528,10 @@ final class GrpcFixturesTest extends TestCase
         );
 
         // Validate response
-        /** @var mixed $expectedResponse */
+        /**  */
         $expectedResponse = $fixture['expected_response'];
         /** @var array<string, mixed> $expectedResponseArray */
-        $expectedResponseArray = is_array($expectedResponse) ? $expectedResponse : [];
+        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $this->validateStreamResponse($responses, $expectedResponseArray);
     }
 
@@ -548,15 +548,15 @@ final class GrpcFixturesTest extends TestCase
     {
         // Extract service and method
         [$serviceName, $methodName, $method] = $this->extractServiceMethod($fixture);
-        assert(is_string($serviceName));
-        assert(is_string($methodName));
+        \assert(\is_string($serviceName));
+        \assert(\is_string($methodName));
 
         // Determine streaming mode from method
-        /** @var mixed $isClientStreamingVal */
+        /**  */
         $isClientStreamingVal = $method['client_streaming'] ?? false;
         $isClientStreaming = (bool) $isClientStreamingVal;
 
-        /** @var mixed $isServerStreamingVal */
+        /**  */
         $isServerStreamingVal = $method['server_streaming'] ?? false;
         $isServerStreaming = (bool) $isServerStreamingVal;
 
@@ -565,21 +565,21 @@ final class GrpcFixturesTest extends TestCase
         $requestDataMixed = $this->extractRequestData($fixture, isStreaming: $isStreaming);
 
         // Extract metadata and timeout
-        /** @var mixed $request */
+        /**  */
         $request = $fixture['request'];
-        assert(is_array($request));
+        \assert(\is_array($request));
 
         /** @var array<string, string> $metadata */
-        $metadata = is_array($request['metadata'] ?? null) ? (array) $request['metadata'] : [];
+        $metadata = \is_array($request['metadata'] ?? null) ? (array) $request['metadata'] : [];
 
-        /** @var mixed $handler */
+        /**  */
         $handler = $request['handler'] ?? [];
-        assert(is_array($handler));
+        \assert(\is_array($handler));
 
-        /** @var mixed $timeoutMs */
+        /**  */
         $timeoutMs = $handler['timeout_ms'] ?? null;
         /** @var float|null $timeout */
-        $timeout = $timeoutMs !== null && is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
+        $timeout = $timeoutMs !== null && \is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
 
         // Execute RPC and expect error
         try {
@@ -622,16 +622,16 @@ final class GrpcFixturesTest extends TestCase
             $this->fail('Expected RuntimeException to be thrown');
         } catch (\RuntimeException $e) {
             // Validate error
-            /** @var mixed $expectedResponse */
+            /**  */
             $expectedResponse = $fixture['expected_response'];
-            assert(is_array($expectedResponse));
+            \assert(\is_array($expectedResponse));
 
-            /** @var mixed $error */
+            /**  */
             $error = $expectedResponse['error'] ?? null;
-            if (is_array($error)) {
-                /** @var mixed $code */
+            if (\is_array($error)) {
+                /**  */
                 $code = $error['code'] ?? null;
-                if ($code !== null && (is_string($code) || is_int($code))) {
+                if ($code !== null && (\is_string($code) || \is_int($code))) {
                     $this->assertStringContainsString(
                         (string) $code,
                         $e->getMessage(),
@@ -639,9 +639,9 @@ final class GrpcFixturesTest extends TestCase
                     );
                 }
 
-                /** @var mixed $message */
+                /**  */
                 $message = $error['message'] ?? null;
-                if (is_string($message)) {
+                if (\is_string($message)) {
                     $this->assertStringContainsString(
                         $message,
                         $e->getMessage(),

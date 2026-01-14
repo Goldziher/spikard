@@ -16,4 +16,4 @@ gem 'websocket-client-simple', '~> 0.8'
 
 # gRPC support for RPC services (allow 1.76.0+)
 gem 'grpc', '~> 1.76'
-gem 'grpc-tools', '~> 1.76', require: false  # Development: protobuf code generation
+gem 'grpc-tools', '~> 1.76', require: false # Development: protobuf code generation

@@ -137,6 +137,21 @@ fn handler_param_names<'py>(
     Ok((Some(out), first_param_name))
 }
 
+fn ensure_empty_in_handler_globals<'py>(py: Python<'py>, handler: Bound<'py, PyAny>) -> PyResult<()> {
+    let globals = handler.getattr("__globals__")?.cast_into::<PyDict>()?;
+    if globals.get_item("Empty")?.is_some() {
+        return Ok(());
+    }
+
+    if let Ok(types_mod) = py.import("spikard._internal.types")
+        && let Ok(empty) = types_mod.getattr("Empty")
+    {
+        let _ = globals.set_item("Empty", empty);
+    }
+
+    Ok(())
+}
+
 fn request_param_is_request_type<'py>(
     py: Python<'py>,
     handler: Bound<'py, PyAny>,
@@ -334,6 +349,7 @@ impl PythonHandler {
             body_param_name,
         ) = Python::attach(|py| {
             let handler_obj = handler.bind(py);
+            let _ = ensure_empty_in_handler_globals(py, handler_obj.clone());
             let needs = needs_param_conversion(py, handler_obj.clone()).unwrap_or(true);
             let (params, first_param_name) = handler_param_names(py, handler_obj.clone()).unwrap_or((None, None));
             let request_param_is_request = if matches!(first_param_name.as_deref(), Some("request" | "req")) {

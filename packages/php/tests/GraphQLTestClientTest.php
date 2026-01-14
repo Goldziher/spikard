@@ -70,7 +70,7 @@ class GraphQLTestClientTest extends TestCase
             if (!\is_callable($handler) && \method_exists($handler, 'handle')) {
                 $wrappedHandler = $handler;
                 $finalHandler = new class ($wrappedHandler) implements \Spikard\Handlers\HandlerInterface {
-                    /** @var object */
+                    /**  */
                     private object $handler;
 
                     public function __construct(object $handler)
@@ -88,7 +88,7 @@ class GraphQLTestClientTest extends TestCase
                         if (!\is_callable($this->handler)) {
                             return \Spikard\Http\Response::json(['error' => 'Handler is not callable'], 500);
                         }
-                        /** @var mixed $result */
+                        /**  */
                         $result = ($this->handler)($request);
                         if ($result instanceof \Spikard\Http\Response) {
                             return $result;

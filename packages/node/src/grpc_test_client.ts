@@ -48,6 +48,25 @@ export class GrpcTestClient {
 	}
 
 	/**
+	 * Create a gRPC client bound to the configured server address.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private createClient(): any {
+		if (!this.grpc) {
+			throw new Error(
+				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
+			);
+		}
+
+		const credentials = this.grpc.credentials?.createInsecure?.();
+		if (!credentials) {
+			throw new Error("gRPC credentials factory unavailable in @grpc/grpc-js");
+		}
+
+		return new this.grpc.Client(this.serverAddress, credentials);
+	}
+
+	/**
 	 * Initialize the gRPC module using @grpc/grpc-js.
 	 *
 	 * This is called automatically in the constructor.
@@ -101,24 +120,17 @@ export class GrpcTestClient {
 		metadata?: Record<string, string>,
 		timeout?: number,
 	): Promise<Record<string, unknown>> {
-		if (!this.grpc) {
-			throw new Error(
-				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
-			);
-		}
-
 		const method = `/${serviceName}/${methodName}`;
 
 		// Create a dynamic client for making unary RPC calls
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const client = new this.grpc.Client() as any;
+		const client = this.createClient() as any;
 
 		return new Promise((resolve, reject) => {
 			try {
 				// Make the unary RPC call directly
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				client.makeUnaryRequest(
-					this.serverAddress,
 					method,
 					(value: Record<string, unknown>) => {
 						return Buffer.from(JSON.stringify(value));
@@ -167,17 +179,11 @@ export class GrpcTestClient {
 		metadata?: Record<string, string>,
 		timeout?: number,
 	): Promise<Array<Record<string, unknown>>> {
-		if (!this.grpc) {
-			throw new Error(
-				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
-			);
-		}
-
 		const method = `/${serviceName}/${methodName}`;
 
 		// Create a dynamic client for making server streaming RPC calls
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const client = new this.grpc.Client() as any;
+		const client = this.createClient() as any;
 
 		return new Promise((resolve, reject) => {
 			const responses: Array<Record<string, unknown>> = [];
@@ -186,7 +192,6 @@ export class GrpcTestClient {
 				// Make the server streaming RPC call
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				const call = client.makeServerStreamRequest(
-					this.serverAddress,
 					method,
 					(value: Record<string, unknown>) => {
 						return Buffer.from(JSON.stringify(value));
@@ -241,24 +246,17 @@ export class GrpcTestClient {
 		metadata?: Record<string, string>,
 		timeout?: number,
 	): Promise<Record<string, unknown>> {
-		if (!this.grpc) {
-			throw new Error(
-				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
-			);
-		}
-
 		const method = `/${serviceName}/${methodName}`;
 
 		// Create a dynamic client for making client streaming RPC calls
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const client = new this.grpc.Client() as any;
+		const client = this.createClient() as any;
 
 		return new Promise((resolve, reject) => {
 			try {
 				// Make the client streaming RPC call
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				const call = client.makeClientStreamRequest(
-					this.serverAddress,
 					method,
 					(value: Record<string, unknown>) => {
 						return Buffer.from(JSON.stringify(value));
@@ -319,17 +317,11 @@ export class GrpcTestClient {
 		metadata?: Record<string, string>,
 		timeout?: number,
 	): Promise<Array<Record<string, unknown>>> {
-		if (!this.grpc) {
-			throw new Error(
-				`gRPC module not initialized. Cannot connect to ${this.serverAddress}. Is @grpc/grpc-js installed?`,
-			);
-		}
-
 		const method = `/${serviceName}/${methodName}`;
 
 		// Create a dynamic client for making bidirectional streaming RPC calls
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const client = new this.grpc.Client() as any;
+		const client = this.createClient() as any;
 
 		return new Promise((resolve, reject) => {
 			const responses: Array<Record<string, unknown>> = [];
@@ -338,7 +330,6 @@ export class GrpcTestClient {
 				// Make the bidirectional streaming RPC call
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				const call = client.makeBidiStreamRequest(
-					this.serverAddress,
 					method,
 					(value: Record<string, unknown>) => {
 						return Buffer.from(JSON.stringify(value));

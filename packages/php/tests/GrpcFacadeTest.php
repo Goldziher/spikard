@@ -105,7 +105,7 @@ final class GrpcFacadeTest extends TestCase
     public function testFacadeIntegration(): void
     {
         $service = Grpc::createService();
-        $handler = new class implements \Spikard\Grpc\HandlerInterface {
+        $handler = new class () implements \Spikard\Grpc\HandlerInterface {
             public function handleRequest(Request $request): Response
             {
                 return Grpc::createResponse('response');

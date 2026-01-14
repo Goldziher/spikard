@@ -25,7 +25,8 @@ final class Request
         public readonly string $methodName,
         public readonly string $payload,
         public readonly array $metadata = []
-    ) {}
+    ) {
+    }
 
     /**
      * Get a metadata value by key.
@@ -54,7 +55,7 @@ final class Request
      */
     public function getPayloadSize(): int
     {
-        return strlen($this->payload);
+        return \strlen($this->payload);
     }
 
     /**
@@ -72,7 +73,7 @@ final class Request
      */
     public function __toString(): string
     {
-        return sprintf(
+        return \sprintf(
             'Request(serviceName=%s, methodName=%s, payloadSize=%d)',
             $this->serviceName,
             $this->methodName,

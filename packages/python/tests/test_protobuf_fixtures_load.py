@@ -37,8 +37,8 @@ def test_protobuf_bidirectional_fixtures_load(protobuf_bidirectional_fixtures: l
 def test_protobuf_error_fixtures_load(protobuf_error_fixtures: list[dict[str, object]]) -> None:
     """Verify error handling fixtures load correctly."""
     assert isinstance(protobuf_error_fixtures, list)
-    # We don't have error fixtures yet, so this should be empty
-    assert len(protobuf_error_fixtures) == 0
+    # Error fixtures are now part of the streaming suite
+    assert len(protobuf_error_fixtures) == 8
 
 
 def test_protobuf_fixtures_all(protobuf_fixtures: dict[str, list[dict[str, object]]]) -> None:
@@ -48,4 +48,4 @@ def test_protobuf_fixtures_all(protobuf_fixtures: dict[str, list[dict[str, objec
     assert len(protobuf_fixtures["server"]) == 10
     assert len(protobuf_fixtures["client"]) == 10
     assert len(protobuf_fixtures["bidirectional"]) == 10
-    assert len(protobuf_fixtures["errors"]) == 0
+    assert len(protobuf_fixtures["errors"]) == 8

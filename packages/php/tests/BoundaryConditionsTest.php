@@ -501,7 +501,7 @@ final class BoundaryConditionsTest extends TestClientTestCase
     {
         $requestCount = 0;
 
-        $handler = new class implements \Spikard\Handlers\HandlerInterface {
+        $handler = new class () implements \Spikard\Handlers\HandlerInterface {
             private int $requestCount = 0;
 
             public function matches(Request $request): bool

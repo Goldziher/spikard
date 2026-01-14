@@ -15,7 +15,6 @@ use RuntimeException;
 final class GrpcCallWrapper
 {
     /**
-     * @var object
      */
     private object $call;
 
@@ -32,24 +31,23 @@ final class GrpcCallWrapper
      */
     public function sendMetadata(array $metadata): void
     {
-        if (method_exists($this->call, 'sendMetadata')) {
+        if (\method_exists($this->call, 'sendMetadata')) {
             $this->call->sendMetadata($metadata);
         }
     }
 
     /**
-     * @param string $message
      */
     public function write(string $message): void
     {
-        if (method_exists($this->call, 'write')) {
+        if (\method_exists($this->call, 'write')) {
             $this->call->write($message);
         }
     }
 
     public function writesDone(): void
     {
-        if (method_exists($this->call, 'writesDone')) {
+        if (\method_exists($this->call, 'writesDone')) {
             $this->call->writesDone();
         }
     }
@@ -61,11 +59,73 @@ final class GrpcCallWrapper
      */
     public function read(): array
     {
-        if (method_exists($this->call, 'read')) {
+        if (\method_exists($this->call, 'read')) {
             /** @var array{0: string|null, 1: array<string, string>} */
             return $this->call->read();
         }
         return [null, []];
+    }
+
+    /**
+     * Fetch final gRPC status when available.
+     *
+     * @return array{code: int, details: string, metadata: array<string, mixed>}
+     */
+    public function getStatus(): array
+    {
+        if (\method_exists($this->call, 'getStatus')) {
+            /**  */
+            $status = $this->call->getStatus();
+
+            if (\is_array($status)) {
+                return [
+                    'code' => \is_numeric($status['code'] ?? null) ? (int) $status['code'] : 0,
+                    'details' => \is_string($status['details'] ?? null) ? (string) $status['details'] : '',
+                    'metadata' => \is_array($status['metadata'] ?? null) ? (array) $status['metadata'] : [],
+                ];
+            }
+
+            if (\is_object($status)) {
+                $code = 0;
+                $details = '';
+                $metadata = [];
+
+                if (\method_exists($status, 'getCode')) {
+                    $codeVal = $status->getCode();
+                    if (\is_numeric($codeVal)) {
+                        $code = (int) $codeVal;
+                    }
+                } elseif (\property_exists($status, 'code') && \is_numeric($status->code)) {
+                    $code = (int) $status->code;
+                }
+
+                if (\method_exists($status, 'getDetails')) {
+                    $detailsVal = $status->getDetails();
+                    if (\is_string($detailsVal)) {
+                        $details = $detailsVal;
+                    }
+                } elseif (\property_exists($status, 'details') && \is_string($status->details)) {
+                    $details = $status->details;
+                }
+
+                if (\method_exists($status, 'getMetadata')) {
+                    $metaVal = $status->getMetadata();
+                    if (\is_array($metaVal)) {
+                        $metadata = $metaVal;
+                    }
+                } elseif (\property_exists($status, 'metadata') && \is_array($status->metadata)) {
+                    $metadata = $status->metadata;
+                }
+
+                return [
+                    'code' => $code,
+                    'details' => $details,
+                    'metadata' => $metadata,
+                ];
+            }
+        }
+
+        return ['code' => 0, 'details' => '', 'metadata' => []];
     }
 }
 
@@ -90,11 +150,21 @@ final class GrpcCallWrapper
  *     );
  */
 /**
- * Interface for gRPC channel (from PHP gRPC extension).
- * This is a stub to provide type safety for the channel object.
+ * Wrapper for gRPC channel to provide safe method access.
  */
-interface GrpcChannelInterface
+final class GrpcChannelWrapper
 {
+    /**
+     */
+    private object $channel;
+
+    /**
+     */
+    public function __construct(object $channel)
+    {
+        $this->channel = $channel;
+    }
+
     /**
      * Create a call object for an RPC method.
      *
@@ -102,7 +172,14 @@ interface GrpcChannelInterface
      * @param float $timeout Timeout in seconds
      * @return object A call object
      */
-    public function createCall(string $method, float $timeout): object;
+    public function createCall(string $method, float $timeout): object
+    {
+        if (\method_exists($this->channel, 'createCall')) {
+            return $this->channel->createCall($method, $timeout);
+        }
+
+        throw new RuntimeException('gRPC channel does not support createCall()');
+    }
 }
 
 final class GrpcTestClient
@@ -110,9 +187,8 @@ final class GrpcTestClient
     private string $serverAddress;
 
     /**
-     * @var GrpcChannelInterface|null
      */
-    private ?GrpcChannelInterface $channel = null;
+    private ?GrpcChannelWrapper $channel = null;
 
     /**
      * Initialize gRPC test client.
@@ -122,6 +198,43 @@ final class GrpcTestClient
     public function __construct(string $serverAddress = 'localhost:50051')
     {
         $this->serverAddress = $serverAddress;
+    }
+
+    private function grpcCodeName(int $code): string
+    {
+        $map = [
+            0 => 'OK',
+            1 => 'CANCELLED',
+            2 => 'UNKNOWN',
+            3 => 'INVALID_ARGUMENT',
+            4 => 'DEADLINE_EXCEEDED',
+            5 => 'NOT_FOUND',
+            6 => 'ALREADY_EXISTS',
+            7 => 'PERMISSION_DENIED',
+            8 => 'RESOURCE_EXHAUSTED',
+            9 => 'FAILED_PRECONDITION',
+            10 => 'ABORTED',
+            11 => 'OUT_OF_RANGE',
+            12 => 'UNIMPLEMENTED',
+            13 => 'INTERNAL',
+            14 => 'UNAVAILABLE',
+            15 => 'DATA_LOSS',
+            16 => 'UNAUTHENTICATED',
+        ];
+
+        return $map[$code] ?? "UNKNOWN({$code})";
+    }
+
+    private function assertOkStatus(GrpcCallWrapper $call, string $context): void
+    {
+        $status = $call->getStatus();
+        $code = $status['code'];
+        $details = $status['details'];
+
+        if ($code !== 0) {
+            $codeName = $this->grpcCodeName($code);
+            throw new RuntimeException(\sprintf('%s gRPC error %s (%d): %s', $context, $codeName, $code, $details));
+        }
     }
 
     /**
@@ -138,10 +251,10 @@ final class GrpcTestClient
         // Create insecure channel to the gRPC server
         // In production, you would use grpc_channel_create with credentials
         // For testing, we use a simple TCP connection wrapper
-        $parts = explode(':', $this->serverAddress);
-        if (count($parts) !== 2) {
+        $parts = \explode(':', $this->serverAddress);
+        if (\count($parts) !== 2) {
             throw new RuntimeException(
-                sprintf('Invalid server address format: %s', $this->serverAddress)
+                \sprintf('Invalid server address format: %s', $this->serverAddress)
             );
         }
 
@@ -149,7 +262,7 @@ final class GrpcTestClient
         $portInt = (int) $port;
 
         // Verify gRPC extension is loaded
-        if (!extension_loaded('grpc')) {
+        if (!\extension_loaded('grpc')) {
             throw new RuntimeException(
                 'gRPC PHP extension not loaded. Install with: pecl install grpc'
             );
@@ -157,20 +270,15 @@ final class GrpcTestClient
 
         // Create the channel using grpc_channel_create (gRPC PHP extension)
         // The gRPC PHP extension returns a resource-like object that we treat as GrpcChannelInterface for type safety
-        if (function_exists('grpc_channel_create')) {
-            /** @var mixed $channelResult */
+        if (\function_exists('grpc_channel_create')) {
+            /** @var object|false $channelResult */
             $channelResult = grpc_channel_create($host . ':' . $portInt, []);
             if ($channelResult === false) {
                 throw new RuntimeException(
-                    sprintf('Failed to create gRPC channel to %s', $this->serverAddress)
+                    \sprintf('Failed to create gRPC channel to %s', $this->serverAddress)
                 );
             }
-            // Cast to GrpcChannelInterface for type safety (gRPC resource implements required methods)
-            assert(is_object($channelResult) || is_resource($channelResult), 'gRPC channel must be object or resource');
-            /** @var GrpcChannelInterface $channel */
-            $channel = $channelResult instanceof GrpcChannelInterface ? $channelResult : (object) $channelResult;
-            // We cast this assuming the gRPC extension's channel object is compatible
-            $this->channel = $channel;
+            $this->channel = new GrpcChannelWrapper($channelResult);
         } else {
             throw new RuntimeException(
                 'grpc_channel_create function not available (gRPC PHP extension issue)'
@@ -236,7 +344,7 @@ final class GrpcTestClient
             $preparedMetadata = $this->prepareMetadata($metadata);
 
             // Serialize request as JSON
-            $requestPayload = json_encode($request, JSON_THROW_ON_ERROR);
+            $requestPayload = \json_encode($request, JSON_THROW_ON_ERROR);
 
             // Create a call object (gRPC PHP extension not statically typed)
             $rawCall = $this->channel->createCall($method, $timeout ?? 5.0);
@@ -250,15 +358,18 @@ final class GrpcTestClient
             [$responsePayload, $_metadata] = $call->read();
 
             if ($responsePayload === null) {
+                $this->assertOkStatus($call, 'Unary RPC failed');
                 throw new RuntimeException('No response received from server');
             }
 
+            $this->assertOkStatus($call, 'Unary RPC failed');
+
             // Deserialize response
             /** @var array<string, mixed> */
-            return json_decode($responsePayload, true, 512, JSON_THROW_ON_ERROR);
+            return \json_decode($responsePayload, true, 512, JSON_THROW_ON_ERROR);
         } catch (Exception $e) {
             throw new RuntimeException(
-                sprintf('Unary RPC failed: %s', $e->getMessage()),
+                \sprintf('Unary RPC failed: %s', $e->getMessage()),
                 0,
                 $e,
             );
@@ -296,7 +407,7 @@ final class GrpcTestClient
             $preparedMetadata = $this->prepareMetadata($metadata);
 
             // Serialize request as JSON
-            $requestPayload = json_encode($request, JSON_THROW_ON_ERROR);
+            $requestPayload = \json_encode($request, JSON_THROW_ON_ERROR);
 
             // Create a call object (gRPC PHP extension not statically typed)
             $rawCall = $this->channel->createCall($method, $timeout ?? 5.0);
@@ -318,14 +429,16 @@ final class GrpcTestClient
 
                 // Deserialize message
                 /** @var array<string, mixed> */
-                $decoded = json_decode($message, true, 512, JSON_THROW_ON_ERROR);
+                $decoded = \json_decode($message, true, 512, JSON_THROW_ON_ERROR);
                 $responses[] = $decoded;
             }
+
+            $this->assertOkStatus($call, 'Server streaming RPC failed');
 
             return $responses;
         } catch (Exception $e) {
             throw new RuntimeException(
-                sprintf('Server streaming RPC failed: %s', $e->getMessage()),
+                \sprintf('Server streaming RPC failed: %s', $e->getMessage()),
                 0,
                 $e,
             );
@@ -370,7 +483,7 @@ final class GrpcTestClient
             $call->sendMetadata($preparedMetadata);
 
             foreach ($requests as $request) {
-                $payload = json_encode($request, JSON_THROW_ON_ERROR);
+                $payload = \json_encode($request, JSON_THROW_ON_ERROR);
                 $call->write($payload);
             }
 
@@ -380,15 +493,18 @@ final class GrpcTestClient
             [$responsePayload, $_metadata] = $call->read();
 
             if ($responsePayload === null) {
+                $this->assertOkStatus($call, 'Client streaming RPC failed');
                 throw new RuntimeException('No response received from server');
             }
 
+            $this->assertOkStatus($call, 'Client streaming RPC failed');
+
             // Deserialize response
             /** @var array<string, mixed> */
-            return json_decode($responsePayload, true, 512, JSON_THROW_ON_ERROR);
+            return \json_decode($responsePayload, true, 512, JSON_THROW_ON_ERROR);
         } catch (Exception $e) {
             throw new RuntimeException(
-                sprintf('Client streaming RPC failed: %s', $e->getMessage()),
+                \sprintf('Client streaming RPC failed: %s', $e->getMessage()),
                 0,
                 $e,
             );
@@ -434,7 +550,7 @@ final class GrpcTestClient
 
             // Send all request messages
             foreach ($requests as $request) {
-                $payload = json_encode($request, JSON_THROW_ON_ERROR);
+                $payload = \json_encode($request, JSON_THROW_ON_ERROR);
                 $call->write($payload);
             }
 
@@ -451,14 +567,16 @@ final class GrpcTestClient
 
                 // Deserialize message
                 /** @var array<string, mixed> */
-                $decoded = json_decode($message, true, 512, JSON_THROW_ON_ERROR);
+                $decoded = \json_decode($message, true, 512, JSON_THROW_ON_ERROR);
                 $responses[] = $decoded;
             }
+
+            $this->assertOkStatus($call, 'Bidirectional RPC failed');
 
             return $responses;
         } catch (Exception $e) {
             throw new RuntimeException(
-                sprintf('Bidirectional streaming RPC failed: %s', $e->getMessage()),
+                \sprintf('Bidirectional streaming RPC failed: %s', $e->getMessage()),
                 0,
                 $e,
             );

@@ -224,8 +224,8 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  grpc (~> 1.60)
-  grpc-tools (~> 1.60)
+  grpc (~> 1.76)
+  grpc-tools (~> 1.76)
   rake (~> 13.0)
   rake-compiler (~> 1.2)
   rb_sys (~> 0.9)

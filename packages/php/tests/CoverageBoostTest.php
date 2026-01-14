@@ -18,8 +18,8 @@ use Spikard\Http\JsonRpcMethodInfo;
 use Spikard\Http\Params\Header;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
-use Spikard\Testing\TestClient;
 use Spikard\Native\TestClient as NativeTestClient;
+use Spikard\Testing\TestClient;
 
 final class CoverageBoostTest extends TestCase
 {
@@ -70,7 +70,7 @@ final class CoverageBoostTest extends TestCase
         self::assertCount(1, $routes);
         /** @var array<string, mixed> $route */
         $route = $routes[0];
-        /** @var mixed $schemaRaw */
+        /**  */
         $schemaRaw = $route['parameter_schema'];
         if (!\is_array($schemaRaw)) {
             $schemaRaw = [];
@@ -79,7 +79,7 @@ final class CoverageBoostTest extends TestCase
         $schema = $schemaRaw;
         self::assertSame('object', $schema['type']);
 
-        /** @var mixed $propertiesRaw */
+        /**  */
         $propertiesRaw = $schema['properties'];
         if (!\is_array($propertiesRaw)) {
             $propertiesRaw = [];
@@ -87,13 +87,13 @@ final class CoverageBoostTest extends TestCase
         /** @var array<string, mixed> $properties */
         $properties = $propertiesRaw;
         self::assertArrayHasKey('x-custom-header', $properties);
-        /** @var mixed $customHeaderRaw */
+        /**  */
         $customHeaderRaw = $properties['x-custom-header'];
         if (\is_array($customHeaderRaw)) {
             self::assertSame('header', $customHeaderRaw['source']);
         }
         self::assertArrayHasKey('id', $properties);
-        /** @var mixed $idRaw */
+        /**  */
         $idRaw = $properties['id'];
         if (\is_array($idRaw)) {
             self::assertSame('path', $idRaw['source']);
