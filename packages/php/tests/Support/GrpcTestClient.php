@@ -211,6 +211,81 @@ final class GrpcChannelWrapper
     }
 }
 
+/**
+ * JSON-focused gRPC stub that reuses grpc/grpc BaseStub.
+ */
+final class GrpcJsonStub extends \Grpc\BaseStub
+{
+    /**
+     * @param array<string, mixed> $metadata
+     * @param array<string, mixed> $options
+     * @return array{0: mixed, 1: mixed}
+     */
+    public function unaryCall(string $method, string $payload, array $metadata, array $options): array
+    {
+        return $this->_simpleRequest(
+            $method,
+            $payload,
+            [self::class, 'decodeJson'],
+            $metadata,
+            $options,
+        )->wait();
+    }
+
+    /**
+     * @param array<string, mixed> $metadata
+     * @param array<string, mixed> $options
+     */
+    public function serverStreamCall(string $method, string $payload, array $metadata, array $options): object
+    {
+        return $this->_serverStreamRequest(
+            $method,
+            $payload,
+            [self::class, 'decodeJson'],
+            $metadata,
+            $options,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $metadata
+     * @param array<string, mixed> $options
+     */
+    public function clientStreamCall(string $method, array $metadata, array $options): object
+    {
+        return $this->_clientStreamRequest(
+            $method,
+            [self::class, 'decodeJson'],
+            $metadata,
+            $options,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $metadata
+     * @param array<string, mixed> $options
+     */
+    public function bidiStreamCall(string $method, array $metadata, array $options): object
+    {
+        return $this->_bidiRequest(
+            $method,
+            [self::class, 'decodeJson'],
+            $metadata,
+            $options,
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function decodeJson(string $payload): array
+    {
+        /** @var array<string, mixed> $decoded */
+        $decoded = \json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+        return $decoded;
+    }
+}
+
 final class GrpcTestClient
 {
     private string $serverAddress;
@@ -218,6 +293,7 @@ final class GrpcTestClient
     /**
      */
     private ?GrpcChannelWrapper $channel = null;
+    private ?GrpcJsonStub $stub = null;
 
     /**
      * Initialize gRPC test client.
@@ -299,15 +375,26 @@ final class GrpcTestClient
 
         // Create the channel using the available gRPC API
         if (\function_exists('grpc_channel_create')) {
+            $options = [];
             /** @var object|false $channelResult */
-            $channelResult = grpc_channel_create($host . ':' . $portInt, []);
+            $channelResult = grpc_channel_create($host . ':' . $portInt, $options);
             if ($channelResult === false) {
                 throw new RuntimeException(
                     \sprintf('Failed to create gRPC channel to %s', $this->serverAddress)
                 );
             }
-            $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
-            return;
+
+            if (\method_exists($channelResult, 'createCall')) {
+                $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
+                $this->stub = null;
+                return;
+            }
+
+            if (\class_exists('\\Grpc\\BaseStub')) {
+                $this->stub = $this->createStub($this->serverAddress, $options, $channelResult);
+                $this->channel = null;
+                return;
+            }
         }
 
         if (\class_exists('\\Grpc\\Channel')) {
@@ -318,12 +405,22 @@ final class GrpcTestClient
 
             /** @var \Grpc\Channel $channelResult */
             $channelResult = new \Grpc\Channel($host . ':' . $portInt, $options);
-            $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
-            return;
+
+            if (\method_exists($channelResult, 'createCall')) {
+                $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
+                $this->stub = null;
+                return;
+            }
+
+            if (\class_exists('\\Grpc\\BaseStub')) {
+                $this->stub = $this->createStub($this->serverAddress, $options, $channelResult);
+                $this->channel = null;
+                return;
+            }
         }
 
         throw new RuntimeException(
-            'grpc_channel_create function not available (gRPC PHP extension issue)'
+            'No compatible gRPC channel API available (missing createCall and BaseStub fallback)'
         );
     }
 
@@ -334,6 +431,7 @@ final class GrpcTestClient
     {
         // Channels are automatically cleaned up in PHP
         $this->channel = null;
+        $this->stub = null;
     }
 
     /**
@@ -352,6 +450,300 @@ final class GrpcTestClient
         }
 
         return $prepared;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildCallOptions(?float $timeout): array
+    {
+        if ($timeout === null) {
+            return [];
+        }
+
+        $micros = (int) \max(0, \round($timeout * 1_000_000));
+        return ['timeout' => $micros];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function normalizeDecodedResponse(mixed $payload): array
+    {
+        if (\is_array($payload)) {
+            if (\array_key_exists(0, $payload) && \array_key_exists(1, $payload)) {
+                $payload = $payload[0];
+            } else {
+                return $this->normalizeResponseKeys($payload);
+            }
+        }
+
+        if (\is_string($payload)) {
+            /** @var array<string, mixed> $decoded */
+            $decoded = \json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+            return $this->normalizeResponseKeys($decoded);
+        }
+
+        throw new RuntimeException('Unexpected response payload type');
+    }
+
+    /**
+     * @param array<mixed, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function normalizeResponseKeys(array $payload): array
+    {
+        $normalized = [];
+        foreach ($payload as $key => $value) {
+            $normalized[(string) $key] = $value;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function collectStreamResponses(object $call): array
+    {
+        $responses = [];
+
+        if (\method_exists($call, 'responses')) {
+            $stream = $call->responses();
+            if (\is_iterable($stream)) {
+                foreach ($stream as $message) {
+                    $responses[] = $this->normalizeDecodedResponse($message);
+                }
+                return $responses;
+            }
+        }
+
+        if (\method_exists($call, 'read')) {
+            while (true) {
+                $message = $call->read();
+                if ($message === null) {
+                    break;
+                }
+                $responses[] = $this->normalizeDecodedResponse($message);
+            }
+        }
+
+        return $responses;
+    }
+
+    private function assertStubStatusOk(mixed $status, string $context): void
+    {
+        if ($status === null) {
+            return;
+        }
+
+        $code = 0;
+        $details = '';
+
+        if (\is_array($status)) {
+            $codeVal = $status['code'] ?? 0;
+            $code = \is_numeric($codeVal) ? (int) $codeVal : 0;
+            $detailsVal = $status['details'] ?? '';
+            $details = \is_string($detailsVal) ? $detailsVal : '';
+        } elseif (\is_object($status)) {
+            if (\method_exists($status, 'getCode')) {
+                $codeVal = $status->getCode();
+                if (\is_numeric($codeVal)) {
+                    $code = (int) $codeVal;
+                }
+            } elseif (\property_exists($status, 'code') && \is_numeric($status->code)) {
+                $code = (int) $status->code;
+            }
+
+            if (\method_exists($status, 'getDetails')) {
+                $detailsVal = $status->getDetails();
+                if (\is_string($detailsVal)) {
+                    $details = $detailsVal;
+                }
+            } elseif (\property_exists($status, 'details') && \is_string($status->details)) {
+                $details = $status->details;
+            }
+        }
+
+        if ($code !== 0) {
+            $codeName = $this->grpcCodeName($code);
+            throw new RuntimeException(\sprintf('%s gRPC error %s (%d): %s', $context, $codeName, $code, $details));
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    private function createStub(string $target, array $options, ?object $channel = null): GrpcJsonStub
+    {
+        $reflection = new \ReflectionClass(GrpcJsonStub::class);
+        $constructor = $reflection->getConstructor();
+        $args = [$target, $options];
+
+        if ($channel !== null && $constructor !== null && $constructor->getNumberOfParameters() >= 3) {
+            $args[] = $channel;
+        }
+
+        /** @var GrpcJsonStub $stub */
+        $stub = $reflection->newInstanceArgs($args);
+        return $stub;
+    }
+
+    /**
+     * @param array<string, mixed> $request
+     * @param array<string, string> $metadata
+     * @return array<string, mixed>
+     */
+    private function executeUnaryWithStub(
+        string $serviceName,
+        string $methodName,
+        array $request,
+        array $metadata,
+        ?float $timeout,
+    ): array {
+        if ($this->stub === null) {
+            throw new RuntimeException('Stub not initialized');
+        }
+
+        $method = '/' . $serviceName . '/' . $methodName;
+        $preparedMetadata = $this->prepareMetadata($metadata);
+        $options = $this->buildCallOptions($timeout);
+        $requestPayload = \json_encode($request, JSON_THROW_ON_ERROR);
+
+        [$response, $status] = $this->stub->unaryCall($method, $requestPayload, $preparedMetadata, $options);
+
+        if ($response === null) {
+            $this->assertStubStatusOk($status, 'Unary RPC failed');
+            throw new RuntimeException('No response received from server');
+        }
+
+        $this->assertStubStatusOk($status, 'Unary RPC failed');
+        return $this->normalizeDecodedResponse($response);
+    }
+
+    /**
+     * @param array<string, mixed> $request
+     * @param array<string, string> $metadata
+     * @return array<int, array<string, mixed>>
+     */
+    private function executeServerStreamingWithStub(
+        string $serviceName,
+        string $methodName,
+        array $request,
+        array $metadata,
+        ?float $timeout,
+    ): array {
+        if ($this->stub === null) {
+            throw new RuntimeException('Stub not initialized');
+        }
+
+        $method = '/' . $serviceName . '/' . $methodName;
+        $preparedMetadata = $this->prepareMetadata($metadata);
+        $options = $this->buildCallOptions($timeout);
+        $requestPayload = \json_encode($request, JSON_THROW_ON_ERROR);
+
+        $call = $this->stub->serverStreamCall($method, $requestPayload, $preparedMetadata, $options);
+        $responses = $this->collectStreamResponses($call);
+        $status = \method_exists($call, 'getStatus') ? $call->getStatus() : null;
+
+        $this->assertStubStatusOk($status, 'Server streaming RPC failed');
+        return $responses;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $requests
+     * @param array<string, string> $metadata
+     * @return array<string, mixed>
+     */
+    private function executeClientStreamingWithStub(
+        string $serviceName,
+        string $methodName,
+        array $requests,
+        array $metadata,
+        ?float $timeout,
+    ): array {
+        if ($this->stub === null) {
+            throw new RuntimeException('Stub not initialized');
+        }
+
+        $method = '/' . $serviceName . '/' . $methodName;
+        $preparedMetadata = $this->prepareMetadata($metadata);
+        $options = $this->buildCallOptions($timeout);
+
+        $call = $this->stub->clientStreamCall($method, $preparedMetadata, $options);
+
+        foreach ($requests as $request) {
+            $payload = \json_encode($request, JSON_THROW_ON_ERROR);
+            if (\method_exists($call, 'write')) {
+                $call->write($payload);
+            }
+        }
+
+        if (\method_exists($call, 'writesDone')) {
+            $call->writesDone();
+        }
+
+        $response = null;
+        $status = null;
+
+        if (\method_exists($call, 'wait')) {
+            $waitResult = $call->wait();
+            if (\is_array($waitResult)) {
+                $response = $waitResult[0] ?? null;
+                $status = $waitResult[1] ?? null;
+            }
+        } elseif (\method_exists($call, 'read')) {
+            $response = $call->read();
+            $status = \method_exists($call, 'getStatus') ? $call->getStatus() : null;
+        }
+
+        if ($response === null) {
+            $this->assertStubStatusOk($status, 'Client streaming RPC failed');
+            throw new RuntimeException('No response received from server');
+        }
+
+        $this->assertStubStatusOk($status, 'Client streaming RPC failed');
+        return $this->normalizeDecodedResponse($response);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $requests
+     * @param array<string, string> $metadata
+     * @return array<int, array<string, mixed>>
+     */
+    private function executeBidirectionalWithStub(
+        string $serviceName,
+        string $methodName,
+        array $requests,
+        array $metadata,
+        ?float $timeout,
+    ): array {
+        if ($this->stub === null) {
+            throw new RuntimeException('Stub not initialized');
+        }
+
+        $method = '/' . $serviceName . '/' . $methodName;
+        $preparedMetadata = $this->prepareMetadata($metadata);
+        $options = $this->buildCallOptions($timeout);
+
+        $call = $this->stub->bidiStreamCall($method, $preparedMetadata, $options);
+
+        foreach ($requests as $request) {
+            $payload = \json_encode($request, JSON_THROW_ON_ERROR);
+            if (\method_exists($call, 'write')) {
+                $call->write($payload);
+            }
+        }
+
+        if (\method_exists($call, 'writesDone')) {
+            $call->writesDone();
+        }
+
+        $responses = $this->collectStreamResponses($call);
+        $status = \method_exists($call, 'getStatus') ? $call->getStatus() : null;
+
+        $this->assertStubStatusOk($status, 'Bidirectional RPC failed');
+        return $responses;
     }
 
     /**
@@ -375,6 +767,10 @@ final class GrpcTestClient
         ?float $timeout = null,
     ): array {
         $this->connect();
+
+        if ($this->stub !== null) {
+            return $this->executeUnaryWithStub($serviceName, $methodName, $request, $metadata, $timeout);
+        }
 
         if ($this->channel === null) {
             throw new RuntimeException('Channel not initialized');
@@ -438,6 +834,10 @@ final class GrpcTestClient
         ?float $timeout = null,
     ): array {
         $this->connect();
+
+        if ($this->stub !== null) {
+            return $this->executeServerStreamingWithStub($serviceName, $methodName, $request, $metadata, $timeout);
+        }
 
         if ($this->channel === null) {
             throw new RuntimeException('Channel not initialized');
@@ -508,6 +908,10 @@ final class GrpcTestClient
     ): array {
         $this->connect();
 
+        if ($this->stub !== null) {
+            return $this->executeClientStreamingWithStub($serviceName, $methodName, $requests, $metadata, $timeout);
+        }
+
         if ($this->channel === null) {
             throw new RuntimeException('Channel not initialized');
         }
@@ -573,6 +977,10 @@ final class GrpcTestClient
         ?float $timeout = null,
     ): array {
         $this->connect();
+
+        if ($this->stub !== null) {
+            return $this->executeBidirectionalWithStub($serviceName, $methodName, $requests, $metadata, $timeout);
+        }
 
         if ($this->channel === null) {
             throw new RuntimeException('Channel not initialized');

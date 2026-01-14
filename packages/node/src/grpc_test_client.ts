@@ -187,6 +187,26 @@ export class GrpcTestClient {
 
 		return new Promise((resolve, reject) => {
 			const responses: Array<Record<string, unknown>> = [];
+			let settled = false;
+			let finalStatus: Record<string, unknown> | null = null;
+
+			const finishWithError = (err: unknown): void => {
+				if (settled) {
+					return;
+				}
+				settled = true;
+				client.close();
+				reject(err);
+			};
+
+			const finishWithSuccess = (): void => {
+				if (settled) {
+					return;
+				}
+				settled = true;
+				client.close();
+				resolve(responses);
+			};
 
 			try {
 				// Make the server streaming RPC call
@@ -212,8 +232,7 @@ export class GrpcTestClient {
 					if (err && typeof err === "object") {
 						(err as Record<string, unknown>).responses = responses;
 					}
-					client.close();
-					reject(err);
+					finishWithError(err);
 				});
 
 				// Then register data and end handlers
@@ -221,13 +240,37 @@ export class GrpcTestClient {
 					responses.push(response);
 				});
 
+				call.on("status", (status: Record<string, unknown>) => {
+					finalStatus = status;
+					const code = status.code;
+					if (typeof code === "number" && code !== 0) {
+						const details = status.details ?? status.message ?? "gRPC error";
+						const statusError = new Error(String(details));
+						(statusError as Record<string, unknown>).code = code;
+						(statusError as Record<string, unknown>).details = details;
+						(statusError as Record<string, unknown>).metadata = status.metadata;
+						(statusError as Record<string, unknown>).responses = responses;
+						finishWithError(statusError);
+					}
+				});
+
 				call.on("end", () => {
-					client.close();
-					resolve(responses);
+					const code = finalStatus?.code;
+					if (typeof code === "number" && code !== 0) {
+						const details = finalStatus?.details ?? finalStatus?.message ?? "gRPC error";
+						const statusError = new Error(String(details));
+						(statusError as Record<string, unknown>).code = code;
+						(statusError as Record<string, unknown>).details = details;
+						(statusError as Record<string, unknown>).metadata = finalStatus?.metadata;
+						(statusError as Record<string, unknown>).responses = responses;
+						finishWithError(statusError);
+						return;
+					}
+
+					finishWithSuccess();
 				});
 			} catch (error) {
-				client.close();
-				reject(error);
+				finishWithError(error);
 			}
 		});
 	}
@@ -287,9 +330,6 @@ export class GrpcTestClient {
 				// Register error handler FIRST to catch errors early
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				call.on("error", (err: any) => {
-					if (err && typeof err === "object") {
-						(err as Record<string, unknown>).responses = responses;
-					}
 					client.close();
 					reject(err);
 				});
@@ -331,6 +371,26 @@ export class GrpcTestClient {
 
 		return new Promise((resolve, reject) => {
 			const responses: Array<Record<string, unknown>> = [];
+			let settled = false;
+			let finalStatus: Record<string, unknown> | null = null;
+
+			const finishWithError = (err: unknown): void => {
+				if (settled) {
+					return;
+				}
+				settled = true;
+				client.close();
+				reject(err);
+			};
+
+			const finishWithSuccess = (): void => {
+				if (settled) {
+					return;
+				}
+				settled = true;
+				client.close();
+				resolve(responses);
+			};
 
 			try {
 				// Make the bidirectional streaming RPC call
@@ -352,8 +412,10 @@ export class GrpcTestClient {
 				// Register error handler FIRST to catch errors early
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				call.on("error", (err: any) => {
-					client.close();
-					reject(err);
+					if (err && typeof err === "object") {
+						(err as Record<string, unknown>).responses = responses;
+					}
+					finishWithError(err);
 				});
 
 				// Then register data and end handlers
@@ -361,9 +423,34 @@ export class GrpcTestClient {
 					responses.push(response);
 				});
 
+				call.on("status", (status: Record<string, unknown>) => {
+					finalStatus = status;
+					const code = status.code;
+					if (typeof code === "number" && code !== 0) {
+						const details = status.details ?? status.message ?? "gRPC error";
+						const statusError = new Error(String(details));
+						(statusError as Record<string, unknown>).code = code;
+						(statusError as Record<string, unknown>).details = details;
+						(statusError as Record<string, unknown>).metadata = status.metadata;
+						(statusError as Record<string, unknown>).responses = responses;
+						finishWithError(statusError);
+					}
+				});
+
 				call.on("end", () => {
-					client.close();
-					resolve(responses);
+					const code = finalStatus?.code;
+					if (typeof code === "number" && code !== 0) {
+						const details = finalStatus?.details ?? finalStatus?.message ?? "gRPC error";
+						const statusError = new Error(String(details));
+						(statusError as Record<string, unknown>).code = code;
+						(statusError as Record<string, unknown>).details = details;
+						(statusError as Record<string, unknown>).metadata = finalStatus?.metadata;
+						(statusError as Record<string, unknown>).responses = responses;
+						finishWithError(statusError);
+						return;
+					}
+
+					finishWithSuccess();
 				});
 
 				// Write all requests after error handler is registered
@@ -372,8 +459,7 @@ export class GrpcTestClient {
 				}
 				call.end();
 			} catch (error) {
-				client.close();
-				reject(error);
+				finishWithError(error);
 			}
 		});
 	}

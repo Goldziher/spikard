@@ -7,11 +7,10 @@ that can be passed to Rust for validation and caching.
 from datetime import date, datetime, time, timedelta
 from enum import Enum
 from pathlib import Path, PurePath
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from uuid import UUID
 
-if TYPE_CHECKING:
-    from spikard._internal.field_definition import FieldDefinition
+from spikard._internal.field_definition import FieldDefinition  # noqa: TC001
 
 __all__ = ("field_definition_to_json_schema",)
 
