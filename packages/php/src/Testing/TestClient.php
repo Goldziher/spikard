@@ -152,7 +152,8 @@ final class TestClient
         if ($this->native === null) {
             $routes = $this->app->nativeRoutes();
             $config = $this->app->nativeConfig();
-            $this->native = new \Spikard\Native\TestClient($routes, $config);
+            $dependencies = $this->app->dependencies();
+            $this->native = new \Spikard\Native\TestClient($routes, $config, $dependencies);
         }
 
         return $this->native;
