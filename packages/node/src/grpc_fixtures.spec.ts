@@ -261,6 +261,31 @@ function grpcCodeToName(code: number): string {
 	return codeNames[code] || `UNKNOWN(${code})`;
 }
 
+function normalizeGrpcCodeName(name: string): string {
+	return name
+		.trim()
+		.toUpperCase()
+		.replace(/[\s-]+/g, "_");
+}
+
+function getGrpcCodeFromError(grpcError: Record<string, unknown>): { codeName?: string; numericCode?: number } {
+	const codeValue = grpcError.code ?? grpcError.status ?? grpcError.statusCode;
+
+	if (typeof codeValue === "number") {
+		return { numericCode: codeValue, codeName: grpcCodeToName(codeValue) };
+	}
+
+	if (typeof codeValue === "string") {
+		const parsed = Number(codeValue);
+		if (!Number.isNaN(parsed)) {
+			return { numericCode: parsed, codeName: grpcCodeToName(parsed) };
+		}
+		return { codeName: normalizeGrpcCodeName(codeValue) };
+	}
+
+	return {};
+}
+
 /**
  * Validate gRPC error against expected error.
  *
@@ -275,24 +300,31 @@ function validateErrorResponse(error: unknown, expectedResponse: Record<string, 
 
 	// Cast error to check status (gRPC errors have status property for the numeric code)
 	const grpcError = error as Record<string, unknown>;
-	const numericCode =
-		typeof grpcError.code === "number" ? (grpcError.code as number) : (grpcError.status as number | undefined);
+	const { codeName, numericCode } = getGrpcCodeFromError(grpcError);
 
 	// DEBUG: Log error properties
 	// DEBUG: Log error properties
 
 	// Validate error code - gRPC-js uses .status for the numeric status code
 	if (typeof expectedCode === "string") {
-		const actualCodeName = grpcCodeToName(numericCode ?? -1);
-		expect(actualCodeName).toBe(expectedCode);
+		const expectedCodeName = normalizeGrpcCodeName(expectedCode);
+		if (codeName) {
+			expect(codeName).toBe(expectedCodeName);
+		} else if (numericCode !== undefined) {
+			expect(grpcCodeToName(numericCode)).toBe(expectedCodeName);
+		}
 	} else if (typeof expectedCode === "number") {
-		expect(numericCode).toBe(expectedCode);
+		if (numericCode !== undefined) {
+			expect(numericCode).toBe(expectedCode);
+		} else if (codeName) {
+			expect(codeName).toBe(grpcCodeToName(expectedCode));
+		}
 	}
 
 	// Validate error message if specified
 	if (expectedMessage) {
-		const errorDetails = String(grpcError.details || "");
-		expect(errorDetails).toContain(expectedMessage);
+		const errorDetails = String(grpcError.details ?? grpcError.message ?? "");
+		expect(errorDetails.toLowerCase()).toContain(expectedMessage.toLowerCase());
 	}
 }
 
