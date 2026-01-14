@@ -181,6 +181,10 @@ jobs:
         working-directory: packages/php
         run: composer test
 
+      - name: Run PHP e2e tests
+        working-directory: e2e/php
+        run: php -d extension=spikard.so ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
+
   coverage-php:
     name: PHP Code Coverage (85% minimum)
     runs-on: ubuntu-latest

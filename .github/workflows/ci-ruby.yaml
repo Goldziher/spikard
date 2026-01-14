@@ -126,6 +126,15 @@ jobs:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
         run: bundle exec rspec
 
+      - name: Run Ruby e2e tests
+        working-directory: e2e/ruby
+        env:
+          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
+        run: |
+          BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle install --jobs 4 --retry 3
+          BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle exec rake -C ../../packages/ruby ext:build
+          BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle exec rspec
+
       - name: Upload coverage to Codecov
         if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v5

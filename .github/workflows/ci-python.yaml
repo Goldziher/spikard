@@ -119,6 +119,10 @@ jobs:
         shell: bash
         run: uv run pytest packages/python/tests/ -v
 
+      - name: Run Python e2e tests
+        working-directory: e2e/python
+        run: PYTHONPATH=../../packages/python:. ../../.venv/bin/python -m pytest tests/ -v
+
   build-python-sdist:
     name: Build Python Source Distribution
     runs-on: ubuntu-latest
