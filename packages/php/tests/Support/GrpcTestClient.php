@@ -312,13 +312,11 @@ final class GrpcTestClient
 
         if (\class_exists('\\Grpc\\Channel')) {
             $options = [];
-            if (\class_exists('\\Grpc\\ChannelCredentials')
-                && \method_exists('\\Grpc\\ChannelCredentials', 'createInsecure')
-            ) {
+            if (\class_exists('\\Grpc\\ChannelCredentials')) {
                 $options['credentials'] = \Grpc\ChannelCredentials::createInsecure();
             }
 
-            /** @var object $channelResult */
+            /** @var \Grpc\Channel $channelResult */
             $channelResult = new \Grpc\Channel($host . ':' . $portInt, $options);
             $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
             return;

@@ -209,6 +209,9 @@ export class GrpcTestClient {
 				// Register error handler FIRST to catch errors early
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				call.on("error", (err: any) => {
+					if (err && typeof err === "object") {
+						(err as Record<string, unknown>).responses = responses;
+					}
 					client.close();
 					reject(err);
 				});
@@ -284,6 +287,9 @@ export class GrpcTestClient {
 				// Register error handler FIRST to catch errors early
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				call.on("error", (err: any) => {
+					if (err && typeof err === "object") {
+						(err as Record<string, unknown>).responses = responses;
+					}
 					client.close();
 					reject(err);
 				});

@@ -19,6 +19,11 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+try:
+    from typing import Self
+except ImportError:  # pragma: no cover - py310 fallback
+    from typing_extensions import Self  # noqa: UP035
+
 import cloudpickle
 import httpx
 from httpx_sse import ServerSentEvent, aconnect_sse
@@ -125,7 +130,7 @@ class TestClient:
             raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
         return self._port
 
-    async def __aenter__(self) -> "TestClient":
+    async def __aenter__(self) -> Self:
         """Start the server and return the client."""
         await self._start_server()
         return self

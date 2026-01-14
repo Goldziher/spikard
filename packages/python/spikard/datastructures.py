@@ -12,6 +12,11 @@ import io
 from tempfile import SpooledTemporaryFile
 from typing import Annotated, Any
 
+try:
+    from typing import Self
+except ImportError:  # pragma: no cover - py310 fallback
+    from typing_extensions import Self  # noqa: UP035
+
 import msgspec
 
 __all__ = ("UploadFile",)
@@ -236,7 +241,7 @@ class UploadFile:
         if hasattr(self, "_file") and not self._file.closed:
             self._file.close()
 
-    def __enter__(self) -> UploadFile:
+    def __enter__(self) -> Self:
         """Enter context manager (sync)."""
         return self
 
@@ -244,7 +249,7 @@ class UploadFile:
         """Exit context manager (sync)."""
         self.close()
 
-    async def __aenter__(self) -> UploadFile:
+    async def __aenter__(self) -> Self:
         """Enter async context manager."""
         return self
 

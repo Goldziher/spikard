@@ -296,6 +296,38 @@ function validateErrorResponse(error: unknown, expectedResponse: Record<string, 
 	}
 }
 
+function expectsGrpcError(expectedResponse: Record<string, unknown>): boolean {
+	if (expectedResponse.error) {
+		return true;
+	}
+
+	const statusCode = expectedResponse.status_code;
+	if (typeof statusCode === "string") {
+		return statusCode !== "OK";
+	}
+	if (typeof statusCode === "number") {
+		return statusCode !== 0;
+	}
+
+	return false;
+}
+
+function buildErrorExpectation(expectedResponse: Record<string, unknown>): Record<string, unknown> {
+	if (expectedResponse.error) {
+		return expectedResponse;
+	}
+
+	const statusCode = expectedResponse.status_code;
+	const message = expectedResponse.message;
+
+	return {
+		error: {
+			code: statusCode,
+			message: typeof message === "string" ? message : undefined,
+		},
+	};
+}
+
 // Load fixtures by category
 const serverStreamingFixtures = loadFixturesByCategory("server");
 const clientStreamingFixtures = loadFixturesByCategory("client");
@@ -327,17 +359,44 @@ describe("gRPC Server Streaming Fixtures", () => {
 			const handler = fixture.handler as Record<string, unknown> | undefined;
 			const timeoutMs = handler?.timeout_ms as number | undefined;
 
-			// Execute RPC
-			const responses = await client.executeServerStreaming(
-				serviceName,
-				methodName,
-				requestMessage as Record<string, unknown>,
-				metadata,
-				timeoutMs ? timeoutMs / 1000 : undefined,
-			);
+			const expectedResponse = fixture.expected_response as Record<string, unknown>;
+			const expectsError = expectsGrpcError(expectedResponse);
+			let responses: Array<Record<string, unknown>> = [];
+			let error: unknown;
+
+			try {
+				// Execute RPC
+				responses = await client.executeServerStreaming(
+					serviceName,
+					methodName,
+					requestMessage as Record<string, unknown>,
+					metadata,
+					timeoutMs ? timeoutMs / 1000 : undefined,
+				);
+
+				if (expectsError) {
+					throw new Error("Expected gRPC error but none was raised");
+				}
+			} catch (err) {
+				if (!expectsError) {
+					throw err;
+				}
+				error = err;
+				const errResponses = (err as Record<string, unknown> | null)?.responses;
+				if (Array.isArray(errResponses)) {
+					responses = errResponses as Array<Record<string, unknown>>;
+				}
+			}
+
+			if (expectsError) {
+				validateErrorResponse(error, buildErrorExpectation(expectedResponse));
+				if (expectedResponse.stream) {
+					validateStreamResponse(responses, expectedResponse);
+				}
+				return;
+			}
 
 			// Validate response
-			const expectedResponse = fixture.expected_response as Record<string, unknown>;
 			validateStreamResponse(responses, expectedResponse);
 		});
 	}
@@ -409,17 +468,44 @@ describe("gRPC Bidirectional Streaming Fixtures", () => {
 			const handler = fixture.handler as Record<string, unknown> | undefined;
 			const timeoutMs = handler?.timeout_ms as number | undefined;
 
-			// Execute RPC
-			const responses = await client.executeBidirectional(
-				serviceName,
-				methodName,
-				requestMessages as Array<Record<string, unknown>>,
-				metadata,
-				timeoutMs ? timeoutMs / 1000 : undefined,
-			);
+			const expectedResponse = fixture.expected_response as Record<string, unknown>;
+			const expectsError = expectsGrpcError(expectedResponse);
+			let responses: Array<Record<string, unknown>> = [];
+			let error: unknown;
+
+			try {
+				// Execute RPC
+				responses = await client.executeBidirectional(
+					serviceName,
+					methodName,
+					requestMessages as Array<Record<string, unknown>>,
+					metadata,
+					timeoutMs ? timeoutMs / 1000 : undefined,
+				);
+
+				if (expectsError) {
+					throw new Error("Expected gRPC error but none was raised");
+				}
+			} catch (err) {
+				if (!expectsError) {
+					throw err;
+				}
+				error = err;
+				const errResponses = (err as Record<string, unknown> | null)?.responses;
+				if (Array.isArray(errResponses)) {
+					responses = errResponses as Array<Record<string, unknown>>;
+				}
+			}
+
+			if (expectsError) {
+				validateErrorResponse(error, buildErrorExpectation(expectedResponse));
+				if (expectedResponse.stream) {
+					validateStreamResponse(responses, expectedResponse);
+				}
+				return;
+			}
 
 			// Validate response
-			const expectedResponse = fixture.expected_response as Record<string, unknown>;
 			validateStreamResponse(responses, expectedResponse);
 		});
 	}

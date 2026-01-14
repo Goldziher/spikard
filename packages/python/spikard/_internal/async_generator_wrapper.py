@@ -6,6 +6,8 @@ instead of having to manage Python event loops in Rust.
 Based on Robyn's proven implementation.
 """
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator, Iterator
 from typing import TypeVar
@@ -42,7 +44,7 @@ class AsyncGeneratorWrapper(Iterator[T]):
         self._iterator: AsyncIterator[T] | None = None
         self._exhausted = False
 
-    def __iter__(self) -> "AsyncGeneratorWrapper[T]":
+    def __iter__(self) -> AsyncGeneratorWrapper[T]:
         """Return self as iterator."""
         return self
 
