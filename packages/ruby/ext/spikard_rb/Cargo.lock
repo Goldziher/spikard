@@ -2523,7 +2523,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-bindings-shared"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "axum",
  "http",
@@ -2540,7 +2540,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -2564,7 +2564,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -2594,6 +2594,7 @@ dependencies = [
  "serde_qs",
  "spikard-core",
  "tokio",
+ "tokio-stream",
  "tokio-util",
  "tonic",
  "tower",
@@ -2611,13 +2612,15 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "async-stream",
  "axum",
  "axum-test",
  "bytes",
  "cookie",
+ "futures",
+ "futures-util",
  "http",
  "magnus",
  "once_cell",
@@ -2649,7 +2652,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb-macros"
-version = "0.9.0"
+version = "0.9.1"
 dependencies = [
  "proc-macro2",
  "quote",
