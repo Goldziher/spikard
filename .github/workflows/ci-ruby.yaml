@@ -114,11 +114,37 @@ jobs:
           bundler-cache: true
           working-directory: packages/ruby
 
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.10"
+          cache-prefix: grpc-server
+
       - name: Download Ruby gem artifacts
         uses: actions/download-artifact@v7
         with:
           name: ruby-gem
           path: packages/ruby/
+
+      - name: Start gRPC fixture server
+        shell: bash
+        run: |
+          uv run --directory packages/python python scripts/start_grpc_test_server.py >/tmp/grpc_server.log 2>&1 &
+          echo $! > /tmp/grpc_server.pid
+          python - <<'PY'
+          import socket
+          import time
+
+          deadline = time.time() + 20
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 50051), timeout=1):
+                      break
+              except OSError:
+                  time.sleep(0.5)
+          else:
+              raise SystemExit("gRPC server did not start on :50051")
+          PY
 
       - name: Run Ruby specs
         working-directory: packages/ruby
@@ -134,6 +160,14 @@ jobs:
           BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle install --jobs 4 --retry 3
           BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle exec rake -C ../../packages/ruby ext:build
           BUNDLE_GEMFILE=../../packages/ruby/Gemfile bundle exec rspec
+
+      - name: Stop gRPC fixture server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/grpc_server.pid ]; then
+            kill "$(cat /tmp/grpc_server.pid)" || true
+          fi
 
       - name: Upload coverage to Codecov
         if: github.actor != 'dependabot[bot]'

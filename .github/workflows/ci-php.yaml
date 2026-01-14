@@ -135,7 +135,13 @@ jobs:
           tools: composer
           coverage: xdebug
           ini-values: xdebug.mode=coverage
-          extensions: fileinfo, xdebug
+          extensions: fileinfo, xdebug, grpc
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.10"
+          cache-prefix: grpc-server
 
       - name: Setup Composer Cache
         uses: actions/cache@v5
@@ -177,6 +183,26 @@ jobs:
         working-directory: packages/php
         run: composer install --no-interaction --no-progress
 
+      - name: Start gRPC fixture server
+        shell: bash
+        run: |
+          uv run --directory packages/python python scripts/start_grpc_test_server.py >/tmp/grpc_server.log 2>&1 &
+          echo $! > /tmp/grpc_server.pid
+          python - <<'PY'
+          import socket
+          import time
+
+          deadline = time.time() + 20
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 50051), timeout=1):
+                      break
+              except OSError:
+                  time.sleep(0.5)
+          else:
+              raise SystemExit("gRPC server did not start on :50051")
+          PY
+
       - name: Run PHP tests
         working-directory: packages/php
         run: composer test
@@ -184,6 +210,14 @@ jobs:
       - name: Run PHP e2e tests
         working-directory: e2e/php
         run: php -d extension=spikard.so ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
+
+      - name: Stop gRPC fixture server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/grpc_server.pid ]; then
+            kill "$(cat /tmp/grpc_server.pid)" || true
+          fi
 
   coverage-php:
     name: PHP Code Coverage (85% minimum)
@@ -197,7 +231,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: pcov
+          extensions: pcov, grpc
           coverage: pcov
           tools: composer
 
@@ -209,6 +243,12 @@ jobs:
         uses: ./.github/actions/setup-rust
         with:
           cache-key-prefix: coverage-php
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.10"
+          cache-prefix: grpc-server
 
       - name: Install LLVM/Clang (for ext-php-rs bindgen)
         uses: ./.github/actions/setup-llvm-clang
@@ -256,11 +296,39 @@ jobs:
           # Verify extension is loaded
           php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
 
+      - name: Start gRPC fixture server
+        shell: bash
+        run: |
+          uv run --directory packages/python python scripts/start_grpc_test_server.py >/tmp/grpc_server.log 2>&1 &
+          echo $! > /tmp/grpc_server.pid
+          python - <<'PY'
+          import socket
+          import time
+
+          deadline = time.time() + 20
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 50051), timeout=1):
+                      break
+              except OSError:
+                  time.sleep(0.5)
+          else:
+              raise SystemExit("gRPC server did not start on :50051")
+          PY
+
       - name: Run PHP tests with coverage
         working-directory: packages/php
         env:
           XDEBUG_MODE: coverage
         run: vendor/bin/phpunit --coverage-html htmlcov --coverage-clover ../../target/clover.xml
+
+      - name: Stop gRPC fixture server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/grpc_server.pid ]; then
+            kill "$(cat /tmp/grpc_server.pid)" || true
+          fi
 
       - name: Enforce minimum coverage threshold (85%)
         run: bash scripts/ci/php/enforce-coverage-threshold.sh

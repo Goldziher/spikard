@@ -95,6 +95,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: node-tests
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
 
@@ -103,6 +108,12 @@ jobs:
         with:
           node-version: "20"
           cache: pnpm
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.10"
+          cache-prefix: grpc-server
 
       - name: Download Node bindings
         uses: actions/download-artifact@v7
@@ -119,6 +130,26 @@ jobs:
         shell: bash
         run: pnpm install
 
+      - name: Start gRPC fixture server
+        shell: bash
+        run: |
+          uv run --directory packages/python python scripts/start_grpc_test_server.py >/tmp/grpc_server.log 2>&1 &
+          echo $! > /tmp/grpc_server.pid
+          python - <<'PY'
+          import socket
+          import time
+
+          deadline = time.time() + 20
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 50051), timeout=1):
+                      break
+              except OSError:
+                  time.sleep(0.5)
+          else:
+              raise SystemExit("gRPC server did not start on :50051")
+          PY
+
       - name: Run tests
         working-directory: packages/node
         shell: bash
@@ -132,6 +163,14 @@ jobs:
         shell: bash
         run: pnpm --filter spikard-e2e-node test
 
+      - name: Stop gRPC fixture server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/grpc_server.pid ]; then
+            kill "$(cat /tmp/grpc_server.pid)" || true
+          fi
+
   coverage-node:
     name: Node.js Code Coverage
     runs-on: ubuntu-latest
@@ -139,6 +178,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: node-coverage
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -148,11 +192,45 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.10"
+          cache-prefix: grpc-server
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Start gRPC fixture server
+        shell: bash
+        run: |
+          uv run --directory packages/python python scripts/start_grpc_test_server.py >/tmp/grpc_server.log 2>&1 &
+          echo $! > /tmp/grpc_server.pid
+          python - <<'PY'
+          import socket
+          import time
+
+          deadline = time.time() + 20
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 50051), timeout=1):
+                      break
+              except OSError:
+                  time.sleep(0.5)
+          else:
+              raise SystemExit("gRPC server did not start on :50051")
+          PY
+
       - name: Run Node.js tests with coverage
         run: pnpm --filter @spikard/node test --coverage
+
+      - name: Stop gRPC fixture server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/grpc_server.pid ]; then
+            kill "$(cat /tmp/grpc_server.pid)" || true
+          fi
 
       - name: Upload coverage to Codecov
         if: github.actor != 'dependabot[bot]'
