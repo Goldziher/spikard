@@ -459,7 +459,16 @@ describe("gRPC Error Handling Fixtures", () => {
 			let error: unknown;
 
 			try {
-				if (isServerStreaming && !isClientStreaming) {
+				if (!isClientStreaming && !isServerStreaming) {
+					// Unary
+					await client.executeUnary(
+						serviceName,
+						methodName,
+						requestData as Record<string, unknown>,
+						metadata,
+						timeoutMs ? timeoutMs / 1000 : undefined,
+					);
+				} else if (isServerStreaming && !isClientStreaming) {
 					// Server streaming
 					await client.executeServerStreaming(
 						serviceName,
@@ -478,7 +487,7 @@ describe("gRPC Error Handling Fixtures", () => {
 						timeoutMs ? timeoutMs / 1000 : undefined,
 					);
 				} else {
-					// Bidirectional or unary
+					// Bidirectional streaming
 					await client.executeBidirectional(
 						serviceName,
 						methodName,
