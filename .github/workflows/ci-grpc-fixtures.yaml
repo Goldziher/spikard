@@ -1,6 +1,7 @@
 name: CI gRPC Fixtures
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:

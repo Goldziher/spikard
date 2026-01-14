@@ -1,6 +1,7 @@
 name: CI Validate
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -28,6 +29,7 @@ on:
       - 'packages/php/**'
       - '.github/workflows/**'
       - '.github/actions/**'
+      - '.github/workflows/ci-validate.yaml'
   pull_request:
     branches: [main]
     paths:
@@ -56,6 +58,7 @@ on:
       - '.github/workflows/**'
       - '.github/actions/**'
 
+      - '.github/workflows/ci-validate.yaml'
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
