@@ -20,11 +20,9 @@ import json
 import signal
 import sys
 import time
+from collections.abc import AsyncIterator  # noqa: TC003
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
+from typing import Any
 
 # Add packages/python to path so we can import from conftest
 sys.path.insert(0, str(Path(__file__).parent.parent / "packages" / "python"))
@@ -250,7 +248,10 @@ class GenericHandler(grpc.GenericRpcHandler):
 
                                 if not client_streaming and server_streaming:
                                     # Server streaming
-                                    async def server_stream_handler(request: dict, context: Any) -> AsyncIterator[dict]:
+                                    async def server_stream_handler(
+                                        request: dict,
+                                        context: Any,
+                                    ) -> AsyncIterator[dict]:
                                         async for msg in self.servicer.handle_server_stream(
                                             request, context, method_path
                                         ):
@@ -277,7 +278,10 @@ class GenericHandler(grpc.GenericRpcHandler):
 
                                 if client_streaming and server_streaming:
                                     # Bidirectional streaming
-                                    async def bidi_handler(request_iterator: Any, context: Any) -> AsyncIterator[dict]:
+                                    async def bidi_handler(
+                                        request_iterator: Any,
+                                        context: Any,
+                                    ) -> AsyncIterator[dict]:
                                         async for msg in self.servicer.handle_bidi_stream(
                                             request_iterator, context, method_path
                                         ):
