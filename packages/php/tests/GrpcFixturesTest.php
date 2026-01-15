@@ -408,7 +408,35 @@ final class GrpcFixturesTest extends TestCase
         /** @var float|null $timeout */
         $timeout = $timeoutMs !== null && \is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
 
-        // Execute RPC
+        /**  */
+        $expectedResponse = $fixture['expected_response'];
+        /** @var array<string, mixed> $expectedResponseArray */
+        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
+        $expectedError = $expectedResponseArray['error'] ?? null;
+
+        if (\is_array($expectedError)) {
+            $result = $this->client->executeServerStreamingWithStatus(
+                $serviceName,
+                $methodName,
+                $requestMessage,
+                $metadata,
+                $timeout,
+            );
+            $responses = $result['responses'];
+            $status = $result['status'];
+
+            $this->validateStreamResponse($responses, $expectedResponseArray);
+            $expectedCode = $expectedError['code'] ?? null;
+            if (\is_int($expectedCode)) {
+                $this->assertSame($expectedCode, $status['code']);
+            }
+            $expectedMessage = $expectedError['message'] ?? null;
+            if (\is_string($expectedMessage) && $expectedMessage !== '') {
+                $this->assertStringContainsString($expectedMessage, $status['details']);
+            }
+            return;
+        }
+
         $responses = $this->client->executeServerStreaming(
             $serviceName,
             $methodName,
@@ -416,12 +444,6 @@ final class GrpcFixturesTest extends TestCase
             $metadata,
             $timeout,
         );
-
-        // Validate response
-        /**  */
-        $expectedResponse = $fixture['expected_response'];
-        /** @var array<string, mixed> $expectedResponseArray */
-        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $this->validateStreamResponse($responses, $expectedResponseArray);
     }
 

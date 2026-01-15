@@ -592,6 +592,23 @@ final class GrpcTestClient
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function normalizeMetadata(mixed $metadata): array
+    {
+        if (!\is_array($metadata)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($metadata as $key => $value) {
+            $normalized[(string) $key] = $value;
+        }
+
+        return $normalized;
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     private function collectStreamResponses(object $call): array
@@ -627,14 +644,25 @@ final class GrpcTestClient
             return;
         }
 
+        $normalized = $this->normalizeStubStatus($status);
+        $this->assertNormalizedStatusOk($normalized, $context);
+    }
+
+    /**
+     * @return array{code: int, details: string, metadata: array<string, mixed>}
+     */
+    private function normalizeStubStatus(mixed $status): array
+    {
         $code = 0;
         $details = '';
+        $metadata = [];
 
         if (\is_array($status)) {
             $codeVal = $status['code'] ?? 0;
             $code = \is_numeric($codeVal) ? (int) $codeVal : 0;
             $detailsVal = $status['details'] ?? '';
             $details = \is_string($detailsVal) ? $detailsVal : '';
+            $metadata = $this->normalizeMetadata($status['metadata'] ?? null);
         } elseif (\is_object($status)) {
             if (\method_exists($status, 'getCode')) {
                 $codeVal = $status->getCode();
@@ -653,7 +681,29 @@ final class GrpcTestClient
             } elseif (\property_exists($status, 'details') && \is_string($status->details)) {
                 $details = $status->details;
             }
+
+            if (\method_exists($status, 'getMetadata')) {
+                $metadataVal = $status->getMetadata();
+                $metadata = $this->normalizeMetadata($metadataVal);
+            } elseif (\property_exists($status, 'metadata')) {
+                $metadata = $this->normalizeMetadata($status->metadata);
+            }
         }
+
+        return [
+            'code' => $code,
+            'details' => $details,
+            'metadata' => $metadata,
+        ];
+    }
+
+    /**
+     * @param array{code: int, details: string} $status
+     */
+    private function assertNormalizedStatusOk(array $status, string $context): void
+    {
+        $code = $status['code'];
+        $details = $status['details'];
 
         if ($code !== 0) {
             $codeName = $this->grpcCodeName($code);
@@ -714,9 +764,9 @@ final class GrpcTestClient
     /**
      * @param array<string, mixed> $request
      * @param array<string, string> $metadata
-     * @return array<int, array<string, mixed>>
+     * @return array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}}
      */
-    private function executeServerStreamingWithStub(
+    private function executeServerStreamingWithStubStatus(
         string $serviceName,
         string $methodName,
         array $request,
@@ -736,8 +786,10 @@ final class GrpcTestClient
         $responses = $this->collectStreamResponses($call);
         $status = \method_exists($call, 'getStatus') ? $call->getStatus() : null;
 
-        $this->assertStubStatusOk($status, 'Server streaming RPC failed');
-        return $responses;
+        return [
+            'responses' => $responses,
+            'status' => $this->normalizeStubStatus($status),
+        ];
     }
 
     /**
@@ -912,6 +964,72 @@ final class GrpcTestClient
      * @param array<string, string> $metadata Optional metadata headers
      * @param float|null $timeout Optional timeout in seconds
      *
+     * @return array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}}
+     *
+     * @throws RuntimeException If RPC fails
+     */
+    public function executeServerStreamingWithStatus(
+        string $serviceName,
+        string $methodName,
+        array $request,
+        array $metadata = [],
+        ?float $timeout = null,
+    ): array {
+        $this->connect();
+
+        if ($this->stub !== null) {
+            return $this->executeServerStreamingWithStubStatus($serviceName, $methodName, $request, $metadata, $timeout);
+        }
+
+        if ($this->channel === null) {
+            throw new RuntimeException('Channel not initialized');
+        }
+
+        try {
+            $method = '/' . $serviceName . '/' . $methodName;
+            $preparedMetadata = $this->prepareMetadata($metadata);
+            $requestPayload = \json_encode($request, JSON_THROW_ON_ERROR);
+
+            $rawCall = $this->channel->createCall($method, $timeout ?? 5.0);
+            $call = new GrpcCallWrapper($rawCall);
+
+            $call->sendMetadata($preparedMetadata);
+            $call->write($requestPayload);
+            $call->writesDone();
+
+            $responses = [];
+            while (true) {
+                [$message, $_metadata] = $call->read();
+                if ($message === null) {
+                    break;
+                }
+                /** @var array<string, mixed> */
+                $decoded = \json_decode($message, true, 512, JSON_THROW_ON_ERROR);
+                $responses[] = $decoded;
+            }
+
+            return [
+                'responses' => $responses,
+                'status' => $call->getStatus(),
+            ];
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                \sprintf('Server streaming RPC failed: %s', $e->getMessage()),
+                0,
+                $e,
+            );
+        }
+    }
+
+    /**
+     * Execute server streaming RPC from fixture.
+     *
+     * @param string $serviceName Fully qualified service name
+     * @param string $methodName Method name
+     * @param array<string, mixed> $request Request data as array
+     * @param array<string, string> $metadata Optional metadata headers
+     * @param float|null $timeout Optional timeout in seconds
+     *
      * @return array<int, array<string, mixed>> List of response messages
      *
      * @throws RuntimeException If RPC fails
@@ -923,57 +1041,9 @@ final class GrpcTestClient
         array $metadata = [],
         ?float $timeout = null,
     ): array {
-        $this->connect();
-
-        if ($this->stub !== null) {
-            return $this->executeServerStreamingWithStub($serviceName, $methodName, $request, $metadata, $timeout);
-        }
-
-        if ($this->channel === null) {
-            throw new RuntimeException('Channel not initialized');
-        }
-
-        try {
-            $method = '/' . $serviceName . '/' . $methodName;
-            $preparedMetadata = $this->prepareMetadata($metadata);
-
-            // Serialize request as JSON
-            $requestPayload = \json_encode($request, JSON_THROW_ON_ERROR);
-
-            // Create a call object (gRPC PHP extension not statically typed)
-            $rawCall = $this->channel->createCall($method, $timeout ?? 5.0);
-            $call = new GrpcCallWrapper($rawCall);
-
-            // Send request and start reading responses
-            $call->sendMetadata($preparedMetadata);
-            $call->write($requestPayload);
-            $call->writesDone();
-
-            // Read all response messages
-            $responses = [];
-            while (true) {
-                [$message, $_metadata] = $call->read();
-
-                if ($message === null) {
-                    break;
-                }
-
-                // Deserialize message
-                /** @var array<string, mixed> */
-                $decoded = \json_decode($message, true, 512, JSON_THROW_ON_ERROR);
-                $responses[] = $decoded;
-            }
-
-            $this->assertOkStatus($call, 'Server streaming RPC failed');
-
-            return $responses;
-        } catch (Exception $e) {
-            throw new RuntimeException(
-                \sprintf('Server streaming RPC failed: %s', $e->getMessage()),
-                0,
-                $e,
-            );
-        }
+        $result = $this->executeServerStreamingWithStatus($serviceName, $methodName, $request, $metadata, $timeout);
+        $this->assertNormalizedStatusOk($result['status'], 'Server streaming RPC failed');
+        return $result['responses'];
     }
 
     /**
