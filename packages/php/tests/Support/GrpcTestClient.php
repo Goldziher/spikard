@@ -212,6 +212,68 @@ final class GrpcChannelWrapper
 }
 
 /**
+ * JSON wrapper message for gRPC BaseStub calls.
+ */
+final class GrpcJsonMessage
+{
+    private string $payload;
+
+    public function __construct(string $payload = '')
+    {
+        $this->payload = $payload;
+    }
+
+    public function serializeToString(): string
+    {
+        return $this->payload;
+    }
+
+    public function mergeFromString(string $payload): void
+    {
+        $this->payload = $payload;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return self::normalizeDecoded($this->payload);
+    }
+
+    public function getPayload(): string
+    {
+        return $this->payload;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function decodeJson(string $payload): array
+    {
+        return self::normalizeDecoded($payload);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function normalizeDecoded(string $payload): array
+    {
+        $decoded = \json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+        if (!\is_array($decoded)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($decoded as $key => $value) {
+            $normalized[(string) $key] = $value;
+        }
+
+        return $normalized;
+    }
+}
+
+/**
  * JSON-focused gRPC stub that reuses grpc/grpc BaseStub.
  */
 final class GrpcJsonStub extends \Grpc\BaseStub
@@ -225,8 +287,8 @@ final class GrpcJsonStub extends \Grpc\BaseStub
     {
         return $this->_simpleRequest(
             $method,
-            $payload,
-            [self::class, 'decodeJson'],
+            new GrpcJsonMessage($payload),
+            [GrpcJsonMessage::class, 'decodeJson'],
             $metadata,
             $options,
         )->wait();
@@ -240,8 +302,8 @@ final class GrpcJsonStub extends \Grpc\BaseStub
     {
         return $this->_serverStreamRequest(
             $method,
-            $payload,
-            [self::class, 'decodeJson'],
+            new GrpcJsonMessage($payload),
+            [GrpcJsonMessage::class, 'decodeJson'],
             $metadata,
             $options,
         );
@@ -255,7 +317,7 @@ final class GrpcJsonStub extends \Grpc\BaseStub
     {
         return $this->_clientStreamRequest(
             $method,
-            [self::class, 'decodeJson'],
+            [GrpcJsonMessage::class, 'decodeJson'],
             $metadata,
             $options,
         );
@@ -269,7 +331,7 @@ final class GrpcJsonStub extends \Grpc\BaseStub
     {
         return $this->_bidiRequest(
             $method,
-            [self::class, 'decodeJson'],
+            [GrpcJsonMessage::class, 'decodeJson'],
             $metadata,
             $options,
         );
@@ -453,6 +515,20 @@ final class GrpcTestClient
     }
 
     /**
+     * @param array<string, string> $metadata
+     * @return array<string, array<int, string>>
+     */
+    private function prepareStubMetadata(array $metadata): array
+    {
+        $prepared = [];
+        foreach ($metadata as $key => $value) {
+            $prepared[(string) $key] = [(string) $value];
+        }
+
+        return $prepared;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function buildCallOptions(?float $timeout): array
@@ -475,6 +551,20 @@ final class GrpcTestClient
                 $payload = $payload[0];
             } else {
                 return $this->normalizeResponseKeys($payload);
+            }
+        }
+
+        if (\is_object($payload)) {
+            if (\method_exists($payload, 'toArray')) {
+                $decoded = $payload->toArray();
+                if (\is_array($decoded)) {
+                    return $this->normalizeResponseKeys($decoded);
+                }
+            }
+            if (\method_exists($payload, 'getPayload')) {
+                $payload = $payload->getPayload();
+            } elseif (\method_exists($payload, 'serializeToString')) {
+                $payload = $payload->serializeToString();
             }
         }
 
@@ -606,7 +696,7 @@ final class GrpcTestClient
         }
 
         $method = '/' . $serviceName . '/' . $methodName;
-        $preparedMetadata = $this->prepareMetadata($metadata);
+        $preparedMetadata = $this->prepareStubMetadata($metadata);
         $options = $this->buildCallOptions($timeout);
         $requestPayload = \json_encode($request, JSON_THROW_ON_ERROR);
 
@@ -638,7 +728,7 @@ final class GrpcTestClient
         }
 
         $method = '/' . $serviceName . '/' . $methodName;
-        $preparedMetadata = $this->prepareMetadata($metadata);
+        $preparedMetadata = $this->prepareStubMetadata($metadata);
         $options = $this->buildCallOptions($timeout);
         $requestPayload = \json_encode($request, JSON_THROW_ON_ERROR);
 
@@ -667,7 +757,7 @@ final class GrpcTestClient
         }
 
         $method = '/' . $serviceName . '/' . $methodName;
-        $preparedMetadata = $this->prepareMetadata($metadata);
+        $preparedMetadata = $this->prepareStubMetadata($metadata);
         $options = $this->buildCallOptions($timeout);
 
         $call = $this->stub->clientStreamCall($method, $preparedMetadata, $options);
@@ -675,7 +765,7 @@ final class GrpcTestClient
         foreach ($requests as $request) {
             $payload = \json_encode($request, JSON_THROW_ON_ERROR);
             if (\method_exists($call, 'write')) {
-                $call->write($payload);
+                $call->write(new GrpcJsonMessage($payload));
             }
         }
 
@@ -723,7 +813,7 @@ final class GrpcTestClient
         }
 
         $method = '/' . $serviceName . '/' . $methodName;
-        $preparedMetadata = $this->prepareMetadata($metadata);
+        $preparedMetadata = $this->prepareStubMetadata($metadata);
         $options = $this->buildCallOptions($timeout);
 
         $call = $this->stub->bidiStreamCall($method, $preparedMetadata, $options);
@@ -731,7 +821,7 @@ final class GrpcTestClient
         foreach ($requests as $request) {
             $payload = \json_encode($request, JSON_THROW_ON_ERROR);
             if (\method_exists($call, 'write')) {
-                $call->write($payload);
+                $call->write(new GrpcJsonMessage($payload));
             }
         }
 

@@ -25,6 +25,25 @@ require_relative 'support/grpc_test_client'
 #
 
 FIXTURES_DIR = File.join(__dir__, '..', '..', '..', 'testing_data', 'protobuf', 'streaming').freeze
+GRPC_CODE_NAME_MAP = {
+  GRPC::Core::StatusCodes::OK => 'OK',
+  GRPC::Core::StatusCodes::CANCELLED => 'CANCELLED',
+  GRPC::Core::StatusCodes::UNKNOWN => 'UNKNOWN',
+  GRPC::Core::StatusCodes::INVALID_ARGUMENT => 'INVALID_ARGUMENT',
+  GRPC::Core::StatusCodes::DEADLINE_EXCEEDED => 'DEADLINE_EXCEEDED',
+  GRPC::Core::StatusCodes::NOT_FOUND => 'NOT_FOUND',
+  GRPC::Core::StatusCodes::ALREADY_EXISTS => 'ALREADY_EXISTS',
+  GRPC::Core::StatusCodes::PERMISSION_DENIED => 'PERMISSION_DENIED',
+  GRPC::Core::StatusCodes::RESOURCE_EXHAUSTED => 'RESOURCE_EXHAUSTED',
+  GRPC::Core::StatusCodes::FAILED_PRECONDITION => 'FAILED_PRECONDITION',
+  GRPC::Core::StatusCodes::ABORTED => 'ABORTED',
+  GRPC::Core::StatusCodes::OUT_OF_RANGE => 'OUT_OF_RANGE',
+  GRPC::Core::StatusCodes::UNIMPLEMENTED => 'UNIMPLEMENTED',
+  GRPC::Core::StatusCodes::INTERNAL => 'INTERNAL',
+  GRPC::Core::StatusCodes::UNAVAILABLE => 'UNAVAILABLE',
+  GRPC::Core::StatusCodes::DATA_LOSS => 'DATA_LOSS',
+  GRPC::Core::StatusCodes::UNAUTHENTICATED => 'UNAUTHENTICATED'
+}.freeze
 
 ##
 # Load all fixtures from a category directory.
@@ -182,6 +201,16 @@ def validate_single_response(response, expected_response)
                       "Response mismatch: #{response.inspect} != #{expected_message.inspect}"
 end
 
+def normalize_code_name(name)
+  name.to_s.strip.upcase
+end
+
+def grpc_code_name(code)
+  return normalize_code_name(code) if code.is_a?(String) || code.is_a?(Symbol)
+
+  GRPC_CODE_NAME_MAP.fetch(code, code.to_s)
+end
+
 ##
 # Validate gRPC error code against expected code.
 #
@@ -192,11 +221,11 @@ end
 #
 def validate_error_code(error, expected_code)
   if expected_code.is_a?(String)
-    actual_code_name = error.code.to_s
-    expect(actual_code_name).to eq(expected_code),
-                                "Expected status #{expected_code}, got #{actual_code_name}"
+    actual_code_name = grpc_code_name(error.code)
+    expect(normalize_code_name(actual_code_name)).to eq(normalize_code_name(expected_code)),
+                                                     "Expected status #{expected_code}, got #{actual_code_name}"
   elsif expected_code.is_a?(Integer)
-    actual_code_value = error.code
+    actual_code_value = error.code.is_a?(Integer) ? error.code : error.code.to_s.to_i
     expect(actual_code_value).to eq(expected_code),
                                  "Expected status code #{expected_code}, got #{actual_code_value}"
   end
@@ -236,6 +265,23 @@ def validate_error_response(error, expected_response)
   validate_error_message(error, expected_message)
 end
 
+def grpc_error_expected?(expected_response)
+  return true if expected_response['error']
+
+  false
+end
+
+def build_error_expectation(expected_response)
+  return expected_response if expected_response['error']
+
+  {
+    'error' => {
+      'code' => expected_response['status_code'],
+      'message' => expected_response['message'].is_a?(String) ? expected_response['message'] : nil
+    }
+  }
+end
+
 # Load fixtures by category
 SERVER_STREAMING_FIXTURES = load_fixtures_by_category('server').freeze
 CLIENT_STREAMING_FIXTURES = load_fixtures_by_category('client').freeze
@@ -262,18 +308,33 @@ RSpec.describe 'gRPC Streaming Fixtures' do
           handler = fixture['handler'] || {}
           timeout = handler['timeout_ms'] ? (handler['timeout_ms'] / 1000.0) : nil
 
-          # Execute RPC
-          responses = client.execute_server_streaming(
-            service_name,
-            method_name,
-            request_message,
-            metadata: metadata,
-            timeout: timeout
-          )
-
-          # Validate response
           expected_response = fixture['expected_response']
-          validate_stream_response(responses, expected_response)
+          expects_error = expected_response['error']
+          responses = []
+          error = nil
+
+          begin
+            responses = client.execute_server_streaming(
+              service_name,
+              method_name,
+              request_message,
+              metadata: metadata,
+              timeout: timeout
+            )
+            raise 'Expected gRPC error but none was raised' if expects_error
+          rescue GRPC::BadStatus => e
+            raise e unless expects_error
+
+            error = e
+            responses = e.responses if e.respond_to?(:responses)
+          end
+
+          if expects_error
+            validate_error_response(error, expected_response)
+            validate_stream_response(responses, expected_response) if expected_response['stream']
+          else
+            validate_stream_response(responses, expected_response)
+          end
         end
       end
     end
@@ -330,18 +391,33 @@ RSpec.describe 'gRPC Streaming Fixtures' do
           handler = fixture['handler'] || {}
           timeout = handler['timeout_ms'] ? (handler['timeout_ms'] / 1000.0) : nil
 
-          # Execute RPC
-          responses = client.execute_bidirectional(
-            service_name,
-            method_name,
-            request_messages,
-            metadata: metadata,
-            timeout: timeout
-          )
-
-          # Validate response
           expected_response = fixture['expected_response']
-          validate_stream_response(responses, expected_response)
+          expects_error = grpc_error_expected?(expected_response)
+          responses = []
+          error = nil
+
+          begin
+            responses = client.execute_bidirectional(
+              service_name,
+              method_name,
+              request_messages,
+              metadata: metadata,
+              timeout: timeout
+            )
+            raise 'Expected gRPC error but none was raised' if expects_error
+          rescue GRPC::BadStatus => e
+            raise e unless expects_error
+
+            error = e
+            responses = e.responses if e.respond_to?(:responses)
+          end
+
+          if expects_error
+            validate_error_response(error, build_error_expectation(expected_response))
+            validate_stream_response(responses, expected_response) if expected_response['stream']
+          else
+            validate_stream_response(responses, expected_response)
+          end
         end
       end
     end
@@ -400,7 +476,7 @@ RSpec.describe 'gRPC Streaming Fixtures' do
                 timeout: timeout
               )
             end
-          rescue GRPC::RpcError => e
+          rescue GRPC::BadStatus => e
             error = e
           end
 

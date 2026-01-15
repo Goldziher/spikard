@@ -15,8 +15,6 @@ Usage:
     cd packages/php && vendor/bin/phpunit tests/GrpcFixturesTest.php
 """
 
-from __future__ import annotations
-
 import asyncio
 import json
 import signal
@@ -167,33 +165,43 @@ class FixtureDrivenServicer:
         return {"count": len(messages)}
 
     async def handle_bidi_stream(self, request_iterator: Any, context: Any, method_path: str) -> AsyncIterator[dict]:
-        """Bidirectional streaming RPC: echo messages or return fixture stream."""
+        """Bidirectional streaming RPC: yield fixture responses or raise error."""
         fixture = self.get_fixture_for_method(method_path)
-
-        # Collect all request messages first
-        messages = [msg async for msg in request_iterator]
+        expected_messages: list[dict] = []
+        should_error = False
+        error_status = grpc.StatusCode.UNKNOWN
+        error_message = "Unknown error"
 
         if fixture:
             expected = fixture.get("expected_response", {})
             if isinstance(expected, dict):
                 error = expected.get("error")
                 if isinstance(error, dict):
+                    should_error = True
                     status_code = expected.get("status_code", "UNKNOWN")
                     error_message = error.get("message", "Unknown error")
-                    status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
-                    await context.abort(status, error_message)
-                    return
+                    error_status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
 
                 stream = expected.get("stream")
                 if isinstance(stream, list):
-                    for message in stream:
-                        if isinstance(message, dict):
-                            yield message
-                    return
+                    expected_messages = [msg for msg in stream if isinstance(msg, dict)]
 
-        # Fallback: echo messages
-        for msg in messages:
-            yield msg
+        if expected_messages:
+            for message in expected_messages:
+                yield message
+            if should_error:
+                await context.abort(error_status, error_message)
+        elif should_error:
+            message_count = 0
+            async for _ in request_iterator:
+                message_count += 1
+                if message_count >= 1:
+                    await context.abort(error_status, error_message)
+                    return
+            await context.abort(error_status, error_message)
+        else:
+            async for msg in request_iterator:
+                yield msg
 
 
 class GenericHandler(grpc.GenericRpcHandler):

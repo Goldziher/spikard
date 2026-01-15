@@ -47,7 +47,7 @@ No MSRV bump policy has been established yet, so MSRV may increase in any releas
 
 The MSRV is the minimum Rust version that can be used to *compile* each crate. However, `bindgen` and `bindgen-cli` can generate bindings that are compatible with Rust versions below the current MSRV.
 
-Most of the time, the `bindgen-cli` crate will have a more recent MSRV than `bindgen` as crates such as `clap` require it. 
+Most of the time, the `bindgen-cli` crate will have a more recent MSRV than `bindgen` as crates such as `clap` require it.
 
 ## API Reference
 

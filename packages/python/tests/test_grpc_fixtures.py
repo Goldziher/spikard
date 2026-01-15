@@ -261,6 +261,26 @@ def validate_error_response(
         )
 
 
+def expects_grpc_error(expected_response: dict[str, object]) -> bool:
+    return bool(expected_response.get("error"))
+
+
+def build_error_expectation(expected_response: dict[str, object]) -> dict[str, object]:
+    if expected_response.get("error"):
+        return expected_response
+
+    status_code = expected_response.get("status_code")
+    message = expected_response.get("message")
+    error_message = message if isinstance(message, str) else None
+
+    return {
+        "error": {
+            "code": status_code,
+            "message": error_message,
+        }
+    }
+
+
 # Parametrize tests by fixture category
 server_streaming_fixtures = load_fixtures_by_category("server")
 client_streaming_fixtures = load_fixtures_by_category("client")
@@ -419,6 +439,21 @@ async def test_bidirectional_fixture(
         handler = fixture.get("handler", {})
         timeout_ms = handler.get("timeout_ms")
 
+        expected_response = fixture["expected_response"]
+        expects_error = expects_grpc_error(expected_response)
+
+        if expects_error:
+            with pytest.raises(grpc.RpcError) as exc_info:
+                await client.execute_bidirectional(
+                    service_name,
+                    method_name,
+                    request_messages,
+                    metadata=metadata,
+                    timeout=timeout_ms / 1000 if timeout_ms else None,
+                )
+            validate_error_response(exc_info, build_error_expectation(expected_response))
+            return
+
         # Execute RPC
         responses = await client.execute_bidirectional(
             service_name,
@@ -429,7 +464,6 @@ async def test_bidirectional_fixture(
         )
 
         # Validate response
-        expected_response = fixture["expected_response"]
         validate_stream_response(responses, expected_response)
 
 

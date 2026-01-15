@@ -65,11 +65,14 @@ final class FfiTypeSafetyTest extends TestCase
 
                     public function handle(Request $request): Response
                     {
-                        if (!\is_callable($this->handler)) {
+                        if (\is_callable($this->handler)) {
+                            /**  */
+                            $result = ($this->handler)($request);
+                        } elseif (\method_exists($this->handler, 'handle')) {
+                            $result = $this->handler->handle($request);
+                        } else {
                             return Response::json(['error' => 'Handler is not callable'], 500);
                         }
-                        /**  */
-                        $result = ($this->handler)($request);
                         if ($result instanceof Response) {
                             return $result;
                         }

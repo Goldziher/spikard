@@ -653,7 +653,6 @@ def grpc_server() -> object:
                         # Map status code string to grpc.StatusCode
                         error_status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
                         error_message = error_message_from_fixture
-
                     stream = expected.get("stream")
                     if isinstance(stream, list):
                         expected_messages = [msg for msg in stream if isinstance(msg, dict)]

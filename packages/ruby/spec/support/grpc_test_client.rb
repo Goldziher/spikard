@@ -99,7 +99,12 @@ module GrpcTestClientUtils
   # @return [Array<Hash>] List of collected responses
   #
   def self.collect_stream_responses(enum)
-    enum.map { |response| response }
+    responses = []
+    enum.each_with_object(responses) { |response, acc| acc << response }
+    responses
+  rescue GRPC::BadStatus => e
+    e.define_singleton_method(:responses) { responses }
+    raise e
   end
 end
 

@@ -332,15 +332,6 @@ function expectsGrpcError(expectedResponse: Record<string, unknown>): boolean {
 	if (expectedResponse.error) {
 		return true;
 	}
-
-	const statusCode = expectedResponse.status_code;
-	if (typeof statusCode === "string") {
-		return statusCode !== "OK";
-	}
-	if (typeof statusCode === "number") {
-		return statusCode !== 0;
-	}
-
 	return false;
 }
 
