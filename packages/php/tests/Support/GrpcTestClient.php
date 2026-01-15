@@ -851,9 +851,9 @@ final class GrpcTestClient
     /**
      * @param array<int, array<string, mixed>> $requests
      * @param array<string, string> $metadata
-     * @return array<int, array<string, mixed>>
+     * @return array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}}
      */
-    private function executeBidirectionalWithStub(
+    private function executeBidirectionalWithStubStatus(
         string $serviceName,
         string $methodName,
         array $requests,
@@ -884,8 +884,10 @@ final class GrpcTestClient
         $responses = $this->collectStreamResponses($call);
         $status = \method_exists($call, 'getStatus') ? $call->getStatus() : null;
 
-        $this->assertStubStatusOk($status, 'Bidirectional RPC failed');
-        return $responses;
+        return [
+            'responses' => $responses,
+            'status' => $this->normalizeStubStatus($status),
+        ];
     }
 
     /**
@@ -1125,6 +1127,77 @@ final class GrpcTestClient
      * @param array<string, string> $metadata Optional metadata headers
      * @param float|null $timeout Optional timeout in seconds
      *
+     * @return array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}}
+     *
+     * @throws RuntimeException If RPC fails
+     */
+    public function executeBidirectionalWithStatus(
+        string $serviceName,
+        string $methodName,
+        array $requests,
+        array $metadata = [],
+        ?float $timeout = null,
+    ): array {
+        $this->connect();
+
+        if ($this->stub !== null) {
+            return $this->executeBidirectionalWithStubStatus($serviceName, $methodName, $requests, $metadata, $timeout);
+        }
+
+        if ($this->channel === null) {
+            throw new RuntimeException('Channel not initialized');
+        }
+
+        try {
+            $method = '/' . $serviceName . '/' . $methodName;
+            $preparedMetadata = $this->prepareMetadata($metadata);
+
+            $rawCall = $this->channel->createCall($method, $timeout ?? 5.0);
+            $call = new GrpcCallWrapper($rawCall);
+
+            $call->sendMetadata($preparedMetadata);
+
+            foreach ($requests as $request) {
+                $payload = \json_encode($request, JSON_THROW_ON_ERROR);
+                $call->write($payload);
+            }
+
+            $call->writesDone();
+
+            $responses = [];
+            while (true) {
+                [$message, $_metadata] = $call->read();
+                if ($message === null) {
+                    break;
+                }
+
+                /** @var array<string, mixed> */
+                $decoded = \json_decode($message, true, 512, JSON_THROW_ON_ERROR);
+                $responses[] = $decoded;
+            }
+
+            return [
+                'responses' => $responses,
+                'status' => $call->getStatus(),
+            ];
+        } catch (Exception $e) {
+            throw new RuntimeException(
+                \sprintf('Bidirectional streaming RPC failed: %s', $e->getMessage()),
+                0,
+                $e,
+            );
+        }
+    }
+
+    /**
+     * Execute bidirectional streaming RPC from fixture.
+     *
+     * @param string $serviceName Fully qualified service name
+     * @param string $methodName Method name
+     * @param array<int, array<string, mixed>> $requests List of request messages
+     * @param array<string, string> $metadata Optional metadata headers
+     * @param float|null $timeout Optional timeout in seconds
+     *
      * @return array<int, array<string, mixed>> List of response messages
      *
      * @throws RuntimeException If RPC fails
@@ -1136,60 +1209,9 @@ final class GrpcTestClient
         array $metadata = [],
         ?float $timeout = null,
     ): array {
-        $this->connect();
-
-        if ($this->stub !== null) {
-            return $this->executeBidirectionalWithStub($serviceName, $methodName, $requests, $metadata, $timeout);
-        }
-
-        if ($this->channel === null) {
-            throw new RuntimeException('Channel not initialized');
-        }
-
-        try {
-            $method = '/' . $serviceName . '/' . $methodName;
-            $preparedMetadata = $this->prepareMetadata($metadata);
-
-            // Create a call object (gRPC PHP extension not statically typed)
-            $rawCall = $this->channel->createCall($method, $timeout ?? 5.0);
-            $call = new GrpcCallWrapper($rawCall);
-
-            // Send metadata
-            $call->sendMetadata($preparedMetadata);
-
-            // Send all request messages
-            foreach ($requests as $request) {
-                $payload = \json_encode($request, JSON_THROW_ON_ERROR);
-                $call->write($payload);
-            }
-
-            $call->writesDone();
-
-            // Read all response messages
-            $responses = [];
-            while (true) {
-                [$message, $_metadata] = $call->read();
-
-                if ($message === null) {
-                    break;
-                }
-
-                // Deserialize message
-                /** @var array<string, mixed> */
-                $decoded = \json_decode($message, true, 512, JSON_THROW_ON_ERROR);
-                $responses[] = $decoded;
-            }
-
-            $this->assertOkStatus($call, 'Bidirectional RPC failed');
-
-            return $responses;
-        } catch (Exception $e) {
-            throw new RuntimeException(
-                \sprintf('Bidirectional streaming RPC failed: %s', $e->getMessage()),
-                0,
-                $e,
-            );
-        }
+        $result = $this->executeBidirectionalWithStatus($serviceName, $methodName, $requests, $metadata, $timeout);
+        $this->assertNormalizedStatusOk($result['status'], 'Bidirectional RPC failed');
+        return $result['responses'];
     }
 
     /**

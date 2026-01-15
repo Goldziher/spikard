@@ -415,6 +415,7 @@ final class GrpcFixturesTest extends TestCase
         $expectedError = $expectedResponseArray['error'] ?? null;
 
         if (\is_array($expectedError)) {
+            /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
             $result = $this->client->executeServerStreamingWithStatus(
                 $serviceName,
                 $methodName,
@@ -540,7 +541,36 @@ final class GrpcFixturesTest extends TestCase
         /** @var float|null $timeout */
         $timeout = $timeoutMs !== null && \is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
 
-        // Execute RPC
+        /**  */
+        $expectedResponse = $fixture['expected_response'];
+        /** @var array<string, mixed> $expectedResponseArray */
+        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
+        $expectedError = $expectedResponseArray['error'] ?? null;
+
+        if (\is_array($expectedError)) {
+            /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
+            $result = $this->client->executeBidirectionalWithStatus(
+                $serviceName,
+                $methodName,
+                $requestMessages,
+                $metadata,
+                $timeout,
+            );
+            $responses = $result['responses'];
+            $status = $result['status'];
+
+            $this->validateStreamResponse($responses, $expectedResponseArray);
+            $expectedCode = $expectedError['code'] ?? null;
+            if (\is_int($expectedCode)) {
+                $this->assertSame($expectedCode, $status['code']);
+            }
+            $expectedMessage = $expectedError['message'] ?? null;
+            if (\is_string($expectedMessage) && $expectedMessage !== '') {
+                $this->assertStringContainsString($expectedMessage, $status['details']);
+            }
+            return;
+        }
+
         $responses = $this->client->executeBidirectional(
             $serviceName,
             $methodName,
@@ -548,12 +578,6 @@ final class GrpcFixturesTest extends TestCase
             $metadata,
             $timeout,
         );
-
-        // Validate response
-        /**  */
-        $expectedResponse = $fixture['expected_response'];
-        /** @var array<string, mixed> $expectedResponseArray */
-        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $this->validateStreamResponse($responses, $expectedResponseArray);
     }
 
