@@ -164,6 +164,10 @@ jobs:
         shell: bash
         run: pnpm install --frozen-lockfile
 
+      - name: Build Node package for e2e
+        shell: bash
+        run: pnpm --filter @spikard/node build
+
       - name: Run Node e2e tests
         shell: bash
         run: pnpm --filter spikard-e2e-node test

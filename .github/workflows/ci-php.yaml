@@ -128,6 +128,9 @@ jobs:
       - name: Setup LLVM/Clang
         uses: ./.github/actions/setup-llvm-clang
 
+      - name: Setup OpenSSL
+        uses: ./.github/actions/setup-openssl
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -163,6 +166,13 @@ jobs:
         run: |
           # Find the extension file
           EXT_FILE=$(find target/release -type f \( -name 'libspikard_php*.so' -o -name 'spikard_php*.so' \) | head -1)
+          if [ -z "$EXT_FILE" ]; then
+            echo "PHP extension artifact missing; building locally"
+            bash scripts/ci/php/install-dev-headers-linux.sh
+            bash scripts/ci/php/detect-php-config.sh
+            PHP_CONFIG=/usr/bin/php-config8.2 cargo build --release -p spikard-php --features extension-module
+            EXT_FILE=$(find target/release -type f \( -name 'libspikard_php*.so' -o -name 'spikard_php*.so' \) | head -1)
+          fi
           if [ -z "$EXT_FILE" ]; then
             echo "Error: Could not find PHP extension (.so file)"
             exit 1
