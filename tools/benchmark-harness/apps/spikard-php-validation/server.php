@@ -428,7 +428,11 @@ final class BenchmarkController
 {
     private function echoBody(Request $request): Response
     {
-        return new Response($request->body ?? [], 200, []);
+        $body = $request->body ?? [];
+        if ($this->isFormUrlencoded($request) && \is_array($body)) {
+            $body = $this->coerceFormValues($body);
+        }
+        return new Response($body, 200, []);
     }
 
     private function fixedResponse(array $data): Response
@@ -451,6 +455,52 @@ final class BenchmarkController
     private function queryParams(Request $request): Response
     {
         return new Response($request->queryParams, 200, []);
+    }
+
+    private function isFormUrlencoded(Request $request): bool
+    {
+        $contentType = $request->headers['content-type'] ?? '';
+        return \is_string($contentType) && \str_contains($contentType, 'application/x-www-form-urlencoded');
+    }
+
+    /** @param array<string, mixed> $values */
+    private function coerceFormValues(array $values): array
+    {
+        $output = [];
+        foreach ($values as $key => $value) {
+            $output[$key] = $this->coerceFormValue($value);
+        }
+        return $output;
+    }
+
+    private function coerceFormValue(mixed $value): mixed
+    {
+        if (\is_array($value)) {
+            return $this->coerceFormValues($value);
+        }
+        if (!\is_string($value)) {
+            return $value;
+        }
+        if ($value === '') {
+            return '';
+        }
+        $lower = \strtolower($value);
+        if ($lower === 'true') {
+            return true;
+        }
+        if ($lower === 'false') {
+            return false;
+        }
+        if ($lower === 'null') {
+            return null;
+        }
+        if (\preg_match('/^-?\d+$/', $value) === 1) {
+            return (int) $value;
+        }
+        if (\is_numeric($value)) {
+            return (float) $value;
+        }
+        return $value;
     }
 
     #[Get('/health')]

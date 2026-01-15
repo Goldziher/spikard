@@ -70,6 +70,8 @@
  * Contains the parsed gRPC request with all components extracted from
  * the gRPC wire format.
  */
+export type GrpcMetadata = Record<string, string>;
+
 export interface GrpcRequest {
 	/**
 	 * Fully qualified service name
@@ -105,7 +107,7 @@ export interface GrpcRequest {
 	 *
 	 * Example: { "authorization": "Bearer token123", "x-request-id": "abc" }
 	 */
-	metadata: Record<string, string>;
+	metadata: GrpcMetadata;
 }
 
 /**
@@ -136,7 +138,7 @@ export interface GrpcResponse {
 	 *
 	 * Example: { "x-server-id": "server-1", "x-cache-status": "hit" }
 	 */
-	metadata?: Record<string, string>;
+	metadata?: GrpcMetadata;
 }
 
 /**

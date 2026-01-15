@@ -84,11 +84,6 @@ struct VeryLargePayload {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct PathInt {
-    id: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 struct PathUuid {
     uuid: Uuid,
 }
@@ -242,7 +237,11 @@ async fn get_path_deep(ctx: RequestContext) -> Result<Response<Body>, (StatusCod
 }
 
 async fn get_path_int(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let PathInt { id } = ctx.path().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let id = ctx
+        .path_param("id")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: id".to_string()))?
+        .parse::<i64>()
+        .map_err(|err| (StatusCode::BAD_REQUEST, format!("Invalid path param id: {err}")))?;
     let result = serde_json::json!({ "id": id });
     Response::builder()
         .status(StatusCode::OK)

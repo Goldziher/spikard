@@ -87,6 +87,14 @@ interface PathParams {
 	readonly [key: string]: string;
 }
 
+interface RequestPayload {
+	readonly method?: string;
+	readonly path?: string;
+	readonly body?: unknown;
+	readonly query?: unknown;
+	readonly pathParams?: PathParams;
+}
+
 interface JsonBody {
 	readonly [key: string]: unknown;
 }
@@ -491,11 +499,38 @@ function post(
 		registerRoute("POST", path, handler, requestSchemaValue, responseSchemaValue);
 }
 
-function unwrapBody(value: unknown): unknown {
-	if (value && typeof value === "object" && "body" in value) {
-		return (value as { body?: unknown }).body;
+function isRequestPayload(value: unknown): value is RequestPayload {
+	return Boolean(value && typeof value === "object" && "method" in value && "path" in value);
+}
+
+function extractBody(value: unknown): unknown {
+	const bodyValue = value && typeof value === "object" && "body" in value ? (value as { body?: unknown }).body : value;
+	if (!bodyValue || typeof bodyValue !== "object") {
+		return bodyValue;
+	}
+	const record = bodyValue as Record<string, unknown>;
+	if (record.__spikard_form__ && typeof record.__spikard_form__ === "object") {
+		return record.__spikard_form__;
+	}
+	if (record.__spikard_multipart__ && typeof record.__spikard_multipart__ === "object") {
+		const multipart = record.__spikard_multipart__ as { fields?: unknown };
+		return multipart.fields ?? {};
+	}
+	return bodyValue;
+}
+
+function extractQuery(value: unknown): unknown {
+	if (isRequestPayload(value)) {
+		return value.query ?? {};
 	}
 	return value;
+}
+
+function extractPathParams(value: unknown): PathParams {
+	if (isRequestPayload(value)) {
+		return value.pathParams ?? {};
+	}
+	return (value ?? {}) as PathParams;
 }
 
 post(
@@ -503,7 +538,7 @@ post(
 	requestSchema("json/small"),
 	responseSchema("json/small"),
 )(async function jsonSmall(body: unknown): Promise<unknown> {
-	return unwrapBody(body);
+	return extractBody(body);
 });
 
 post(
@@ -511,7 +546,7 @@ post(
 	requestSchema("json/medium"),
 	responseSchema("json/medium"),
 )(async function jsonMedium(body: unknown): Promise<unknown> {
-	return unwrapBody(body);
+	return extractBody(body);
 });
 
 post(
@@ -519,7 +554,7 @@ post(
 	requestSchema("json/large"),
 	responseSchema("json/large"),
 )(async function jsonLarge(body: unknown): Promise<unknown> {
-	return unwrapBody(body);
+	return extractBody(body);
 });
 
 post(
@@ -527,7 +562,7 @@ post(
 	requestSchema("json/very-large"),
 	responseSchema("json/very-large"),
 )(async function jsonVeryLarge(body: unknown): Promise<unknown> {
-	return unwrapBody(body);
+	return extractBody(body);
 });
 
 post(
@@ -559,7 +594,7 @@ post(
 	requestSchema("urlencoded/simple"),
 	responseSchema("urlencoded/simple"),
 )(async function urlencodedSimple(body: unknown): Promise<unknown> {
-	return unwrapBody(body);
+	return extractBody(body);
 });
 
 post(
@@ -567,7 +602,7 @@ post(
 	requestSchema("urlencoded/complex"),
 	responseSchema("urlencoded/complex"),
 )(async function urlencodedComplex(body: unknown): Promise<unknown> {
-	return unwrapBody(body);
+	return extractBody(body);
 });
 
 get(
@@ -575,7 +610,8 @@ get(
 	responseSchema("path/simple"),
 	parameterSchema("path/simple"),
 )(async function pathSimple(params: PathParams): Promise<PathResponse> {
-	return { id: params.id ?? "" };
+	const pathParams = extractPathParams(params);
+	return { id: pathParams.id ?? "" };
 });
 
 get(
@@ -583,7 +619,8 @@ get(
 	responseSchema("path/multiple"),
 	parameterSchema("path/multiple"),
 )(async function pathMultiple(params: PathParams): Promise<PathResponse> {
-	return { user_id: params.user_id ?? "", post_id: params.post_id ?? "" };
+	const pathParams = extractPathParams(params);
+	return { user_id: pathParams.user_id ?? "", post_id: pathParams.post_id ?? "" };
 });
 
 get(
@@ -591,12 +628,13 @@ get(
 	responseSchema("path/deep"),
 	parameterSchema("path/deep"),
 )(async function pathDeep(params: PathParams): Promise<PathResponse> {
+	const pathParams = extractPathParams(params);
 	return {
-		org: params.org ?? "",
-		team: params.team ?? "",
-		project: params.project ?? "",
-		resource: params.resource ?? "",
-		id: params.id ?? "",
+		org: pathParams.org ?? "",
+		team: pathParams.team ?? "",
+		project: pathParams.project ?? "",
+		resource: pathParams.resource ?? "",
+		id: pathParams.id ?? "",
 	};
 });
 
@@ -605,7 +643,8 @@ get(
 	responseSchema("path/int"),
 	parameterSchema("path/int"),
 )(async function pathInt(params: PathParams): Promise<PathResponse> {
-	return { id: Number.parseInt(params.id ?? "0", 10) };
+	const pathParams = extractPathParams(params);
+	return { id: Number.parseInt(pathParams.id ?? "0", 10) };
 });
 
 get(
@@ -613,7 +652,8 @@ get(
 	responseSchema("path/uuid"),
 	parameterSchema("path/uuid"),
 )(async function pathUuid(params: PathParams): Promise<PathResponse> {
-	return { uuid: params.uuid ?? "" };
+	const pathParams = extractPathParams(params);
+	return { uuid: pathParams.uuid ?? "" };
 });
 
 get(
@@ -621,7 +661,8 @@ get(
 	responseSchema("path/date"),
 	parameterSchema("path/date"),
 )(async function pathDate(params: PathParams): Promise<PathResponse> {
-	return { date: params.date ?? "" };
+	const pathParams = extractPathParams(params);
+	return { date: pathParams.date ?? "" };
 });
 
 get(
@@ -629,7 +670,7 @@ get(
 	responseSchema("query/few"),
 	parameterSchema("query/few"),
 )(async function queryFew(query: unknown): Promise<unknown> {
-	return query;
+	return extractQuery(query);
 });
 
 get(
@@ -637,7 +678,7 @@ get(
 	responseSchema("query/medium"),
 	parameterSchema("query/medium"),
 )(async function queryMedium(query: unknown): Promise<unknown> {
-	return query;
+	return extractQuery(query);
 });
 
 get(
@@ -645,7 +686,7 @@ get(
 	responseSchema("query/many"),
 	parameterSchema("query/many"),
 )(async function queryMany(query: unknown): Promise<unknown> {
-	return query;
+	return extractQuery(query);
 });
 
 interface HealthResponse {
