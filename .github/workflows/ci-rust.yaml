@@ -92,8 +92,8 @@ jobs:
         id: setup-python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
-          cache-prefix: test-rust
+          python-version: "3.14"
+          cache-prefix: test-rust-py3.14
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -115,7 +115,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: ${{ steps.setup-python.outputs.python-path }}
-          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.10/site-packages
+          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.14/site-packages
         shell: bash
         run: bash scripts/ci/rust/run-workspace-tests.sh
 
@@ -131,8 +131,8 @@ jobs:
         id: setup-python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
-          cache-prefix: coverage-rust
+          python-version: "3.14"
+          cache-prefix: coverage-rust-py3.14
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -157,7 +157,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: ${{ steps.setup-python.outputs.python-path }}
-          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.10/site-packages
+          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.14/site-packages
         run: >
           cargo tarpaulin
           -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared
@@ -206,8 +206,8 @@ jobs:
         id: setup-python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
-          cache-prefix: coverage-rust-php-linux
+          python-version: "3.14"
+          cache-prefix: coverage-rust-php-linux-py3.14
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
@@ -232,7 +232,7 @@ jobs:
         env:
           RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
           PYO3_PYTHON: ${{ steps.setup-python.outputs.python-path }}
-          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.10/site-packages
+          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.14/site-packages
         run: |
           cargo tarpaulin \
             -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared \
