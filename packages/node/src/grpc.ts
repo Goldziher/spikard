@@ -390,9 +390,15 @@ export function createUnaryHandler<TRequest, TResponse>(
 			// Serialize response
 			const encoded = responseType.encode(response).finish();
 
+			if (responseMetadata) {
+				return {
+					payload: Buffer.from(encoded),
+					metadata: responseMetadata,
+				};
+			}
+
 			return {
 				payload: Buffer.from(encoded),
-				metadata: responseMetadata,
 			};
 		},
 	};
