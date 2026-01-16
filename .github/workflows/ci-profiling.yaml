@@ -21,6 +21,10 @@ on:
         default: "10"
   push:
     branches: [benchmarks, profiling]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/ci-profiling.yaml'
 
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
