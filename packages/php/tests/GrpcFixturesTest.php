@@ -29,6 +29,25 @@ use Spikard\Tests\Support\GrpcTestClient;
  */
 final class GrpcFixturesTest extends TestCase
 {
+    private const GRPC_CODE_MAP = [
+        'OK' => 0,
+        'CANCELLED' => 1,
+        'UNKNOWN' => 2,
+        'INVALID_ARGUMENT' => 3,
+        'DEADLINE_EXCEEDED' => 4,
+        'NOT_FOUND' => 5,
+        'ALREADY_EXISTS' => 6,
+        'PERMISSION_DENIED' => 7,
+        'RESOURCE_EXHAUSTED' => 8,
+        'FAILED_PRECONDITION' => 9,
+        'ABORTED' => 10,
+        'OUT_OF_RANGE' => 11,
+        'UNIMPLEMENTED' => 12,
+        'INTERNAL' => 13,
+        'UNAVAILABLE' => 14,
+        'DATA_LOSS' => 15,
+        'UNAUTHENTICATED' => 16,
+    ];
     private const FIXTURES_DIR = __DIR__ . '/../../../testing_data/protobuf/streaming';
 
     private GrpcTestClient $client;
@@ -275,34 +294,74 @@ final class GrpcFixturesTest extends TestCase
         /**  */
         $expectedMessages = $expectedResponse['stream'] ?? null;
 
-        if ($expectedMessages === null) {
-            // No specific stream expectations, just verify received responses
+        if ($expectedMessages !== null) {
+            /** @var array<int, array<string, mixed>> $expectedMessages */
+
+            // Validate stream length
+            $this->assertCount(
+                \count($expectedMessages),
+                $responses,
+                \sprintf(
+                    'Expected %d messages, got %d',
+                    \count($expectedMessages),
+                    \count($responses),
+                ),
+            );
+
+            // Validate each message
+            foreach ($responses as $i => $actual) {
+                /** @var array<string, mixed> $expectedMsg */
+                $expectedMsg = $expectedMessages[$i];
+                $this->assertEquals(
+                    $expectedMsg,
+                    $actual,
+                    \sprintf('Message %d mismatch', $i),
+                );
+            }
             return;
         }
 
-        /** @var array<int, array<string, mixed>> $expectedMessages */
+        /**  */
+        $expectedCountValue = $expectedResponse['stream_count'] ?? null;
 
-        // Validate stream length
-        $this->assertCount(
-            \count($expectedMessages),
-            $responses,
-            \sprintf(
-                'Expected %d messages, got %d',
-                \count($expectedMessages),
-                \count($responses),
-            ),
-        );
-
-        // Validate each message
-        foreach ($responses as $i => $actual) {
-            /** @var array<string, mixed> $expectedMsg */
-            $expectedMsg = $expectedMessages[$i];
-            $this->assertEquals(
-                $expectedMsg,
-                $actual,
-                \sprintf('Message %d mismatch', $i),
+        if ($expectedCountValue !== null && \is_numeric($expectedCountValue)) {
+            $expectedCount = (int) $expectedCountValue;
+            $this->assertCount(
+                $expectedCount,
+                $responses,
+                \sprintf('Expected %d messages, got %d', $expectedCount, \count($responses)),
             );
+
+            /**  */
+            $expectedSamples = $expectedResponse['stream_sample'] ?? null;
+            if (\is_array($expectedSamples)) {
+                foreach ($expectedSamples as $sample) {
+                    if (!\is_array($sample)) {
+                        continue;
+                    }
+                    $found = false;
+                    foreach ($responses as $response) {
+                        if ($response == $sample) {
+                            $found = true;
+                            break;
+                        }
+                    }
+                    $this->assertTrue($found, 'Expected sample message not found in stream');
+                }
+            }
+            return;
         }
+
+    }
+
+    private function grpcCodeFromName(mixed $statusCode): ?int
+    {
+        if (!\is_string($statusCode)) {
+            return null;
+        }
+
+        $normalized = \strtoupper($statusCode);
+        return self::GRPC_CODE_MAP[$normalized] ?? null;
     }
 
     /**
@@ -413,8 +472,10 @@ final class GrpcFixturesTest extends TestCase
         /** @var array<string, mixed> $expectedResponseArray */
         $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $expectedError = $expectedResponseArray['error'] ?? null;
+        $expectedStatusCode = $this->grpcCodeFromName($expectedResponseArray['status_code'] ?? null);
+        $expectsError = \is_array($expectedError) || ($expectedStatusCode !== null && $expectedStatusCode !== 0);
 
-        if (\is_array($expectedError)) {
+        if ($expectsError) {
             /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
             $result = $this->client->executeServerStreamingWithStatus(
                 $serviceName,
@@ -427,11 +488,22 @@ final class GrpcFixturesTest extends TestCase
             $status = $result['status'];
 
             $this->validateStreamResponse($responses, $expectedResponseArray);
-            $expectedCode = $expectedError['code'] ?? null;
+            $expectedCode = null;
+            if (\is_array($expectedError) && \is_numeric($expectedError['code'] ?? null)) {
+                $expectedCode = (int) $expectedError['code'];
+            } elseif (\is_int($expectedStatusCode)) {
+                $expectedCode = $expectedStatusCode;
+            }
             if (\is_int($expectedCode)) {
                 $this->assertSame($expectedCode, $status['code']);
             }
-            $expectedMessage = $expectedError['message'] ?? null;
+            $expectedMessage = null;
+            if (\is_array($expectedError)) {
+                $expectedMessage = $expectedError['message'] ?? null;
+            }
+            if ($expectedMessage === null) {
+                $expectedMessage = $expectedResponseArray['message'] ?? null;
+            }
             if (\is_string($expectedMessage) && $expectedMessage !== '') {
                 $this->assertStringContainsString($expectedMessage, $status['details']);
             }
@@ -546,8 +618,10 @@ final class GrpcFixturesTest extends TestCase
         /** @var array<string, mixed> $expectedResponseArray */
         $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $expectedError = $expectedResponseArray['error'] ?? null;
+        $expectedStatusCode = $this->grpcCodeFromName($expectedResponseArray['status_code'] ?? null);
+        $expectsError = \is_array($expectedError) || ($expectedStatusCode !== null && $expectedStatusCode !== 0);
 
-        if (\is_array($expectedError)) {
+        if ($expectsError) {
             /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
             $result = $this->client->executeBidirectionalWithStatus(
                 $serviceName,
@@ -560,11 +634,22 @@ final class GrpcFixturesTest extends TestCase
             $status = $result['status'];
 
             $this->validateStreamResponse($responses, $expectedResponseArray);
-            $expectedCode = $expectedError['code'] ?? null;
+            $expectedCode = null;
+            if (\is_array($expectedError) && \is_numeric($expectedError['code'] ?? null)) {
+                $expectedCode = (int) $expectedError['code'];
+            } elseif (\is_int($expectedStatusCode)) {
+                $expectedCode = $expectedStatusCode;
+            }
             if (\is_int($expectedCode)) {
                 $this->assertSame($expectedCode, $status['code']);
             }
-            $expectedMessage = $expectedError['message'] ?? null;
+            $expectedMessage = null;
+            if (\is_array($expectedError)) {
+                $expectedMessage = $expectedError['message'] ?? null;
+            }
+            if ($expectedMessage === null) {
+                $expectedMessage = $expectedResponseArray['message'] ?? null;
+            }
             if (\is_string($expectedMessage) && $expectedMessage !== '') {
                 $this->assertStringContainsString($expectedMessage, $status['details']);
             }
