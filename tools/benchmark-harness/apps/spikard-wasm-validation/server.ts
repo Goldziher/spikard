@@ -519,11 +519,43 @@ function extractBody(value: unknown): unknown {
 	return bodyValue;
 }
 
-function extractQuery(value: unknown): unknown {
-	if (isRequestPayload(value)) {
-		return value.query ?? {};
+function coerceQueryValue(value: unknown): unknown {
+	if (Array.isArray(value)) {
+		return value.map((entry) => coerceQueryValue(entry));
+	}
+	if (value && typeof value === "object") {
+		const record = value as Record<string, unknown>;
+		const output: Record<string, unknown> = {};
+		for (const [key, entry] of Object.entries(record)) {
+			output[key] = coerceQueryValue(entry);
+		}
+		return output;
+	}
+	if (typeof value !== "string") {
+		return value;
+	}
+	const lowered = value.toLowerCase();
+	if (lowered === "true") {
+		return true;
+	}
+	if (lowered === "false") {
+		return false;
+	}
+	if (!value.trim()) {
+		return value;
+	}
+	const numeric = Number(value);
+	if (!Number.isNaN(numeric)) {
+		return value.includes(".") ? numeric : Number.parseInt(value, 10);
 	}
 	return value;
+}
+
+function extractQuery(value: unknown): unknown {
+	if (isRequestPayload(value)) {
+		return coerceQueryValue(value.query ?? {});
+	}
+	return coerceQueryValue(value);
 }
 
 function extractPathParams(value: unknown): PathParams {

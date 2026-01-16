@@ -7,6 +7,7 @@
 
 use crate::error::{Error, Result};
 use serde::Deserialize;
+use std::io::ErrorKind;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::time::Duration;
@@ -30,6 +31,7 @@ struct RubyMetricsFile {
 
 /// Start Ruby profiler for the given PID
 pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64) -> Result<RubyProfiler> {
+    let mut output_path = output_path;
     let (child, stderr_path) = if let Some(ref path) = output_path {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
@@ -56,10 +58,22 @@ pub fn start_profiler(pid: u32, output_path: Option<PathBuf>, duration_secs: u64
             "--silent",
         ]);
         cmd.stdout(Stdio::null()).stderr(Stdio::from(stderr_file));
-        let child = cmd
-            .spawn()
-            .map_err(|e| Error::BenchmarkFailed(format!("Failed to start rbspy profiler for pid {pid}: {e}")))?;
-        (Some(child), Some(stderr_path))
+        let child = match cmd.spawn() {
+            Ok(child) => Some(child),
+            Err(error) if error.kind() == ErrorKind::NotFound => {
+                eprintln!("  ⚠ rbspy not found; skipping Ruby CPU profiling");
+                let _ = std::fs::remove_file(&stderr_path);
+                output_path = None;
+                None
+            }
+            Err(error) => {
+                return Err(Error::BenchmarkFailed(format!(
+                    "Failed to start rbspy profiler for pid {pid}: {error}"
+                )));
+            }
+        };
+        let stderr_path = child.as_ref().map(|_| stderr_path);
+        (child, stderr_path)
     } else {
         (None, None)
     };

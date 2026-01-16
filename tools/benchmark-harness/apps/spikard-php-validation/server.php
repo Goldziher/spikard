@@ -426,10 +426,10 @@ $queryManyParams = [
 
 final class BenchmarkController
 {
-    private function echoBody(Request $request): Response
+    private function echoBody(Request $request, bool $forceForm = false): Response
     {
         $body = $request->body ?? [];
-        if ($this->isFormUrlencoded($request) && \is_array($body)) {
+        if (($forceForm || $this->isFormUrlencoded($request)) && \is_array($body)) {
             $body = $this->coerceFormValues($body);
         }
         return new Response($body, 200, []);
@@ -468,15 +468,18 @@ final class BenchmarkController
     {
         $output = [];
         foreach ($values as $key => $value) {
-            $output[$key] = $this->coerceFormValue($value);
+            $output[$key] = $this->coerceFormValue($value, \is_string($key) ? $key : null);
         }
         return $output;
     }
 
-    private function coerceFormValue(mixed $value): mixed
+    private function coerceFormValue(mixed $value, ?string $key): mixed
     {
         if (\is_array($value)) {
             return $this->coerceFormValues($value);
+        }
+        if ($key === 'zip') {
+            return \is_string($value) ? $value : (string) $value;
         }
         if (!\is_string($value)) {
             return $value;
@@ -570,14 +573,14 @@ final class BenchmarkController
     #[SchemaRef(request: 'urlencoded/simple', response: 'urlencoded/simple')]
     public function urlencodedSimple(Request $request): Response
     {
-        return $this->echoBody($request);
+        return $this->echoBody($request, true);
     }
 
     #[Post('/urlencoded/complex')]
     #[SchemaRef(request: 'urlencoded/complex', response: 'urlencoded/complex')]
     public function urlencodedComplex(Request $request): Response
     {
-        return $this->echoBody($request);
+        return $this->echoBody($request, true);
     }
 
     #[Get('/path/simple/{id}')]

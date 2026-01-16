@@ -8,7 +8,7 @@ use axum::http::{Response, StatusCode};
 use clap::Parser;
 use pprof::ProfilerGuard;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Map, Value};
 use spikard::{App, RequestContext, ServerConfig, get, post};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -184,9 +184,66 @@ async fn post_multipart_large(_ctx: RequestContext) -> Result<Response<Body>, (S
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
+fn coerce_bool(value: Value) -> Value {
+    match value {
+        Value::Bool(_) => value,
+        Value::String(value) => match value.as_str() {
+            "true" => Value::Bool(true),
+            "false" => Value::Bool(false),
+            _ => Value::String(value),
+        },
+        _ => value,
+    }
+}
+
+fn coerce_i64(value: Value) -> Value {
+    match value {
+        Value::Number(_) => value,
+        Value::String(value) => value
+            .parse::<i64>()
+            .map_or(Value::String(value), |parsed| Value::Number(parsed.into())),
+        _ => value,
+    }
+}
+
+fn coerce_field(map: &mut Map<String, Value>, key: &str, coerce: fn(Value) -> Value) {
+    if let Some(value) = map.remove(key) {
+        map.insert(key.to_string(), coerce(value));
+    }
+}
+
+fn coerce_urlencoded_simple(body: Value) -> Value {
+    let mut map = match body {
+        Value::Object(map) => map,
+        _ => return body,
+    };
+    coerce_field(&mut map, "age", coerce_i64);
+    coerce_field(&mut map, "subscribe", coerce_bool);
+    Value::Object(map)
+}
+
+fn coerce_urlencoded_complex(body: Value) -> Value {
+    let mut map = match body {
+        Value::Object(map) => map,
+        _ => return body,
+    };
+    coerce_field(&mut map, "age", coerce_i64);
+    for key in [
+        "subscribe",
+        "newsletter",
+        "terms_accepted",
+        "privacy_accepted",
+        "marketing_consent",
+        "two_factor_enabled",
+    ] {
+        coerce_field(&mut map, key, coerce_bool);
+    }
+    Value::Object(map)
+}
+
 
 async fn post_urlencoded_simple(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let body = coerce_urlencoded_simple(ctx.body_value().clone());
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -196,7 +253,7 @@ async fn post_urlencoded_simple(ctx: RequestContext) -> Result<Response<Body>, (
 }
 
 async fn post_urlencoded_complex(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    let body = coerce_urlencoded_complex(ctx.body_value().clone());
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)

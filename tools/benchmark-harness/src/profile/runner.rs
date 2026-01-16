@@ -28,9 +28,15 @@ fn find_workspace_root(app_dir: &Path) -> Option<PathBuf> {
 }
 
 fn find_tsx_cli(app_dir: &Path) -> Option<PathBuf> {
-    let workspace_root = find_workspace_root(app_dir)?;
-    let tsx_cli = workspace_root.join("node_modules/tsx/dist/cli.mjs");
-    tsx_cli.exists().then_some(tsx_cli)
+    let mut candidates = Vec::new();
+    candidates.push(app_dir.join("node_modules/tsx/dist/cli.mjs"));
+    if let Some(parent) = app_dir.parent() {
+        candidates.push(parent.join("node_modules/tsx/dist/cli.mjs"));
+    }
+    if let Some(workspace_root) = find_workspace_root(app_dir) {
+        candidates.push(workspace_root.join("node_modules/tsx/dist/cli.mjs"));
+    }
+    candidates.into_iter().find(|path| path.exists())
 }
 fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) -> Option<u32> {
     let mut system = System::new();

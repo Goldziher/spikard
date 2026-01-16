@@ -6,8 +6,6 @@ against the pure Rust baseline.
 Uses shared JSON Schemas for validation across benchmark apps.
 """
 
-from __future__ import annotations
-
 import atexit
 import json
 import os
@@ -77,6 +75,56 @@ def parameter_schema(key: str) -> dict[str, Any]:
 
 def response_schema(key: str) -> dict[str, Any]:
     return RESPONSE_SCHEMAS[key]
+
+
+def _coerce_bool(value: Any) -> Any:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.lower()
+        if lowered == "true":
+            return True
+        if lowered == "false":
+            return False
+    return value
+
+
+def _coerce_int(value: Any) -> Any:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped and stripped.lstrip("-").isdigit():
+            return int(stripped)
+    return value
+
+
+def _coerce_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
+    coerced = dict(body)
+    if "age" in coerced:
+        coerced["age"] = _coerce_int(coerced["age"])
+    if "subscribe" in coerced:
+        coerced["subscribe"] = _coerce_bool(coerced["subscribe"])
+    return coerced
+
+
+def _coerce_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
+    coerced = dict(body)
+    if "age" in coerced:
+        coerced["age"] = _coerce_int(coerced["age"])
+    for key in (
+        "subscribe",
+        "newsletter",
+        "terms_accepted",
+        "privacy_accepted",
+        "marketing_consent",
+        "two_factor_enabled",
+    ):
+        if key in coerced:
+            coerced[key] = _coerce_bool(coerced[key])
+    return coerced
 
 
 def _dump_profile() -> None:
@@ -306,7 +354,7 @@ async def post_multipart_large(_body: dict[str, Any]) -> dict[str, int]:
 @profile_once("urlencoded-simple")
 async def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
     """Simple URL-encoded form (3-5 fields)."""
-    return body
+    return _coerce_urlencoded_simple(body)
 
 
 @post(
@@ -317,7 +365,7 @@ async def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
 @profile_once("urlencoded-complex")
 async def post_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
     """Complex URL-encoded form (10-20 fields)."""
-    return body
+    return _coerce_urlencoded_complex(body)
 
 
 @get(
