@@ -61,22 +61,19 @@ def load_fixture(fixture_path: Path) -> dict[str, Any]:
 
 
 def parse_expected_error(expected: dict[str, Any]) -> tuple[grpc.StatusCode | None, str | None]:
-    """Return gRPC status and message when fixture expects an error response."""
-    status_code = expected.get("status_code")
+    """Return gRPC status and message when fixture explicitly defines an error."""
     error = expected.get("error")
-    has_error = isinstance(error, dict) or (isinstance(status_code, str) and status_code.upper() != "OK")
-    if not has_error:
+    if not isinstance(error, dict):
         return None, None
 
+    status_code = expected.get("status_code")
     status_name = status_code if isinstance(status_code, str) else "UNKNOWN"
     status = getattr(grpc.StatusCode, status_name, grpc.StatusCode.UNKNOWN)
 
-    message = None
-    if isinstance(error, dict):
-        message = error.get("message")
+    message = error.get("message") if isinstance(error.get("message"), str) else None
     if not message:
-        message = expected.get("message")
-    if not isinstance(message, str) or not message:
+        message = expected.get("message") if isinstance(expected.get("message"), str) else None
+    if not message:
         message = "Unknown error"
 
     return status, message
@@ -168,10 +165,11 @@ class FixtureDrivenServicer:
                     if timeout_ms is not None:
                         elapsed_ms = (time.time() - start_time) * 1000
                         if elapsed_ms > timeout_ms:
-                            status, message_text = parse_expected_error(
-                                {"status_code": "DEADLINE_EXCEEDED", "message": "Deadline exceeded"}
-                            )
-                            await context.abort(status or grpc.StatusCode.DEADLINE_EXCEEDED, message_text or "")
+                            status, message_text = parse_expected_error(expected)
+                            if status is None:
+                                status = grpc.StatusCode.DEADLINE_EXCEEDED
+                                message_text = "Deadline exceeded"
+                            await context.abort(status, message_text or "Deadline exceeded")
                             return
 
                     yield message

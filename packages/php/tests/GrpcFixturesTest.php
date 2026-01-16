@@ -473,7 +473,7 @@ final class GrpcFixturesTest extends TestCase
         $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $expectedError = $expectedResponseArray['error'] ?? null;
         $expectedStatusCode = $this->grpcCodeFromName($expectedResponseArray['status_code'] ?? null);
-        $expectsError = \is_array($expectedError) || ($expectedStatusCode !== null && $expectedStatusCode !== 0);
+        $expectsError = \is_array($expectedError);
 
         if ($expectsError) {
             /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
@@ -619,7 +619,7 @@ final class GrpcFixturesTest extends TestCase
         $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $expectedError = $expectedResponseArray['error'] ?? null;
         $expectedStatusCode = $this->grpcCodeFromName($expectedResponseArray['status_code'] ?? null);
-        $expectsError = \is_array($expectedError) || ($expectedStatusCode !== null && $expectedStatusCode !== 0);
+        $expectsError = \is_array($expectedError);
 
         if ($expectsError) {
             /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
