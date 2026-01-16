@@ -446,15 +446,15 @@ final class GrpcTestClient
                 );
             }
 
-            if (\method_exists($channelResult, 'createCall')) {
-                $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
-                $this->stub = null;
-                return;
-            }
-
             if (\class_exists('\\Grpc\\BaseStub')) {
                 $this->stub = $this->createStub($this->serverAddress, $options, $channelResult);
                 $this->channel = null;
+                return;
+            }
+
+            if (\method_exists($channelResult, 'createCall')) {
+                $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
+                $this->stub = null;
                 return;
             }
         }
@@ -468,15 +468,15 @@ final class GrpcTestClient
             /** @var \Grpc\Channel $channelResult */
             $channelResult = new \Grpc\Channel($host . ':' . $portInt, $options);
 
-            if (\method_exists($channelResult, 'createCall')) {
-                $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
-                $this->stub = null;
-                return;
-            }
-
             if (\class_exists('\\Grpc\\BaseStub')) {
                 $this->stub = $this->createStub($this->serverAddress, $options, $channelResult);
                 $this->channel = null;
+                return;
+            }
+
+            if (\method_exists($channelResult, 'createCall')) {
+                $this->channel = new GrpcChannelWrapper($channelResult, $this->serverAddress);
+                $this->stub = null;
                 return;
             }
         }
