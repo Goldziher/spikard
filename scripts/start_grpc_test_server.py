@@ -60,6 +60,64 @@ def load_fixture(fixture_path: Path) -> dict[str, Any]:
         return json.load(f)
 
 
+def parse_expected_error(expected: dict[str, Any]) -> tuple[grpc.StatusCode | None, str | None]:
+    """Return gRPC status and message when fixture expects an error response."""
+    status_code = expected.get("status_code")
+    error = expected.get("error")
+    has_error = isinstance(error, dict) or (isinstance(status_code, str) and status_code.upper() != "OK")
+    if not has_error:
+        return None, None
+
+    status_name = status_code if isinstance(status_code, str) else "UNKNOWN"
+    status = getattr(grpc.StatusCode, status_name, grpc.StatusCode.UNKNOWN)
+
+    message = None
+    if isinstance(error, dict):
+        message = error.get("message")
+    if not message:
+        message = expected.get("message")
+    if not isinstance(message, str) or not message:
+        message = "Unknown error"
+
+    return status, message
+
+
+def build_stream_messages(expected: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build server-streamed messages from fixture metadata."""
+    stream = expected.get("stream")
+    if isinstance(stream, list):
+        return [msg for msg in stream if isinstance(msg, dict)]
+
+    stream_count = expected.get("stream_count")
+    if not isinstance(stream_count, int) or stream_count <= 0:
+        return []
+
+    samples = expected.get("stream_sample")
+    sample_messages = [msg for msg in samples if isinstance(msg, dict)] if isinstance(samples, list) else []
+    sample_by_seq = {msg.get("sequence"): msg for msg in sample_messages if isinstance(msg.get("sequence"), int)}
+
+    template = sample_messages[0] if sample_messages else {}
+    base_timestamp = template.get("timestamp") if isinstance(template.get("timestamp"), int) else None
+    base_status = template.get("status") if isinstance(template.get("status"), str) else None
+
+    messages: list[dict[str, Any]] = []
+    for seq in range(1, stream_count + 1):
+        if seq in sample_by_seq:
+            messages.append(sample_by_seq[seq])
+            continue
+
+        msg: dict[str, Any] = {}
+        if "sequence" in template or sample_by_seq:
+            msg["sequence"] = seq
+        if base_timestamp is not None:
+            msg["timestamp"] = base_timestamp + (seq - 1)
+        if base_status is not None:
+            msg["status"] = base_status
+        messages.append(msg)
+
+    return messages
+
+
 class FixtureDrivenServicer:
     """Fixture-driven test service supporting all four streaming modes."""
 
@@ -83,13 +141,9 @@ class FixtureDrivenServicer:
         if fixture:
             expected = fixture.get("expected_response", {})
             if isinstance(expected, dict):
-                # Check for error response
-                error = expected.get("error")
-                if isinstance(error, dict):
-                    status_code = expected.get("status_code", "UNKNOWN")
-                    error_message = error.get("message", "Unknown error")
-                    status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
-                    await context.abort(status, error_message)
+                status, message = parse_expected_error(expected)
+                if status is not None:
+                    await context.abort(status, message or "Unknown error")
                     return {}
 
                 message = expected.get("message")
@@ -109,35 +163,25 @@ class FixtureDrivenServicer:
 
                 start_time = time.time()
 
-                stream = expected.get("stream")
-                if isinstance(stream, list):
-                    for message in stream:
-                        if isinstance(message, dict):
-                            if timeout_ms is not None:
-                                elapsed_ms = (time.time() - start_time) * 1000
-                                if elapsed_ms > timeout_ms:
-                                    status_code = expected.get("status_code", "DEADLINE_EXCEEDED")
-                                    error = expected.get("error", {})
-                                    error_message = (
-                                        error.get("message", "Deadline exceeded while streaming messages")
-                                        if isinstance(error, dict)
-                                        else "Deadline exceeded"
-                                    )
-                                    status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.DEADLINE_EXCEEDED)
-                                    await context.abort(status, error_message)
-                                    return
+                stream_messages = build_stream_messages(expected)
+                for message in stream_messages:
+                    if timeout_ms is not None:
+                        elapsed_ms = (time.time() - start_time) * 1000
+                        if elapsed_ms > timeout_ms:
+                            status, message_text = parse_expected_error(
+                                {"status_code": "DEADLINE_EXCEEDED", "message": "Deadline exceeded"}
+                            )
+                            await context.abort(status or grpc.StatusCode.DEADLINE_EXCEEDED, message_text or "")
+                            return
 
-                            yield message
+                    yield message
 
-                            if delay_ms > 0:
-                                await asyncio.sleep(delay_ms / 1000.0)
+                    if delay_ms > 0:
+                        await asyncio.sleep(delay_ms / 1000.0)
 
-                error = expected.get("error")
-                if isinstance(error, dict):
-                    status_code = expected.get("status_code", "UNKNOWN")
-                    error_message = error.get("message", "Unknown error")
-                    status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
-                    await context.abort(status, error_message)
+                status, message_text = parse_expected_error(expected)
+                if status is not None:
+                    await context.abort(status, message_text or "Unknown error")
         return
         yield  # unreachable
 
@@ -149,12 +193,9 @@ class FixtureDrivenServicer:
         if fixture:
             expected = fixture.get("expected_response", {})
             if isinstance(expected, dict):
-                error = expected.get("error")
-                if isinstance(error, dict):
-                    status_code = expected.get("status_code", "UNKNOWN")
-                    error_message = error.get("message", "Unknown error")
-                    status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
-                    await context.abort(status, error_message)
+                status, message = parse_expected_error(expected)
+                if status is not None:
+                    await context.abort(status, message or "Unknown error")
                     return {}
 
                 message = expected.get("message")
@@ -173,12 +214,11 @@ class FixtureDrivenServicer:
         if fixture:
             expected = fixture.get("expected_response", {})
             if isinstance(expected, dict):
-                error = expected.get("error")
-                if isinstance(error, dict):
+                status, message = parse_expected_error(expected)
+                if status is not None:
                     should_error = True
-                    status_code = expected.get("status_code", "UNKNOWN")
-                    error_message = error.get("message", "Unknown error")
-                    error_status = getattr(grpc.StatusCode, status_code, grpc.StatusCode.UNKNOWN)
+                    error_status = status
+                    error_message = message or "Unknown error"
 
                 stream = expected.get("stream")
                 if isinstance(stream, list):
