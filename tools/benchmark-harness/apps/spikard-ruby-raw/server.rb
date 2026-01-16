@@ -526,36 +526,36 @@ end
 # ============================================================================
 
 app.get '/path/simple/{id}', handler_name: 'get_path_simple' do |request|
-  { id: request[:path_params][:id] }
+  { id: request[:path_params]['id'] }
 end
 
 app.get '/path/multiple/{user_id}/{post_id}', handler_name: 'get_path_multiple' do |request|
   {
-    user_id: request[:path_params][:user_id],
-    post_id: request[:path_params][:post_id]
+    user_id: request[:path_params]['user_id'],
+    post_id: request[:path_params]['post_id']
   }
 end
 
 app.get '/path/deep/{org}/{team}/{project}/{resource}/{id}', handler_name: 'get_path_deep' do |request|
   {
-    org: request[:path_params][:org],
-    team: request[:path_params][:team],
-    project: request[:path_params][:project],
-    resource: request[:path_params][:resource],
-    id: request[:path_params][:id]
+    org: request[:path_params]['org'],
+    team: request[:path_params]['team'],
+    project: request[:path_params]['project'],
+    resource: request[:path_params]['resource'],
+    id: request[:path_params]['id']
   }
 end
 
 app.get '/path/int/{id}', handler_name: 'get_path_int' do |request|
-  { id: request[:path_params][:id].to_i }
+  { id: request[:path_params]['id'].to_i }
 end
 
 app.get '/path/uuid/{uuid}', handler_name: 'get_path_uuid' do |request|
-  { uuid: request[:path_params][:uuid] }
+  { uuid: request[:path_params]['uuid'] }
 end
 
 app.get '/path/date/{date}', handler_name: 'get_path_date' do |request|
-  { date: request[:path_params][:date] }
+  { date: request[:path_params]['date'] }
 end
 
 # ============================================================================

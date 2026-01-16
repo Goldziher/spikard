@@ -519,6 +519,31 @@ function extractBody(value: unknown): unknown {
 	return bodyValue;
 }
 
+async function buildMultipartOptions(req: Request): Promise<{
+	fields: Record<string, string>;
+	files: Array<{ name: string; filename?: string; content: string; contentType?: string }>;
+}> {
+	const formData = await req.formData();
+	const fields: Record<string, string> = {};
+	const files: Array<{ name: string; filename?: string; content: string; contentType?: string }> = [];
+
+	for (const [key, value] of formData.entries()) {
+		if (typeof value === "string") {
+			fields[key] = value;
+			continue;
+		}
+
+		files.push({
+			name: key,
+			filename: value.name || undefined,
+			content: "",
+			contentType: value.type || undefined,
+		});
+	}
+
+	return { fields, files };
+}
+
 function coerceQueryValue(value: unknown): unknown {
 	if (Array.isArray(value)) {
 		return value.map((entry) => coerceQueryValue(entry));
@@ -770,11 +795,11 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 					headers: { "content-type": contentType },
 				})) as ServerResponse;
 			} else if (req.body && contentType.includes("multipart/form-data")) {
-				// Multipart parsing in Deno is extremely expensive and dwarfs WASM binding overhead.
-				// These benchmark endpoints intentionally ignore multipart bodies (matching Robyn),
-				// so just drain the request body and forward the request without parsing.
-				await req.arrayBuffer();
-				response = (await client.post(pathWithQuery, { headers: { "content-type": contentType } })) as ServerResponse;
+				const multipart = await buildMultipartOptions(req);
+				response = (await client.post(pathWithQuery, {
+					multipart,
+					headers: { "content-type": contentType },
+				})) as ServerResponse;
 			} else if (req.body) {
 				const formRawBody = await req.text();
 				response = (await client.post(pathWithQuery, {

@@ -36,7 +36,13 @@ fn find_tsx_cli(app_dir: &Path) -> Option<PathBuf> {
     if let Some(workspace_root) = find_workspace_root(app_dir) {
         candidates.push(workspace_root.join("node_modules/tsx/dist/cli.mjs"));
     }
-    candidates.into_iter().find(|path| path.exists())
+    candidates.into_iter().find_map(|path| {
+        if path.exists() {
+            path.canonicalize().ok().or(Some(path))
+        } else {
+            None
+        }
+    })
 }
 fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) -> Option<u32> {
     let mut system = System::new();
