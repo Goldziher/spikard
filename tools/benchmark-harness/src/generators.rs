@@ -95,7 +95,7 @@ pub fn generate_urlencoded_complex() -> HashMap<String, String> {
     form.insert("country".to_string(), "USA".to_string());
     form.insert("state".to_string(), "CA".to_string());
     form.insert("city".to_string(), "Performance City".to_string());
-    form.insert("zip".to_string(), "94105".to_string());
+    form.insert("zip".to_string(), "94105-0001".to_string());
     form.insert("phone".to_string(), "+14155550199".to_string());
     form.insert("company".to_string(), "Benchmark Labs".to_string());
     form.insert("job_title".to_string(), "Performance Engineer".to_string());

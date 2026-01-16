@@ -103,7 +103,7 @@ print(json.dumps(data))
 
 # URL-encoded form data
 URLENCODED_SIMPLE="name=John+Doe&email=john%40example.com&age=30&city=New+York"
-URLENCODED_COMPLEX="name=John+Doe&email=john%40example.com&age=30&city=New+York&country=USA&phone=%2B1234567890&address=123+Main+St&zip=10001&interests=tech&interests=sports&interests=music&company=TestCorp&position=Engineer&department=Engineering&salary=100000&start_date=2020-01-15&active=true&verified=true&newsletter=true&terms=true"
+URLENCODED_COMPLEX="name=John+Doe&email=john%40example.com&age=30&city=New+York&country=USA&phone=%2B1234567890&address=123+Main+St&zip=10001-0001&interests=tech&interests=sports&interests=music&company=TestCorp&position=Engineer&department=Engineering&salary=100000&start_date=2020-01-15&active=true&verified=true&newsletter=true&terms=true"
 
 echo "=== Comprehensive Workload Benchmark ==="
 echo "Duration: $DURATION per test"

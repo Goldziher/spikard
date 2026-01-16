@@ -915,7 +915,7 @@ impl ProfileRunner {
             let urlencoded_str = match body_file {
                 "urlencoded-simple.txt" => "name=John+Doe&email=john%40example.com&age=30&subscribe=true",
                 "urlencoded-complex.txt" => {
-                    "username=testuser&password=secret123&email=test%40example.com&first_name=John&last_name=Doe&age=30&country=US&state=CA&city=San+Francisco&zip=94102&phone=%2B1-555-1234&company=Acme+Corp&job_title=Engineer&subscribe=true&newsletter=weekly&terms_accepted=true&privacy_accepted=true&marketing_consent=false&two_factor_enabled=true"
+                    "username=testuser&password=secret123&email=test%40example.com&first_name=John&last_name=Doe&age=30&country=US&state=CA&city=San+Francisco&zip=94102-0001&phone=%2B1-555-1234&company=Acme+Corp&job_title=Engineer&subscribe=true&newsletter=true&terms_accepted=true&privacy_accepted=true&marketing_consent=false&two_factor_enabled=true"
                 }
                 _ => return Err(Error::InvalidInput(format!("Unknown body file: {body_file}"))),
             };
