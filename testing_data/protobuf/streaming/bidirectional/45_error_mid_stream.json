@@ -44,7 +44,15 @@
 	},
 	"expected_response": {
 		"status_code": "INTERNAL",
-		"message": "Error after processing 2 messages"
+		"message": "Error after processing 2 messages",
+		"stream": [
+			{ "id": 1, "status": "processed" },
+			{ "id": 2, "status": "processed" }
+		],
+		"error": {
+			"code": 13,
+			"message": "Error after processing 2 messages"
+		}
 	},
 	"tags": ["bidirectional_streaming", "error", "mid_stream"]
 }
