@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcOkStatus0SuccessfulResponseTest extends TestCase
+{
     public function testGrpcGrpcOkStatus0SuccessfulResponse(): void
     {
         // Tests successful gRPC response with OK status code. Validates basic request-response completion.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcUserAgentAndClientInfoMetadataTest extends TestCase
+{
     public function testGrpcUserAgentAndClientInfoMetadata(): void
     {
         // Tests User-Agent header handling and client identification. Validates proper user-agent parsing and logging.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

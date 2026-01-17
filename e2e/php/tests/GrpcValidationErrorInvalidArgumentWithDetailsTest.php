@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcValidationErrorInvalidArgumentWithDetailsTest extends TestCase
+{
     public function testGrpcValidationErrorInvalidArgumentWithDetails(): void
     {
         // Tests INVALID_ARGUMENT status code with detailed validation error information. Demonstrates how validation failures are communicated.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

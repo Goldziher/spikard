@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcOutOfRangeStatus11Test extends TestCase
+{
     public function testGrpcGrpcOutOfRangeStatus11(): void
     {
         // Tests OUT_OF_RANGE gRPC status code. Returned when a value is outside the acceptable range.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

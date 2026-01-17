@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcRequestIdForDistributedTracingTest extends TestCase
+{
     public function testGrpcRequestIdForDistributedTracing(): void
     {
         // Tests request ID header propagation for distributed tracing. Validates X-Request-ID generation and propagation.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

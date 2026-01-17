@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcProto3DefaultValueBehaviorTest extends TestCase
+{
     public function testGrpcProto3DefaultValueBehavior(): void
     {
         // Tests how proto3 handles implicit default values. When fields are omitted from the request, response should reflect appropriate defaults.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

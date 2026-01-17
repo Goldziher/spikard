@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcTimestampAndDurationWellKnownTypesTest extends TestCase
+{
     public function testGrpcTimestampAndDurationWellKnownTypes(): void
     {
         // Tests usage of google.protobuf.Timestamp and Duration types. Validates RFC 3339 timestamp serialization and duration calculations.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

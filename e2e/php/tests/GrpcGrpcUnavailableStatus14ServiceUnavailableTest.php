@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcUnavailableStatus14ServiceUnavailableTest extends TestCase
+{
     public function testGrpcGrpcUnavailableStatus14ServiceUnavailable(): void
     {
         // Tests UNAVAILABLE gRPC status code. Returned when the service is temporarily unavailable.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

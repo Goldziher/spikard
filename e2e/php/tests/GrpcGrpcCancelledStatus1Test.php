@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcCancelledStatus1Test extends TestCase
+{
     public function testGrpcGrpcCancelledStatus1(): void
     {
         // Tests CANCELLED gRPC status code. Returned when the RPC was cancelled by the client or server.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

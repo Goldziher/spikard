@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcUnknownStatus2Test extends TestCase
+{
     public function testGrpcGrpcUnknownStatus2(): void
     {
         // Tests UNKNOWN gRPC status code. Used for errors that do not fit any other status code.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

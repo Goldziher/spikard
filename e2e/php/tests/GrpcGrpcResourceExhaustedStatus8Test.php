@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcResourceExhaustedStatus8Test extends TestCase
+{
     public function testGrpcGrpcResourceExhaustedStatus8(): void
     {
         // Tests RESOURCE_EXHAUSTED gRPC status code. Returned when the server has run out of resources (disk space, memory, connections, etc.).
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

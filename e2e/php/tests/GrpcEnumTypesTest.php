@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcEnumTypesTest extends TestCase
+{
     public function testGrpcEnumTypes(): void
     {
         // Tests enum definitions and serialization. Covers enum fields with named constants.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

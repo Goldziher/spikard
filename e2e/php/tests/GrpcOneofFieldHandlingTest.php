@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcOneofFieldHandlingTest extends TestCase
+{
     public function testGrpcOneofFieldHandling(): void
     {
         // Tests oneof fields where only one field in the group can be set at a time. Validates proper mutual exclusivity and serialization.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

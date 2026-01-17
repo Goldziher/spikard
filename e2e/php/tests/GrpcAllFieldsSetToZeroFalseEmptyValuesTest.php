@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcAllFieldsSetToZeroFalseEmptyValuesTest extends TestCase
+{
     public function testGrpcAllFieldsSetToZeroFalseEmptyValues(): void
     {
         // Tests proto3 default value behavior when all fields are explicitly set to zero, false, empty string. Validates that zero values are transmitted correctly.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

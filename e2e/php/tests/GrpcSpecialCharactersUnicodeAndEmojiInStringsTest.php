@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcSpecialCharactersUnicodeAndEmojiInStringsTest extends TestCase
+{
     public function testGrpcSpecialCharactersUnicodeAndEmojiInStrings(): void
     {
         // Tests handling of unicode characters, emojis, and special characters in protobuf string fields. Validates proper UTF-8 encoding/decoding.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

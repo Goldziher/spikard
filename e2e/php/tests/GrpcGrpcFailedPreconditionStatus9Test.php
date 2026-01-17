@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcFailedPreconditionStatus9Test extends TestCase
+{
     public function testGrpcGrpcFailedPreconditionStatus9(): void
     {
         // Tests FAILED_PRECONDITION gRPC status code. Returned when the RPC failed because the system is not in the required state.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

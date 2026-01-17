@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcClientStreamingRpcTest extends TestCase
+{
     public function testGrpcClientStreamingRpc(): void
     {
         // Tests client streaming where client sends multiple messages. Covers streaming request aggregation patterns.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcMaximumFieldNumber536870911Test extends TestCase
+{
     public function testGrpcMaximumFieldNumber536870911(): void
     {
         // Tests protobuf messages using the maximum allowed field number (536870911). Validates proper field number encoding in varint format.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

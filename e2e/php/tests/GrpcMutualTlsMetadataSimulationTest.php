@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcMutualTlsMetadataSimulationTest extends TestCase
+{
     public function testGrpcMutualTlsMetadataSimulation(): void
     {
         // Tests mutual TLS authentication by validating client certificate metadata. Simulates mTLS handshake verification.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

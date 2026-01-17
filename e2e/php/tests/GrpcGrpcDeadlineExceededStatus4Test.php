@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcDeadlineExceededStatus4Test extends TestCase
+{
     public function testGrpcGrpcDeadlineExceededStatus4(): void
     {
         // Tests DEADLINE_EXCEEDED gRPC status code. Returned when the RPC does not complete within the specified time limit.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

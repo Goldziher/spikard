@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcRateLimitingWithMetadataHeadersTest extends TestCase
+{
     public function testGrpcRateLimitingWithMetadataHeaders(): void
     {
         // Tests gRPC rate limiting. Validates rate limit headers in response and proper 429 handling.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

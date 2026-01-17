@@ -287,7 +287,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_auth_multiple_authentication_schemes_jwt_precedence_18();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/data', ['headers' => ["Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg", "X-API-Key" => "sk_test_123456"]]);
+        $response = $client->request('GET', '/api/data', ['headers' => ["X-API-Key" => "sk_test_123456", "Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -505,7 +505,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_content_types_20_content_length_mismatch_8();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/data', ['headers' => ["Content-Length" => "100", "Content-Type" => "application/json"], 'body' => ["value" => "short"]]);
+        $response = $client->request('POST', '/data', ['headers' => ["Content-Type" => "application/json", "Content-Length" => "100"], 'body' => ["value" => "short"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -865,7 +865,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cookies_multiple_cookies_success_12();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/', ['cookies' => ["session_id" => "session123", "fatebook_tracker" => "tracker456", "googall_tracker" => "ga789"]]);
+        $response = $client->request('GET', '/items/', ['cookies' => ["googall_tracker" => "ga789", "fatebook_tracker" => "tracker456", "session_id" => "session123"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1119,7 +1119,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_07_cors_preflight_header_not_allowed_2();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Headers" => "X-Custom-Header", "Access-Control-Request-Method" => "POST"]]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "X-Custom-Header"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1133,7 +1133,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_08_cors_max_age_3();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type"]]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Access-Control-Request-Headers" => "Content-Type", "Access-Control-Request-Method" => "POST", "Origin" => "https://example.com"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1177,7 +1177,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_private_network_access_6();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ["Access-Control-Request-Private-Network" => "true", "Access-Control-Request-Method" => "GET", "Origin" => "https://public.example.com"]]);
+        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ["Access-Control-Request-Private-Network" => "true", "Origin" => "https://public.example.com", "Access-Control-Request-Method" => "GET"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1191,7 +1191,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_vary_header_for_proper_caching_7();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/cached-resource', ['headers' => ["Cache-Control" => "max-age=3600", "Origin" => "https://app.example.com"]]);
+        $response = $client->request('GET', '/api/cached-resource', ['headers' => ["Origin" => "https://app.example.com", "Cache-Control" => "max-age=3600"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1265,7 +1265,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_request_12();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type, X-Custom-Header", "Origin" => "https://example.com"]]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Access-Control-Request-Headers" => "Content-Type, X-Custom-Header", "Origin" => "https://example.com", "Access-Control-Request-Method" => "POST"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1311,7 +1311,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_safelisted_headers_without_preflight_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/form', ['headers' => ["Accept" => "application/json", "Content-Type" => "text/plain", "Accept-Language" => "en-US", "Origin" => "https://app.example.com"]]);
+        $response = $client->request('POST', '/api/form', ['headers' => ["Origin" => "https://app.example.com", "Content-Type" => "text/plain", "Accept-Language" => "en-US", "Accept" => "application/json"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -2331,7 +2331,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_headers_multiple_custom_headers_23();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/headers/multiple', ['headers' => ["X-Client-Version" => "1.2.3", "X-Trace-Id" => "trace-abc", "X-Request-Id" => "req-12345"]]);
+        $response = $client->request('GET', '/headers/multiple', ['headers' => ["X-Trace-Id" => "trace-abc", "X-Client-Version" => "1.2.3", "X-Request-Id" => "req-12345"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -3863,7 +3863,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_multipart_mixed_files_and_form_data_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/', ['headers' => ["Content-Type" => "multipart/form-data"], 'files' => [["field_name" => "file", "filename" => "upload.txt", "content" => "file data here", "content_type" => "text/plain", "content_encoding" => "text"]], 'data' => ["active" => "true", "username" => "testuser", "age" => "25"]]);
+        $response = $client->request('POST', '/', ['headers' => ["Content-Type" => "multipart/form-data"], 'files' => [["field_name" => "file", "filename" => "upload.txt", "content" => "file data here", "content_type" => "text/plain", "content_encoding" => "text"]], 'data' => ["username" => "testuser", "active" => "true", "age" => "25"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6463,7 +6463,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_oauth2_password_grant_flow_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/token', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["password" => "secret", "username" => "johndoe", "grant_type" => "password", "scope" => ""]]);
+        $response = $client->request('POST', '/token', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["scope" => "", "grant_type" => "password", "password" => "secret", "username" => "johndoe"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;

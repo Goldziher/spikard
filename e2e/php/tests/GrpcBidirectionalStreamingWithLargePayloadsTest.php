@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcBidirectionalStreamingWithLargePayloadsTest extends TestCase
+{
     public function testGrpcBidirectionalStreamingWithLargePayloads(): void
     {
         // Tests bidirectional streaming RPC with large messages in both directions. Validates concurrent read/write handling and proper message ordering.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

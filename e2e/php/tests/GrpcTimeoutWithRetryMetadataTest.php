@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcTimeoutWithRetryMetadataTest extends TestCase
+{
     public function testGrpcTimeoutWithRetryMetadata(): void
     {
         // Tests DEADLINE_EXCEEDED status code with retry metadata in response trailers. Indicates whether client should retry.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

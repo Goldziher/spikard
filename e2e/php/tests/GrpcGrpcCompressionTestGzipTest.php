@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcCompressionTestGzipTest extends TestCase
+{
     public function testGrpcGrpcCompressionTestGzip(): void
     {
         // Tests gRPC payload compression using gzip. Validates that compressed messages are properly decompressed and that header metadata indicates compression.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

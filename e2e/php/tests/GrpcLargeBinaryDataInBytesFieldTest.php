@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcLargeBinaryDataInBytesFieldTest extends TestCase
+{
     public function testGrpcLargeBinaryDataInBytesField(): void
     {
         // Tests handling of large binary data in protobuf bytes fields. Validates proper base64 encoding/decoding and preservation of binary integrity.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGoogleProtobufAnyTypeUsageTest extends TestCase
+{
     public function testGrpcGoogleProtobufAnyTypeUsage(): void
     {
         // Tests usage of google.protobuf.Any for storing arbitrary message types. Validates type URL encoding and message packing.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

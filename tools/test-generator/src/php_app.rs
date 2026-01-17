@@ -176,7 +176,7 @@ fn build_app_factory(
             let raw_middleware = fixture.handler.as_ref().and_then(|h| h.middleware.as_ref());
             let config_str = generate_server_config_php(&metadata, raw_middleware);
 
-            let handler_class = generate_handler_class_php(fixture);
+            let handler_class = generate_handler_class_php(fixture, metadata.compression.is_some());
 
             if config_str == "null" {
                 code.push_str(&format!(
@@ -323,7 +323,7 @@ fn build_routes_json(
 }
 
 /// Generate handler class that returns expected response from fixture
-fn generate_handler_class_php(fixture: &Fixture) -> String {
+fn generate_handler_class_php(fixture: &Fixture, strip_compression_headers: bool) -> String {
     let expected_status = fixture.expected_response.status_code;
     let expected_body = fixture.expected_response.body.as_ref();
     let expected_headers = &fixture.expected_response.headers;
@@ -337,6 +337,11 @@ fn generate_handler_class_php(fixture: &Fixture) -> String {
     let headers_literal = if let Some(headers_map) = expected_headers {
         let mut header_pairs = Vec::new();
         for (key, value) in headers_map {
+            if strip_compression_headers
+                && (key.eq_ignore_ascii_case("content-encoding") || key.eq_ignore_ascii_case("vary"))
+            {
+                continue;
+            }
             header_pairs.push(format!("{} => {}", php_string_literal(key), php_string_literal(value)));
         }
         if header_pairs.is_empty() {

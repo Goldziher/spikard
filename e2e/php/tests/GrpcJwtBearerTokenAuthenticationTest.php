@@ -1,9 +1,16 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcJwtBearerTokenAuthenticationTest extends TestCase
+{
     public function testGrpcJwtBearerTokenAuthentication(): void
     {
         // Tests JWT authentication via gRPC metadata. Validates that JWT tokens are properly extracted and validated from authorization header.
 
         // Build gRPC request from fixture
-        $metadata = ["content-type" => "application/grpc", "authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"];
+        $metadata = ["authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", "content-type" => "application/grpc"];
         $requestPayload = json_encode(["action" => "read"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

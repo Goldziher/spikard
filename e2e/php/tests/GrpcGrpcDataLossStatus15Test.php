@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcDataLossStatus15Test extends TestCase
+{
     public function testGrpcGrpcDataLossStatus15(): void
     {
         // Tests DATA_LOSS gRPC status code. Returned when unrecoverable data loss or corruption occurred.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

@@ -1,9 +1,16 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcSimpleUnaryRpcGetuserTest extends TestCase
+{
     public function testGrpcSimpleUnaryRpcGetuser(): void
     {
         // Tests basic unary gRPC call with scalar types (int32, string). Covers fundamental request-response pattern.
 
         // Build gRPC request from fixture
-        $metadata = ["authorization" => "Bearer test-token", "content-type" => "application/grpc"];
+        $metadata = ["content-type" => "application/grpc", "authorization" => "Bearer test-token"];
         $requestPayload = json_encode(["user_id" => 123]);
 
         $request = new \Spikard\Grpc\GrpcRequest(
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

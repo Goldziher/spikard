@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcNestedMessagesTest extends TestCase
+{
     public function testGrpcNestedMessages(): void
     {
         // Tests nested message types with complex field hierarchies. Covers nested message definitions and serialization.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

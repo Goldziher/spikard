@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcOptionalFieldsTest extends TestCase
+{
     public function testGrpcOptionalFields(): void
     {
         // Tests optional field handling with presence semantics. Covers optional fields with and without values.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

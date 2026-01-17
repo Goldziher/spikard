@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcCustomAuthenticationSchemeHeaderTest extends TestCase
+{
     public function testGrpcCustomAuthenticationSchemeHeader(): void
     {
         // Tests custom authentication header scheme. Validates that custom auth headers are properly extracted and validated.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

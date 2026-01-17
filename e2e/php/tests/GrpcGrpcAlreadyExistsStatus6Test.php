@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcAlreadyExistsStatus6Test extends TestCase
+{
     public function testGrpcGrpcAlreadyExistsStatus6(): void
     {
         // Tests ALREADY_EXISTS gRPC status code. Returned when trying to create a resource that already exists.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

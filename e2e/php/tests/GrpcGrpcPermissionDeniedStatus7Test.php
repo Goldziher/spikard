@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcPermissionDeniedStatus7Test extends TestCase
+{
     public function testGrpcGrpcPermissionDeniedStatus7(): void
     {
         // Tests PERMISSION_DENIED gRPC status code. Returned when the caller does not have sufficient permissions.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

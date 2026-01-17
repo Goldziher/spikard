@@ -525,7 +525,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['message' => 'Compressed payload', 'payload' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'], 200, ['content-encoding' => 'gzip', 'vary' => 'Accept-Encoding']);
+                return new Response(['message' => 'Compressed payload', 'payload' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'], 200, []);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -544,7 +544,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['message' => 'Small payload', 'payload' => 'tiny'], 200, ['content-encoding' => '<<absent>>']);
+                return new Response(['message' => 'Small payload', 'payload' => 'tiny'], 200, []);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -722,7 +722,7 @@ final class AppFactory
             public function handle(Request $request): Response {
                 return new Response('id,name,price
 1,Item A,10.0
-2,Item B,20.0', 200, ['content-type' => 'text/csv; charset=utf-8', 'content-disposition' => 'attachment; filename=data.csv']);
+2,Item B,20.0', 200, ['content-disposition' => 'attachment; filename=data.csv', 'content-type' => 'text/csv; charset=utf-8']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -818,7 +818,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response('pdf_binary_data', 200, ['content-disposition' => 'attachment; filename=document.pdf', 'content-type' => 'application/pdf']);
+                return new Response('pdf_binary_data', 200, ['content-type' => 'application/pdf', 'content-disposition' => 'attachment; filename=document.pdf']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1330,7 +1330,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(null, 204, ['Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Methods' => 'POST', 'Access-Control-Max-Age' => '3600']);
+                return new Response(null, 204, ['Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Methods' => 'POST', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Origin' => 'https://example.com']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1346,7 +1346,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(null, 200, ['X-Request-Id' => 'abc123', 'X-Total-Count' => '42', 'Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id', 'Access-Control-Allow-Origin' => 'https://example.com']);
+                return new Response(null, 200, ['Access-Control-Expose-Headers' => 'X-Total-Count, X-Request-Id', 'Access-Control-Allow-Origin' => 'https://example.com', 'X-Total-Count' => '42', 'X-Request-Id' => 'abc123']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1378,7 +1378,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(null, 204, ['Vary' => 'Origin', 'Access-Control-Allow-Private-Network' => 'true', 'Access-Control-Allow-Methods' => 'GET, POST', 'Access-Control-Allow-Origin' => 'https://public.example.com']);
+                return new Response(null, 204, ['Access-Control-Allow-Private-Network' => 'true', 'Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://public.example.com', 'Access-Control-Allow-Methods' => 'GET, POST']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1394,7 +1394,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['data' => 'cacheable resource'], 200, ['Vary' => 'Origin', 'Cache-Control' => 'public, max-age=3600', 'Access-Control-Allow-Origin' => 'https://app.example.com']);
+                return new Response(['data' => 'cacheable resource'], 200, ['Cache-Control' => 'public, max-age=3600', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1410,7 +1410,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['data' => 'resource data'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://admin.example.com']);
+                return new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://admin.example.com', 'Vary' => 'Origin']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1442,7 +1442,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(null, 204, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin']);
+                return new Response(null, 204, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Max-Age' => '3600']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1458,7 +1458,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(null, 204, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Origin' => 'https://app.example.com', 'Vary' => 'Origin', 'Access-Control-Max-Age' => '3600']);
+                return new Response(null, 204, ['Access-Control-Allow-Origin' => 'https://app.example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE', 'Access-Control-Max-Age' => '3600', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Vary' => 'Origin']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1474,7 +1474,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(null, 200, ['Access-Control-Max-Age' => '600', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS']);
+                return new Response(null, 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers' => 'Content-Type, X-Custom-Header', 'Access-Control-Max-Age' => '600']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -1490,7 +1490,7 @@ final class AppFactory
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['data' => 'resource data'], 200, ['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://subdomain.example.com']);
+                return new Response(['data' => 'resource data'], 200, ['Access-Control-Allow-Origin' => 'https://subdomain.example.com', 'Vary' => 'Origin']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -2772,7 +2772,7 @@ line3', 'quotes' => 'He said "hello" and \'goodbye\'', 'backslashes' => 'C:\\\\U
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(null, 200, ['Content-Length' => '85', 'Content-Type' => 'application/json']);
+                return new Response(null, 200, ['Content-Type' => 'application/json', 'Content-Length' => '85']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -2788,7 +2788,7 @@ line3', 'quotes' => 'He said "hello" and \'goodbye\'', 'backslashes' => 'C:\\\\U
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(null, 200, ['Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Max-Age' => '86400']);
+                return new Response(null, 200, ['Access-Control-Allow-Origin' => 'https://example.com', 'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS', 'Access-Control-Max-Age' => '86400', 'Access-Control-Allow-Headers' => 'Content-Type']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -3716,7 +3716,7 @@ line3', 'quotes' => 'He said "hello" and \'goodbye\'', 'backslashes' => 'C:\\\\U
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['message' => 'Action completed successfully', 'user_id' => 'user-123', 'action' => 'update_profile', 'request_id' => '.*'], 200, ['X-Request-ID' => '.*', 'X-Frame-Options' => 'DENY', 'X-Response-Time' => '.*ms', 'X-Content-Type-Options' => 'nosniff']);
+                return new Response(['message' => 'Action completed successfully', 'user_id' => 'user-123', 'action' => 'update_profile', 'request_id' => '.*'], 200, ['X-Request-ID' => '.*', 'X-Response-Time' => '.*ms', 'X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'DENY']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -3780,7 +3780,7 @@ line3', 'quotes' => 'He said "hello" and \'goodbye\'', 'backslashes' => 'C:\\\\U
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['message' => 'Response with security headers'], 200, ['X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'DENY', 'X-XSS-Protection' => '1; mode=block', 'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains']);
+                return new Response(['message' => 'Response with security headers'], 200, ['X-XSS-Protection' => '1; mode=block', 'Strict-Transport-Security' => 'max-age=31536000; includeSubDomains', 'X-Content-Type-Options' => 'nosniff', 'X-Frame-Options' => 'DENY']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -6214,7 +6214,7 @@ line3', 'quotes' => 'He said "hello" and \'goodbye\'', 'backslashes' => 'C:\\\\U
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response('binary_data_1024_bytes', 206, ['Content-Range' => 'bytes 0-1023/5000', 'Content-Type' => 'application/pdf', 'Content-Length' => '1024', 'Accept-Ranges' => 'bytes']);
+                return new Response('binary_data_1024_bytes', 206, ['Content-Type' => 'application/pdf', 'Content-Range' => 'bytes 0-1023/5000', 'Content-Length' => '1024', 'Accept-Ranges' => 'bytes']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);
@@ -6454,7 +6454,7 @@ line3', 'quotes' => 'He said "hello" and \'goodbye\'', 'backslashes' => 'C:\\\\U
         $handler = new class implements HandlerInterface {
             public function matches(Request $request): bool { return true; }
             public function handle(Request $request): Response {
-                return new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['Retry-After' => '60', 'X-RateLimit-Limit' => '100', 'X-RateLimit-Remaining' => '0', 'X-RateLimit-Reset' => '1609459200']);
+                return new Response(['detail' => 'Rate limit exceeded. Try again in 60 seconds.'], 429, ['Retry-After' => '60', 'X-RateLimit-Remaining' => '0', 'X-RateLimit-Reset' => '1609459200', 'X-RateLimit-Limit' => '100']);
             }
             public function __invoke(Request $request): Response {
                 return $this->handle($request);

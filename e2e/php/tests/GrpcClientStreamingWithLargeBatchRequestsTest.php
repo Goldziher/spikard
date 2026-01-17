@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcClientStreamingWithLargeBatchRequestsTest extends TestCase
+{
     public function testGrpcClientStreamingWithLargeBatchRequests(): void
     {
         // Tests client streaming RPC with large batch requests. Validates server accumulation of multiple large client messages.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

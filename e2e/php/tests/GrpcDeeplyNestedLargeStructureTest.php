@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcDeeplyNestedLargeStructureTest extends TestCase
+{
     public function testGrpcDeeplyNestedLargeStructure(): void
     {
         // Tests deeply nested protobuf messages with complex hierarchies. Validates that nested message serialization handles proper field numbering and recursive structures.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

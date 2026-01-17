@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcBidirectionalStreamingRpcTest extends TestCase
+{
     public function testGrpcBidirectionalStreamingRpc(): void
     {
         // Tests bidirectional streaming where both client and server send multiple messages. Covers duplex communication patterns.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

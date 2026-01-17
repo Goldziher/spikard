@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcInvalidArgumentStatus3Test extends TestCase
+{
     public function testGrpcGrpcInvalidArgumentStatus3(): void
     {
         // Tests INVALID_ARGUMENT gRPC status code. Indicates that the client provided an invalid or malformed argument.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

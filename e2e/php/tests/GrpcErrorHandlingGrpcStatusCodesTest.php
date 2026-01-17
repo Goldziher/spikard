@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcErrorHandlingGrpcStatusCodesTest extends TestCase
+{
     public function testGrpcErrorHandlingGrpcStatusCodes(): void
     {
         // Tests gRPC error status codes and error responses. Covers NOT_FOUND, INVALID_ARGUMENT, INTERNAL, and other gRPC status codes.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

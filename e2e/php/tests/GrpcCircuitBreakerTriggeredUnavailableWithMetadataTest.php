@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcCircuitBreakerTriggeredUnavailableWithMetadataTest extends TestCase
+{
     public function testGrpcCircuitBreakerTriggeredUnavailableWithMetadata(): void
     {
         // Tests UNAVAILABLE status code with circuit breaker metadata. Indicates service degradation and when to retry.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

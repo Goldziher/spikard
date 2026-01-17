@@ -49,6 +49,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../bootstrap.php';
 "#;
     fs::write(tests_dir.join("bootstrap.php"), bootstrap).context("Failed to write test bootstrap")?;
+    fs::write(tests_dir.join("helpers.php"), helpers_file()?).context("Failed to write test helpers")?;
 
     fs::write(output_dir.join("bootstrap.php"), bootstrap_file()?).context("Failed to write bootstrap.php")?;
     fs::write(output_dir.join("phpunit.xml"), phpunit_config()?).context("Failed to write phpunit.xml")?;
@@ -512,9 +513,85 @@ fn bootstrap_file() -> Result<String> {
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../packages/php/vendor/autoload.php';
+require_once __DIR__ . '/tests/helpers.php';
 require_once __DIR__ . '/app/main.php';
 "#;
     Ok(bootstrap.to_string())
+}
+
+fn helpers_file() -> Result<String> {
+    let helpers = r#"<?php
+declare(strict_types=1);
+
+namespace Spikard\Tests;
+
+use Spikard\DI\ResolvedDependencies;
+use Spikard\Http\Request;
+
+/**
+ * Create a Request while ensuring the body is stored in a variable
+ * so extensions that require pass-by-reference can accept it.
+ *
+ * @param array<string, string> $headers
+ * @param array<string, string> $cookies
+ * @param array<string, array<int, string>> $queryParams
+ * @param array<string, string> $pathParams
+ * @param array<string, mixed>|null $validatedParams
+ * @param array<string, mixed> $files
+ */
+function make_request(
+    string $method,
+    string $path,
+    mixed $body,
+    array $headers = [],
+    array $cookies = [],
+    array $queryParams = [],
+    array $pathParams = [],
+    ?array $validatedParams = null,
+    array $files = [],
+    ?ResolvedDependencies $dependencies = null,
+): Request {
+    $bodyRef = $body;
+    return new Request(
+        $method,
+        $path,
+        $bodyRef,
+        $headers,
+        $cookies,
+        $queryParams,
+        $pathParams,
+        $validatedParams,
+        $files,
+        $dependencies,
+    );
+}
+
+/**
+ * Execute PHP code in a subprocess without loading the extension.
+ *
+ * @return array{int, string} [exitCode, output]
+ */
+function run_without_extension(string $code): array
+{
+    $autoloadPath = \realpath(__DIR__ . '/../../packages/php/vendor/autoload.php');
+    if ($autoloadPath === false) {
+        return [1, 'Failed to resolve autoload.php path'];
+    }
+
+    $command = \sprintf(
+        '%s -n -d detect_unicode=0 -r %s',
+        \escapeshellarg(PHP_BINARY),
+        \escapeshellarg(\"require '{$autoloadPath}';\" . $code)
+    );
+
+    $output = [];
+    $exitCode = 0;
+    \exec($command . ' 2>&1', $output, $exitCode);
+
+    return [$exitCode, \implode(\"\\n\", $output)];
+}
+"#;
+    Ok(helpers.to_string())
 }
 
 /// Generate PHP PHPUnit test method for a gRPC fixture
@@ -522,7 +599,13 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     let mut code = String::new();
 
     let test_name = sanitize_identifier(&fixture.name);
+    let class_name = format!("Grpc{}Test", to_pascal_case(&test_name));
     let handler_name = format!("handleGrpc{}", to_pascal_case(&test_name));
+
+    code.push_str("<?php\n");
+    code.push_str("declare(strict_types=1);\n\n");
+    code.push_str("use PHPUnit\\Framework\\TestCase;\n\n");
+    code.push_str(&format!("final class {} extends TestCase\n{{\n", class_name));
 
     // Test method
     code.push_str(&format!(
@@ -611,6 +694,7 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     }
 
     code.push_str("    }\n\n");
+    code.push_str("}\n");
 
     Ok(code)
 }

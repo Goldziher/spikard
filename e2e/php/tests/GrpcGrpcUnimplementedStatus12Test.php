@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcUnimplementedStatus12Test extends TestCase
+{
     public function testGrpcGrpcUnimplementedStatus12(): void
     {
         // Tests UNIMPLEMENTED gRPC status code. Returned when the server does not implement the requested RPC method.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

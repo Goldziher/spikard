@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcNotFoundStatus5Test extends TestCase
+{
     public function testGrpcGrpcNotFoundStatus5(): void
     {
         // Tests NOT_FOUND gRPC status code. Returned when a requested resource (e.g., user, file) does not exist.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

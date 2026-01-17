@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcServerStreamingWithLargeResponseDataTest extends TestCase
+{
     public function testGrpcServerStreamingWithLargeResponseData(): void
     {
         // Tests server streaming RPC that yields multiple large messages. Validates proper streaming protocol handling and backpressure management.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

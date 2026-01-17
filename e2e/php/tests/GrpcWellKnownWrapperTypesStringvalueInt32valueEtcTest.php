@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcWellKnownWrapperTypesStringvalueInt32valueEtcTest extends TestCase
+{
     public function testGrpcWellKnownWrapperTypesStringvalueInt32valueEtc(): void
     {
         // Tests usage of google.protobuf wrapper types (StringValue, Int32Value, BoolValue) for nullable scalar types. Validates proper null/present distinction.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

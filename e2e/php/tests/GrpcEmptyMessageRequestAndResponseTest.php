@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcEmptyMessageRequestAndResponseTest extends TestCase
+{
     public function testGrpcEmptyMessageRequestAndResponse(): void
     {
         // Tests handling of empty protobuf messages with no fields. Validates that the protocol correctly handles minimal payloads.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcRepeatedFieldsArraysTest extends TestCase
+{
     public function testGrpcRepeatedFieldsArrays(): void
     {
         // Tests arrays/repeated fields for primitive types and messages. Covers repeated field serialization and deserialization.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

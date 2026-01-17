@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcChunkedFileUploadWithClientStreamingTest extends TestCase
+{
     public function testGrpcChunkedFileUploadWithClientStreaming(): void
     {
         // Tests client streaming RPC for chunked file uploads. Validates that multiple message chunks are properly accumulated and processed by the server.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

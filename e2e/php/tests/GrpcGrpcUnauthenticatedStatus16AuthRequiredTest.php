@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcGrpcUnauthenticatedStatus16AuthRequiredTest extends TestCase
+{
     public function testGrpcGrpcUnauthenticatedStatus16AuthRequired(): void
     {
         // Tests UNAUTHENTICATED gRPC status code. Returned when the request lacks valid authentication credentials.
@@ -27,3 +34,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

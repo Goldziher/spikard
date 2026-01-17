@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcMapFieldHandlingMapStringMessageTest extends TestCase
+{
     public function testGrpcMapFieldHandlingMapStringMessage(): void
     {
         // Tests protobuf map fields with string keys and message values. Validates proper key-value pair serialization and access patterns.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

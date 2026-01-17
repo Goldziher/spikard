@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcLarge1mbMessagePayloadTest extends TestCase
+{
     public function testGrpcLarge1mbMessagePayload(): void
     {
         // Tests handling of 1MB protobuf messages. Verifies that large payloads are properly serialized, transmitted, and deserialized without truncation or corruption.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

@@ -31,6 +31,7 @@ pub struct PhpTestResponse {
     pub(crate) status: i64,
     pub(crate) body: String,
     pub(crate) headers: HashMap<String, String>,
+    pub(crate) cookies: HashMap<String, String>,
 }
 
 #[php_impl]
@@ -66,6 +67,16 @@ impl PhpTestResponse {
     pub fn get_headers(&self) -> PhpResult<ZBox<ZendHashTable>> {
         let mut table = ZendHashTable::new();
         for (k, v) in &self.headers {
+            table.insert(k.as_str(), v.as_str())?;
+        }
+        Ok(table)
+    }
+
+    /// Get response cookies as a PHP array.
+    #[php(name = "getCookies")]
+    pub fn get_cookies(&self) -> PhpResult<ZBox<ZendHashTable>> {
+        let mut table = ZendHashTable::new();
+        for (k, v) in &self.cookies {
             table.insert(k.as_str(), v.as_str())?;
         }
         Ok(table)
@@ -598,6 +609,7 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
             status: 204,
             body: String::new(),
             headers: HashMap::new(),
+            cookies: HashMap::new(),
         });
     }
 
@@ -630,7 +642,32 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
             }
         }
 
-        return Ok(PhpTestResponse { status, body, headers });
+        let mut cookies = HashMap::new();
+        if let Ok(cookies_zval) = obj.try_call_method("getCookies", vec![])
+            && let Some(arr) = cookies_zval.array()
+        {
+            for (key, val) in arr.iter() {
+                let key_str = match key {
+                    ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+                    ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                    ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                };
+                if let Some(val_str) = val.string() {
+                    cookies.insert(key_str, val_str.to_string());
+                }
+            }
+        }
+
+        if cookies.is_empty() {
+            cookies = cookies_from_headers(&headers);
+        }
+
+        return Ok(PhpTestResponse {
+            status,
+            body,
+            headers,
+            cookies,
+        });
     }
 
     if let Some(s) = response.string() {
@@ -640,6 +677,7 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
             status: 200,
             body: s.to_string(),
             headers,
+            cookies: HashMap::new(),
         });
     }
 
@@ -654,6 +692,7 @@ fn zval_to_test_response(response: &Zval) -> PhpResult<PhpTestResponse> {
         status: 200,
         body,
         headers,
+        cookies: HashMap::new(),
     })
 }
 
@@ -1060,11 +1099,13 @@ fn snapshot_to_php_response(snapshot: ResponseSnapshot) -> PhpResult<PhpTestResp
     } else {
         String::from_utf8_lossy(&snapshot.body).into_owned()
     };
+    let cookies = cookies_from_headers(&headers);
 
     Ok(PhpTestResponse {
         status: status_code,
         body,
         headers,
+        cookies,
     })
 }
 
@@ -1078,6 +1119,18 @@ fn header_value(headers: &HashMap<String, String>, name: &str) -> Option<String>
         .iter()
         .find(|(key, _)| key.eq_ignore_ascii_case(name))
         .map(|(_, value)| value.clone())
+}
+
+fn cookies_from_headers(headers: &HashMap<String, String>) -> HashMap<String, String> {
+    let mut cookies = HashMap::new();
+    let Some(raw) = header_value(headers, "set-cookie") else {
+        return cookies;
+    };
+    let cookie_pair = raw.split(';').next().unwrap_or_default();
+    if let Some((name, value)) = cookie_pair.split_once('=') {
+        cookies.insert(name.trim().to_string(), value.trim().to_string());
+    }
+    cookies
 }
 
 /// Advanced test client that uses axum-test for full HTTP stack testing.

@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcLargeRepeatedFieldWith10000ItemsTest extends TestCase
+{
     public function testGrpcLargeRepeatedFieldWith10000Items(): void
     {
         // Tests handling of repeated fields containing thousands of elements. Validates efficient serialization and deserialization of large arrays without memory bloat.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

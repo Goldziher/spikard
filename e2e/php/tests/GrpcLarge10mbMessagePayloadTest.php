@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcLarge10mbMessagePayloadTest extends TestCase
+{
     public function testGrpcLarge10mbMessagePayload(): void
     {
         // Tests handling of 10MB protobuf messages. Validates high-capacity transfers, memory efficiency, and absence of stream fragmentation issues.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

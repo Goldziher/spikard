@@ -1,3 +1,10 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcApiKeyAuthenticationTest extends TestCase
+{
     public function testGrpcApiKeyAuthentication(): void
     {
         // Tests API key authentication via gRPC metadata. Validates that API keys are properly validated and associated with clients.
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}

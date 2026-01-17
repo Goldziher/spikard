@@ -1,9 +1,16 @@
+<?php
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
+final class GrpcCorsRelatedMetadataHeadersTest extends TestCase
+{
     public function testGrpcCorsRelatedMetadataHeaders(): void
     {
         // Tests CORS-related metadata in gRPC calls. Validates origin validation and cross-origin request handling.
 
         // Build gRPC request from fixture
-        $metadata = ["content-type" => "application/grpc", "origin" => "https://example.com", "access-control-request-method" => "POST"];
+        $metadata = ["origin" => "https://example.com", "access-control-request-method" => "POST", "content-type" => "application/grpc"];
         $requestPayload = json_encode(["resource" => "data"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(
@@ -31,3 +38,4 @@
         $this->assertNotNull($metadata);
     }
 
+}
