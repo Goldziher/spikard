@@ -179,6 +179,6 @@ These fixtures are designed to be consumed by:
 
 ## References
 
-- Plan: `/Users/naamanhirschfeld/.claude/plans/synthetic-cooking-kettle.md`
-- Schema: `/Users/naamanhirschfeld/workspace/spikard/testing_data/00-FIXTURE-SCHEMA.json`
-- Test Generator: `/Users/naamanhirschfeld/workspace/spikard/tools/test-generator/`
+- Plan: `.claude/plans/synthetic-cooking-kettle.md`
+- Schema: `testing_data/00-FIXTURE-SCHEMA.json`
+- Test Generator: `tools/test-generator/`

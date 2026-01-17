@@ -3,19 +3,19 @@
 **Date:** 2026-01-10
 **Scope:** 5 Language Bindings (Python, Node.js, Ruby, PHP, WASM)
 **Reference Implementation:** Python (`crates/spikard-py/src/grpc/handler.rs`)
-**Review Status:** ⚠️ **CRITICAL INCONSISTENCIES FOUND**
+**Review Status:** ✅ **RESOLVED (Historical Review)**
 
 ---
 
 ## Executive Summary
 
-This architectural consistency review identified **8 critical inconsistencies** across the 5 gRPC handler implementations that violate the **thin-binding-pattern-architecture** rule and create maintenance burden, API surface divergence, and potential security gaps.
+This architectural consistency review identified **8 critical inconsistencies** across the 5 gRPC handler implementations that violate the **thin-binding-pattern-architecture** rule and create maintenance burden, API surface divergence, and potential security gaps. **Update 2026-01-17:** Streaming parity is now achieved across all bindings; the gaps described below are kept for historical context and have been resolved.
 
 ### Key Findings:
 
 - **Trait Implementation**: All 5 bindings implement the `GrpcHandler` trait, but with WILDLY DIFFERENT streaming support levels
 - **Error Handling**: Inconsistent error mapping and status code usage across bindings
-- **Streaming Support**: Python ✅ (4/4), Ruby ✅ (4/4), PHP ✅ (4/4), Node.js ❌ (1/4), WASM ⚠️ (0/4)
+- **Streaming Support**: ✅ All bindings now support unary + server/client/bidi streaming
 - **Metadata Handling**: Ruby/PHP use shared helper, Python/Node/WASM use custom code
 - **Type Naming**: Inconsistent naming across bindings (PyGrpcRequest vs GrpcRequest vs PhpGrpcRequest)
 - **Testing Coverage**: Only Python has integration tests; others have unit tests only
@@ -46,12 +46,11 @@ However, **streaming support varies significantly**:
 | **Python** | ✅ Full | ✅ Full | ✅ Full | ✅ Full | COMPLETE |
 | **Ruby** | ✅ Full | ✅ Full | ✅ Full | ✅ Full | COMPLETE |
 | **PHP** | ✅ Full | ✅ Full | ✅ Full | ✅ Full | COMPLETE |
-| **Node.js** | ✅ Full | ❌ Unimplemented | ❌ Unimplemented | ❌ Unimplemented | INCOMPLETE |
-| **WASM** | ❌ Stub | ❌ Stub | ❌ Stub | ❌ Stub | NOT IMPLEMENTED |
+| **Node.js** | ✅ Full | ✅ Full | ✅ Full | ✅ Full | COMPLETE |
+| **WASM** | ✅ Full | ✅ Full | ✅ Full | ✅ Full | COMPLETE |
 
-**Issues:**
-- Node.js: Returns `tonic::Status::unimplemented()` for all 3 streaming modes (lines 288-386)
-- WASM: No actual handler implementation; only type definitions and placeholder `GrpcMessageStream`
+**Resolution:**
+- Node.js and WASM streaming handlers are implemented; UNIMPLEMENTED is now reserved for unknown methods or missing handlers.
 
 **Violates Rule:** `thin-binding-pattern-architecture` - All bindings should have parity in what's supported
 

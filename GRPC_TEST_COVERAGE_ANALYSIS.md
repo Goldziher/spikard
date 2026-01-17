@@ -798,22 +798,22 @@ Spikard has **solid fixture-based testing** covering all streaming modes, but la
 ## File References
 
 ### Test Files Analyzed
-- `/Users/naamanhirschfeld/workspace/spikard/packages/python/tests/test_grpc_fixtures.py` (507 lines)
-- `/Users/naamanhirschfeld/workspace/spikard/packages/node/src/grpc_fixtures.spec.ts` (465 lines)
-- `/Users/naamanhirschfeld/workspace/spikard/crates/spikard-rb/src/grpc/handler.rs` (565 lines, 88 test lines)
-- `/Users/naamanhirschfeld/workspace/spikard/crates/spikard-php/src/php/grpc/handler.rs` (824 lines, 110 test lines)
-- `/Users/naamanhirschfeld/workspace/spikard/crates/spikard-node/tests/handler_tests.rs` (110 lines)
-- `/Users/naamanhirschfeld/workspace/spikard/.github/workflows/ci-grpc-fixtures.yaml` (300 lines)
+- `packages/python/tests/test_grpc_fixtures.py` (507 lines)
+- `packages/node/src/grpc_fixtures.spec.ts` (465 lines)
+- `crates/spikard-rb/src/grpc/handler.rs` (565 lines, 88 test lines)
+- `crates/spikard-php/src/php/grpc/handler.rs` (824 lines, 110 test lines)
+- `crates/spikard-node/tests/handler_tests.rs` (110 lines)
+- `.github/workflows/ci-grpc-fixtures.yaml` (300 lines)
 
 ### Fixture Directory
-- `/Users/naamanhirschfeld/workspace/spikard/testing_data/protobuf/streaming/` (99 JSON fixtures)
+- `testing_data/protobuf/streaming/` (99 JSON fixtures)
   - `server/` (10 fixtures)
   - `client/` (10 fixtures)
   - `bidirectional/` (10 fixtures)
   - `errors/` (8 fixtures)
 
 ### Configuration
-- `/Users/naamanhirschfeld/workspace/spikard/Taskfile.yaml` (test targets)
+- `Taskfile.yaml` (test targets)
 
 ---
 

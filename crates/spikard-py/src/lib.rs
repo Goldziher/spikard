@@ -272,16 +272,21 @@ fn process() -> PyResult<()> {
 ///     TestClient: A test client for making requests to the app
 #[pyfunction]
 fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testing::client::TestClient> {
+    let write_debug_log = |name: &str, contents: &str| {
+        let path = std::env::temp_dir().join(name);
+        let _ = std::fs::write(path, contents);
+    };
+
     // DEBUG: Log test client creation
-    let _ = std::fs::write("/tmp/create_test_client.log", "create_test_client() called\n");
+    write_debug_log("create_test_client.log", "create_test_client() called\n");
     eprintln!("[UNCONDITIONAL DEBUG] create_test_client() called");
 
     spikard_http::debug::init();
 
     let routes_with_handlers = extract_routes_from_app(py, app)?;
-    let _ = std::fs::write(
-        "/tmp/routes_extracted.log",
-        format!("Extracted {} routes\n", routes_with_handlers.len()),
+    write_debug_log(
+        "routes_extracted.log",
+        &format!("Extracted {} routes\n", routes_with_handlers.len()),
     );
 
     let schema_registry = spikard_http::SchemaRegistry::new();
@@ -307,10 +312,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
         })
         .collect();
 
-    let _ = std::fs::write(
-        "/tmp/routes_converted.log",
-        format!("Converted {} routes\n", routes.len()),
-    );
+    write_debug_log("routes_converted.log", &format!("Converted {} routes\n", routes.len()));
 
     #[cfg(feature = "di")]
     let mut config = if let Ok(py_config) = app.getattr("_config") {
@@ -397,12 +399,12 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
         );
     }
 
-    let _ = std::fs::write("/tmp/axum_router_built.log", "Axum router built successfully\n");
+    write_debug_log("axum_router_built.log", "Axum router built successfully\n");
 
     eprintln!("[UNCONDITIONAL DEBUG] Creating TestClient from Axum router");
 
     let client = testing::client::TestClient::from_router(axum_router)?;
-    let _ = std::fs::write("/tmp/test_client_created.log", "TestClient created successfully\n");
+    write_debug_log("test_client_created.log", "TestClient created successfully\n");
 
     Ok(client)
 }

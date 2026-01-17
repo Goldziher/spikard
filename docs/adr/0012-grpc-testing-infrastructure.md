@@ -349,7 +349,6 @@ end
 - PHP: ~0.03 seconds (PHPUnit)
 
 **Known Gaps**:
-- **Streaming RPCs**: No tests yet (feature not implemented)
 - **E2E Tests**: No full client/server integration tests
 - **Performance Tests**: No load testing or benchmarking
 - **Chaos Engineering**: No fault injection or resilience testing

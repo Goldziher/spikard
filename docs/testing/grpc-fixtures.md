@@ -12,7 +12,7 @@ Fixture-driven testing is the canonical approach for validating gRPC streaming f
 4. **Reproducibility**: Fixtures are deterministic JSON; no flaky random test generation
 5. **Documentation**: Fixtures serve as executable specifications for expected behavior
 
-Fixtures are stored in `/Users/naamanhirschfeld/workspace/spikard/testing_data/protobuf/streaming/` organized by streaming category.
+Fixtures are stored in `testing_data/protobuf/streaming/` organized by streaming category.
 
 ---
 
@@ -43,7 +43,7 @@ Spikard follows a rigorous 5-layer testing pyramid with fixtures as the authorit
 
 ## Fixture Structure
 
-Each fixture is a JSON file conforming to `/Users/naamanhirschfeld/workspace/spikard/testing_data/protobuf/streaming/schema.json`.
+Each fixture is a JSON file conforming to `testing_data/protobuf/streaming/schema.json`.
 
 ### Required Fields
 

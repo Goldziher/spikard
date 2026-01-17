@@ -577,9 +577,9 @@ mod tests {
 
     #[test]
     fn test_load_grpc_fixtures_integration() {
-        let fixtures_path = Path::new("/Users/naamanhirschfeld/workspace/spikard/testing_data");
+        let fixtures_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data");
 
-        let fixtures = load_grpc_fixtures(fixtures_path).expect("Failed to load fixtures");
+        let fixtures = load_grpc_fixtures(&fixtures_path).expect("Failed to load fixtures");
         assert!(
             !fixtures.is_empty(),
             "Should load at least some gRPC fixtures from testing_data"
