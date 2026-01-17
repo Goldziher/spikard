@@ -4,6 +4,7 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Spikard\Testing\TestClient;
 use E2E\Php\AppFactory;
+use function Spikard\Tests\normalize_validation_errors;
 
 /**
  * Generated from testing_data fixtures.
@@ -759,9 +760,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["cookie", "key"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["cookie", "key"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -791,9 +792,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["cookie", "tracking_id"], "msg" => "String should match pattern '^[A-Z0-9]{8}\$'", "input" => "invalid-format", "ctx" => ["pattern" => "^[A-Z0-9]{8}\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["cookie", "tracking_id"], "msg" => "String should match pattern '^[A-Z0-9]{8}\$'", "input" => "invalid-format", "ctx" => ["pattern" => "^[A-Z0-9]{8}\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -823,9 +824,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["cookie", "session_id"], "msg" => "String should have at most 20 characters", "input" => "this_cookie_value_is_way_too_long", "ctx" => ["max_length" => 20]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["cookie", "session_id"], "msg" => "String should have at most 20 characters", "input" => "this_cookie_value_is_way_too_long", "ctx" => ["max_length" => 20]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -855,9 +856,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["cookie", "tracking_id"], "msg" => "String should have at least 3 characters", "input" => ""]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["cookie", "tracking_id"], "msg" => "String should have at least 3 characters", "input" => ""]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -865,7 +866,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cookies_multiple_cookies_success_12();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/items/', ['cookies' => ["googall_tracker" => "ga789", "fatebook_tracker" => "tracker456", "session_id" => "session123"]]);
+        $response = $client->request('GET', '/items/', ['cookies' => ["fatebook_tracker" => "tracker456", "session_id" => "session123", "googall_tracker" => "ga789"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -935,9 +936,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["cookie", "session_id"], "msg" => "Field required", "input" => ""]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["cookie", "session_id"], "msg" => "Field required", "input" => ""]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -1105,7 +1106,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_06_cors_preflight_method_not_allowed_1();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Headers" => "Content-Type", "Access-Control-Request-Method" => "DELETE"]]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Access-Control-Request-Method" => "DELETE", "Origin" => "https://example.com", "Access-Control-Request-Headers" => "Content-Type"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1119,7 +1120,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_07_cors_preflight_header_not_allowed_2();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "X-Custom-Header"]]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Headers" => "X-Custom-Header", "Access-Control-Request-Method" => "POST"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1133,7 +1134,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_08_cors_max_age_3();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Access-Control-Request-Headers" => "Content-Type", "Access-Control-Request-Method" => "POST", "Origin" => "https://example.com"]]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1177,7 +1178,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_private_network_access_6();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ["Access-Control-Request-Private-Network" => "true", "Origin" => "https://public.example.com", "Access-Control-Request-Method" => "GET"]]);
+        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ["Access-Control-Request-Method" => "GET", "Origin" => "https://public.example.com", "Access-Control-Request-Private-Network" => "true"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1251,7 +1252,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_for_put_method_11();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ["Origin" => "https://app.example.com", "Access-Control-Request-Method" => "PUT", "Access-Control-Request-Headers" => "Content-Type, X-Custom-Header"]]);
+        $response = $client->request('OPTIONS', '/api/resource/123', ['headers' => ["Access-Control-Request-Method" => "PUT", "Origin" => "https://app.example.com", "Access-Control-Request-Headers" => "Content-Type, X-Custom-Header"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1265,7 +1266,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_request_12();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Access-Control-Request-Headers" => "Content-Type, X-Custom-Header", "Origin" => "https://example.com", "Access-Control-Request-Method" => "POST"]]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type, X-Custom-Header"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1311,7 +1312,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_safelisted_headers_without_preflight_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/form', ['headers' => ["Origin" => "https://app.example.com", "Content-Type" => "text/plain", "Accept-Language" => "en-US", "Accept" => "application/json"]]);
+        $response = $client->request('POST', '/api/form', ['headers' => ["Origin" => "https://app.example.com", "Accept" => "application/json", "Accept-Language" => "en-US", "Content-Type" => "text/plain"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1343,7 +1344,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_with_credentials_17();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/user/profile', ['headers' => ["Origin" => "https://app.example.com", "Cookie" => "session=abc123"]]);
+        $response = $client->request('GET', '/api/user/profile', ['headers' => ["Cookie" => "session=abc123", "Origin" => "https://app.example.com"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1397,9 +1398,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(500, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/dependency-error", "title" => "Dependency Resolution Failed", "status" => 500, "detail" => "Circular dependency detected", "errors" => [["type" => "circular_dependency", "msg" => "Circular dependency detected in dependency graph", "cycle" => ["service_a", "service_b", "service_a"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/dependency-error", "title" => "Dependency Resolution Failed", "status" => 500, "detail" => "Circular dependency detected", "errors" => [["type" => "circular_dependency", "msg" => "Circular dependency detected in dependency graph", "cycle" => ["service_a", "service_b", "service_a"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -1445,9 +1446,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(500, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/dependency-error", "title" => "Dependency Resolution Failed", "status" => 500, "detail" => "Required dependency not found", "errors" => [["type" => "missing_dependency", "msg" => "Dependency 'non_existent_service' is not registered", "dependency_key" => "non_existent_service"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/dependency-error", "title" => "Dependency Resolution Failed", "status" => 500, "detail" => "Required dependency not found", "errors" => [["type" => "missing_dependency", "msg" => "Dependency 'non_existent_service' is not registered", "dependency_key" => "non_existent_service"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -1637,9 +1638,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(500, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/dependency-error", "title" => "Dependency Resolution Failed", "status" => 500, "detail" => "Dependency type mismatch", "errors" => [["type" => "type_mismatch", "msg" => "Dependency 'config' type mismatch: expected object, got string", "dependency_key" => "config", "expected_type" => "object", "actual_type" => "string"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/dependency-error", "title" => "Dependency Resolution Failed", "status" => 500, "detail" => "Dependency type mismatch", "errors" => [["type" => "type_mismatch", "msg" => "Dependency 'config' type mismatch: expected object, got string", "dependency_key" => "config", "expected_type" => "object", "actual_type" => "string"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -1765,9 +1766,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["body", "content"], "msg" => "String should have at most 10000 characters", "input" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "ctx" => ["max_length" => 10000]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["body", "content"], "msg" => "String should have at most 10000 characters", "input" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "ctx" => ["max_length" => 10000]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -1813,9 +1814,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "filename"], "msg" => "String should match pattern '^[^\\x00]+\$'", "input" => "file\x00.txt", "ctx" => ["pattern" => "^[^\\x00]+\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "filename"], "msg" => "String should match pattern '^[^\\x00]+\$'", "input" => "file\x00.txt", "ctx" => ["pattern" => "^[^\\x00]+\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2003,9 +2004,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["headers", "authorization"], "msg" => "Invalid Bearer token format", "ctx" => ["pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*\$", "value" => "Bearer invalid token with spaces"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["headers", "authorization"], "msg" => "Invalid Bearer token format", "ctx" => ["pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*\$", "value" => "Bearer invalid token with spaces"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2019,9 +2020,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["headers", "authorization"], "msg" => "Invalid Bearer token format", "ctx" => ["pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*\$", "value" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["headers", "authorization"], "msg" => "Invalid Bearer token format", "ctx" => ["pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*\$", "value" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2049,9 +2050,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["headers", "x-api-key"], "msg" => "Invalid API key format", "ctx" => ["pattern" => "^[a-f0-9]{32}\$", "value" => "invalid-key"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["headers", "x-api-key"], "msg" => "Invalid API key format", "ctx" => ["pattern" => "^[a-f0-9]{32}\$", "value" => "invalid-key"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2113,9 +2114,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["headers", "authorization"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["headers", "authorization"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2145,9 +2146,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["headers", "authorization"], "msg" => "String should match pattern '^Digest .+'", "input" => "Other invalidauthorization"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["headers", "authorization"], "msg" => "String should match pattern '^Digest .+'", "input" => "Other invalidauthorization"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2177,9 +2178,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["headers", "authorization"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["headers", "authorization"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2241,9 +2242,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["headers", "x-request-id"], "msg" => "String should match pattern '^[0-9]{3,}\$'", "input" => "invalid-format", "ctx" => ["pattern" => "^[0-9]{3,}\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["headers", "x-request-id"], "msg" => "String should match pattern '^[0-9]{3,}\$'", "input" => "invalid-format", "ctx" => ["pattern" => "^[0-9]{3,}\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2273,9 +2274,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["headers", "x-session-id"], "msg" => "String should have at most 20 characters", "input" => "this_is_way_too_long_for_validation", "ctx" => ["max_length" => 20]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["headers", "x-session-id"], "msg" => "String should have at most 20 characters", "input" => "this_is_way_too_long_for_validation", "ctx" => ["max_length" => 20]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2289,9 +2290,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["headers", "x-token"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["headers", "x-token"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2331,7 +2332,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_headers_multiple_custom_headers_23();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/headers/multiple', ['headers' => ["X-Trace-Id" => "trace-abc", "X-Client-Version" => "1.2.3", "X-Request-Id" => "req-12345"]]);
+        $response = $client->request('GET', '/headers/multiple', ['headers' => ["X-Request-Id" => "req-12345", "X-Trace-Id" => "trace-abc", "X-Client-Version" => "1.2.3"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -2481,9 +2482,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["headers", "x-api-key"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["headers", "x-api-key"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2569,7 +2570,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_http_methods_options_cors_preflight_request_5();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type", "Origin" => "https://example.com"]]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -2669,9 +2670,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "price"], "msg" => "Field required", "input" => ["id" => 1, "name" => "Item Name"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "price"], "msg" => "Field required", "input" => ["id" => 1, "name" => "Item Name"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2685,9 +2686,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "2 validation errors in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "input" => "X", "ctx" => ["min_length" => 3]], ["type" => "greater_than", "loc" => ["body", "price"], "msg" => "Input should be greater than 0", "input" => -10, "ctx" => ["gt" => 0]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "2 validation errors in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "input" => "X", "ctx" => ["min_length" => 3]], ["type" => "greater_than", "loc" => ["body", "price"], "msg" => "Input should be greater than 0", "input" => -10, "ctx" => ["gt" => 0]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2715,9 +2716,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "profile", "email"], "msg" => "Field required", "input" => ["name" => "John Doe"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "profile", "email"], "msg" => "Field required", "input" => ["name" => "John Doe"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2773,9 +2774,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body", "extra_field"], "msg" => "Additional properties are not allowed", "ctx" => ["additional_properties" => false, "unexpected_field" => "extra_field"], "input" => ["name" => "John", "email" => "john@example.com", "extra_field" => "should fail"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body", "extra_field"], "msg" => "Additional properties are not allowed", "ctx" => ["additional_properties" => false, "unexpected_field" => "extra_field"], "input" => ["name" => "John", "email" => "john@example.com", "extra_field" => "should fail"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2803,9 +2804,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the 'oneOf' keyword", "input" => ["credit_card" => "1234567812345678", "paypal_email" => "user@example.com"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the 'oneOf' keyword", "input" => ["credit_card" => "1234567812345678", "paypal_email" => "user@example.com"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2819,9 +2820,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"bitcoin_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa\"} is not valid under any of the schemas listed in the 'oneOf' keyword", "input" => ["bitcoin_address" => "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"bitcoin_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa\"} is not valid under any of the schemas listed in the 'oneOf' keyword", "input" => ["bitcoin_address" => "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2863,9 +2864,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"name\":\"John Doe\"} is not valid under any of the schemas listed in the 'anyOf' keyword", "input" => ["name" => "John Doe"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"name\":\"John Doe\"} is not valid under any of the schemas listed in the 'anyOf' keyword", "input" => ["name" => "John Doe"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2893,9 +2894,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body", "username"], "msg" => "{\"enum\":[\"admin\",\"root\",\"system\"]} is not allowed for \"admin\"", "input" => "admin"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body", "username"], "msg" => "{\"enum\":[\"admin\",\"root\",\"system\"]} is not allowed for \"admin\"", "input" => "admin"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2923,9 +2924,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body", "version"], "msg" => "\"1.0\" was expected", "input" => "2.0"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body", "version"], "msg" => "\"1.0\" was expected", "input" => "2.0"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2953,9 +2954,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"host\":\"localhost\"} has less than 2 properties", "input" => ["host" => "localhost"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"host\":\"localhost\"} has less than 2 properties", "input" => ["host" => "localhost"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2969,9 +2970,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true} has more than 3 properties", "input" => ["host" => "localhost", "port" => 8080, "ssl" => true, "debug" => false]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true} has more than 3 properties", "input" => ["host" => "localhost", "port" => 8080, "ssl" => true, "debug" => false]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -2999,9 +3000,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "\"billing_address\" is a required property", "input" => ["name" => "John Doe", "credit_card" => "1234567812345678"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body"], "msg" => "\"billing_address\" is a required property", "input" => ["name" => "John Doe", "credit_card" => "1234567812345678"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3157,9 +3158,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "too_short", "loc" => ["body", "tags"], "msg" => "List should have at least 1 item after validation", "input" => [], "ctx" => ["min_length" => 1]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "too_short", "loc" => ["body", "tags"], "msg" => "List should have at least 1 item after validation", "input" => [], "ctx" => ["min_length" => 1]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3173,9 +3174,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "enum", "loc" => ["body", "category"], "msg" => "Input should be 'electronics', 'clothing' or 'books'", "input" => "furniture", "ctx" => ["expected" => "'electronics', 'clothing' or 'books'"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "enum", "loc" => ["body", "category"], "msg" => "Input should be 'electronics', 'clothing' or 'books'", "input" => "furniture", "ctx" => ["expected" => "'electronics', 'clothing' or 'books'"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3221,9 +3222,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "float_parsing", "loc" => ["body", "price"], "msg" => "Input should be a valid number, unable to parse string as a number", "input" => "not a number"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "float_parsing", "loc" => ["body", "price"], "msg" => "Input should be a valid number, unable to parse string as a number", "input" => "not a number"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3269,9 +3270,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "greater_than_equal", "loc" => ["body", "price"], "msg" => "Input should be greater than or equal to 1", "input" => 0.5, "ctx" => ["ge" => 1]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "greater_than_equal", "loc" => ["body", "price"], "msg" => "Input should be greater than or equal to 1", "input" => 0.5, "ctx" => ["ge" => 1]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3333,9 +3334,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "name"], "msg" => "Field required", "input" => ["description" => "A very nice Item", "price" => 35.4]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "name"], "msg" => "Field required", "input" => ["description" => "A very nice Item", "price" => 35.4]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3365,9 +3366,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["body", "name"], "msg" => "String should have at most 50 characters", "input" => "This is a very long name that exceeds the maximum length", "ctx" => ["max_length" => 50]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["body", "name"], "msg" => "String should have at most 50 characters", "input" => "This is a very long name that exceeds the maximum length", "ctx" => ["max_length" => 50]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3381,9 +3382,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3397,9 +3398,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "sku"], "msg" => "String should match pattern '^[A-Z]{3}[0-9]{4}\$'", "input" => "ABC-123", "ctx" => ["pattern" => "^[A-Z]{3}[0-9]{4}\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "sku"], "msg" => "String should match pattern '^[A-Z]{3}[0-9]{4}\$'", "input" => "ABC-123", "ctx" => ["pattern" => "^[A-Z]{3}[0-9]{4}\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3429,9 +3430,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "uuid_parsing", "loc" => ["body", "item_id"], "msg" => "Input should be a valid UUID", "input" => "not-a-valid-uuid"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "uuid_parsing", "loc" => ["body", "item_id"], "msg" => "Input should be a valid UUID", "input" => "not-a-valid-uuid"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3471,7 +3472,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_lifecycle_hooks_multiple_hooks_all_phases_2();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ["Content-Type" => "application/json", "Authorization" => "Bearer valid-token-12345"], 'body' => ["user_id" => "user-123", "action" => "update_profile"]]);
+        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ["Authorization" => "Bearer valid-token-12345", "Content-Type" => "application/json"], 'body' => ["user_id" => "user-123", "action" => "update_profile"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -3681,9 +3682,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["files", "image"], "msg" => "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png", "ctx" => ["declared_mime" => "image/jpeg", "detected_type" => "image/png", "magic_bytes" => "89504e470d0a1a0a"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["files", "image"], "msg" => "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png", "ctx" => ["declared_mime" => "image/jpeg", "detected_type" => "image/png", "magic_bytes" => "89504e470d0a1a0a"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3697,9 +3698,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["files", "image"], "msg" => "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg", "ctx" => ["declared_mime" => "image/png", "detected_type" => "image/jpeg", "magic_bytes" => "ffd8ffe0"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["files", "image"], "msg" => "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg", "ctx" => ["declared_mime" => "image/png", "detected_type" => "image/jpeg", "magic_bytes" => "ffd8ffe0"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3727,9 +3728,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["files", "file"], "msg" => "File buffer is empty", "ctx" => ["buffer_size" => 0]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["files", "file"], "msg" => "File buffer is empty", "ctx" => ["buffer_size" => 0]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -3863,7 +3864,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_multipart_mixed_files_and_form_data_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/', ['headers' => ["Content-Type" => "multipart/form-data"], 'files' => [["field_name" => "file", "filename" => "upload.txt", "content" => "file data here", "content_type" => "text/plain", "content_encoding" => "text"]], 'data' => ["username" => "testuser", "active" => "true", "age" => "25"]]);
+        $response = $client->request('POST', '/', ['headers' => ["Content-Type" => "multipart/form-data"], 'files' => [["field_name" => "file", "filename" => "upload.txt", "content" => "file data here", "content_type" => "text/plain", "content_encoding" => "text"]], 'data' => ["age" => "25", "username" => "testuser", "active" => "true"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -3965,9 +3966,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "file"], "msg" => "Field required", "input" => []]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "file"], "msg" => "Field required", "input" => []]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4045,9 +4046,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["path", "date"], "msg" => "Invalid date format", "ctx" => ["format" => "date", "value" => "2025-13-45"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["path", "date"], "msg" => "Invalid date format", "ctx" => ["format" => "date", "value" => "2025-13-45"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4125,9 +4126,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["path", "username"], "msg" => "String length must be at least 3", "ctx" => ["min_length" => 3, "actual_length" => 2]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["path", "username"], "msg" => "String length must be at least 3", "ctx" => ["min_length" => 3, "actual_length" => 2]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4141,9 +4142,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["path", "username"], "msg" => "String length must not exceed 20", "ctx" => ["max_length" => 20, "actual_length" => 42]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["path", "username"], "msg" => "String length must not exceed 20", "ctx" => ["max_length" => 20, "actual_length" => 42]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4173,9 +4174,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["path", "owner"], "msg" => "String does not match pattern", "ctx" => ["pattern" => "^[a-zA-Z0-9-]+\$", "value" => "invalid@owner"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["path", "owner"], "msg" => "String does not match pattern", "ctx" => ["pattern" => "^[a-zA-Z0-9-]+\$", "value" => "invalid@owner"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4253,9 +4254,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "enum", "loc" => ["path", "model_name"], "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'", "input" => "foo", "ctx" => ["expected" => "'alexnet', 'resnet' or 'lenet'"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "enum", "loc" => ["path", "model_name"], "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'", "input" => "foo", "ctx" => ["expected" => "'alexnet', 'resnet' or 'lenet'"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4301,9 +4302,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["path", "item_id"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "foobar"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["path", "item_id"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "foobar"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4365,9 +4366,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "greater_than", "loc" => ["path", "item_id"], "msg" => "Input should be greater than 3", "input" => 2, "ctx" => ["gt" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "greater_than", "loc" => ["path", "item_id"], "msg" => "Input should be greater than 3", "input" => 2, "ctx" => ["gt" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4445,9 +4446,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "uuid_parsing", "loc" => ["path", "id"], "msg" => "Input should be a valid UUID", "input" => "not-a-uuid"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "uuid_parsing", "loc" => ["path", "id"], "msg" => "Input should be a valid UUID", "input" => "not-a-uuid"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4541,9 +4542,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["path", "item_id"], "msg" => "String should have at most 3 characters", "input" => "foobar", "ctx" => ["max_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["path", "item_id"], "msg" => "String should have at most 3 characters", "input" => "foobar", "ctx" => ["max_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4557,9 +4558,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["path", "item_id"], "msg" => "String should have at least 3 characters", "input" => "fo", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["path", "item_id"], "msg" => "String should have at least 3 characters", "input" => "fo", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4637,9 +4638,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "term"], "msg" => "String length must be at least 3", "ctx" => ["min_length" => 3, "actual_length" => 2]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "term"], "msg" => "String length must be at least 3", "ctx" => ["min_length" => 3, "actual_length" => 2]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4653,9 +4654,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "term"], "msg" => "String length must not exceed 10", "ctx" => ["max_length" => 10, "actual_length" => 21]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "term"], "msg" => "String length must not exceed 10", "ctx" => ["max_length" => 10, "actual_length" => 21]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4685,9 +4686,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "email"], "msg" => "String does not match pattern", "ctx" => ["pattern" => "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$", "value" => "invalid-email"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "email"], "msg" => "String does not match pattern", "ctx" => ["pattern" => "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$", "value" => "invalid-email"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4717,9 +4718,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "limit"], "msg" => "Value must be greater than 0", "ctx" => ["exclusive_minimum" => 0, "value" => 0]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "limit"], "msg" => "Value must be greater than 0", "ctx" => ["exclusive_minimum" => 0, "value" => 0]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4765,9 +4766,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "limit"], "msg" => "Value must not exceed 100", "ctx" => ["maximum" => 100, "value" => 101]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "limit"], "msg" => "Value must not exceed 100", "ctx" => ["maximum" => 100, "value" => 101]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4797,9 +4798,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "ids"], "msg" => "Array must contain at least 2 items", "ctx" => ["min_items" => 2, "actual_items" => 1]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "ids"], "msg" => "Array must contain at least 2 items", "ctx" => ["min_items" => 2, "actual_items" => 1]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4813,9 +4814,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "tags"], "msg" => "Array must not contain more than 5 items", "ctx" => ["max_items" => 5, "actual_items" => 6]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "tags"], "msg" => "Array must not contain more than 5 items", "ctx" => ["max_items" => 5, "actual_items" => 6]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4861,9 +4862,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "email"], "msg" => "Invalid email format", "ctx" => ["format" => "email", "value" => "not-an-email"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "email"], "msg" => "Invalid email format", "ctx" => ["format" => "email", "value" => "not-an-email"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4893,9 +4894,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "ip"], "msg" => "Invalid IPv4 address format", "ctx" => ["format" => "ipv4", "value" => "999.999.999.999"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "ip"], "msg" => "Invalid IPv4 address format", "ctx" => ["format" => "ipv4", "value" => "999.999.999.999"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4941,9 +4942,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "url"], "msg" => "Invalid URI format", "ctx" => ["format" => "uri", "value" => "not a uri"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "url"], "msg" => "Invalid URI format", "ctx" => ["format" => "uri", "value" => "not a uri"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -4989,9 +4990,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "quantity"], "msg" => "Value must be a multiple of 5", "ctx" => ["multiple_of" => 5, "value" => 17]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "quantity"], "msg" => "Value must be a multiple of 5", "ctx" => ["multiple_of" => 5, "value" => 17]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5021,9 +5022,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "ids"], "msg" => "Array items must be unique", "ctx" => ["unique_items" => true, "duplicate_value" => 2, "duplicate_index" => 2]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["query", "ids"], "msg" => "Array items must be unique", "ctx" => ["unique_items" => true, "duplicate_value" => 2, "duplicate_index" => 2]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5181,9 +5182,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "enum", "loc" => ["query", "model"], "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'", "input" => "vgg16", "ctx" => ["expected" => "'alexnet', 'resnet' or 'lenet'"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "enum", "loc" => ["query", "model"], "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'", "input" => "vgg16", "ctx" => ["expected" => "'alexnet', 'resnet' or 'lenet'"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5353,9 +5354,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["query", "device_ids"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["query", "device_ids"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5507,9 +5508,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["query", "query"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => 42.5]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["query", "query"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => 42.5]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5523,9 +5524,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["query", "query"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "baz"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["query", "query"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "baz"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5539,9 +5540,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["query", "query"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["query", "query"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5569,9 +5570,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["query", "query"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["query", "query"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5599,9 +5600,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["query", "name"], "msg" => "String should have at most 10 characters", "input" => "this_is_way_too_long", "ctx" => ["max_length" => 10]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["query", "name"], "msg" => "String should have at most 10 characters", "input" => "this_is_way_too_long", "ctx" => ["max_length" => 10]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5615,9 +5616,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["query", "name"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["query", "name"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5631,9 +5632,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["query", "code"], "msg" => "String should match pattern '^[0-9]{3,}\$'", "input" => "abc123", "ctx" => ["pattern" => "^[0-9]{3,}\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["query", "code"], "msg" => "String should match pattern '^[0-9]{3,}\$'", "input" => "abc123", "ctx" => ["pattern" => "^[0-9]{3,}\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5647,9 +5648,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["query", "item_query"], "msg" => "String should match pattern '^fixedquery\$'", "input" => "nonregexquery", "ctx" => ["pattern" => "^fixedquery\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["query", "item_query"], "msg" => "String should match pattern '^fixedquery\$'", "input" => "nonregexquery", "ctx" => ["pattern" => "^fixedquery\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -5679,9 +5680,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "uuid_parsing", "loc" => ["query", "item_id"], "msg" => "Input should be a valid UUID", "input" => "not-a-uuid"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "uuid_parsing", "loc" => ["query", "item_id"], "msg" => "Input should be a valid UUID", "input" => "not-a-uuid"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6139,9 +6140,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "name"], "msg" => "Field required", "input" => ["price" => "not a number"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "name"], "msg" => "Field required", "input" => ["price" => "not a number"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6293,9 +6294,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "username"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "username"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6309,9 +6310,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "account_id"], "msg" => "String should match pattern '^ACC-[0-9]{6}\$'", "input" => "INVALID123", "ctx" => ["pattern" => "^ACC-[0-9]{6}\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "account_id"], "msg" => "String should match pattern '^ACC-[0-9]{6}\$'", "input" => "INVALID123", "ctx" => ["pattern" => "^ACC-[0-9]{6}\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6325,9 +6326,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "greater_than_equal", "loc" => ["body", "quantity"], "msg" => "Input should be greater than or equal to 1", "input" => 0, "ctx" => ["ge" => 1]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "greater_than_equal", "loc" => ["body", "quantity"], "msg" => "Input should be greater than or equal to 1", "input" => 0, "ctx" => ["ge" => 1]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6341,9 +6342,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "too_short", "loc" => ["body", "tags"], "msg" => "List should have at least 2 item after validation", "input" => ["single"], "ctx" => ["min_length" => 2]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "too_short", "loc" => ["body", "tags"], "msg" => "List should have at least 2 item after validation", "input" => ["single"], "ctx" => ["min_length" => 2]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6357,9 +6358,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "email"], "msg" => "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$'", "input" => "not-an-email", "ctx" => ["pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "email"], "msg" => "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$'", "input" => "not-an-email", "ctx" => ["pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6373,9 +6374,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["body", "price"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "not-a-number"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["body", "price"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "not-a-number"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6389,9 +6390,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body", "unknown_field"], "msg" => "Additional properties are not allowed", "input" => ["theme" => "dark", "unknown_field" => "value"], "ctx" => ["additional_properties" => false, "unexpected_field" => "unknown_field"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "validation_error", "loc" => ["body", "unknown_field"], "msg" => "Additional properties are not allowed", "input" => ["theme" => "dark", "unknown_field" => "value"], "ctx" => ["additional_properties" => false, "unexpected_field" => "unknown_field"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6399,7 +6400,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_boolean_field_conversion_11();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/form/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["subscribe" => "true", "username" => "johndoe"]]);
+        $response = $client->request('POST', '/form/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["username" => "johndoe", "subscribe" => "true"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6415,7 +6416,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_empty_string_value_12();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/form/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["description" => "", "username" => "johndoe"]]);
+        $response = $client->request('POST', '/form/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["username" => "johndoe", "description" => ""]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6463,7 +6464,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_oauth2_password_grant_flow_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/token', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["scope" => "", "grant_type" => "password", "password" => "secret", "username" => "johndoe"]]);
+        $response = $client->request('POST', '/token', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["scope" => "", "password" => "secret", "username" => "johndoe", "grant_type" => "password"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6479,7 +6480,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_optional_field_missing_success_16();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/register/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["password" => "secret", "username" => "johndoe"]]);
+        $response = $client->request('POST', '/register/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["username" => "johndoe", "password" => "secret"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6501,9 +6502,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "username"], "msg" => "String should match pattern '^[a-z0-9_]+\$'", "input" => "john doe", "ctx" => ["pattern" => "^[a-z0-9_]+\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "username"], "msg" => "String should match pattern '^[a-z0-9_]+\$'", "input" => "john doe", "ctx" => ["pattern" => "^[a-z0-9_]+\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6517,9 +6518,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "username"], "msg" => "Field required", "input" => ["password" => "secret"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "username"], "msg" => "Field required", "input" => ["password" => "secret"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6527,7 +6528,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_simple_form_submission_success_19();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/login/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["password" => "secret", "username" => "johndoe"]]);
+        $response = $client->request('POST', '/login/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["username" => "johndoe", "password" => "secret"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6543,7 +6544,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_special_characters_encoding_20();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/form/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["name" => "John Doe", "description" => "Test & Development"]]);
+        $response = $client->request('POST', '/form/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["description" => "Test & Development", "name" => "John Doe"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6565,9 +6566,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["body", "username"], "msg" => "String should have at most 20 characters", "input" => "this_is_a_very_long_username_that_exceeds_limit", "ctx" => ["max_length" => 20]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["body", "username"], "msg" => "String should have at most 20 characters", "input" => "this_is_a_very_long_username_that_exceeds_limit", "ctx" => ["max_length" => 20]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6581,9 +6582,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "username"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "username"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6597,9 +6598,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "3 validation errors in request", "errors" => [["type" => "greater_than_equal", "loc" => ["body", "age"], "msg" => "Input should be greater than or equal to 18", "input" => 15, "ctx" => ["ge" => 18]], ["type" => "string_pattern_mismatch", "loc" => ["body", "email"], "msg" => "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$'", "input" => "invalid-email", "ctx" => ["pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$"]], ["type" => "string_too_short", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "3 validation errors in request", "errors" => [["type" => "greater_than_equal", "loc" => ["body", "age"], "msg" => "Input should be greater than or equal to 18", "input" => 15, "ctx" => ["ge" => 18]], ["type" => "string_pattern_mismatch", "loc" => ["body", "email"], "msg" => "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$'", "input" => "invalid-email", "ctx" => ["pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$"]], ["type" => "string_too_short", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6613,9 +6614,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "profile", "contact", "email"], "msg" => "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$'", "input" => "invalid", "ctx" => ["pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["body", "profile", "contact", "email"], "msg" => "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$'", "input" => "invalid", "ctx" => ["pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6629,9 +6630,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "type_error", "loc" => ["body", "tags", "2"], "msg" => "Input should be a valid unknown", "input" => 123]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "type_error", "loc" => ["body", "tags", "2"], "msg" => "Input should be a valid unknown", "input" => 123]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6645,9 +6646,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "too_long", "loc" => ["body", "tags"], "msg" => "List should have at most 10 items after validation", "input" => ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"], "ctx" => ["max_length" => 10]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "too_long", "loc" => ["body", "tags"], "msg" => "List should have at most 10 items after validation", "input" => ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"], "ctx" => ["max_length" => 10]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6661,9 +6662,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "too_short", "loc" => ["body", "tags"], "msg" => "List should have at least 1 item after validation", "input" => [], "ctx" => ["min_length" => 1]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "too_short", "loc" => ["body", "tags"], "msg" => "List should have at least 1 item after validation", "input" => [], "ctx" => ["min_length" => 1]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6677,9 +6678,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "float_parsing", "loc" => ["body", "price"], "msg" => "Input should be a valid number, unable to parse string as a number", "input" => "not_a_float"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "float_parsing", "loc" => ["body", "price"], "msg" => "Input should be a valid number, unable to parse string as a number", "input" => "not_a_float"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6693,9 +6694,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["headers", "x-token"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["headers", "x-token"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6709,9 +6710,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "uuid_parsing", "loc" => ["path", "item_id"], "msg" => "Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `n` at 0", "input" => "not-a-uuid"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "uuid_parsing", "loc" => ["path", "item_id"], "msg" => "Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `n` at 0", "input" => "not-a-uuid"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6725,9 +6726,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "bool_parsing", "loc" => ["query", "is_active"], "msg" => "Input should be a valid boolean, unable to interpret input", "input" => "maybe"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "bool_parsing", "loc" => ["query", "is_active"], "msg" => "Input should be a valid boolean, unable to interpret input", "input" => "maybe"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6741,9 +6742,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "datetime_parsing", "loc" => ["body", "created_at"], "msg" => "Input should be a valid datetime", "input" => "not-a-datetime"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "datetime_parsing", "loc" => ["body", "created_at"], "msg" => "Input should be a valid datetime", "input" => "not-a-datetime"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6757,9 +6758,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "enum", "loc" => ["path", "model_name"], "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'", "input" => "invalid_model", "ctx" => ["expected" => "'alexnet', 'resnet' or 'lenet'"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "enum", "loc" => ["path", "model_name"], "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'", "input" => "invalid_model", "ctx" => ["expected" => "'alexnet', 'resnet' or 'lenet'"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6789,9 +6790,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "price"], "msg" => "Field required", "input" => ["name" => "Item"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["body", "price"], "msg" => "Field required", "input" => ["name" => "Item"]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6805,9 +6806,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["query", "q"], "msg" => "Field required", "input" => null]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "missing", "loc" => ["query", "q"], "msg" => "Field required", "input" => null]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6821,9 +6822,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "3 validation errors in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "input" => "X", "ctx" => ["min_length" => 3]], ["type" => "greater_than", "loc" => ["body", "price"], "msg" => "Input should be greater than 0", "input" => -10, "ctx" => ["gt" => 0]], ["type" => "int_parsing", "loc" => ["body", "quantity"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "not_a_number"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "3 validation errors in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "input" => "X", "ctx" => ["min_length" => 3]], ["type" => "greater_than", "loc" => ["body", "price"], "msg" => "Input should be greater than 0", "input" => -10, "ctx" => ["gt" => 0]], ["type" => "int_parsing", "loc" => ["body", "quantity"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "not_a_number"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6837,9 +6838,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "3 validation errors in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "seller", "address", "city"], "msg" => "String should have at least 3 characters", "input" => "SF", "ctx" => ["min_length" => 3]], ["type" => "string_too_short", "loc" => ["body", "seller", "address", "zip_code"], "msg" => "String should have at least 5 characters", "input" => "123", "ctx" => ["min_length" => 5]], ["type" => "string_too_short", "loc" => ["body", "seller", "name"], "msg" => "String should have at least 3 characters", "input" => "Jo", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "3 validation errors in request", "errors" => [["type" => "string_too_short", "loc" => ["body", "seller", "address", "city"], "msg" => "String should have at least 3 characters", "input" => "SF", "ctx" => ["min_length" => 3]], ["type" => "string_too_short", "loc" => ["body", "seller", "address", "zip_code"], "msg" => "String should have at least 5 characters", "input" => "123", "ctx" => ["min_length" => 5]], ["type" => "string_too_short", "loc" => ["body", "seller", "name"], "msg" => "String should have at least 3 characters", "input" => "Jo", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6853,9 +6854,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "greater_than", "loc" => ["query", "price"], "msg" => "Input should be greater than 0", "input" => "0", "ctx" => ["gt" => 0]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "greater_than", "loc" => ["query", "price"], "msg" => "Input should be greater than 0", "input" => "0", "ctx" => ["gt" => 0]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6869,9 +6870,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "less_than_equal", "loc" => ["query", "limit"], "msg" => "Input should be less than or equal to 100", "input" => "101", "ctx" => ["le" => 100]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "less_than_equal", "loc" => ["query", "limit"], "msg" => "Input should be less than or equal to 100", "input" => "101", "ctx" => ["le" => 100]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6885,9 +6886,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["query", "skip"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "not_a_number"]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "int_parsing", "loc" => ["query", "skip"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "input" => "not_a_number"]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6901,9 +6902,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["query", "q"], "msg" => "String should have at most 50 characters", "input" => "this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter", "ctx" => ["max_length" => 50]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_long", "loc" => ["query", "q"], "msg" => "String should have at most 50 characters", "input" => "this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter", "ctx" => ["max_length" => 50]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6917,9 +6918,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["query", "q"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_too_short", "loc" => ["query", "q"], "msg" => "String should have at least 3 characters", "input" => "ab", "ctx" => ["min_length" => 3]]]]);
         $this->assertEquals($expected, $body);
     }
 
@@ -6933,9 +6934,9 @@ final class GeneratedTest extends TestCase
         $statusCode = $response->statusCode;
         $this->assertSame(422, $statusCode);
 
-        $body = $response->body;
+        $body = normalize_validation_errors($response->body);
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["query", "q"], "msg" => "String should match pattern '^[a-zA-Z0-9_-]+\$'", "input" => "invalid!", "ctx" => ["pattern" => "^[a-zA-Z0-9_-]+\$"]]]];
+        $expected = normalize_validation_errors(["type" => "https://spikard.dev/errors/validation-error", "title" => "Request Validation Failed", "status" => 422, "detail" => "1 validation error in request", "errors" => [["type" => "string_pattern_mismatch", "loc" => ["query", "q"], "msg" => "String should match pattern '^[a-zA-Z0-9_-]+\$'", "input" => "invalid!", "ctx" => ["pattern" => "^[a-zA-Z0-9_-]+\$"]]]]);
         $this->assertEquals($expected, $body);
     }
 

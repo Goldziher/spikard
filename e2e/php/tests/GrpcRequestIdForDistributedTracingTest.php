@@ -10,7 +10,7 @@ final class GrpcRequestIdForDistributedTracingTest extends TestCase
         // Tests request ID header propagation for distributed tracing. Validates X-Request-ID generation and propagation.
 
         // Build gRPC request from fixture
-        $metadata = ["x-request-id" => "req-12345-67890", "content-type" => "application/grpc"];
+        $metadata = ["content-type" => "application/grpc", "x-request-id" => "req-12345-67890"];
         $requestPayload = json_encode(["operation" => "trace_test"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

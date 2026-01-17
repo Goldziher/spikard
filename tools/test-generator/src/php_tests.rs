@@ -90,7 +90,7 @@ fn build_test_file(
 ) -> String {
     let mut code = String::new();
     code.push_str(
-        "<?php\ndeclare(strict_types=1);\n\nuse PHPUnit\\Framework\\TestCase;\nuse Spikard\\Testing\\TestClient;\nuse E2E\\Php\\AppFactory;\n\n/**\n * Generated from testing_data fixtures.\n * @phpstan-type ResponseBody array<string, mixed>|string|int|float|bool|null\n */\nfinal class GeneratedTest extends TestCase\n{\n",
+        "<?php\ndeclare(strict_types=1);\n\nuse PHPUnit\\Framework\\TestCase;\nuse Spikard\\Testing\\TestClient;\nuse E2E\\Php\\AppFactory;\nuse function Spikard\\Tests\\normalize_validation_errors;\n\n/**\n * Generated from testing_data fixtures.\n * @phpstan-type ResponseBody array<string, mixed>|string|int|float|bool|null\n */\nfinal class GeneratedTest extends TestCase\n{\n",
     );
 
     for (category, fixtures) in fixtures_by_category {
@@ -220,12 +220,27 @@ fn build_fixture_test(category: &str, index: usize, fixture: &Fixture) -> String
         .as_ref()
         .map(|v| matches!(v, serde_json::Value::Array(_) | serde_json::Value::Object(_)))
         .unwrap_or(false);
+    let has_error_array = fixture
+        .expected_response
+        .body
+        .as_ref()
+        .and_then(|v| v.as_object())
+        .and_then(|map| map.get("errors"))
+        .map(|errors| matches!(errors, serde_json::Value::Array(_)))
+        .unwrap_or(false);
 
     let body_assertion = if is_array_value {
-        format!(
-            "        $body = $response->body;\n        /** @var array<string, mixed>|string|int|float|bool|null $expected */\n        $expected = {};\n        $this->assertEquals($expected, $body);",
-            expected_body
-        )
+        if has_error_array {
+            format!(
+                "        $body = normalize_validation_errors($response->body);\n        /** @var array<string, mixed>|string|int|float|bool|null $expected */\n        $expected = normalize_validation_errors({});\n        $this->assertEquals($expected, $body);",
+                expected_body
+            )
+        } else {
+            format!(
+                "        $body = $response->body;\n        /** @var array<string, mixed>|string|int|float|bool|null $expected */\n        $expected = {};\n        $this->assertEquals($expected, $body);",
+                expected_body
+            )
+        }
     } else {
         format!("        $body = $response->body;\n        $this->assertEquals({}, $body);", expected_body)
     };
@@ -581,14 +596,66 @@ function run_without_extension(string $code): array
     $command = \sprintf(
         '%s -n -d detect_unicode=0 -r %s',
         \escapeshellarg(PHP_BINARY),
-        \escapeshellarg(\"require '{$autoloadPath}';\" . $code)
+        \escapeshellarg("require '{$autoloadPath}';" . $code)
     );
 
     $output = [];
     $exitCode = 0;
     \exec($command . ' 2>&1', $output, $exitCode);
 
-    return [$exitCode, \implode(\"\\n\", $output)];
+    return [$exitCode, \implode("\n", $output)];
+}
+
+/**
+ * Normalize validation error ordering for stable comparisons.
+ *
+ * @param array<string, mixed>|string|int|float|bool|null $payload
+ * @return array<string, mixed>|string|int|float|bool|null
+ */
+function normalize_validation_errors(mixed $payload): mixed
+{
+    if (!\is_array($payload)) {
+        return $payload;
+    }
+
+    if (!\array_key_exists('errors', $payload) || !\is_array($payload['errors'])) {
+        return $payload;
+    }
+
+    /** @var array<int, mixed> $errors */
+    $errors = $payload['errors'];
+    \usort($errors, static function (mixed $left, mixed $right): int {
+        return error_sort_key($left) <=> error_sort_key($right);
+    });
+    $payload['errors'] = $errors;
+
+    return $payload;
+}
+
+/**
+ * @param array<string, mixed>|string|int|float|bool|null $error
+ */
+function error_sort_key(mixed $error): string
+{
+    if (!\is_array($error)) {
+        return '';
+    }
+
+    $loc = $error['loc'] ?? [];
+    if (\is_array($loc)) {
+        $locParts = [];
+        foreach ($loc as $part) {
+            $locParts[] = (string) $part;
+        }
+        $loc = \implode('.', $locParts);
+    } else {
+        $loc = (string) $loc;
+    }
+
+    $type = \is_string($error['type'] ?? null) ? $error['type'] : '';
+    $msg = \is_string($error['msg'] ?? null) ? $error['msg'] : '';
+
+    return $loc . '|' . $type . '|' . $msg;
 }
 "#;
     Ok(helpers.to_string())

@@ -68,3 +68,55 @@ function run_without_extension(string $code): array
 
     return [$exitCode, \implode("\n", $output)];
 }
+
+/**
+ * Normalize validation error ordering for stable comparisons.
+ *
+ * @param array<string, mixed>|string|int|float|bool|null $payload
+ * @return array<string, mixed>|string|int|float|bool|null
+ */
+function normalize_validation_errors(mixed $payload): mixed
+{
+    if (!\is_array($payload)) {
+        return $payload;
+    }
+
+    if (!\array_key_exists('errors', $payload) || !\is_array($payload['errors'])) {
+        return $payload;
+    }
+
+    /** @var array<int, mixed> $errors */
+    $errors = $payload['errors'];
+    \usort($errors, static function (mixed $left, mixed $right): int {
+        return error_sort_key($left) <=> error_sort_key($right);
+    });
+    $payload['errors'] = $errors;
+
+    return $payload;
+}
+
+/**
+ * @param array<string, mixed>|string|int|float|bool|null $error
+ */
+function error_sort_key(mixed $error): string
+{
+    if (!\is_array($error)) {
+        return '';
+    }
+
+    $loc = $error['loc'] ?? [];
+    if (\is_array($loc)) {
+        $locParts = [];
+        foreach ($loc as $part) {
+            $locParts[] = (string) $part;
+        }
+        $loc = \implode('.', $locParts);
+    } else {
+        $loc = (string) $loc;
+    }
+
+    $type = \is_string($error['type'] ?? null) ? $error['type'] : '';
+    $msg = \is_string($error['msg'] ?? null) ? $error['msg'] : '';
+
+    return $loc . '|' . $type . '|' . $msg;
+}

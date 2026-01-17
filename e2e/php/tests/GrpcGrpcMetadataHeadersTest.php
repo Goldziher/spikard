@@ -10,7 +10,7 @@ final class GrpcGrpcMetadataHeadersTest extends TestCase
         // Tests gRPC metadata handling for request/response headers including authorization, tracing IDs, and custom headers.
 
         // Build gRPC request from fixture
-        $metadata = ["x-trace-id" => "trace-abc123def456", "x-custom-header" => "custom-value", "content-type" => "application/grpc", "authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"];
+        $metadata = ["x-trace-id" => "trace-abc123def456", "content-type" => "application/grpc", "x-custom-header" => "custom-value", "authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"];
         $requestPayload = json_encode(["request_id" => "req-987654321"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

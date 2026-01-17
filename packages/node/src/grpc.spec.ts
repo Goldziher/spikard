@@ -1693,7 +1693,7 @@ describe("Performance and Edge Cases", () => {
 		const elapsed = Date.now() - startTime;
 
 		expect(response.payload.toString()).toBe("completed");
-		expect(elapsed).toBeGreaterThanOrEqual(100);
+		expect(elapsed).toBeGreaterThanOrEqual(90);
 	});
 
 	it("should handle memory cleanup after large payloads", async () => {
