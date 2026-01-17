@@ -59,12 +59,12 @@ function run_without_extension(string $code): array
     $command = \sprintf(
         '%s -n -d detect_unicode=0 -r %s',
         \escapeshellarg(PHP_BINARY),
-        \escapeshellarg(\"require '{$autoloadPath}';\" . $code)
+        \escapeshellarg("require '{$autoloadPath}';" . $code)
     );
 
     $output = [];
     $exitCode = 0;
     \exec($command . ' 2>&1', $output, $exitCode);
 
-    return [$exitCode, \implode(\"\\n\", $output)];
+    return [$exitCode, \implode("\n", $output)];
 }
