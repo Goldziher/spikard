@@ -7,6 +7,10 @@ final class GrpcGrpcPermissionDeniedStatus7Test extends TestCase
 {
     public function testGrpcGrpcPermissionDeniedStatus7(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests PERMISSION_DENIED gRPC status code. Returned when the caller does not have sufficient permissions.
 
         // Build gRPC request from fixture

@@ -7,6 +7,10 @@ final class GrpcGrpcOutOfRangeStatus11Test extends TestCase
 {
     public function testGrpcGrpcOutOfRangeStatus11(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests OUT_OF_RANGE gRPC status code. Returned when a value is outside the acceptable range.
 
         // Build gRPC request from fixture

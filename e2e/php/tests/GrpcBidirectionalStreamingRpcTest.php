@@ -7,10 +7,14 @@ final class GrpcBidirectionalStreamingRpcTest extends TestCase
 {
     public function testGrpcBidirectionalStreamingRpc(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests bidirectional streaming where both client and server send multiple messages. Covers duplex communication patterns.
 
         // Build gRPC request from fixture
-        $metadata = ["content-type" => "application/grpc", "authorization" => "Bearer user-token"];
+        $metadata = ["authorization" => "Bearer user-token", "content-type" => "application/grpc"];
         $requestPayload = json_encode([]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

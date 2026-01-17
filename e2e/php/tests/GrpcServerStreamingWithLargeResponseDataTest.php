@@ -7,6 +7,10 @@ final class GrpcServerStreamingWithLargeResponseDataTest extends TestCase
 {
     public function testGrpcServerStreamingWithLargeResponseData(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests server streaming RPC that yields multiple large messages. Validates proper streaming protocol handling and backpressure management.
 
         // Build gRPC request from fixture

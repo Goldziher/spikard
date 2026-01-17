@@ -7,6 +7,10 @@ final class GrpcLargeBinaryDataInBytesFieldTest extends TestCase
 {
     public function testGrpcLargeBinaryDataInBytesField(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests handling of large binary data in protobuf bytes fields. Validates proper base64 encoding/decoding and preservation of binary integrity.
 
         // Build gRPC request from fixture

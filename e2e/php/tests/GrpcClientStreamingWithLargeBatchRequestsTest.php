@@ -7,6 +7,10 @@ final class GrpcClientStreamingWithLargeBatchRequestsTest extends TestCase
 {
     public function testGrpcClientStreamingWithLargeBatchRequests(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests client streaming RPC with large batch requests. Validates server accumulation of multiple large client messages.
 
         // Build gRPC request from fixture

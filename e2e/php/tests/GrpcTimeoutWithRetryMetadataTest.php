@@ -7,6 +7,10 @@ final class GrpcTimeoutWithRetryMetadataTest extends TestCase
 {
     public function testGrpcTimeoutWithRetryMetadata(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests DEADLINE_EXCEEDED status code with retry metadata in response trailers. Indicates whether client should retry.
 
         // Build gRPC request from fixture

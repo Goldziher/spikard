@@ -7,6 +7,10 @@ final class GrpcEmptyMessageRequestAndResponseTest extends TestCase
 {
     public function testGrpcEmptyMessageRequestAndResponse(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests handling of empty protobuf messages with no fields. Validates that the protocol correctly handles minimal payloads.
 
         // Build gRPC request from fixture

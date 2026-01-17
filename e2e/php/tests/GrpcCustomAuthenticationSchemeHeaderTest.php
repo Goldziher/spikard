@@ -7,6 +7,10 @@ final class GrpcCustomAuthenticationSchemeHeaderTest extends TestCase
 {
     public function testGrpcCustomAuthenticationSchemeHeader(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests custom authentication header scheme. Validates that custom auth headers are properly extracted and validated.
 
         // Build gRPC request from fixture

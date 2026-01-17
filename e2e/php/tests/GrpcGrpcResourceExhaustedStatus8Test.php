@@ -7,6 +7,10 @@ final class GrpcGrpcResourceExhaustedStatus8Test extends TestCase
 {
     public function testGrpcGrpcResourceExhaustedStatus8(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests RESOURCE_EXHAUSTED gRPC status code. Returned when the server has run out of resources (disk space, memory, connections, etc.).
 
         // Build gRPC request from fixture

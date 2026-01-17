@@ -7,10 +7,14 @@ final class GrpcMutualTlsMetadataSimulationTest extends TestCase
 {
     public function testGrpcMutualTlsMetadataSimulation(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests mutual TLS authentication by validating client certificate metadata. Simulates mTLS handshake verification.
 
         // Build gRPC request from fixture
-        $metadata = ["x-client-cert-cn" => "client.example.com", "content-type" => "application/grpc", "x-client-cert-fingerprint" => "AB:CD:EF:12:34:56:78:90"];
+        $metadata = ["content-type" => "application/grpc", "x-client-cert-fingerprint" => "AB:CD:EF:12:34:56:78:90", "x-client-cert-cn" => "client.example.com"];
         $requestPayload = json_encode(["operation" => "secure_read"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

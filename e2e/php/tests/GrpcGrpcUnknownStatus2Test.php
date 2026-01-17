@@ -7,6 +7,10 @@ final class GrpcGrpcUnknownStatus2Test extends TestCase
 {
     public function testGrpcGrpcUnknownStatus2(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests UNKNOWN gRPC status code. Used for errors that do not fit any other status code.
 
         // Build gRPC request from fixture

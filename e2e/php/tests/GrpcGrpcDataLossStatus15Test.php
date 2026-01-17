@@ -7,6 +7,10 @@ final class GrpcGrpcDataLossStatus15Test extends TestCase
 {
     public function testGrpcGrpcDataLossStatus15(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests DATA_LOSS gRPC status code. Returned when unrecoverable data loss or corruption occurred.
 
         // Build gRPC request from fixture

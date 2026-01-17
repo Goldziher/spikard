@@ -7,6 +7,10 @@ final class GrpcLarge10mbMessagePayloadTest extends TestCase
 {
     public function testGrpcLarge10mbMessagePayload(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests handling of 10MB protobuf messages. Validates high-capacity transfers, memory efficiency, and absence of stream fragmentation issues.
 
         // Build gRPC request from fixture

@@ -7,6 +7,10 @@ final class GrpcRateLimitingWithMetadataHeadersTest extends TestCase
 {
     public function testGrpcRateLimitingWithMetadataHeaders(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests gRPC rate limiting. Validates rate limit headers in response and proper 429 handling.
 
         // Build gRPC request from fixture

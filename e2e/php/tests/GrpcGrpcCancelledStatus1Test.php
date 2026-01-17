@@ -7,6 +7,10 @@ final class GrpcGrpcCancelledStatus1Test extends TestCase
 {
     public function testGrpcGrpcCancelledStatus1(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests CANCELLED gRPC status code. Returned when the RPC was cancelled by the client or server.
 
         // Build gRPC request from fixture

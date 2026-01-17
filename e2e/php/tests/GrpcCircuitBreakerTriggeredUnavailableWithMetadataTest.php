@@ -7,6 +7,10 @@ final class GrpcCircuitBreakerTriggeredUnavailableWithMetadataTest extends TestC
 {
     public function testGrpcCircuitBreakerTriggeredUnavailableWithMetadata(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests UNAVAILABLE status code with circuit breaker metadata. Indicates service degradation and when to retry.
 
         // Build gRPC request from fixture

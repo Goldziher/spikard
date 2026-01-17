@@ -7,6 +7,10 @@ final class GrpcDeeplyNestedLargeStructureTest extends TestCase
 {
     public function testGrpcDeeplyNestedLargeStructure(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests deeply nested protobuf messages with complex hierarchies. Validates that nested message serialization handles proper field numbering and recursive structures.
 
         // Build gRPC request from fixture

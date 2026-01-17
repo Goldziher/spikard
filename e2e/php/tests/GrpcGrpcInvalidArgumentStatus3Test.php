@@ -7,6 +7,10 @@ final class GrpcGrpcInvalidArgumentStatus3Test extends TestCase
 {
     public function testGrpcGrpcInvalidArgumentStatus3(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests INVALID_ARGUMENT gRPC status code. Indicates that the client provided an invalid or malformed argument.
 
         // Build gRPC request from fixture

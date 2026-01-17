@@ -7,6 +7,10 @@ final class GrpcWellKnownWrapperTypesStringvalueInt32valueEtcTest extends TestCa
 {
     public function testGrpcWellKnownWrapperTypesStringvalueInt32valueEtc(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests usage of google.protobuf wrapper types (StringValue, Int32Value, BoolValue) for nullable scalar types. Validates proper null/present distinction.
 
         // Build gRPC request from fixture

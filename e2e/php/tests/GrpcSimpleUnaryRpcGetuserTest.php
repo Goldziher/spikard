@@ -7,10 +7,14 @@ final class GrpcSimpleUnaryRpcGetuserTest extends TestCase
 {
     public function testGrpcSimpleUnaryRpcGetuser(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests basic unary gRPC call with scalar types (int32, string). Covers fundamental request-response pattern.
 
         // Build gRPC request from fixture
-        $metadata = ["content-type" => "application/grpc", "authorization" => "Bearer test-token"];
+        $metadata = ["authorization" => "Bearer test-token", "content-type" => "application/grpc"];
         $requestPayload = json_encode(["user_id" => 123]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

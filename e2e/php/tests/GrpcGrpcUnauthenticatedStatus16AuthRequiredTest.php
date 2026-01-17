@@ -7,6 +7,10 @@ final class GrpcGrpcUnauthenticatedStatus16AuthRequiredTest extends TestCase
 {
     public function testGrpcGrpcUnauthenticatedStatus16AuthRequired(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests UNAUTHENTICATED gRPC status code. Returned when the request lacks valid authentication credentials.
 
         // Build gRPC request from fixture

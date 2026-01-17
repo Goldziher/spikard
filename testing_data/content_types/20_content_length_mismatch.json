@@ -41,7 +41,10 @@
 	"expected_response": {
 		"status_code": 400,
 		"body": {
-			"error": "Content-Length header does not match actual body size"
+			"type": "https://spikard.dev/errors/content-length-mismatch",
+			"title": "Content-Length header mismatch",
+			"status": 400,
+			"detail": "Content-Length header does not match actual body size"
 		}
 	},
 	"tags": ["content_types", "content_length", "validation", "error"]

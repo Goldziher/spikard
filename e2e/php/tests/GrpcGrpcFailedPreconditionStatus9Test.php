@@ -7,6 +7,10 @@ final class GrpcGrpcFailedPreconditionStatus9Test extends TestCase
 {
     public function testGrpcGrpcFailedPreconditionStatus9(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests FAILED_PRECONDITION gRPC status code. Returned when the RPC failed because the system is not in the required state.
 
         // Build gRPC request from fixture

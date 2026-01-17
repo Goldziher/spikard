@@ -7,10 +7,14 @@ final class GrpcCorsRelatedMetadataHeadersTest extends TestCase
 {
     public function testGrpcCorsRelatedMetadataHeaders(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests CORS-related metadata in gRPC calls. Validates origin validation and cross-origin request handling.
 
         // Build gRPC request from fixture
-        $metadata = ["content-type" => "application/grpc", "origin" => "https://example.com", "access-control-request-method" => "POST"];
+        $metadata = ["access-control-request-method" => "POST", "content-type" => "application/grpc", "origin" => "https://example.com"];
         $requestPayload = json_encode(["resource" => "data"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

@@ -7,6 +7,10 @@ final class GrpcOneofFieldHandlingTest extends TestCase
 {
     public function testGrpcOneofFieldHandling(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests oneof fields where only one field in the group can be set at a time. Validates proper mutual exclusivity and serialization.
 
         // Build gRPC request from fixture

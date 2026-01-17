@@ -7,6 +7,10 @@ final class GrpcGrpcDeadlineExceededStatus4Test extends TestCase
 {
     public function testGrpcGrpcDeadlineExceededStatus4(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests DEADLINE_EXCEEDED gRPC status code. Returned when the RPC does not complete within the specified time limit.
 
         // Build gRPC request from fixture

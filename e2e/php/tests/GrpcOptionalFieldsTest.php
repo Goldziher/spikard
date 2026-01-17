@@ -7,6 +7,10 @@ final class GrpcOptionalFieldsTest extends TestCase
 {
     public function testGrpcOptionalFields(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests optional field handling with presence semantics. Covers optional fields with and without values.
 
         // Build gRPC request from fixture

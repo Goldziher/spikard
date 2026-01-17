@@ -7,6 +7,10 @@ final class GrpcLarge1mbMessagePayloadTest extends TestCase
 {
     public function testGrpcLarge1mbMessagePayload(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests handling of 1MB protobuf messages. Verifies that large payloads are properly serialized, transmitted, and deserialized without truncation or corruption.
 
         // Build gRPC request from fixture

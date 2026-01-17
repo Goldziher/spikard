@@ -7,6 +7,10 @@ final class GrpcBidirectionalStreamingWithLargePayloadsTest extends TestCase
 {
     public function testGrpcBidirectionalStreamingWithLargePayloads(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests bidirectional streaming RPC with large messages in both directions. Validates concurrent read/write handling and proper message ordering.
 
         // Build gRPC request from fixture

@@ -7,6 +7,10 @@ final class GrpcProto3DefaultValueBehaviorTest extends TestCase
 {
     public function testGrpcProto3DefaultValueBehavior(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests how proto3 handles implicit default values. When fields are omitted from the request, response should reflect appropriate defaults.
 
         // Build gRPC request from fixture

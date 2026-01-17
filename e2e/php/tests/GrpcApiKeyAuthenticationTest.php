@@ -7,10 +7,14 @@ final class GrpcApiKeyAuthenticationTest extends TestCase
 {
     public function testGrpcApiKeyAuthentication(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests API key authentication via gRPC metadata. Validates that API keys are properly validated and associated with clients.
 
         // Build gRPC request from fixture
-        $metadata = ["x-api-key" => "sk_live_abc123def456", "content-type" => "application/grpc"];
+        $metadata = ["content-type" => "application/grpc", "x-api-key" => "sk_live_abc123def456"];
         $requestPayload = json_encode(["resource" => "users"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

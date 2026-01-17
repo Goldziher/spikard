@@ -7,6 +7,10 @@ final class GrpcSpecialCharactersUnicodeAndEmojiInStringsTest extends TestCase
 {
     public function testGrpcSpecialCharactersUnicodeAndEmojiInStrings(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests handling of unicode characters, emojis, and special characters in protobuf string fields. Validates proper UTF-8 encoding/decoding.
 
         // Build gRPC request from fixture

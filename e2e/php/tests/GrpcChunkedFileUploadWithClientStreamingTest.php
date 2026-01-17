@@ -7,6 +7,10 @@ final class GrpcChunkedFileUploadWithClientStreamingTest extends TestCase
 {
     public function testGrpcChunkedFileUploadWithClientStreaming(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests client streaming RPC for chunked file uploads. Validates that multiple message chunks are properly accumulated and processed by the server.
 
         // Build gRPC request from fixture

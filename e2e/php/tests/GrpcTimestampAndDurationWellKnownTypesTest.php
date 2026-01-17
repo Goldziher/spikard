@@ -7,6 +7,10 @@ final class GrpcTimestampAndDurationWellKnownTypesTest extends TestCase
 {
     public function testGrpcTimestampAndDurationWellKnownTypes(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests usage of google.protobuf.Timestamp and Duration types. Validates RFC 3339 timestamp serialization and duration calculations.
 
         // Build gRPC request from fixture

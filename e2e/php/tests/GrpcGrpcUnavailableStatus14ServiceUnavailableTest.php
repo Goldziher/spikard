@@ -7,6 +7,10 @@ final class GrpcGrpcUnavailableStatus14ServiceUnavailableTest extends TestCase
 {
     public function testGrpcGrpcUnavailableStatus14ServiceUnavailable(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests UNAVAILABLE gRPC status code. Returned when the service is temporarily unavailable.
 
         // Build gRPC request from fixture

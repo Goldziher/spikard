@@ -7,6 +7,10 @@ final class GrpcMapFieldHandlingMapStringMessageTest extends TestCase
 {
     public function testGrpcMapFieldHandlingMapStringMessage(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests protobuf map fields with string keys and message values. Validates proper key-value pair serialization and access patterns.
 
         // Build gRPC request from fixture

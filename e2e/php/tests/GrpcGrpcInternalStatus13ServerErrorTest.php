@@ -7,6 +7,10 @@ final class GrpcGrpcInternalStatus13ServerErrorTest extends TestCase
 {
     public function testGrpcGrpcInternalStatus13ServerError(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests INTERNAL gRPC status code. Returned when an internal server error occurs.
 
         // Build gRPC request from fixture

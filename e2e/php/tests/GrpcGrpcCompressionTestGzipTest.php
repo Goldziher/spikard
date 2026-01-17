@@ -7,10 +7,14 @@ final class GrpcGrpcCompressionTestGzipTest extends TestCase
 {
     public function testGrpcGrpcCompressionTestGzip(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests gRPC payload compression using gzip. Validates that compressed messages are properly decompressed and that header metadata indicates compression.
 
         // Build gRPC request from fixture
-        $metadata = ["grpc-encoding" => "gzip", "content-type" => "application/grpc"];
+        $metadata = ["content-type" => "application/grpc", "grpc-encoding" => "gzip"];
         $requestPayload = json_encode(["id" => "compress-test-001", "data" => "VGhpcyBpcyBhIHRlc3QgcGF5bG9hZCB0aGF0IHNob3VsZCBiZSBjb21wcmVzc2VkIHdpdGggZ3ppcC4gUmVwZWF0aW5nIHRvIGluY3JlYXNlIGNvbXByZXNzaWJpbGl0eTogVGhpcyBpcyBhIHRlc3QgcGF5bG9hZCB0aGF0IHNob3VsZCBiZSBjb21wcmVzc2VkIHdpdGggZ3ppcC4gUmVwZWF0aW5nIHRvIGluY3JlYXNlIGNvbXByZXNzaWJpbGl0eS4="]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

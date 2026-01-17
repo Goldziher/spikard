@@ -7,6 +7,10 @@ final class GrpcGoogleProtobufAnyTypeUsageTest extends TestCase
 {
     public function testGrpcGoogleProtobufAnyTypeUsage(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests usage of google.protobuf.Any for storing arbitrary message types. Validates type URL encoding and message packing.
 
         // Build gRPC request from fixture

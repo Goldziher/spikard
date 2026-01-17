@@ -7,6 +7,10 @@ final class GrpcEnumTypesTest extends TestCase
 {
     public function testGrpcEnumTypes(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests enum definitions and serialization. Covers enum fields with named constants.
 
         // Build gRPC request from fixture

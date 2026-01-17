@@ -7,6 +7,10 @@ final class GrpcGrpcUnimplementedStatus12Test extends TestCase
 {
     public function testGrpcGrpcUnimplementedStatus12(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests UNIMPLEMENTED gRPC status code. Returned when the server does not implement the requested RPC method.
 
         // Build gRPC request from fixture

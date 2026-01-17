@@ -7,6 +7,10 @@ final class GrpcLargeRepeatedFieldWith10000ItemsTest extends TestCase
 {
     public function testGrpcLargeRepeatedFieldWith10000Items(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests handling of repeated fields containing thousands of elements. Validates efficient serialization and deserialization of large arrays without memory bloat.
 
         // Build gRPC request from fixture

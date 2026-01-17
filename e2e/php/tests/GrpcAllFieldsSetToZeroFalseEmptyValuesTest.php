@@ -7,6 +7,10 @@ final class GrpcAllFieldsSetToZeroFalseEmptyValuesTest extends TestCase
 {
     public function testGrpcAllFieldsSetToZeroFalseEmptyValues(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests proto3 default value behavior when all fields are explicitly set to zero, false, empty string. Validates that zero values are transmitted correctly.
 
         // Build gRPC request from fixture

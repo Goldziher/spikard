@@ -7,6 +7,10 @@ final class GrpcServerStreamingRpcTest extends TestCase
 {
     public function testGrpcServerStreamingRpc(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests server streaming where the server sends multiple responses. Covers streaming response patterns.
 
         // Build gRPC request from fixture

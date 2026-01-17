@@ -680,6 +680,9 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
         to_pascal_case(&test_name)
     ));
     code.push_str("    {\n");
+    code.push_str("        if (!\\class_exists('\\\\Spikard\\\\Grpc\\\\GrpcRequest')) {\n");
+    code.push_str("            $this->markTestSkipped('gRPC support not available');\n");
+    code.push_str("        }\n\n");
 
     // Add description as comment if available
     if let Some(description) = &fixture.description {

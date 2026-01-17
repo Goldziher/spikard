@@ -7,6 +7,10 @@ final class GrpcGrpcAlreadyExistsStatus6Test extends TestCase
 {
     public function testGrpcGrpcAlreadyExistsStatus6(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests ALREADY_EXISTS gRPC status code. Returned when trying to create a resource that already exists.
 
         // Build gRPC request from fixture

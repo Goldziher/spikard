@@ -7,6 +7,10 @@ final class GrpcGrpcOkStatus0SuccessfulResponseTest extends TestCase
 {
     public function testGrpcGrpcOkStatus0SuccessfulResponse(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests successful gRPC response with OK status code. Validates basic request-response completion.
 
         // Build gRPC request from fixture

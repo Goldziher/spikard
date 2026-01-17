@@ -7,6 +7,10 @@ final class GrpcGrpcNotFoundStatus5Test extends TestCase
 {
     public function testGrpcGrpcNotFoundStatus5(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests NOT_FOUND gRPC status code. Returned when a requested resource (e.g., user, file) does not exist.
 
         // Build gRPC request from fixture

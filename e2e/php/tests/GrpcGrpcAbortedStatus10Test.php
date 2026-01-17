@@ -7,6 +7,10 @@ final class GrpcGrpcAbortedStatus10Test extends TestCase
 {
     public function testGrpcGrpcAbortedStatus10(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests ABORTED gRPC status code. Returned when an operation was aborted, typically due to a concurrency issue like conflict.
 
         // Build gRPC request from fixture

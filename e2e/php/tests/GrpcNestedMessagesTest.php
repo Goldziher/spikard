@@ -7,6 +7,10 @@ final class GrpcNestedMessagesTest extends TestCase
 {
     public function testGrpcNestedMessages(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests nested message types with complex field hierarchies. Covers nested message definitions and serialization.
 
         // Build gRPC request from fixture

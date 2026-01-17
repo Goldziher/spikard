@@ -36,7 +36,7 @@
 				{
 					"type": "validation_error",
 					"loc": ["body"],
-					"msg": "{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true} has more than 3 properties",
+					"msg": "{\"host\":\"localhost\",\"port\":8080,\"ssl\":true,\"debug\":false} has more than 3 properties",
 					"input": {
 						"host": "localhost",
 						"port": 8080,

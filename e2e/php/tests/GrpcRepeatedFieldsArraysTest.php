@@ -7,6 +7,10 @@ final class GrpcRepeatedFieldsArraysTest extends TestCase
 {
     public function testGrpcRepeatedFieldsArrays(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests arrays/repeated fields for primitive types and messages. Covers repeated field serialization and deserialization.
 
         // Build gRPC request from fixture

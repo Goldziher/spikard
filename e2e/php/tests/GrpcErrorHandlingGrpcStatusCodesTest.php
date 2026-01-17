@@ -7,6 +7,10 @@ final class GrpcErrorHandlingGrpcStatusCodesTest extends TestCase
 {
     public function testGrpcErrorHandlingGrpcStatusCodes(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests gRPC error status codes and error responses. Covers NOT_FOUND, INVALID_ARGUMENT, INTERNAL, and other gRPC status codes.
 
         // Build gRPC request from fixture

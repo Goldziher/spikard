@@ -7,6 +7,10 @@ final class GrpcValidationErrorInvalidArgumentWithDetailsTest extends TestCase
 {
     public function testGrpcValidationErrorInvalidArgumentWithDetails(): void
     {
+        if (!\class_exists('\\Spikard\\Grpc\\GrpcRequest')) {
+            $this->markTestSkipped('gRPC support not available');
+        }
+
         // Tests INVALID_ARGUMENT status code with detailed validation error information. Demonstrates how validation failures are communicated.
 
         // Build gRPC request from fixture
