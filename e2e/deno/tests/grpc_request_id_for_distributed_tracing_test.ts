@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: Request ID for distributed tracing"
   // Tests request ID header propagation for distributed tracing. Validates X-Request-ID generation and propagation.
 
   const metadata: Record<string, string> = {
-    "x-request-id": "req-12345-67890",
     "content-type": "application/grpc",
+    "x-request-id": "req-12345-67890",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.TracingService",

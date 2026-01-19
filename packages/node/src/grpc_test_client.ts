@@ -43,7 +43,8 @@ export class GrpcTestClient {
 	 * @param serverAddress - Server address in format "host:port"
 	 */
 	constructor(serverAddress: string = "localhost:50051") {
-		this.serverAddress = serverAddress;
+		const normalized = typeof serverAddress === "string" ? serverAddress.trim() : "";
+		this.serverAddress = normalized.length > 0 ? normalized : "localhost:50051";
 		this.initializeGrpc();
 	}
 
@@ -63,7 +64,9 @@ export class GrpcTestClient {
 			throw new Error("gRPC credentials factory unavailable in @grpc/grpc-js");
 		}
 
-		return new this.grpc.Client(this.serverAddress, credentials);
+		const address = typeof this.serverAddress === "string" ? this.serverAddress.trim() : "";
+		const target = address.length > 0 ? address : "localhost:50051";
+		return new this.grpc.Client(target, credentials);
 	}
 
 	/**

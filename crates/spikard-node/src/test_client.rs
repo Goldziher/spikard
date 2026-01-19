@@ -616,8 +616,13 @@ impl TestClient {
         );
         let handle = runtime.handle().clone();
         let _guard = handle.enter();
+        let transport = if websocket_paths.is_empty() {
+            Transport::MockHttp
+        } else {
+            Transport::HttpRandomPort
+        };
         let server = TestServer::builder()
-            .transport(Transport::HttpRandomPort)
+            .transport(transport)
             .build(axum_router)
             .map_err(|e| Error::from_reason(format!("Failed to create test server: {}", e)))?;
         drop(_guard);

@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: Simple unary RPC - GetUser", async 
   // Tests basic unary gRPC call with scalar types (int32, string). Covers fundamental request-response pattern.
 
   const metadata: Record<string, string> = {
-    "authorization": "Bearer test-token",
     "content-type": "application/grpc",
+    "authorization": "Bearer test-token",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.UserService",

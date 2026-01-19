@@ -192,7 +192,7 @@ import {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const form = { description: "Test & Development", name: "John Doe" };
+		const form = { name: "John Doe", description: "Test & Development" };
 		const response = await client.post("/form/", { headers, form });
 
 		assertEquals(response.statusCode, 200);
@@ -210,7 +210,7 @@ import {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const form = { username: "johndoe", subscribe: "true" };
+		const form = { subscribe: "true", username: "johndoe" };
 		const response = await client.post("/form/", { headers, form });
 
 		assertEquals(response.statusCode, 200);
@@ -228,7 +228,7 @@ import {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const form = { description: "", username: "johndoe" };
+		const form = { username: "johndoe", description: "" };
 		const response = await client.post("/form/", { headers, form });
 
 		assertEquals(response.statusCode, 200);
@@ -246,7 +246,7 @@ import {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const form = { password: "secret", grant_type: "password", username: "johndoe", scope: "" };
+		const form = { username: "johndoe", grant_type: "password", password: "secret", scope: "" };
 		const response = await client.post("/token", { headers, form });
 
 		assertEquals(response.statusCode, 200);

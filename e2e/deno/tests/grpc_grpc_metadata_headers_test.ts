@@ -12,9 +12,9 @@ Deno.test("grpc: should handle gRPC request: gRPC metadata headers", async () =>
 
   const metadata: Record<string, string> = {
     "x-custom-header": "custom-value",
-    "x-trace-id": "trace-abc123def456",
     "content-type": "application/grpc",
     "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+    "x-trace-id": "trace-abc123def456",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.MetadataService",

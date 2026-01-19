@@ -169,7 +169,7 @@ import {
 		const app = createAppMultipartMixedFilesAndFormData();
 		const client = new TestClient(app);
 
-		const multipart = { fields: { age: "25", username: "testuser", active: "true" }, files: [{ name: "file", filename: "upload.txt", content: "file data here", contentType: "text/plain" }] };
+		const multipart = { fields: { active: "true", username: "testuser", age: "25" }, files: [{ name: "file", filename: "upload.txt", content: "file data here", contentType: "text/plain" }] };
 		const response = await client.post("/", { multipart });
 
 		assertEquals(response.statusCode, 200);

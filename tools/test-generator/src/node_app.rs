@@ -466,13 +466,13 @@ fn generate_app_file_per_fixture(
     code.push_str("type HookResult = HookRequest | HookResponse;\n");
 
     if has_grpc {
-        code.push_str("\ntype GrpcRequest = {\n");
+        code.push_str("\nexport type GrpcRequest = {\n");
         code.push_str("\tserviceName: string;\n");
         code.push_str("\tmethodName: string;\n");
         code.push_str("\tpayload: Buffer;\n");
         code.push_str("\tmetadata?: Record<string, string>;\n");
         code.push_str("};\n");
-        code.push_str("type GrpcResponse = {\n");
+        code.push_str("export type GrpcResponse = {\n");
         code.push_str("\tpayload: Buffer;\n");
         code.push_str("\tmetadata?: Record<string, string>;\n");
         code.push_str("\tstatusCode: string;\n");

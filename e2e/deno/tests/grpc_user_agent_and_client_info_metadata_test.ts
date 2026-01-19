@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: User-Agent and client info metadata
   // Tests User-Agent header handling and client identification. Validates proper user-agent parsing and logging.
 
   const metadata: Record<string, string> = {
-    "user-agent": "grpc-client/1.2.3 (linux; amd64)",
     "content-type": "application/grpc",
+    "user-agent": "grpc-client/1.2.3 (linux; amd64)",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.ClientService",

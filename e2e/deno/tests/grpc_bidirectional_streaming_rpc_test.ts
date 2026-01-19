@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: Bidirectional streaming RPC", async
   // Tests bidirectional streaming where both client and server send multiple messages. Covers duplex communication patterns.
 
   const metadata: Record<string, string> = {
-    "authorization": "Bearer user-token",
     "content-type": "application/grpc",
+    "authorization": "Bearer user-token",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.ChatService",

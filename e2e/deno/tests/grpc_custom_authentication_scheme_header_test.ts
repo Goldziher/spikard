@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: Custom authentication scheme header
   // Tests custom authentication header scheme. Validates that custom auth headers are properly extracted and validated.
 
   const metadata: Record<string, string> = {
-    "x-custom-auth": "CustomScheme token_value_123",
     "content-type": "application/grpc",
+    "x-custom-auth": "CustomScheme token_value_123",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.CustomAuthService",

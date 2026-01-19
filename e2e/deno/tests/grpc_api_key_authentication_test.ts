@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: API key authentication", async () =
   // Tests API key authentication via gRPC metadata. Validates that API keys are properly validated and associated with clients.
 
   const metadata: Record<string, string> = {
-    "x-api-key": "sk_live_abc123def456",
     "content-type": "application/grpc",
+    "x-api-key": "sk_live_abc123def456",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.ApiService",

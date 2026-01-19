@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: gRPC compression test - gzip", asyn
   // Tests gRPC payload compression using gzip. Validates that compressed messages are properly decompressed and that header metadata indicates compression.
 
   const metadata: Record<string, string> = {
-    "content-type": "application/grpc",
     "grpc-encoding": "gzip",
+    "content-type": "application/grpc",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.CompressionService",

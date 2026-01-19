@@ -31,13 +31,13 @@ type HookResponse = {
 };
 type HookResult = HookRequest | HookResponse;
 
-type GrpcRequest = {
+export type GrpcRequest = {
 	serviceName: string;
 	methodName: string;
 	payload: Buffer;
 	metadata?: Record<string, string>;
 };
-type GrpcResponse = {
+export type GrpcResponse = {
 	payload: Buffer;
 	metadata?: Record<string, string>;
 	statusCode: string;
@@ -105,6 +105,18 @@ function sleep(ms: number, signal?: AbortSignalLike): Promise<void> {
 	});
 }
 
+const NotificationBatchMessageSchema = z.array(z.object({
+  message: z.string(),
+  timestamp: z.string(),
+  type: z.string(),
+}));
+
+type NotificationBatchMessage = {
+  message: string;
+  timestamp: string;
+  type: string;
+}[];
+
 const SystemAlertMessageSchema = z.object({
   level: z.union([z.literal("info"), z.literal("warning"), z.literal("error"), z.literal("critical")]),
   message: z.string(),
@@ -120,18 +132,6 @@ type SystemAlertMessage = {
   timestamp: string;
   type: string;
 };
-
-const NotificationBatchMessageSchema = z.array(z.object({
-  message: z.string(),
-  timestamp: z.string(),
-  type: z.string(),
-}));
-
-type NotificationBatchMessage = {
-  message: string;
-  timestamp: string;
-  type: string;
-}[];
 
 const StatusUpdateMessageSchema = z.object({
   message: z.string().optional(),
@@ -149,6 +149,18 @@ type StatusUpdateMessage = {
   status: string;
   timestamp: string;
   type: string;
+};
+
+const UserLeftMessageSchema = z.object({
+  timestamp: z.string(),
+  type: z.literal("userLeft"),
+  user: z.string(),
+});
+
+type UserLeftMessage = {
+  timestamp: string;
+  type: string;
+  user: string;
 };
 
 const ChatMessageMessageSchema = z.object({
@@ -195,18 +207,6 @@ type UserJoinedMessage = {
   user: string;
 };
 
-const UserLeftMessageSchema = z.object({
-  timestamp: z.string(),
-  type: z.literal("userLeft"),
-  user: z.string(),
-});
-
-type UserLeftMessage = {
-  timestamp: string;
-  type: string;
-  user: string;
-};
-
 const ChatAckMessageSchema = z.object({
   messageId: z.string(),
   status: z.union([z.literal("queued"), z.literal("delivered"), z.literal("rejected")]),
@@ -225,11007 +225,6 @@ const BACKGROUND_STATE: Record<string, unknown[]> = {};
 
 // Cleanup state tracking for DI fixtures
 const CLEANUP_STATE: Record<string, string[]> = {};
-
-/**
- * Handler for GET /api/override-test
- */
-async function diRouteLevelDependencyOverrideSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _api_key_validator = request.dependencies?.api_key_validator ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"mode":"test","strict":false};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiRouteLevelDependencyOverrideSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("apiKeyValidator", { mode: "test", strict: false });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/override-test",
-		handler_name: "di_route_level_dependency_override_success",
-		handler_dependencies: ["api_key_validator"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_route_level_dependency_override_success: diRouteLevelDependencyOverrideSuccess
-		};
-	return app;
-}
-
-
-function _diCircularDependencyDetectionErrorServiceA(serviceB): unknown {
-	// Factory for service_a
-	void serviceB;
-	return { _factory: "service_a", _random: Math.random() };
-}
-
-function _diCircularDependencyDetectionErrorServiceB(serviceA): unknown {
-	// Factory for service_b
-	void serviceA;
-	return { _factory: "service_b", _random: Math.random() };
-}
-
-/**
- * Handler for GET /api/circular
- */
-async function diCircularDependencyDetectionError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _service_a = request.dependencies?.service_a ?? null;
-	const response: HandlerResponse = { status: 500 };
-	const responseBody = {"type":"https://spikard.dev/errors/dependency-error","title":"Dependency Resolution Failed","status":500,"detail":"Circular dependency detected","errors":[{"type":"circular_dependency","msg":"Circular dependency detected in dependency graph","cycle":["service_a","service_b","service_a"]}]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiCircularDependencyDetectionError(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/circular",
-		handler_name: "di_circular_dependency_detection_error",
-		handler_dependencies: ["service_a"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			di_circular_dependency_detection_error: diCircularDependencyDetectionError
-		},
-	};
-}
-
-
-function _diFactoryDependencySuccessTimestampGenerator(): unknown {
-	// Factory for timestamp_generator
-	return { _factory: "timestamp_generator", _random: Math.random() };
-}
-
-/**
- * Handler for GET /api/timestamp
- */
-async function diFactoryDependencySuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _timestamp_generator = request.dependencies?.timestamp_generator ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"timestamp":"<<present>>"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiFactoryDependencySuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("timestampGenerator", _diFactoryDependencySuccessTimestampGenerator);
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/timestamp",
-		handler_name: "di_factory_dependency_success",
-		handler_dependencies: ["timestamp_generator"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_factory_dependency_success: diFactoryDependencySuccess
-		};
-	return app;
-}
-
-
-/**
- * Handler for GET /api/config
- */
-async function diValueDependencyInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _app_name = request.dependencies?.app_name ?? null;
-	const _version = request.dependencies?.version ?? null;
-	const _max_connections = request.dependencies?.max_connections ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"app_name":"SpikardApp","version":"1.0.0","max_connections":100};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiValueDependencyInjectionSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("appName", "SpikardApp");
-	app.provide("maxConnections", 100);
-	app.provide("version", "1.0.0");
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/config",
-		handler_name: "di_value_dependency_injection_success",
-		handler_dependencies: ["app_name", "version", "max_connections"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_value_dependency_injection_success: diValueDependencyInjectionSuccess
-		};
-	return app;
-}
-
-
-/**
- * Handler for GET /api/node-destructure
- */
-async function diNodeJsObjectDestructuringInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _db = request.dependencies?.db ?? null;
-	const _logger = request.dependencies?.logger ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"db_name":"PostgreSQL","log_level":"info"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiNodeJsObjectDestructuringInjectionSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("db", { name: "PostgreSQL", connected: true });
-	app.provide("logger", { level: "info", enabled: true });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/node-destructure",
-		handler_name: "di_node_js_object_destructuring_injection_success",
-		handler_dependencies: ["db", "logger"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_node_js_object_destructuring_injection_success: diNodeJsObjectDestructuringInjectionSuccess
-		};
-	return app;
-}
-
-
-async function _diNestedDependencies3LevelsSuccessDbPool(config): Promise<unknown> {
-	// Async factory for db_pool
-	void config;
-	// Simulate async DB connection
-	return { connected: true, poolId: Math.random().toString() };
-}
-
-async function _diNestedDependencies3LevelsSuccessCache(config): Promise<unknown> {
-	// Async factory for cache
-	void config;
-	// Simulate async cache connection
-	return { ready: true, cacheId: Math.random().toString() };
-}
-
-function _diNestedDependencies3LevelsSuccessAuthService(dbPool, cache): unknown {
-	// Factory for auth_service
-	void dbPool;
-	void cache;
-	return { _factory: "auth_service", _random: Math.random() };
-}
-
-/**
- * Handler for GET /api/auth-status
- */
-async function diNestedDependencies3LevelsSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _auth_service = request.dependencies?.auth_service ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"auth_enabled":true,"has_db":true,"has_cache":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiNestedDependencies3LevelsSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("config", { db_url: "postgresql://localhost/mydb", cache_ttl: 300 });
-	app.provide("cache", _diNestedDependencies3LevelsSuccessCache, { cacheable: true });
-	app.provide("dbPool", _diNestedDependencies3LevelsSuccessDbPool, { cacheable: true });
-	app.provide("authService", _diNestedDependencies3LevelsSuccessAuthService, { cacheable: true });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/auth-status",
-		handler_name: "di_nested_dependencies_3_levels_success",
-		handler_dependencies: ["auth_service"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_nested_dependencies_3_levels_success: diNestedDependencies3LevelsSuccess
-		};
-	return app;
-}
-
-
-/**
- * Handler for GET /api/type-mismatch
- */
-async function diTypeMismatchInDependencyResolutionError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _config = request.dependencies?.config ?? null;
-	const response: HandlerResponse = { status: 500 };
-	const responseBody = {"type":"https://spikard.dev/errors/dependency-error","title":"Dependency Resolution Failed","status":500,"detail":"Dependency type mismatch","errors":[{"type":"type_mismatch","msg":"Dependency 'config' type mismatch: expected object, got string","dependency_key":"config","expected_type":"object","actual_type":"string"}]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiTypeMismatchInDependencyResolutionError(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("config", "string_config");
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/type-mismatch",
-		handler_name: "di_type_mismatch_in_dependency_resolution_error",
-		handler_dependencies: ["config"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_type_mismatch_in_dependency_resolution_error: diTypeMismatchInDependencyResolutionError
-		};
-	return app;
-}
-
-
-/**
- * Handler for GET /api/missing-dep
- */
-async function diMissingDependencyError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _non_existent_service = request.dependencies?.non_existent_service ?? null;
-	const response: HandlerResponse = { status: 500 };
-	const responseBody = {"type":"https://spikard.dev/errors/dependency-error","title":"Dependency Resolution Failed","status":500,"detail":"Required dependency not found","errors":[{"type":"missing_dependency","msg":"Dependency 'non_existent_service' is not registered","dependency_key":"non_existent_service"}]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiMissingDependencyError(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/missing-dep",
-		handler_name: "di_missing_dependency_error",
-		handler_dependencies: ["non_existent_service"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			di_missing_dependency_error: diMissingDependencyError
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/python-name-inject
- */
-async function diPythonParameterNameBasedInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _db_pool = request.dependencies?.db_pool ?? null;
-	const _cache = request.dependencies?.cache ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"db_status":"connected","cache_status":"ready"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiPythonParameterNameBasedInjectionSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("cache", { status: "ready" });
-	app.provide("dbPool", { status: "connected" });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/python-name-inject",
-		handler_name: "di_python_parameter_name_based_injection_success",
-		handler_dependencies: ["db_pool", "cache"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_python_parameter_name_based_injection_success: diPythonParameterNameBasedInjectionSuccess
-		};
-	return app;
-}
-
-
-async function diDependencyInjectionInLifecycleHooksSuccessLogRequestOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: log_request
-	return request;
-}
-
-async function diDependencyInjectionInLifecycleHooksSuccessAuthCheckPreHandler0(request: HookRequest): Promise<HookResult> {
-	// Mock preHandler hook: auth_check
-	return request;
-}
-
-
-
-/**
- * Handler for GET /api/hook-di-test
- */
-async function diDependencyInjectionInLifecycleHooksSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-auth-mode":"strict","x-log-level":"debug"};
-	const responseBody = {"authenticated":true,"logged":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiDependencyInjectionInLifecycleHooksSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("authService", { enabled: true, strict_mode: true });
-	app.provide("logger", { level: "debug" });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/hook-di-test",
-		handler_name: "di_dependency_injection_in_lifecycle_hooks_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_dependency_injection_in_lifecycle_hooks_success: diDependencyInjectionInLifecycleHooksSuccess
-		};
-	app.lifecycleHooks = {
-		onRequest: [diDependencyInjectionInLifecycleHooksSuccessLogRequestOnRequest0],
-		preHandler: [diDependencyInjectionInLifecycleHooksSuccessAuthCheckPreHandler0]
-	};
-	return app;
-}
-
-
-/**
- * Handler for GET /api/ruby-kwargs
- */
-async function diRubyKeywordArgumentInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _db_pool = request.dependencies?.db_pool ?? null;
-	const _session = request.dependencies?.session ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"adapter":"postgresql","user_id":42};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiRubyKeywordArgumentInjectionSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("dbPool", { adapter: "postgresql", pool_size: 5 });
-	app.provide("session", { session_id: "abc123", user_id: 42 });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/ruby-kwargs",
-		handler_name: "di_ruby_keyword_argument_injection_success",
-		handler_dependencies: ["db_pool", "session"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_ruby_keyword_argument_injection_success: diRubyKeywordArgumentInjectionSuccess
-		};
-	return app;
-}
-
-
-async function* _diMultipleDependenciesWithCleanupSuccessDbConnection(): AsyncGenerator<unknown, void, unknown> {
-	// Factory for db_connection with cleanup
-	// Initialize cleanup state
-	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
-	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("db_opened");
-	// Create resource
-	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
-	try {
-		yield resource;
-	} finally {
-		// Cleanup resource
-		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("db_closed");
-	}
-}
-
-async function* _diMultipleDependenciesWithCleanupSuccessSession(dbConnection, cacheConnection): AsyncGenerator<unknown, void, unknown> {
-	// Factory for session with cleanup
-	void dbConnection;
-	void cacheConnection;
-	// Initialize cleanup state
-	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
-	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_opened");
-	// Create resource
-	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
-	try {
-		yield resource;
-	} finally {
-		// Cleanup resource
-		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_closed");
-	}
-}
-
-async function* _diMultipleDependenciesWithCleanupSuccessCacheConnection(): AsyncGenerator<unknown, void, unknown> {
-	// Factory for cache_connection with cleanup
-	// Initialize cleanup state
-	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
-	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("cache_opened");
-	// Create resource
-	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
-	try {
-		yield resource;
-	} finally {
-		// Cleanup resource
-		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("cache_closed");
-	}
-}
-
-/**
- * Handler for GET /api/multi-cleanup-test
- */
-async function diMultipleDependenciesWithCleanupSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _session = request.dependencies?.session ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"session_active":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-async function diMultipleDependenciesWithCleanupSuccessBackgroundState(): Promise<string> {
-	const state = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] ?? [];
-	const response: HandlerResponse = { status: 200 };
-	response.headers = { "content-type": "application/json" };
-	response.body = { "cleanup_order": state };
-	return JSON.stringify(response);
-}
-
-async function diMultipleDependenciesWithCleanupSuccessCleanupState(): Promise<string> {
-	// Return cleanup events
-	const cleanupEvents = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
-	const response: HandlerResponse = { status: 200 };
-	response.headers = { "content-type": "application/json" };
-	response.body = { cleanup_events: cleanupEvents };
-	return JSON.stringify(response);
-}
-
-export function createAppDiMultipleDependenciesWithCleanupSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("cacheConnection", _diMultipleDependenciesWithCleanupSuccessCacheConnection, { cacheable: true });
-	app.provide("dbConnection", _diMultipleDependenciesWithCleanupSuccessDbConnection, { cacheable: true });
-	app.provide("session", _diMultipleDependenciesWithCleanupSuccessSession, { cacheable: true });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/multi-cleanup-test",
-		handler_name: "di_multiple_dependencies_with_cleanup_success",
-		handler_dependencies: ["session"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	const backgroundRoute: RouteMetadata = {
-		method: "GET",
-		path: "/api/multi-cleanup-state",
-		handler_name: "di_multiple_dependencies_with_cleanup_success_background_state",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	const cleanupRoute: RouteMetadata = {
-		method: "GET",
-		path: "/api/cleanup-state",
-		handler_name: "di_multiple_dependencies_with_cleanup_success_cleanup_state",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route, backgroundRoute, cleanupRoute];
-	app.handlers = {
-			di_multiple_dependencies_with_cleanup_success: diMultipleDependenciesWithCleanupSuccess,
-			di_multiple_dependencies_with_cleanup_success_background_state: diMultipleDependenciesWithCleanupSuccessBackgroundState,
-			di_multiple_dependencies_with_cleanup_success_cleanup_state: diMultipleDependenciesWithCleanupSuccessCleanupState
-		};
-	return app;
-}
-
-
-function _diMixedSingletonAndPerRequestCachingSuccessDbPool(appConfig): unknown {
-	// Factory for db_pool
-	void appConfig;
-	return { _factory: "db_pool", _random: Math.random() };
-}
-
-function _diMixedSingletonAndPerRequestCachingSuccessRequestContext(dbPool): unknown {
-	// Factory for request_context
-	void dbPool;
-	return { _factory: "request_context", _random: Math.random() };
-}
-
-/**
- * Handler for GET /api/mixed-caching
- */
-async function diMixedSingletonAndPerRequestCachingSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _app_config = request.dependencies?.app_config ?? null;
-	const _db_pool = request.dependencies?.db_pool ?? null;
-	const _request_context = request.dependencies?.request_context ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const poolKey = "di_mixed_singleton_and_per_request_caching_success_pool";
-	const ctxKey = "di_mixed_singleton_and_per_request_caching_success_ctx_counter";
-	const pool = (BACKGROUND_STATE[poolKey] as { pool_id: string } | undefined) ?? { pool_id: "00000000-0000-0000-0000-000000000063" };
-	BACKGROUND_STATE[poolKey] = pool;
-	const ctxCount = (BACKGROUND_STATE[ctxKey] as number | undefined) ?? 0;
-	BACKGROUND_STATE[ctxKey] = ctxCount + 1;
-	const context_id = `context-${ctxCount + 1}`;
-	response.body = { app_name: "MyApp", pool_id: pool.pool_id, context_id };
-	return JSON.stringify(response);
-}
-
-export function createAppDiMixedSingletonAndPerRequestCachingSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("appConfig", { app_name: "MyApp", version: "2.0" });
-	app.provide("dbPool", _diMixedSingletonAndPerRequestCachingSuccessDbPool, { singleton: true });
-	app.provide("requestContext", _diMixedSingletonAndPerRequestCachingSuccessRequestContext, { cacheable: true });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/mixed-caching",
-		handler_name: "di_mixed_singleton_and_per_request_caching_success",
-		handler_dependencies: ["app_config", "db_pool", "request_context"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_mixed_singleton_and_per_request_caching_success: diMixedSingletonAndPerRequestCachingSuccess
-		};
-	return app;
-}
-
-
-async function* _diResourceCleanupAfterRequestSuccessDbSession(): AsyncGenerator<unknown, void, unknown> {
-	// Factory for db_session with cleanup
-	// Initialize cleanup state
-	CLEANUP_STATE["di_resource_cleanup_after_request_success"] = CLEANUP_STATE["di_resource_cleanup_after_request_success"] || [];
-	CLEANUP_STATE["di_resource_cleanup_after_request_success"].push("session_opened");
-	// Create resource
-	const resource = { id: "00000000-0000-0000-0000-000000000029", opened: true };
-	try {
-		yield resource;
-	} finally {
-		// Cleanup resource
-		CLEANUP_STATE["di_resource_cleanup_after_request_success"].push("session_closed");
-	}
-}
-
-/**
- * Handler for GET /api/cleanup-test
- */
-async function diResourceCleanupAfterRequestSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _db_session = request.dependencies?.db_session ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"session_id":"<<uuid>>","status":"completed"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-async function diResourceCleanupAfterRequestSuccessCleanupState(): Promise<string> {
-	// Return cleanup events
-	const cleanupEvents = CLEANUP_STATE["di_resource_cleanup_after_request_success"] || [];
-	const response: HandlerResponse = { status: 200 };
-	response.headers = { "content-type": "application/json" };
-	response.body = { cleanup_events: cleanupEvents };
-	return JSON.stringify(response);
-}
-
-export function createAppDiResourceCleanupAfterRequestSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("dbSession", _diResourceCleanupAfterRequestSuccessDbSession, { cacheable: true });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/cleanup-test",
-		handler_name: "di_resource_cleanup_after_request_success",
-		handler_dependencies: ["db_session"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	const cleanupRoute: RouteMetadata = {
-		method: "GET",
-		path: "/api/cleanup-state",
-		handler_name: "di_resource_cleanup_after_request_success_cleanup_state",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route, cleanupRoute];
-	app.handlers = {
-			di_resource_cleanup_after_request_success: diResourceCleanupAfterRequestSuccess,
-			di_resource_cleanup_after_request_success_cleanup_state: diResourceCleanupAfterRequestSuccessCleanupState
-		};
-	return app;
-}
-
-
-/**
- * Handler for GET /api/python-type-inject
- */
-async function diPythonTypeAnnotationBasedInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _database_pool = request.dependencies?.database_pool ?? null;
-	const _cache_client = request.dependencies?.cache_client ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"pool_type":"PostgreSQL","cache_type":"Redis"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiPythonTypeAnnotationBasedInjectionSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("cacheClient", { cache_type: "Redis", ttl: 300 });
-	app.provide("databasePool", { pool_type: "PostgreSQL", max_connections: 20 });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/python-type-inject",
-		handler_name: "di_python_type_annotation_based_injection_success",
-		handler_dependencies: ["database_pool", "cache_client"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_python_type_annotation_based_injection_success: diPythonTypeAnnotationBasedInjectionSuccess
-		};
-	return app;
-}
-
-
-function _diPerRequestDependencyCachingSuccessRequestIdGenerator(): unknown {
-	// Factory for request_id_generator
-	return { _factory: "request_id_generator", _random: Math.random() };
-}
-
-/**
- * Handler for GET /api/request-id
- */
-async function diPerRequestDependencyCachingSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _request_id_generator = request.dependencies?.request_id_generator ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"first_id":"<<uuid>>","second_id":"<<same_as:first_id>>"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiPerRequestDependencyCachingSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("requestIdGenerator", _diPerRequestDependencyCachingSuccessRequestIdGenerator, { cacheable: true });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/request-id",
-		handler_name: "di_per_request_dependency_caching_success",
-		handler_dependencies: ["request_id_generator", "request_id_generator"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_per_request_dependency_caching_success: diPerRequestDependencyCachingSuccess
-		};
-	return app;
-}
-
-
-function _diSingletonDependencyCachingSuccessAppCounter(): unknown {
-	// Factory for app_counter
-	return { _factory: "app_counter", _random: Math.random() };
-}
-
-/**
- * Handler for GET /api/app-counter
- */
-async function diSingletonDependencyCachingSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _app_counter = request.dependencies?.app_counter ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const stateKey = "di_singleton_dependency_caching_success_counter";
-	const existing = BACKGROUND_STATE[stateKey] as { counter_id: string; count: number } | undefined;
-	const counter = existing ?? { counter_id: "00000000-0000-0000-0000-000000000063", count: 0 };
-	counter.count += 1;
-	BACKGROUND_STATE[stateKey] = counter;
-	response.body = { counter_id: counter.counter_id, count: counter.count };
-	return JSON.stringify(response);
-}
-
-export function createAppDiSingletonDependencyCachingSuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("appCounter", _diSingletonDependencyCachingSuccessAppCounter, { singleton: true });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/app-counter",
-		handler_name: "di_singleton_dependency_caching_success",
-		handler_dependencies: ["app_counter"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_singleton_dependency_caching_success: diSingletonDependencyCachingSuccess
-		};
-	return app;
-}
-
-
-async function _diAsyncFactoryDependencySuccessDbPool(): Promise<unknown> {
-	// Async factory for db_pool
-	// Simulate async DB connection
-	return { connected: true, poolId: Math.random().toString() };
-}
-
-/**
- * Handler for GET /api/db-status
- */
-async function diAsyncFactoryDependencySuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const _db_pool = request.dependencies?.db_pool ?? null;
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"pool_status":"connected","max_size":10};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppDiAsyncFactoryDependencySuccess(): SpikardApp {
-	const app = new Spikard();
-
-	app.provide("dbPool", _diAsyncFactoryDependencySuccessDbPool, { cacheable: true });
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/db-status",
-		handler_name: "di_async_factory_dependency_success",
-		handler_dependencies: ["db_pool"],
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	app.routes = [route];
-	app.handlers = {
-			di_async_factory_dependency_success: diAsyncFactoryDependencySuccess
-		};
-	return app;
-}
-
-
-/**
- * Handler for OPTIONS /api/data
- */
-async function cors07CorsPreflightHeaderNotAllowed(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 403 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppCors07CorsPreflightHeaderNotAllowed(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "OPTIONS",
-		path: "/api/data",
-		handler_name: "cors_07_cors_preflight_header_not_allowed",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"},"Access-Control-Request-Method":{"type":"string","source":"header"},"Access-Control-Request-Headers":{"type":"string","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_07_cors_preflight_header_not_allowed: cors07CorsPreflightHeaderNotAllowed
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/cached-resource
- */
-async function corsCorsVaryHeaderForProperCaching(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"cache-control":"public, max-age=3600","vary":"Origin","access-control-allow-origin":"https://app.example.com"};
-	const responseBody = {"data":"cacheable resource"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsVaryHeaderForProperCaching(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/cached-resource",
-		handler_name: "cors_cors_vary_header_for_proper_caching",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_vary_header_for_proper_caching: corsCorsVaryHeaderForProperCaching
-		},
-	};
-}
-
-
-/**
- * Handler for OPTIONS /api/resource/123
- */
-async function corsCorsPreflightForPutMethod(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 204 };
-	response.headers = {"access-control-max-age":"3600","access-control-allow-methods":"GET, POST, PUT, PATCH, DELETE","access-control-allow-origin":"https://app.example.com","access-control-allow-headers":"Content-Type, X-Custom-Header","vary":"Origin"};
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsPreflightForPutMethod(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "OPTIONS",
-		path: "/api/resource/123",
-		handler_name: "cors_cors_preflight_for_put_method",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_preflight_for_put_method: corsCorsPreflightForPutMethod
-		},
-	};
-}
-
-
-/**
- * Handler for OPTIONS /api/resource/456
- */
-async function corsCorsPreflightForDeleteMethod(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 204 };
-	response.headers = {"access-control-allow-origin":"https://app.example.com","access-control-max-age":"3600","access-control-allow-methods":"GET, POST, PUT, PATCH, DELETE","vary":"Origin"};
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsPreflightForDeleteMethod(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "OPTIONS",
-		path: "/api/resource/456",
-		handler_name: "cors_cors_preflight_for_delete_method",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_preflight_for_delete_method: corsCorsPreflightForDeleteMethod
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function corsCorsMultipleAllowedOrigins(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"vary":"Origin","access-control-allow-origin":"https://admin.example.com"};
-	const responseBody = {"data":"resource data"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsMultipleAllowedOrigins(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "cors_cors_multiple_allowed_origins",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_multiple_allowed_origins: corsCorsMultipleAllowedOrigins
-		},
-	};
-}
-
-
-/**
- * Handler for OPTIONS /items/
- */
-async function corsCorsPreflightRequest(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"access-control-allow-origin":"https://example.com","access-control-allow-headers":"Content-Type, X-Custom-Header","access-control-allow-methods":"GET, POST, PUT, DELETE, OPTIONS","access-control-max-age":"600"};
-	const result: Record<string, unknown> = {};
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsPreflightRequest(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "OPTIONS",
-		path: "/items/",
-		handler_name: "cors_cors_preflight_request",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_preflight_request: corsCorsPreflightRequest
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/user/profile
- */
-async function corsCorsWithCredentials(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"access-control-allow-credentials":"true","vary":"Origin","access-control-allow-origin":"https://app.example.com"};
-	const responseBody = {"username":"john"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsWithCredentials(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/user/profile",
-		handler_name: "cors_cors_with_credentials",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_with_credentials: corsCorsWithCredentials
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function corsCorsRegexPatternMatchingForOrigins(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"access-control-allow-origin":"https://subdomain.example.com","vary":"Origin"};
-	const responseBody = {"data":"resource data"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsRegexPatternMatchingForOrigins(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "cors_cors_regex_pattern_matching_for_origins",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_regex_pattern_matching_for_origins: corsCorsRegexPatternMatchingForOrigins
-		},
-	};
-}
-
-
-/**
- * Handler for OPTIONS /api/data
- */
-async function cors08CorsMaxAge(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 204 };
-	response.headers = {"access-control-allow-origin":"https://example.com","access-control-allow-methods":"POST","access-control-allow-headers":"Content-Type","access-control-max-age":"3600"};
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppCors08CorsMaxAge(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "OPTIONS",
-		path: "/api/data",
-		handler_name: "cors_08_cors_max_age",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"},"Access-Control-Request-Method":{"type":"string","source":"header"},"Access-Control-Request-Headers":{"type":"string","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_08_cors_max_age: cors08CorsMaxAge
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function cors10CorsOriginNull(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 403 };
-	const responseBody = {"error":"Origin 'null' is not allowed"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCors10CorsOriginNull(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "cors_10_cors_origin_null",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_10_cors_origin_null: cors10CorsOriginNull
-		},
-	};
-}
-
-
-/**
- * Handler for GET /public/data
- */
-async function corsCorsWildcardOrigin(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"access-control-allow-origin":"*"};
-	const responseBody = {"data":"public"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsWildcardOrigin(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/public/data",
-		handler_name: "cors_cors_wildcard_origin",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_wildcard_origin: corsCorsWildcardOrigin
-		},
-	};
-}
-
-
-/**
- * Handler for POST /api/form
- */
-async function corsCorsSafelistedHeadersWithoutPreflight(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"access-control-allow-origin":"https://app.example.com","vary":"Origin"};
-	const responseBody = {"message":"Success"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsSafelistedHeadersWithoutPreflight(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/api/form",
-		handler_name: "cors_cors_safelisted_headers_without_preflight",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_safelisted_headers_without_preflight: corsCorsSafelistedHeadersWithoutPreflight
-		},
-	};
-}
-
-
-/**
- * Handler for OPTIONS /api/local-resource
- */
-async function corsCorsPrivateNetworkAccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 204 };
-	response.headers = {"access-control-allow-origin":"https://public.example.com","access-control-allow-private-network":"true","vary":"Origin","access-control-allow-methods":"GET, POST"};
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsPrivateNetworkAccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "OPTIONS",
-		path: "/api/local-resource",
-		handler_name: "cors_cors_private_network_access",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_private_network_access: corsCorsPrivateNetworkAccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function corsCorsOriginCaseSensitivity(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"vary":"Origin"};
-	const result: Record<string, unknown> = {};
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsOriginCaseSensitivity(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "cors_cors_origin_case_sensitivity",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_origin_case_sensitivity: corsCorsOriginCaseSensitivity
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function corsCorsRequestBlocked(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 403 };
-	const responseBody = {"detail":"CORS request from origin 'https://malicious-site.com' not allowed"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsCorsRequestBlocked(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "cors_cors_request_blocked",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_cors_request_blocked: corsCorsRequestBlocked
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function corsSimpleCorsRequest(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"access-control-allow-origin":"https://example.com","vary":"Origin"};
-	const responseBody = {"items":[]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCorsSimpleCorsRequest(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "cors_simple_cors_request",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_simple_cors_request: corsSimpleCorsRequest
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function cors09CorsExposeHeaders(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-total-count":"42","access-control-allow-origin":"https://example.com","access-control-expose-headers":"X-Total-Count, X-Request-Id","x-request-id":"abc123"};
-	const result: Record<string, unknown> = {};
-	const origin = _params.Origin;
-	if (origin !== null && origin !== undefined) {
-		result.Origin = origin;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCors09CorsExposeHeaders(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "cors_09_cors_expose_headers",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_09_cors_expose_headers: cors09CorsExposeHeaders
-		},
-	};
-}
-
-
-/**
- * Handler for OPTIONS /api/data
- */
-async function cors06CorsPreflightMethodNotAllowed(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 403 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppCors06CorsPreflightMethodNotAllowed(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "OPTIONS",
-		path: "/api/data",
-		handler_name: "cors_06_cors_preflight_method_not_allowed",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"},"Access-Control-Request-Method":{"type":"string","source":"header"},"Access-Control-Request-Headers":{"type":"string","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cors_06_cors_preflight_method_not_allowed: cors06CorsPreflightMethodNotAllowed
-		},
-	};
-}
-
-
-/**
- * Handler for GET /timeouts/slow
- */
-async function requestTimeoutRequestExceedsTimeout(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 408 };
-	const signal = isAbortSignalLike(_context?.signal) ? _context?.signal : undefined;
-	await sleep(1500, signal);
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppRequestTimeoutRequestExceedsTimeout(): SpikardApp {
-	const config: ServerConfig = {
-		requestTimeout: 1
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/timeouts/slow",
-		handler_name: "request_timeout_request_exceeds_timeout",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			request_timeout_request_exceeds_timeout: requestTimeoutRequestExceedsTimeout
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /timeouts/fast
- */
-async function requestTimeoutRequestCompletesBeforeTimeout(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const signal = isAbortSignalLike(_context?.signal) ? _context?.signal : undefined;
-	await sleep(100, signal);
-	const responseBody = {"status":"ok","duration":"fast"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppRequestTimeoutRequestCompletesBeforeTimeout(): SpikardApp {
-	const config: ServerConfig = {
-		requestTimeout: 2
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/timeouts/fast",
-		handler_name: "request_timeout_request_completes_before_timeout",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			request_timeout_request_completes_before_timeout: requestTimeoutRequestCompletesBeforeTimeout
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for POST /login/
- */
-async function urlEncodedSimpleFormSubmissionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"johndoe"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedSimpleFormSubmissionSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/login/",
-		handler_name: "url_encoded_simple_form_submission_success",
-		request_schema: {"type":"object","required":["username","password"],"properties":{"username":{"type":"string"},"password":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_simple_form_submission_success: urlEncodedSimpleFormSubmissionSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function urlEncoded15SpecialCharactersFieldNames(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"user-name":"JohnDoe","contact.email":"john@example.com"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded15SpecialCharactersFieldNames(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "url_encoded_15_special_characters_field_names",
-		request_schema: {"type":"object","properties":{"user-name":{"type":"string"},"contact.email":{"type":"string","format":"email"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_15_special_characters_field_names: urlEncoded15SpecialCharactersFieldNames
-		},
-	};
-}
-
-
-/**
- * Handler for POST /form/validated
- */
-async function urlEncodedPatternValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedPatternValidationFail(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/form/validated",
-		handler_name: "url_encoded_pattern_validation_fail",
-		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string","pattern":"^[a-z0-9_]+$"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_pattern_validation_fail: urlEncodedPatternValidationFail
-		},
-	};
-}
-
-
-/**
- * Handler for POST /settings
- */
-async function urlEncoded22AdditionalPropertiesStrictFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded22AdditionalPropertiesStrictFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/settings",
-		handler_name: "url_encoded_22_additional_properties_strict_failure",
-		request_schema: {"type":"object","required":["theme"],"properties":{"theme":{"type":"string","enum":["light","dark"]}},"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_22_additional_properties_strict_failure: urlEncoded22AdditionalPropertiesStrictFailure
-		},
-	};
-}
-
-
-/**
- * Handler for POST /accounts
- */
-async function urlEncoded17PatternValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded17PatternValidationFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/accounts",
-		handler_name: "url_encoded_17_pattern_validation_failure",
-		request_schema: {"type":"object","required":["account_id"],"properties":{"account_id":{"type":"string","pattern":"^ACC-[0-9]{6}$"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_17_pattern_validation_failure: urlEncoded17PatternValidationFailure
-		},
-	};
-}
-
-
-/**
- * Handler for POST /subscribe
- */
-async function urlEncoded20FormatEmailValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded20FormatEmailValidationFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/subscribe",
-		handler_name: "url_encoded_20_format_email_validation_failure",
-		request_schema: {"type":"object","required":["email"],"properties":{"email":{"type":"string","format":"email"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_20_format_email_validation_failure: urlEncoded20FormatEmailValidationFailure
-		},
-	};
-}
-
-
-/**
- * Handler for POST /form/tags
- */
-async function urlEncodedMultipleValuesForSameField(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"tags":["python","fastapi","web"]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedMultipleValuesForSameField(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/form/tags",
-		handler_name: "url_encoded_multiple_values_for_same_field",
-		request_schema: {"type":"object","required":["tags"],"properties":{"tags":{"type":"array","items":{"type":"string"}}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_multiple_values_for_same_field: urlEncodedMultipleValuesForSameField
-		},
-	};
-}
-
-
-/**
- * Handler for POST /login/
- */
-async function urlEncodedRequiredFieldMissingValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedRequiredFieldMissingValidationError(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/login/",
-		handler_name: "url_encoded_required_field_missing_validation_error",
-		request_schema: {"type":"object","required":["username","password"],"properties":{"username":{"type":"string"},"password":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_required_field_missing_validation_error: urlEncodedRequiredFieldMissingValidationError
-		},
-	};
-}
-
-
-/**
- * Handler for POST /register
- */
-async function urlEncoded13ArrayFieldSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"tags":["python","rust","typescript"]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded13ArrayFieldSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/register",
-		handler_name: "url_encoded_13_array_field_success",
-		request_schema: {"type":"object","required":["tags"],"properties":{"tags":{"type":"array","items":{"type":"string"},"minItems":1}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_13_array_field_success: urlEncoded13ArrayFieldSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for POST /form/
- */
-async function urlEncodedNumericFieldTypeConversion(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"johndoe","age":30};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedNumericFieldTypeConversion(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/form/",
-		handler_name: "url_encoded_numeric_field_type_conversion",
-		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string"},"age":{"type":"integer"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_numeric_field_type_conversion: urlEncodedNumericFieldTypeConversion
-		},
-	};
-}
-
-
-/**
- * Handler for POST /form/
- */
-async function urlEncodedSpecialCharactersEncoding(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"name":"John Doe","description":"Test & Development"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedSpecialCharactersEncoding(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/form/",
-		handler_name: "url_encoded_special_characters_encoding",
-		request_schema: {"type":"object","required":["name"],"properties":{"name":{"type":"string"},"description":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_special_characters_encoding: urlEncodedSpecialCharactersEncoding
-		},
-	};
-}
-
-
-/**
- * Handler for POST /form/
- */
-async function urlEncodedBooleanFieldConversion(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"johndoe","subscribe":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedBooleanFieldConversion(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/form/",
-		handler_name: "url_encoded_boolean_field_conversion",
-		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string"},"subscribe":{"type":"boolean"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_boolean_field_conversion: urlEncodedBooleanFieldConversion
-		},
-	};
-}
-
-
-/**
- * Handler for POST /form/
- */
-async function urlEncodedEmptyStringValue(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"johndoe","description":""};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedEmptyStringValue(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/form/",
-		handler_name: "url_encoded_empty_string_value",
-		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string"},"description":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_empty_string_value: urlEncodedEmptyStringValue
-		},
-	};
-}
-
-
-/**
- * Handler for POST /token
- */
-async function urlEncodedOauth2PasswordGrantFlow(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"access_token":"johndoe","token_type":"bearer"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedOauth2PasswordGrantFlow(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/token",
-		handler_name: "url_encoded_oauth2_password_grant_flow",
-		request_schema: {"type":"object","required":["username","password","grant_type"],"properties":{"username":{"type":"string"},"password":{"type":"string"},"grant_type":{"type":"string"},"scope":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_oauth2_password_grant_flow: urlEncodedOauth2PasswordGrantFlow
-		},
-	};
-}
-
-
-/**
- * Handler for POST /tags
- */
-async function urlEncoded19ArrayMinitemsValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded19ArrayMinitemsValidationFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/tags",
-		handler_name: "url_encoded_19_array_minitems_validation_failure",
-		request_schema: {"type":"object","required":["tags"],"properties":{"tags":{"type":"array","items":{"type":"string"},"minItems":2}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_19_array_minitems_validation_failure: urlEncoded19ArrayMinitemsValidationFailure
-		},
-	};
-}
-
-
-/**
- * Handler for POST /register/
- */
-async function urlEncodedOptionalFieldMissingSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"johndoe","email":null};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedOptionalFieldMissingSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/register/",
-		handler_name: "url_encoded_optional_field_missing_success",
-		request_schema: {"type":"object","required":["username","password"],"properties":{"username":{"type":"string"},"password":{"type":"string"},"email":{"type":["string","null"],"format":"email"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_optional_field_missing_success: urlEncodedOptionalFieldMissingSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for POST /profile
- */
-async function urlEncoded14NestedObjectBracketNotation(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"user":{"name":"John Doe","email":"john@example.com","age":30}};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded14NestedObjectBracketNotation(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/profile",
-		handler_name: "url_encoded_14_nested_object_bracket_notation",
-		request_schema: {"type":"object","required":["user"],"properties":{"user":{"type":"object","required":["name","email"],"properties":{"name":{"type":"string","minLength":1},"email":{"type":"string","format":"email"},"age":{"type":"integer","minimum":0}}}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_14_nested_object_bracket_notation: urlEncoded14NestedObjectBracketNotation
-		},
-	};
-}
-
-
-/**
- * Handler for POST /form/validated
- */
-async function urlEncodedStringMaxLengthValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedStringMaxLengthValidationFail(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/form/validated",
-		handler_name: "url_encoded_string_max_length_validation_fail",
-		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string","maxLength":20}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_string_max_length_validation_fail: urlEncodedStringMaxLengthValidationFail
-		},
-	};
-}
-
-
-/**
- * Handler for POST /products
- */
-async function urlEncoded18IntegerMinimumValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded18IntegerMinimumValidationFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/products",
-		handler_name: "url_encoded_18_integer_minimum_validation_failure",
-		request_schema: {"type":"object","required":["quantity"],"properties":{"quantity":{"type":"integer","minimum":1}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_18_integer_minimum_validation_failure: urlEncoded18IntegerMinimumValidationFailure
-		},
-	};
-}
-
-
-/**
- * Handler for POST /products
- */
-async function urlEncoded21IntegerTypeCoercionFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded21IntegerTypeCoercionFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/products",
-		handler_name: "url_encoded_21_integer_type_coercion_failure",
-		request_schema: {"type":"object","required":["price"],"properties":{"price":{"type":"integer"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_21_integer_type_coercion_failure: urlEncoded21IntegerTypeCoercionFailure
-		},
-	};
-}
-
-
-/**
- * Handler for POST /users
- */
-async function urlEncoded16MinlengthValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncoded16MinlengthValidationFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/users",
-		handler_name: "url_encoded_16_minlength_validation_failure",
-		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string","minLength":3}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_16_minlength_validation_failure: urlEncoded16MinlengthValidationFailure
-		},
-	};
-}
-
-
-/**
- * Handler for POST /form/validated
- */
-async function urlEncodedStringMinLengthValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppUrlEncodedStringMinLengthValidationFail(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/form/validated",
-		handler_name: "url_encoded_string_min_length_validation_fail",
-		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string","minLength":3}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			url_encoded_string_min_length_validation_fail: urlEncodedStringMinLengthValidationFail
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/{item_id}
- */
-async function validationErrorsInvalidUuidFormat(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const itemId = _params.item_id;
-	if (itemId !== null && itemId !== undefined) {
-		result.item_id = itemId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsInvalidUuidFormat(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/{item_id}",
-		handler_name: "validation_errors_invalid_uuid_format",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","format":"uuid","source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_invalid_uuid_format: validationErrorsInvalidUuidFormat
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsInvalidBooleanValue(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	const isActive = _params.is_active;
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	if (isActive !== null && isActive !== undefined) {
-		result.is_active = isActive;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsInvalidBooleanValue(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_invalid_boolean_value",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"is_active":{"type":"boolean","source":"query"}},"required":["q","is_active"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_invalid_boolean_value: validationErrorsInvalidBooleanValue
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsMissingRequiredQueryParameter(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsMissingRequiredQueryParameter(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_missing_required_query_parameter",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"}},"required":["q"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_missing_required_query_parameter: validationErrorsMissingRequiredQueryParameter
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsArrayMaxItemsConstraintViolation(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsArrayMaxItemsConstraintViolation(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_array_max_items_constraint_violation",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"type":"array","items":{"type":"string"},"maxItems":10}},"additionalProperties":false,"required":["name","price","tags"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_array_max_items_constraint_violation: validationErrorsArrayMaxItemsConstraintViolation
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsNumericConstraintViolationGtGreaterThan(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	const price = _params.price;
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	if (price !== null && price !== undefined) {
-		result.price = price;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsNumericConstraintViolationGtGreaterThan(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_numeric_constraint_violation_gt_greater_than",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"price":{"type":"number","exclusiveMinimum":0,"source":"query"}},"required":["q","price"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_numeric_constraint_violation_gt_greater_than: validationErrorsNumericConstraintViolationGtGreaterThan
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsStringRegexPatternMismatch(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsStringRegexPatternMismatch(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_string_regex_pattern_mismatch",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","pattern":"^[a-zA-Z0-9_-]+$","source":"query"}},"required":["q"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_string_regex_pattern_mismatch: validationErrorsStringRegexPatternMismatch
-		},
-	};
-}
-
-
-/**
- * Handler for GET /models/{model_name}
- */
-async function validationErrorsInvalidEnumValue(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const modelName = _params.model_name;
-	if (modelName !== null && modelName !== undefined) {
-		result.model_name = modelName;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsInvalidEnumValue(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/models/{model_name}",
-		handler_name: "validation_errors_invalid_enum_value",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"model_name":{"type":"string","enum":["alexnet","resnet","lenet"],"source":"path"}},"required":["model_name"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_invalid_enum_value: validationErrorsInvalidEnumValue
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsStringMinLengthConstraintViolation(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsStringMinLengthConstraintViolation(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_string_min_length_constraint_violation",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","minLength":3,"source":"query"}},"required":["q"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_string_min_length_constraint_violation: validationErrorsStringMinLengthConstraintViolation
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsMultipleValidationErrors(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsMultipleValidationErrors(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_multiple_validation_errors",
-		request_schema: {"type":"object","properties":{"name":{"type":"string","minLength":3},"price":{"type":"integer","exclusiveMinimum":0},"quantity":{"type":"integer"}},"additionalProperties":false,"required":["name","price","quantity"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_multiple_validation_errors: validationErrorsMultipleValidationErrors
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsStringMaxLengthConstraintViolation(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsStringMaxLengthConstraintViolation(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_string_max_length_constraint_violation",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","maxLength":50,"source":"query"}},"required":["q"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_string_max_length_constraint_violation: validationErrorsStringMaxLengthConstraintViolation
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsNestedObjectValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsNestedObjectValidationError(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_nested_object_validation_error",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"seller":{"type":"object","properties":{"name":{"type":"string","minLength":3},"address":{"type":"object","properties":{"city":{"type":"string","minLength":3},"zip_code":{"type":"string","minLength":5}},"additionalProperties":false,"required":["city","zip_code"]}},"additionalProperties":false,"required":["name","address"]}},"additionalProperties":false,"required":["name","price","seller"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_nested_object_validation_error: validationErrorsNestedObjectValidationError
-		},
-	};
-}
-
-
-/**
- * Handler for POST /profiles
- */
-async function validationErrors10NestedErrorPath(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrors10NestedErrorPath(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/profiles",
-		handler_name: "validation_errors_10_nested_error_path",
-		request_schema: {"type":"object","required":["profile"],"properties":{"profile":{"type":"object","required":["contact"],"properties":{"contact":{"type":"object","required":["email"],"properties":{"email":{"type":"string","format":"email"}}}}}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_10_nested_error_path: validationErrors10NestedErrorPath
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsInvalidDatetimeFormat(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsInvalidDatetimeFormat(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_invalid_datetime_format",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"created_at":{"type":"string","format":"date-time"}},"additionalProperties":false,"required":["name","price","created_at"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_invalid_datetime_format: validationErrorsInvalidDatetimeFormat
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsArrayItemValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsArrayItemValidationError(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_array_item_validation_error",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["name","price","tags"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_array_item_validation_error: validationErrorsArrayItemValidationError
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsMissingRequiredBodyField(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsMissingRequiredBodyField(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_missing_required_body_field",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"string"}},"additionalProperties":false,"required":["name","price"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_missing_required_body_field: validationErrorsMissingRequiredBodyField
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsBodyFieldTypeErrorStringForFloat(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsBodyFieldTypeErrorStringForFloat(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_body_field_type_error_string_for_float",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"}},"additionalProperties":false,"required":["name","price"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_body_field_type_error_string_for_float: validationErrorsBodyFieldTypeErrorStringForFloat
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsMalformedJsonBody(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 400 };
-	const responseBody = {"detail":"Invalid request format"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsMalformedJsonBody(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_malformed_json_body",
-		request_schema: {"type":"string"},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_malformed_json_body: validationErrorsMalformedJsonBody
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsQueryParamTypeErrorStringProvidedForInt(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	const skip = _params.skip;
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	if (skip !== null && skip !== undefined) {
-		result.skip = skip;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsQueryParamTypeErrorStringProvidedForInt(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_query_param_type_error_string_provided_for_int",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"skip":{"type":"integer","source":"query"}},"required":["q","skip"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_query_param_type_error_string_provided_for_int: validationErrorsQueryParamTypeErrorStringProvidedForInt
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsHeaderValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	const xToken = _params["x-token"];
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	if (xToken !== null && xToken !== undefined) {
-		result["x-token"] = xToken;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsHeaderValidationError(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_header_validation_error",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"x-token":{"type":"string","source":"header"}},"required":["q","x-token"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_header_validation_error: validationErrorsHeaderValidationError
-		},
-	};
-}
-
-
-/**
- * Handler for POST /users
- */
-async function validationErrors09MultipleValidationErrors(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrors09MultipleValidationErrors(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/users",
-		handler_name: "validation_errors_09_multiple_validation_errors",
-		request_schema: {"type":"object","required":["name","email","age"],"properties":{"name":{"type":"string","minLength":3},"email":{"type":"string","format":"email"},"age":{"type":"integer","minimum":18}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_09_multiple_validation_errors: validationErrors09MultipleValidationErrors
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function validationErrorsNumericConstraintViolationLeLessThanOrEqual(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const q = _params.q;
-	const limit = _params.limit;
-	if (q !== null && q !== undefined) {
-		result.q = q;
-	}
-	if (limit !== null && limit !== undefined) {
-		result.limit = limit;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsNumericConstraintViolationLeLessThanOrEqual(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "validation_errors_numeric_constraint_violation_le_less_than_or_equal",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"limit":{"type":"integer","maximum":100,"source":"query"}},"required":["q","limit"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_numeric_constraint_violation_le_less_than_or_equal: validationErrorsNumericConstraintViolationLeLessThanOrEqual
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function validationErrorsArrayMinItemsConstraintViolation(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppValidationErrorsArrayMinItemsConstraintViolation(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "validation_errors_array_min_items_constraint_violation",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"type":"array","items":{},"minItems":1}},"additionalProperties":false,"required":["name","price","tags"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			validation_errors_array_min_items_constraint_violation: validationErrorsArrayMinItemsConstraintViolation
-		},
-	};
-}
-
-
-/**
- * Handler for POST /background/events
- */
-async function backgroundBackgroundEventLoggingSecondPayload(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 202 };
-	response.headers = {"content-type":"application/json"};
-	BACKGROUND_STATE["background_background_event_logging_second_payload"] = BACKGROUND_STATE["background_background_event_logging_second_payload"] ?? [];
-	const state = BACKGROUND_STATE["background_background_event_logging_second_payload"] as unknown[];
-	const value = _body && typeof _body === "object" ? _body.event : undefined;
-	if (value === undefined || value === null) {
-		throw new Error("background task requires request body value");
-	}
-	void Promise.resolve().then(() => void state.push(value));
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-
-async function backgroundBackgroundEventLoggingSecondPayloadBackgroundState(): Promise<string> {
-	const state = BACKGROUND_STATE["background_background_event_logging_second_payload"] ?? [];
-	const response: HandlerResponse = { status: 200 };
-	response.headers = { "content-type": "application/json" };
-	response.body = { "events": state };
-	return JSON.stringify(response);
-}
-
-export function createAppBackgroundBackgroundEventLoggingSecondPayload(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/background/events",
-		handler_name: "background_background_event_logging_second_payload",
-		request_schema: {"type":"object","properties":{"event":{"type":"string"}},"required":["event"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	const backgroundRoute: RouteMetadata = {
-		method: "GET",
-		path: "/background/events",
-		handler_name: "background_background_event_logging_second_payload_background_state",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route, backgroundRoute],
-		handlers: {
-			background_background_event_logging_second_payload: backgroundBackgroundEventLoggingSecondPayload,
-			background_background_event_logging_second_payload_background_state: backgroundBackgroundEventLoggingSecondPayloadBackgroundState
-		},
-	};
-}
-
-
-/**
- * Handler for POST /background/events
- */
-async function backgroundBackgroundEventLogging(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 202 };
-	response.headers = {"content-type":"application/json"};
-	BACKGROUND_STATE["background_background_event_logging"] = BACKGROUND_STATE["background_background_event_logging"] ?? [];
-	const state = BACKGROUND_STATE["background_background_event_logging"] as unknown[];
-	const value = _body && typeof _body === "object" ? _body.event : undefined;
-	if (value === undefined || value === null) {
-		throw new Error("background task requires request body value");
-	}
-	void Promise.resolve().then(() => void state.push(value));
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-
-async function backgroundBackgroundEventLoggingBackgroundState(): Promise<string> {
-	const state = BACKGROUND_STATE["background_background_event_logging"] ?? [];
-	const response: HandlerResponse = { status: 200 };
-	response.headers = { "content-type": "application/json" };
-	response.body = { "events": state };
-	return JSON.stringify(response);
-}
-
-export function createAppBackgroundBackgroundEventLogging(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/background/events",
-		handler_name: "background_background_event_logging",
-		request_schema: {"type":"object","properties":{"event":{"type":"string"}},"required":["event"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	const backgroundRoute: RouteMetadata = {
-		method: "GET",
-		path: "/background/events",
-		handler_name: "background_background_event_logging_background_state",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route, backgroundRoute],
-		handlers: {
-			background_background_event_logging: backgroundBackgroundEventLogging,
-			background_background_event_logging_background_state: backgroundBackgroundEventLoggingBackgroundState
-		},
-	};
-}
-
-
-async function lifecycleHooksOnresponseSecurityHeadersSecurityHeadersOnResponse0(response: HookResponse): Promise<HookResponse> {
-	// onResponse hook: security_headers - Adds security headers
-	if (!response.headers) response.headers = {};
-	response.headers["X-Content-Type-Options"] = "nosniff";
-	response.headers["X-Frame-Options"] = "DENY";
-	response.headers["X-XSS-Protection"] = "1; mode=block";
-	response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
-	return response;
-}
-
-
-
-/**
- * Handler for GET /api/test-security-headers
- */
-async function lifecycleHooksOnresponseSecurityHeaders(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-frame-options":"DENY","strict-transport-security":"max-age=31536000; includeSubDomains","x-content-type-options":"nosniff","x-xss-protection":"1; mode=block"};
-	const responseBody = {"message":"Response with security headers"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksOnresponseSecurityHeaders(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/test-security-headers",
-		handler_name: "lifecycle_hooks_onresponse_security_headers",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_onresponse_security_headers: lifecycleHooksOnresponseSecurityHeaders
-		},
-	lifecycleHooks: {
-		onResponse: [lifecycleHooksOnresponseSecurityHeadersSecurityHeadersOnResponse0]
-	},
-	};
-}
-
-
-async function lifecycleHooksPrehandlerAuthenticationFailedShortCircuitAuthenticatorPreHandler0(_request: HookRequest): Promise<HookResult> {
-	// preHandler hook: authenticator - Short circuits with 401
-	return {
-		statusCode: 401,
-		body: {
-			error: "Unauthorized",
-			message: "Invalid or expired authentication token"
-		}
-	};
-}
-
-
-
-/**
- * Handler for GET /api/protected-resource-fail
- */
-async function lifecycleHooksPrehandlerAuthenticationFailedShortCircuit(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"error":"Unauthorized","message":"Invalid or expired authentication token"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksPrehandlerAuthenticationFailedShortCircuit(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/protected-resource-fail",
-		handler_name: "lifecycle_hooks_prehandler_authentication_failed_short_circuit",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_prehandler_authentication_failed_short_circuit: lifecycleHooksPrehandlerAuthenticationFailedShortCircuit
-		},
-	lifecycleHooks: {
-		preHandler: [lifecycleHooksPrehandlerAuthenticationFailedShortCircuitAuthenticatorPreHandler0]
-	},
-	};
-}
-
-
-async function lifecycleHooksPrehandlerAuthorizationCheckAuthenticatorPreHandler0(request: HookRequest): Promise<HookResult> {
-	// Mock preHandler hook: authenticator
-	return request;
-}
-
-async function lifecycleHooksPrehandlerAuthorizationCheckAuthorizerPreHandler1(request: HookRequest): Promise<HookResult> {
-	// Mock preHandler hook: authorizer
-	return request;
-}
-
-
-
-/**
- * Handler for GET /api/admin-only
- */
-async function lifecycleHooksPrehandlerAuthorizationCheck(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Admin access granted","user_id":"admin-456","role":"admin"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksPrehandlerAuthorizationCheck(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/admin-only",
-		handler_name: "lifecycle_hooks_prehandler_authorization_check",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_prehandler_authorization_check: lifecycleHooksPrehandlerAuthorizationCheck
-		},
-	lifecycleHooks: {
-		preHandler: [lifecycleHooksPrehandlerAuthorizationCheckAuthenticatorPreHandler0, lifecycleHooksPrehandlerAuthorizationCheckAuthorizerPreHandler1]
-	},
-	};
-}
-
-
-async function lifecycleHooksPrehandlerAuthenticationSuccessAuthenticatorPreHandler0(request: HookRequest): Promise<HookResult> {
-	// Mock preHandler hook: authenticator
-	return request;
-}
-
-
-
-/**
- * Handler for GET /api/protected-resource
- */
-async function lifecycleHooksPrehandlerAuthenticationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Access granted","user_id":"user-123","authenticated":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksPrehandlerAuthenticationSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/protected-resource",
-		handler_name: "lifecycle_hooks_prehandler_authentication_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_prehandler_authentication_success: lifecycleHooksPrehandlerAuthenticationSuccess
-		},
-	lifecycleHooks: {
-		preHandler: [lifecycleHooksPrehandlerAuthenticationSuccessAuthenticatorPreHandler0]
-	},
-	};
-}
-
-
-async function lifecycleHooksPrevalidationRateLimitExceededShortCircuitRateLimiterPreValidation0(_request: HookRequest): Promise<HookResult> {
-	// preValidation hook: rate_limiter - Short circuits with 429
-	return {
-		statusCode: 429,
-		body: {
-			error: "Rate limit exceeded",
-			message: "Too many requests, please try again later"
-		},
-		headers: {
-			"Retry-After": "60"
-		}
-	};
-}
-
-
-
-/**
- * Handler for POST /api/test-rate-limit-exceeded
- */
-async function lifecycleHooksPrevalidationRateLimitExceededShortCircuit(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 429 };
-	response.headers = {"retry-after":"60"};
-	const responseBody = {"error":"Rate limit exceeded","message":"Too many requests, please try again later"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksPrevalidationRateLimitExceededShortCircuit(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/api/test-rate-limit-exceeded",
-		handler_name: "lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit",
-		request_schema: {"type":"object","properties":{"data":{"type":"string"}},"required":["data"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit: lifecycleHooksPrevalidationRateLimitExceededShortCircuit
-		},
-	lifecycleHooks: {
-		preValidation: [lifecycleHooksPrevalidationRateLimitExceededShortCircuitRateLimiterPreValidation0]
-	},
-	};
-}
-
-
-async function lifecycleHooksOnerrorErrorLoggingErrorLoggerOnError0(response: HookResponse): Promise<HookResponse> {
-	// onError hook: error_logger - Format error response
-	if (!response.headers) response.headers = {};
-	response.headers["Content-Type"] = "application/json";
-	return response;
-}
-
-async function lifecycleHooksOnerrorErrorLoggingErrorFormatterOnError1(response: HookResponse): Promise<HookResponse> {
-	// onError hook: error_formatter - Format error response
-	if (!response.headers) response.headers = {};
-	response.headers["Content-Type"] = "application/json";
-	return response;
-}
-
-
-
-/**
- * Handler for GET /api/test-error
- */
-async function lifecycleHooksOnerrorErrorLogging(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 500 };
-	response.headers = {"content-type":"application/json"};
-	const responseBody = {"error":"Internal Server Error","message":"An unexpected error occurred","error_id":".*"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksOnerrorErrorLogging(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/test-error",
-		handler_name: "lifecycle_hooks_onerror_error_logging",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_onerror_error_logging: lifecycleHooksOnerrorErrorLogging
-		},
-	lifecycleHooks: {
-		onError: [lifecycleHooksOnerrorErrorLoggingErrorLoggerOnError0, lifecycleHooksOnerrorErrorLoggingErrorFormatterOnError1]
-	},
-	};
-}
-
-
-async function lifecycleHooksMultipleHooksAllPhasesRequestLoggerOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: request_logger
-	return request;
-}
-
-async function lifecycleHooksMultipleHooksAllPhasesRequestIdGeneratorOnRequest1(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: request_id_generator
-	return request;
-}
-
-async function lifecycleHooksMultipleHooksAllPhasesRateLimiterPreValidation0(request: HookRequest): Promise<HookResult> {
-	// Mock preValidation hook: rate_limiter
-	return request;
-}
-
-async function lifecycleHooksMultipleHooksAllPhasesAuthenticatorPreHandler0(request: HookRequest): Promise<HookResult> {
-	// Mock preHandler hook: authenticator
-	return request;
-}
-
-async function lifecycleHooksMultipleHooksAllPhasesAuthorizerPreHandler1(request: HookRequest): Promise<HookResult> {
-	// Mock preHandler hook: authorizer
-	return request;
-}
-
-async function lifecycleHooksMultipleHooksAllPhasesSecurityHeadersOnResponse0(response: HookResponse): Promise<HookResponse> {
-	// onResponse hook: security_headers - Adds security headers
-	if (!response.headers) response.headers = {};
-	response.headers["X-Content-Type-Options"] = "nosniff";
-	response.headers["X-Frame-Options"] = "DENY";
-	response.headers["X-XSS-Protection"] = "1; mode=block";
-	response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
-	return response;
-}
-
-async function lifecycleHooksMultipleHooksAllPhasesResponseTimerOnResponse1(response: HookResponse): Promise<HookResponse> {
-	// onResponse hook: response_timer - Adds timing header
-	if (!response.headers) response.headers = {};
-	response.headers["X-Response-Time"] = "0ms";
-	return response;
-}
-
-async function lifecycleHooksMultipleHooksAllPhasesAuditLoggerOnResponse2(response: HookResponse): Promise<HookResponse> {
-	// Mock onResponse hook: audit_logger
-	return response;
-}
-
-async function lifecycleHooksMultipleHooksAllPhasesErrorLoggerOnError0(response: HookResponse): Promise<HookResponse> {
-	// onError hook: error_logger - Format error response
-	if (!response.headers) response.headers = {};
-	response.headers["Content-Type"] = "application/json";
-	return response;
-}
-
-
-
-/**
- * Handler for POST /api/full-lifecycle
- */
-async function lifecycleHooksMultipleHooksAllPhases(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-content-type-options":"nosniff","x-request-id":".*","x-frame-options":"DENY","x-response-time":".*ms"};
-	const responseBody = {"message":"Action completed successfully","user_id":"user-123","action":"update_profile","request_id":".*"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksMultipleHooksAllPhases(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/api/full-lifecycle",
-		handler_name: "lifecycle_hooks_multiple_hooks_all_phases",
-		request_schema: {"type":"object","properties":{"user_id":{"type":"string"},"action":{"type":"string"}},"required":["user_id","action"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_multiple_hooks_all_phases: lifecycleHooksMultipleHooksAllPhases
-		},
-	lifecycleHooks: {
-		onRequest: [lifecycleHooksMultipleHooksAllPhasesRequestLoggerOnRequest0, lifecycleHooksMultipleHooksAllPhasesRequestIdGeneratorOnRequest1],
-		preValidation: [lifecycleHooksMultipleHooksAllPhasesRateLimiterPreValidation0],
-		preHandler: [lifecycleHooksMultipleHooksAllPhasesAuthenticatorPreHandler0, lifecycleHooksMultipleHooksAllPhasesAuthorizerPreHandler1],
-		onResponse: [lifecycleHooksMultipleHooksAllPhasesSecurityHeadersOnResponse0, lifecycleHooksMultipleHooksAllPhasesResponseTimerOnResponse1, lifecycleHooksMultipleHooksAllPhasesAuditLoggerOnResponse2],
-		onError: [lifecycleHooksMultipleHooksAllPhasesErrorLoggerOnError0]
-	},
-	};
-}
-
-
-async function lifecycleHooksHookExecutionOrderFirstHookOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: first_hook
-	return request;
-}
-
-async function lifecycleHooksHookExecutionOrderSecondHookOnRequest1(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: second_hook
-	return request;
-}
-
-async function lifecycleHooksHookExecutionOrderThirdHookOnRequest2(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: third_hook
-	return request;
-}
-
-
-
-/**
- * Handler for GET /api/test-hook-order
- */
-async function lifecycleHooksHookExecutionOrder(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Hooks executed in order","execution_order":["first_hook","second_hook","third_hook"]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksHookExecutionOrder(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/test-hook-order",
-		handler_name: "lifecycle_hooks_hook_execution_order",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_hook_execution_order: lifecycleHooksHookExecutionOrder
-		},
-	lifecycleHooks: {
-		onRequest: [lifecycleHooksHookExecutionOrderFirstHookOnRequest0, lifecycleHooksHookExecutionOrderSecondHookOnRequest1, lifecycleHooksHookExecutionOrderThirdHookOnRequest2]
-	},
-	};
-}
-
-
-async function lifecycleHooksOnresponseResponseTimingStartTimerOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: start_timer
-	return request;
-}
-
-async function lifecycleHooksOnresponseResponseTimingResponseTimerOnResponse0(response: HookResponse): Promise<HookResponse> {
-	// onResponse hook: response_timer - Adds timing header
-	if (!response.headers) response.headers = {};
-	response.headers["X-Response-Time"] = "0ms";
-	return response;
-}
-
-
-
-/**
- * Handler for GET /api/test-timing
- */
-async function lifecycleHooksOnresponseResponseTiming(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-response-time":".*ms"};
-	const responseBody = {"message":"Response with timing info"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksOnresponseResponseTiming(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/test-timing",
-		handler_name: "lifecycle_hooks_onresponse_response_timing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_onresponse_response_timing: lifecycleHooksOnresponseResponseTiming
-		},
-	lifecycleHooks: {
-		onRequest: [lifecycleHooksOnresponseResponseTimingStartTimerOnRequest0],
-		onResponse: [lifecycleHooksOnresponseResponseTimingResponseTimerOnResponse0]
-	},
-	};
-}
-
-
-async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthenticatorPreHandler0(_request: HookRequest): Promise<HookResult> {
-	// preHandler hook: authenticator - Short circuits with 403
-	return {
-		statusCode: 403,
-		body: {
-			error: "Forbidden",
-			message: "Admin role required for this endpoint"
-		}
-	};
-}
-
-async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthorizerPreHandler1(_request: HookRequest): Promise<HookResult> {
-	// preHandler hook: authorizer - Short circuits with 403
-	return {
-		statusCode: 403,
-		body: {
-			error: "Forbidden",
-			message: "Admin role required for this endpoint"
-		}
-	};
-}
-
-
-
-/**
- * Handler for GET /api/admin-only-forbidden
- */
-async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 403 };
-	const responseBody = {"error":"Forbidden","message":"Admin role required for this endpoint"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/admin-only-forbidden",
-		handler_name: "lifecycle_hooks_prehandler_authorization_forbidden_short_circuit",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_prehandler_authorization_forbidden_short_circuit: lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit
-		},
-	lifecycleHooks: {
-		preHandler: [lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthenticatorPreHandler0, lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthorizerPreHandler1]
-	},
-	};
-}
-
-
-async function lifecycleHooksOnrequestRequestLoggingRequestLoggerOnRequest0(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: request_logger
-	return request;
-}
-
-async function lifecycleHooksOnrequestRequestLoggingRequestIdGeneratorOnRequest1(request: HookRequest): Promise<HookResult> {
-	// Mock onRequest hook: request_id_generator
-	return request;
-}
-
-
-
-/**
- * Handler for GET /api/test-on-request
- */
-async function lifecycleHooksOnrequestRequestLogging(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-request-id":".*"};
-	const responseBody = {"message":"onRequest hooks executed","request_logged":true,"has_request_id":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksOnrequestRequestLogging(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/test-on-request",
-		handler_name: "lifecycle_hooks_onrequest_request_logging",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_onrequest_request_logging: lifecycleHooksOnrequestRequestLogging
-		},
-	lifecycleHooks: {
-		onRequest: [lifecycleHooksOnrequestRequestLoggingRequestLoggerOnRequest0, lifecycleHooksOnrequestRequestLoggingRequestIdGeneratorOnRequest1]
-	},
-	};
-}
-
-
-async function lifecycleHooksPrevalidationRateLimitingRateLimiterPreValidation0(request: HookRequest): Promise<HookResult> {
-	// Mock preValidation hook: rate_limiter
-	return request;
-}
-
-
-
-/**
- * Handler for POST /api/test-rate-limit
- */
-async function lifecycleHooksPrevalidationRateLimiting(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Request accepted","rate_limit_checked":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppLifecycleHooksPrevalidationRateLimiting(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/api/test-rate-limit",
-		handler_name: "lifecycle_hooks_prevalidation_rate_limiting",
-		request_schema: {"type":"object","properties":{"data":{"type":"string"}},"required":["data"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			lifecycle_hooks_prevalidation_rate_limiting: lifecycleHooksPrevalidationRateLimiting
-		},
-	lifecycleHooks: {
-		preValidation: [lifecycleHooksPrevalidationRateLimitingRateLimiterPreValidation0]
-	},
-	};
-}
-
-
-
-
-export function createAppStaticFilesStaticFileServerReturnsTextFile(): SpikardApp {
-	const config: ServerConfig = {
-		staticFiles: [
-			{
-				directory: new URL("./static_assets/static_files_static_file_server_returns_text_file/public_0", import.meta.url).pathname,
-				routePrefix: "/public",
-				cacheControl: "public, max-age=60",
-			}
-		]
-	};
-
-	return {
-		routes: [],
-		handlers: {
-		},
-		config,
-	};
-}
-
-
-
-
-export function createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory(): SpikardApp {
-	const config: ServerConfig = {
-		staticFiles: [
-			{
-				directory: new URL("./static_assets/static_files_static_server_returns_index_html_for_directory/app_0", import.meta.url).pathname,
-				routePrefix: "/app",
-			}
-		]
-	};
-
-	return {
-		routes: [],
-		handlers: {
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /compression/skip
- */
-async function compressionCompressionPayloadBelowMinSizeIsNotCompressed(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Small payload","payload":"tiny"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCompressionCompressionPayloadBelowMinSizeIsNotCompressed(): SpikardApp {
-	const config: ServerConfig = {
-		compression: {
-			gzip: true,
-			brotli: false,
-			minSize: 4096,
-			quality: 6
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/compression/skip",
-		handler_name: "compression_compression_payload_below_min_size_is_not_compressed",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			compression_compression_payload_below_min_size_is_not_compressed: compressionCompressionPayloadBelowMinSizeIsNotCompressed
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /compression/gzip
- */
-async function compressionCompressionGzipApplied(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"vary":"Accept-Encoding"};
-	const responseBody = {"message":"Compressed payload","payload":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCompressionCompressionGzipApplied(): SpikardApp {
-	const config: ServerConfig = {
-		compression: {
-			gzip: true,
-			brotli: false,
-			minSize: 0,
-			quality: 4
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/compression/gzip",
-		handler_name: "compression_compression_gzip_applied",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			compression_compression_gzip_applied: compressionCompressionGzipApplied
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /headers/pattern
- */
-async function headersHeaderRegexValidationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"x_request_id":"12345"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersHeaderRegexValidationSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/pattern",
-		handler_name: "headers_header_regex_validation_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-Request-Id":{"type":"string","annotation":"str","pattern":"^[0-9]{3,}$","source":"header"}},"required":["X-Request-Id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_header_regex_validation_success: headersHeaderRegexValidationSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function headers33ApiKeyHeaderValid(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const result: Record<string, unknown> = {};
-	const xAPIKey = _params["X-API-Key"];
-	if (xAPIKey !== null && xAPIKey !== undefined) {
-		result["X-API-Key"] = xAPIKey;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeaders33ApiKeyHeaderValid(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "headers_33_api_key_header_valid",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","pattern":"^[a-f0-9]{32}$","source":"header"}},"required":["X-API-Key"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_33_api_key_header_valid: headers33ApiKeyHeaderValid
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/content-type
- */
-async function headersContentTypeHeaderApplicationJson(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"content_type":"application/json"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersContentTypeHeaderApplicationJson(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/content-type",
-		handler_name: "headers_content_type_header_application_json",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Content-Type":{"type":"string","annotation":"str","source":"header"}},"required":["Content-Type"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_content_type_header_application_json: headersContentTypeHeaderApplicationJson
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/accept-language
- */
-async function headersAcceptLanguageHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"accept_language":"en-US,en;q=0.9"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersAcceptLanguageHeader(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/accept-language",
-		handler_name: "headers_accept_language_header",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Accept-Language":{"type":"string","annotation":"str","source":"header"}},"required":["Accept-Language"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_accept_language_header: headersAcceptLanguageHeader
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function headersXApiKeyRequiredHeaderSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"secret"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersXApiKeyRequiredHeaderSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "headers_x_api_key_required_header_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"key":{"type":"string","annotation":"str","source":"header"}},"required":["key"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_x_api_key_required_header_success: headersXApiKeyRequiredHeaderSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/max-length
- */
-async function headersHeaderValidationMaxLengthConstraintFail(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const xSessionId = _params["X-Session-Id"];
-	if (xSessionId !== null && xSessionId !== undefined) {
-		result["X-Session-Id"] = xSessionId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersHeaderValidationMaxLengthConstraintFail(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/max-length",
-		handler_name: "headers_header_validation_max_length_constraint_fail",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-Session-Id":{"type":"string","annotation":"str","maxLength":20,"source":"header"}},"required":["X-Session-Id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_header_validation_max_length_constraint_fail: headersHeaderValidationMaxLengthConstraintFail
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function headersXApiKeyRequiredHeaderMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const xAPIKey = _params["X-API-Key"];
-	if (xAPIKey !== null && xAPIKey !== undefined) {
-		result["X-API-Key"] = xAPIKey;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersXApiKeyRequiredHeaderMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "headers_x_api_key_required_header_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","annotation":"str","source":"header"}},"required":["X-API-Key"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_x_api_key_required_header_missing: headersXApiKeyRequiredHeaderMissing
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/origin
- */
-async function headersOriginHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"origin":"https://example.com"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersOriginHeader(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/origin",
-		handler_name: "headers_origin_header",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","annotation":"str","source":"header"}},"required":["Origin"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_origin_header: headersOriginHeader
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function headersUserAgentHeaderDefaultValue(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"User-Agent":"testclient"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersUserAgentHeaderDefaultValue(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "headers_user_agent_header_default_value",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"User-Agent":{"type":"string","annotation":"str","source":"header","default":"testclient"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_user_agent_header_default_value: headersUserAgentHeaderDefaultValue
-		},
-	};
-}
-
-
-/**
- * Handler for GET /protected
- */
-async function headers32BearerTokenMissingPrefix(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const authorization = _params.Authorization;
-	if (authorization !== null && authorization !== undefined) {
-		result.Authorization = authorization;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeaders32BearerTokenMissingPrefix(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/protected",
-		handler_name: "headers_32_bearer_token_missing_prefix",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_32_bearer_token_missing_prefix: headers32BearerTokenMissingPrefix
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function headersOptionalHeaderWithNoneDefaultMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"strange_header":null};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersOptionalHeaderWithNoneDefaultMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "headers_optional_header_with_none_default_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"strange-header":{"type":"string","annotation":"str","source":"header","default":null}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_optional_header_with_none_default_missing: headersOptionalHeaderWithNoneDefaultMissing
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/pattern
- */
-async function headersHeaderRegexValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const xRequestId = _params["X-Request-Id"];
-	if (xRequestId !== null && xRequestId !== undefined) {
-		result["X-Request-Id"] = xRequestId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersHeaderRegexValidationFail(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/pattern",
-		handler_name: "headers_header_regex_validation_fail",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-Request-Id":{"type":"string","annotation":"str","pattern":"^[0-9]{3,}$","source":"header"}},"required":["X-Request-Id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_header_regex_validation_fail: headersHeaderRegexValidationFail
-		},
-	};
-}
-
-
-/**
- * Handler for GET /protected
- */
-async function headers31BearerTokenFormatInvalid(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const authorization = _params.Authorization;
-	if (authorization !== null && authorization !== undefined) {
-		result.Authorization = authorization;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeaders31BearerTokenFormatInvalid(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/protected",
-		handler_name: "headers_31_bearer_token_format_invalid",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_31_bearer_token_format_invalid: headers31BearerTokenFormatInvalid
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function headersXApiKeyOptionalHeaderSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"msg":"Hello secret"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersXApiKeyOptionalHeaderSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "headers_x_api_key_optional_header_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"key":{"type":"string","annotation":"str","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_x_api_key_optional_header_success: headersXApiKeyOptionalHeaderSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function headersAuthorizationHeaderSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"scheme":"Digest","credentials":"foobar"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersAuthorizationHeaderSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "headers_authorization_header_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_authorization_header_success: headersAuthorizationHeaderSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /protected
- */
-async function headers30BearerTokenFormatValid(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const result: Record<string, unknown> = {};
-	const authorization = _params.Authorization;
-	if (authorization !== null && authorization !== undefined) {
-		result.Authorization = authorization;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeaders30BearerTokenFormatValid(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/protected",
-		handler_name: "headers_30_bearer_token_format_valid",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_30_bearer_token_format_valid: headers30BearerTokenFormatValid
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function headersAuthorizationHeaderMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const authorization = _params.Authorization;
-	if (authorization !== null && authorization !== undefined) {
-		result.Authorization = authorization;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersAuthorizationHeaderMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "headers_authorization_header_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_authorization_header_missing: headersAuthorizationHeaderMissing
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/accept
- */
-async function headersAcceptHeaderJson(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"accept":"application/json"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersAcceptHeaderJson(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/accept",
-		handler_name: "headers_accept_header_json",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Accept":{"type":"string","annotation":"str","source":"header"}},"required":["Accept"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_accept_header_json: headersAcceptHeaderJson
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/accept-encoding
- */
-async function headersAcceptEncodingHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"accept_encoding":"gzip, deflate, br"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersAcceptEncodingHeader(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/accept-encoding",
-		handler_name: "headers_accept_encoding_header",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Accept-Encoding":{"type":"string","annotation":"str","source":"header"}},"required":["Accept-Encoding"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_accept_encoding_header: headersAcceptEncodingHeader
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function headersAuthorizationHeaderWrongScheme(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const authorization = _params.Authorization;
-	if (authorization !== null && authorization !== undefined) {
-		result.Authorization = authorization;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersAuthorizationHeaderWrongScheme(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "headers_authorization_header_wrong_scheme",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header","pattern":"^Digest .+"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_authorization_header_wrong_scheme: headersAuthorizationHeaderWrongScheme
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/validated
- */
-async function headersHeaderValidationMinLengthConstraint(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const xToken = _params["X-Token"];
-	if (xToken !== null && xToken !== undefined) {
-		result["X-Token"] = xToken;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersHeaderValidationMinLengthConstraint(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/validated",
-		handler_name: "headers_header_validation_min_length_constraint",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-Token":{"type":"string","annotation":"str","minLength":3,"source":"header"}},"required":["X-Token"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_header_validation_min_length_constraint: headersHeaderValidationMinLengthConstraint
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/basic-auth
- */
-async function headersBasicAuthenticationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"username","password":"password"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersBasicAuthenticationSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/basic-auth",
-		handler_name: "headers_basic_authentication_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_basic_authentication_success: headersBasicAuthenticationSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/bearer-auth
- */
-async function headersBearerTokenAuthenticationMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const authorization = _params.Authorization;
-	if (authorization !== null && authorization !== undefined) {
-		result.Authorization = authorization;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersBearerTokenAuthenticationMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/bearer-auth",
-		handler_name: "headers_bearer_token_authentication_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header","pattern":"^Bearer .+"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_bearer_token_authentication_missing: headersBearerTokenAuthenticationMissing
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function headersXApiKeyOptionalHeaderMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"msg":"Hello World"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersXApiKeyOptionalHeaderMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "headers_x_api_key_optional_header_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"key":{"type":"string","annotation":"str","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_x_api_key_optional_header_missing: headersXApiKeyOptionalHeaderMissing
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function headersMultipleHeaderValuesXToken(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"X-Token values":["foo","bar"]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersMultipleHeaderValuesXToken(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "headers_multiple_header_values_x_token",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"x-token":{"type":"string","annotation":"str","source":"header"}},"required":["x-token"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_multiple_header_values_x_token: headersMultipleHeaderValuesXToken
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/multiple
- */
-async function headersMultipleCustomHeaders(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"x_request_id":"req-12345","x_client_version":"1.2.3","x_trace_id":"trace-abc"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersMultipleCustomHeaders(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/multiple",
-		handler_name: "headers_multiple_custom_headers",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-Request-Id":{"type":"string","annotation":"str","source":"header"},"X-Client-Version":{"type":"string","annotation":"str","source":"header"},"X-Trace-Id":{"type":"string","annotation":"str","source":"header"}},"required":["X-Request-Id","X-Client-Version","X-Trace-Id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_multiple_custom_headers: headersMultipleCustomHeaders
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function headers34ApiKeyHeaderInvalid(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const xAPIKey = _params["X-API-Key"];
-	if (xAPIKey !== null && xAPIKey !== undefined) {
-		result["X-API-Key"] = xAPIKey;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHeaders34ApiKeyHeaderInvalid(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "headers_34_api_key_header_invalid",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","pattern":"^[a-f0-9]{32}$","source":"header"}},"required":["X-API-Key"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_34_api_key_header_invalid: headers34ApiKeyHeaderInvalid
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/bearer-auth
- */
-async function headersBearerTokenAuthenticationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"token":"valid_token_123"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersBearerTokenAuthenticationSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/bearer-auth",
-		handler_name: "headers_bearer_token_authentication_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_bearer_token_authentication_success: headersBearerTokenAuthenticationSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/host
- */
-async function headersHostHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"host":"example.com:8080"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersHostHeader(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/host",
-		handler_name: "headers_host_header",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Host":{"type":"string","annotation":"str","source":"header"}},"required":["Host"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_host_header: headersHostHeader
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/referer
- */
-async function headersRefererHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"referer":"https://example.com/page"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersRefererHeader(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/referer",
-		handler_name: "headers_referer_header",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Referer":{"type":"string","annotation":"str","source":"header"}},"required":["Referer"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_referer_header: headersRefererHeader
-		},
-	};
-}
-
-
-/**
- * Handler for GET /headers/underscore
- */
-async function headersHeaderWithUnderscoreConversionExplicit(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"x_token":"secret123"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersHeaderWithUnderscoreConversionExplicit(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/headers/underscore",
-		handler_name: "headers_header_with_underscore_conversion_explicit",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-Token":{"type":"string","annotation":"str","source":"header"}},"required":["X-Token"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_header_with_underscore_conversion_explicit: headersHeaderWithUnderscoreConversionExplicit
-		},
-	};
-}
-
-
-/**
- * Handler for POST /echo
- */
-async function headersHeaderCaseInsensitivityAccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"content_type_lower":"application/json","content_type_upper":"application/json","content_type_mixed":"application/json"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersHeaderCaseInsensitivityAccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/echo",
-		handler_name: "headers_header_case_insensitivity_access",
-		request_schema: {"type":"object","properties":{"test":{"type":"string"}},"additionalProperties":false,"required":["test"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_header_case_insensitivity_access: headersHeaderCaseInsensitivityAccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function headersUserAgentHeaderCustomValue(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"User-Agent":"Mozilla/5.0 Custom Browser"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHeadersUserAgentHeaderCustomValue(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "headers_user_agent_header_custom_value",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"User-Agent":{"type":"string","annotation":"str","source":"header"}},"required":["User-Agent"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			headers_user_agent_header_custom_value: headersUserAgentHeaderCustomValue
-		},
-	};
-}
-
-
-/**
- * Handler for POST /
- */
-async function multipartMultipleValuesForSameFieldName(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"files":[{"filename":"file1.txt","size":10,"content":"first file","content_type":"text/plain"},{"filename":"file2.txt","size":11,"content":"second file","content_type":"text/plain"}],"tags":["python","rust","web"]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartMultipleValuesForSameFieldName(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/",
-		handler_name: "multipart_multiple_values_for_same_field_name",
-		request_schema: {"type":"object","properties":{"files":{"type":"array","items":{"type":"string","format":"binary"}},"tags":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["files"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_multiple_values_for_same_field_name: multipartMultipleValuesForSameFieldName
-		},
-	};
-}
-
-
-/**
- * Handler for POST /upload
- */
-async function multipart19FileMimeSpoofingPngAsJpeg(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipart19FileMimeSpoofingPngAsJpeg(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/upload",
-		handler_name: "multipart_19_file_mime_spoofing_png_as_jpeg",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: {"image":{"required":true,"content_type":["image/jpeg"],"validate_magic_numbers":true}},
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_19_file_mime_spoofing_png_as_jpeg: multipart19FileMimeSpoofingPngAsJpeg
-		},
-	};
-}
-
-
-/**
- * Handler for POST /upload
- */
-async function multipart20FileMimeSpoofingJpegAsPng(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipart20FileMimeSpoofingJpegAsPng(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/upload",
-		handler_name: "multipart_20_file_mime_spoofing_jpeg_as_png",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: {"image":{"required":true,"content_type":["image/png"],"validate_magic_numbers":true}},
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_20_file_mime_spoofing_jpeg_as_png: multipart20FileMimeSpoofingJpegAsPng
-		},
-	};
-}
-
-
-/**
- * Handler for POST /upload
- */
-async function multipart21FilePdfMagicNumberSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipart21FilePdfMagicNumberSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/upload",
-		handler_name: "multipart_21_file_pdf_magic_number_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: {"document":{"required":true,"content_type":["application/pdf"],"validate_magic_numbers":true}},
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_21_file_pdf_magic_number_success: multipart21FilePdfMagicNumberSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/images-only
- */
-async function multipartContentTypeValidationInvalidType(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartContentTypeValidationInvalidType(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/images-only",
-		handler_name: "multipart_content_type_validation_invalid_type",
-		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: {"file":{"required":true,"content_type":["image/jpeg","image/png","image/gif"]}},
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_content_type_validation_invalid_type: multipartContentTypeValidationInvalidType
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/document
- */
-async function multipartPdfFileUpload(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"filename":"report.pdf","content_type":"application/pdf","size":16};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartPdfFileUpload(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/document",
-		handler_name: "multipart_pdf_file_upload",
-		request_schema: {"type":"object","properties":{"document":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["document"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_pdf_file_upload: multipartPdfFileUpload
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/list
- */
-async function multipartFileListUploadArrayOfFiles(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"filenames":["file1.txt","file2.txt"],"total_size":35};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartFileListUploadArrayOfFiles(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/list",
-		handler_name: "multipart_file_list_upload_array_of_files",
-		request_schema: {"type":"object","properties":{"files":{"type":"array","items":{"type":"string","format":"binary"}}},"additionalProperties":false,"required":["files"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_file_list_upload_array_of_files: multipartFileListUploadArrayOfFiles
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/optional
- */
-async function multipartOptionalFileUploadProvided(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"filename":"optional.txt","content_type":"text/plain","size":21};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartOptionalFileUploadProvided(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/optional",
-		handler_name: "multipart_optional_file_upload_provided",
-		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["file"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_optional_file_upload_provided: multipartOptionalFileUploadProvided
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/validated
- */
-async function multipartFileSizeValidationTooLarge(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 413 };
-	const responseBody = {"detail":"File too large. Maximum size is 1MB"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartFileSizeValidationTooLarge(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/validated",
-		handler_name: "multipart_file_size_validation_too_large",
-		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_file_size_validation_too_large: multipartFileSizeValidationTooLarge
-		},
-	};
-}
-
-
-/**
- * Handler for POST /
- */
-async function multipartMixedFilesAndFormData(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"file":{"filename":"upload.txt","size":14,"content":"file data here","content_type":"text/plain"},"username":"testuser","age":"25","active":"true"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartMixedFilesAndFormData(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/",
-		handler_name: "multipart_mixed_files_and_form_data",
-		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"},"username":{"type":"string"},"age":{"type":"string"},"active":{"type":"string"}},"additionalProperties":false,"required":["file"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_mixed_files_and_form_data: multipartMixedFilesAndFormData
-		},
-	};
-}
-
-
-/**
- * Handler for POST /
- */
-async function multipartSimpleFileUpload(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"test":{"filename":"test.txt","size":14,"content":"<file content>","content_type":"text/plain"}};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartSimpleFileUpload(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/",
-		handler_name: "multipart_simple_file_upload",
-		request_schema: {"type":"object","properties":{"test":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["test"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_simple_file_upload: multipartSimpleFileUpload
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/upload
- */
-async function multipartEmptyFileUpload(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"filename":"empty.txt","size":0};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartEmptyFileUpload(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/upload",
-		handler_name: "multipart_empty_file_upload",
-		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["file"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_empty_file_upload: multipartEmptyFileUpload
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/optional
- */
-async function multipartOptionalFileUploadMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"file":null};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartOptionalFileUploadMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/optional",
-		handler_name: "multipart_optional_file_upload_missing",
-		request_schema: {"type":"object","properties":{},"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_optional_file_upload_missing: multipartOptionalFileUploadMissing
-		},
-	};
-}
-
-
-/**
- * Handler for POST /
- */
-async function multipartFileUploadWithoutFilename(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"test1":"<file1 content>"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartFileUploadWithoutFilename(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/",
-		handler_name: "multipart_file_upload_without_filename",
-		request_schema: {"type":"object","properties":{"test1":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["test1"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_file_upload_without_filename: multipartFileUploadWithoutFilename
-		},
-	};
-}
-
-
-/**
- * Handler for POST /upload
- */
-async function multipart18FileMagicNumberJpegSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipart18FileMagicNumberJpegSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/upload",
-		handler_name: "multipart_18_file_magic_number_jpeg_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: {"image":{"required":true,"content_type":["image/jpeg"],"validate_magic_numbers":true}},
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_18_file_magic_number_jpeg_success: multipart18FileMagicNumberJpegSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for POST /upload
- */
-async function multipart22FileEmptyBuffer(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipart22FileEmptyBuffer(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/upload",
-		handler_name: "multipart_22_file_empty_buffer",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: {"file":{"required":true,"validate_magic_numbers":true}},
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_22_file_empty_buffer: multipart22FileEmptyBuffer
-		},
-	};
-}
-
-
-/**
- * Handler for POST /upload
- */
-async function multipart17FileMagicNumberPngSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipart17FileMagicNumberPngSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/upload",
-		handler_name: "multipart_17_file_magic_number_png_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: {"image":{"required":true,"content_type":["image/png"],"validate_magic_numbers":true}},
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_17_file_magic_number_png_success: multipart17FileMagicNumberPngSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for POST /
- */
-async function multipartFormDataWithoutFiles(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"some":"data"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartFormDataWithoutFiles(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/",
-		handler_name: "multipart_form_data_without_files",
-		request_schema: {"type":"object","properties":{"some":{"type":"string"}},"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_form_data_without_files: multipartFormDataWithoutFiles
-		},
-	};
-}
-
-
-/**
- * Handler for POST /
- */
-async function multipartMultipleFileUploads(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"test1":{"filename":"test1.txt","size":15,"content":"<file1 content>","content_type":"text/plain"},"test2":{"filename":"test2.txt","size":15,"content":"<file2 content>","content_type":"text/plain"}};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartMultipleFileUploads(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/",
-		handler_name: "multipart_multiple_file_uploads",
-		request_schema: {"type":"object","properties":{"test1":{"type":"string","format":"binary"},"test2":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["test1","test2"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_multiple_file_uploads: multipartMultipleFileUploads
-		},
-	};
-}
-
-
-/**
- * Handler for POST /
- */
-async function multipartFileUploadWithCustomHeaders(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"test2":{"filename":"test2.txt","size":15,"content":"<file2 content>","content_type":"text/plain","headers":[["content-disposition","form-data; name=\"test2\"; filename=\"test2.txt\""],["content-type","text/plain"],["x-custom","f2"]]}};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartFileUploadWithCustomHeaders(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/",
-		handler_name: "multipart_file_upload_with_custom_headers",
-		request_schema: {"type":"object","properties":{"test2":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["test2"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_file_upload_with_custom_headers: multipartFileUploadWithCustomHeaders
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/required
- */
-async function multipartRequiredFileUploadMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartRequiredFileUploadMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/required",
-		handler_name: "multipart_required_file_upload_missing",
-		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"required":["file"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_required_file_upload_missing: multipartRequiredFileUploadMissing
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files/image
- */
-async function multipartImageFileUpload(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"filename":"photo.jpg","content_type":"image/jpeg","size":22};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppMultipartImageFileUpload(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files/image",
-		handler_name: "multipart_image_file_upload",
-		request_schema: {"type":"object","properties":{"image":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["image"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			multipart_image_file_upload: multipartImageFileUpload
-		},
-	};
-}
-
-
-/**
- * Handler for GET /data
- */
-async function cookies25CookieSamesiteLax(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const result: Record<string, unknown> = {};
-	const tracking = _params.tracking;
-	if (tracking !== null && tracking !== undefined) {
-		result.tracking = tracking;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookies25CookieSamesiteLax(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/data",
-		handler_name: "cookies_25_cookie_samesite_lax",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"tracking":{"type":"string","source":"cookie","samesite":"Lax"}},"required":["tracking"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_25_cookie_samesite_lax: cookies25CookieSamesiteLax
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function cookiesOptionalCookieParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"ads_id":"abc123"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesOptionalCookieParameterSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "cookies_optional_cookie_parameter_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"ads_id":{"type":"string","source":"cookie"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_optional_cookie_parameter_success: cookiesOptionalCookieParameterSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /cookies/pattern
- */
-async function cookiesCookieRegexPatternValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const trackingId = _params.tracking_id;
-	if (trackingId !== null && trackingId !== undefined) {
-		result.tracking_id = trackingId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesCookieRegexPatternValidationFail(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/cookies/pattern",
-		handler_name: "cookies_cookie_regex_pattern_validation_fail",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"tracking_id":{"type":"string","pattern":"^[A-Z0-9]{8}$","source":"cookie"}},"required":["tracking_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_cookie_regex_pattern_validation_fail: cookiesCookieRegexPatternValidationFail
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookies/session
- */
-async function cookiesResponseSessionCookieNoMaxAge(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Session cookie set"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseSessionCookieNoMaxAge(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookies/session",
-		handler_name: "cookies_response_session_cookie_no_max_age",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_session_cookie_no_max_age: cookiesResponseSessionCookieNoMaxAge
-		},
-	};
-}
-
-
-/**
- * Handler for GET /secure
- */
-async function cookies27CookieHttponlyFlag(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const result: Record<string, unknown> = {};
-	const session = _params.session;
-	if (session !== null && session !== undefined) {
-		result.session = session;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookies27CookieHttponlyFlag(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/secure",
-		handler_name: "cookies_27_cookie_httponly_flag",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"session":{"type":"string","source":"cookie","httponly":true}},"required":["session"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_27_cookie_httponly_flag: cookies27CookieHttponlyFlag
-		},
-	};
-}
-
-
-/**
- * Handler for GET /cookie/set
- */
-async function cookiesResponseCookieWithAttributes(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Cookie set"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseCookieWithAttributes(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/cookie/set",
-		handler_name: "cookies_response_cookie_with_attributes",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_cookie_with_attributes: cookiesResponseCookieWithAttributes
-		},
-	};
-}
-
-
-/**
- * Handler for GET /secure
- */
-async function cookies24CookieSamesiteStrict(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const result: Record<string, unknown> = {};
-	const sessionId = _params.session_id;
-	if (sessionId !== null && sessionId !== undefined) {
-		result.session_id = sessionId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookies24CookieSamesiteStrict(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/secure",
-		handler_name: "cookies_24_cookie_samesite_strict",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"session_id":{"type":"string","source":"cookie","samesite":"Strict"}},"required":["session_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_24_cookie_samesite_strict: cookies24CookieSamesiteStrict
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function cookiesApikeyCookieAuthenticationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"secret"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesApikeyCookieAuthenticationSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "cookies_apikey_cookie_authentication_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"key":{"type":"string","source":"cookie"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_apikey_cookie_authentication_success: cookiesApikeyCookieAuthenticationSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /cookies/min-length
- */
-async function cookiesCookieValidationMinLengthConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"token":"abc"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesCookieValidationMinLengthConstraintSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/cookies/min-length",
-		handler_name: "cookies_cookie_validation_min_length_constraint_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"token":{"type":"string","source":"cookie"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_cookie_validation_min_length_constraint_success: cookiesCookieValidationMinLengthConstraintSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function cookiesCookieValidationMinLengthFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const trackingId = _params.tracking_id;
-	if (trackingId !== null && trackingId !== undefined) {
-		result.tracking_id = trackingId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesCookieValidationMinLengthFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "cookies_cookie_validation_min_length_failure",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"tracking_id":{"type":"string","minLength":3,"source":"cookie"}},"required":["tracking_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_cookie_validation_min_length_failure: cookiesCookieValidationMinLengthFailure
-		},
-	};
-}
-
-
-/**
- * Handler for GET /cookies/validated
- */
-async function cookiesCookieValidationMaxLengthConstraintFail(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const sessionId = _params.session_id;
-	if (sessionId !== null && sessionId !== undefined) {
-		result.session_id = sessionId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesCookieValidationMaxLengthConstraintFail(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/cookies/validated",
-		handler_name: "cookies_cookie_validation_max_length_constraint_fail",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"session_id":{"type":"string","maxLength":20,"source":"cookie"}},"required":["session_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_cookie_validation_max_length_constraint_fail: cookiesCookieValidationMaxLengthConstraintFail
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/cookies
- */
-async function cookiesRequiredCookieMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const sessionId = _params.session_id;
-	const fatebookTracker = _params.fatebook_tracker;
-	if (sessionId !== null && sessionId !== undefined) {
-		result.session_id = sessionId;
-	}
-	if (fatebookTracker !== null && fatebookTracker !== undefined) {
-		result.fatebook_tracker = fatebookTracker;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesRequiredCookieMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/cookies",
-		handler_name: "cookies_required_cookie_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"session_id":{"type":"string","source":"cookie"},"fatebook_tracker":{"type":"string","source":"cookie"}},"required":["session_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_required_cookie_missing: cookiesRequiredCookieMissing
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function cookiesOptionalCookieParameterMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"ads_id":null};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesOptionalCookieParameterMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "cookies_optional_cookie_parameter_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"ads_id":{"type":"string","source":"cookie"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_optional_cookie_parameter_missing: cookiesOptionalCookieParameterMissing
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me/auth
- */
-async function cookiesApikeyCookieAuthenticationMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const key = _params.key;
-	if (key !== null && key !== undefined) {
-		result.key = key;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesApikeyCookieAuthenticationMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me/auth",
-		handler_name: "cookies_apikey_cookie_authentication_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"key":{"type":"string","source":"cookie"}},"required":["key"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_apikey_cookie_authentication_missing: cookiesApikeyCookieAuthenticationMissing
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookies/multiple
- */
-async function cookiesResponseMultipleCookies(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Multiple cookies set"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseMultipleCookies(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookies/multiple",
-		handler_name: "cookies_response_multiple_cookies",
-		request_schema: {"type":"object","properties":{"user":{"type":"string"},"session":{"type":"string"}},"required":["user","session"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_multiple_cookies: cookiesResponseMultipleCookies
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookies/samesite-lax
- */
-async function cookiesResponseCookieWithSamesiteLax(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Cookie set with SameSite=Lax"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseCookieWithSamesiteLax(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookies/samesite-lax",
-		handler_name: "cookies_response_cookie_with_samesite_lax",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_cookie_with_samesite_lax: cookiesResponseCookieWithSamesiteLax
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookies/delete
- */
-async function cookiesResponseDeleteCookie(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Cookie deleted"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseDeleteCookie(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookies/delete",
-		handler_name: "cookies_response_delete_cookie",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"session":{"type":"string","source":"cookie"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_delete_cookie: cookiesResponseDeleteCookie
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookies/set-with-path
- */
-async function cookiesResponseCookieWithPathAttribute(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Cookie set with path"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseCookieWithPathAttribute(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookies/set-with-path",
-		handler_name: "cookies_response_cookie_with_path_attribute",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_cookie_with_path_attribute: cookiesResponseCookieWithPathAttribute
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function cookiesOptionalApikeyCookieMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"msg":"Create an account first"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesOptionalApikeyCookieMissing(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "cookies_optional_apikey_cookie_missing",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"key":{"type":"string","source":"cookie"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_optional_apikey_cookie_missing: cookiesOptionalApikeyCookieMissing
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookies/samesite-strict
- */
-async function cookiesResponseCookieWithSamesiteStrict(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Cookie set with SameSite=Strict"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseCookieWithSamesiteStrict(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookies/samesite-strict",
-		handler_name: "cookies_response_cookie_with_samesite_strict",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_cookie_with_samesite_strict: cookiesResponseCookieWithSamesiteStrict
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookies/samesite-none
- */
-async function cookiesResponseCookieWithSamesiteNone(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Cookie set with SameSite=None"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseCookieWithSamesiteNone(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookies/samesite-none",
-		handler_name: "cookies_response_cookie_with_samesite_none",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_cookie_with_samesite_none: cookiesResponseCookieWithSamesiteNone
-		},
-	};
-}
-
-
-/**
- * Handler for GET /cookies/pattern
- */
-async function cookiesCookieRegexPatternValidationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"tracking_id":"ABC12345"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesCookieRegexPatternValidationSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/cookies/pattern",
-		handler_name: "cookies_cookie_regex_pattern_validation_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"tracking_id":{"type":"string","source":"cookie"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_cookie_regex_pattern_validation_success: cookiesCookieRegexPatternValidationSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookie/
- */
-async function cookiesResponseSetCookieBasic(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Come to the dark side, we have cookies"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseSetCookieBasic(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookie/",
-		handler_name: "cookies_response_set_cookie_basic",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_set_cookie_basic: cookiesResponseSetCookieBasic
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/
- */
-async function cookiesMultipleCookiesSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"session_id":"session123","fatebook_tracker":"tracker456","googall_tracker":"ga789"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesMultipleCookiesSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/",
-		handler_name: "cookies_multiple_cookies_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"session_id":{"type":"string","source":"cookie"},"fatebook_tracker":{"type":"string","source":"cookie"},"googall_tracker":{"type":"string","source":"cookie"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_multiple_cookies_success: cookiesMultipleCookiesSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /secure
- */
-async function cookies26CookieSecureFlag(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const result: Record<string, unknown> = {};
-	const authToken = _params.auth_token;
-	if (authToken !== null && authToken !== undefined) {
-		result.auth_token = authToken;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppCookies26CookieSecureFlag(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/secure",
-		handler_name: "cookies_26_cookie_secure_flag",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"auth_token":{"type":"string","source":"cookie","secure":true}},"required":["auth_token"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_26_cookie_secure_flag: cookies26CookieSecureFlag
-		},
-	};
-}
-
-
-/**
- * Handler for POST /cookies/set-with-domain
- */
-async function cookiesResponseCookieWithDomainAttribute(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Cookie set with domain"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppCookiesResponseCookieWithDomainAttribute(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/cookies/set-with-domain",
-		handler_name: "cookies_response_cookie_with_domain_attribute",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			cookies_response_cookie_with_domain_attribute: cookiesResponseCookieWithDomainAttribute
-		},
-	};
-}
-
-
-/**
- * Handler for GET /api/protected
- */
-async function authJwtMalformedTokenFormat(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Malformed JWT token","status":401,"detail":"Malformed JWT token: expected 3 parts separated by dots, found 2"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtMalformedTokenFormat(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/protected",
-		handler_name: "auth_jwt_malformed_token_format",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_malformed_token_format: authJwtMalformedTokenFormat
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/protected
- */
-async function authBearerTokenWithoutPrefix(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Invalid Authorization header format","status":401,"detail":"Authorization header must use Bearer scheme: 'Bearer <token>'"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthBearerTokenWithoutPrefix(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/protected",
-		handler_name: "auth_bearer_token_without_prefix",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_bearer_token_without_prefix: authBearerTokenWithoutPrefix
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /protected/user
- */
-async function authJwtAuthenticationValidToken(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Access granted","user_id":"user123"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtAuthenticationValidToken(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256",
-		audience: ["https://api.example.com"],
-		issuer: "https://auth.example.com"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/protected/user",
-		handler_name: "auth_jwt_authentication_valid_token",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_authentication_valid_token: authJwtAuthenticationValidToken
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function authApiKeyRotationOldKeyStillValid(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-api-key-deprecated":"true"};
-	const responseBody = {"message":"Access granted","data":"sensitive information"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthApiKeyRotationOldKeyStillValid(): SpikardApp {
-	const config: ServerConfig = {
-		apiKeyAuth: {
-		keys: ["sk_test_old_123456","sk_test_new_789012"],
-		headerName: "X-API-Key"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "auth_api_key_rotation_old_key_still_valid",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","source":"header","description":"API key for authentication"}},"required":["X-API-Key"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_api_key_rotation_old_key_still_valid: authApiKeyRotationOldKeyStillValid
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/protected
- */
-async function authJwtInvalidIssuer(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"Token issuer is invalid, expected 'https://auth.example.com'"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtInvalidIssuer(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256",
-		issuer: "https://auth.example.com",
-		leeway: 0
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/protected",
-		handler_name: "auth_jwt_invalid_issuer",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_invalid_issuer: authJwtInvalidIssuer
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/protected
- */
-async function authJwtWithMultipleAudiences(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Access granted","user_id":"user123"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtWithMultipleAudiences(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256",
-		audience: ["https://api.example.com"],
-		issuer: "https://auth.example.com"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/protected",
-		handler_name: "auth_jwt_with_multiple_audiences",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_with_multiple_audiences: authJwtWithMultipleAudiences
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function authApiKeyInQueryParameter(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Access granted","data":"sensitive information"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthApiKeyInQueryParameter(): SpikardApp {
-	const config: ServerConfig = {
-		apiKeyAuth: {
-		keys: ["sk_test_123456","sk_test_789012"],
-		headerName: "X-API-Key"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "auth_api_key_in_query_parameter",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_api_key_in_query_parameter: authApiKeyInQueryParameter
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /protected/user
- */
-async function authJwtAuthenticationExpiredToken(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"Token has expired"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtAuthenticationExpiredToken(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/protected/user",
-		handler_name: "auth_jwt_authentication_expired_token",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_authentication_expired_token: authJwtAuthenticationExpiredToken
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function authApiKeyAuthenticationInvalidKey(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Invalid API key","status":401,"detail":"The provided API key is not valid"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthApiKeyAuthenticationInvalidKey(): SpikardApp {
-	const config: ServerConfig = {
-		apiKeyAuth: {
-		keys: ["sk_test_123456","sk_test_789012"],
-		headerName: "X-API-Key"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "auth_api_key_authentication_invalid_key",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","source":"header"}},"required":["X-API-Key"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_api_key_authentication_invalid_key: authApiKeyAuthenticationInvalidKey
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/protected
- */
-async function authJwtNotBeforeClaimInFuture(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"JWT not valid yet, not before claim is in the future"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtNotBeforeClaimInFuture(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256",
-		leeway: 0
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/protected",
-		handler_name: "auth_jwt_not_before_claim_in_future",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_not_before_claim_in_future: authJwtNotBeforeClaimInFuture
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function authMultipleAuthenticationSchemesJwtPrecedence(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Access granted","user_id":"user123","auth_method":"jwt"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthMultipleAuthenticationSchemesJwtPrecedence(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256",
-		audience: ["https://api.example.com"],
-		issuer: "https://auth.example.com"
-		},
-		apiKeyAuth: {
-		keys: ["sk_test_123456","sk_test_789012"],
-		headerName: "X-API-Key"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "auth_multiple_authentication_schemes_jwt_precedence",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"},"X-API-Key":{"type":"string","source":"header","description":"API key for authentication"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_multiple_authentication_schemes_jwt_precedence: authMultipleAuthenticationSchemesJwtPrecedence
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/admin
- */
-async function authJwtMissingRequiredCustomClaims(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 403 };
-	const responseBody = {"type":"https://spikard.dev/errors/forbidden","title":"Forbidden","status":403,"detail":"Required claims 'role' and 'permissions' missing from JWT"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtMissingRequiredCustomClaims(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256",
-		audience: ["https://api.example.com"],
-		issuer: "https://auth.example.com"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/admin",
-		handler_name: "auth_jwt_missing_required_custom_claims",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_missing_required_custom_claims: authJwtMissingRequiredCustomClaims
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function authApiKeyAuthenticationValidKey(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Access granted","data":"sensitive information"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthApiKeyAuthenticationValidKey(): SpikardApp {
-	const config: ServerConfig = {
-		apiKeyAuth: {
-		keys: ["sk_test_123456","sk_test_789012"],
-		headerName: "X-API-Key"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "auth_api_key_authentication_valid_key",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","source":"header","description":"API key for authentication"}},"required":["X-API-Key"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_api_key_authentication_valid_key: authApiKeyAuthenticationValidKey
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function authApiKeyWithCustomHeaderName(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Access granted","data":"sensitive information"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthApiKeyWithCustomHeaderName(): SpikardApp {
-	const config: ServerConfig = {
-		apiKeyAuth: {
-		keys: ["sk_test_123456","sk_test_789012"],
-		headerName: "X-API-Token"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "auth_api_key_with_custom_header_name",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-API-Token":{"type":"string","source":"header","description":"API token for authentication"}},"required":["X-API-Token"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_api_key_with_custom_header_name: authApiKeyWithCustomHeaderName
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /api/data
- */
-async function authApiKeyAuthenticationMissingHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Missing API key","status":401,"detail":"Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthApiKeyAuthenticationMissingHeader(): SpikardApp {
-	const config: ServerConfig = {
-		apiKeyAuth: {
-		keys: ["sk_test_123456","sk_test_789012"],
-		headerName: "X-API-Key"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/data",
-		handler_name: "auth_api_key_authentication_missing_header",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_api_key_authentication_missing_header: authApiKeyAuthenticationMissingHeader
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /protected/user
- */
-async function authJwtAuthenticationInvalidSignature(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"Token signature is invalid"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtAuthenticationInvalidSignature(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/protected/user",
-		handler_name: "auth_jwt_authentication_invalid_signature",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_authentication_invalid_signature: authJwtAuthenticationInvalidSignature
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /protected/user
- */
-async function authJwtAuthenticationMissingAuthorizationHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Missing or invalid Authorization header","status":401,"detail":"Expected 'Authorization: Bearer <token>'"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtAuthenticationMissingAuthorizationHeader(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256"
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/protected/user",
-		handler_name: "auth_jwt_authentication_missing_authorization_header",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_authentication_missing_authorization_header: authJwtAuthenticationMissingAuthorizationHeader
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for GET /protected/user
- */
-async function authJwtAuthenticationInvalidAudience(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"Token audience is invalid"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppAuthJwtAuthenticationInvalidAudience(): SpikardApp {
-	const config: ServerConfig = {
-		jwtAuth: {
-		secret: "test-secret-key-do-not-use-in-production",
-		algorithm: "HS256",
-		audience: ["https://api.example.com"]
-		}
-	};
-
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/protected/user",
-		handler_name: "auth_jwt_authentication_invalid_audience",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header"}},"required":["Authorization"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			auth_jwt_authentication_invalid_audience: authJwtAuthenticationInvalidAudience
-		},
-		config,
-	};
-}
-
-
-/**
- * Handler for OPTIONS /items/
- */
-async function httpMethodsOptionsCorsPreflightRequest(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"access-control-allow-origin":"https://example.com","access-control-allow-methods":"GET, POST, PUT, DELETE, OPTIONS","access-control-max-age":"86400","access-control-allow-headers":"Content-Type"};
-	const result: Record<string, unknown> = {};
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsOptionsCorsPreflightRequest(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "OPTIONS",
-		path: "/items/",
-		handler_name: "http_methods_options_cors_preflight_request",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_options_cors_preflight_request: httpMethodsOptionsCorsPreflightRequest
-		},
-	};
-}
-
-
-/**
- * Handler for DELETE /items/{id}
- */
-async function httpMethodsDeleteRemoveResource(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsDeleteRemoveResource(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "DELETE",
-		path: "/items/{id}",
-		handler_name: "http_methods_delete_remove_resource",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_delete_remove_resource: httpMethodsDeleteRemoveResource
-		},
-	};
-}
-
-
-/**
- * Handler for PUT /items/{id}
- */
-async function httpMethodsPutCreateResourceIfDoesnTExist(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":999,"name":"New Item","price":49.99};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsPutCreateResourceIfDoesnTExist(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "PUT",
-		path: "/items/{id}",
-		handler_name: "http_methods_put_create_resource_if_doesn_t_exist",
-		request_schema: {"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"number"}},"required":["id","name","price"]},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_put_create_resource_if_doesn_t_exist: httpMethodsPutCreateResourceIfDoesnTExist
-		},
-	};
-}
-
-
-/**
- * Handler for PATCH /items/{id}
- */
-async function httpMethodsPatchUpdateMultipleFields(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":1,"name":"Updated Name","price":89.99,"in_stock":false};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsPatchUpdateMultipleFields(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "PATCH",
-		path: "/items/{id}",
-		handler_name: "http_methods_patch_update_multiple_fields",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"in_stock":{"type":"boolean"}},"required":["in_stock","name","price"]},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_patch_update_multiple_fields: httpMethodsPatchUpdateMultipleFields
-		},
-	};
-}
-
-
-/**
- * Handler for PUT /items/{id}
- */
-async function httpMethodsPutValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const id = _params.id;
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	if (id !== null && id !== undefined) {
-		result.id = id;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsPutValidationError(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "PUT",
-		path: "/items/{id}",
-		handler_name: "http_methods_put_validation_error",
-		request_schema: {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["id","name","price"],"properties":{"id":{"type":"integer"},"name":{"type":"string","minLength":3},"price":{"type":"number","exclusiveMinimum":0}}},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_put_validation_error: httpMethodsPutValidationError
-		},
-	};
-}
-
-
-/**
- * Handler for HEAD /items/{id}
- */
-async function httpMethodsHeadGetMetadataWithoutBody(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"application/json","content-length":"85"};
-	const result: Record<string, unknown> = {};
-	const id = _params.id;
-	if (id !== null && id !== undefined) {
-		result.id = id;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsHeadGetMetadataWithoutBody(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "HEAD",
-		path: "/items/{id}",
-		handler_name: "http_methods_head_get_metadata_without_body",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_head_get_metadata_without_body: httpMethodsHeadGetMetadataWithoutBody
-		},
-	};
-}
-
-
-/**
- * Handler for DELETE /items/{id}
- */
-async function httpMethodsDeleteWithResponseBody(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":1,"name":"Deleted Item","message":"Item deleted successfully"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsDeleteWithResponseBody(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "DELETE",
-		path: "/items/{id}",
-		handler_name: "http_methods_delete_with_response_body",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_delete_with_response_body: httpMethodsDeleteWithResponseBody
-		},
-	};
-}
-
-
-/**
- * Handler for PUT /items/{id}
- */
-async function httpMethodsPutMissingRequiredField(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const id = _params.id;
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	if (id !== null && id !== undefined) {
-		result.id = id;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsPutMissingRequiredField(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "PUT",
-		path: "/items/{id}",
-		handler_name: "http_methods_put_missing_required_field",
-		request_schema: {"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"string"}},"required":["price"]},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_put_missing_required_field: httpMethodsPutMissingRequiredField
-		},
-	};
-}
-
-
-/**
- * Handler for PATCH /items/{id}
- */
-async function httpMethodsPatchPartialUpdate(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":1,"name":"Existing Item","price":79.99,"in_stock":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsPatchPartialUpdate(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "PATCH",
-		path: "/items/{id}",
-		handler_name: "http_methods_patch_partial_update",
-		request_schema: {"type":"object","properties":{"price":{"type":"number"}},"required":["price"]},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_patch_partial_update: httpMethodsPatchPartialUpdate
-		},
-	};
-}
-
-
-/**
- * Handler for DELETE /items/{id}
- */
-async function httpMethodsDeleteResourceNotFound(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsDeleteResourceNotFound(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "DELETE",
-		path: "/items/{id}",
-		handler_name: "http_methods_delete_resource_not_found",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_delete_resource_not_found: httpMethodsDeleteResourceNotFound
-		},
-	};
-}
-
-
-/**
- * Handler for PUT /items/{id}
- */
-async function httpMethodsPutIdempotentOperation(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":1,"name":"Fixed Name","price":50.0};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsPutIdempotentOperation(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "PUT",
-		path: "/items/{id}",
-		handler_name: "http_methods_put_idempotent_operation",
-		request_schema: {"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"number"}},"required":["id","name","price"]},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_put_idempotent_operation: httpMethodsPutIdempotentOperation
-		},
-	};
-}
-
-
-/**
- * Handler for PUT /items/{id}
- */
-async function httpMethodsPutCompleteResourceReplacement(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":1,"name":"Updated Item","description":"Completely replaced","price":99.99,"in_stock":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppHttpMethodsPutCompleteResourceReplacement(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "PUT",
-		path: "/items/{id}",
-		handler_name: "http_methods_put_complete_resource_replacement",
-		request_schema: {"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"description":{"type":"string"},"price":{"type":"number"},"in_stock":{"type":"boolean"}},"required":["description","id","in_stock","name","price"]},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			http_methods_put_complete_resource_replacement: httpMethodsPutCompleteResourceReplacement
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function contentTypes415UnsupportedMediaType(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 415 };
-	const responseBody = {"type":"https://spikard.dev/errors/unsupported-media-type","title":"Unsupported Media Type","status":415,"detail":"Unsupported media type"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes415UnsupportedMediaType(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "content_types_415_unsupported_media_type",
-		request_schema: {"type":"string"},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_415_unsupported_media_type: contentTypes415UnsupportedMediaType
-		},
-	};
-}
-
-
-/**
- * Handler for GET /xml
- */
-async function contentTypesXmlResponseApplicationXml(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"application/xml"};
-	const responseBody = "<?xml version=\"1.0\"?><item><name>Item</name><price>42.0</price></item>";
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesXmlResponseApplicationXml(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/xml",
-		handler_name: "content_types_xml_response_application_xml",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_xml_response_application_xml: contentTypesXmlResponseApplicationXml
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function contentTypes14ContentTypeCaseInsensitive(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"name":"test"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes14ContentTypeCaseInsensitive(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "content_types_14_content_type_case_insensitive",
-		request_schema: {"type":"object","required":["name"],"properties":{"name":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_14_content_type_case_insensitive: contentTypes14ContentTypeCaseInsensitive
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/unicode
- */
-async function contentTypesJsonWithUtf8Charset(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"application/json; charset=utf-8"};
-	const responseBody = {"name":"Café","emoji":"☕"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesJsonWithUtf8Charset(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/unicode",
-		handler_name: "content_types_json_with_utf_8_charset",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_json_with_utf_8_charset: contentTypesJsonWithUtf8Charset
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function contentTypes16TextPlainNotAccepted(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 415 };
-	const responseBody = {"type":"https://spikard.dev/errors/unsupported-media-type","title":"Unsupported Media Type","status":415,"detail":"Unsupported media type"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes16TextPlainNotAccepted(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "content_types_16_text_plain_not_accepted",
-		request_schema: {"type":"object","required":["data"],"properties":{"data":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_16_text_plain_not_accepted: contentTypes16TextPlainNotAccepted
-		},
-	};
-}
-
-
-/**
- * Handler for GET /download/document.pdf
- */
-async function contentTypesPdfResponseApplicationPdf(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"application/pdf","content-disposition":"attachment; filename=document.pdf"};
-	const responseBody = "pdf_binary_data";
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesPdfResponseApplicationPdf(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/download/document.pdf",
-		handler_name: "content_types_pdf_response_application_pdf",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_pdf_response_application_pdf: contentTypesPdfResponseApplicationPdf
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function contentTypes20ContentLengthMismatch(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 400 };
-	const responseBody = {"error":"Content-Length header does not match actual body size"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes20ContentLengthMismatch(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "content_types_20_content_length_mismatch",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"Content-Length":{"type":"string","source":"header"}}},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_20_content_length_mismatch: contentTypes20ContentLengthMismatch
-		},
-	};
-}
-
-
-/**
- * Handler for POST /api/v1/resource
- */
-async function contentTypes17VendorJsonAccepted(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"data":"value"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes17VendorJsonAccepted(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/api/v1/resource",
-		handler_name: "content_types_17_vendor_json_accepted",
-		request_schema: {"type":"object","required":["data"],"properties":{"data":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_17_vendor_json_accepted: contentTypes17VendorJsonAccepted
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function contentTypes13JsonWithCharsetUtf16(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 415 };
-	const responseBody = {"type":"https://spikard.dev/errors/unsupported-charset","title":"Unsupported Charset","status":415,"detail":"Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes13JsonWithCharsetUtf16(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "content_types_13_json_with_charset_utf16",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_13_json_with_charset_utf16: contentTypes13JsonWithCharsetUtf16
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/json
- */
-async function contentTypesJsonResponseApplicationJson(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"application/json"};
-	const responseBody = {"name":"Item","price":42.0};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesJsonResponseApplicationJson(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/json",
-		handler_name: "content_types_json_response_application_json",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_json_response_application_json: contentTypesJsonResponseApplicationJson
-		},
-	};
-}
-
-
-/**
- * Handler for POST /upload
- */
-async function contentTypes15MultipartBoundaryRequired(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 400 };
-	const responseBody = {"error":"multipart/form-data requires 'boundary' parameter"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes15MultipartBoundaryRequired(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/upload",
-		handler_name: "content_types_15_multipart_boundary_required",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{}},
-		file_params: {"document":{"required":true}},
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_15_multipart_boundary_required: contentTypes15MultipartBoundaryRequired
-		},
-	};
-}
-
-
-/**
- * Handler for GET /accept-test/{id}
- */
-async function contentTypesContentNegotiationAcceptHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"application/json"};
-	const responseBody = {"id":1,"name":"Item"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesContentNegotiationAcceptHeader(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/accept-test/{id}",
-		handler_name: "content_types_content_negotiation_accept_header",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_content_negotiation_accept_header: contentTypesContentNegotiationAcceptHeader
-		},
-	};
-}
-
-
-/**
- * Handler for GET /html
- */
-async function contentTypesHtmlResponseTextHtml(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"text/html; charset=utf-8"};
-	const responseBody = "<html><body><h1>Hello</h1></body></html>";
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesHtmlResponseTextHtml(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/html",
-		handler_name: "content_types_html_response_text_html",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_html_response_text_html: contentTypesHtmlResponseTextHtml
-		},
-	};
-}
-
-
-/**
- * Handler for GET /images/photo.jpg
- */
-async function contentTypesJpegImageResponseImageJpeg(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"image/jpeg"};
-	const responseBody = "jpeg_binary_data";
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesJpegImageResponseImageJpeg(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/images/photo.jpg",
-		handler_name: "content_types_jpeg_image_response_image_jpeg",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_jpeg_image_response_image_jpeg: contentTypesJpegImageResponseImageJpeg
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function contentTypes19MissingContentTypeDefaultJson(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"name":"test"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes19MissingContentTypeDefaultJson(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "content_types_19_missing_content_type_default_json",
-		request_schema: {"type":"object","required":["name"],"properties":{"name":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_19_missing_content_type_default_json: contentTypes19MissingContentTypeDefaultJson
-		},
-	};
-}
-
-
-/**
- * Handler for GET /images/logo.png
- */
-async function contentTypesPngImageResponseImagePng(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"image/png"};
-	const responseBody = "png_binary_data";
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesPngImageResponseImagePng(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/images/logo.png",
-		handler_name: "content_types_png_image_response_image_png",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_png_image_response_image_png: contentTypesPngImageResponseImagePng
-		},
-	};
-}
-
-
-/**
- * Handler for GET /text
- */
-async function contentTypesPlainTextResponseTextPlain(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"text/plain; charset=utf-8"};
-	const responseBody = "Hello, World!";
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesPlainTextResponseTextPlain(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/text",
-		handler_name: "content_types_plain_text_response_text_plain",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_plain_text_response_text_plain: contentTypesPlainTextResponseTextPlain
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function contentTypes18ContentTypeWithMultipleParams(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"value":"test"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypes18ContentTypeWithMultipleParams(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "content_types_18_content_type_with_multiple_params",
-		request_schema: {"type":"object","properties":{"value":{"type":"string"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_18_content_type_with_multiple_params: contentTypes18ContentTypeWithMultipleParams
-		},
-	};
-}
-
-
-/**
- * Handler for GET /export/data.csv
- */
-async function contentTypesCsvResponseTextCsv(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"text/csv; charset=utf-8","content-disposition":"attachment; filename=data.csv"};
-	const responseBody = "id,name,price\n1,Item A,10.0\n2,Item B,20.0";
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesCsvResponseTextCsv(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/export/data.csv",
-		handler_name: "content_types_csv_response_text_csv",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_csv_response_text_csv: contentTypesCsvResponseTextCsv
-		},
-	};
-}
-
-
-/**
- * Handler for GET /download/file.bin
- */
-async function contentTypesBinaryResponseApplicationOctetStream(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"content-type":"application/octet-stream","content-disposition":"attachment; filename=file.bin"};
-	const responseBody = "binary_data_placeholder";
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppContentTypesBinaryResponseApplicationOctetStream(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/download/file.bin",
-		handler_name: "content_types_binary_response_application_octet_stream",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			content_types_binary_response_application_octet_stream: contentTypesBinaryResponseApplicationOctetStream
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/bool/{item_id}
- */
-async function pathParamsBooleanPathParameterTrue(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsBooleanPathParameterTrue(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/bool/{item_id}",
-		handler_name: "path_params_boolean_path_parameter_true",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"boolean","source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_boolean_path_parameter_true: pathParamsBooleanPathParameterTrue
-		},
-	};
-}
-
-
-/**
- * Handler for GET /prices/{amount}
- */
-async function pathParams29DecimalPathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"amount":"19.99"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams29DecimalPathParamSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/prices/{amount}",
-		handler_name: "path_params_29_decimal_path_param_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"amount":{"type":"string","format":"decimal","source":"path"}},"required":["amount"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_29_decimal_path_param_success: pathParams29DecimalPathParamSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/param-lt-gt/{item_id}
- */
-async function pathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":2};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/param-lt-gt/{item_id}",
-		handler_name: "path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","exclusiveMinimum":1,"exclusiveMaximum":3,"source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success: pathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /repos/{owner}/{repo}
- */
-async function pathParams33StringPatternPathSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"owner":"spikard-labs","repo":"spikard-http"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams33StringPatternPathSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/repos/{owner}/{repo}",
-		handler_name: "path_params_33_string_pattern_path_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"owner":{"type":"string","pattern":"^[a-zA-Z0-9-]+$","source":"path"},"repo":{"type":"string","pattern":"^[a-zA-Z0-9-_]+$","source":"path"}},"required":["owner","repo"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_33_string_pattern_path_success: pathParams33StringPatternPathSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/{username}
- */
-async function pathParams31StringMinlengthPathFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const username = _params.username;
-	if (username !== null && username !== undefined) {
-		result.username = username;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams31StringMinlengthPathFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/{username}",
-		handler_name: "path_params_31_string_minlength_path_failure",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"username":{"type":"string","minLength":3,"source":"path"}},"required":["username"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_31_string_minlength_path_failure: pathParams31StringMinlengthPathFailure
-		},
-	};
-}
-
-
-/**
- * Handler for GET /offset/{value}
- */
-async function pathParams35NegativeIntegerPathParam(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"value":-100};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams35NegativeIntegerPathParam(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/offset/{value}",
-		handler_name: "path_params_35_negative_integer_path_param",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"value":{"type":"integer","source":"path"}},"required":["value"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_35_negative_integer_path_param: pathParams35NegativeIntegerPathParam
-		},
-	};
-}
-
-
-/**
- * Handler for GET /models/{model_name}
- */
-async function pathParamsEnumPathParameterInvalidValue(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const modelName = _params.model_name;
-	if (modelName !== null && modelName !== undefined) {
-		result.model_name = modelName;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsEnumPathParameterInvalidValue(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/models/{model_name}",
-		handler_name: "path_params_enum_path_parameter_invalid_value",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"model_name":{"type":"string","enum":["alexnet","resnet","lenet"],"source":"path"}},"required":["model_name"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_enum_path_parameter_invalid_value: pathParamsEnumPathParameterInvalidValue
-		},
-	};
-}
-
-
-/**
- * Handler for GET /bookings/{timestamp}
- */
-async function pathParams27DatetimeFormatPathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"timestamp":"2025-10-30T14:30:00Z"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams27DatetimeFormatPathParamSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/bookings/{timestamp}",
-		handler_name: "path_params_27_datetime_format_path_param_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"timestamp":{"type":"string","format":"date-time","source":"path"}},"required":["timestamp"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_27_datetime_format_path_param_success: pathParams27DatetimeFormatPathParamSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /events/{date}
- */
-async function pathParams25DateFormatInvalidFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const date = _params.date;
-	if (date !== null && date !== undefined) {
-		result.date = date.toISOString();
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams25DateFormatInvalidFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/events/{date}",
-		handler_name: "path_params_25_date_format_invalid_failure",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"date":{"type":"string","format":"date","source":"path"}},"required":["date"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_25_date_format_invalid_failure: pathParams25DateFormatInvalidFailure
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/param-lt/{item_id}
- */
-async function pathParamsIntegerPathParameterWithLtConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":2};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsIntegerPathParameterWithLtConstraintSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/param-lt/{item_id}",
-		handler_name: "path_params_integer_path_parameter_with_lt_constraint_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","exclusiveMaximum":3,"source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_integer_path_parameter_with_lt_constraint_success: pathParamsIntegerPathParameterWithLtConstraintSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/param-gt/{item_id}
- */
-async function pathParamsIntegerPathParameterWithGtConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":42};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsIntegerPathParameterWithGtConstraintSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/param-gt/{item_id}",
-		handler_name: "path_params_integer_path_parameter_with_gt_constraint_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","exclusiveMinimum":3,"source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_integer_path_parameter_with_gt_constraint_success: pathParamsIntegerPathParameterWithGtConstraintSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /delays/{duration}
- */
-async function pathParams28DurationFormatPathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"duration":"P1DT2H30M"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams28DurationFormatPathParamSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/delays/{duration}",
-		handler_name: "path_params_28_duration_format_path_param_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"duration":{"type":"string","format":"duration","source":"path"}},"required":["duration"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_28_duration_format_path_param_success: pathParams28DurationFormatPathParamSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /type-syntax/items-count/{count:int}
- */
-async function pathParamsPathParameterTypeSyntaxWithOverride(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"count":"50"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsPathParameterTypeSyntaxWithOverride(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/type-syntax/items-count/{count:int}",
-		handler_name: "path_params_path_parameter_type_syntax_with_override",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"count":{"type":"integer","minimum":1,"maximum":100,"source":"path"}},"required":["count"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_path_parameter_type_syntax_with_override: pathParamsPathParameterTypeSyntaxWithOverride
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/{id}
- */
-async function pathParams20UuidV3PathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":"e8b5a51d-11c8-3310-a6ab-367563f20686"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams20UuidV3PathParamSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/{id}",
-		handler_name: "path_params_20_uuid_v3_path_param_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","format":"uuid","uuidVersion":"3","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_20_uuid_v3_path_param_success: pathParams20UuidV3PathParamSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/int/{item_id}
- */
-async function pathParamsIntegerPathParameterInvalidString(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const itemId = _params.item_id;
-	if (itemId !== null && itemId !== undefined) {
-		result.item_id = itemId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsIntegerPathParameterInvalidString(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/int/{item_id}",
-		handler_name: "path_params_integer_path_parameter_invalid_string",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_integer_path_parameter_invalid_string: pathParamsIntegerPathParameterInvalidString
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/{username}
- */
-async function pathParams30StringMinlengthPathSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"username":"alice"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams30StringMinlengthPathSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/{username}",
-		handler_name: "path_params_30_string_minlength_path_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"username":{"type":"string","minLength":3,"source":"path"}},"required":["username"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_30_string_minlength_path_success: pathParams30StringMinlengthPathSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/param-le/{item_id}
- */
-async function pathParamsIntegerPathParameterWithLeConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":3};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsIntegerPathParameterWithLeConstraintSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/param-le/{item_id}",
-		handler_name: "path_params_integer_path_parameter_with_le_constraint_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","maximum":3,"source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_integer_path_parameter_with_le_constraint_success: pathParamsIntegerPathParameterWithLeConstraintSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /type-syntax/items/{id:uuid}
- */
-async function pathParamsPathParameterTypeSyntaxInvalidUuid(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsPathParameterTypeSyntaxInvalidUuid(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/type-syntax/items/{id:uuid}",
-		handler_name: "path_params_path_parameter_type_syntax_invalid_uuid",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_path_parameter_type_syntax_invalid_uuid: pathParamsPathParameterTypeSyntaxInvalidUuid
-		},
-	};
-}
-
-
-/**
- * Handler for GET /files/{file_path:path}
- */
-async function pathParamsPathTypeParameterFilePath(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"file_path":"home/johndoe/myfile.txt"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsPathTypeParameterFilePath(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/files/{file_path:path}",
-		handler_name: "path_params_path_type_parameter_file_path",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"file_path":{"type":"string","source":"path"}},"required":["file_path"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_path_type_parameter_file_path: pathParamsPathTypeParameterFilePath
-		},
-	};
-}
-
-
-/**
- * Handler for GET /type-syntax/items/{id:uuid}
- */
-async function pathParamsPathParameterWithTypeSyntaxUuid(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":"550e8400-e29b-41d4-a716-446655440000"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsPathParameterWithTypeSyntaxUuid(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/type-syntax/items/{id:uuid}",
-		handler_name: "path_params_path_parameter_with_type_syntax_uuid",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_path_parameter_with_type_syntax_uuid: pathParamsPathParameterWithTypeSyntaxUuid
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/{username}
- */
-async function pathParams32StringMaxlengthPathFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const username = _params.username;
-	if (username !== null && username !== undefined) {
-		result.username = username;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams32StringMaxlengthPathFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/{username}",
-		handler_name: "path_params_32_string_maxlength_path_failure",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"username":{"type":"string","maxLength":20,"source":"path"}},"required":["username"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_32_string_maxlength_path_failure: pathParams32StringMaxlengthPathFailure
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/int/{item_id}
- */
-async function pathParamsIntegerPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":42};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsIntegerPathParameterSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/int/{item_id}",
-		handler_name: "path_params_integer_path_parameter_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_integer_path_parameter_success: pathParamsIntegerPathParameterSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /repos/{owner}
- */
-async function pathParams34StringPatternPathFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const owner = _params.owner;
-	if (owner !== null && owner !== undefined) {
-		result.owner = owner;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams34StringPatternPathFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/repos/{owner}",
-		handler_name: "path_params_34_string_pattern_path_failure",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"owner":{"type":"string","pattern":"^[a-zA-Z0-9-]+$","source":"path"}},"required":["owner"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_34_string_pattern_path_failure: pathParams34StringPatternPathFailure
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/{id}
- */
-async function pathParams21UuidV5PathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":"630eb68f-e0fa-5ecc-887a-7c7a62614681"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams21UuidV5PathParamSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/{id}",
-		handler_name: "path_params_21_uuid_v5_path_param_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"string","format":"uuid","uuidVersion":"5","source":"path"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_21_uuid_v5_path_param_success: pathParams21UuidV5PathParamSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/param-maxlength/{item_id}
- */
-async function pathParamsStringPathParameterWithMaxLengthFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const itemId = _params.item_id;
-	if (itemId !== null && itemId !== undefined) {
-		result.item_id = itemId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsStringPathParameterWithMaxLengthFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/param-maxlength/{item_id}",
-		handler_name: "path_params_string_path_parameter_with_max_length_failure",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","maxLength":3,"source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_string_path_parameter_with_max_length_failure: pathParamsStringPathParameterWithMaxLengthFailure
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/param-minlength/{item_id}
- */
-async function pathParamsStringPathParameterWithMinLengthFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const itemId = _params.item_id;
-	if (itemId !== null && itemId !== undefined) {
-		result.item_id = itemId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsStringPathParameterWithMinLengthFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/param-minlength/{item_id}",
-		handler_name: "path_params_string_path_parameter_with_min_length_failure",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","minLength":3,"source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_string_path_parameter_with_min_length_failure: pathParamsStringPathParameterWithMinLengthFailure
-		},
-	};
-}
-
-
-/**
- * Handler for GET /{version}/{service_id}/{user_id}/{order_id}
- */
-async function pathParamsMultiplePathParametersSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"version":1.0,"service_id":1,"user_id":"abc","order_id":"c892496f-b1fd-4b91-bdb8-b46f92df1716"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsMultiplePathParametersSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/{version}/{service_id}/{user_id}/{order_id}",
-		handler_name: "path_params_multiple_path_parameters_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"version":{"type":"number","source":"path"},"service_id":{"type":"integer","source":"path"},"user_id":{"type":"string","source":"path"},"order_id":{"type":"string","format":"uuid","source":"path"}},"required":["version","service_id","user_id","order_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_multiple_path_parameters_success: pathParamsMultiplePathParametersSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /date/{date_param}
- */
-async function pathParamsDatePathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"date_param":"2023-07-15"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsDatePathParameterSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/date/{date_param}",
-		handler_name: "path_params_date_path_parameter_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"date_param":{"type":"string","format":"date","source":"path"}},"required":["date_param"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_date_path_parameter_success: pathParamsDatePathParameterSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/param-gt/{item_id}
- */
-async function pathParamsIntegerPathParameterWithGtConstraintFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	const itemId = _params.item_id;
-	if (itemId !== null && itemId !== undefined) {
-		result.item_id = itemId;
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsIntegerPathParameterWithGtConstraintFailure(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/param-gt/{item_id}",
-		handler_name: "path_params_integer_path_parameter_with_gt_constraint_failure",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","exclusiveMinimum":3,"source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_integer_path_parameter_with_gt_constraint_failure: pathParamsIntegerPathParameterWithGtConstraintFailure
-		},
-	};
-}
-
-
-/**
- * Handler for GET /events/{date}
- */
-async function pathParams24DateFormatPathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"date":"2025-10-30"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParams24DateFormatPathParamSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/events/{date}",
-		handler_name: "path_params_24_date_format_path_param_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"date":{"type":"string","format":"date","source":"path"}},"required":["date"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_24_date_format_path_param_success: pathParams24DateFormatPathParamSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/float/{item_id}
- */
-async function pathParamsFloatPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":42.5};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsFloatPathParameterSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/float/{item_id}",
-		handler_name: "path_params_float_path_parameter_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"number","source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_float_path_parameter_success: pathParamsFloatPathParameterSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /type-syntax/users/{user_id:int}
- */
-async function pathParamsPathParameterWithTypeSyntaxInteger(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"user_id":"42"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsPathParameterWithTypeSyntaxInteger(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/type-syntax/users/{user_id:int}",
-		handler_name: "path_params_path_parameter_with_type_syntax_integer",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_path_parameter_with_type_syntax_integer: pathParamsPathParameterWithTypeSyntaxInteger
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/str/{item_id}
- */
-async function pathParamsStringPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":"foobar"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsStringPathParameterSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/str/{item_id}",
-		handler_name: "path_params_string_path_parameter_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_string_path_parameter_success: pathParamsStringPathParameterSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items/{item_id}
- */
-async function pathParamsUuidPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":"ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsUuidPathParameterSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items/{item_id}",
-		handler_name: "path_params_uuid_path_parameter_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","format":"uuid","source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_uuid_path_parameter_success: pathParamsUuidPathParameterSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/param-ge/{item_id}
- */
-async function pathParamsIntegerPathParameterWithGeConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":3};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsIntegerPathParameterWithGeConstraintSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/param-ge/{item_id}",
-		handler_name: "path_params_integer_path_parameter_with_ge_constraint_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","minimum":3,"source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_integer_path_parameter_with_ge_constraint_success: pathParamsIntegerPathParameterWithGeConstraintSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /models/{model_name}
- */
-async function pathParamsEnumPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"model_name":"alexnet"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsEnumPathParameterSuccess(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/models/{model_name}",
-		handler_name: "path_params_enum_path_parameter_success",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"model_name":{"type":"string","enum":["alexnet","lenet","resnet"],"source":"path"}},"required":["model_name"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_enum_path_parameter_success: pathParamsEnumPathParameterSuccess
-		},
-	};
-}
-
-
-/**
- * Handler for GET /path/bool/{item_id}
- */
-async function pathParamsBooleanPathParameterNumeric1(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"item_id":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppPathParamsBooleanPathParameterNumeric1(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/path/bool/{item_id}",
-		handler_name: "path_params_boolean_path_parameter_numeric_1",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"item_id":{"type":"boolean","source":"path"}},"required":["item_id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			path_params_boolean_path_parameter_numeric_1: pathParamsBooleanPathParameterNumeric1
-		},
-	};
-}
-
-
-/**
- * Handler for POST /messages
- */
-async function edgeCases19EmojiInStrings(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"text":"Hello 👋 World 🌍"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases19EmojiInStrings(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/messages",
-		handler_name: "edge_cases_19_emoji_in_strings",
-		request_schema: {"type":"object","required":["text"],"properties":{"text":{"type":"string","minLength":1,"maxLength":100}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_19_emoji_in_strings: edgeCases19EmojiInStrings
-		},
-	};
-}
-
-
-/**
- * Handler for GET /search
- */
-async function edgeCases12PercentEncodedSpecialChars(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"term":"hi there"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases12PercentEncodedSpecialChars(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/search",
-		handler_name: "edge_cases_12_percent_encoded_special_chars",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"term":{"type":"string","source":"query"}},"required":["term"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_12_percent_encoded_special_chars: edgeCases12PercentEncodedSpecialChars
-		},
-	};
-}
-
-
-/**
- * Handler for POST /strings/
- */
-async function edgeCasesSpecialStringValuesAndEscaping(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"empty_string":"","whitespace":"   ","tabs_newlines":"line1\n\tline2\r\nline3","quotes":"He said \"hello\" and 'goodbye'","backslashes":"C:\\\\Users\\\\Path","unicode_escapes":"Hello","special_chars":"!@#$%^&*()_+-=[]{}|;':\",./<>?"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCasesSpecialStringValuesAndEscaping(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/strings/",
-		handler_name: "edge_cases_special_string_values_and_escaping",
-		request_schema: {"type":"object","properties":{"empty_string":{"type":"string"},"whitespace":{"type":"string"},"tabs_newlines":{"type":"string"},"quotes":{"type":"string"},"backslashes":{"type":"string"},"unicode_escapes":{"type":"string"},"special_chars":{"type":"string"}},"additionalProperties":false,"required":["empty_string","whitespace","tabs_newlines","quotes","backslashes","unicode_escapes","special_chars"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_special_string_values_and_escaping: edgeCasesSpecialStringValuesAndEscaping
-		},
-	};
-}
-
-
-/**
- * Handler for POST /calculate
- */
-async function edgeCases15FloatPrecisionPreservation(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"value":3.141592653589793};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases15FloatPrecisionPreservation(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/calculate",
-		handler_name: "edge_cases_15_float_precision_preservation",
-		request_schema: {"type":"object","required":["value"],"properties":{"value":{"type":"number"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_15_float_precision_preservation: edgeCases15FloatPrecisionPreservation
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items
- */
-async function edgeCases13EmptyStringQueryParamPreserved(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"filter":""};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases13EmptyStringQueryParamPreserved(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items",
-		handler_name: "edge_cases_13_empty_string_query_param_preserved",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"filter":{"type":"string","source":"query"}},"required":["filter"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_13_empty_string_query_param_preserved: edgeCases13EmptyStringQueryParamPreserved
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items
- */
-async function edgeCases24ArrayWithHoles(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"items":["first","third","sixth"]};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases24ArrayWithHoles(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items",
-		handler_name: "edge_cases_24_array_with_holes",
-		request_schema: {"type":"object","required":["items"],"properties":{"items":{"type":"array","items":{"type":"string"}}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_24_array_with_holes: edgeCases24ArrayWithHoles
-		},
-	};
-}
-
-
-/**
- * Handler for POST /calculate
- */
-async function edgeCases21ScientificNotationNumber(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"value":123000};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases21ScientificNotationNumber(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/calculate",
-		handler_name: "edge_cases_21_scientific_notation_number",
-		request_schema: {"type":"object","required":["value"],"properties":{"value":{"type":"number","minimum":0}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_21_scientific_notation_number: edgeCases21ScientificNotationNumber
-		},
-	};
-}
-
-
-/**
- * Handler for POST /calculations/
- */
-async function edgeCasesFloatPrecisionAndRounding(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"sum":0.30000000000000004,"precise_value":3.141592653589793,"very_small":1e-10,"very_large":1.7976931348623157e+308};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCasesFloatPrecisionAndRounding(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/calculations/",
-		handler_name: "edge_cases_float_precision_and_rounding",
-		request_schema: {"type":"object","properties":{"value1":{"type":"number"},"value2":{"type":"number"},"expected_sum":{"type":"number"},"precise_value":{"type":"number"},"very_small":{"type":"number"},"very_large":{"type":"number"}},"additionalProperties":false,"required":["value1","value2","expected_sum","precise_value","very_small","very_large"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_float_precision_and_rounding: edgeCasesFloatPrecisionAndRounding
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function edgeCasesUnicodeAndEmojiHandling(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":1,"name":"Coffee Shop ☕","description":"Best café in München 🇩🇪","tags":["食べ物","音楽","💰"],"emoji_reactions":"👍❤️😂🎉"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCasesUnicodeAndEmojiHandling(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/items/",
-		handler_name: "edge_cases_unicode_and_emoji_handling",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"},"description":{"type":"string"},"tags":{"type":"array","items":{"type":"string"}},"emoji_reactions":{"type":"string"}},"additionalProperties":false,"required":["name","description","tags","emoji_reactions"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_unicode_and_emoji_handling: edgeCasesUnicodeAndEmojiHandling
-		},
-	};
-}
-
-
-/**
- * Handler for POST /text
- */
-async function edgeCases17ExtremelyLongString(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases17ExtremelyLongString(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/text",
-		handler_name: "edge_cases_17_extremely_long_string",
-		request_schema: {"type":"object","required":["content"],"properties":{"content":{"type":"string","maxLength":10000}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_17_extremely_long_string: edgeCases17ExtremelyLongString
-		},
-	};
-}
-
-
-/**
- * Handler for GET /search
- */
-async function edgeCases11Utf8QueryParameter(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"term":"café"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases11Utf8QueryParameter(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/search",
-		handler_name: "edge_cases_11_utf8_query_parameter",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"term":{"type":"string","source":"query"}},"required":["term"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_11_utf8_query_parameter: edgeCases11Utf8QueryParameter
-		},
-	};
-}
-
-
-/**
- * Handler for POST /users
- */
-async function edgeCases18UnicodeNormalization(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"name":"café"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases18UnicodeNormalization(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/users",
-		handler_name: "edge_cases_18_unicode_normalization",
-		request_schema: {"type":"object","required":["name"],"properties":{"name":{"type":"string","minLength":1}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_18_unicode_normalization: edgeCases18UnicodeNormalization
-		},
-	};
-}
-
-
-/**
- * Handler for POST /files
- */
-async function edgeCases20NullByteInString(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 422 };
-	const result: Record<string, unknown> = {};
-	if (_body !== null && _body !== undefined) {
-		if (typeof _body === "object") {
-			Object.assign(result, _body);
-		} else {
-			result.body = _body;
-		}
-	}
-	response.body = result;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases20NullByteInString(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/files",
-		handler_name: "edge_cases_20_null_byte_in_string",
-		request_schema: {"type":"object","required":["filename"],"properties":{"filename":{"type":"string","pattern":"^[^\\x00]+$"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_20_null_byte_in_string: edgeCases20NullByteInString
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function edgeCases23DeeplyNestedJsonLimit(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 400 };
-	const responseBody = {"error":"Request body exceeds maximum nesting depth of 32"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases23DeeplyNestedJsonLimit(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "edge_cases_23_deeply_nested_json_limit",
-		request_schema: {"type":"object"},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_23_deeply_nested_json_limit: edgeCases23DeeplyNestedJsonLimit
-		},
-	};
-}
-
-
-/**
- * Handler for GET /items
- */
-async function edgeCases14LargeIntegerBoundary(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":9007199254740991};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases14LargeIntegerBoundary(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/items",
-		handler_name: "edge_cases_14_large_integer_boundary",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"id":{"type":"integer","source":"query"}},"required":["id"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_14_large_integer_boundary: edgeCases14LargeIntegerBoundary
-		},
-	};
-}
-
-
-/**
- * Handler for GET /data
- */
-async function edgeCases22LeadingZerosInteger(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"value":123};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases22LeadingZerosInteger(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/data",
-		handler_name: "edge_cases_22_leading_zeros_integer",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"value":{"type":"integer","annotation":"int","source":"query"}},"required":["value"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_22_leading_zeros_integer: edgeCases22LeadingZerosInteger
-		},
-	};
-}
-
-
-/**
- * Handler for POST /numbers/
- */
-async function edgeCasesLargeIntegerBoundaryValues(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"max_safe_int":9007199254740991,"large_int":"9223372036854775807","negative_large":"-9223372036854775808"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCasesLargeIntegerBoundaryValues(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/numbers/",
-		handler_name: "edge_cases_large_integer_boundary_values",
-		request_schema: {"type":"object","properties":{"max_safe_int":{"type":"integer"},"large_int":{"type":"integer"},"negative_large":{"type":"integer"}},"additionalProperties":false,"required":["max_safe_int","large_int","negative_large"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_large_integer_boundary_values: edgeCasesLargeIntegerBoundaryValues
-		},
-	};
-}
-
-
-/**
- * Handler for POST /nested/
- */
-async function edgeCasesDeeplyNestedStructure10Levels(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"message":"Processed deeply nested structure","max_depth":10,"value_found":"deep"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCasesDeeplyNestedStructure10Levels(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/nested/",
-		handler_name: "edge_cases_deeply_nested_structure_10_levels",
-		request_schema: {"type":"object","properties":{"level1":{"type":"object","properties":{"level2":{"type":"object","properties":{"level3":{"type":"object","properties":{"level4":{"type":"object","properties":{"level5":{"type":"object","properties":{"level6":{"type":"object","properties":{"level7":{"type":"object","properties":{"level8":{"type":"object","properties":{"level9":{"type":"object","properties":{"level10":{"type":"object","properties":{"value":{"type":"string"},"depth":{"type":"integer"}},"additionalProperties":false,"required":["value","depth"]}},"additionalProperties":false,"required":["level10"]}},"additionalProperties":false,"required":["level9"]}},"additionalProperties":false,"required":["level8"]}},"additionalProperties":false,"required":["level7"]}},"additionalProperties":false,"required":["level6"]}},"additionalProperties":false,"required":["level5"]}},"additionalProperties":false,"required":["level4"]}},"additionalProperties":false,"required":["level3"]}},"additionalProperties":false,"required":["level2"]}},"additionalProperties":false,"required":["level1"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_deeply_nested_structure_10_levels: edgeCasesDeeplyNestedStructure10Levels
-		},
-	};
-}
-
-
-/**
- * Handler for POST /nulls/
- */
-async function edgeCasesEmptyAndNullValueHandling(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"explicit_null_is_null":true,"empty_string_length":0,"empty_array_length":0,"empty_object_keys":0,"zero_is_falsy":true,"false_is_false":true};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCasesEmptyAndNullValueHandling(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/nulls/",
-		handler_name: "edge_cases_empty_and_null_value_handling",
-		request_schema: {"type":"object","properties":{"explicit_null":{"type":"null"},"empty_string":{"type":"string"},"empty_array":{"type":"array","items":{}},"empty_object":{"type":"object","properties":{},"additionalProperties":false},"zero_number":{"type":"integer"},"false_boolean":{"type":"boolean"}},"additionalProperties":false,"required":["explicit_null","empty_string","empty_array","empty_object","zero_number","false_boolean"]},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_empty_and_null_value_handling: edgeCasesEmptyAndNullValueHandling
-		},
-	};
-}
-
-
-/**
- * Handler for POST /data
- */
-async function edgeCases16NegativeZeroHandling(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"offset":0};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppEdgeCases16NegativeZeroHandling(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "POST",
-		path: "/data",
-		handler_name: "edge_cases_16_negative_zero_handling",
-		request_schema: {"type":"object","required":["offset"],"properties":{"offset":{"type":"number"}}},
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			edge_cases_16_negative_zero_handling: edgeCases16NegativeZeroHandling
-		},
-	};
-}
-
 
 /**
  * Handler for GET /items/
@@ -13732,119 +2731,6 @@ export function createAppQueryParams60FormatIpv4Success(): SpikardApp {
 
 
 /**
- * Handler for GET /stream/json-lines
- */
-async function streamingStreamJsonLines(_requestJson: string): Promise<StreamingResponse> {
-	const stream = async function* () {
-		yield "{\"index\":0,\"payload\":\"alpha\"}\\n";
-		yield "{\"index\":1,\"payload\":\"beta\"}\\n";
-		yield "{\"index\":2,\"payload\":\"gamma\"}\\n";
-	};
-
-	return new StreamingResponse(stream(), {
-		statusCode: 200,
-		headers: {"content-type":"application/x-ndjson"}
-	});
-}
-
-export function createAppStreamingStreamJsonLines(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/stream/json-lines",
-		handler_name: "streaming_stream_json_lines",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			streaming_stream_json_lines: streamingStreamJsonLines
-		},
-	};
-}
-
-
-/**
- * Handler for GET /stream/logfile
- */
-async function streamingBinaryLogDownload(_requestJson: string): Promise<StreamingResponse> {
-	const stream = async function* () {
-		yield "LOG:";
-		yield Buffer.from("AAECAw==", "base64");
-		yield "|TAIL|";
-		yield Buffer.from("Bw==", "base64");
-		yield "\\n";
-	};
-
-	return new StreamingResponse(stream(), {
-		statusCode: 200,
-		headers: {"content-type":"application/octet-stream"}
-	});
-}
-
-export function createAppStreamingBinaryLogDownload(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/stream/logfile",
-		handler_name: "streaming_binary_log_download",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			streaming_binary_log_download: streamingBinaryLogDownload
-		},
-	};
-}
-
-
-/**
- * Handler for GET /stream/csv-report
- */
-async function streamingChunkedCsvExport(_requestJson: string): Promise<StreamingResponse> {
-	const stream = async function* () {
-		yield "id,name,value\\n";
-		yield "1,Alice,42\\n";
-		yield "2,Bob,7\\n";
-	};
-
-	return new StreamingResponse(stream(), {
-		statusCode: 200,
-		headers: {"content-type":"text/csv"}
-	});
-}
-
-export function createAppStreamingChunkedCsvExport(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/stream/csv-report",
-		handler_name: "streaming_chunked_csv_export",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			streaming_chunked_csv_export: streamingChunkedCsvExport
-		},
-	};
-}
-
-
-/**
  * Handler for GET /rate-limit/basic
  */
 async function rateLimitRateLimitBelowThresholdSucceeds(requestJson: string, _context?: HandlerContext): Promise<string> {
@@ -13930,25 +2816,2003 @@ export function createAppRateLimitRateLimitExceededReturns429(): SpikardApp {
 
 
 /**
- * Handler for POST /slow-endpoint
+ * Handler for POST /items/
  */
-async function statusCodes408RequestTimeout(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function contentTypes415UnsupportedMediaType(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 415 };
+	const responseBody = {"type":"https://spikard.dev/errors/unsupported-media-type","title":"Unsupported Media Type","status":415,"detail":"Unsupported media type"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes415UnsupportedMediaType(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "content_types_415_unsupported_media_type",
+		request_schema: {"type":"string"},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_415_unsupported_media_type: contentTypes415UnsupportedMediaType
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /xml
+ */
+async function contentTypesXmlResponseApplicationXml(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"application/xml"};
+	const responseBody = "<?xml version=\"1.0\"?><item><name>Item</name><price>42.0</price></item>";
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesXmlResponseApplicationXml(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/xml",
+		handler_name: "content_types_xml_response_application_xml",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_xml_response_application_xml: contentTypesXmlResponseApplicationXml
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /data
+ */
+async function contentTypes14ContentTypeCaseInsensitive(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"name":"test"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes14ContentTypeCaseInsensitive(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/data",
+		handler_name: "content_types_14_content_type_case_insensitive",
+		request_schema: {"type":"object","required":["name"],"properties":{"name":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_14_content_type_case_insensitive: contentTypes14ContentTypeCaseInsensitive
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/unicode
+ */
+async function contentTypesJsonWithUtf8Charset(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"application/json; charset=utf-8"};
+	const responseBody = {"name":"Café","emoji":"☕"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesJsonWithUtf8Charset(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/unicode",
+		handler_name: "content_types_json_with_utf_8_charset",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_json_with_utf_8_charset: contentTypesJsonWithUtf8Charset
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /data
+ */
+async function contentTypes16TextPlainNotAccepted(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 415 };
+	const responseBody = {"type":"https://spikard.dev/errors/unsupported-media-type","title":"Unsupported Media Type","status":415,"detail":"Unsupported media type"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes16TextPlainNotAccepted(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/data",
+		handler_name: "content_types_16_text_plain_not_accepted",
+		request_schema: {"type":"object","required":["data"],"properties":{"data":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_16_text_plain_not_accepted: contentTypes16TextPlainNotAccepted
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /download/document.pdf
+ */
+async function contentTypesPdfResponseApplicationPdf(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"application/pdf","content-disposition":"attachment; filename=document.pdf"};
+	const responseBody = "pdf_binary_data";
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesPdfResponseApplicationPdf(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/download/document.pdf",
+		handler_name: "content_types_pdf_response_application_pdf",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_pdf_response_application_pdf: contentTypesPdfResponseApplicationPdf
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /data
+ */
+async function contentTypes20ContentLengthMismatch(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 400 };
+	const responseBody = {"type":"https://spikard.dev/errors/content-length-mismatch","title":"Content-Length header mismatch","status":400,"detail":"Content-Length header does not match actual body size"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes20ContentLengthMismatch(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/data",
+		handler_name: "content_types_20_content_length_mismatch",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Content-Length":{"type":"string","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_20_content_length_mismatch: contentTypes20ContentLengthMismatch
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /api/v1/resource
+ */
+async function contentTypes17VendorJsonAccepted(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"data":"value"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes17VendorJsonAccepted(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/api/v1/resource",
+		handler_name: "content_types_17_vendor_json_accepted",
+		request_schema: {"type":"object","required":["data"],"properties":{"data":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_17_vendor_json_accepted: contentTypes17VendorJsonAccepted
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /data
+ */
+async function contentTypes13JsonWithCharsetUtf16(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 415 };
+	const responseBody = {"type":"https://spikard.dev/errors/unsupported-charset","title":"Unsupported Charset","status":415,"detail":"Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes13JsonWithCharsetUtf16(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/data",
+		handler_name: "content_types_13_json_with_charset_utf16",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_13_json_with_charset_utf16: contentTypes13JsonWithCharsetUtf16
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/json
+ */
+async function contentTypesJsonResponseApplicationJson(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"application/json"};
+	const responseBody = {"name":"Item","price":42.0};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesJsonResponseApplicationJson(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/json",
+		handler_name: "content_types_json_response_application_json",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_json_response_application_json: contentTypesJsonResponseApplicationJson
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /upload
+ */
+async function contentTypes15MultipartBoundaryRequired(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 400 };
+	const responseBody = {"error":"multipart/form-data requires 'boundary' parameter"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes15MultipartBoundaryRequired(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/upload",
+		handler_name: "content_types_15_multipart_boundary_required",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: {"document":{"required":true}},
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_15_multipart_boundary_required: contentTypes15MultipartBoundaryRequired
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /accept-test/{id}
+ */
+async function contentTypesContentNegotiationAcceptHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"application/json"};
+	const responseBody = {"id":1,"name":"Item"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesContentNegotiationAcceptHeader(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/accept-test/{id}",
+		handler_name: "content_types_content_negotiation_accept_header",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_content_negotiation_accept_header: contentTypesContentNegotiationAcceptHeader
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /html
+ */
+async function contentTypesHtmlResponseTextHtml(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"text/html; charset=utf-8"};
+	const responseBody = "<html><body><h1>Hello</h1></body></html>";
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesHtmlResponseTextHtml(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/html",
+		handler_name: "content_types_html_response_text_html",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_html_response_text_html: contentTypesHtmlResponseTextHtml
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /images/photo.jpg
+ */
+async function contentTypesJpegImageResponseImageJpeg(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"image/jpeg"};
+	const responseBody = "jpeg_binary_data";
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesJpegImageResponseImageJpeg(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/images/photo.jpg",
+		handler_name: "content_types_jpeg_image_response_image_jpeg",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_jpeg_image_response_image_jpeg: contentTypesJpegImageResponseImageJpeg
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /data
+ */
+async function contentTypes19MissingContentTypeDefaultJson(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"name":"test"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes19MissingContentTypeDefaultJson(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/data",
+		handler_name: "content_types_19_missing_content_type_default_json",
+		request_schema: {"type":"object","required":["name"],"properties":{"name":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_19_missing_content_type_default_json: contentTypes19MissingContentTypeDefaultJson
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /images/logo.png
+ */
+async function contentTypesPngImageResponseImagePng(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"image/png"};
+	const responseBody = "png_binary_data";
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesPngImageResponseImagePng(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/images/logo.png",
+		handler_name: "content_types_png_image_response_image_png",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_png_image_response_image_png: contentTypesPngImageResponseImagePng
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /text
+ */
+async function contentTypesPlainTextResponseTextPlain(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"text/plain; charset=utf-8"};
+	const responseBody = "Hello, World!";
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesPlainTextResponseTextPlain(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/text",
+		handler_name: "content_types_plain_text_response_text_plain",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_plain_text_response_text_plain: contentTypesPlainTextResponseTextPlain
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /data
+ */
+async function contentTypes18ContentTypeWithMultipleParams(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"value":"test"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypes18ContentTypeWithMultipleParams(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/data",
+		handler_name: "content_types_18_content_type_with_multiple_params",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_18_content_type_with_multiple_params: contentTypes18ContentTypeWithMultipleParams
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /export/data.csv
+ */
+async function contentTypesCsvResponseTextCsv(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"text/csv; charset=utf-8","content-disposition":"attachment; filename=data.csv"};
+	const responseBody = "id,name,price\n1,Item A,10.0\n2,Item B,20.0";
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesCsvResponseTextCsv(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/export/data.csv",
+		handler_name: "content_types_csv_response_text_csv",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_csv_response_text_csv: contentTypesCsvResponseTextCsv
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /download/file.bin
+ */
+async function contentTypesBinaryResponseApplicationOctetStream(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-type":"application/octet-stream","content-disposition":"attachment; filename=file.bin"};
+	const responseBody = "binary_data_placeholder";
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppContentTypesBinaryResponseApplicationOctetStream(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/download/file.bin",
+		handler_name: "content_types_binary_response_application_octet_stream",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			content_types_binary_response_application_octet_stream: contentTypesBinaryResponseApplicationOctetStream
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/protected
+ */
+async function authJwtMalformedTokenFormat(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Malformed JWT token","status":401,"detail":"Malformed JWT token: expected 3 parts separated by dots, found 2"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtMalformedTokenFormat(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/protected",
+		handler_name: "auth_jwt_malformed_token_format",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_malformed_token_format: authJwtMalformedTokenFormat
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/protected
+ */
+async function authBearerTokenWithoutPrefix(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Invalid Authorization header format","status":401,"detail":"Authorization header must use Bearer scheme: 'Bearer <token>'"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthBearerTokenWithoutPrefix(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/protected",
+		handler_name: "auth_bearer_token_without_prefix",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_bearer_token_without_prefix: authBearerTokenWithoutPrefix
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /protected/user
+ */
+async function authJwtAuthenticationValidToken(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Access granted","user_id":"user123"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtAuthenticationValidToken(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256",
+		audience: ["https://api.example.com"],
+		issuer: "https://auth.example.com"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/protected/user",
+		handler_name: "auth_jwt_authentication_valid_token",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_authentication_valid_token: authJwtAuthenticationValidToken
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function authApiKeyRotationOldKeyStillValid(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-api-key-deprecated":"true"};
+	const responseBody = {"message":"Access granted","data":"sensitive information"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthApiKeyRotationOldKeyStillValid(): SpikardApp {
+	const config: ServerConfig = {
+		apiKeyAuth: {
+		keys: ["sk_test_old_123456","sk_test_new_789012"],
+		headerName: "X-API-Key"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "auth_api_key_rotation_old_key_still_valid",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","source":"header","description":"API key for authentication"}},"required":["X-API-Key"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_api_key_rotation_old_key_still_valid: authApiKeyRotationOldKeyStillValid
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/protected
+ */
+async function authJwtInvalidIssuer(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"Token issuer is invalid, expected 'https://auth.example.com'"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtInvalidIssuer(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256",
+		issuer: "https://auth.example.com",
+		leeway: 0
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/protected",
+		handler_name: "auth_jwt_invalid_issuer",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_invalid_issuer: authJwtInvalidIssuer
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/protected
+ */
+async function authJwtWithMultipleAudiences(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Access granted","user_id":"user123"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtWithMultipleAudiences(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256",
+		audience: ["https://api.example.com"],
+		issuer: "https://auth.example.com"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/protected",
+		handler_name: "auth_jwt_with_multiple_audiences",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_with_multiple_audiences: authJwtWithMultipleAudiences
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function authApiKeyInQueryParameter(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Access granted","data":"sensitive information"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthApiKeyInQueryParameter(): SpikardApp {
+	const config: ServerConfig = {
+		apiKeyAuth: {
+		keys: ["sk_test_123456","sk_test_789012"],
+		headerName: "X-API-Key"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "auth_api_key_in_query_parameter",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_api_key_in_query_parameter: authApiKeyInQueryParameter
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /protected/user
+ */
+async function authJwtAuthenticationExpiredToken(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"Token has expired"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtAuthenticationExpiredToken(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/protected/user",
+		handler_name: "auth_jwt_authentication_expired_token",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_authentication_expired_token: authJwtAuthenticationExpiredToken
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function authApiKeyAuthenticationInvalidKey(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Invalid API key","status":401,"detail":"The provided API key is not valid"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthApiKeyAuthenticationInvalidKey(): SpikardApp {
+	const config: ServerConfig = {
+		apiKeyAuth: {
+		keys: ["sk_test_123456","sk_test_789012"],
+		headerName: "X-API-Key"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "auth_api_key_authentication_invalid_key",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","source":"header"}},"required":["X-API-Key"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_api_key_authentication_invalid_key: authApiKeyAuthenticationInvalidKey
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/protected
+ */
+async function authJwtNotBeforeClaimInFuture(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"JWT not valid yet, not before claim is in the future"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtNotBeforeClaimInFuture(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256",
+		leeway: 0
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/protected",
+		handler_name: "auth_jwt_not_before_claim_in_future",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_not_before_claim_in_future: authJwtNotBeforeClaimInFuture
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function authMultipleAuthenticationSchemesJwtPrecedence(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Access granted","user_id":"user123","auth_method":"jwt"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthMultipleAuthenticationSchemesJwtPrecedence(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256",
+		audience: ["https://api.example.com"],
+		issuer: "https://auth.example.com"
+		},
+		apiKeyAuth: {
+		keys: ["sk_test_123456","sk_test_789012"],
+		headerName: "X-API-Key"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "auth_multiple_authentication_schemes_jwt_precedence",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"},"X-API-Key":{"type":"string","source":"header","description":"API key for authentication"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_multiple_authentication_schemes_jwt_precedence: authMultipleAuthenticationSchemesJwtPrecedence
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/admin
+ */
+async function authJwtMissingRequiredCustomClaims(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 403 };
+	const responseBody = {"type":"https://spikard.dev/errors/forbidden","title":"Forbidden","status":403,"detail":"Required claims 'role' and 'permissions' missing from JWT"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtMissingRequiredCustomClaims(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256",
+		audience: ["https://api.example.com"],
+		issuer: "https://auth.example.com"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/admin",
+		handler_name: "auth_jwt_missing_required_custom_claims",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header","description":"JWT token in Bearer format"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_missing_required_custom_claims: authJwtMissingRequiredCustomClaims
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function authApiKeyAuthenticationValidKey(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Access granted","data":"sensitive information"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthApiKeyAuthenticationValidKey(): SpikardApp {
+	const config: ServerConfig = {
+		apiKeyAuth: {
+		keys: ["sk_test_123456","sk_test_789012"],
+		headerName: "X-API-Key"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "auth_api_key_authentication_valid_key",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","source":"header","description":"API key for authentication"}},"required":["X-API-Key"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_api_key_authentication_valid_key: authApiKeyAuthenticationValidKey
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function authApiKeyWithCustomHeaderName(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Access granted","data":"sensitive information"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthApiKeyWithCustomHeaderName(): SpikardApp {
+	const config: ServerConfig = {
+		apiKeyAuth: {
+		keys: ["sk_test_123456","sk_test_789012"],
+		headerName: "X-API-Token"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "auth_api_key_with_custom_header_name",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-API-Token":{"type":"string","source":"header","description":"API token for authentication"}},"required":["X-API-Token"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_api_key_with_custom_header_name: authApiKeyWithCustomHeaderName
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function authApiKeyAuthenticationMissingHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Missing API key","status":401,"detail":"Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthApiKeyAuthenticationMissingHeader(): SpikardApp {
+	const config: ServerConfig = {
+		apiKeyAuth: {
+		keys: ["sk_test_123456","sk_test_789012"],
+		headerName: "X-API-Key"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "auth_api_key_authentication_missing_header",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_api_key_authentication_missing_header: authApiKeyAuthenticationMissingHeader
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /protected/user
+ */
+async function authJwtAuthenticationInvalidSignature(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"Token signature is invalid"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtAuthenticationInvalidSignature(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/protected/user",
+		handler_name: "auth_jwt_authentication_invalid_signature",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_authentication_invalid_signature: authJwtAuthenticationInvalidSignature
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /protected/user
+ */
+async function authJwtAuthenticationMissingAuthorizationHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"Missing or invalid Authorization header","status":401,"detail":"Expected 'Authorization: Bearer <token>'"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtAuthenticationMissingAuthorizationHeader(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256"
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/protected/user",
+		handler_name: "auth_jwt_authentication_missing_authorization_header",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_authentication_missing_authorization_header: authJwtAuthenticationMissingAuthorizationHeader
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /protected/user
+ */
+async function authJwtAuthenticationInvalidAudience(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"type":"https://spikard.dev/errors/unauthorized","title":"JWT validation failed","status":401,"detail":"Token audience is invalid"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppAuthJwtAuthenticationInvalidAudience(): SpikardApp {
+	const config: ServerConfig = {
+		jwtAuth: {
+		secret: "test-secret-key-do-not-use-in-production",
+		algorithm: "HS256",
+		audience: ["https://api.example.com"]
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/protected/user",
+		handler_name: "auth_jwt_authentication_invalid_audience",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			auth_jwt_authentication_invalid_audience: authJwtAuthenticationInvalidAudience
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /timeouts/slow
+ */
+async function requestTimeoutRequestExceedsTimeout(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
 	const response: HandlerResponse = { status: 408 };
-	response.headers = {"connection":"close"};
-	const responseBody = {"detail":"Request timeout"};
+	const signal = isAbortSignalLike(_context?.signal) ? _context?.signal : undefined;
+	await sleep(1500, signal);
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppRequestTimeoutRequestExceedsTimeout(): SpikardApp {
+	const config: ServerConfig = {
+		requestTimeout: 1
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/timeouts/slow",
+		handler_name: "request_timeout_request_exceeds_timeout",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			request_timeout_request_exceeds_timeout: requestTimeoutRequestExceedsTimeout
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /timeouts/fast
+ */
+async function requestTimeoutRequestCompletesBeforeTimeout(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const signal = isAbortSignalLike(_context?.signal) ? _context?.signal : undefined;
+	await sleep(100, signal);
+	const responseBody = {"status":"ok","duration":"fast"};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes408RequestTimeout(): SpikardApp {
+export function createAppRequestTimeoutRequestCompletesBeforeTimeout(): SpikardApp {
+	const config: ServerConfig = {
+		requestTimeout: 2
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/timeouts/fast",
+		handler_name: "request_timeout_request_completes_before_timeout",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			request_timeout_request_completes_before_timeout: requestTimeoutRequestCompletesBeforeTimeout
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for OPTIONS /items/
+ */
+async function httpMethodsOptionsCorsPreflightRequest(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"access-control-allow-headers":"Content-Type","access-control-allow-methods":"GET, POST, PUT, DELETE, OPTIONS","access-control-allow-origin":"https://example.com","access-control-max-age":"86400"};
+	const result: Record<string, unknown> = {};
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsOptionsCorsPreflightRequest(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "OPTIONS",
+		path: "/items/",
+		handler_name: "http_methods_options_cors_preflight_request",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_options_cors_preflight_request: httpMethodsOptionsCorsPreflightRequest
+		},
+	};
+}
+
+
+/**
+ * Handler for DELETE /items/{id}
+ */
+async function httpMethodsDeleteRemoveResource(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsDeleteRemoveResource(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "DELETE",
+		path: "/items/{id}",
+		handler_name: "http_methods_delete_remove_resource",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_delete_remove_resource: httpMethodsDeleteRemoveResource
+		},
+	};
+}
+
+
+/**
+ * Handler for PUT /items/{id}
+ */
+async function httpMethodsPutCreateResourceIfDoesnTExist(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":999,"name":"New Item","price":49.99};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsPutCreateResourceIfDoesnTExist(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "PUT",
+		path: "/items/{id}",
+		handler_name: "http_methods_put_create_resource_if_doesn_t_exist",
+		request_schema: {"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"number"}},"required":["id","name","price"]},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_put_create_resource_if_doesn_t_exist: httpMethodsPutCreateResourceIfDoesnTExist
+		},
+	};
+}
+
+
+/**
+ * Handler for PATCH /items/{id}
+ */
+async function httpMethodsPatchUpdateMultipleFields(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":1,"name":"Updated Name","price":89.99,"in_stock":false};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsPatchUpdateMultipleFields(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "PATCH",
+		path: "/items/{id}",
+		handler_name: "http_methods_patch_update_multiple_fields",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"in_stock":{"type":"boolean"}},"required":["in_stock","name","price"]},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_patch_update_multiple_fields: httpMethodsPatchUpdateMultipleFields
+		},
+	};
+}
+
+
+/**
+ * Handler for PUT /items/{id}
+ */
+async function httpMethodsPutValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const id = _params.id;
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	if (id !== null && id !== undefined) {
+		result.id = id;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsPutValidationError(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "PUT",
+		path: "/items/{id}",
+		handler_name: "http_methods_put_validation_error",
+		request_schema: {"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["id","name","price"],"properties":{"id":{"type":"integer"},"name":{"type":"string","minLength":3},"price":{"type":"number","exclusiveMinimum":0}}},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_put_validation_error: httpMethodsPutValidationError
+		},
+	};
+}
+
+
+/**
+ * Handler for HEAD /items/{id}
+ */
+async function httpMethodsHeadGetMetadataWithoutBody(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"content-length":"85","content-type":"application/json"};
+	const result: Record<string, unknown> = {};
+	const id = _params.id;
+	if (id !== null && id !== undefined) {
+		result.id = id;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsHeadGetMetadataWithoutBody(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "HEAD",
+		path: "/items/{id}",
+		handler_name: "http_methods_head_get_metadata_without_body",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_head_get_metadata_without_body: httpMethodsHeadGetMetadataWithoutBody
+		},
+	};
+}
+
+
+/**
+ * Handler for DELETE /items/{id}
+ */
+async function httpMethodsDeleteWithResponseBody(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":1,"name":"Deleted Item","message":"Item deleted successfully"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsDeleteWithResponseBody(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "DELETE",
+		path: "/items/{id}",
+		handler_name: "http_methods_delete_with_response_body",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_delete_with_response_body: httpMethodsDeleteWithResponseBody
+		},
+	};
+}
+
+
+/**
+ * Handler for PUT /items/{id}
+ */
+async function httpMethodsPutMissingRequiredField(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const id = _params.id;
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	if (id !== null && id !== undefined) {
+		result.id = id;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsPutMissingRequiredField(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "PUT",
+		path: "/items/{id}",
+		handler_name: "http_methods_put_missing_required_field",
+		request_schema: {"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"string"}},"required":["price"]},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_put_missing_required_field: httpMethodsPutMissingRequiredField
+		},
+	};
+}
+
+
+/**
+ * Handler for PATCH /items/{id}
+ */
+async function httpMethodsPatchPartialUpdate(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":1,"name":"Existing Item","price":79.99,"in_stock":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsPatchPartialUpdate(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "PATCH",
+		path: "/items/{id}",
+		handler_name: "http_methods_patch_partial_update",
+		request_schema: {"type":"object","properties":{"price":{"type":"number"}},"required":["price"]},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_patch_partial_update: httpMethodsPatchPartialUpdate
+		},
+	};
+}
+
+
+/**
+ * Handler for DELETE /items/{id}
+ */
+async function httpMethodsDeleteResourceNotFound(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsDeleteResourceNotFound(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "DELETE",
+		path: "/items/{id}",
+		handler_name: "http_methods_delete_resource_not_found",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_delete_resource_not_found: httpMethodsDeleteResourceNotFound
+		},
+	};
+}
+
+
+/**
+ * Handler for PUT /items/{id}
+ */
+async function httpMethodsPutIdempotentOperation(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":1,"name":"Fixed Name","price":50.0};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsPutIdempotentOperation(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "PUT",
+		path: "/items/{id}",
+		handler_name: "http_methods_put_idempotent_operation",
+		request_schema: {"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"price":{"type":"number"}},"required":["id","name","price"]},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_put_idempotent_operation: httpMethodsPutIdempotentOperation
+		},
+	};
+}
+
+
+/**
+ * Handler for PUT /items/{id}
+ */
+async function httpMethodsPutCompleteResourceReplacement(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":1,"name":"Updated Item","description":"Completely replaced","price":99.99,"in_stock":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHttpMethodsPutCompleteResourceReplacement(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "PUT",
+		path: "/items/{id}",
+		handler_name: "http_methods_put_complete_resource_replacement",
+		request_schema: {"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"},"description":{"type":"string"},"price":{"type":"number"},"in_stock":{"type":"boolean"}},"required":["description","id","in_stock","name","price"]},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			http_methods_put_complete_resource_replacement: httpMethodsPutCompleteResourceReplacement
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /login/
+ */
+async function urlEncodedSimpleFormSubmissionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"johndoe"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncodedSimpleFormSubmissionSuccess(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "POST",
-		path: "/slow-endpoint",
-		handler_name: "status_codes_408_request_timeout",
-		request_schema: {"type":"object","properties":{"data":{"type":"string"}},"additionalProperties":false,"required":["data"]},
+		path: "/login/",
+		handler_name: "url_encoded_simple_form_submission_success",
+		request_schema: {"type":"object","required":["username","password"],"properties":{"username":{"type":"string"},"password":{"type":"string"}}},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -13958,66 +4822,31 @@ export function createAppStatusCodes408RequestTimeout(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_408_request_timeout: statusCodes408RequestTimeout
+			url_encoded_simple_form_submission_success: urlEncodedSimpleFormSubmissionSuccess
 		},
 	};
 }
 
 
 /**
- * Handler for GET /status-test/{code}
+ * Handler for POST /data
  */
-async function statusCodes404NotFoundResourceNotFound(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncoded15SpecialCharactersFieldNames(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 404 };
-	const responseBody = {"detail":"Item not found"};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"user-name":"JohnDoe","contact.email":"john@example.com"};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes404NotFoundResourceNotFound(): SpikardApp {
+export function createAppUrlEncoded15SpecialCharactersFieldNames(): SpikardApp {
 	const route: RouteMetadata = {
-		method: "GET",
-		path: "/status-test/{code}",
-		handler_name: "status_codes_404_not_found_resource_not_found",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"code":{"type":"string","source":"path"}},"required":["code"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			status_codes_404_not_found_resource_not_found: statusCodes404NotFoundResourceNotFound
-		},
-	};
-}
-
-
-/**
- * Handler for GET /health
- */
-async function statusCodes503ServiceUnavailableServerOverload(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 503 };
-	response.headers = {"retry-after":"120"};
-	const responseBody = {"detail":"Service temporarily unavailable"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppStatusCodes503ServiceUnavailableServerOverload(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/health",
-		handler_name: "status_codes_503_service_unavailable_server_overload",
-		request_schema: undefined,
+		method: "POST",
+		path: "/data",
+		handler_name: "url_encoded_15_special_characters_field_names",
+		request_schema: {"type":"object","properties":{"user-name":{"type":"string"},"contact.email":{"type":"string","format":"email"}}},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14027,16 +4856,16 @@ export function createAppStatusCodes503ServiceUnavailableServerOverload(): Spika
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_503_service_unavailable_server_overload: statusCodes503ServiceUnavailableServerOverload
+			url_encoded_15_special_characters_field_names: urlEncoded15SpecialCharactersFieldNames
 		},
 	};
 }
 
 
 /**
- * Handler for POST /items/
+ * Handler for POST /form/validated
  */
-async function statusCodes422UnprocessableEntityValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncodedPatternValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
@@ -14053,12 +4882,12 @@ async function statusCodes422UnprocessableEntityValidationError(requestJson: str
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes422UnprocessableEntityValidationError(): SpikardApp {
+export function createAppUrlEncodedPatternValidationFail(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "POST",
-		path: "/items/",
-		handler_name: "status_codes_422_unprocessable_entity_validation_error",
-		request_schema: {"type":"object","properties":{"price":{"type":"string"},"name":{"type":"string"}},"additionalProperties":false,"required":["price","name"]},
+		path: "/form/validated",
+		handler_name: "url_encoded_pattern_validation_fail",
+		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string","pattern":"^[a-z0-9_]+$"}}},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14068,31 +4897,38 @@ export function createAppStatusCodes422UnprocessableEntityValidationError(): Spi
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_422_unprocessable_entity_validation_error: statusCodes422UnprocessableEntityValidationError
+			url_encoded_pattern_validation_fail: urlEncodedPatternValidationFail
 		},
 	};
 }
 
 
 /**
- * Handler for GET /temp-redirect
+ * Handler for POST /settings
  */
-async function statusCodes302FoundTemporaryRedirect(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncoded22AdditionalPropertiesStrictFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 302 };
-	response.headers = {"location":"/target-path"};
-	response.body = null;
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes302FoundTemporaryRedirect(): SpikardApp {
+export function createAppUrlEncoded22AdditionalPropertiesStrictFailure(): SpikardApp {
 	const route: RouteMetadata = {
-		method: "GET",
-		path: "/temp-redirect",
-		handler_name: "status_codes_302_found_temporary_redirect",
-		request_schema: undefined,
+		method: "POST",
+		path: "/settings",
+		handler_name: "url_encoded_22_additional_properties_strict_failure",
+		request_schema: {"type":"object","required":["theme"],"properties":{"theme":{"type":"string","enum":["light","dark"]}},"additionalProperties":false},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14102,32 +4938,40 @@ export function createAppStatusCodes302FoundTemporaryRedirect(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_302_found_temporary_redirect: statusCodes302FoundTemporaryRedirect
+			url_encoded_22_additional_properties_strict_failure: urlEncoded22AdditionalPropertiesStrictFailure
 		},
 	};
 }
 
 
 /**
- * Handler for GET /status-test/{code}
+ * Handler for POST /accounts
  */
-async function statusCodes304NotModifiedCachedContentValid(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncoded17PatternValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 304 };
-	response.body = null;
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes304NotModifiedCachedContentValid(): SpikardApp {
+export function createAppUrlEncoded17PatternValidationFailure(): SpikardApp {
 	const route: RouteMetadata = {
-		method: "GET",
-		path: "/status-test/{code}",
-		handler_name: "status_codes_304_not_modified_cached_content_valid",
-		request_schema: undefined,
+		method: "POST",
+		path: "/accounts",
+		handler_name: "url_encoded_17_pattern_validation_failure",
+		request_schema: {"type":"object","required":["account_id"],"properties":{"account_id":{"type":"string","pattern":"^ACC-[0-9]{6}$"}}},
 		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"code":{"type":"string","source":"path"},"If-None-Match":{"type":"string","source":"header"}},"required":["code"]},
+		parameter_schema: undefined,
 		file_params: undefined,
 		is_async: true,
 	};
@@ -14135,31 +4979,72 @@ export function createAppStatusCodes304NotModifiedCachedContentValid(): SpikardA
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_304_not_modified_cached_content_valid: statusCodes304NotModifiedCachedContentValid
+			url_encoded_17_pattern_validation_failure: urlEncoded17PatternValidationFailure
 		},
 	};
 }
 
 
 /**
- * Handler for POST /items/
+ * Handler for POST /subscribe
  */
-async function statusCodes400BadRequestInvalidRequest(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncoded20FormatEmailValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 400 };
-	const responseBody = {"detail":"Invalid request format"};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncoded20FormatEmailValidationFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/subscribe",
+		handler_name: "url_encoded_20_format_email_validation_failure",
+		request_schema: {"type":"object","required":["email"],"properties":{"email":{"type":"string","format":"email"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_20_format_email_validation_failure: urlEncoded20FormatEmailValidationFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /form/tags
+ */
+async function urlEncodedMultipleValuesForSameField(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"tags":["python","fastapi","web"]};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes400BadRequestInvalidRequest(): SpikardApp {
+export function createAppUrlEncodedMultipleValuesForSameField(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "POST",
-		path: "/items/",
-		handler_name: "status_codes_400_bad_request_invalid_request",
-		request_schema: {"type":"string"},
+		path: "/form/tags",
+		handler_name: "url_encoded_multiple_values_for_same_field",
+		request_schema: {"type":"object","required":["tags"],"properties":{"tags":{"type":"array","items":{"type":"string"}}}},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14169,30 +5054,38 @@ export function createAppStatusCodes400BadRequestInvalidRequest(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_400_bad_request_invalid_request: statusCodes400BadRequestInvalidRequest
+			url_encoded_multiple_values_for_same_field: urlEncodedMultipleValuesForSameField
 		},
 	};
 }
 
 
 /**
- * Handler for TRACE /data
+ * Handler for POST /login/
  */
-async function statusCodes22501NotImplemented(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncodedRequiredFieldMissingValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 405 };
-	response.body = null;
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes22501NotImplemented(): SpikardApp {
+export function createAppUrlEncodedRequiredFieldMissingValidationError(): SpikardApp {
 	const route: RouteMetadata = {
-		method: "TRACE",
-		path: "/data",
-		handler_name: "status_codes_22_501_not_implemented",
-		request_schema: undefined,
+		method: "POST",
+		path: "/login/",
+		handler_name: "url_encoded_required_field_missing_validation_error",
+		request_schema: {"type":"object","required":["username","password"],"properties":{"username":{"type":"string"},"password":{"type":"string"}}},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14202,98 +5095,31 @@ export function createAppStatusCodes22501NotImplemented(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_22_501_not_implemented: statusCodes22501NotImplemented
+			url_encoded_required_field_missing_validation_error: urlEncodedRequiredFieldMissingValidationError
 		},
 	};
 }
 
 
 /**
- * Handler for DELETE /status-test/{code}
+ * Handler for POST /register
  */
-async function statusCodes204NoContentSuccessWithNoBody(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 204 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppStatusCodes204NoContentSuccessWithNoBody(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "DELETE",
-		path: "/status-test/{code}",
-		handler_name: "status_codes_204_no_content_success_with_no_body",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"code":{"type":"string","source":"path"}},"required":["code"]},
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			status_codes_204_no_content_success_with_no_body: statusCodes204NoContentSuccessWithNoBody
-		},
-	};
-}
-
-
-/**
- * Handler for GET /old-path
- */
-async function statusCodes301MovedPermanentlyPermanentRedirect(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 301 };
-	response.headers = {"location":"/new-path"};
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppStatusCodes301MovedPermanentlyPermanentRedirect(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/old-path",
-		handler_name: "status_codes_301_moved_permanently_permanent_redirect",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			status_codes_301_moved_permanently_permanent_redirect: statusCodes301MovedPermanentlyPermanentRedirect
-		},
-	};
-}
-
-
-/**
- * Handler for POST /items/
- */
-async function statusCodes201CreatedResourceCreated(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncoded13ArrayFieldSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
 	const response: HandlerResponse = { status: 201 };
-	const responseBody = {"id":1,"name":"New Item"};
+	const responseBody = {"tags":["python","rust","typescript"]};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes201CreatedResourceCreated(): SpikardApp {
+export function createAppUrlEncoded13ArrayFieldSuccess(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "POST",
-		path: "/items/",
-		handler_name: "status_codes_201_created_resource_created",
-		request_schema: {"type":"object","properties":{"name":{"type":"string"}},"additionalProperties":false,"required":["name"]},
+		path: "/register",
+		handler_name: "url_encoded_13_array_field_success",
+		request_schema: {"type":"object","required":["tags"],"properties":{"tags":{"type":"array","items":{"type":"string"},"minItems":1}}},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14303,31 +5129,31 @@ export function createAppStatusCodes201CreatedResourceCreated(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_201_created_resource_created: statusCodes201CreatedResourceCreated
+			url_encoded_13_array_field_success: urlEncoded13ArrayFieldSuccess
 		},
 	};
 }
 
 
 /**
- * Handler for POST /tasks/
+ * Handler for POST /form/
  */
-async function statusCodes202AcceptedRequestAcceptedForProcessing(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncodedNumericFieldTypeConversion(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 202 };
-	const responseBody = {"message":"Task accepted for processing","task_id":"abc123"};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"johndoe","age":30};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes202AcceptedRequestAcceptedForProcessing(): SpikardApp {
+export function createAppUrlEncodedNumericFieldTypeConversion(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "POST",
-		path: "/tasks/",
-		handler_name: "status_codes_202_accepted_request_accepted_for_processing",
-		request_schema: {"type":"object","properties":{"task":{"type":"string"}},"additionalProperties":false,"required":["task"]},
+		path: "/form/",
+		handler_name: "url_encoded_numeric_field_type_conversion",
+		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string"},"age":{"type":"integer"}}},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14337,30 +5163,894 @@ export function createAppStatusCodes202AcceptedRequestAcceptedForProcessing(): S
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_202_accepted_request_accepted_for_processing: statusCodes202AcceptedRequestAcceptedForProcessing
+			url_encoded_numeric_field_type_conversion: urlEncodedNumericFieldTypeConversion
 		},
 	};
 }
 
 
 /**
- * Handler for POST /redirect-post
+ * Handler for POST /form/
  */
-async function statusCodes307TemporaryRedirectMethodPreserved(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function urlEncodedSpecialCharactersEncoding(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 307 };
-	response.headers = {"location":"/target-post"};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"name":"John Doe","description":"Test & Development"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncodedSpecialCharactersEncoding(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/form/",
+		handler_name: "url_encoded_special_characters_encoding",
+		request_schema: {"type":"object","required":["name"],"properties":{"name":{"type":"string"},"description":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_special_characters_encoding: urlEncodedSpecialCharactersEncoding
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /form/
+ */
+async function urlEncodedBooleanFieldConversion(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"johndoe","subscribe":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncodedBooleanFieldConversion(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/form/",
+		handler_name: "url_encoded_boolean_field_conversion",
+		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string"},"subscribe":{"type":"boolean"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_boolean_field_conversion: urlEncodedBooleanFieldConversion
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /form/
+ */
+async function urlEncodedEmptyStringValue(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"johndoe","description":""};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncodedEmptyStringValue(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/form/",
+		handler_name: "url_encoded_empty_string_value",
+		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string"},"description":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_empty_string_value: urlEncodedEmptyStringValue
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /token
+ */
+async function urlEncodedOauth2PasswordGrantFlow(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"access_token":"johndoe","token_type":"bearer"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncodedOauth2PasswordGrantFlow(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/token",
+		handler_name: "url_encoded_oauth2_password_grant_flow",
+		request_schema: {"type":"object","required":["username","password","grant_type"],"properties":{"username":{"type":"string"},"password":{"type":"string"},"grant_type":{"type":"string"},"scope":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_oauth2_password_grant_flow: urlEncodedOauth2PasswordGrantFlow
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /tags
+ */
+async function urlEncoded19ArrayMinitemsValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncoded19ArrayMinitemsValidationFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/tags",
+		handler_name: "url_encoded_19_array_minitems_validation_failure",
+		request_schema: {"type":"object","required":["tags"],"properties":{"tags":{"type":"array","items":{"type":"string"},"minItems":2}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_19_array_minitems_validation_failure: urlEncoded19ArrayMinitemsValidationFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /register/
+ */
+async function urlEncodedOptionalFieldMissingSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"johndoe","email":null};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncodedOptionalFieldMissingSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/register/",
+		handler_name: "url_encoded_optional_field_missing_success",
+		request_schema: {"type":"object","required":["username","password"],"properties":{"username":{"type":"string"},"password":{"type":"string"},"email":{"type":["string","null"],"format":"email"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_optional_field_missing_success: urlEncodedOptionalFieldMissingSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /profile
+ */
+async function urlEncoded14NestedObjectBracketNotation(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"user":{"name":"John Doe","email":"john@example.com","age":30}};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncoded14NestedObjectBracketNotation(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/profile",
+		handler_name: "url_encoded_14_nested_object_bracket_notation",
+		request_schema: {"type":"object","required":["user"],"properties":{"user":{"type":"object","required":["name","email"],"properties":{"name":{"type":"string","minLength":1},"email":{"type":"string","format":"email"},"age":{"type":"integer","minimum":0}}}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_14_nested_object_bracket_notation: urlEncoded14NestedObjectBracketNotation
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /form/validated
+ */
+async function urlEncodedStringMaxLengthValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncodedStringMaxLengthValidationFail(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/form/validated",
+		handler_name: "url_encoded_string_max_length_validation_fail",
+		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string","maxLength":20}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_string_max_length_validation_fail: urlEncodedStringMaxLengthValidationFail
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /products
+ */
+async function urlEncoded18IntegerMinimumValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncoded18IntegerMinimumValidationFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/products",
+		handler_name: "url_encoded_18_integer_minimum_validation_failure",
+		request_schema: {"type":"object","required":["quantity"],"properties":{"quantity":{"type":"integer","minimum":1}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_18_integer_minimum_validation_failure: urlEncoded18IntegerMinimumValidationFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /products
+ */
+async function urlEncoded21IntegerTypeCoercionFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncoded21IntegerTypeCoercionFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/products",
+		handler_name: "url_encoded_21_integer_type_coercion_failure",
+		request_schema: {"type":"object","required":["price"],"properties":{"price":{"type":"integer"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_21_integer_type_coercion_failure: urlEncoded21IntegerTypeCoercionFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /users
+ */
+async function urlEncoded16MinlengthValidationFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncoded16MinlengthValidationFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/users",
+		handler_name: "url_encoded_16_minlength_validation_failure",
+		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string","minLength":3}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_16_minlength_validation_failure: urlEncoded16MinlengthValidationFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /form/validated
+ */
+async function urlEncodedStringMinLengthValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppUrlEncodedStringMinLengthValidationFail(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/form/validated",
+		handler_name: "url_encoded_string_min_length_validation_fail",
+		request_schema: {"type":"object","required":["username"],"properties":{"username":{"type":"string","minLength":3}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			url_encoded_string_min_length_validation_fail: urlEncodedStringMinLengthValidationFail
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /
+ */
+async function multipartMultipleValuesForSameFieldName(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"files":[{"filename":"file1.txt","size":10,"content":"first file","content_type":"text/plain"},{"filename":"file2.txt","size":11,"content":"second file","content_type":"text/plain"}],"tags":["python","rust","web"]};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartMultipleValuesForSameFieldName(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/",
+		handler_name: "multipart_multiple_values_for_same_field_name",
+		request_schema: {"type":"object","properties":{"files":{"type":"array","items":{"type":"string","format":"binary"}},"tags":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["files"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_multiple_values_for_same_field_name: multipartMultipleValuesForSameFieldName
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /upload
+ */
+async function multipart19FileMimeSpoofingPngAsJpeg(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipart19FileMimeSpoofingPngAsJpeg(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/upload",
+		handler_name: "multipart_19_file_mime_spoofing_png_as_jpeg",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: {"image":{"required":true,"content_type":["image/jpeg"],"validate_magic_numbers":true}},
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_19_file_mime_spoofing_png_as_jpeg: multipart19FileMimeSpoofingPngAsJpeg
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /upload
+ */
+async function multipart20FileMimeSpoofingJpegAsPng(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipart20FileMimeSpoofingJpegAsPng(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/upload",
+		handler_name: "multipart_20_file_mime_spoofing_jpeg_as_png",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: {"image":{"required":true,"content_type":["image/png"],"validate_magic_numbers":true}},
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_20_file_mime_spoofing_jpeg_as_png: multipart20FileMimeSpoofingJpegAsPng
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /upload
+ */
+async function multipart21FilePdfMagicNumberSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
 	response.body = null;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes307TemporaryRedirectMethodPreserved(): SpikardApp {
+export function createAppMultipart21FilePdfMagicNumberSuccess(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "POST",
-		path: "/redirect-post",
-		handler_name: "status_codes_307_temporary_redirect_method_preserved",
+		path: "/upload",
+		handler_name: "multipart_21_file_pdf_magic_number_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: {"document":{"required":true,"content_type":["application/pdf"],"validate_magic_numbers":true}},
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_21_file_pdf_magic_number_success: multipart21FilePdfMagicNumberSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/images-only
+ */
+async function multipartContentTypeValidationInvalidType(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartContentTypeValidationInvalidType(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/images-only",
+		handler_name: "multipart_content_type_validation_invalid_type",
+		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: {"file":{"required":true,"content_type":["image/jpeg","image/png","image/gif"]}},
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_content_type_validation_invalid_type: multipartContentTypeValidationInvalidType
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/document
+ */
+async function multipartPdfFileUpload(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"filename":"report.pdf","content_type":"application/pdf","size":16};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartPdfFileUpload(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/document",
+		handler_name: "multipart_pdf_file_upload",
+		request_schema: {"type":"object","properties":{"document":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["document"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_pdf_file_upload: multipartPdfFileUpload
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/list
+ */
+async function multipartFileListUploadArrayOfFiles(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"filenames":["file1.txt","file2.txt"],"total_size":35};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartFileListUploadArrayOfFiles(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/list",
+		handler_name: "multipart_file_list_upload_array_of_files",
+		request_schema: {"type":"object","properties":{"files":{"type":"array","items":{"type":"string","format":"binary"}}},"additionalProperties":false,"required":["files"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_file_list_upload_array_of_files: multipartFileListUploadArrayOfFiles
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/optional
+ */
+async function multipartOptionalFileUploadProvided(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"filename":"optional.txt","content_type":"text/plain","size":21};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartOptionalFileUploadProvided(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/optional",
+		handler_name: "multipart_optional_file_upload_provided",
+		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["file"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_optional_file_upload_provided: multipartOptionalFileUploadProvided
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/validated
+ */
+async function multipartFileSizeValidationTooLarge(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 413 };
+	const responseBody = {"detail":"File too large. Maximum size is 1MB"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartFileSizeValidationTooLarge(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/validated",
+		handler_name: "multipart_file_size_validation_too_large",
+		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_file_size_validation_too_large: multipartFileSizeValidationTooLarge
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /
+ */
+async function multipartMixedFilesAndFormData(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"file":{"filename":"upload.txt","size":14,"content":"file data here","content_type":"text/plain"},"username":"testuser","age":"25","active":"true"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartMixedFilesAndFormData(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/",
+		handler_name: "multipart_mixed_files_and_form_data",
+		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"},"username":{"type":"string"},"age":{"type":"string"},"active":{"type":"string"}},"additionalProperties":false,"required":["file"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_mixed_files_and_form_data: multipartMixedFilesAndFormData
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /
+ */
+async function multipartSimpleFileUpload(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"test":{"filename":"test.txt","size":14,"content":"<file content>","content_type":"text/plain"}};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartSimpleFileUpload(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/",
+		handler_name: "multipart_simple_file_upload",
+		request_schema: {"type":"object","properties":{"test":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["test"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_simple_file_upload: multipartSimpleFileUpload
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/upload
+ */
+async function multipartEmptyFileUpload(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"filename":"empty.txt","size":0};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartEmptyFileUpload(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/upload",
+		handler_name: "multipart_empty_file_upload",
+		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["file"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_empty_file_upload: multipartEmptyFileUpload
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/optional
+ */
+async function multipartOptionalFileUploadMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"file":null};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartOptionalFileUploadMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/optional",
+		handler_name: "multipart_optional_file_upload_missing",
 		request_schema: {"type":"object","properties":{},"additionalProperties":false},
 		response_schema: undefined,
 		parameter_schema: undefined,
@@ -14371,99 +6061,31 @@ export function createAppStatusCodes307TemporaryRedirectMethodPreserved(): Spika
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_307_temporary_redirect_method_preserved: statusCodes307TemporaryRedirectMethodPreserved
+			multipart_optional_file_upload_missing: multipartOptionalFileUploadMissing
 		},
 	};
 }
 
 
 /**
- * Handler for GET /error
+ * Handler for POST /
  */
-async function statusCodes500InternalServerErrorServerError(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 500 };
-	const responseBody = {"type":"https://spikard.dev/errors/internal-server-error","title":"Internal Server Error","status":500,"detail":"Internal server error"};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppStatusCodes500InternalServerErrorServerError(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/error",
-		handler_name: "status_codes_500_internal_server_error_server_error",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			status_codes_500_internal_server_error_server_error: statusCodes500InternalServerErrorServerError
-		},
-	};
-}
-
-
-/**
- * Handler for GET /data
- */
-async function statusCodes20414UriTooLong(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function multipartFileUploadWithoutFilename(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
 	const response: HandlerResponse = { status: 200 };
-	response.body = null;
-	return JSON.stringify(response);
-}
-
-export function createAppStatusCodes20414UriTooLong(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/data",
-		handler_name: "status_codes_20_414_uri_too_long",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			status_codes_20_414_uri_too_long: statusCodes20414UriTooLong
-		},
-	};
-}
-
-
-/**
- * Handler for GET /users/me
- */
-async function statusCodes401UnauthorizedMissingAuthentication(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 401 };
-	response.headers = {"www-authenticate":"Bearer"};
-	const responseBody = {"detail":"Not authenticated"};
+	const responseBody = {"test1":"<file1 content>"};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes401UnauthorizedMissingAuthentication(): SpikardApp {
+export function createAppMultipartFileUploadWithoutFilename(): SpikardApp {
 	const route: RouteMetadata = {
-		method: "GET",
-		path: "/users/me",
-		handler_name: "status_codes_401_unauthorized_missing_authentication",
-		request_schema: undefined,
+		method: "POST",
+		path: "/",
+		handler_name: "multipart_file_upload_without_filename",
+		request_schema: {"type":"object","properties":{"test1":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["test1"]},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14473,42 +6095,7 @@ export function createAppStatusCodes401UnauthorizedMissingAuthentication(): Spik
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_401_unauthorized_missing_authentication: statusCodes401UnauthorizedMissingAuthentication
-		},
-	};
-}
-
-
-/**
- * Handler for GET /data
- */
-async function statusCodes23503ServiceUnavailable(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 503 };
-	response.headers = {"retry-after":"60"};
-	const responseBody = {"error":"Service Unavailable","message":"The service is temporarily unavailable. Please try again later."};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppStatusCodes23503ServiceUnavailable(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/data",
-		handler_name: "status_codes_23_503_service_unavailable",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			status_codes_23_503_service_unavailable: statusCodes23503ServiceUnavailable
+			multipart_file_upload_without_filename: multipartFileUploadWithoutFilename
 		},
 	};
 }
@@ -14517,22 +6104,122 @@ export function createAppStatusCodes23503ServiceUnavailable(): SpikardApp {
 /**
  * Handler for POST /upload
  */
-async function statusCodes19413PayloadTooLarge(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function multipart18FileMagicNumberJpegSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 413 };
-	const responseBody = {"error":"Payload Too Large","message":"Request body size exceeds maximum allowed size of 1024 bytes"};
+	const response: HandlerResponse = { status: 201 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipart18FileMagicNumberJpegSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/upload",
+		handler_name: "multipart_18_file_magic_number_jpeg_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: {"image":{"required":true,"content_type":["image/jpeg"],"validate_magic_numbers":true}},
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_18_file_magic_number_jpeg_success: multipart18FileMagicNumberJpegSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /upload
+ */
+async function multipart22FileEmptyBuffer(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipart22FileEmptyBuffer(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/upload",
+		handler_name: "multipart_22_file_empty_buffer",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: {"file":{"required":true,"validate_magic_numbers":true}},
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_22_file_empty_buffer: multipart22FileEmptyBuffer
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /upload
+ */
+async function multipart17FileMagicNumberPngSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipart17FileMagicNumberPngSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/upload",
+		handler_name: "multipart_17_file_magic_number_png_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{}},
+		file_params: {"image":{"required":true,"content_type":["image/png"],"validate_magic_numbers":true}},
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_17_file_magic_number_png_success: multipart17FileMagicNumberPngSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /
+ */
+async function multipartFormDataWithoutFiles(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"some":"data"};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes19413PayloadTooLarge(): SpikardApp {
+export function createAppMultipartFormDataWithoutFiles(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "POST",
-		path: "/upload",
-		handler_name: "status_codes_19_413_payload_too_large",
-		request_schema: {"type":"object","properties":{"data":{"type":"string"}}},
+		path: "/",
+		handler_name: "multipart_form_data_without_files",
+		request_schema: {"type":"object","properties":{"some":{"type":"string"}},"additionalProperties":false},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14542,30 +6229,182 @@ export function createAppStatusCodes19413PayloadTooLarge(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_19_413_payload_too_large: statusCodes19413PayloadTooLarge
+			multipart_form_data_without_files: multipartFormDataWithoutFiles
 		},
 	};
 }
 
 
 /**
- * Handler for GET /admin/users
+ * Handler for POST /
  */
-async function statusCodes403ForbiddenInsufficientPermissions(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function multipartMultipleFileUploads(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 403 };
-	const responseBody = {"detail":"Not enough permissions"};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"test1":{"filename":"test1.txt","size":15,"content":"<file1 content>","content_type":"text/plain"},"test2":{"filename":"test2.txt","size":15,"content":"<file2 content>","content_type":"text/plain"}};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes403ForbiddenInsufficientPermissions(): SpikardApp {
+export function createAppMultipartMultipleFileUploads(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/",
+		handler_name: "multipart_multiple_file_uploads",
+		request_schema: {"type":"object","properties":{"test1":{"type":"string","format":"binary"},"test2":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["test1","test2"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_multiple_file_uploads: multipartMultipleFileUploads
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /
+ */
+async function multipartFileUploadWithCustomHeaders(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"test2":{"filename":"test2.txt","size":15,"content":"<file2 content>","content_type":"text/plain","headers":[["content-disposition","form-data; name=\"test2\"; filename=\"test2.txt\""],["content-type","text/plain"],["x-custom","f2"]]}};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartFileUploadWithCustomHeaders(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/",
+		handler_name: "multipart_file_upload_with_custom_headers",
+		request_schema: {"type":"object","properties":{"test2":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["test2"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_file_upload_with_custom_headers: multipartFileUploadWithCustomHeaders
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/required
+ */
+async function multipartRequiredFileUploadMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartRequiredFileUploadMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/required",
+		handler_name: "multipart_required_file_upload_missing",
+		request_schema: {"type":"object","properties":{"file":{"type":"string","format":"binary"}},"required":["file"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_required_file_upload_missing: multipartRequiredFileUploadMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files/image
+ */
+async function multipartImageFileUpload(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"filename":"photo.jpg","content_type":"image/jpeg","size":22};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppMultipartImageFileUpload(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files/image",
+		handler_name: "multipart_image_file_upload",
+		request_schema: {"type":"object","properties":{"image":{"type":"string","format":"binary"}},"additionalProperties":false,"required":["image"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			multipart_image_file_upload: multipartImageFileUpload
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /compression/skip
+ */
+async function compressionCompressionPayloadBelowMinSizeIsNotCompressed(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Small payload","payload":"tiny"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCompressionCompressionPayloadBelowMinSizeIsNotCompressed(): SpikardApp {
+	const config: ServerConfig = {
+		compression: {
+			gzip: true,
+			brotli: false,
+			minSize: 4096,
+			quality: 6
+		}
+	};
+
 	const route: RouteMetadata = {
 		method: "GET",
-		path: "/admin/users",
-		handler_name: "status_codes_403_forbidden_insufficient_permissions",
+		path: "/compression/skip",
+		handler_name: "compression_compression_payload_below_min_size_is_not_compressed",
 		request_schema: undefined,
 		response_schema: undefined,
 		parameter_schema: undefined,
@@ -14576,7 +6415,677 @@ export function createAppStatusCodes403ForbiddenInsufficientPermissions(): Spika
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_403_forbidden_insufficient_permissions: statusCodes403ForbiddenInsufficientPermissions
+			compression_compression_payload_below_min_size_is_not_compressed: compressionCompressionPayloadBelowMinSizeIsNotCompressed
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for GET /compression/gzip
+ */
+async function compressionCompressionGzipApplied(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"vary":"Accept-Encoding"};
+	const responseBody = {"message":"Compressed payload","payload":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCompressionCompressionGzipApplied(): SpikardApp {
+	const config: ServerConfig = {
+		compression: {
+			gzip: true,
+			brotli: false,
+			minSize: 0,
+			quality: 4
+		}
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/compression/gzip",
+		handler_name: "compression_compression_gzip_applied",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			compression_compression_gzip_applied: compressionCompressionGzipApplied
+		},
+		config,
+	};
+}
+
+
+/**
+ * Handler for OPTIONS /api/data
+ */
+async function cors07CorsPreflightHeaderNotAllowed(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 403 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppCors07CorsPreflightHeaderNotAllowed(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "OPTIONS",
+		path: "/api/data",
+		handler_name: "cors_07_cors_preflight_header_not_allowed",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"},"Access-Control-Request-Method":{"type":"string","source":"header"},"Access-Control-Request-Headers":{"type":"string","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_07_cors_preflight_header_not_allowed: cors07CorsPreflightHeaderNotAllowed
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/cached-resource
+ */
+async function corsCorsVaryHeaderForProperCaching(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"cache-control":"public, max-age=3600","access-control-allow-origin":"https://app.example.com","vary":"Origin"};
+	const responseBody = {"data":"cacheable resource"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsVaryHeaderForProperCaching(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/cached-resource",
+		handler_name: "cors_cors_vary_header_for_proper_caching",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_vary_header_for_proper_caching: corsCorsVaryHeaderForProperCaching
+		},
+	};
+}
+
+
+/**
+ * Handler for OPTIONS /api/resource/123
+ */
+async function corsCorsPreflightForPutMethod(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 204 };
+	response.headers = {"access-control-allow-origin":"https://app.example.com","vary":"Origin","access-control-allow-methods":"GET, POST, PUT, PATCH, DELETE","access-control-max-age":"3600","access-control-allow-headers":"Content-Type, X-Custom-Header"};
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsPreflightForPutMethod(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "OPTIONS",
+		path: "/api/resource/123",
+		handler_name: "cors_cors_preflight_for_put_method",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_preflight_for_put_method: corsCorsPreflightForPutMethod
+		},
+	};
+}
+
+
+/**
+ * Handler for OPTIONS /api/resource/456
+ */
+async function corsCorsPreflightForDeleteMethod(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 204 };
+	response.headers = {"access-control-allow-origin":"https://app.example.com","access-control-allow-methods":"GET, POST, PUT, PATCH, DELETE","access-control-max-age":"3600","vary":"Origin"};
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsPreflightForDeleteMethod(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "OPTIONS",
+		path: "/api/resource/456",
+		handler_name: "cors_cors_preflight_for_delete_method",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_preflight_for_delete_method: corsCorsPreflightForDeleteMethod
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function corsCorsMultipleAllowedOrigins(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"vary":"Origin","access-control-allow-origin":"https://admin.example.com"};
+	const responseBody = {"data":"resource data"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsMultipleAllowedOrigins(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "cors_cors_multiple_allowed_origins",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_multiple_allowed_origins: corsCorsMultipleAllowedOrigins
+		},
+	};
+}
+
+
+/**
+ * Handler for OPTIONS /items/
+ */
+async function corsCorsPreflightRequest(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"access-control-allow-methods":"GET, POST, PUT, DELETE, OPTIONS","access-control-allow-headers":"Content-Type, X-Custom-Header","access-control-allow-origin":"https://example.com","access-control-max-age":"600"};
+	const result: Record<string, unknown> = {};
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsPreflightRequest(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "OPTIONS",
+		path: "/items/",
+		handler_name: "cors_cors_preflight_request",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_preflight_request: corsCorsPreflightRequest
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/user/profile
+ */
+async function corsCorsWithCredentials(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"access-control-allow-origin":"https://app.example.com","vary":"Origin","access-control-allow-credentials":"true"};
+	const responseBody = {"username":"john"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsWithCredentials(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/user/profile",
+		handler_name: "cors_cors_with_credentials",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_with_credentials: corsCorsWithCredentials
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function corsCorsRegexPatternMatchingForOrigins(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"access-control-allow-origin":"https://subdomain.example.com","vary":"Origin"};
+	const responseBody = {"data":"resource data"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsRegexPatternMatchingForOrigins(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "cors_cors_regex_pattern_matching_for_origins",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_regex_pattern_matching_for_origins: corsCorsRegexPatternMatchingForOrigins
+		},
+	};
+}
+
+
+/**
+ * Handler for OPTIONS /api/data
+ */
+async function cors08CorsMaxAge(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 204 };
+	response.headers = {"access-control-allow-headers":"Content-Type","access-control-max-age":"3600","access-control-allow-methods":"POST","access-control-allow-origin":"https://example.com"};
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppCors08CorsMaxAge(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "OPTIONS",
+		path: "/api/data",
+		handler_name: "cors_08_cors_max_age",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"},"Access-Control-Request-Method":{"type":"string","source":"header"},"Access-Control-Request-Headers":{"type":"string","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_08_cors_max_age: cors08CorsMaxAge
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function cors10CorsOriginNull(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 403 };
+	const responseBody = {"error":"Origin 'null' is not allowed"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCors10CorsOriginNull(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "cors_10_cors_origin_null",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_10_cors_origin_null: cors10CorsOriginNull
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /public/data
+ */
+async function corsCorsWildcardOrigin(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"access-control-allow-origin":"*"};
+	const responseBody = {"data":"public"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsWildcardOrigin(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/public/data",
+		handler_name: "cors_cors_wildcard_origin",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_wildcard_origin: corsCorsWildcardOrigin
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /api/form
+ */
+async function corsCorsSafelistedHeadersWithoutPreflight(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"access-control-allow-origin":"https://app.example.com","vary":"Origin"};
+	const responseBody = {"message":"Success"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsSafelistedHeadersWithoutPreflight(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/api/form",
+		handler_name: "cors_cors_safelisted_headers_without_preflight",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_safelisted_headers_without_preflight: corsCorsSafelistedHeadersWithoutPreflight
+		},
+	};
+}
+
+
+/**
+ * Handler for OPTIONS /api/local-resource
+ */
+async function corsCorsPrivateNetworkAccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 204 };
+	response.headers = {"access-control-allow-origin":"https://public.example.com","access-control-allow-private-network":"true","access-control-allow-methods":"GET, POST","vary":"Origin"};
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsPrivateNetworkAccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "OPTIONS",
+		path: "/api/local-resource",
+		handler_name: "cors_cors_private_network_access",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_private_network_access: corsCorsPrivateNetworkAccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function corsCorsOriginCaseSensitivity(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"vary":"Origin"};
+	const result: Record<string, unknown> = {};
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsOriginCaseSensitivity(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "cors_cors_origin_case_sensitivity",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_origin_case_sensitivity: corsCorsOriginCaseSensitivity
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function corsCorsRequestBlocked(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 403 };
+	const responseBody = {"detail":"CORS request from origin 'https://malicious-site.com' not allowed"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsCorsRequestBlocked(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "cors_cors_request_blocked",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_cors_request_blocked: corsCorsRequestBlocked
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function corsSimpleCorsRequest(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"access-control-allow-origin":"https://example.com","vary":"Origin"};
+	const responseBody = {"items":[]};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCorsSimpleCorsRequest(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "cors_simple_cors_request",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_simple_cors_request: corsSimpleCorsRequest
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function cors09CorsExposeHeaders(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-total-count":"42","access-control-expose-headers":"X-Total-Count, X-Request-Id","access-control-allow-origin":"https://example.com","x-request-id":"abc123"};
+	const result: Record<string, unknown> = {};
+	const origin = _params.Origin;
+	if (origin !== null && origin !== undefined) {
+		result.Origin = origin;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCors09CorsExposeHeaders(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "cors_09_cors_expose_headers",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_09_cors_expose_headers: cors09CorsExposeHeaders
+		},
+	};
+}
+
+
+/**
+ * Handler for OPTIONS /api/data
+ */
+async function cors06CorsPreflightMethodNotAllowed(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 403 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppCors06CorsPreflightMethodNotAllowed(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "OPTIONS",
+		path: "/api/data",
+		handler_name: "cors_06_cors_preflight_method_not_allowed",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","source":"header"},"Access-Control-Request-Method":{"type":"string","source":"header"},"Access-Control-Request-Headers":{"type":"string","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cors_06_cors_preflight_method_not_allowed: cors06CorsPreflightMethodNotAllowed
 		},
 	};
 }
@@ -14585,24 +7094,28 @@ export function createAppStatusCodes403ForbiddenInsufficientPermissions(): Spika
 /**
  * Handler for GET /data
  */
-async function statusCodes21431RequestHeaderFieldsTooLarge(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function cookies25CookieSamesiteLax(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 431 };
-	const responseBody = {"error":"Request Header Fields Too Large","message":"Request headers exceed maximum allowed size of 8192 bytes"};
-	response.body = responseBody;
+	const response: HandlerResponse = { status: 200 };
+	const result: Record<string, unknown> = {};
+	const tracking = _params.tracking;
+	if (tracking !== null && tracking !== undefined) {
+		result.tracking = tracking;
+	}
+	response.body = result;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes21431RequestHeaderFieldsTooLarge(): SpikardApp {
+export function createAppCookies25CookieSamesiteLax(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "GET",
 		path: "/data",
-		handler_name: "status_codes_21_431_request_header_fields_too_large",
+		handler_name: "cookies_25_cookie_samesite_lax",
 		request_schema: undefined,
 		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"X-Large-Header":{"type":"string","source":"header"}}},
+		parameter_schema: {"type":"object","properties":{"tracking":{"type":"string","source":"cookie","samesite":"Lax"}},"required":["tracking"]},
 		file_params: undefined,
 		is_async: true,
 	};
@@ -14610,68 +7123,33 @@ export function createAppStatusCodes21431RequestHeaderFieldsTooLarge(): SpikardA
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_21_431_request_header_fields_too_large: statusCodes21431RequestHeaderFieldsTooLarge
+			cookies_25_cookie_samesite_lax: cookies25CookieSamesiteLax
 		},
 	};
 }
 
 
 /**
- * Handler for GET /api/resource
+ * Handler for GET /items/
  */
-async function statusCodes429TooManyRequests(requestJson: string, _context?: HandlerContext): Promise<string> {
-	const request = JSON.parse(requestJson);
-	const _body = request.body ?? null;
-	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 429 };
-	response.headers = {"x-ratelimit-limit":"100","retry-after":"60","x-ratelimit-reset":"1609459200","x-ratelimit-remaining":"0"};
-	const responseBody = {"detail":"Rate limit exceeded. Try again in 60 seconds."};
-	response.body = responseBody;
-	return JSON.stringify(response);
-}
-
-export function createAppStatusCodes429TooManyRequests(): SpikardApp {
-	const route: RouteMetadata = {
-		method: "GET",
-		path: "/api/resource",
-		handler_name: "status_codes_429_too_many_requests",
-		request_schema: undefined,
-		response_schema: undefined,
-		parameter_schema: undefined,
-		file_params: undefined,
-		is_async: true,
-	};
-
-	return {
-		routes: [route],
-		handlers: {
-			status_codes_429_too_many_requests: statusCodes429TooManyRequests
-		},
-	};
-}
-
-
-/**
- * Handler for GET /status-test/{code}
- */
-async function statusCodes200OkSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function cookiesOptionalCookieParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
 	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"id":1,"name":"Item 1"};
+	const responseBody = {"ads_id":"abc123"};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes200OkSuccess(): SpikardApp {
+export function createAppCookiesOptionalCookieParameterSuccess(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "GET",
-		path: "/status-test/{code}",
-		handler_name: "status_codes_200_ok_success",
+		path: "/items/",
+		handler_name: "cookies_optional_cookie_parameter_success",
 		request_schema: undefined,
 		response_schema: undefined,
-		parameter_schema: {"type":"object","properties":{"code":{"type":"string","source":"path"}},"required":["code"]},
+		parameter_schema: {"type":"object","properties":{"ads_id":{"type":"string","source":"cookie"}}},
 		file_params: undefined,
 		is_async: true,
 	};
@@ -14679,41 +7157,140 @@ export function createAppStatusCodes200OkSuccess(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_200_ok_success: statusCodes200OkSuccess
+			cookies_optional_cookie_parameter_success: cookiesOptionalCookieParameterSuccess
 		},
 	};
 }
 
 
 /**
- * Handler for GET /files/document.pdf
+ * Handler for GET /cookies/pattern
  */
-async function statusCodes206PartialContent(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function cookiesCookieRegexPatternValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 206 };
-	response.headers = {"content-range":"bytes 0-1023/5000","content-type":"application/pdf","accept-ranges":"bytes","content-length":"1024"};
-	const contentValue = "binary_data_1024_bytes";
-	let contentBytes = Buffer.from(contentValue, "utf-8");
-	if (contentBytes.length < 1024) {
-		const padding = Buffer.alloc(1024 - contentBytes.length, " ");
-		contentBytes = Buffer.concat([contentBytes, padding]);
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const trackingId = _params.tracking_id;
+	if (trackingId !== null && trackingId !== undefined) {
+		result.tracking_id = trackingId;
 	}
-	async function* streamContent() {
-		yield contentBytes;
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesCookieRegexPatternValidationFail(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/cookies/pattern",
+		handler_name: "cookies_cookie_regex_pattern_validation_fail",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"tracking_id":{"type":"string","pattern":"^[A-Z0-9]{8}$","source":"cookie"}},"required":["tracking_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_cookie_regex_pattern_validation_fail: cookiesCookieRegexPatternValidationFail
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookies/session
+ */
+async function cookiesResponseSessionCookieNoMaxAge(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Session cookie set"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseSessionCookieNoMaxAge(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookies/session",
+		handler_name: "cookies_response_session_cookie_no_max_age",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_response_session_cookie_no_max_age: cookiesResponseSessionCookieNoMaxAge
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /secure
+ */
+async function cookies27CookieHttponlyFlag(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const result: Record<string, unknown> = {};
+	const session = _params.session;
+	if (session !== null && session !== undefined) {
+		result.session = session;
 	}
-	return new StreamingResponse(streamContent(), {
-		statusCode: 206,
-		headers: response.headers ?? {},
-	});
+	response.body = result;
+	return JSON.stringify(response);
 }
 
-export function createAppStatusCodes206PartialContent(): SpikardApp {
+export function createAppCookies27CookieHttponlyFlag(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "GET",
-		path: "/files/document.pdf",
-		handler_name: "status_codes_206_partial_content",
+		path: "/secure",
+		handler_name: "cookies_27_cookie_httponly_flag",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"session":{"type":"string","source":"cookie","httponly":true}},"required":["session"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_27_cookie_httponly_flag: cookies27CookieHttponlyFlag
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /cookie/set
+ */
+async function cookiesResponseCookieWithAttributes(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Cookie set"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseCookieWithAttributes(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/cookie/set",
+		handler_name: "cookies_response_cookie_with_attributes",
 		request_schema: undefined,
 		response_schema: undefined,
 		parameter_schema: undefined,
@@ -14724,31 +7301,598 @@ export function createAppStatusCodes206PartialContent(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			status_codes_206_partial_content: statusCodes206PartialContent
+			cookies_response_cookie_with_attributes: cookiesResponseCookieWithAttributes
 		},
 	};
 }
 
 
 /**
- * Handler for GET /request-id/preserved
+ * Handler for GET /secure
  */
-async function requestIdRequestIdHeaderIsPreserved(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function cookies24CookieSamesiteStrict(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
 	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-request-id":"trace-123"};
-	const responseBody = {"status":"preserved","echo":"trace-123"};
+	const result: Record<string, unknown> = {};
+	const sessionId = _params.session_id;
+	if (sessionId !== null && sessionId !== undefined) {
+		result.session_id = sessionId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCookies24CookieSamesiteStrict(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/secure",
+		handler_name: "cookies_24_cookie_samesite_strict",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"session_id":{"type":"string","source":"cookie","samesite":"Strict"}},"required":["session_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_24_cookie_samesite_strict: cookies24CookieSamesiteStrict
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function cookiesApikeyCookieAuthenticationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"secret"};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppRequestIdRequestIdHeaderIsPreserved(): SpikardApp {
+export function createAppCookiesApikeyCookieAuthenticationSuccess(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "GET",
-		path: "/request-id/preserved",
-		handler_name: "request_id_request_id_header_is_preserved",
+		path: "/users/me",
+		handler_name: "cookies_apikey_cookie_authentication_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"key":{"type":"string","source":"cookie"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_apikey_cookie_authentication_success: cookiesApikeyCookieAuthenticationSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /cookies/min-length
+ */
+async function cookiesCookieValidationMinLengthConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"token":"abc"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesCookieValidationMinLengthConstraintSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/cookies/min-length",
+		handler_name: "cookies_cookie_validation_min_length_constraint_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"token":{"type":"string","source":"cookie"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_cookie_validation_min_length_constraint_success: cookiesCookieValidationMinLengthConstraintSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function cookiesCookieValidationMinLengthFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const trackingId = _params.tracking_id;
+	if (trackingId !== null && trackingId !== undefined) {
+		result.tracking_id = trackingId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesCookieValidationMinLengthFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "cookies_cookie_validation_min_length_failure",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"tracking_id":{"type":"string","minLength":3,"source":"cookie"}},"required":["tracking_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_cookie_validation_min_length_failure: cookiesCookieValidationMinLengthFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /cookies/validated
+ */
+async function cookiesCookieValidationMaxLengthConstraintFail(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const sessionId = _params.session_id;
+	if (sessionId !== null && sessionId !== undefined) {
+		result.session_id = sessionId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesCookieValidationMaxLengthConstraintFail(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/cookies/validated",
+		handler_name: "cookies_cookie_validation_max_length_constraint_fail",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"session_id":{"type":"string","maxLength":20,"source":"cookie"}},"required":["session_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_cookie_validation_max_length_constraint_fail: cookiesCookieValidationMaxLengthConstraintFail
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/cookies
+ */
+async function cookiesRequiredCookieMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const sessionId = _params.session_id;
+	const fatebookTracker = _params.fatebook_tracker;
+	if (sessionId !== null && sessionId !== undefined) {
+		result.session_id = sessionId;
+	}
+	if (fatebookTracker !== null && fatebookTracker !== undefined) {
+		result.fatebook_tracker = fatebookTracker;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesRequiredCookieMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/cookies",
+		handler_name: "cookies_required_cookie_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"session_id":{"type":"string","source":"cookie"},"fatebook_tracker":{"type":"string","source":"cookie"}},"required":["session_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_required_cookie_missing: cookiesRequiredCookieMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function cookiesOptionalCookieParameterMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"ads_id":null};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesOptionalCookieParameterMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "cookies_optional_cookie_parameter_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"ads_id":{"type":"string","source":"cookie"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_optional_cookie_parameter_missing: cookiesOptionalCookieParameterMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me/auth
+ */
+async function cookiesApikeyCookieAuthenticationMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const key = _params.key;
+	if (key !== null && key !== undefined) {
+		result.key = key;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesApikeyCookieAuthenticationMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me/auth",
+		handler_name: "cookies_apikey_cookie_authentication_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"key":{"type":"string","source":"cookie"}},"required":["key"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_apikey_cookie_authentication_missing: cookiesApikeyCookieAuthenticationMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookies/multiple
+ */
+async function cookiesResponseMultipleCookies(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Multiple cookies set"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseMultipleCookies(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookies/multiple",
+		handler_name: "cookies_response_multiple_cookies",
+		request_schema: {"type":"object","properties":{"user":{"type":"string"},"session":{"type":"string"}},"required":["user","session"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_response_multiple_cookies: cookiesResponseMultipleCookies
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookies/samesite-lax
+ */
+async function cookiesResponseCookieWithSamesiteLax(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Cookie set with SameSite=Lax"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseCookieWithSamesiteLax(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookies/samesite-lax",
+		handler_name: "cookies_response_cookie_with_samesite_lax",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_response_cookie_with_samesite_lax: cookiesResponseCookieWithSamesiteLax
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookies/delete
+ */
+async function cookiesResponseDeleteCookie(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Cookie deleted"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseDeleteCookie(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookies/delete",
+		handler_name: "cookies_response_delete_cookie",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"session":{"type":"string","source":"cookie"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_response_delete_cookie: cookiesResponseDeleteCookie
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookies/set-with-path
+ */
+async function cookiesResponseCookieWithPathAttribute(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Cookie set with path"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseCookieWithPathAttribute(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookies/set-with-path",
+		handler_name: "cookies_response_cookie_with_path_attribute",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_response_cookie_with_path_attribute: cookiesResponseCookieWithPathAttribute
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function cookiesOptionalApikeyCookieMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"msg":"Create an account first"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesOptionalApikeyCookieMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "cookies_optional_apikey_cookie_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"key":{"type":"string","source":"cookie"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_optional_apikey_cookie_missing: cookiesOptionalApikeyCookieMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookies/samesite-strict
+ */
+async function cookiesResponseCookieWithSamesiteStrict(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Cookie set with SameSite=Strict"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseCookieWithSamesiteStrict(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookies/samesite-strict",
+		handler_name: "cookies_response_cookie_with_samesite_strict",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_response_cookie_with_samesite_strict: cookiesResponseCookieWithSamesiteStrict
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookies/samesite-none
+ */
+async function cookiesResponseCookieWithSamesiteNone(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Cookie set with SameSite=None"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseCookieWithSamesiteNone(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookies/samesite-none",
+		handler_name: "cookies_response_cookie_with_samesite_none",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_response_cookie_with_samesite_none: cookiesResponseCookieWithSamesiteNone
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /cookies/pattern
+ */
+async function cookiesCookieRegexPatternValidationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"tracking_id":"ABC12345"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesCookieRegexPatternValidationSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/cookies/pattern",
+		handler_name: "cookies_cookie_regex_pattern_validation_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"tracking_id":{"type":"string","source":"cookie"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_cookie_regex_pattern_validation_success: cookiesCookieRegexPatternValidationSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookie/
+ */
+async function cookiesResponseSetCookieBasic(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Come to the dark side, we have cookies"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseSetCookieBasic(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookie/",
+		handler_name: "cookies_response_set_cookie_basic",
 		request_schema: undefined,
 		response_schema: undefined,
 		parameter_schema: undefined,
@@ -14759,35 +7903,1198 @@ export function createAppRequestIdRequestIdHeaderIsPreserved(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			request_id_request_id_header_is_preserved: requestIdRequestIdHeaderIsPreserved
+			cookies_response_set_cookie_basic: cookiesResponseSetCookieBasic
 		},
 	};
 }
 
 
 /**
- * Handler for GET /request-id/disabled
+ * Handler for GET /items/
  */
-async function requestIdRequestIdMiddlewareCanBeDisabled(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function cookiesMultipleCookiesSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
 	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"status":"no-request-id"};
+	const responseBody = {"session_id":"session123","fatebook_tracker":"tracker456","googall_tracker":"ga789"};
 	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppRequestIdRequestIdMiddlewareCanBeDisabled(): SpikardApp {
+export function createAppCookiesMultipleCookiesSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "cookies_multiple_cookies_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"session_id":{"type":"string","source":"cookie"},"fatebook_tracker":{"type":"string","source":"cookie"},"googall_tracker":{"type":"string","source":"cookie"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_multiple_cookies_success: cookiesMultipleCookiesSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /secure
+ */
+async function cookies26CookieSecureFlag(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const result: Record<string, unknown> = {};
+	const authToken = _params.auth_token;
+	if (authToken !== null && authToken !== undefined) {
+		result.auth_token = authToken;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppCookies26CookieSecureFlag(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/secure",
+		handler_name: "cookies_26_cookie_secure_flag",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"auth_token":{"type":"string","source":"cookie","secure":true}},"required":["auth_token"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_26_cookie_secure_flag: cookies26CookieSecureFlag
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /cookies/set-with-domain
+ */
+async function cookiesResponseCookieWithDomainAttribute(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Cookie set with domain"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppCookiesResponseCookieWithDomainAttribute(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/cookies/set-with-domain",
+		handler_name: "cookies_response_cookie_with_domain_attribute",
+		request_schema: {"type":"object","properties":{"value":{"type":"string"}},"required":["value"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			cookies_response_cookie_with_domain_attribute: cookiesResponseCookieWithDomainAttribute
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /background/events
+ */
+async function backgroundBackgroundEventLoggingSecondPayload(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 202 };
+	response.headers = {"content-type":"application/json"};
+	BACKGROUND_STATE["background_background_event_logging_second_payload"] = BACKGROUND_STATE["background_background_event_logging_second_payload"] ?? [];
+	const state = BACKGROUND_STATE["background_background_event_logging_second_payload"] as unknown[];
+	const value = _body && typeof _body === "object" ? _body.event : undefined;
+	if (value === undefined || value === null) {
+		throw new Error("background task requires request body value");
+	}
+	void Promise.resolve().then(() => void state.push(value));
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+
+async function backgroundBackgroundEventLoggingSecondPayloadBackgroundState(): Promise<string> {
+	const state = BACKGROUND_STATE["background_background_event_logging_second_payload"] ?? [];
+	const response: HandlerResponse = { status: 200 };
+	response.headers = { "content-type": "application/json" };
+	response.body = { "events": state };
+	return JSON.stringify(response);
+}
+
+export function createAppBackgroundBackgroundEventLoggingSecondPayload(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/background/events",
+		handler_name: "background_background_event_logging_second_payload",
+		request_schema: {"type":"object","properties":{"event":{"type":"string"}},"required":["event"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	const backgroundRoute: RouteMetadata = {
+		method: "GET",
+		path: "/background/events",
+		handler_name: "background_background_event_logging_second_payload_background_state",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route, backgroundRoute],
+		handlers: {
+			background_background_event_logging_second_payload: backgroundBackgroundEventLoggingSecondPayload,
+			background_background_event_logging_second_payload_background_state: backgroundBackgroundEventLoggingSecondPayloadBackgroundState
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /background/events
+ */
+async function backgroundBackgroundEventLogging(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 202 };
+	response.headers = {"content-type":"application/json"};
+	BACKGROUND_STATE["background_background_event_logging"] = BACKGROUND_STATE["background_background_event_logging"] ?? [];
+	const state = BACKGROUND_STATE["background_background_event_logging"] as unknown[];
+	const value = _body && typeof _body === "object" ? _body.event : undefined;
+	if (value === undefined || value === null) {
+		throw new Error("background task requires request body value");
+	}
+	void Promise.resolve().then(() => void state.push(value));
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+
+async function backgroundBackgroundEventLoggingBackgroundState(): Promise<string> {
+	const state = BACKGROUND_STATE["background_background_event_logging"] ?? [];
+	const response: HandlerResponse = { status: 200 };
+	response.headers = { "content-type": "application/json" };
+	response.body = { "events": state };
+	return JSON.stringify(response);
+}
+
+export function createAppBackgroundBackgroundEventLogging(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/background/events",
+		handler_name: "background_background_event_logging",
+		request_schema: {"type":"object","properties":{"event":{"type":"string"}},"required":["event"],"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	const backgroundRoute: RouteMetadata = {
+		method: "GET",
+		path: "/background/events",
+		handler_name: "background_background_event_logging_background_state",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route, backgroundRoute],
+		handlers: {
+			background_background_event_logging: backgroundBackgroundEventLogging,
+			background_background_event_logging_background_state: backgroundBackgroundEventLoggingBackgroundState
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/override-test
+ */
+async function diRouteLevelDependencyOverrideSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _api_key_validator = request.dependencies?.api_key_validator ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"mode":"test","strict":false};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiRouteLevelDependencyOverrideSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("apiKeyValidator", { mode: "test", strict: false });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/override-test",
+		handler_name: "di_route_level_dependency_override_success",
+		handler_dependencies: ["api_key_validator"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_route_level_dependency_override_success: diRouteLevelDependencyOverrideSuccess
+		};
+	return app;
+}
+
+
+function _diCircularDependencyDetectionErrorServiceA(serviceB): unknown {
+	// Factory for service_a
+	void serviceB;
+	return { _factory: "service_a", _random: Math.random() };
+}
+
+function _diCircularDependencyDetectionErrorServiceB(serviceA): unknown {
+	// Factory for service_b
+	void serviceA;
+	return { _factory: "service_b", _random: Math.random() };
+}
+
+/**
+ * Handler for GET /api/circular
+ */
+async function diCircularDependencyDetectionError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _service_a = request.dependencies?.service_a ?? null;
+	const response: HandlerResponse = { status: 500 };
+	const responseBody = {"type":"https://spikard.dev/errors/dependency-error","title":"Dependency Resolution Failed","status":500,"detail":"Circular dependency detected","errors":[{"type":"circular_dependency","msg":"Circular dependency detected in dependency graph","cycle":["service_a","service_b","service_a"]}]};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiCircularDependencyDetectionError(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/circular",
+		handler_name: "di_circular_dependency_detection_error",
+		handler_dependencies: ["service_a"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			di_circular_dependency_detection_error: diCircularDependencyDetectionError
+		},
+	};
+}
+
+
+function _diFactoryDependencySuccessTimestampGenerator(): unknown {
+	// Factory for timestamp_generator
+	return { _factory: "timestamp_generator", _random: Math.random() };
+}
+
+/**
+ * Handler for GET /api/timestamp
+ */
+async function diFactoryDependencySuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _timestamp_generator = request.dependencies?.timestamp_generator ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"timestamp":"<<present>>"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiFactoryDependencySuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("timestampGenerator", _diFactoryDependencySuccessTimestampGenerator);
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/timestamp",
+		handler_name: "di_factory_dependency_success",
+		handler_dependencies: ["timestamp_generator"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_factory_dependency_success: diFactoryDependencySuccess
+		};
+	return app;
+}
+
+
+/**
+ * Handler for GET /api/config
+ */
+async function diValueDependencyInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _app_name = request.dependencies?.app_name ?? null;
+	const _version = request.dependencies?.version ?? null;
+	const _max_connections = request.dependencies?.max_connections ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"app_name":"SpikardApp","version":"1.0.0","max_connections":100};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiValueDependencyInjectionSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("appName", "SpikardApp");
+	app.provide("maxConnections", 100);
+	app.provide("version", "1.0.0");
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/config",
+		handler_name: "di_value_dependency_injection_success",
+		handler_dependencies: ["app_name", "version", "max_connections"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_value_dependency_injection_success: diValueDependencyInjectionSuccess
+		};
+	return app;
+}
+
+
+/**
+ * Handler for GET /api/node-destructure
+ */
+async function diNodeJsObjectDestructuringInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _db = request.dependencies?.db ?? null;
+	const _logger = request.dependencies?.logger ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"db_name":"PostgreSQL","log_level":"info"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiNodeJsObjectDestructuringInjectionSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("db", { name: "PostgreSQL", connected: true });
+	app.provide("logger", { level: "info", enabled: true });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/node-destructure",
+		handler_name: "di_node_js_object_destructuring_injection_success",
+		handler_dependencies: ["db", "logger"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_node_js_object_destructuring_injection_success: diNodeJsObjectDestructuringInjectionSuccess
+		};
+	return app;
+}
+
+
+async function _diNestedDependencies3LevelsSuccessCache(config): Promise<unknown> {
+	// Async factory for cache
+	void config;
+	// Simulate async cache connection
+	return { ready: true, cacheId: Math.random().toString() };
+}
+
+async function _diNestedDependencies3LevelsSuccessDbPool(config): Promise<unknown> {
+	// Async factory for db_pool
+	void config;
+	// Simulate async DB connection
+	return { connected: true, poolId: Math.random().toString() };
+}
+
+function _diNestedDependencies3LevelsSuccessAuthService(dbPool, cache): unknown {
+	// Factory for auth_service
+	void dbPool;
+	void cache;
+	return { _factory: "auth_service", _random: Math.random() };
+}
+
+/**
+ * Handler for GET /api/auth-status
+ */
+async function diNestedDependencies3LevelsSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _auth_service = request.dependencies?.auth_service ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"auth_enabled":true,"has_db":true,"has_cache":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiNestedDependencies3LevelsSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("config", { db_url: "postgresql://localhost/mydb", cache_ttl: 300 });
+	app.provide("cache", _diNestedDependencies3LevelsSuccessCache, { cacheable: true });
+	app.provide("dbPool", _diNestedDependencies3LevelsSuccessDbPool, { cacheable: true });
+	app.provide("authService", _diNestedDependencies3LevelsSuccessAuthService, { cacheable: true });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/auth-status",
+		handler_name: "di_nested_dependencies_3_levels_success",
+		handler_dependencies: ["auth_service"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_nested_dependencies_3_levels_success: diNestedDependencies3LevelsSuccess
+		};
+	return app;
+}
+
+
+/**
+ * Handler for GET /api/type-mismatch
+ */
+async function diTypeMismatchInDependencyResolutionError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _config = request.dependencies?.config ?? null;
+	const response: HandlerResponse = { status: 500 };
+	const responseBody = {"type":"https://spikard.dev/errors/dependency-error","title":"Dependency Resolution Failed","status":500,"detail":"Dependency type mismatch","errors":[{"type":"type_mismatch","msg":"Dependency 'config' type mismatch: expected object, got string","dependency_key":"config","expected_type":"object","actual_type":"string"}]};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiTypeMismatchInDependencyResolutionError(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("config", "string_config");
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/type-mismatch",
+		handler_name: "di_type_mismatch_in_dependency_resolution_error",
+		handler_dependencies: ["config"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_type_mismatch_in_dependency_resolution_error: diTypeMismatchInDependencyResolutionError
+		};
+	return app;
+}
+
+
+/**
+ * Handler for GET /api/missing-dep
+ */
+async function diMissingDependencyError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _non_existent_service = request.dependencies?.non_existent_service ?? null;
+	const response: HandlerResponse = { status: 500 };
+	const responseBody = {"type":"https://spikard.dev/errors/dependency-error","title":"Dependency Resolution Failed","status":500,"detail":"Required dependency not found","errors":[{"type":"missing_dependency","msg":"Dependency 'non_existent_service' is not registered","dependency_key":"non_existent_service"}]};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiMissingDependencyError(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/missing-dep",
+		handler_name: "di_missing_dependency_error",
+		handler_dependencies: ["non_existent_service"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			di_missing_dependency_error: diMissingDependencyError
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/python-name-inject
+ */
+async function diPythonParameterNameBasedInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _db_pool = request.dependencies?.db_pool ?? null;
+	const _cache = request.dependencies?.cache ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"db_status":"connected","cache_status":"ready"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiPythonParameterNameBasedInjectionSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("cache", { status: "ready" });
+	app.provide("dbPool", { status: "connected" });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/python-name-inject",
+		handler_name: "di_python_parameter_name_based_injection_success",
+		handler_dependencies: ["db_pool", "cache"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_python_parameter_name_based_injection_success: diPythonParameterNameBasedInjectionSuccess
+		};
+	return app;
+}
+
+
+async function diDependencyInjectionInLifecycleHooksSuccessLogRequestOnRequest0(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: log_request
+	return request;
+}
+
+async function diDependencyInjectionInLifecycleHooksSuccessAuthCheckPreHandler0(request: HookRequest): Promise<HookResult> {
+	// Mock preHandler hook: auth_check
+	return request;
+}
+
+
+
+/**
+ * Handler for GET /api/hook-di-test
+ */
+async function diDependencyInjectionInLifecycleHooksSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-auth-mode":"strict","x-log-level":"debug"};
+	const responseBody = {"authenticated":true,"logged":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiDependencyInjectionInLifecycleHooksSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("authService", { enabled: true, strict_mode: true });
+	app.provide("logger", { level: "debug" });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/hook-di-test",
+		handler_name: "di_dependency_injection_in_lifecycle_hooks_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_dependency_injection_in_lifecycle_hooks_success: diDependencyInjectionInLifecycleHooksSuccess
+		};
+	app.lifecycleHooks = {
+		onRequest: [diDependencyInjectionInLifecycleHooksSuccessLogRequestOnRequest0],
+		preHandler: [diDependencyInjectionInLifecycleHooksSuccessAuthCheckPreHandler0]
+	};
+	return app;
+}
+
+
+/**
+ * Handler for GET /api/ruby-kwargs
+ */
+async function diRubyKeywordArgumentInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _db_pool = request.dependencies?.db_pool ?? null;
+	const _session = request.dependencies?.session ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"adapter":"postgresql","user_id":42};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiRubyKeywordArgumentInjectionSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("dbPool", { adapter: "postgresql", pool_size: 5 });
+	app.provide("session", { session_id: "abc123", user_id: 42 });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/ruby-kwargs",
+		handler_name: "di_ruby_keyword_argument_injection_success",
+		handler_dependencies: ["db_pool", "session"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_ruby_keyword_argument_injection_success: diRubyKeywordArgumentInjectionSuccess
+		};
+	return app;
+}
+
+
+async function* _diMultipleDependenciesWithCleanupSuccessDbConnection(): AsyncGenerator<unknown, void, unknown> {
+	// Factory for db_connection with cleanup
+	// Initialize cleanup state
+	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
+	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("db_opened");
+	// Create resource
+	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
+	try {
+		yield resource;
+	} finally {
+		// Cleanup resource
+		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("db_closed");
+	}
+}
+
+async function* _diMultipleDependenciesWithCleanupSuccessSession(dbConnection, cacheConnection): AsyncGenerator<unknown, void, unknown> {
+	// Factory for session with cleanup
+	void dbConnection;
+	void cacheConnection;
+	// Initialize cleanup state
+	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
+	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_opened");
+	// Create resource
+	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
+	try {
+		yield resource;
+	} finally {
+		// Cleanup resource
+		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("session_closed");
+	}
+}
+
+async function* _diMultipleDependenciesWithCleanupSuccessCacheConnection(): AsyncGenerator<unknown, void, unknown> {
+	// Factory for cache_connection with cleanup
+	// Initialize cleanup state
+	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
+	CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("cache_opened");
+	// Create resource
+	const resource = { id: "00000000-0000-0000-0000-00000000002d", opened: true };
+	try {
+		yield resource;
+	} finally {
+		// Cleanup resource
+		CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"].push("cache_closed");
+	}
+}
+
+/**
+ * Handler for GET /api/multi-cleanup-test
+ */
+async function diMultipleDependenciesWithCleanupSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _session = request.dependencies?.session ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"session_active":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+async function diMultipleDependenciesWithCleanupSuccessBackgroundState(): Promise<string> {
+	const state = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] ?? [];
+	const response: HandlerResponse = { status: 200 };
+	response.headers = { "content-type": "application/json" };
+	response.body = { "cleanup_order": state };
+	return JSON.stringify(response);
+}
+
+async function diMultipleDependenciesWithCleanupSuccessCleanupState(): Promise<string> {
+	// Return cleanup events
+	const cleanupEvents = CLEANUP_STATE["di_multiple_dependencies_with_cleanup_success"] || [];
+	const response: HandlerResponse = { status: 200 };
+	response.headers = { "content-type": "application/json" };
+	response.body = { cleanup_events: cleanupEvents };
+	return JSON.stringify(response);
+}
+
+export function createAppDiMultipleDependenciesWithCleanupSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("cacheConnection", _diMultipleDependenciesWithCleanupSuccessCacheConnection, { cacheable: true });
+	app.provide("dbConnection", _diMultipleDependenciesWithCleanupSuccessDbConnection, { cacheable: true });
+	app.provide("session", _diMultipleDependenciesWithCleanupSuccessSession, { cacheable: true });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/multi-cleanup-test",
+		handler_name: "di_multiple_dependencies_with_cleanup_success",
+		handler_dependencies: ["session"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	const backgroundRoute: RouteMetadata = {
+		method: "GET",
+		path: "/api/multi-cleanup-state",
+		handler_name: "di_multiple_dependencies_with_cleanup_success_background_state",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	const cleanupRoute: RouteMetadata = {
+		method: "GET",
+		path: "/api/cleanup-state",
+		handler_name: "di_multiple_dependencies_with_cleanup_success_cleanup_state",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route, backgroundRoute, cleanupRoute];
+	app.handlers = {
+			di_multiple_dependencies_with_cleanup_success: diMultipleDependenciesWithCleanupSuccess,
+			di_multiple_dependencies_with_cleanup_success_background_state: diMultipleDependenciesWithCleanupSuccessBackgroundState,
+			di_multiple_dependencies_with_cleanup_success_cleanup_state: diMultipleDependenciesWithCleanupSuccessCleanupState
+		};
+	return app;
+}
+
+
+function _diMixedSingletonAndPerRequestCachingSuccessRequestContext(dbPool): unknown {
+	// Factory for request_context
+	void dbPool;
+	return { _factory: "request_context", _random: Math.random() };
+}
+
+function _diMixedSingletonAndPerRequestCachingSuccessDbPool(appConfig): unknown {
+	// Factory for db_pool
+	void appConfig;
+	return { _factory: "db_pool", _random: Math.random() };
+}
+
+/**
+ * Handler for GET /api/mixed-caching
+ */
+async function diMixedSingletonAndPerRequestCachingSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _app_config = request.dependencies?.app_config ?? null;
+	const _db_pool = request.dependencies?.db_pool ?? null;
+	const _request_context = request.dependencies?.request_context ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const poolKey = "di_mixed_singleton_and_per_request_caching_success_pool";
+	const ctxKey = "di_mixed_singleton_and_per_request_caching_success_ctx_counter";
+	const pool = (BACKGROUND_STATE[poolKey] as { pool_id: string } | undefined) ?? { pool_id: "00000000-0000-0000-0000-000000000063" };
+	BACKGROUND_STATE[poolKey] = pool;
+	const ctxCount = (BACKGROUND_STATE[ctxKey] as number | undefined) ?? 0;
+	BACKGROUND_STATE[ctxKey] = ctxCount + 1;
+	const context_id = `context-${ctxCount + 1}`;
+	response.body = { app_name: "MyApp", pool_id: pool.pool_id, context_id };
+	return JSON.stringify(response);
+}
+
+export function createAppDiMixedSingletonAndPerRequestCachingSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("appConfig", { app_name: "MyApp", version: "2.0" });
+	app.provide("dbPool", _diMixedSingletonAndPerRequestCachingSuccessDbPool, { singleton: true });
+	app.provide("requestContext", _diMixedSingletonAndPerRequestCachingSuccessRequestContext, { cacheable: true });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/mixed-caching",
+		handler_name: "di_mixed_singleton_and_per_request_caching_success",
+		handler_dependencies: ["app_config", "db_pool", "request_context"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_mixed_singleton_and_per_request_caching_success: diMixedSingletonAndPerRequestCachingSuccess
+		};
+	return app;
+}
+
+
+async function* _diResourceCleanupAfterRequestSuccessDbSession(): AsyncGenerator<unknown, void, unknown> {
+	// Factory for db_session with cleanup
+	// Initialize cleanup state
+	CLEANUP_STATE["di_resource_cleanup_after_request_success"] = CLEANUP_STATE["di_resource_cleanup_after_request_success"] || [];
+	CLEANUP_STATE["di_resource_cleanup_after_request_success"].push("session_opened");
+	// Create resource
+	const resource = { id: "00000000-0000-0000-0000-000000000029", opened: true };
+	try {
+		yield resource;
+	} finally {
+		// Cleanup resource
+		CLEANUP_STATE["di_resource_cleanup_after_request_success"].push("session_closed");
+	}
+}
+
+/**
+ * Handler for GET /api/cleanup-test
+ */
+async function diResourceCleanupAfterRequestSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _db_session = request.dependencies?.db_session ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"session_id":"<<uuid>>","status":"completed"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+async function diResourceCleanupAfterRequestSuccessCleanupState(): Promise<string> {
+	// Return cleanup events
+	const cleanupEvents = CLEANUP_STATE["di_resource_cleanup_after_request_success"] || [];
+	const response: HandlerResponse = { status: 200 };
+	response.headers = { "content-type": "application/json" };
+	response.body = { cleanup_events: cleanupEvents };
+	return JSON.stringify(response);
+}
+
+export function createAppDiResourceCleanupAfterRequestSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("dbSession", _diResourceCleanupAfterRequestSuccessDbSession, { cacheable: true });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/cleanup-test",
+		handler_name: "di_resource_cleanup_after_request_success",
+		handler_dependencies: ["db_session"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	const cleanupRoute: RouteMetadata = {
+		method: "GET",
+		path: "/api/cleanup-state",
+		handler_name: "di_resource_cleanup_after_request_success_cleanup_state",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route, cleanupRoute];
+	app.handlers = {
+			di_resource_cleanup_after_request_success: diResourceCleanupAfterRequestSuccess,
+			di_resource_cleanup_after_request_success_cleanup_state: diResourceCleanupAfterRequestSuccessCleanupState
+		};
+	return app;
+}
+
+
+/**
+ * Handler for GET /api/python-type-inject
+ */
+async function diPythonTypeAnnotationBasedInjectionSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _database_pool = request.dependencies?.database_pool ?? null;
+	const _cache_client = request.dependencies?.cache_client ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"pool_type":"PostgreSQL","cache_type":"Redis"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiPythonTypeAnnotationBasedInjectionSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("cacheClient", { cache_type: "Redis", ttl: 300 });
+	app.provide("databasePool", { pool_type: "PostgreSQL", max_connections: 20 });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/python-type-inject",
+		handler_name: "di_python_type_annotation_based_injection_success",
+		handler_dependencies: ["database_pool", "cache_client"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_python_type_annotation_based_injection_success: diPythonTypeAnnotationBasedInjectionSuccess
+		};
+	return app;
+}
+
+
+function _diPerRequestDependencyCachingSuccessRequestIdGenerator(): unknown {
+	// Factory for request_id_generator
+	return { _factory: "request_id_generator", _random: Math.random() };
+}
+
+/**
+ * Handler for GET /api/request-id
+ */
+async function diPerRequestDependencyCachingSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _request_id_generator = request.dependencies?.request_id_generator ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"first_id":"<<uuid>>","second_id":"<<same_as:first_id>>"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiPerRequestDependencyCachingSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("requestIdGenerator", _diPerRequestDependencyCachingSuccessRequestIdGenerator, { cacheable: true });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/request-id",
+		handler_name: "di_per_request_dependency_caching_success",
+		handler_dependencies: ["request_id_generator", "request_id_generator"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_per_request_dependency_caching_success: diPerRequestDependencyCachingSuccess
+		};
+	return app;
+}
+
+
+function _diSingletonDependencyCachingSuccessAppCounter(): unknown {
+	// Factory for app_counter
+	return { _factory: "app_counter", _random: Math.random() };
+}
+
+/**
+ * Handler for GET /api/app-counter
+ */
+async function diSingletonDependencyCachingSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _app_counter = request.dependencies?.app_counter ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const stateKey = "di_singleton_dependency_caching_success_counter";
+	const existing = BACKGROUND_STATE[stateKey] as { counter_id: string; count: number } | undefined;
+	const counter = existing ?? { counter_id: "00000000-0000-0000-0000-000000000063", count: 0 };
+	counter.count += 1;
+	BACKGROUND_STATE[stateKey] = counter;
+	response.body = { counter_id: counter.counter_id, count: counter.count };
+	return JSON.stringify(response);
+}
+
+export function createAppDiSingletonDependencyCachingSuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("appCounter", _diSingletonDependencyCachingSuccessAppCounter, { singleton: true });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/app-counter",
+		handler_name: "di_singleton_dependency_caching_success",
+		handler_dependencies: ["app_counter"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_singleton_dependency_caching_success: diSingletonDependencyCachingSuccess
+		};
+	return app;
+}
+
+
+async function _diAsyncFactoryDependencySuccessDbPool(): Promise<unknown> {
+	// Async factory for db_pool
+	// Simulate async DB connection
+	return { connected: true, poolId: Math.random().toString() };
+}
+
+/**
+ * Handler for GET /api/db-status
+ */
+async function diAsyncFactoryDependencySuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const _db_pool = request.dependencies?.db_pool ?? null;
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"pool_status":"connected","max_size":10};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppDiAsyncFactoryDependencySuccess(): SpikardApp {
+	const app = new Spikard();
+
+	app.provide("dbPool", _diAsyncFactoryDependencySuccessDbPool, { cacheable: true });
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/db-status",
+		handler_name: "di_async_factory_dependency_success",
+		handler_dependencies: ["db_pool"],
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	app.routes = [route];
+	app.handlers = {
+			di_async_factory_dependency_success: diAsyncFactoryDependencySuccess
+		};
+	return app;
+}
+
+
+/**
+ * Handler for POST /body-limit/under
+ */
+async function bodyLimitsBodyUnderLimitSucceeds(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"accepted":true,"note":"small"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppBodyLimitsBodyUnderLimitSucceeds(): SpikardApp {
 	const config: ServerConfig = {
-		enableRequestId: false
+		maxBodySize: 64
 	};
 
 	const route: RouteMetadata = {
-		method: "GET",
-		path: "/request-id/disabled",
-		handler_name: "request_id_request_id_middleware_can_be_disabled",
-		request_schema: undefined,
+		method: "POST",
+		path: "/body-limit/under",
+		handler_name: "body_limits_body_under_limit_succeeds",
+		request_schema: {"type":"object","properties":{"note":{"type":"string"}},"required":["note"],"additionalProperties":false},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14797,7 +9104,7 @@ export function createAppRequestIdRequestIdMiddlewareCanBeDisabled(): SpikardApp
 	return {
 		routes: [route],
 		handlers: {
-			request_id_request_id_middleware_can_be_disabled: requestIdRequestIdMiddlewareCanBeDisabled
+			body_limits_body_under_limit_succeeds: bodyLimitsBodyUnderLimitSucceeds
 		},
 		config,
 	};
@@ -14805,29 +9112,27 @@ export function createAppRequestIdRequestIdMiddlewareCanBeDisabled(): SpikardApp
 
 
 /**
- * Handler for GET /request-id/generated
+ * Handler for POST /body-limit/over
  */
-async function requestIdRequestIdIsGeneratedWhenNotProvided(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function bodyLimitsBodyOverLimitReturns413(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	response.headers = {"x-request-id":"00000000-0000-4000-8000-000000000000"};
-	const responseBody = {"status":"generated"};
-	response.body = responseBody;
+	const response: HandlerResponse = { status: 413 };
+	response.body = null;
 	return JSON.stringify(response);
 }
 
-export function createAppRequestIdRequestIdIsGeneratedWhenNotProvided(): SpikardApp {
+export function createAppBodyLimitsBodyOverLimitReturns413(): SpikardApp {
 	const config: ServerConfig = {
-		enableRequestId: true
+		maxBodySize: 64
 	};
 
 	const route: RouteMetadata = {
-		method: "GET",
-		path: "/request-id/generated",
-		handler_name: "request_id_request_id_is_generated_when_not_provided",
-		request_schema: undefined,
+		method: "POST",
+		path: "/body-limit/over",
+		handler_name: "body_limits_body_over_limit_returns_413",
+		request_schema: {"type":"object","properties":{"note":{"type":"string"}},"required":["note"],"additionalProperties":false},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -14837,7 +9142,7 @@ export function createAppRequestIdRequestIdIsGeneratedWhenNotProvided(): Spikard
 	return {
 		routes: [route],
 		handlers: {
-			request_id_request_id_is_generated_when_not_provided: requestIdRequestIdIsGeneratedWhenNotProvided
+			body_limits_body_over_limit_returns_413: bodyLimitsBodyOverLimitReturns413
 		},
 		config,
 	};
@@ -16632,28 +10937,149 @@ export function createAppJsonBodiesArrayOfObjectsSuccess(): SpikardApp {
 
 
 /**
- * Handler for POST /body-limit/under
+ * Handler for GET /items/{item_id}
  */
-async function bodyLimitsBodyUnderLimitSucceeds(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function validationErrorsInvalidUuidFormat(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 200 };
-	const responseBody = {"accepted":true,"note":"small"};
-	response.body = responseBody;
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const itemId = _params.item_id;
+	if (itemId !== null && itemId !== undefined) {
+		result.item_id = itemId;
+	}
+	response.body = result;
 	return JSON.stringify(response);
 }
 
-export function createAppBodyLimitsBodyUnderLimitSucceeds(): SpikardApp {
-	const config: ServerConfig = {
-		maxBodySize: 64
+export function createAppValidationErrorsInvalidUuidFormat(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/{item_id}",
+		handler_name: "validation_errors_invalid_uuid_format",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","format":"uuid","source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
 	};
 
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_invalid_uuid_format: validationErrorsInvalidUuidFormat
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsInvalidBooleanValue(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	const isActive = _params.is_active;
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	if (isActive !== null && isActive !== undefined) {
+		result.is_active = isActive;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsInvalidBooleanValue(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_invalid_boolean_value",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"is_active":{"type":"boolean","source":"query"}},"required":["q","is_active"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_invalid_boolean_value: validationErrorsInvalidBooleanValue
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsMissingRequiredQueryParameter(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsMissingRequiredQueryParameter(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_missing_required_query_parameter",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"}},"required":["q"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_missing_required_query_parameter: validationErrorsMissingRequiredQueryParameter
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsArrayMaxItemsConstraintViolation(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsArrayMaxItemsConstraintViolation(): SpikardApp {
 	const route: RouteMetadata = {
 		method: "POST",
-		path: "/body-limit/under",
-		handler_name: "body_limits_body_under_limit_succeeds",
-		request_schema: {"type":"object","properties":{"note":{"type":"string"}},"required":["note"],"additionalProperties":false},
+		path: "/items/",
+		handler_name: "validation_errors_array_max_items_constraint_violation",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"type":"array","items":{"type":"string"},"maxItems":10}},"additionalProperties":false,"required":["name","price","tags"]},
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -16663,7 +11089,5579 @@ export function createAppBodyLimitsBodyUnderLimitSucceeds(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			body_limits_body_under_limit_succeeds: bodyLimitsBodyUnderLimitSucceeds
+			validation_errors_array_max_items_constraint_violation: validationErrorsArrayMaxItemsConstraintViolation
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsNumericConstraintViolationGtGreaterThan(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	const price = _params.price;
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	if (price !== null && price !== undefined) {
+		result.price = price;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsNumericConstraintViolationGtGreaterThan(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_numeric_constraint_violation_gt_greater_than",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"price":{"type":"number","exclusiveMinimum":0,"source":"query"}},"required":["q","price"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_numeric_constraint_violation_gt_greater_than: validationErrorsNumericConstraintViolationGtGreaterThan
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsStringRegexPatternMismatch(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsStringRegexPatternMismatch(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_string_regex_pattern_mismatch",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","pattern":"^[a-zA-Z0-9_-]+$","source":"query"}},"required":["q"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_string_regex_pattern_mismatch: validationErrorsStringRegexPatternMismatch
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /models/{model_name}
+ */
+async function validationErrorsInvalidEnumValue(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const modelName = _params.model_name;
+	if (modelName !== null && modelName !== undefined) {
+		result.model_name = modelName;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsInvalidEnumValue(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/models/{model_name}",
+		handler_name: "validation_errors_invalid_enum_value",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"model_name":{"type":"string","enum":["alexnet","resnet","lenet"],"source":"path"}},"required":["model_name"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_invalid_enum_value: validationErrorsInvalidEnumValue
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsStringMinLengthConstraintViolation(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsStringMinLengthConstraintViolation(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_string_min_length_constraint_violation",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","minLength":3,"source":"query"}},"required":["q"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_string_min_length_constraint_violation: validationErrorsStringMinLengthConstraintViolation
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsMultipleValidationErrors(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsMultipleValidationErrors(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "validation_errors_multiple_validation_errors",
+		request_schema: {"type":"object","properties":{"name":{"type":"string","minLength":3},"price":{"type":"integer","exclusiveMinimum":0},"quantity":{"type":"integer"}},"additionalProperties":false,"required":["name","price","quantity"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_multiple_validation_errors: validationErrorsMultipleValidationErrors
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsStringMaxLengthConstraintViolation(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsStringMaxLengthConstraintViolation(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_string_max_length_constraint_violation",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","maxLength":50,"source":"query"}},"required":["q"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_string_max_length_constraint_violation: validationErrorsStringMaxLengthConstraintViolation
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsNestedObjectValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsNestedObjectValidationError(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "validation_errors_nested_object_validation_error",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"seller":{"type":"object","properties":{"name":{"type":"string","minLength":3},"address":{"type":"object","properties":{"city":{"type":"string","minLength":3},"zip_code":{"type":"string","minLength":5}},"additionalProperties":false,"required":["city","zip_code"]}},"additionalProperties":false,"required":["name","address"]}},"additionalProperties":false,"required":["name","price","seller"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_nested_object_validation_error: validationErrorsNestedObjectValidationError
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /profiles
+ */
+async function validationErrors10NestedErrorPath(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrors10NestedErrorPath(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/profiles",
+		handler_name: "validation_errors_10_nested_error_path",
+		request_schema: {"type":"object","required":["profile"],"properties":{"profile":{"type":"object","required":["contact"],"properties":{"contact":{"type":"object","required":["email"],"properties":{"email":{"type":"string","format":"email"}}}}}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_10_nested_error_path: validationErrors10NestedErrorPath
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsInvalidDatetimeFormat(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsInvalidDatetimeFormat(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "validation_errors_invalid_datetime_format",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"created_at":{"type":"string","format":"date-time"}},"additionalProperties":false,"required":["name","price","created_at"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_invalid_datetime_format: validationErrorsInvalidDatetimeFormat
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsArrayItemValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsArrayItemValidationError(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "validation_errors_array_item_validation_error",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["name","price","tags"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_array_item_validation_error: validationErrorsArrayItemValidationError
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsMissingRequiredBodyField(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsMissingRequiredBodyField(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "validation_errors_missing_required_body_field",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"string"}},"additionalProperties":false,"required":["name","price"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_missing_required_body_field: validationErrorsMissingRequiredBodyField
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsBodyFieldTypeErrorStringForFloat(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsBodyFieldTypeErrorStringForFloat(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "validation_errors_body_field_type_error_string_for_float",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"}},"additionalProperties":false,"required":["name","price"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_body_field_type_error_string_for_float: validationErrorsBodyFieldTypeErrorStringForFloat
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsMalformedJsonBody(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 400 };
+	const responseBody = {"detail":"Invalid request format"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsMalformedJsonBody(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "validation_errors_malformed_json_body",
+		request_schema: {"type":"string"},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_malformed_json_body: validationErrorsMalformedJsonBody
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsQueryParamTypeErrorStringProvidedForInt(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	const skip = _params.skip;
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	if (skip !== null && skip !== undefined) {
+		result.skip = skip;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsQueryParamTypeErrorStringProvidedForInt(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_query_param_type_error_string_provided_for_int",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"skip":{"type":"integer","source":"query"}},"required":["q","skip"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_query_param_type_error_string_provided_for_int: validationErrorsQueryParamTypeErrorStringProvidedForInt
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsHeaderValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	const xToken = _params["x-token"];
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	if (xToken !== null && xToken !== undefined) {
+		result["x-token"] = xToken;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsHeaderValidationError(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_header_validation_error",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"x-token":{"type":"string","source":"header"}},"required":["q","x-token"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_header_validation_error: validationErrorsHeaderValidationError
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /users
+ */
+async function validationErrors09MultipleValidationErrors(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrors09MultipleValidationErrors(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/users",
+		handler_name: "validation_errors_09_multiple_validation_errors",
+		request_schema: {"type":"object","required":["name","email","age"],"properties":{"name":{"type":"string","minLength":3},"email":{"type":"string","format":"email"},"age":{"type":"integer","minimum":18}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_09_multiple_validation_errors: validationErrors09MultipleValidationErrors
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function validationErrorsNumericConstraintViolationLeLessThanOrEqual(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const q = _params.q;
+	const limit = _params.limit;
+	if (q !== null && q !== undefined) {
+		result.q = q;
+	}
+	if (limit !== null && limit !== undefined) {
+		result.limit = limit;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsNumericConstraintViolationLeLessThanOrEqual(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "validation_errors_numeric_constraint_violation_le_less_than_or_equal",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"q":{"type":"string","source":"query"},"limit":{"type":"integer","maximum":100,"source":"query"}},"required":["q","limit"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_numeric_constraint_violation_le_less_than_or_equal: validationErrorsNumericConstraintViolationLeLessThanOrEqual
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function validationErrorsArrayMinItemsConstraintViolation(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppValidationErrorsArrayMinItemsConstraintViolation(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "validation_errors_array_min_items_constraint_violation",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"type":"array","items":{},"minItems":1}},"additionalProperties":false,"required":["name","price","tags"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			validation_errors_array_min_items_constraint_violation: validationErrorsArrayMinItemsConstraintViolation
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /slow-endpoint
+ */
+async function statusCodes408RequestTimeout(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 408 };
+	response.headers = {"connection":"close"};
+	const responseBody = {"detail":"Request timeout"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes408RequestTimeout(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/slow-endpoint",
+		handler_name: "status_codes_408_request_timeout",
+		request_schema: {"type":"object","properties":{"data":{"type":"string"}},"additionalProperties":false,"required":["data"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_408_request_timeout: statusCodes408RequestTimeout
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /status-test/{code}
+ */
+async function statusCodes404NotFoundResourceNotFound(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 404 };
+	const responseBody = {"detail":"Item not found"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes404NotFoundResourceNotFound(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/status-test/{code}",
+		handler_name: "status_codes_404_not_found_resource_not_found",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"code":{"type":"string","source":"path"}},"required":["code"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_404_not_found_resource_not_found: statusCodes404NotFoundResourceNotFound
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /health
+ */
+async function statusCodes503ServiceUnavailableServerOverload(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 503 };
+	response.headers = {"retry-after":"120"};
+	const responseBody = {"detail":"Service temporarily unavailable"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes503ServiceUnavailableServerOverload(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/health",
+		handler_name: "status_codes_503_service_unavailable_server_overload",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_503_service_unavailable_server_overload: statusCodes503ServiceUnavailableServerOverload
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function statusCodes422UnprocessableEntityValidationError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes422UnprocessableEntityValidationError(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "status_codes_422_unprocessable_entity_validation_error",
+		request_schema: {"type":"object","properties":{"price":{"type":"string"},"name":{"type":"string"}},"additionalProperties":false,"required":["price","name"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_422_unprocessable_entity_validation_error: statusCodes422UnprocessableEntityValidationError
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /temp-redirect
+ */
+async function statusCodes302FoundTemporaryRedirect(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 302 };
+	response.headers = {"location":"/target-path"};
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes302FoundTemporaryRedirect(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/temp-redirect",
+		handler_name: "status_codes_302_found_temporary_redirect",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_302_found_temporary_redirect: statusCodes302FoundTemporaryRedirect
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /status-test/{code}
+ */
+async function statusCodes304NotModifiedCachedContentValid(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 304 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes304NotModifiedCachedContentValid(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/status-test/{code}",
+		handler_name: "status_codes_304_not_modified_cached_content_valid",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"code":{"type":"string","source":"path"},"If-None-Match":{"type":"string","source":"header"}},"required":["code"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_304_not_modified_cached_content_valid: statusCodes304NotModifiedCachedContentValid
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function statusCodes400BadRequestInvalidRequest(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 400 };
+	const responseBody = {"detail":"Invalid request format"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes400BadRequestInvalidRequest(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "status_codes_400_bad_request_invalid_request",
+		request_schema: {"type":"string"},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_400_bad_request_invalid_request: statusCodes400BadRequestInvalidRequest
+		},
+	};
+}
+
+
+/**
+ * Handler for TRACE /data
+ */
+async function statusCodes22501NotImplemented(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 405 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes22501NotImplemented(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "TRACE",
+		path: "/data",
+		handler_name: "status_codes_22_501_not_implemented",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_22_501_not_implemented: statusCodes22501NotImplemented
+		},
+	};
+}
+
+
+/**
+ * Handler for DELETE /status-test/{code}
+ */
+async function statusCodes204NoContentSuccessWithNoBody(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 204 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes204NoContentSuccessWithNoBody(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "DELETE",
+		path: "/status-test/{code}",
+		handler_name: "status_codes_204_no_content_success_with_no_body",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"code":{"type":"string","source":"path"}},"required":["code"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_204_no_content_success_with_no_body: statusCodes204NoContentSuccessWithNoBody
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /old-path
+ */
+async function statusCodes301MovedPermanentlyPermanentRedirect(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 301 };
+	response.headers = {"location":"/new-path"};
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes301MovedPermanentlyPermanentRedirect(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/old-path",
+		handler_name: "status_codes_301_moved_permanently_permanent_redirect",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_301_moved_permanently_permanent_redirect: statusCodes301MovedPermanentlyPermanentRedirect
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function statusCodes201CreatedResourceCreated(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"id":1,"name":"New Item"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes201CreatedResourceCreated(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "status_codes_201_created_resource_created",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"}},"additionalProperties":false,"required":["name"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_201_created_resource_created: statusCodes201CreatedResourceCreated
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /tasks/
+ */
+async function statusCodes202AcceptedRequestAcceptedForProcessing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 202 };
+	const responseBody = {"message":"Task accepted for processing","task_id":"abc123"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes202AcceptedRequestAcceptedForProcessing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/tasks/",
+		handler_name: "status_codes_202_accepted_request_accepted_for_processing",
+		request_schema: {"type":"object","properties":{"task":{"type":"string"}},"additionalProperties":false,"required":["task"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_202_accepted_request_accepted_for_processing: statusCodes202AcceptedRequestAcceptedForProcessing
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /redirect-post
+ */
+async function statusCodes307TemporaryRedirectMethodPreserved(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 307 };
+	response.headers = {"location":"/target-post"};
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes307TemporaryRedirectMethodPreserved(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/redirect-post",
+		handler_name: "status_codes_307_temporary_redirect_method_preserved",
+		request_schema: {"type":"object","properties":{},"additionalProperties":false},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_307_temporary_redirect_method_preserved: statusCodes307TemporaryRedirectMethodPreserved
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /error
+ */
+async function statusCodes500InternalServerErrorServerError(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 500 };
+	const responseBody = {"type":"https://spikard.dev/errors/internal-server-error","title":"Internal Server Error","status":500,"detail":"Internal server error"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes500InternalServerErrorServerError(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/error",
+		handler_name: "status_codes_500_internal_server_error_server_error",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_500_internal_server_error_server_error: statusCodes500InternalServerErrorServerError
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /data
+ */
+async function statusCodes20414UriTooLong(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.body = null;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes20414UriTooLong(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/data",
+		handler_name: "status_codes_20_414_uri_too_long",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_20_414_uri_too_long: statusCodes20414UriTooLong
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function statusCodes401UnauthorizedMissingAuthentication(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	response.headers = {"www-authenticate":"Bearer"};
+	const responseBody = {"detail":"Not authenticated"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes401UnauthorizedMissingAuthentication(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "status_codes_401_unauthorized_missing_authentication",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_401_unauthorized_missing_authentication: statusCodes401UnauthorizedMissingAuthentication
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /data
+ */
+async function statusCodes23503ServiceUnavailable(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 503 };
+	response.headers = {"retry-after":"60"};
+	const responseBody = {"error":"Service Unavailable","message":"The service is temporarily unavailable. Please try again later."};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes23503ServiceUnavailable(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/data",
+		handler_name: "status_codes_23_503_service_unavailable",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_23_503_service_unavailable: statusCodes23503ServiceUnavailable
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /upload
+ */
+async function statusCodes19413PayloadTooLarge(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 413 };
+	const responseBody = {"error":"Payload Too Large","message":"Request body size exceeds maximum allowed size of 1024 bytes"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes19413PayloadTooLarge(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/upload",
+		handler_name: "status_codes_19_413_payload_too_large",
+		request_schema: {"type":"object","properties":{"data":{"type":"string"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_19_413_payload_too_large: statusCodes19413PayloadTooLarge
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /admin/users
+ */
+async function statusCodes403ForbiddenInsufficientPermissions(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 403 };
+	const responseBody = {"detail":"Not enough permissions"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes403ForbiddenInsufficientPermissions(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/admin/users",
+		handler_name: "status_codes_403_forbidden_insufficient_permissions",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_403_forbidden_insufficient_permissions: statusCodes403ForbiddenInsufficientPermissions
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /data
+ */
+async function statusCodes21431RequestHeaderFieldsTooLarge(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 431 };
+	const responseBody = {"error":"Request Header Fields Too Large","message":"Request headers exceed maximum allowed size of 8192 bytes"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes21431RequestHeaderFieldsTooLarge(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/data",
+		handler_name: "status_codes_21_431_request_header_fields_too_large",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-Large-Header":{"type":"string","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_21_431_request_header_fields_too_large: statusCodes21431RequestHeaderFieldsTooLarge
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/resource
+ */
+async function statusCodes429TooManyRequests(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 429 };
+	response.headers = {"x-ratelimit-limit":"100","x-ratelimit-remaining":"0","retry-after":"60","x-ratelimit-reset":"1609459200"};
+	const responseBody = {"detail":"Rate limit exceeded. Try again in 60 seconds."};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes429TooManyRequests(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/resource",
+		handler_name: "status_codes_429_too_many_requests",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_429_too_many_requests: statusCodes429TooManyRequests
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /status-test/{code}
+ */
+async function statusCodes200OkSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":1,"name":"Item 1"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppStatusCodes200OkSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/status-test/{code}",
+		handler_name: "status_codes_200_ok_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"code":{"type":"string","source":"path"}},"required":["code"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_200_ok_success: statusCodes200OkSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /files/document.pdf
+ */
+async function statusCodes206PartialContent(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 206 };
+	response.headers = {"content-length":"1024","content-range":"bytes 0-1023/5000","accept-ranges":"bytes","content-type":"application/pdf"};
+	const contentValue = "binary_data_1024_bytes";
+	let contentBytes = Buffer.from(contentValue, "utf-8");
+	if (contentBytes.length < 1024) {
+		const padding = Buffer.alloc(1024 - contentBytes.length, " ");
+		contentBytes = Buffer.concat([contentBytes, padding]);
+	}
+	async function* streamContent() {
+		yield contentBytes;
+	}
+	return new StreamingResponse(streamContent(), {
+		statusCode: 206,
+		headers: response.headers ?? {},
+	});
+}
+
+export function createAppStatusCodes206PartialContent(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/files/document.pdf",
+		handler_name: "status_codes_206_partial_content",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			status_codes_206_partial_content: statusCodes206PartialContent
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/bool/{item_id}
+ */
+async function pathParamsBooleanPathParameterTrue(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsBooleanPathParameterTrue(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/bool/{item_id}",
+		handler_name: "path_params_boolean_path_parameter_true",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"boolean","source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_boolean_path_parameter_true: pathParamsBooleanPathParameterTrue
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /prices/{amount}
+ */
+async function pathParams29DecimalPathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"amount":"19.99"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams29DecimalPathParamSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/prices/{amount}",
+		handler_name: "path_params_29_decimal_path_param_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"amount":{"type":"string","format":"decimal","source":"path"}},"required":["amount"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_29_decimal_path_param_success: pathParams29DecimalPathParamSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/param-lt-gt/{item_id}
+ */
+async function pathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":2};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/param-lt-gt/{item_id}",
+		handler_name: "path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","exclusiveMinimum":1,"exclusiveMaximum":3,"source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success: pathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /repos/{owner}/{repo}
+ */
+async function pathParams33StringPatternPathSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"owner":"spikard-labs","repo":"spikard-http"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams33StringPatternPathSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/repos/{owner}/{repo}",
+		handler_name: "path_params_33_string_pattern_path_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"owner":{"type":"string","pattern":"^[a-zA-Z0-9-]+$","source":"path"},"repo":{"type":"string","pattern":"^[a-zA-Z0-9-_]+$","source":"path"}},"required":["owner","repo"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_33_string_pattern_path_success: pathParams33StringPatternPathSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/{username}
+ */
+async function pathParams31StringMinlengthPathFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const username = _params.username;
+	if (username !== null && username !== undefined) {
+		result.username = username;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams31StringMinlengthPathFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/{username}",
+		handler_name: "path_params_31_string_minlength_path_failure",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"username":{"type":"string","minLength":3,"source":"path"}},"required":["username"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_31_string_minlength_path_failure: pathParams31StringMinlengthPathFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /offset/{value}
+ */
+async function pathParams35NegativeIntegerPathParam(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"value":-100};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams35NegativeIntegerPathParam(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/offset/{value}",
+		handler_name: "path_params_35_negative_integer_path_param",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"value":{"type":"integer","source":"path"}},"required":["value"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_35_negative_integer_path_param: pathParams35NegativeIntegerPathParam
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /models/{model_name}
+ */
+async function pathParamsEnumPathParameterInvalidValue(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const modelName = _params.model_name;
+	if (modelName !== null && modelName !== undefined) {
+		result.model_name = modelName;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsEnumPathParameterInvalidValue(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/models/{model_name}",
+		handler_name: "path_params_enum_path_parameter_invalid_value",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"model_name":{"type":"string","enum":["alexnet","resnet","lenet"],"source":"path"}},"required":["model_name"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_enum_path_parameter_invalid_value: pathParamsEnumPathParameterInvalidValue
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /bookings/{timestamp}
+ */
+async function pathParams27DatetimeFormatPathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"timestamp":"2025-10-30T14:30:00Z"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams27DatetimeFormatPathParamSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/bookings/{timestamp}",
+		handler_name: "path_params_27_datetime_format_path_param_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"timestamp":{"type":"string","format":"date-time","source":"path"}},"required":["timestamp"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_27_datetime_format_path_param_success: pathParams27DatetimeFormatPathParamSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /events/{date}
+ */
+async function pathParams25DateFormatInvalidFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const date = _params.date;
+	if (date !== null && date !== undefined) {
+		result.date = date.toISOString();
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams25DateFormatInvalidFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/events/{date}",
+		handler_name: "path_params_25_date_format_invalid_failure",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"date":{"type":"string","format":"date","source":"path"}},"required":["date"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_25_date_format_invalid_failure: pathParams25DateFormatInvalidFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/param-lt/{item_id}
+ */
+async function pathParamsIntegerPathParameterWithLtConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":2};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsIntegerPathParameterWithLtConstraintSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/param-lt/{item_id}",
+		handler_name: "path_params_integer_path_parameter_with_lt_constraint_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","exclusiveMaximum":3,"source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_integer_path_parameter_with_lt_constraint_success: pathParamsIntegerPathParameterWithLtConstraintSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/param-gt/{item_id}
+ */
+async function pathParamsIntegerPathParameterWithGtConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":42};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsIntegerPathParameterWithGtConstraintSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/param-gt/{item_id}",
+		handler_name: "path_params_integer_path_parameter_with_gt_constraint_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","exclusiveMinimum":3,"source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_integer_path_parameter_with_gt_constraint_success: pathParamsIntegerPathParameterWithGtConstraintSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /delays/{duration}
+ */
+async function pathParams28DurationFormatPathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"duration":"P1DT2H30M"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams28DurationFormatPathParamSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/delays/{duration}",
+		handler_name: "path_params_28_duration_format_path_param_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"duration":{"type":"string","format":"duration","source":"path"}},"required":["duration"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_28_duration_format_path_param_success: pathParams28DurationFormatPathParamSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /type-syntax/items-count/{count:int}
+ */
+async function pathParamsPathParameterTypeSyntaxWithOverride(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"count":"50"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsPathParameterTypeSyntaxWithOverride(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/type-syntax/items-count/{count:int}",
+		handler_name: "path_params_path_parameter_type_syntax_with_override",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"count":{"type":"integer","minimum":1,"maximum":100,"source":"path"}},"required":["count"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_path_parameter_type_syntax_with_override: pathParamsPathParameterTypeSyntaxWithOverride
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/{id}
+ */
+async function pathParams20UuidV3PathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":"e8b5a51d-11c8-3310-a6ab-367563f20686"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams20UuidV3PathParamSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/{id}",
+		handler_name: "path_params_20_uuid_v3_path_param_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","format":"uuid","uuidVersion":"3","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_20_uuid_v3_path_param_success: pathParams20UuidV3PathParamSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/int/{item_id}
+ */
+async function pathParamsIntegerPathParameterInvalidString(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const itemId = _params.item_id;
+	if (itemId !== null && itemId !== undefined) {
+		result.item_id = itemId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsIntegerPathParameterInvalidString(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/int/{item_id}",
+		handler_name: "path_params_integer_path_parameter_invalid_string",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_integer_path_parameter_invalid_string: pathParamsIntegerPathParameterInvalidString
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/{username}
+ */
+async function pathParams30StringMinlengthPathSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"alice"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams30StringMinlengthPathSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/{username}",
+		handler_name: "path_params_30_string_minlength_path_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"username":{"type":"string","minLength":3,"source":"path"}},"required":["username"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_30_string_minlength_path_success: pathParams30StringMinlengthPathSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/param-le/{item_id}
+ */
+async function pathParamsIntegerPathParameterWithLeConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":3};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsIntegerPathParameterWithLeConstraintSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/param-le/{item_id}",
+		handler_name: "path_params_integer_path_parameter_with_le_constraint_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","maximum":3,"source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_integer_path_parameter_with_le_constraint_success: pathParamsIntegerPathParameterWithLeConstraintSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /type-syntax/items/{id:uuid}
+ */
+async function pathParamsPathParameterTypeSyntaxInvalidUuid(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsPathParameterTypeSyntaxInvalidUuid(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/type-syntax/items/{id:uuid}",
+		handler_name: "path_params_path_parameter_type_syntax_invalid_uuid",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_path_parameter_type_syntax_invalid_uuid: pathParamsPathParameterTypeSyntaxInvalidUuid
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /files/{file_path:path}
+ */
+async function pathParamsPathTypeParameterFilePath(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"file_path":"home/johndoe/myfile.txt"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsPathTypeParameterFilePath(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/files/{file_path:path}",
+		handler_name: "path_params_path_type_parameter_file_path",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"file_path":{"type":"string","source":"path"}},"required":["file_path"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_path_type_parameter_file_path: pathParamsPathTypeParameterFilePath
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /type-syntax/items/{id:uuid}
+ */
+async function pathParamsPathParameterWithTypeSyntaxUuid(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":"550e8400-e29b-41d4-a716-446655440000"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsPathParameterWithTypeSyntaxUuid(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/type-syntax/items/{id:uuid}",
+		handler_name: "path_params_path_parameter_with_type_syntax_uuid",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_path_parameter_with_type_syntax_uuid: pathParamsPathParameterWithTypeSyntaxUuid
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/{username}
+ */
+async function pathParams32StringMaxlengthPathFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const username = _params.username;
+	if (username !== null && username !== undefined) {
+		result.username = username;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams32StringMaxlengthPathFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/{username}",
+		handler_name: "path_params_32_string_maxlength_path_failure",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"username":{"type":"string","maxLength":20,"source":"path"}},"required":["username"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_32_string_maxlength_path_failure: pathParams32StringMaxlengthPathFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/int/{item_id}
+ */
+async function pathParamsIntegerPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":42};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsIntegerPathParameterSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/int/{item_id}",
+		handler_name: "path_params_integer_path_parameter_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_integer_path_parameter_success: pathParamsIntegerPathParameterSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /repos/{owner}
+ */
+async function pathParams34StringPatternPathFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const owner = _params.owner;
+	if (owner !== null && owner !== undefined) {
+		result.owner = owner;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams34StringPatternPathFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/repos/{owner}",
+		handler_name: "path_params_34_string_pattern_path_failure",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"owner":{"type":"string","pattern":"^[a-zA-Z0-9-]+$","source":"path"}},"required":["owner"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_34_string_pattern_path_failure: pathParams34StringPatternPathFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/{id}
+ */
+async function pathParams21UuidV5PathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":"630eb68f-e0fa-5ecc-887a-7c7a62614681"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams21UuidV5PathParamSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/{id}",
+		handler_name: "path_params_21_uuid_v5_path_param_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"string","format":"uuid","uuidVersion":"5","source":"path"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_21_uuid_v5_path_param_success: pathParams21UuidV5PathParamSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/param-maxlength/{item_id}
+ */
+async function pathParamsStringPathParameterWithMaxLengthFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const itemId = _params.item_id;
+	if (itemId !== null && itemId !== undefined) {
+		result.item_id = itemId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsStringPathParameterWithMaxLengthFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/param-maxlength/{item_id}",
+		handler_name: "path_params_string_path_parameter_with_max_length_failure",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","maxLength":3,"source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_string_path_parameter_with_max_length_failure: pathParamsStringPathParameterWithMaxLengthFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/param-minlength/{item_id}
+ */
+async function pathParamsStringPathParameterWithMinLengthFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const itemId = _params.item_id;
+	if (itemId !== null && itemId !== undefined) {
+		result.item_id = itemId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsStringPathParameterWithMinLengthFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/param-minlength/{item_id}",
+		handler_name: "path_params_string_path_parameter_with_min_length_failure",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","minLength":3,"source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_string_path_parameter_with_min_length_failure: pathParamsStringPathParameterWithMinLengthFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /{version}/{service_id}/{user_id}/{order_id}
+ */
+async function pathParamsMultiplePathParametersSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"version":1.0,"service_id":1,"user_id":"abc","order_id":"c892496f-b1fd-4b91-bdb8-b46f92df1716"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsMultiplePathParametersSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/{version}/{service_id}/{user_id}/{order_id}",
+		handler_name: "path_params_multiple_path_parameters_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"version":{"type":"number","source":"path"},"service_id":{"type":"integer","source":"path"},"user_id":{"type":"string","source":"path"},"order_id":{"type":"string","format":"uuid","source":"path"}},"required":["version","service_id","user_id","order_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_multiple_path_parameters_success: pathParamsMultiplePathParametersSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /date/{date_param}
+ */
+async function pathParamsDatePathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"date_param":"2023-07-15"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsDatePathParameterSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/date/{date_param}",
+		handler_name: "path_params_date_path_parameter_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"date_param":{"type":"string","format":"date","source":"path"}},"required":["date_param"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_date_path_parameter_success: pathParamsDatePathParameterSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/param-gt/{item_id}
+ */
+async function pathParamsIntegerPathParameterWithGtConstraintFailure(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const itemId = _params.item_id;
+	if (itemId !== null && itemId !== undefined) {
+		result.item_id = itemId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsIntegerPathParameterWithGtConstraintFailure(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/param-gt/{item_id}",
+		handler_name: "path_params_integer_path_parameter_with_gt_constraint_failure",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","exclusiveMinimum":3,"source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_integer_path_parameter_with_gt_constraint_failure: pathParamsIntegerPathParameterWithGtConstraintFailure
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /events/{date}
+ */
+async function pathParams24DateFormatPathParamSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"date":"2025-10-30"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParams24DateFormatPathParamSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/events/{date}",
+		handler_name: "path_params_24_date_format_path_param_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"date":{"type":"string","format":"date","source":"path"}},"required":["date"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_24_date_format_path_param_success: pathParams24DateFormatPathParamSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/float/{item_id}
+ */
+async function pathParamsFloatPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":42.5};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsFloatPathParameterSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/float/{item_id}",
+		handler_name: "path_params_float_path_parameter_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"number","source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_float_path_parameter_success: pathParamsFloatPathParameterSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /type-syntax/users/{user_id:int}
+ */
+async function pathParamsPathParameterWithTypeSyntaxInteger(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"user_id":"42"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsPathParameterWithTypeSyntaxInteger(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/type-syntax/users/{user_id:int}",
+		handler_name: "path_params_path_parameter_with_type_syntax_integer",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_path_parameter_with_type_syntax_integer: pathParamsPathParameterWithTypeSyntaxInteger
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/str/{item_id}
+ */
+async function pathParamsStringPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":"foobar"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsStringPathParameterSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/str/{item_id}",
+		handler_name: "path_params_string_path_parameter_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_string_path_parameter_success: pathParamsStringPathParameterSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/{item_id}
+ */
+async function pathParamsUuidPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":"ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsUuidPathParameterSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/{item_id}",
+		handler_name: "path_params_uuid_path_parameter_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"string","format":"uuid","source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_uuid_path_parameter_success: pathParamsUuidPathParameterSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/param-ge/{item_id}
+ */
+async function pathParamsIntegerPathParameterWithGeConstraintSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":3};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsIntegerPathParameterWithGeConstraintSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/param-ge/{item_id}",
+		handler_name: "path_params_integer_path_parameter_with_ge_constraint_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"integer","minimum":3,"source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_integer_path_parameter_with_ge_constraint_success: pathParamsIntegerPathParameterWithGeConstraintSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /models/{model_name}
+ */
+async function pathParamsEnumPathParameterSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"model_name":"alexnet"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsEnumPathParameterSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/models/{model_name}",
+		handler_name: "path_params_enum_path_parameter_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"model_name":{"type":"string","enum":["alexnet","lenet","resnet"],"source":"path"}},"required":["model_name"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_enum_path_parameter_success: pathParamsEnumPathParameterSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /path/bool/{item_id}
+ */
+async function pathParamsBooleanPathParameterNumeric1(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"item_id":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppPathParamsBooleanPathParameterNumeric1(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/path/bool/{item_id}",
+		handler_name: "path_params_boolean_path_parameter_numeric_1",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"item_id":{"type":"boolean","source":"path"}},"required":["item_id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			path_params_boolean_path_parameter_numeric_1: pathParamsBooleanPathParameterNumeric1
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /stream/json-lines
+ */
+async function streamingStreamJsonLines(_requestJson: string): Promise<StreamingResponse> {
+	const stream = async function* () {
+		yield "{\"index\":0,\"payload\":\"alpha\"}\\n";
+		yield "{\"index\":1,\"payload\":\"beta\"}\\n";
+		yield "{\"index\":2,\"payload\":\"gamma\"}\\n";
+	};
+
+	return new StreamingResponse(stream(), {
+		statusCode: 200,
+		headers: {"content-type":"application/x-ndjson"}
+	});
+}
+
+export function createAppStreamingStreamJsonLines(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/stream/json-lines",
+		handler_name: "streaming_stream_json_lines",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			streaming_stream_json_lines: streamingStreamJsonLines
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /stream/logfile
+ */
+async function streamingBinaryLogDownload(_requestJson: string): Promise<StreamingResponse> {
+	const stream = async function* () {
+		yield "LOG:";
+		yield Buffer.from("AAECAw==", "base64");
+		yield "|TAIL|";
+		yield Buffer.from("Bw==", "base64");
+		yield "\\n";
+	};
+
+	return new StreamingResponse(stream(), {
+		statusCode: 200,
+		headers: {"content-type":"application/octet-stream"}
+	});
+}
+
+export function createAppStreamingBinaryLogDownload(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/stream/logfile",
+		handler_name: "streaming_binary_log_download",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			streaming_binary_log_download: streamingBinaryLogDownload
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /stream/csv-report
+ */
+async function streamingChunkedCsvExport(_requestJson: string): Promise<StreamingResponse> {
+	const stream = async function* () {
+		yield "id,name,value\\n";
+		yield "1,Alice,42\\n";
+		yield "2,Bob,7\\n";
+	};
+
+	return new StreamingResponse(stream(), {
+		statusCode: 200,
+		headers: {"content-type":"text/csv"}
+	});
+}
+
+export function createAppStreamingChunkedCsvExport(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/stream/csv-report",
+		handler_name: "streaming_chunked_csv_export",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			streaming_chunked_csv_export: streamingChunkedCsvExport
+		},
+	};
+}
+
+
+
+
+export function createAppStaticFilesStaticFileServerReturnsTextFile(): SpikardApp {
+	const config: ServerConfig = {
+		staticFiles: [
+			{
+				directory: new URL("./static_assets/static_files_static_file_server_returns_text_file/public_0", import.meta.url).pathname,
+				routePrefix: "/public",
+				cacheControl: "public, max-age=60",
+			}
+		]
+	};
+
+	return {
+		routes: [],
+		handlers: {
+		},
+		config,
+	};
+}
+
+
+
+
+export function createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory(): SpikardApp {
+	const config: ServerConfig = {
+		staticFiles: [
+			{
+				directory: new URL("./static_assets/static_files_static_server_returns_index_html_for_directory/app_0", import.meta.url).pathname,
+				routePrefix: "/app",
+			}
+		]
+	};
+
+	return {
+		routes: [],
+		handlers: {
+		},
+		config,
+	};
+}
+
+
+async function lifecycleHooksOnresponseSecurityHeadersSecurityHeadersOnResponse0(response: HookResponse): Promise<HookResponse> {
+	// onResponse hook: security_headers - Adds security headers
+	if (!response.headers) response.headers = {};
+	response.headers["X-Content-Type-Options"] = "nosniff";
+	response.headers["X-Frame-Options"] = "DENY";
+	response.headers["X-XSS-Protection"] = "1; mode=block";
+	response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+	return response;
+}
+
+
+
+/**
+ * Handler for GET /api/test-security-headers
+ */
+async function lifecycleHooksOnresponseSecurityHeaders(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-content-type-options":"nosniff","x-frame-options":"DENY","strict-transport-security":"max-age=31536000; includeSubDomains","x-xss-protection":"1; mode=block"};
+	const responseBody = {"message":"Response with security headers"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksOnresponseSecurityHeaders(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/test-security-headers",
+		handler_name: "lifecycle_hooks_onresponse_security_headers",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_onresponse_security_headers: lifecycleHooksOnresponseSecurityHeaders
+		},
+	lifecycleHooks: {
+		onResponse: [lifecycleHooksOnresponseSecurityHeadersSecurityHeadersOnResponse0]
+	},
+	};
+}
+
+
+async function lifecycleHooksPrehandlerAuthenticationFailedShortCircuitAuthenticatorPreHandler0(_request: HookRequest): Promise<HookResult> {
+	// preHandler hook: authenticator - Short circuits with 401
+	return {
+		statusCode: 401,
+		body: {
+			error: "Unauthorized",
+			message: "Invalid or expired authentication token"
+		}
+	};
+}
+
+
+
+/**
+ * Handler for GET /api/protected-resource-fail
+ */
+async function lifecycleHooksPrehandlerAuthenticationFailedShortCircuit(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 401 };
+	const responseBody = {"error":"Unauthorized","message":"Invalid or expired authentication token"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksPrehandlerAuthenticationFailedShortCircuit(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/protected-resource-fail",
+		handler_name: "lifecycle_hooks_prehandler_authentication_failed_short_circuit",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_prehandler_authentication_failed_short_circuit: lifecycleHooksPrehandlerAuthenticationFailedShortCircuit
+		},
+	lifecycleHooks: {
+		preHandler: [lifecycleHooksPrehandlerAuthenticationFailedShortCircuitAuthenticatorPreHandler0]
+	},
+	};
+}
+
+
+async function lifecycleHooksPrehandlerAuthorizationCheckAuthenticatorPreHandler0(request: HookRequest): Promise<HookResult> {
+	// Mock preHandler hook: authenticator
+	return request;
+}
+
+async function lifecycleHooksPrehandlerAuthorizationCheckAuthorizerPreHandler1(request: HookRequest): Promise<HookResult> {
+	// Mock preHandler hook: authorizer
+	return request;
+}
+
+
+
+/**
+ * Handler for GET /api/admin-only
+ */
+async function lifecycleHooksPrehandlerAuthorizationCheck(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Admin access granted","user_id":"admin-456","role":"admin"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksPrehandlerAuthorizationCheck(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/admin-only",
+		handler_name: "lifecycle_hooks_prehandler_authorization_check",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_prehandler_authorization_check: lifecycleHooksPrehandlerAuthorizationCheck
+		},
+	lifecycleHooks: {
+		preHandler: [lifecycleHooksPrehandlerAuthorizationCheckAuthenticatorPreHandler0, lifecycleHooksPrehandlerAuthorizationCheckAuthorizerPreHandler1]
+	},
+	};
+}
+
+
+async function lifecycleHooksPrehandlerAuthenticationSuccessAuthenticatorPreHandler0(request: HookRequest): Promise<HookResult> {
+	// Mock preHandler hook: authenticator
+	return request;
+}
+
+
+
+/**
+ * Handler for GET /api/protected-resource
+ */
+async function lifecycleHooksPrehandlerAuthenticationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Access granted","user_id":"user-123","authenticated":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksPrehandlerAuthenticationSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/protected-resource",
+		handler_name: "lifecycle_hooks_prehandler_authentication_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_prehandler_authentication_success: lifecycleHooksPrehandlerAuthenticationSuccess
+		},
+	lifecycleHooks: {
+		preHandler: [lifecycleHooksPrehandlerAuthenticationSuccessAuthenticatorPreHandler0]
+	},
+	};
+}
+
+
+async function lifecycleHooksPrevalidationRateLimitExceededShortCircuitRateLimiterPreValidation0(_request: HookRequest): Promise<HookResult> {
+	// preValidation hook: rate_limiter - Short circuits with 429
+	return {
+		statusCode: 429,
+		body: {
+			error: "Rate limit exceeded",
+			message: "Too many requests, please try again later"
+		},
+		headers: {
+			"Retry-After": "60"
+		}
+	};
+}
+
+
+
+/**
+ * Handler for POST /api/test-rate-limit-exceeded
+ */
+async function lifecycleHooksPrevalidationRateLimitExceededShortCircuit(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 429 };
+	response.headers = {"retry-after":"60"};
+	const responseBody = {"error":"Rate limit exceeded","message":"Too many requests, please try again later"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksPrevalidationRateLimitExceededShortCircuit(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/api/test-rate-limit-exceeded",
+		handler_name: "lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit",
+		request_schema: {"type":"object","properties":{"data":{"type":"string"}},"required":["data"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit: lifecycleHooksPrevalidationRateLimitExceededShortCircuit
+		},
+	lifecycleHooks: {
+		preValidation: [lifecycleHooksPrevalidationRateLimitExceededShortCircuitRateLimiterPreValidation0]
+	},
+	};
+}
+
+
+async function lifecycleHooksOnerrorErrorLoggingErrorLoggerOnError0(response: HookResponse): Promise<HookResponse> {
+	// onError hook: error_logger - Format error response
+	if (!response.headers) response.headers = {};
+	response.headers["Content-Type"] = "application/json";
+	return response;
+}
+
+async function lifecycleHooksOnerrorErrorLoggingErrorFormatterOnError1(response: HookResponse): Promise<HookResponse> {
+	// onError hook: error_formatter - Format error response
+	if (!response.headers) response.headers = {};
+	response.headers["Content-Type"] = "application/json";
+	return response;
+}
+
+
+
+/**
+ * Handler for GET /api/test-error
+ */
+async function lifecycleHooksOnerrorErrorLogging(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 500 };
+	response.headers = {"content-type":"application/json"};
+	const responseBody = {"error":"Internal Server Error","message":"An unexpected error occurred","error_id":".*"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksOnerrorErrorLogging(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/test-error",
+		handler_name: "lifecycle_hooks_onerror_error_logging",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_onerror_error_logging: lifecycleHooksOnerrorErrorLogging
+		},
+	lifecycleHooks: {
+		onError: [lifecycleHooksOnerrorErrorLoggingErrorLoggerOnError0, lifecycleHooksOnerrorErrorLoggingErrorFormatterOnError1]
+	},
+	};
+}
+
+
+async function lifecycleHooksMultipleHooksAllPhasesRequestLoggerOnRequest0(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: request_logger
+	return request;
+}
+
+async function lifecycleHooksMultipleHooksAllPhasesRequestIdGeneratorOnRequest1(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: request_id_generator
+	return request;
+}
+
+async function lifecycleHooksMultipleHooksAllPhasesRateLimiterPreValidation0(request: HookRequest): Promise<HookResult> {
+	// Mock preValidation hook: rate_limiter
+	return request;
+}
+
+async function lifecycleHooksMultipleHooksAllPhasesAuthenticatorPreHandler0(request: HookRequest): Promise<HookResult> {
+	// Mock preHandler hook: authenticator
+	return request;
+}
+
+async function lifecycleHooksMultipleHooksAllPhasesAuthorizerPreHandler1(request: HookRequest): Promise<HookResult> {
+	// Mock preHandler hook: authorizer
+	return request;
+}
+
+async function lifecycleHooksMultipleHooksAllPhasesSecurityHeadersOnResponse0(response: HookResponse): Promise<HookResponse> {
+	// onResponse hook: security_headers - Adds security headers
+	if (!response.headers) response.headers = {};
+	response.headers["X-Content-Type-Options"] = "nosniff";
+	response.headers["X-Frame-Options"] = "DENY";
+	response.headers["X-XSS-Protection"] = "1; mode=block";
+	response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+	return response;
+}
+
+async function lifecycleHooksMultipleHooksAllPhasesResponseTimerOnResponse1(response: HookResponse): Promise<HookResponse> {
+	// onResponse hook: response_timer - Adds timing header
+	if (!response.headers) response.headers = {};
+	response.headers["X-Response-Time"] = "0ms";
+	return response;
+}
+
+async function lifecycleHooksMultipleHooksAllPhasesAuditLoggerOnResponse2(response: HookResponse): Promise<HookResponse> {
+	// Mock onResponse hook: audit_logger
+	return response;
+}
+
+async function lifecycleHooksMultipleHooksAllPhasesErrorLoggerOnError0(response: HookResponse): Promise<HookResponse> {
+	// onError hook: error_logger - Format error response
+	if (!response.headers) response.headers = {};
+	response.headers["Content-Type"] = "application/json";
+	return response;
+}
+
+
+
+/**
+ * Handler for POST /api/full-lifecycle
+ */
+async function lifecycleHooksMultipleHooksAllPhases(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-request-id":".*","x-response-time":".*ms","x-frame-options":"DENY","x-content-type-options":"nosniff"};
+	const responseBody = {"message":"Action completed successfully","user_id":"user-123","action":"update_profile","request_id":".*"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksMultipleHooksAllPhases(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/api/full-lifecycle",
+		handler_name: "lifecycle_hooks_multiple_hooks_all_phases",
+		request_schema: {"type":"object","properties":{"user_id":{"type":"string"},"action":{"type":"string"}},"required":["user_id","action"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_multiple_hooks_all_phases: lifecycleHooksMultipleHooksAllPhases
+		},
+	lifecycleHooks: {
+		onRequest: [lifecycleHooksMultipleHooksAllPhasesRequestLoggerOnRequest0, lifecycleHooksMultipleHooksAllPhasesRequestIdGeneratorOnRequest1],
+		preValidation: [lifecycleHooksMultipleHooksAllPhasesRateLimiterPreValidation0],
+		preHandler: [lifecycleHooksMultipleHooksAllPhasesAuthenticatorPreHandler0, lifecycleHooksMultipleHooksAllPhasesAuthorizerPreHandler1],
+		onResponse: [lifecycleHooksMultipleHooksAllPhasesSecurityHeadersOnResponse0, lifecycleHooksMultipleHooksAllPhasesResponseTimerOnResponse1, lifecycleHooksMultipleHooksAllPhasesAuditLoggerOnResponse2],
+		onError: [lifecycleHooksMultipleHooksAllPhasesErrorLoggerOnError0]
+	},
+	};
+}
+
+
+async function lifecycleHooksHookExecutionOrderFirstHookOnRequest0(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: first_hook
+	return request;
+}
+
+async function lifecycleHooksHookExecutionOrderSecondHookOnRequest1(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: second_hook
+	return request;
+}
+
+async function lifecycleHooksHookExecutionOrderThirdHookOnRequest2(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: third_hook
+	return request;
+}
+
+
+
+/**
+ * Handler for GET /api/test-hook-order
+ */
+async function lifecycleHooksHookExecutionOrder(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Hooks executed in order","execution_order":["first_hook","second_hook","third_hook"]};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksHookExecutionOrder(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/test-hook-order",
+		handler_name: "lifecycle_hooks_hook_execution_order",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_hook_execution_order: lifecycleHooksHookExecutionOrder
+		},
+	lifecycleHooks: {
+		onRequest: [lifecycleHooksHookExecutionOrderFirstHookOnRequest0, lifecycleHooksHookExecutionOrderSecondHookOnRequest1, lifecycleHooksHookExecutionOrderThirdHookOnRequest2]
+	},
+	};
+}
+
+
+async function lifecycleHooksOnresponseResponseTimingStartTimerOnRequest0(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: start_timer
+	return request;
+}
+
+async function lifecycleHooksOnresponseResponseTimingResponseTimerOnResponse0(response: HookResponse): Promise<HookResponse> {
+	// onResponse hook: response_timer - Adds timing header
+	if (!response.headers) response.headers = {};
+	response.headers["X-Response-Time"] = "0ms";
+	return response;
+}
+
+
+
+/**
+ * Handler for GET /api/test-timing
+ */
+async function lifecycleHooksOnresponseResponseTiming(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-response-time":".*ms"};
+	const responseBody = {"message":"Response with timing info"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksOnresponseResponseTiming(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/test-timing",
+		handler_name: "lifecycle_hooks_onresponse_response_timing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_onresponse_response_timing: lifecycleHooksOnresponseResponseTiming
+		},
+	lifecycleHooks: {
+		onRequest: [lifecycleHooksOnresponseResponseTimingStartTimerOnRequest0],
+		onResponse: [lifecycleHooksOnresponseResponseTimingResponseTimerOnResponse0]
+	},
+	};
+}
+
+
+async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthenticatorPreHandler0(_request: HookRequest): Promise<HookResult> {
+	// preHandler hook: authenticator - Short circuits with 403
+	return {
+		statusCode: 403,
+		body: {
+			error: "Forbidden",
+			message: "Admin role required for this endpoint"
+		}
+	};
+}
+
+async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthorizerPreHandler1(_request: HookRequest): Promise<HookResult> {
+	// preHandler hook: authorizer - Short circuits with 403
+	return {
+		statusCode: 403,
+		body: {
+			error: "Forbidden",
+			message: "Admin role required for this endpoint"
+		}
+	};
+}
+
+
+
+/**
+ * Handler for GET /api/admin-only-forbidden
+ */
+async function lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 403 };
+	const responseBody = {"error":"Forbidden","message":"Admin role required for this endpoint"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/admin-only-forbidden",
+		handler_name: "lifecycle_hooks_prehandler_authorization_forbidden_short_circuit",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_prehandler_authorization_forbidden_short_circuit: lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit
+		},
+	lifecycleHooks: {
+		preHandler: [lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthenticatorPreHandler0, lifecycleHooksPrehandlerAuthorizationForbiddenShortCircuitAuthorizerPreHandler1]
+	},
+	};
+}
+
+
+async function lifecycleHooksOnrequestRequestLoggingRequestLoggerOnRequest0(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: request_logger
+	return request;
+}
+
+async function lifecycleHooksOnrequestRequestLoggingRequestIdGeneratorOnRequest1(request: HookRequest): Promise<HookResult> {
+	// Mock onRequest hook: request_id_generator
+	return request;
+}
+
+
+
+/**
+ * Handler for GET /api/test-on-request
+ */
+async function lifecycleHooksOnrequestRequestLogging(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-request-id":".*"};
+	const responseBody = {"message":"onRequest hooks executed","request_logged":true,"has_request_id":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksOnrequestRequestLogging(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/test-on-request",
+		handler_name: "lifecycle_hooks_onrequest_request_logging",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_onrequest_request_logging: lifecycleHooksOnrequestRequestLogging
+		},
+	lifecycleHooks: {
+		onRequest: [lifecycleHooksOnrequestRequestLoggingRequestLoggerOnRequest0, lifecycleHooksOnrequestRequestLoggingRequestIdGeneratorOnRequest1]
+	},
+	};
+}
+
+
+async function lifecycleHooksPrevalidationRateLimitingRateLimiterPreValidation0(request: HookRequest): Promise<HookResult> {
+	// Mock preValidation hook: rate_limiter
+	return request;
+}
+
+
+
+/**
+ * Handler for POST /api/test-rate-limit
+ */
+async function lifecycleHooksPrevalidationRateLimiting(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Request accepted","rate_limit_checked":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppLifecycleHooksPrevalidationRateLimiting(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/api/test-rate-limit",
+		handler_name: "lifecycle_hooks_prevalidation_rate_limiting",
+		request_schema: {"type":"object","properties":{"data":{"type":"string"}},"required":["data"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			lifecycle_hooks_prevalidation_rate_limiting: lifecycleHooksPrevalidationRateLimiting
+		},
+	lifecycleHooks: {
+		preValidation: [lifecycleHooksPrevalidationRateLimitingRateLimiterPreValidation0]
+	},
+	};
+}
+
+
+/**
+ * Handler for POST /messages
+ */
+async function edgeCases19EmojiInStrings(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"text":"Hello 👋 World 🌍"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases19EmojiInStrings(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/messages",
+		handler_name: "edge_cases_19_emoji_in_strings",
+		request_schema: {"type":"object","required":["text"],"properties":{"text":{"type":"string","minLength":1,"maxLength":100}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_19_emoji_in_strings: edgeCases19EmojiInStrings
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /search
+ */
+async function edgeCases12PercentEncodedSpecialChars(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"term":"hi there"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases12PercentEncodedSpecialChars(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/search",
+		handler_name: "edge_cases_12_percent_encoded_special_chars",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"term":{"type":"string","source":"query"}},"required":["term"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_12_percent_encoded_special_chars: edgeCases12PercentEncodedSpecialChars
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /strings/
+ */
+async function edgeCasesSpecialStringValuesAndEscaping(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"empty_string":"","whitespace":"   ","tabs_newlines":"line1\n\tline2\r\nline3","quotes":"He said \"hello\" and 'goodbye'","backslashes":"C:\\\\Users\\\\Path","unicode_escapes":"Hello","special_chars":"!@#$%^&*()_+-=[]{}|;':\",./<>?"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCasesSpecialStringValuesAndEscaping(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/strings/",
+		handler_name: "edge_cases_special_string_values_and_escaping",
+		request_schema: {"type":"object","properties":{"empty_string":{"type":"string"},"whitespace":{"type":"string"},"tabs_newlines":{"type":"string"},"quotes":{"type":"string"},"backslashes":{"type":"string"},"unicode_escapes":{"type":"string"},"special_chars":{"type":"string"}},"additionalProperties":false,"required":["empty_string","whitespace","tabs_newlines","quotes","backslashes","unicode_escapes","special_chars"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_special_string_values_and_escaping: edgeCasesSpecialStringValuesAndEscaping
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /calculate
+ */
+async function edgeCases15FloatPrecisionPreservation(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"value":3.141592653589793};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases15FloatPrecisionPreservation(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/calculate",
+		handler_name: "edge_cases_15_float_precision_preservation",
+		request_schema: {"type":"object","required":["value"],"properties":{"value":{"type":"number"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_15_float_precision_preservation: edgeCases15FloatPrecisionPreservation
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items
+ */
+async function edgeCases13EmptyStringQueryParamPreserved(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"filter":""};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases13EmptyStringQueryParamPreserved(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items",
+		handler_name: "edge_cases_13_empty_string_query_param_preserved",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"filter":{"type":"string","source":"query"}},"required":["filter"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_13_empty_string_query_param_preserved: edgeCases13EmptyStringQueryParamPreserved
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items
+ */
+async function edgeCases24ArrayWithHoles(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"items":["first","third","sixth"]};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases24ArrayWithHoles(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items",
+		handler_name: "edge_cases_24_array_with_holes",
+		request_schema: {"type":"object","required":["items"],"properties":{"items":{"type":"array","items":{"type":"string"}}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_24_array_with_holes: edgeCases24ArrayWithHoles
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /calculate
+ */
+async function edgeCases21ScientificNotationNumber(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"value":123000};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases21ScientificNotationNumber(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/calculate",
+		handler_name: "edge_cases_21_scientific_notation_number",
+		request_schema: {"type":"object","required":["value"],"properties":{"value":{"type":"number","minimum":0}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_21_scientific_notation_number: edgeCases21ScientificNotationNumber
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /calculations/
+ */
+async function edgeCasesFloatPrecisionAndRounding(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"sum":0.30000000000000004,"precise_value":3.141592653589793,"very_small":1e-10,"very_large":1.7976931348623157e+308};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCasesFloatPrecisionAndRounding(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/calculations/",
+		handler_name: "edge_cases_float_precision_and_rounding",
+		request_schema: {"type":"object","properties":{"value1":{"type":"number"},"value2":{"type":"number"},"expected_sum":{"type":"number"},"precise_value":{"type":"number"},"very_small":{"type":"number"},"very_large":{"type":"number"}},"additionalProperties":false,"required":["value1","value2","expected_sum","precise_value","very_small","very_large"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_float_precision_and_rounding: edgeCasesFloatPrecisionAndRounding
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /items/
+ */
+async function edgeCasesUnicodeAndEmojiHandling(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":1,"name":"Coffee Shop ☕","description":"Best café in München 🇩🇪","tags":["食べ物","音楽","💰"],"emoji_reactions":"👍❤️😂🎉"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCasesUnicodeAndEmojiHandling(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/items/",
+		handler_name: "edge_cases_unicode_and_emoji_handling",
+		request_schema: {"type":"object","properties":{"name":{"type":"string"},"description":{"type":"string"},"tags":{"type":"array","items":{"type":"string"}},"emoji_reactions":{"type":"string"}},"additionalProperties":false,"required":["name","description","tags","emoji_reactions"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_unicode_and_emoji_handling: edgeCasesUnicodeAndEmojiHandling
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /text
+ */
+async function edgeCases17ExtremelyLongString(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases17ExtremelyLongString(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/text",
+		handler_name: "edge_cases_17_extremely_long_string",
+		request_schema: {"type":"object","required":["content"],"properties":{"content":{"type":"string","maxLength":10000}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_17_extremely_long_string: edgeCases17ExtremelyLongString
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /search
+ */
+async function edgeCases11Utf8QueryParameter(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"term":"café"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases11Utf8QueryParameter(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/search",
+		handler_name: "edge_cases_11_utf8_query_parameter",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"term":{"type":"string","source":"query"}},"required":["term"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_11_utf8_query_parameter: edgeCases11Utf8QueryParameter
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /users
+ */
+async function edgeCases18UnicodeNormalization(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"name":"café"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases18UnicodeNormalization(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/users",
+		handler_name: "edge_cases_18_unicode_normalization",
+		request_schema: {"type":"object","required":["name"],"properties":{"name":{"type":"string","minLength":1}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_18_unicode_normalization: edgeCases18UnicodeNormalization
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /files
+ */
+async function edgeCases20NullByteInString(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	if (_body !== null && _body !== undefined) {
+		if (typeof _body === "object") {
+			Object.assign(result, _body);
+		} else {
+			result.body = _body;
+		}
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases20NullByteInString(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/files",
+		handler_name: "edge_cases_20_null_byte_in_string",
+		request_schema: {"type":"object","required":["filename"],"properties":{"filename":{"type":"string","pattern":"^[^\\x00]+$"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_20_null_byte_in_string: edgeCases20NullByteInString
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /data
+ */
+async function edgeCases23DeeplyNestedJsonLimit(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 400 };
+	const responseBody = {"error":"Request body exceeds maximum nesting depth of 32"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases23DeeplyNestedJsonLimit(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/data",
+		handler_name: "edge_cases_23_deeply_nested_json_limit",
+		request_schema: {"type":"object"},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_23_deeply_nested_json_limit: edgeCases23DeeplyNestedJsonLimit
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items
+ */
+async function edgeCases14LargeIntegerBoundary(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"id":9007199254740991};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases14LargeIntegerBoundary(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items",
+		handler_name: "edge_cases_14_large_integer_boundary",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"id":{"type":"integer","source":"query"}},"required":["id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_14_large_integer_boundary: edgeCases14LargeIntegerBoundary
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /data
+ */
+async function edgeCases22LeadingZerosInteger(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"value":123};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases22LeadingZerosInteger(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/data",
+		handler_name: "edge_cases_22_leading_zeros_integer",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"value":{"type":"integer","annotation":"int","source":"query"}},"required":["value"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_22_leading_zeros_integer: edgeCases22LeadingZerosInteger
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /numbers/
+ */
+async function edgeCasesLargeIntegerBoundaryValues(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"max_safe_int":9007199254740991,"large_int":"9223372036854775807","negative_large":"-9223372036854775808"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCasesLargeIntegerBoundaryValues(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/numbers/",
+		handler_name: "edge_cases_large_integer_boundary_values",
+		request_schema: {"type":"object","properties":{"max_safe_int":{"type":"integer"},"large_int":{"type":"integer"},"negative_large":{"type":"integer"}},"additionalProperties":false,"required":["max_safe_int","large_int","negative_large"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_large_integer_boundary_values: edgeCasesLargeIntegerBoundaryValues
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /nested/
+ */
+async function edgeCasesDeeplyNestedStructure10Levels(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"message":"Processed deeply nested structure","max_depth":10,"value_found":"deep"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCasesDeeplyNestedStructure10Levels(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/nested/",
+		handler_name: "edge_cases_deeply_nested_structure_10_levels",
+		request_schema: {"type":"object","properties":{"level1":{"type":"object","properties":{"level2":{"type":"object","properties":{"level3":{"type":"object","properties":{"level4":{"type":"object","properties":{"level5":{"type":"object","properties":{"level6":{"type":"object","properties":{"level7":{"type":"object","properties":{"level8":{"type":"object","properties":{"level9":{"type":"object","properties":{"level10":{"type":"object","properties":{"value":{"type":"string"},"depth":{"type":"integer"}},"additionalProperties":false,"required":["value","depth"]}},"additionalProperties":false,"required":["level10"]}},"additionalProperties":false,"required":["level9"]}},"additionalProperties":false,"required":["level8"]}},"additionalProperties":false,"required":["level7"]}},"additionalProperties":false,"required":["level6"]}},"additionalProperties":false,"required":["level5"]}},"additionalProperties":false,"required":["level4"]}},"additionalProperties":false,"required":["level3"]}},"additionalProperties":false,"required":["level2"]}},"additionalProperties":false,"required":["level1"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_deeply_nested_structure_10_levels: edgeCasesDeeplyNestedStructure10Levels
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /nulls/
+ */
+async function edgeCasesEmptyAndNullValueHandling(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"explicit_null_is_null":true,"empty_string_length":0,"empty_array_length":0,"empty_object_keys":0,"zero_is_falsy":true,"false_is_false":true};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCasesEmptyAndNullValueHandling(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/nulls/",
+		handler_name: "edge_cases_empty_and_null_value_handling",
+		request_schema: {"type":"object","properties":{"explicit_null":{"type":"null"},"empty_string":{"type":"string"},"empty_array":{"type":"array","items":{}},"empty_object":{"type":"object","properties":{},"additionalProperties":false},"zero_number":{"type":"integer"},"false_boolean":{"type":"boolean"}},"additionalProperties":false,"required":["explicit_null","empty_string","empty_array","empty_object","zero_number","false_boolean"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_empty_and_null_value_handling: edgeCasesEmptyAndNullValueHandling
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /data
+ */
+async function edgeCases16NegativeZeroHandling(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 201 };
+	const responseBody = {"offset":0};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppEdgeCases16NegativeZeroHandling(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/data",
+		handler_name: "edge_cases_16_negative_zero_handling",
+		request_schema: {"type":"object","required":["offset"],"properties":{"offset":{"type":"number"}}},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			edge_cases_16_negative_zero_handling: edgeCases16NegativeZeroHandling
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/pattern
+ */
+async function headersHeaderRegexValidationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"x_request_id":"12345"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersHeaderRegexValidationSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/pattern",
+		handler_name: "headers_header_regex_validation_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-Request-Id":{"type":"string","annotation":"str","pattern":"^[0-9]{3,}$","source":"header"}},"required":["X-Request-Id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_header_regex_validation_success: headersHeaderRegexValidationSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function headers33ApiKeyHeaderValid(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const result: Record<string, unknown> = {};
+	const xAPIKey = _params["X-API-Key"];
+	if (xAPIKey !== null && xAPIKey !== undefined) {
+		result["X-API-Key"] = xAPIKey;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeaders33ApiKeyHeaderValid(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "headers_33_api_key_header_valid",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","pattern":"^[a-f0-9]{32}$","source":"header"}},"required":["X-API-Key"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_33_api_key_header_valid: headers33ApiKeyHeaderValid
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/content-type
+ */
+async function headersContentTypeHeaderApplicationJson(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"content_type":"application/json"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersContentTypeHeaderApplicationJson(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/content-type",
+		handler_name: "headers_content_type_header_application_json",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Content-Type":{"type":"string","annotation":"str","source":"header"}},"required":["Content-Type"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_content_type_header_application_json: headersContentTypeHeaderApplicationJson
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/accept-language
+ */
+async function headersAcceptLanguageHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"accept_language":"en-US,en;q=0.9"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersAcceptLanguageHeader(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/accept-language",
+		handler_name: "headers_accept_language_header",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Accept-Language":{"type":"string","annotation":"str","source":"header"}},"required":["Accept-Language"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_accept_language_header: headersAcceptLanguageHeader
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function headersXApiKeyRequiredHeaderSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"secret"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersXApiKeyRequiredHeaderSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "headers_x_api_key_required_header_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"key":{"type":"string","annotation":"str","source":"header"}},"required":["key"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_x_api_key_required_header_success: headersXApiKeyRequiredHeaderSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/max-length
+ */
+async function headersHeaderValidationMaxLengthConstraintFail(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const xSessionId = _params["X-Session-Id"];
+	if (xSessionId !== null && xSessionId !== undefined) {
+		result["X-Session-Id"] = xSessionId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersHeaderValidationMaxLengthConstraintFail(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/max-length",
+		handler_name: "headers_header_validation_max_length_constraint_fail",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-Session-Id":{"type":"string","annotation":"str","maxLength":20,"source":"header"}},"required":["X-Session-Id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_header_validation_max_length_constraint_fail: headersHeaderValidationMaxLengthConstraintFail
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function headersXApiKeyRequiredHeaderMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const xAPIKey = _params["X-API-Key"];
+	if (xAPIKey !== null && xAPIKey !== undefined) {
+		result["X-API-Key"] = xAPIKey;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersXApiKeyRequiredHeaderMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "headers_x_api_key_required_header_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","annotation":"str","source":"header"}},"required":["X-API-Key"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_x_api_key_required_header_missing: headersXApiKeyRequiredHeaderMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/origin
+ */
+async function headersOriginHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"origin":"https://example.com"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersOriginHeader(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/origin",
+		handler_name: "headers_origin_header",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Origin":{"type":"string","annotation":"str","source":"header"}},"required":["Origin"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_origin_header: headersOriginHeader
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function headersUserAgentHeaderDefaultValue(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"User-Agent":"testclient"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersUserAgentHeaderDefaultValue(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "headers_user_agent_header_default_value",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"User-Agent":{"type":"string","annotation":"str","source":"header","default":"testclient"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_user_agent_header_default_value: headersUserAgentHeaderDefaultValue
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /protected
+ */
+async function headers32BearerTokenMissingPrefix(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const authorization = _params.Authorization;
+	if (authorization !== null && authorization !== undefined) {
+		result.Authorization = authorization;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeaders32BearerTokenMissingPrefix(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/protected",
+		handler_name: "headers_32_bearer_token_missing_prefix",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_32_bearer_token_missing_prefix: headers32BearerTokenMissingPrefix
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function headersOptionalHeaderWithNoneDefaultMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"strange_header":null};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersOptionalHeaderWithNoneDefaultMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "headers_optional_header_with_none_default_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"strange-header":{"type":"string","annotation":"str","source":"header","default":null}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_optional_header_with_none_default_missing: headersOptionalHeaderWithNoneDefaultMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/pattern
+ */
+async function headersHeaderRegexValidationFail(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const xRequestId = _params["X-Request-Id"];
+	if (xRequestId !== null && xRequestId !== undefined) {
+		result["X-Request-Id"] = xRequestId;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersHeaderRegexValidationFail(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/pattern",
+		handler_name: "headers_header_regex_validation_fail",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-Request-Id":{"type":"string","annotation":"str","pattern":"^[0-9]{3,}$","source":"header"}},"required":["X-Request-Id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_header_regex_validation_fail: headersHeaderRegexValidationFail
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /protected
+ */
+async function headers31BearerTokenFormatInvalid(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const authorization = _params.Authorization;
+	if (authorization !== null && authorization !== undefined) {
+		result.Authorization = authorization;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeaders31BearerTokenFormatInvalid(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/protected",
+		handler_name: "headers_31_bearer_token_format_invalid",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_31_bearer_token_format_invalid: headers31BearerTokenFormatInvalid
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function headersXApiKeyOptionalHeaderSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"msg":"Hello secret"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersXApiKeyOptionalHeaderSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "headers_x_api_key_optional_header_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"key":{"type":"string","annotation":"str","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_x_api_key_optional_header_success: headersXApiKeyOptionalHeaderSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function headersAuthorizationHeaderSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"scheme":"Digest","credentials":"foobar"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersAuthorizationHeaderSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "headers_authorization_header_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_authorization_header_success: headersAuthorizationHeaderSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /protected
+ */
+async function headers30BearerTokenFormatValid(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const result: Record<string, unknown> = {};
+	const authorization = _params.Authorization;
+	if (authorization !== null && authorization !== undefined) {
+		result.Authorization = authorization;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeaders30BearerTokenFormatValid(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/protected",
+		handler_name: "headers_30_bearer_token_format_valid",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","pattern":"^Bearer [A-Za-z0-9-._~+/]+=*$","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_30_bearer_token_format_valid: headers30BearerTokenFormatValid
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function headersAuthorizationHeaderMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const authorization = _params.Authorization;
+	if (authorization !== null && authorization !== undefined) {
+		result.Authorization = authorization;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersAuthorizationHeaderMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "headers_authorization_header_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_authorization_header_missing: headersAuthorizationHeaderMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/accept
+ */
+async function headersAcceptHeaderJson(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"accept":"application/json"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersAcceptHeaderJson(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/accept",
+		handler_name: "headers_accept_header_json",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Accept":{"type":"string","annotation":"str","source":"header"}},"required":["Accept"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_accept_header_json: headersAcceptHeaderJson
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/accept-encoding
+ */
+async function headersAcceptEncodingHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"accept_encoding":"gzip, deflate, br"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersAcceptEncodingHeader(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/accept-encoding",
+		handler_name: "headers_accept_encoding_header",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Accept-Encoding":{"type":"string","annotation":"str","source":"header"}},"required":["Accept-Encoding"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_accept_encoding_header: headersAcceptEncodingHeader
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function headersAuthorizationHeaderWrongScheme(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const authorization = _params.Authorization;
+	if (authorization !== null && authorization !== undefined) {
+		result.Authorization = authorization;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersAuthorizationHeaderWrongScheme(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "headers_authorization_header_wrong_scheme",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header","pattern":"^Digest .+"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_authorization_header_wrong_scheme: headersAuthorizationHeaderWrongScheme
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/validated
+ */
+async function headersHeaderValidationMinLengthConstraint(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const xToken = _params["X-Token"];
+	if (xToken !== null && xToken !== undefined) {
+		result["X-Token"] = xToken;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersHeaderValidationMinLengthConstraint(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/validated",
+		handler_name: "headers_header_validation_min_length_constraint",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-Token":{"type":"string","annotation":"str","minLength":3,"source":"header"}},"required":["X-Token"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_header_validation_min_length_constraint: headersHeaderValidationMinLengthConstraint
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/basic-auth
+ */
+async function headersBasicAuthenticationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"username":"username","password":"password"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersBasicAuthenticationSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/basic-auth",
+		handler_name: "headers_basic_authentication_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_basic_authentication_success: headersBasicAuthenticationSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/bearer-auth
+ */
+async function headersBearerTokenAuthenticationMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const authorization = _params.Authorization;
+	if (authorization !== null && authorization !== undefined) {
+		result.Authorization = authorization;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersBearerTokenAuthenticationMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/bearer-auth",
+		handler_name: "headers_bearer_token_authentication_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header","pattern":"^Bearer .+"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_bearer_token_authentication_missing: headersBearerTokenAuthenticationMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /users/me
+ */
+async function headersXApiKeyOptionalHeaderMissing(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"msg":"Hello World"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersXApiKeyOptionalHeaderMissing(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/users/me",
+		handler_name: "headers_x_api_key_optional_header_missing",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"key":{"type":"string","annotation":"str","source":"header"}}},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_x_api_key_optional_header_missing: headersXApiKeyOptionalHeaderMissing
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function headersMultipleHeaderValuesXToken(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"X-Token values":["foo","bar"]};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersMultipleHeaderValuesXToken(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "headers_multiple_header_values_x_token",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"x-token":{"type":"string","annotation":"str","source":"header"}},"required":["x-token"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_multiple_header_values_x_token: headersMultipleHeaderValuesXToken
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/multiple
+ */
+async function headersMultipleCustomHeaders(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"x_request_id":"req-12345","x_client_version":"1.2.3","x_trace_id":"trace-abc"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersMultipleCustomHeaders(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/multiple",
+		handler_name: "headers_multiple_custom_headers",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-Request-Id":{"type":"string","annotation":"str","source":"header"},"X-Client-Version":{"type":"string","annotation":"str","source":"header"},"X-Trace-Id":{"type":"string","annotation":"str","source":"header"}},"required":["X-Request-Id","X-Client-Version","X-Trace-Id"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_multiple_custom_headers: headersMultipleCustomHeaders
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /api/data
+ */
+async function headers34ApiKeyHeaderInvalid(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 422 };
+	const result: Record<string, unknown> = {};
+	const xAPIKey = _params["X-API-Key"];
+	if (xAPIKey !== null && xAPIKey !== undefined) {
+		result["X-API-Key"] = xAPIKey;
+	}
+	response.body = result;
+	return JSON.stringify(response);
+}
+
+export function createAppHeaders34ApiKeyHeaderInvalid(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/api/data",
+		handler_name: "headers_34_api_key_header_invalid",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-API-Key":{"type":"string","pattern":"^[a-f0-9]{32}$","source":"header"}},"required":["X-API-Key"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_34_api_key_header_invalid: headers34ApiKeyHeaderInvalid
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/bearer-auth
+ */
+async function headersBearerTokenAuthenticationSuccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"token":"valid_token_123"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersBearerTokenAuthenticationSuccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/bearer-auth",
+		handler_name: "headers_bearer_token_authentication_success",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Authorization":{"type":"string","annotation":"str","source":"header"}},"required":["Authorization"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_bearer_token_authentication_success: headersBearerTokenAuthenticationSuccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/host
+ */
+async function headersHostHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"host":"example.com:8080"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersHostHeader(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/host",
+		handler_name: "headers_host_header",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Host":{"type":"string","annotation":"str","source":"header"}},"required":["Host"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_host_header: headersHostHeader
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/referer
+ */
+async function headersRefererHeader(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"referer":"https://example.com/page"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersRefererHeader(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/referer",
+		handler_name: "headers_referer_header",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"Referer":{"type":"string","annotation":"str","source":"header"}},"required":["Referer"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_referer_header: headersRefererHeader
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /headers/underscore
+ */
+async function headersHeaderWithUnderscoreConversionExplicit(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"x_token":"secret123"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersHeaderWithUnderscoreConversionExplicit(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/headers/underscore",
+		handler_name: "headers_header_with_underscore_conversion_explicit",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"X-Token":{"type":"string","annotation":"str","source":"header"}},"required":["X-Token"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_header_with_underscore_conversion_explicit: headersHeaderWithUnderscoreConversionExplicit
+		},
+	};
+}
+
+
+/**
+ * Handler for POST /echo
+ */
+async function headersHeaderCaseInsensitivityAccess(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"content_type_lower":"application/json","content_type_upper":"application/json","content_type_mixed":"application/json"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersHeaderCaseInsensitivityAccess(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "POST",
+		path: "/echo",
+		handler_name: "headers_header_case_insensitivity_access",
+		request_schema: {"type":"object","properties":{"test":{"type":"string"}},"additionalProperties":false,"required":["test"]},
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_header_case_insensitivity_access: headersHeaderCaseInsensitivityAccess
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /items/
+ */
+async function headersUserAgentHeaderCustomValue(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"User-Agent":"Mozilla/5.0 Custom Browser"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppHeadersUserAgentHeaderCustomValue(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/items/",
+		handler_name: "headers_user_agent_header_custom_value",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: {"type":"object","properties":{"User-Agent":{"type":"string","annotation":"str","source":"header"}},"required":["User-Agent"]},
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			headers_user_agent_header_custom_value: headersUserAgentHeaderCustomValue
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /request-id/preserved
+ */
+async function requestIdRequestIdHeaderIsPreserved(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-request-id":"trace-123"};
+	const responseBody = {"status":"preserved","echo":"trace-123"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppRequestIdRequestIdHeaderIsPreserved(): SpikardApp {
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/request-id/preserved",
+		handler_name: "request_id_request_id_header_is_preserved",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			request_id_request_id_header_is_preserved: requestIdRequestIdHeaderIsPreserved
+		},
+	};
+}
+
+
+/**
+ * Handler for GET /request-id/disabled
+ */
+async function requestIdRequestIdMiddlewareCanBeDisabled(requestJson: string, _context?: HandlerContext): Promise<string> {
+	const request = JSON.parse(requestJson);
+	const _body = request.body ?? null;
+	const _params = request.params ?? {};
+	const response: HandlerResponse = { status: 200 };
+	const responseBody = {"status":"no-request-id"};
+	response.body = responseBody;
+	return JSON.stringify(response);
+}
+
+export function createAppRequestIdRequestIdMiddlewareCanBeDisabled(): SpikardApp {
+	const config: ServerConfig = {
+		enableRequestId: false
+	};
+
+	const route: RouteMetadata = {
+		method: "GET",
+		path: "/request-id/disabled",
+		handler_name: "request_id_request_id_middleware_can_be_disabled",
+		request_schema: undefined,
+		response_schema: undefined,
+		parameter_schema: undefined,
+		file_params: undefined,
+		is_async: true,
+	};
+
+	return {
+		routes: [route],
+		handlers: {
+			request_id_request_id_middleware_can_be_disabled: requestIdRequestIdMiddlewareCanBeDisabled
 		},
 		config,
 	};
@@ -16671,27 +16669,29 @@ export function createAppBodyLimitsBodyUnderLimitSucceeds(): SpikardApp {
 
 
 /**
- * Handler for POST /body-limit/over
+ * Handler for GET /request-id/generated
  */
-async function bodyLimitsBodyOverLimitReturns413(requestJson: string, _context?: HandlerContext): Promise<string> {
+async function requestIdRequestIdIsGeneratedWhenNotProvided(requestJson: string, _context?: HandlerContext): Promise<string> {
 	const request = JSON.parse(requestJson);
 	const _body = request.body ?? null;
 	const _params = request.params ?? {};
-	const response: HandlerResponse = { status: 413 };
-	response.body = null;
+	const response: HandlerResponse = { status: 200 };
+	response.headers = {"x-request-id":"00000000-0000-4000-8000-000000000000"};
+	const responseBody = {"status":"generated"};
+	response.body = responseBody;
 	return JSON.stringify(response);
 }
 
-export function createAppBodyLimitsBodyOverLimitReturns413(): SpikardApp {
+export function createAppRequestIdRequestIdIsGeneratedWhenNotProvided(): SpikardApp {
 	const config: ServerConfig = {
-		maxBodySize: 64
+		enableRequestId: true
 	};
 
 	const route: RouteMetadata = {
-		method: "POST",
-		path: "/body-limit/over",
-		handler_name: "body_limits_body_over_limit_returns_413",
-		request_schema: {"type":"object","properties":{"note":{"type":"string"}},"required":["note"],"additionalProperties":false},
+		method: "GET",
+		path: "/request-id/generated",
+		handler_name: "request_id_request_id_is_generated_when_not_provided",
+		request_schema: undefined,
 		response_schema: undefined,
 		parameter_schema: undefined,
 		file_params: undefined,
@@ -16701,7 +16701,7 @@ export function createAppBodyLimitsBodyOverLimitReturns413(): SpikardApp {
 	return {
 		routes: [route],
 		handlers: {
-			body_limits_body_over_limit_returns_413: bodyLimitsBodyOverLimitReturns413
+			request_id_request_id_is_generated_when_not_provided: requestIdRequestIdIsGeneratedWhenNotProvided
 		},
 		config,
 	};
@@ -17020,11 +17020,11 @@ export async function handleGrpcFullAuthorizationContextWithRoleBasedAccessContr
   const metadata: Record<string, string> = {};
 
   // Request metadata (headers)
-  // x-user-id: "user-admin-001"
-  // content-type: "application/grpc"
-  // x-user-roles: "admin,editor"
   // x-user-permissions: "read,write,delete"
   // authorization: "Bearer token123"
+  // x-user-roles: "admin,editor"
+  // x-user-id: "user-admin-001"
+  // content-type: "application/grpc"
 
   return {
     payload: responsePayload,
@@ -17069,8 +17069,8 @@ export async function handleGrpcCustomAuthenticationSchemeHeader(request: GrpcRe
   const metadata: Record<string, string> = {};
 
   // Request metadata (headers)
-  // content-type: "application/grpc"
   // x-custom-auth: "CustomScheme token_value_123"
+  // content-type: "application/grpc"
 
   return {
     payload: responsePayload,
@@ -17538,8 +17538,587 @@ export async function handleGrpcJwtBearerTokenAuthentication(request: GrpcReques
   const metadata: Record<string, string> = {};
 
   // Request metadata (headers)
-  // content-type: "application/grpc"
   // authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingFilterValidMessages(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC where server filters out invalid messages during streaming.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingPingPongPairs(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC with request-response pairs (ping-pong pattern).
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingChatConversation(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC simulating a chat-like service with alternating messages.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingAsyncProcessingWithDelays(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC with asynchronous message processing.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingBothStreamsEmpty(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC where both request and response streams are empty.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingTransformToUppercase(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC where server transforms incoming messages to uppercase.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingEcho5Messages(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC where client sends 5 messages and expects them echoed back in the same order.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingLargeStreams(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC with 50+ messages in both directions.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingErrorMidStream(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC where server returns error after processing some messages.
+  const responsePayload = Buffer.from(JSON.stringify("Error after processing 2 messages"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "INTERNAL"
+  };
+}
+
+export async function handleGrpcBidirectionalStreamingEmptyRequestStream(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC with empty request stream but server sends response.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcServerStreamingUnicodeAndSpecialCharacters(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC with messages containing unicode characters, emoji, special symbols, and multi-byte UTF-8 sequences. Validates proper encoding/decoding across the streaming pipeline.
+  const responsePayload = Buffer.from(JSON.stringify("Unicode stream completed successfully"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // encoding: "utf-8"
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcServerStreamingEmptyStream(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC that returns an empty stream. The server opens the stream but sends no messages before completing successfully.
+  const responsePayload = Buffer.from(JSON.stringify("Stream completed with no messages"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcServerStreamingTimeoutScenario(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC that exceeds the deadline/timeout. The server starts streaming but doesn't complete before the client-imposed timeout expires. Validates proper timeout handling and stream cancellation.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // grpc-timeout: "1000m"
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "DEADLINE_EXCEEDED"
+  };
+}
+
+export async function handleGrpcServerStreaming10Messages(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC that returns a normal stream of 10 messages. Validates message ordering and complete stream delivery.
+  const responsePayload = Buffer.from(JSON.stringify("10 messages streamed successfully"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcServerStreamingNestedObjectMessages(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC with complex nested message structures. Validates proper serialization and deserialization of deeply nested protobuf objects in streaming context.
+  const responsePayload = Buffer.from(JSON.stringify("3 people with nested objects streamed successfully"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcServerStreamingSingleMessage(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC that returns exactly one message. Verifies that single-message streams are properly handled and distinguished from unary responses.
+  const responsePayload = Buffer.from(JSON.stringify("Stream completed with one message"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcServerStreamingMidStreamError(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC that sends 5 messages successfully, then encounters an error before completing the stream. Validates partial stream delivery and error handling.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "INTERNAL"
+  };
+}
+
+export async function handleGrpcServerStreamingWithMetadataAndTrailers(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC with gRPC metadata headers and trailers. Validates that metadata is accessible before streaming begins and trailers are delivered after stream completion.
+  const responsePayload = Buffer.from(JSON.stringify("Stream completed with metadata and trailers"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+  // x-client-version: "1.0.0"
+  // x-request-id: "metadata-stream-001"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcServerStreaming1mbMessages(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC with large message payloads (approximately 1MB each). Validates that the streaming framework can handle large individual messages without truncation or memory issues.
+  const responsePayload = Buffer.from(JSON.stringify("3 large messages streamed successfully"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcServerStreamingRapid100MessageStream(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC with 100 messages sent in rapid succession. Validates backpressure handling, buffering, and delivery of high-volume message streams without loss or corruption.
+  const responsePayload = Buffer.from(JSON.stringify("100 messages streamed successfully in sequence"));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcErrorHandlingResourceNotFound(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests NOT_FOUND gRPC status code. Returned when the requested resource does not exist. Validates unary RPC requesting non-existent resource.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "NOT_FOUND"
+  };
+}
+
+export async function handleGrpcErrorHandlingPermissionDeniedClientStreaming(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC accessing unauthorized resource. Expects PERMISSION_DENIED status when client sends restricted access level requests. Demonstrates permission validation on streaming upload operations.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "PERMISSION_DENIED"
+  };
+}
+
+export async function handleGrpcErrorHandlingUnimplementedMethod(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests unary RPC calling an unimplemented method. Validates that UNIMPLEMENTED status is returned when the server does not support the requested RPC method. This fixture ensures proper error handling for feature requests that are not yet available in the current server implementation.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "UNIMPLEMENTED"
+  };
+}
+
+export async function handleGrpcErrorHandlingUnauthenticatedServerStreamingRequest(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC without required auth metadata. Expects UNAUTHENTICATED status when authorization header is missing.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "UNAUTHENTICATED"
+  };
+}
+
+export async function handleGrpcErrorHandlingResourceExhausted(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests bidirectional streaming RPC exceeding rate limits. Expects RESOURCE_EXHAUSTED status when client attempts to send 100 messages in rapid succession, exceeding the 100 requests/second rate limit threshold.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "RESOURCE_EXHAUSTED"
+  };
+}
+
+export async function handleGrpcErrorHandlingDeadlineExceeded(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC that exceeds deadline. Expects DEADLINE_EXCEEDED status when RPC time exceeds configured timeout.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "DEADLINE_EXCEEDED"
+  };
+}
+
+export async function handleGrpcErrorHandlingStreamErrorMidTransmission(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC that errors after yielding 3 messages. The stream opens successfully and delivers 3 messages before encountering an INTERNAL error. Validates that partial stream data is delivered before the error is signaled.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "INTERNAL"
+  };
+}
+
+export async function handleGrpcErrorHandlingInvalidRequestPayload(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests server streaming RPC with invalid request payload. Validates that INVALID_ARGUMENT status is returned when required field is missing from the request message. The server should reject the malformed payload before beginning the stream.
+  const responsePayload = Buffer.from(JSON.stringify({}));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "INVALID_ARGUMENT"
+  };
+}
+
+export async function handleGrpcClientStreaming10MessagesSum(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC where client sends 10 integer values. Server sums all values and returns result.
+  const responsePayload = Buffer.from(JSON.stringify({ sequence_id: "seq-001", count: 10, sum: 550, status: "COMPLETE" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcClientStreamingLargeBatch100Messages(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC with 100 messages in the stream. Validates performance with large batch aggregation.
+  const responsePayload = Buffer.from(JSON.stringify({ batch_id: "batch-large-001", total_items: 100, total_value: 5050, average_value: 50.5, status: "PROCESSED" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcClientStreamingEarlyStreamClose(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC where client closes stream after sending 3 messages instead of the expected 5. Server should gracefully handle partial stream.
+  const responsePayload = Buffer.from(JSON.stringify({ session_id: "sess-early-001", received_chunks: 3, expected_chunks: 5, status: "INCOMPLETE" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcClientStreamingMessageSizeLimitExceeded(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC where one message exceeds the max_message_size limit. Server rejects the oversized message and terminates the stream.
+  const responsePayload = Buffer.from(JSON.stringify({ message_id: "payload-002", processed_count: 1, status: "FAILED", error_detail: "Message payload size 10240 exceeds maximum allowed size 4096" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // grpc-max-message-size: "4096"
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "RESOURCE_EXHAUSTED"
+  };
+}
+
+export async function handleGrpcClientStreamingRapidHighFrequencyMessages(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC with rapid-fire message delivery. Server handles 50 messages in quick succession and returns aggregated metrics.
+  const responsePayload = Buffer.from(JSON.stringify({ event_id: "rapid-batch-001", event_count: 50, min_value: 0.1, max_value: 5.0, avg_value: 2.55, throughput_mps: 500.0, status: "PROCESSED" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcClientStreamingUnicodeStringAggregation(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC with Unicode strings that are concatenated. Validates proper UTF-8 handling across multiple messages.
+  const responsePayload = Buffer.from(JSON.stringify({ fragment_id: "unicode-001", result: "Hello, 世界! Привет 🌍", fragment_count: 4, total_length: 26, status: "CONCATENATED" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcClientStreamingMetadataPreservedInResponse(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC where request metadata is forwarded to and preserved in the response. Validates metadata propagation through streaming pipeline.
+  const responsePayload = Buffer.from(JSON.stringify({ request_id: "req-meta-001", processed_by: "grpc-handler-1", received_user_id: "user-789", message_count: 3, trace_id: "trace-abc456", status: "COMPLETE_WITH_METADATA" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // x-user-id: "user-789"
+  // authorization: "Bearer token-xyz123"
+  // custom-header: "custom-value"
+  // x-trace-id: "trace-abc456"
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcClientStreamingSingleMessageAggregation(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC where client sends a single message. Server acknowledges and returns aggregated result.
+  const responsePayload = Buffer.from(JSON.stringify({ count: 1, total: 42, average: 42.0, status: "AGGREGATED" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "OK"
+  };
+}
+
+export async function handleGrpcClientStreamingValidationFailureMidStream(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC where a message fails validation in the middle of the stream. Server rejects the stream and returns error.
+  const responsePayload = Buffer.from(JSON.stringify({ processed: 2, status: "VALIDATION_FAILED", error_message: "Invalid email format at message index 2: invalid-email" }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
+
+  return {
+    payload: responsePayload,
+    metadata,
+    statusCode: "INVALID_ARGUMENT"
+  };
+}
+
+export async function handleGrpcClientStreamingEmptyStreamReturnsDefault(request: GrpcRequest): Promise<GrpcResponse> {
+  // Tests client streaming RPC where client sends no messages (empty stream). Server gracefully handles empty input and returns default response.
+  const responsePayload = Buffer.from(JSON.stringify({ request_id: "empty-stream-req", message_count: 0, result: "DEFAULT_RESULT", is_default: true }));
+  const metadata: Record<string, string> = {};
+
+  // Request metadata (headers)
+  // content-type: "application/grpc"
 
   return {
     payload: responsePayload,
@@ -17767,8 +18346,8 @@ export async function handleGrpcGrpcCompressionTestGzip(request: GrpcRequest): P
   const metadata: Record<string, string> = {};
 
   // Request metadata (headers)
-  // grpc-encoding: "gzip"
   // content-type: "application/grpc"
+  // grpc-encoding: "gzip"
 
   return {
     payload: responsePayload,
@@ -17798,8 +18377,8 @@ export async function handleGrpcOauth2BearerTokenAuthentication(request: GrpcReq
   const metadata: Record<string, string> = {};
 
   // Request metadata (headers)
-  // content-type: "application/grpc"
   // authorization: "Bearer ya29.a0AfH6SMBx..."
+  // content-type: "application/grpc"
 
   return {
     payload: responsePayload,
@@ -17845,8 +18424,8 @@ export async function handleGrpcRequestIdForDistributedTracing(request: GrpcRequ
   const metadata: Record<string, string> = {};
 
   // Request metadata (headers)
-  // x-request-id: "req-12345-67890"
   // content-type: "application/grpc"
+  // x-request-id: "req-12345-67890"
 
   return {
     payload: responsePayload,
@@ -17861,10 +18440,10 @@ export async function handleGrpcGrpcMetadataHeaders(request: GrpcRequest): Promi
   const metadata: Record<string, string> = {};
 
   // Request metadata (headers)
-  // authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
   // content-type: "application/grpc"
   // x-trace-id: "trace-abc123def456"
   // x-custom-header: "custom-value"
+  // authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 
   return {
     payload: responsePayload,
@@ -17879,8 +18458,8 @@ export async function handleGrpcUserAgentAndClientInfoMetadata(request: GrpcRequ
   const metadata: Record<string, string> = {};
 
   // Request metadata (headers)
-  // content-type: "application/grpc"
   // user-agent: "grpc-client/1.2.3 (linux; amd64)"
+  // content-type: "application/grpc"
 
   return {
     payload: responsePayload,
@@ -17935,294 +18514,6 @@ export async function handleGrpcServerStreamingWithLargeResponseData(request: Gr
 }
 
 // App factory functions:
-// - createAppDiRouteLevelDependencyOverrideSuccess() for di / Route-level dependency override - success
-// - createAppDiCircularDependencyDetectionError() for di / Circular dependency detection - error
-// - createAppDiFactoryDependencySuccess() for di / Factory dependency - success
-// - createAppDiValueDependencyInjectionSuccess() for di / Value dependency injection - success
-// - createAppDiNodeJsObjectDestructuringInjectionSuccess() for di / Node.js object destructuring injection - success
-// - createAppDiNestedDependencies3LevelsSuccess() for di / Nested dependencies (3 levels) - success
-// - createAppDiTypeMismatchInDependencyResolutionError() for di / Type mismatch in dependency resolution - error
-// - createAppDiMissingDependencyError() for di / Missing dependency - error
-// - createAppDiPythonParameterNameBasedInjectionSuccess() for di / Python parameter name-based injection - success
-// - createAppDiDependencyInjectionInLifecycleHooksSuccess() for di / Dependency injection in lifecycle hooks - success
-// - createAppDiRubyKeywordArgumentInjectionSuccess() for di / Ruby keyword argument injection - success
-// - createAppDiMultipleDependenciesWithCleanupSuccess() for di / Multiple dependencies with cleanup - success
-// - createAppDiMixedSingletonAndPerRequestCachingSuccess() for di / Mixed singleton and per-request caching - success
-// - createAppDiResourceCleanupAfterRequestSuccess() for di / Resource cleanup after request - success
-// - createAppDiPythonTypeAnnotationBasedInjectionSuccess() for di / Python type annotation-based injection - success
-// - createAppDiPerRequestDependencyCachingSuccess() for di / Per-request dependency caching - success
-// - createAppDiSingletonDependencyCachingSuccess() for di / Singleton dependency caching - success
-// - createAppDiAsyncFactoryDependencySuccess() for di / Async factory dependency - success
-// - createAppCors07CorsPreflightHeaderNotAllowed() for cors / 07_cors_preflight_header_not_allowed
-// - createAppCorsCorsVaryHeaderForProperCaching() for cors / CORS Vary header for proper caching
-// - createAppCorsCorsPreflightForPutMethod() for cors / CORS preflight for PUT method
-// - createAppCorsCorsPreflightForDeleteMethod() for cors / CORS preflight for DELETE method
-// - createAppCorsCorsMultipleAllowedOrigins() for cors / CORS multiple allowed origins
-// - createAppCorsCorsPreflightRequest() for cors / CORS preflight request
-// - createAppCorsCorsWithCredentials() for cors / CORS with credentials
-// - createAppCorsCorsRegexPatternMatchingForOrigins() for cors / CORS regex pattern matching for origins
-// - createAppCors08CorsMaxAge() for cors / 08_cors_max_age
-// - createAppCors10CorsOriginNull() for cors / 10_cors_origin_null
-// - createAppCorsCorsWildcardOrigin() for cors / CORS wildcard origin
-// - createAppCorsCorsSafelistedHeadersWithoutPreflight() for cors / CORS safelisted headers without preflight
-// - createAppCorsCorsPrivateNetworkAccess() for cors / CORS Private Network Access
-// - createAppCorsCorsOriginCaseSensitivity() for cors / CORS origin case sensitivity
-// - createAppCorsCorsRequestBlocked() for cors / CORS request blocked
-// - createAppCorsSimpleCorsRequest() for cors / Simple CORS request
-// - createAppCors09CorsExposeHeaders() for cors / 09_cors_expose_headers
-// - createAppCors06CorsPreflightMethodNotAllowed() for cors / 06_cors_preflight_method_not_allowed
-// - createAppRequestTimeoutRequestExceedsTimeout() for request_timeout / Request exceeds timeout
-// - createAppRequestTimeoutRequestCompletesBeforeTimeout() for request_timeout / Request completes before timeout
-// - createAppUrlEncodedSimpleFormSubmissionSuccess() for url_encoded / Simple form submission - success
-// - createAppUrlEncoded15SpecialCharactersFieldNames() for url_encoded / 15_special_characters_field_names
-// - createAppUrlEncodedPatternValidationFail() for url_encoded / Pattern validation - fail
-// - createAppUrlEncoded22AdditionalPropertiesStrictFailure() for url_encoded / 22_additional_properties_strict_failure
-// - createAppUrlEncoded17PatternValidationFailure() for url_encoded / 17_pattern_validation_failure
-// - createAppUrlEncoded20FormatEmailValidationFailure() for url_encoded / 20_format_email_validation_failure
-// - createAppUrlEncodedMultipleValuesForSameField() for url_encoded / Multiple values for same field
-// - createAppUrlEncodedRequiredFieldMissingValidationError() for url_encoded / Required field missing - validation error
-// - createAppUrlEncoded13ArrayFieldSuccess() for url_encoded / 13_array_field_success
-// - createAppUrlEncodedNumericFieldTypeConversion() for url_encoded / Numeric field type conversion
-// - createAppUrlEncodedSpecialCharactersEncoding() for url_encoded / Special characters encoding
-// - createAppUrlEncodedBooleanFieldConversion() for url_encoded / Boolean field conversion
-// - createAppUrlEncodedEmptyStringValue() for url_encoded / Empty string value
-// - createAppUrlEncodedOauth2PasswordGrantFlow() for url_encoded / OAuth2 password grant flow
-// - createAppUrlEncoded19ArrayMinitemsValidationFailure() for url_encoded / 19_array_minitems_validation_failure
-// - createAppUrlEncodedOptionalFieldMissingSuccess() for url_encoded / Optional field missing - success
-// - createAppUrlEncoded14NestedObjectBracketNotation() for url_encoded / 14_nested_object_bracket_notation
-// - createAppUrlEncodedStringMaxLengthValidationFail() for url_encoded / String max_length validation - fail
-// - createAppUrlEncoded18IntegerMinimumValidationFailure() for url_encoded / 18_integer_minimum_validation_failure
-// - createAppUrlEncoded21IntegerTypeCoercionFailure() for url_encoded / 21_integer_type_coercion_failure
-// - createAppUrlEncoded16MinlengthValidationFailure() for url_encoded / 16_minlength_validation_failure
-// - createAppUrlEncodedStringMinLengthValidationFail() for url_encoded / String min_length validation - fail
-// - createAppValidationErrorsInvalidUuidFormat() for validation_errors / Invalid UUID format
-// - createAppValidationErrorsInvalidBooleanValue() for validation_errors / Invalid boolean value
-// - createAppValidationErrorsMissingRequiredQueryParameter() for validation_errors / Missing required query parameter
-// - createAppValidationErrorsArrayMaxItemsConstraintViolation() for validation_errors / Array max_items constraint violation
-// - createAppValidationErrorsNumericConstraintViolationGtGreaterThan() for validation_errors / Numeric constraint violation - gt (greater than)
-// - createAppValidationErrorsStringRegexPatternMismatch() for validation_errors / String regex pattern mismatch
-// - createAppValidationErrorsInvalidEnumValue() for validation_errors / Invalid enum value
-// - createAppValidationErrorsStringMinLengthConstraintViolation() for validation_errors / String min_length constraint violation
-// - createAppValidationErrorsMultipleValidationErrors() for validation_errors / Multiple validation errors
-// - createAppValidationErrorsStringMaxLengthConstraintViolation() for validation_errors / String max_length constraint violation
-// - createAppValidationErrorsNestedObjectValidationError() for validation_errors / Nested object validation error
-// - createAppValidationErrors10NestedErrorPath() for validation_errors / 10_nested_error_path
-// - createAppValidationErrorsInvalidDatetimeFormat() for validation_errors / Invalid datetime format
-// - createAppValidationErrorsArrayItemValidationError() for validation_errors / Array item validation error
-// - createAppValidationErrorsMissingRequiredBodyField() for validation_errors / Missing required body field
-// - createAppValidationErrorsBodyFieldTypeErrorStringForFloat() for validation_errors / Body field type error - string for float
-// - createAppValidationErrorsMalformedJsonBody() for validation_errors / Malformed JSON body
-// - createAppValidationErrorsQueryParamTypeErrorStringProvidedForInt() for validation_errors / Query param type error - string provided for int
-// - createAppValidationErrorsHeaderValidationError() for validation_errors / Header validation error
-// - createAppValidationErrors09MultipleValidationErrors() for validation_errors / 09_multiple_validation_errors
-// - createAppValidationErrorsNumericConstraintViolationLeLessThanOrEqual() for validation_errors / Numeric constraint violation - le (less than or equal)
-// - createAppValidationErrorsArrayMinItemsConstraintViolation() for validation_errors / Array min_items constraint violation
-// - createAppBackgroundBackgroundEventLoggingSecondPayload() for background / Background event logging - second payload
-// - createAppBackgroundBackgroundEventLogging() for background / Background event logging
-// - createAppLifecycleHooksOnresponseSecurityHeaders() for lifecycle_hooks / onResponse - Security Headers
-// - createAppLifecycleHooksPrehandlerAuthenticationFailedShortCircuit() for lifecycle_hooks / preHandler - Authentication Failed (Short Circuit)
-// - createAppLifecycleHooksPrehandlerAuthorizationCheck() for lifecycle_hooks / preHandler - Authorization Check
-// - createAppLifecycleHooksPrehandlerAuthenticationSuccess() for lifecycle_hooks / preHandler - Authentication Success
-// - createAppLifecycleHooksPrevalidationRateLimitExceededShortCircuit() for lifecycle_hooks / preValidation - Rate Limit Exceeded (Short Circuit)
-// - createAppLifecycleHooksOnerrorErrorLogging() for lifecycle_hooks / onError - Error Logging
-// - createAppLifecycleHooksMultipleHooksAllPhases() for lifecycle_hooks / Multiple Hooks - All Phases
-// - createAppLifecycleHooksHookExecutionOrder() for lifecycle_hooks / Hook Execution Order
-// - createAppLifecycleHooksOnresponseResponseTiming() for lifecycle_hooks / onResponse - Response Timing
-// - createAppLifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit() for lifecycle_hooks / preHandler - Authorization Forbidden (Short Circuit)
-// - createAppLifecycleHooksOnrequestRequestLogging() for lifecycle_hooks / onRequest - Request Logging
-// - createAppLifecycleHooksPrevalidationRateLimiting() for lifecycle_hooks / preValidation - Rate Limiting
-// - createAppStaticFilesStaticFileServerReturnsTextFile() for static_files / Static file server returns text file
-// - createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory() for static_files / Static server returns index.html for directory
-// - createAppCompressionCompressionPayloadBelowMinSizeIsNotCompressed() for compression / Compression - payload below min_size is not compressed
-// - createAppCompressionCompressionGzipApplied() for compression / Compression - gzip applied
-// - createAppHeadersHeaderRegexValidationSuccess() for headers / Header regex validation - success
-// - createAppHeaders33ApiKeyHeaderValid() for headers / 33_api_key_header_valid
-// - createAppHeadersContentTypeHeaderApplicationJson() for headers / Content-Type header - application/json
-// - createAppHeadersAcceptLanguageHeader() for headers / Accept-Language header
-// - createAppHeadersXApiKeyRequiredHeaderSuccess() for headers / X-API-Key required header - success
-// - createAppHeadersHeaderValidationMaxLengthConstraintFail() for headers / Header validation - max_length constraint fail
-// - createAppHeadersXApiKeyRequiredHeaderMissing() for headers / X-API-Key required header - missing
-// - createAppHeadersOriginHeader() for headers / Origin header
-// - createAppHeadersUserAgentHeaderDefaultValue() for headers / User-Agent header - default value
-// - createAppHeaders32BearerTokenMissingPrefix() for headers / 32_bearer_token_missing_prefix
-// - createAppHeadersOptionalHeaderWithNoneDefaultMissing() for headers / Optional header with None default - missing
-// - createAppHeadersHeaderRegexValidationFail() for headers / Header regex validation - fail
-// - createAppHeaders31BearerTokenFormatInvalid() for headers / 31_bearer_token_format_invalid
-// - createAppHeadersXApiKeyOptionalHeaderSuccess() for headers / X-API-Key optional header - success
-// - createAppHeadersAuthorizationHeaderSuccess() for headers / Authorization header - success
-// - createAppHeaders30BearerTokenFormatValid() for headers / 30_bearer_token_format_valid
-// - createAppHeadersAuthorizationHeaderMissing() for headers / Authorization header - missing
-// - createAppHeadersAcceptHeaderJson() for headers / Accept header - JSON
-// - createAppHeadersAcceptEncodingHeader() for headers / Accept-Encoding header
-// - createAppHeadersAuthorizationHeaderWrongScheme() for headers / Authorization header - wrong scheme
-// - createAppHeadersHeaderValidationMinLengthConstraint() for headers / Header validation - min_length constraint
-// - createAppHeadersBasicAuthenticationSuccess() for headers / Basic authentication - success
-// - createAppHeadersBearerTokenAuthenticationMissing() for headers / Bearer token authentication - missing
-// - createAppHeadersXApiKeyOptionalHeaderMissing() for headers / X-API-Key optional header - missing
-// - createAppHeadersMultipleHeaderValuesXToken() for headers / Multiple header values - X-Token
-// - createAppHeadersMultipleCustomHeaders() for headers / Multiple custom headers
-// - createAppHeaders34ApiKeyHeaderInvalid() for headers / 34_api_key_header_invalid
-// - createAppHeadersBearerTokenAuthenticationSuccess() for headers / Bearer token authentication - success
-// - createAppHeadersHostHeader() for headers / Host header
-// - createAppHeadersRefererHeader() for headers / Referer header
-// - createAppHeadersHeaderWithUnderscoreConversionExplicit() for headers / Header with underscore conversion - explicit
-// - createAppHeadersHeaderCaseInsensitivityAccess() for headers / Header case insensitivity - access
-// - createAppHeadersUserAgentHeaderCustomValue() for headers / User-Agent header - custom value
-// - createAppMultipartMultipleValuesForSameFieldName() for multipart / Multiple values for same field name
-// - createAppMultipart19FileMimeSpoofingPngAsJpeg() for multipart / 19_file_mime_spoofing_png_as_jpeg
-// - createAppMultipart20FileMimeSpoofingJpegAsPng() for multipart / 20_file_mime_spoofing_jpeg_as_png
-// - createAppMultipart21FilePdfMagicNumberSuccess() for multipart / 21_file_pdf_magic_number_success
-// - createAppMultipartContentTypeValidationInvalidType() for multipart / Content-Type validation - invalid type
-// - createAppMultipartPdfFileUpload() for multipart / PDF file upload
-// - createAppMultipartFileListUploadArrayOfFiles() for multipart / File list upload (array of files)
-// - createAppMultipartOptionalFileUploadProvided() for multipart / Optional file upload - provided
-// - createAppMultipartFileSizeValidationTooLarge() for multipart / File size validation - too large
-// - createAppMultipartMixedFilesAndFormData() for multipart / Mixed files and form data
-// - createAppMultipartSimpleFileUpload() for multipart / Simple file upload
-// - createAppMultipartEmptyFileUpload() for multipart / Empty file upload
-// - createAppMultipartOptionalFileUploadMissing() for multipart / Optional file upload - missing
-// - createAppMultipartFileUploadWithoutFilename() for multipart / File upload without filename
-// - createAppMultipart18FileMagicNumberJpegSuccess() for multipart / 18_file_magic_number_jpeg_success
-// - createAppMultipart22FileEmptyBuffer() for multipart / 22_file_empty_buffer
-// - createAppMultipart17FileMagicNumberPngSuccess() for multipart / 17_file_magic_number_png_success
-// - createAppMultipartFormDataWithoutFiles() for multipart / Form data without files
-// - createAppMultipartMultipleFileUploads() for multipart / Multiple file uploads
-// - createAppMultipartFileUploadWithCustomHeaders() for multipart / File upload with custom headers
-// - createAppMultipartRequiredFileUploadMissing() for multipart / Required file upload - missing
-// - createAppMultipartImageFileUpload() for multipart / Image file upload
-// - createAppCookies25CookieSamesiteLax() for cookies / 25_cookie_samesite_lax
-// - createAppCookiesOptionalCookieParameterSuccess() for cookies / Optional cookie parameter - success
-// - createAppCookiesCookieRegexPatternValidationFail() for cookies / Cookie regex pattern validation - fail
-// - createAppCookiesResponseSessionCookieNoMaxAge() for cookies / Response - session cookie (no max_age)
-// - createAppCookies27CookieHttponlyFlag() for cookies / 27_cookie_httponly_flag
-// - createAppCookiesResponseCookieWithAttributes() for cookies / Response cookie with attributes
-// - createAppCookies24CookieSamesiteStrict() for cookies / 24_cookie_samesite_strict
-// - createAppCookiesApikeyCookieAuthenticationSuccess() for cookies / APIKey cookie authentication - success
-// - createAppCookiesCookieValidationMinLengthConstraintSuccess() for cookies / Cookie validation - min_length constraint success
-// - createAppCookiesCookieValidationMinLengthFailure() for cookies / Cookie validation - min_length failure
-// - createAppCookiesCookieValidationMaxLengthConstraintFail() for cookies / Cookie validation - max_length constraint fail
-// - createAppCookiesRequiredCookieMissing() for cookies / Required cookie - missing
-// - createAppCookiesOptionalCookieParameterMissing() for cookies / Optional cookie parameter - missing
-// - createAppCookiesApikeyCookieAuthenticationMissing() for cookies / APIKey cookie authentication - missing
-// - createAppCookiesResponseMultipleCookies() for cookies / Response - multiple cookies
-// - createAppCookiesResponseCookieWithSamesiteLax() for cookies / Response cookie with SameSite=Lax
-// - createAppCookiesResponseDeleteCookie() for cookies / Response - delete cookie
-// - createAppCookiesResponseCookieWithPathAttribute() for cookies / Response cookie with path attribute
-// - createAppCookiesOptionalApikeyCookieMissing() for cookies / Optional APIKey cookie - missing
-// - createAppCookiesResponseCookieWithSamesiteStrict() for cookies / Response cookie with SameSite=Strict
-// - createAppCookiesResponseCookieWithSamesiteNone() for cookies / Response cookie with SameSite=None
-// - createAppCookiesCookieRegexPatternValidationSuccess() for cookies / Cookie regex pattern validation - success
-// - createAppCookiesResponseSetCookieBasic() for cookies / Response set cookie - basic
-// - createAppCookiesMultipleCookiesSuccess() for cookies / Multiple cookies - success
-// - createAppCookies26CookieSecureFlag() for cookies / 26_cookie_secure_flag
-// - createAppCookiesResponseCookieWithDomainAttribute() for cookies / Response cookie with domain attribute
-// - createAppAuthJwtMalformedTokenFormat() for auth / JWT malformed token format
-// - createAppAuthBearerTokenWithoutPrefix() for auth / Bearer token without prefix
-// - createAppAuthJwtAuthenticationValidToken() for auth / JWT authentication - valid token
-// - createAppAuthApiKeyRotationOldKeyStillValid() for auth / API key rotation - old key still valid
-// - createAppAuthJwtInvalidIssuer() for auth / JWT invalid issuer
-// - createAppAuthJwtWithMultipleAudiences() for auth / JWT with multiple audiences
-// - createAppAuthApiKeyInQueryParameter() for auth / API key in query parameter
-// - createAppAuthJwtAuthenticationExpiredToken() for auth / JWT authentication - expired token
-// - createAppAuthApiKeyAuthenticationInvalidKey() for auth / API key authentication - invalid key
-// - createAppAuthJwtNotBeforeClaimInFuture() for auth / JWT not before claim in future
-// - createAppAuthMultipleAuthenticationSchemesJwtPrecedence() for auth / Multiple authentication schemes - JWT precedence
-// - createAppAuthJwtMissingRequiredCustomClaims() for auth / JWT missing required custom claims
-// - createAppAuthApiKeyAuthenticationValidKey() for auth / API key authentication - valid key
-// - createAppAuthApiKeyWithCustomHeaderName() for auth / API key with custom header name
-// - createAppAuthApiKeyAuthenticationMissingHeader() for auth / API key authentication - missing header
-// - createAppAuthJwtAuthenticationInvalidSignature() for auth / JWT authentication - invalid signature
-// - createAppAuthJwtAuthenticationMissingAuthorizationHeader() for auth / JWT authentication - missing Authorization header
-// - createAppAuthJwtAuthenticationInvalidAudience() for auth / JWT authentication - invalid audience
-// - createAppHttpMethodsOptionsCorsPreflightRequest() for http_methods / OPTIONS - CORS preflight request
-// - createAppHttpMethodsDeleteRemoveResource() for http_methods / DELETE - Remove resource
-// - createAppHttpMethodsPutCreateResourceIfDoesnTExist() for http_methods / PUT - Create resource if doesn't exist
-// - createAppHttpMethodsPatchUpdateMultipleFields() for http_methods / PATCH - Update multiple fields
-// - createAppHttpMethodsPutValidationError() for http_methods / PUT - Validation error
-// - createAppHttpMethodsHeadGetMetadataWithoutBody() for http_methods / HEAD - Get metadata without body
-// - createAppHttpMethodsDeleteWithResponseBody() for http_methods / DELETE - With response body
-// - createAppHttpMethodsPutMissingRequiredField() for http_methods / PUT - Missing required field
-// - createAppHttpMethodsPatchPartialUpdate() for http_methods / PATCH - Partial update
-// - createAppHttpMethodsDeleteResourceNotFound() for http_methods / DELETE - Resource not found
-// - createAppHttpMethodsPutIdempotentOperation() for http_methods / PUT - Idempotent operation
-// - createAppHttpMethodsPutCompleteResourceReplacement() for http_methods / PUT - Complete resource replacement
-// - createAppContentTypes415UnsupportedMediaType() for content_types / 415 Unsupported Media Type
-// - createAppContentTypesXmlResponseApplicationXml() for content_types / XML response - application/xml
-// - createAppContentTypes14ContentTypeCaseInsensitive() for content_types / 14_content_type_case_insensitive
-// - createAppContentTypesJsonWithUtf8Charset() for content_types / JSON with UTF-8 charset
-// - createAppContentTypes16TextPlainNotAccepted() for content_types / 16_text_plain_not_accepted
-// - createAppContentTypesPdfResponseApplicationPdf() for content_types / PDF response - application/pdf
-// - createAppContentTypes20ContentLengthMismatch() for content_types / 20_content_length_mismatch
-// - createAppContentTypes17VendorJsonAccepted() for content_types / 17_vendor_json_accepted
-// - createAppContentTypes13JsonWithCharsetUtf16() for content_types / 13_json_with_charset_utf16
-// - createAppContentTypesJsonResponseApplicationJson() for content_types / JSON response - application/json
-// - createAppContentTypes15MultipartBoundaryRequired() for content_types / 15_multipart_boundary_required
-// - createAppContentTypesContentNegotiationAcceptHeader() for content_types / Content negotiation - Accept header
-// - createAppContentTypesHtmlResponseTextHtml() for content_types / HTML response - text/html
-// - createAppContentTypesJpegImageResponseImageJpeg() for content_types / JPEG image response - image/jpeg
-// - createAppContentTypes19MissingContentTypeDefaultJson() for content_types / 19_missing_content_type_default_json
-// - createAppContentTypesPngImageResponseImagePng() for content_types / PNG image response - image/png
-// - createAppContentTypesPlainTextResponseTextPlain() for content_types / Plain text response - text/plain
-// - createAppContentTypes18ContentTypeWithMultipleParams() for content_types / 18_content_type_with_multiple_params
-// - createAppContentTypesCsvResponseTextCsv() for content_types / CSV response - text/csv
-// - createAppContentTypesBinaryResponseApplicationOctetStream() for content_types / Binary response - application/octet-stream
-// - createAppPathParamsBooleanPathParameterTrue() for path_params / Boolean path parameter - True
-// - createAppPathParams29DecimalPathParamSuccess() for path_params / 29_decimal_path_param_success
-// - createAppPathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess() for path_params / Integer path parameter with combined lt and gt constraints - success
-// - createAppPathParams33StringPatternPathSuccess() for path_params / 33_string_pattern_path_success
-// - createAppPathParams31StringMinlengthPathFailure() for path_params / 31_string_minlength_path_failure
-// - createAppPathParams35NegativeIntegerPathParam() for path_params / 35_negative_integer_path_param
-// - createAppPathParamsEnumPathParameterInvalidValue() for path_params / Enum path parameter - invalid value
-// - createAppPathParams27DatetimeFormatPathParamSuccess() for path_params / 27_datetime_format_path_param_success
-// - createAppPathParams25DateFormatInvalidFailure() for path_params / 25_date_format_invalid_failure
-// - createAppPathParamsIntegerPathParameterWithLtConstraintSuccess() for path_params / Integer path parameter with lt constraint - success
-// - createAppPathParamsIntegerPathParameterWithGtConstraintSuccess() for path_params / Integer path parameter with gt constraint - success
-// - createAppPathParams28DurationFormatPathParamSuccess() for path_params / 28_duration_format_path_param_success
-// - createAppPathParamsPathParameterTypeSyntaxWithOverride() for path_params / Path parameter type syntax with override
-// - createAppPathParams20UuidV3PathParamSuccess() for path_params / 20_uuid_v3_path_param_success
-// - createAppPathParamsIntegerPathParameterInvalidString() for path_params / Integer path parameter - invalid string
-// - createAppPathParams30StringMinlengthPathSuccess() for path_params / 30_string_minlength_path_success
-// - createAppPathParamsIntegerPathParameterWithLeConstraintSuccess() for path_params / Integer path parameter with le constraint - success
-// - createAppPathParamsPathParameterTypeSyntaxInvalidUuid() for path_params / Path parameter type syntax - invalid UUID
-// - createAppPathParamsPathTypeParameterFilePath() for path_params / Path type parameter - file path
-// - createAppPathParamsPathParameterWithTypeSyntaxUuid() for path_params / Path parameter with type syntax - UUID
-// - createAppPathParams32StringMaxlengthPathFailure() for path_params / 32_string_maxlength_path_failure
-// - createAppPathParamsIntegerPathParameterSuccess() for path_params / Integer path parameter - success
-// - createAppPathParams34StringPatternPathFailure() for path_params / 34_string_pattern_path_failure
-// - createAppPathParams21UuidV5PathParamSuccess() for path_params / 21_uuid_v5_path_param_success
-// - createAppPathParamsStringPathParameterWithMaxLengthFailure() for path_params / String path parameter with max_length - failure
-// - createAppPathParamsStringPathParameterWithMinLengthFailure() for path_params / String path parameter with min_length - failure
-// - createAppPathParamsMultiplePathParametersSuccess() for path_params / Multiple path parameters - success
-// - createAppPathParamsDatePathParameterSuccess() for path_params / Date path parameter - success
-// - createAppPathParamsIntegerPathParameterWithGtConstraintFailure() for path_params / Integer path parameter with gt constraint - failure
-// - createAppPathParams24DateFormatPathParamSuccess() for path_params / 24_date_format_path_param_success
-// - createAppPathParamsFloatPathParameterSuccess() for path_params / Float path parameter - success
-// - createAppPathParamsPathParameterWithTypeSyntaxInteger() for path_params / Path parameter with type syntax - integer
-// - createAppPathParamsStringPathParameterSuccess() for path_params / String path parameter - success
-// - createAppPathParamsUuidPathParameterSuccess() for path_params / UUID path parameter - success
-// - createAppPathParamsIntegerPathParameterWithGeConstraintSuccess() for path_params / Integer path parameter with ge constraint - success
-// - createAppPathParamsEnumPathParameterSuccess() for path_params / Enum path parameter - success
-// - createAppPathParamsBooleanPathParameterNumeric1() for path_params / Boolean path parameter - numeric 1
-// - createAppEdgeCases19EmojiInStrings() for edge_cases / 19_emoji_in_strings
-// - createAppEdgeCases12PercentEncodedSpecialChars() for edge_cases / 12_percent_encoded_special_chars
-// - createAppEdgeCasesSpecialStringValuesAndEscaping() for edge_cases / Special string values and escaping
-// - createAppEdgeCases15FloatPrecisionPreservation() for edge_cases / 15_float_precision_preservation
-// - createAppEdgeCases13EmptyStringQueryParamPreserved() for edge_cases / 13_empty_string_query_param_preserved
-// - createAppEdgeCases24ArrayWithHoles() for edge_cases / 24_array_with_holes
-// - createAppEdgeCases21ScientificNotationNumber() for edge_cases / 21_scientific_notation_number
-// - createAppEdgeCasesFloatPrecisionAndRounding() for edge_cases / Float precision and rounding
-// - createAppEdgeCasesUnicodeAndEmojiHandling() for edge_cases / Unicode and emoji handling
-// - createAppEdgeCases17ExtremelyLongString() for edge_cases / 17_extremely_long_string
-// - createAppEdgeCases11Utf8QueryParameter() for edge_cases / 11_utf8_query_parameter
-// - createAppEdgeCases18UnicodeNormalization() for edge_cases / 18_unicode_normalization
-// - createAppEdgeCases20NullByteInString() for edge_cases / 20_null_byte_in_string
-// - createAppEdgeCases23DeeplyNestedJsonLimit() for edge_cases / 23_deeply_nested_json_limit
-// - createAppEdgeCases14LargeIntegerBoundary() for edge_cases / 14_large_integer_boundary
-// - createAppEdgeCases22LeadingZerosInteger() for edge_cases / 22_leading_zeros_integer
-// - createAppEdgeCasesLargeIntegerBoundaryValues() for edge_cases / Large integer boundary values
-// - createAppEdgeCasesDeeplyNestedStructure10Levels() for edge_cases / Deeply nested structure (10+ levels)
-// - createAppEdgeCasesEmptyAndNullValueHandling() for edge_cases / Empty and null value handling
-// - createAppEdgeCases16NegativeZeroHandling() for edge_cases / 16_negative_zero_handling
 // - createAppQueryParamsStringValidationWithRegexSuccess() for query_params / String validation with regex - success
 // - createAppQueryParams49IntegerGtConstraintSuccess() for query_params / 49_integer_gt_constraint_success
 // - createAppQueryParamsEnumQueryParameterInvalidValue() for query_params / Enum query parameter - invalid value
@@ -18294,37 +18585,172 @@ export async function handleGrpcServerStreamingWithLargeResponseData(request: Gr
 // - createAppQueryParams54ArrayMinitemsConstraintSuccess() for query_params / 54_array_minitems_constraint_success
 // - createAppQueryParams55ArrayMinitemsConstraintFailure() for query_params / 55_array_minitems_constraint_failure
 // - createAppQueryParams60FormatIpv4Success() for query_params / 60_format_ipv4_success
-// - createAppStreamingStreamJsonLines() for streaming / Stream JSON lines
-// - createAppStreamingBinaryLogDownload() for streaming / Binary log download
-// - createAppStreamingChunkedCsvExport() for streaming / Chunked CSV export
 // - createAppRateLimitRateLimitBelowThresholdSucceeds() for rate_limit / Rate limit below threshold succeeds
 // - createAppRateLimitRateLimitExceededReturns429() for rate_limit / Rate limit exceeded returns 429
-// - createAppStatusCodes408RequestTimeout() for status_codes / 408 Request Timeout
-// - createAppStatusCodes404NotFoundResourceNotFound() for status_codes / 404 Not Found - Resource not found
-// - createAppStatusCodes503ServiceUnavailableServerOverload() for status_codes / 503 Service Unavailable - Server overload
-// - createAppStatusCodes422UnprocessableEntityValidationError() for status_codes / 422 Unprocessable Entity - Validation error
-// - createAppStatusCodes302FoundTemporaryRedirect() for status_codes / 302 Found - Temporary redirect
-// - createAppStatusCodes304NotModifiedCachedContentValid() for status_codes / 304 Not Modified - Cached content valid
-// - createAppStatusCodes400BadRequestInvalidRequest() for status_codes / 400 Bad Request - Invalid request
-// - createAppStatusCodes22501NotImplemented() for status_codes / 22_501_not_implemented
-// - createAppStatusCodes204NoContentSuccessWithNoBody() for status_codes / 204 No Content - Success with no body
-// - createAppStatusCodes301MovedPermanentlyPermanentRedirect() for status_codes / 301 Moved Permanently - Permanent redirect
-// - createAppStatusCodes201CreatedResourceCreated() for status_codes / 201 Created - Resource created
-// - createAppStatusCodes202AcceptedRequestAcceptedForProcessing() for status_codes / 202 Accepted - Request accepted for processing
-// - createAppStatusCodes307TemporaryRedirectMethodPreserved() for status_codes / 307 Temporary Redirect - Method preserved
-// - createAppStatusCodes500InternalServerErrorServerError() for status_codes / 500 Internal Server Error - Server error
-// - createAppStatusCodes20414UriTooLong() for status_codes / 20_414_uri_too_long
-// - createAppStatusCodes401UnauthorizedMissingAuthentication() for status_codes / 401 Unauthorized - Missing authentication
-// - createAppStatusCodes23503ServiceUnavailable() for status_codes / 23_503_service_unavailable
-// - createAppStatusCodes19413PayloadTooLarge() for status_codes / 19_413_payload_too_large
-// - createAppStatusCodes403ForbiddenInsufficientPermissions() for status_codes / 403 Forbidden - Insufficient permissions
-// - createAppStatusCodes21431RequestHeaderFieldsTooLarge() for status_codes / 21_431_request_header_fields_too_large
-// - createAppStatusCodes429TooManyRequests() for status_codes / 429 Too Many Requests
-// - createAppStatusCodes200OkSuccess() for status_codes / 200 OK - Success
-// - createAppStatusCodes206PartialContent() for status_codes / 206 Partial Content
-// - createAppRequestIdRequestIdHeaderIsPreserved() for request_id / Request ID header is preserved
-// - createAppRequestIdRequestIdMiddlewareCanBeDisabled() for request_id / Request ID middleware can be disabled
-// - createAppRequestIdRequestIdIsGeneratedWhenNotProvided() for request_id / Request ID is generated when not provided
+// - createAppContentTypes415UnsupportedMediaType() for content_types / 415 Unsupported Media Type
+// - createAppContentTypesXmlResponseApplicationXml() for content_types / XML response - application/xml
+// - createAppContentTypes14ContentTypeCaseInsensitive() for content_types / 14_content_type_case_insensitive
+// - createAppContentTypesJsonWithUtf8Charset() for content_types / JSON with UTF-8 charset
+// - createAppContentTypes16TextPlainNotAccepted() for content_types / 16_text_plain_not_accepted
+// - createAppContentTypesPdfResponseApplicationPdf() for content_types / PDF response - application/pdf
+// - createAppContentTypes20ContentLengthMismatch() for content_types / 20_content_length_mismatch
+// - createAppContentTypes17VendorJsonAccepted() for content_types / 17_vendor_json_accepted
+// - createAppContentTypes13JsonWithCharsetUtf16() for content_types / 13_json_with_charset_utf16
+// - createAppContentTypesJsonResponseApplicationJson() for content_types / JSON response - application/json
+// - createAppContentTypes15MultipartBoundaryRequired() for content_types / 15_multipart_boundary_required
+// - createAppContentTypesContentNegotiationAcceptHeader() for content_types / Content negotiation - Accept header
+// - createAppContentTypesHtmlResponseTextHtml() for content_types / HTML response - text/html
+// - createAppContentTypesJpegImageResponseImageJpeg() for content_types / JPEG image response - image/jpeg
+// - createAppContentTypes19MissingContentTypeDefaultJson() for content_types / 19_missing_content_type_default_json
+// - createAppContentTypesPngImageResponseImagePng() for content_types / PNG image response - image/png
+// - createAppContentTypesPlainTextResponseTextPlain() for content_types / Plain text response - text/plain
+// - createAppContentTypes18ContentTypeWithMultipleParams() for content_types / 18_content_type_with_multiple_params
+// - createAppContentTypesCsvResponseTextCsv() for content_types / CSV response - text/csv
+// - createAppContentTypesBinaryResponseApplicationOctetStream() for content_types / Binary response - application/octet-stream
+// - createAppAuthJwtMalformedTokenFormat() for auth / JWT malformed token format
+// - createAppAuthBearerTokenWithoutPrefix() for auth / Bearer token without prefix
+// - createAppAuthJwtAuthenticationValidToken() for auth / JWT authentication - valid token
+// - createAppAuthApiKeyRotationOldKeyStillValid() for auth / API key rotation - old key still valid
+// - createAppAuthJwtInvalidIssuer() for auth / JWT invalid issuer
+// - createAppAuthJwtWithMultipleAudiences() for auth / JWT with multiple audiences
+// - createAppAuthApiKeyInQueryParameter() for auth / API key in query parameter
+// - createAppAuthJwtAuthenticationExpiredToken() for auth / JWT authentication - expired token
+// - createAppAuthApiKeyAuthenticationInvalidKey() for auth / API key authentication - invalid key
+// - createAppAuthJwtNotBeforeClaimInFuture() for auth / JWT not before claim in future
+// - createAppAuthMultipleAuthenticationSchemesJwtPrecedence() for auth / Multiple authentication schemes - JWT precedence
+// - createAppAuthJwtMissingRequiredCustomClaims() for auth / JWT missing required custom claims
+// - createAppAuthApiKeyAuthenticationValidKey() for auth / API key authentication - valid key
+// - createAppAuthApiKeyWithCustomHeaderName() for auth / API key with custom header name
+// - createAppAuthApiKeyAuthenticationMissingHeader() for auth / API key authentication - missing header
+// - createAppAuthJwtAuthenticationInvalidSignature() for auth / JWT authentication - invalid signature
+// - createAppAuthJwtAuthenticationMissingAuthorizationHeader() for auth / JWT authentication - missing Authorization header
+// - createAppAuthJwtAuthenticationInvalidAudience() for auth / JWT authentication - invalid audience
+// - createAppRequestTimeoutRequestExceedsTimeout() for request_timeout / Request exceeds timeout
+// - createAppRequestTimeoutRequestCompletesBeforeTimeout() for request_timeout / Request completes before timeout
+// - createAppHttpMethodsOptionsCorsPreflightRequest() for http_methods / OPTIONS - CORS preflight request
+// - createAppHttpMethodsDeleteRemoveResource() for http_methods / DELETE - Remove resource
+// - createAppHttpMethodsPutCreateResourceIfDoesnTExist() for http_methods / PUT - Create resource if doesn't exist
+// - createAppHttpMethodsPatchUpdateMultipleFields() for http_methods / PATCH - Update multiple fields
+// - createAppHttpMethodsPutValidationError() for http_methods / PUT - Validation error
+// - createAppHttpMethodsHeadGetMetadataWithoutBody() for http_methods / HEAD - Get metadata without body
+// - createAppHttpMethodsDeleteWithResponseBody() for http_methods / DELETE - With response body
+// - createAppHttpMethodsPutMissingRequiredField() for http_methods / PUT - Missing required field
+// - createAppHttpMethodsPatchPartialUpdate() for http_methods / PATCH - Partial update
+// - createAppHttpMethodsDeleteResourceNotFound() for http_methods / DELETE - Resource not found
+// - createAppHttpMethodsPutIdempotentOperation() for http_methods / PUT - Idempotent operation
+// - createAppHttpMethodsPutCompleteResourceReplacement() for http_methods / PUT - Complete resource replacement
+// - createAppUrlEncodedSimpleFormSubmissionSuccess() for url_encoded / Simple form submission - success
+// - createAppUrlEncoded15SpecialCharactersFieldNames() for url_encoded / 15_special_characters_field_names
+// - createAppUrlEncodedPatternValidationFail() for url_encoded / Pattern validation - fail
+// - createAppUrlEncoded22AdditionalPropertiesStrictFailure() for url_encoded / 22_additional_properties_strict_failure
+// - createAppUrlEncoded17PatternValidationFailure() for url_encoded / 17_pattern_validation_failure
+// - createAppUrlEncoded20FormatEmailValidationFailure() for url_encoded / 20_format_email_validation_failure
+// - createAppUrlEncodedMultipleValuesForSameField() for url_encoded / Multiple values for same field
+// - createAppUrlEncodedRequiredFieldMissingValidationError() for url_encoded / Required field missing - validation error
+// - createAppUrlEncoded13ArrayFieldSuccess() for url_encoded / 13_array_field_success
+// - createAppUrlEncodedNumericFieldTypeConversion() for url_encoded / Numeric field type conversion
+// - createAppUrlEncodedSpecialCharactersEncoding() for url_encoded / Special characters encoding
+// - createAppUrlEncodedBooleanFieldConversion() for url_encoded / Boolean field conversion
+// - createAppUrlEncodedEmptyStringValue() for url_encoded / Empty string value
+// - createAppUrlEncodedOauth2PasswordGrantFlow() for url_encoded / OAuth2 password grant flow
+// - createAppUrlEncoded19ArrayMinitemsValidationFailure() for url_encoded / 19_array_minitems_validation_failure
+// - createAppUrlEncodedOptionalFieldMissingSuccess() for url_encoded / Optional field missing - success
+// - createAppUrlEncoded14NestedObjectBracketNotation() for url_encoded / 14_nested_object_bracket_notation
+// - createAppUrlEncodedStringMaxLengthValidationFail() for url_encoded / String max_length validation - fail
+// - createAppUrlEncoded18IntegerMinimumValidationFailure() for url_encoded / 18_integer_minimum_validation_failure
+// - createAppUrlEncoded21IntegerTypeCoercionFailure() for url_encoded / 21_integer_type_coercion_failure
+// - createAppUrlEncoded16MinlengthValidationFailure() for url_encoded / 16_minlength_validation_failure
+// - createAppUrlEncodedStringMinLengthValidationFail() for url_encoded / String min_length validation - fail
+// - createAppMultipartMultipleValuesForSameFieldName() for multipart / Multiple values for same field name
+// - createAppMultipart19FileMimeSpoofingPngAsJpeg() for multipart / 19_file_mime_spoofing_png_as_jpeg
+// - createAppMultipart20FileMimeSpoofingJpegAsPng() for multipart / 20_file_mime_spoofing_jpeg_as_png
+// - createAppMultipart21FilePdfMagicNumberSuccess() for multipart / 21_file_pdf_magic_number_success
+// - createAppMultipartContentTypeValidationInvalidType() for multipart / Content-Type validation - invalid type
+// - createAppMultipartPdfFileUpload() for multipart / PDF file upload
+// - createAppMultipartFileListUploadArrayOfFiles() for multipart / File list upload (array of files)
+// - createAppMultipartOptionalFileUploadProvided() for multipart / Optional file upload - provided
+// - createAppMultipartFileSizeValidationTooLarge() for multipart / File size validation - too large
+// - createAppMultipartMixedFilesAndFormData() for multipart / Mixed files and form data
+// - createAppMultipartSimpleFileUpload() for multipart / Simple file upload
+// - createAppMultipartEmptyFileUpload() for multipart / Empty file upload
+// - createAppMultipartOptionalFileUploadMissing() for multipart / Optional file upload - missing
+// - createAppMultipartFileUploadWithoutFilename() for multipart / File upload without filename
+// - createAppMultipart18FileMagicNumberJpegSuccess() for multipart / 18_file_magic_number_jpeg_success
+// - createAppMultipart22FileEmptyBuffer() for multipart / 22_file_empty_buffer
+// - createAppMultipart17FileMagicNumberPngSuccess() for multipart / 17_file_magic_number_png_success
+// - createAppMultipartFormDataWithoutFiles() for multipart / Form data without files
+// - createAppMultipartMultipleFileUploads() for multipart / Multiple file uploads
+// - createAppMultipartFileUploadWithCustomHeaders() for multipart / File upload with custom headers
+// - createAppMultipartRequiredFileUploadMissing() for multipart / Required file upload - missing
+// - createAppMultipartImageFileUpload() for multipart / Image file upload
+// - createAppCompressionCompressionPayloadBelowMinSizeIsNotCompressed() for compression / Compression - payload below min_size is not compressed
+// - createAppCompressionCompressionGzipApplied() for compression / Compression - gzip applied
+// - createAppCors07CorsPreflightHeaderNotAllowed() for cors / 07_cors_preflight_header_not_allowed
+// - createAppCorsCorsVaryHeaderForProperCaching() for cors / CORS Vary header for proper caching
+// - createAppCorsCorsPreflightForPutMethod() for cors / CORS preflight for PUT method
+// - createAppCorsCorsPreflightForDeleteMethod() for cors / CORS preflight for DELETE method
+// - createAppCorsCorsMultipleAllowedOrigins() for cors / CORS multiple allowed origins
+// - createAppCorsCorsPreflightRequest() for cors / CORS preflight request
+// - createAppCorsCorsWithCredentials() for cors / CORS with credentials
+// - createAppCorsCorsRegexPatternMatchingForOrigins() for cors / CORS regex pattern matching for origins
+// - createAppCors08CorsMaxAge() for cors / 08_cors_max_age
+// - createAppCors10CorsOriginNull() for cors / 10_cors_origin_null
+// - createAppCorsCorsWildcardOrigin() for cors / CORS wildcard origin
+// - createAppCorsCorsSafelistedHeadersWithoutPreflight() for cors / CORS safelisted headers without preflight
+// - createAppCorsCorsPrivateNetworkAccess() for cors / CORS Private Network Access
+// - createAppCorsCorsOriginCaseSensitivity() for cors / CORS origin case sensitivity
+// - createAppCorsCorsRequestBlocked() for cors / CORS request blocked
+// - createAppCorsSimpleCorsRequest() for cors / Simple CORS request
+// - createAppCors09CorsExposeHeaders() for cors / 09_cors_expose_headers
+// - createAppCors06CorsPreflightMethodNotAllowed() for cors / 06_cors_preflight_method_not_allowed
+// - createAppCookies25CookieSamesiteLax() for cookies / 25_cookie_samesite_lax
+// - createAppCookiesOptionalCookieParameterSuccess() for cookies / Optional cookie parameter - success
+// - createAppCookiesCookieRegexPatternValidationFail() for cookies / Cookie regex pattern validation - fail
+// - createAppCookiesResponseSessionCookieNoMaxAge() for cookies / Response - session cookie (no max_age)
+// - createAppCookies27CookieHttponlyFlag() for cookies / 27_cookie_httponly_flag
+// - createAppCookiesResponseCookieWithAttributes() for cookies / Response cookie with attributes
+// - createAppCookies24CookieSamesiteStrict() for cookies / 24_cookie_samesite_strict
+// - createAppCookiesApikeyCookieAuthenticationSuccess() for cookies / APIKey cookie authentication - success
+// - createAppCookiesCookieValidationMinLengthConstraintSuccess() for cookies / Cookie validation - min_length constraint success
+// - createAppCookiesCookieValidationMinLengthFailure() for cookies / Cookie validation - min_length failure
+// - createAppCookiesCookieValidationMaxLengthConstraintFail() for cookies / Cookie validation - max_length constraint fail
+// - createAppCookiesRequiredCookieMissing() for cookies / Required cookie - missing
+// - createAppCookiesOptionalCookieParameterMissing() for cookies / Optional cookie parameter - missing
+// - createAppCookiesApikeyCookieAuthenticationMissing() for cookies / APIKey cookie authentication - missing
+// - createAppCookiesResponseMultipleCookies() for cookies / Response - multiple cookies
+// - createAppCookiesResponseCookieWithSamesiteLax() for cookies / Response cookie with SameSite=Lax
+// - createAppCookiesResponseDeleteCookie() for cookies / Response - delete cookie
+// - createAppCookiesResponseCookieWithPathAttribute() for cookies / Response cookie with path attribute
+// - createAppCookiesOptionalApikeyCookieMissing() for cookies / Optional APIKey cookie - missing
+// - createAppCookiesResponseCookieWithSamesiteStrict() for cookies / Response cookie with SameSite=Strict
+// - createAppCookiesResponseCookieWithSamesiteNone() for cookies / Response cookie with SameSite=None
+// - createAppCookiesCookieRegexPatternValidationSuccess() for cookies / Cookie regex pattern validation - success
+// - createAppCookiesResponseSetCookieBasic() for cookies / Response set cookie - basic
+// - createAppCookiesMultipleCookiesSuccess() for cookies / Multiple cookies - success
+// - createAppCookies26CookieSecureFlag() for cookies / 26_cookie_secure_flag
+// - createAppCookiesResponseCookieWithDomainAttribute() for cookies / Response cookie with domain attribute
+// - createAppBackgroundBackgroundEventLoggingSecondPayload() for background / Background event logging - second payload
+// - createAppBackgroundBackgroundEventLogging() for background / Background event logging
+// - createAppDiRouteLevelDependencyOverrideSuccess() for di / Route-level dependency override - success
+// - createAppDiCircularDependencyDetectionError() for di / Circular dependency detection - error
+// - createAppDiFactoryDependencySuccess() for di / Factory dependency - success
+// - createAppDiValueDependencyInjectionSuccess() for di / Value dependency injection - success
+// - createAppDiNodeJsObjectDestructuringInjectionSuccess() for di / Node.js object destructuring injection - success
+// - createAppDiNestedDependencies3LevelsSuccess() for di / Nested dependencies (3 levels) - success
+// - createAppDiTypeMismatchInDependencyResolutionError() for di / Type mismatch in dependency resolution - error
+// - createAppDiMissingDependencyError() for di / Missing dependency - error
+// - createAppDiPythonParameterNameBasedInjectionSuccess() for di / Python parameter name-based injection - success
+// - createAppDiDependencyInjectionInLifecycleHooksSuccess() for di / Dependency injection in lifecycle hooks - success
+// - createAppDiRubyKeywordArgumentInjectionSuccess() for di / Ruby keyword argument injection - success
+// - createAppDiMultipleDependenciesWithCleanupSuccess() for di / Multiple dependencies with cleanup - success
+// - createAppDiMixedSingletonAndPerRequestCachingSuccess() for di / Mixed singleton and per-request caching - success
+// - createAppDiResourceCleanupAfterRequestSuccess() for di / Resource cleanup after request - success
+// - createAppDiPythonTypeAnnotationBasedInjectionSuccess() for di / Python type annotation-based injection - success
+// - createAppDiPerRequestDependencyCachingSuccess() for di / Per-request dependency caching - success
+// - createAppDiSingletonDependencyCachingSuccess() for di / Singleton dependency caching - success
+// - createAppDiAsyncFactoryDependencySuccess() for di / Async factory dependency - success
+// - createAppBodyLimitsBodyUnderLimitSucceeds() for body_limits / Body under limit succeeds
+// - createAppBodyLimitsBodyOverLimitReturns413() for body_limits / Body over limit returns 413
 // - createAppJsonBodiesUuidFieldInvalidFormat() for json_bodies / UUID field - invalid format
 // - createAppJsonBodies44ConstValidationFailure() for json_bodies / 44_const_validation_failure
 // - createAppJsonBodiesBooleanFieldSuccess() for json_bodies / Boolean field - success
@@ -18374,8 +18800,161 @@ export async function handleGrpcServerStreamingWithLargeResponseData(request: Gr
 // - createAppJsonBodiesNullValueForOptionalField() for json_bodies / Null value for optional field
 // - createAppJsonBodies31NullablePropertyNullValue() for json_bodies / 31_nullable_property_null_value
 // - createAppJsonBodiesArrayOfObjectsSuccess() for json_bodies / Array of objects - success
-// - createAppBodyLimitsBodyUnderLimitSucceeds() for body_limits / Body under limit succeeds
-// - createAppBodyLimitsBodyOverLimitReturns413() for body_limits / Body over limit returns 413
+// - createAppValidationErrorsInvalidUuidFormat() for validation_errors / Invalid UUID format
+// - createAppValidationErrorsInvalidBooleanValue() for validation_errors / Invalid boolean value
+// - createAppValidationErrorsMissingRequiredQueryParameter() for validation_errors / Missing required query parameter
+// - createAppValidationErrorsArrayMaxItemsConstraintViolation() for validation_errors / Array max_items constraint violation
+// - createAppValidationErrorsNumericConstraintViolationGtGreaterThan() for validation_errors / Numeric constraint violation - gt (greater than)
+// - createAppValidationErrorsStringRegexPatternMismatch() for validation_errors / String regex pattern mismatch
+// - createAppValidationErrorsInvalidEnumValue() for validation_errors / Invalid enum value
+// - createAppValidationErrorsStringMinLengthConstraintViolation() for validation_errors / String min_length constraint violation
+// - createAppValidationErrorsMultipleValidationErrors() for validation_errors / Multiple validation errors
+// - createAppValidationErrorsStringMaxLengthConstraintViolation() for validation_errors / String max_length constraint violation
+// - createAppValidationErrorsNestedObjectValidationError() for validation_errors / Nested object validation error
+// - createAppValidationErrors10NestedErrorPath() for validation_errors / 10_nested_error_path
+// - createAppValidationErrorsInvalidDatetimeFormat() for validation_errors / Invalid datetime format
+// - createAppValidationErrorsArrayItemValidationError() for validation_errors / Array item validation error
+// - createAppValidationErrorsMissingRequiredBodyField() for validation_errors / Missing required body field
+// - createAppValidationErrorsBodyFieldTypeErrorStringForFloat() for validation_errors / Body field type error - string for float
+// - createAppValidationErrorsMalformedJsonBody() for validation_errors / Malformed JSON body
+// - createAppValidationErrorsQueryParamTypeErrorStringProvidedForInt() for validation_errors / Query param type error - string provided for int
+// - createAppValidationErrorsHeaderValidationError() for validation_errors / Header validation error
+// - createAppValidationErrors09MultipleValidationErrors() for validation_errors / 09_multiple_validation_errors
+// - createAppValidationErrorsNumericConstraintViolationLeLessThanOrEqual() for validation_errors / Numeric constraint violation - le (less than or equal)
+// - createAppValidationErrorsArrayMinItemsConstraintViolation() for validation_errors / Array min_items constraint violation
+// - createAppStatusCodes408RequestTimeout() for status_codes / 408 Request Timeout
+// - createAppStatusCodes404NotFoundResourceNotFound() for status_codes / 404 Not Found - Resource not found
+// - createAppStatusCodes503ServiceUnavailableServerOverload() for status_codes / 503 Service Unavailable - Server overload
+// - createAppStatusCodes422UnprocessableEntityValidationError() for status_codes / 422 Unprocessable Entity - Validation error
+// - createAppStatusCodes302FoundTemporaryRedirect() for status_codes / 302 Found - Temporary redirect
+// - createAppStatusCodes304NotModifiedCachedContentValid() for status_codes / 304 Not Modified - Cached content valid
+// - createAppStatusCodes400BadRequestInvalidRequest() for status_codes / 400 Bad Request - Invalid request
+// - createAppStatusCodes22501NotImplemented() for status_codes / 22_501_not_implemented
+// - createAppStatusCodes204NoContentSuccessWithNoBody() for status_codes / 204 No Content - Success with no body
+// - createAppStatusCodes301MovedPermanentlyPermanentRedirect() for status_codes / 301 Moved Permanently - Permanent redirect
+// - createAppStatusCodes201CreatedResourceCreated() for status_codes / 201 Created - Resource created
+// - createAppStatusCodes202AcceptedRequestAcceptedForProcessing() for status_codes / 202 Accepted - Request accepted for processing
+// - createAppStatusCodes307TemporaryRedirectMethodPreserved() for status_codes / 307 Temporary Redirect - Method preserved
+// - createAppStatusCodes500InternalServerErrorServerError() for status_codes / 500 Internal Server Error - Server error
+// - createAppStatusCodes20414UriTooLong() for status_codes / 20_414_uri_too_long
+// - createAppStatusCodes401UnauthorizedMissingAuthentication() for status_codes / 401 Unauthorized - Missing authentication
+// - createAppStatusCodes23503ServiceUnavailable() for status_codes / 23_503_service_unavailable
+// - createAppStatusCodes19413PayloadTooLarge() for status_codes / 19_413_payload_too_large
+// - createAppStatusCodes403ForbiddenInsufficientPermissions() for status_codes / 403 Forbidden - Insufficient permissions
+// - createAppStatusCodes21431RequestHeaderFieldsTooLarge() for status_codes / 21_431_request_header_fields_too_large
+// - createAppStatusCodes429TooManyRequests() for status_codes / 429 Too Many Requests
+// - createAppStatusCodes200OkSuccess() for status_codes / 200 OK - Success
+// - createAppStatusCodes206PartialContent() for status_codes / 206 Partial Content
+// - createAppPathParamsBooleanPathParameterTrue() for path_params / Boolean path parameter - True
+// - createAppPathParams29DecimalPathParamSuccess() for path_params / 29_decimal_path_param_success
+// - createAppPathParamsIntegerPathParameterWithCombinedLtAndGtConstraintsSuccess() for path_params / Integer path parameter with combined lt and gt constraints - success
+// - createAppPathParams33StringPatternPathSuccess() for path_params / 33_string_pattern_path_success
+// - createAppPathParams31StringMinlengthPathFailure() for path_params / 31_string_minlength_path_failure
+// - createAppPathParams35NegativeIntegerPathParam() for path_params / 35_negative_integer_path_param
+// - createAppPathParamsEnumPathParameterInvalidValue() for path_params / Enum path parameter - invalid value
+// - createAppPathParams27DatetimeFormatPathParamSuccess() for path_params / 27_datetime_format_path_param_success
+// - createAppPathParams25DateFormatInvalidFailure() for path_params / 25_date_format_invalid_failure
+// - createAppPathParamsIntegerPathParameterWithLtConstraintSuccess() for path_params / Integer path parameter with lt constraint - success
+// - createAppPathParamsIntegerPathParameterWithGtConstraintSuccess() for path_params / Integer path parameter with gt constraint - success
+// - createAppPathParams28DurationFormatPathParamSuccess() for path_params / 28_duration_format_path_param_success
+// - createAppPathParamsPathParameterTypeSyntaxWithOverride() for path_params / Path parameter type syntax with override
+// - createAppPathParams20UuidV3PathParamSuccess() for path_params / 20_uuid_v3_path_param_success
+// - createAppPathParamsIntegerPathParameterInvalidString() for path_params / Integer path parameter - invalid string
+// - createAppPathParams30StringMinlengthPathSuccess() for path_params / 30_string_minlength_path_success
+// - createAppPathParamsIntegerPathParameterWithLeConstraintSuccess() for path_params / Integer path parameter with le constraint - success
+// - createAppPathParamsPathParameterTypeSyntaxInvalidUuid() for path_params / Path parameter type syntax - invalid UUID
+// - createAppPathParamsPathTypeParameterFilePath() for path_params / Path type parameter - file path
+// - createAppPathParamsPathParameterWithTypeSyntaxUuid() for path_params / Path parameter with type syntax - UUID
+// - createAppPathParams32StringMaxlengthPathFailure() for path_params / 32_string_maxlength_path_failure
+// - createAppPathParamsIntegerPathParameterSuccess() for path_params / Integer path parameter - success
+// - createAppPathParams34StringPatternPathFailure() for path_params / 34_string_pattern_path_failure
+// - createAppPathParams21UuidV5PathParamSuccess() for path_params / 21_uuid_v5_path_param_success
+// - createAppPathParamsStringPathParameterWithMaxLengthFailure() for path_params / String path parameter with max_length - failure
+// - createAppPathParamsStringPathParameterWithMinLengthFailure() for path_params / String path parameter with min_length - failure
+// - createAppPathParamsMultiplePathParametersSuccess() for path_params / Multiple path parameters - success
+// - createAppPathParamsDatePathParameterSuccess() for path_params / Date path parameter - success
+// - createAppPathParamsIntegerPathParameterWithGtConstraintFailure() for path_params / Integer path parameter with gt constraint - failure
+// - createAppPathParams24DateFormatPathParamSuccess() for path_params / 24_date_format_path_param_success
+// - createAppPathParamsFloatPathParameterSuccess() for path_params / Float path parameter - success
+// - createAppPathParamsPathParameterWithTypeSyntaxInteger() for path_params / Path parameter with type syntax - integer
+// - createAppPathParamsStringPathParameterSuccess() for path_params / String path parameter - success
+// - createAppPathParamsUuidPathParameterSuccess() for path_params / UUID path parameter - success
+// - createAppPathParamsIntegerPathParameterWithGeConstraintSuccess() for path_params / Integer path parameter with ge constraint - success
+// - createAppPathParamsEnumPathParameterSuccess() for path_params / Enum path parameter - success
+// - createAppPathParamsBooleanPathParameterNumeric1() for path_params / Boolean path parameter - numeric 1
+// - createAppStreamingStreamJsonLines() for streaming / Stream JSON lines
+// - createAppStreamingBinaryLogDownload() for streaming / Binary log download
+// - createAppStreamingChunkedCsvExport() for streaming / Chunked CSV export
+// - createAppStaticFilesStaticFileServerReturnsTextFile() for static_files / Static file server returns text file
+// - createAppStaticFilesStaticServerReturnsIndexHtmlForDirectory() for static_files / Static server returns index.html for directory
+// - createAppLifecycleHooksOnresponseSecurityHeaders() for lifecycle_hooks / onResponse - Security Headers
+// - createAppLifecycleHooksPrehandlerAuthenticationFailedShortCircuit() for lifecycle_hooks / preHandler - Authentication Failed (Short Circuit)
+// - createAppLifecycleHooksPrehandlerAuthorizationCheck() for lifecycle_hooks / preHandler - Authorization Check
+// - createAppLifecycleHooksPrehandlerAuthenticationSuccess() for lifecycle_hooks / preHandler - Authentication Success
+// - createAppLifecycleHooksPrevalidationRateLimitExceededShortCircuit() for lifecycle_hooks / preValidation - Rate Limit Exceeded (Short Circuit)
+// - createAppLifecycleHooksOnerrorErrorLogging() for lifecycle_hooks / onError - Error Logging
+// - createAppLifecycleHooksMultipleHooksAllPhases() for lifecycle_hooks / Multiple Hooks - All Phases
+// - createAppLifecycleHooksHookExecutionOrder() for lifecycle_hooks / Hook Execution Order
+// - createAppLifecycleHooksOnresponseResponseTiming() for lifecycle_hooks / onResponse - Response Timing
+// - createAppLifecycleHooksPrehandlerAuthorizationForbiddenShortCircuit() for lifecycle_hooks / preHandler - Authorization Forbidden (Short Circuit)
+// - createAppLifecycleHooksOnrequestRequestLogging() for lifecycle_hooks / onRequest - Request Logging
+// - createAppLifecycleHooksPrevalidationRateLimiting() for lifecycle_hooks / preValidation - Rate Limiting
+// - createAppEdgeCases19EmojiInStrings() for edge_cases / 19_emoji_in_strings
+// - createAppEdgeCases12PercentEncodedSpecialChars() for edge_cases / 12_percent_encoded_special_chars
+// - createAppEdgeCasesSpecialStringValuesAndEscaping() for edge_cases / Special string values and escaping
+// - createAppEdgeCases15FloatPrecisionPreservation() for edge_cases / 15_float_precision_preservation
+// - createAppEdgeCases13EmptyStringQueryParamPreserved() for edge_cases / 13_empty_string_query_param_preserved
+// - createAppEdgeCases24ArrayWithHoles() for edge_cases / 24_array_with_holes
+// - createAppEdgeCases21ScientificNotationNumber() for edge_cases / 21_scientific_notation_number
+// - createAppEdgeCasesFloatPrecisionAndRounding() for edge_cases / Float precision and rounding
+// - createAppEdgeCasesUnicodeAndEmojiHandling() for edge_cases / Unicode and emoji handling
+// - createAppEdgeCases17ExtremelyLongString() for edge_cases / 17_extremely_long_string
+// - createAppEdgeCases11Utf8QueryParameter() for edge_cases / 11_utf8_query_parameter
+// - createAppEdgeCases18UnicodeNormalization() for edge_cases / 18_unicode_normalization
+// - createAppEdgeCases20NullByteInString() for edge_cases / 20_null_byte_in_string
+// - createAppEdgeCases23DeeplyNestedJsonLimit() for edge_cases / 23_deeply_nested_json_limit
+// - createAppEdgeCases14LargeIntegerBoundary() for edge_cases / 14_large_integer_boundary
+// - createAppEdgeCases22LeadingZerosInteger() for edge_cases / 22_leading_zeros_integer
+// - createAppEdgeCasesLargeIntegerBoundaryValues() for edge_cases / Large integer boundary values
+// - createAppEdgeCasesDeeplyNestedStructure10Levels() for edge_cases / Deeply nested structure (10+ levels)
+// - createAppEdgeCasesEmptyAndNullValueHandling() for edge_cases / Empty and null value handling
+// - createAppEdgeCases16NegativeZeroHandling() for edge_cases / 16_negative_zero_handling
+// - createAppHeadersHeaderRegexValidationSuccess() for headers / Header regex validation - success
+// - createAppHeaders33ApiKeyHeaderValid() for headers / 33_api_key_header_valid
+// - createAppHeadersContentTypeHeaderApplicationJson() for headers / Content-Type header - application/json
+// - createAppHeadersAcceptLanguageHeader() for headers / Accept-Language header
+// - createAppHeadersXApiKeyRequiredHeaderSuccess() for headers / X-API-Key required header - success
+// - createAppHeadersHeaderValidationMaxLengthConstraintFail() for headers / Header validation - max_length constraint fail
+// - createAppHeadersXApiKeyRequiredHeaderMissing() for headers / X-API-Key required header - missing
+// - createAppHeadersOriginHeader() for headers / Origin header
+// - createAppHeadersUserAgentHeaderDefaultValue() for headers / User-Agent header - default value
+// - createAppHeaders32BearerTokenMissingPrefix() for headers / 32_bearer_token_missing_prefix
+// - createAppHeadersOptionalHeaderWithNoneDefaultMissing() for headers / Optional header with None default - missing
+// - createAppHeadersHeaderRegexValidationFail() for headers / Header regex validation - fail
+// - createAppHeaders31BearerTokenFormatInvalid() for headers / 31_bearer_token_format_invalid
+// - createAppHeadersXApiKeyOptionalHeaderSuccess() for headers / X-API-Key optional header - success
+// - createAppHeadersAuthorizationHeaderSuccess() for headers / Authorization header - success
+// - createAppHeaders30BearerTokenFormatValid() for headers / 30_bearer_token_format_valid
+// - createAppHeadersAuthorizationHeaderMissing() for headers / Authorization header - missing
+// - createAppHeadersAcceptHeaderJson() for headers / Accept header - JSON
+// - createAppHeadersAcceptEncodingHeader() for headers / Accept-Encoding header
+// - createAppHeadersAuthorizationHeaderWrongScheme() for headers / Authorization header - wrong scheme
+// - createAppHeadersHeaderValidationMinLengthConstraint() for headers / Header validation - min_length constraint
+// - createAppHeadersBasicAuthenticationSuccess() for headers / Basic authentication - success
+// - createAppHeadersBearerTokenAuthenticationMissing() for headers / Bearer token authentication - missing
+// - createAppHeadersXApiKeyOptionalHeaderMissing() for headers / X-API-Key optional header - missing
+// - createAppHeadersMultipleHeaderValuesXToken() for headers / Multiple header values - X-Token
+// - createAppHeadersMultipleCustomHeaders() for headers / Multiple custom headers
+// - createAppHeaders34ApiKeyHeaderInvalid() for headers / 34_api_key_header_invalid
+// - createAppHeadersBearerTokenAuthenticationSuccess() for headers / Bearer token authentication - success
+// - createAppHeadersHostHeader() for headers / Host header
+// - createAppHeadersRefererHeader() for headers / Referer header
+// - createAppHeadersHeaderWithUnderscoreConversionExplicit() for headers / Header with underscore conversion - explicit
+// - createAppHeadersHeaderCaseInsensitivityAccess() for headers / Header case insensitivity - access
+// - createAppHeadersUserAgentHeaderCustomValue() for headers / User-Agent header - custom value
+// - createAppRequestIdRequestIdHeaderIsPreserved() for request_id / Request ID header is preserved
+// - createAppRequestIdRequestIdMiddlewareCanBeDisabled() for request_id / Request ID middleware can be disabled
+// - createAppRequestIdRequestIdIsGeneratedWhenNotProvided() for request_id / Request ID is generated when not provided
 // - createAppSseNotifications() for asyncapi_sse / /notifications
 // - createAppWebsocketChat() for asyncapi_websocket / /chat
 // - createAppGraphqlMutation() for graphql / mutation
@@ -18383,22 +18962,22 @@ export async function handleGrpcServerStreamingWithLargeResponseData(request: Gr
 // - createAppGraphqlSubscription() for graphql / subscription
 
 export {
-	SystemAlertMessageSchema,
 	NotificationBatchMessageSchema,
+	SystemAlertMessageSchema,
 	StatusUpdateMessageSchema,
+	UserLeftMessageSchema,
 	ChatMessageMessageSchema,
 	UserNotificationMessageSchema,
 	UserJoinedMessageSchema,
-	UserLeftMessageSchema,
 	ChatAckMessageSchema,
 };
 export type {
-	SystemAlertMessage,
 	NotificationBatchMessage,
+	SystemAlertMessage,
 	StatusUpdateMessage,
+	UserLeftMessage,
 	ChatMessageMessage,
 	UserNotificationMessage,
 	UserJoinedMessage,
-	UserLeftMessage,
 	ChatAckMessage,
 };

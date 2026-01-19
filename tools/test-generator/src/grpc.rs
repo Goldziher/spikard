@@ -128,6 +128,47 @@ pub struct ResponseDef {
     pub stream: Option<Vec<Value>>,
 }
 
+fn try_load_grpc_fixture(path: &Path) -> Option<GrpcFixture> {
+    let content = match fs::read_to_string(path) {
+        Ok(content) => content,
+        Err(err) => {
+            eprintln!("Skipping gRPC fixture {}: {}", path.display(), err);
+            return None;
+        }
+    };
+
+    match parse_grpc_fixture(&content) {
+        Ok(fixture) => Some(fixture),
+        Err(err) => {
+            eprintln!("Skipping gRPC fixture {}: {}", path.display(), err);
+            None
+        }
+    }
+}
+
+fn collect_grpc_fixtures(dir: &Path, fixtures: &mut Vec<GrpcFixture>) -> Result<()> {
+    for entry in fs::read_dir(dir).with_context(|| format!("Failed to read {}", dir.display()))? {
+        let entry = entry.context("Failed to read directory entry")?;
+        let path = entry.path();
+
+        if path.is_dir() {
+            collect_grpc_fixtures(&path, fixtures)?;
+            continue;
+        }
+
+        if path.is_file()
+            && path.extension().is_some_and(|e| e == "json")
+            && path.file_name().is_some_and(|name| name != "schema.json")
+        {
+            if let Some(fixture) = try_load_grpc_fixture(&path) {
+                fixtures.push(fixture);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 /// Load all gRPC fixtures from a directory
 ///
 /// This function recursively searches the protobuf/gRPC fixtures directory and loads
@@ -155,47 +196,7 @@ pub fn load_grpc_fixtures(fixtures_dir: &Path) -> Result<Vec<GrpcFixture>> {
     };
 
     let mut fixtures = Vec::new();
-
-    // Simple flat structure: all fixtures in one directory
-    for entry in fs::read_dir(&target_dir).context("Failed to read protobuf/grpc directory")? {
-        let entry = entry.context("Failed to read directory entry")?;
-        let path = entry.path();
-
-        if path.is_file()
-            && path.extension().is_some_and(|e| e == "json")
-            && path.file_name().is_some_and(|name| name != "schema.json")
-        {
-            let content = fs::read_to_string(&path)
-                .with_context(|| format!("Failed to read {}", path.display()))?;
-            let fixture = parse_grpc_fixture(&content)
-                .with_context(|| format!("Failed to parse {}", path.display()))?;
-            fixtures.push(fixture);
-        }
-    }
-
-    // Also check subdirectories for categorized fixtures
-    for entry in fs::read_dir(&target_dir).context("Failed to read protobuf/grpc directory")? {
-        let entry = entry.context("Failed to read directory entry")?;
-        let path = entry.path();
-
-        if path.is_dir() {
-            for sub_entry in fs::read_dir(&path).context("Failed to read category directory")? {
-                let sub_entry = sub_entry.context("Failed to read sub-entry")?;
-                let file_path = sub_entry.path();
-
-                if file_path.is_file()
-                    && file_path.extension().is_some_and(|e| e == "json")
-                    && file_path.file_name().is_some_and(|name| name != "schema.json")
-                {
-                    let content = fs::read_to_string(&file_path)
-                        .with_context(|| format!("Failed to read {}", file_path.display()))?;
-                    let fixture = parse_grpc_fixture(&content)
-                        .with_context(|| format!("Failed to parse {}", file_path.display()))?;
-                    fixtures.push(fixture);
-                }
-            }
-        }
-    }
+    collect_grpc_fixtures(&target_dir, &mut fixtures)?;
 
     Ok(fixtures)
 }
@@ -226,19 +227,7 @@ pub fn load_grpc_fixtures_by_category(
     }
 
     let mut fixtures = Vec::new();
-
-    for entry in fs::read_dir(&category_dir).context("Failed to read category directory")? {
-        let entry = entry.context("Failed to read directory entry")?;
-        let file_path = entry.path();
-
-        if file_path.is_file() && file_path.extension().is_some_and(|e| e == "json") {
-            let content = fs::read_to_string(&file_path)
-                .with_context(|| format!("Failed to read {}", file_path.display()))?;
-            let fixture = parse_grpc_fixture(&content)
-                .with_context(|| format!("Failed to parse {}", file_path.display()))?;
-            fixtures.push(fixture);
-        }
-    }
+    collect_grpc_fixtures(&category_dir, &mut fixtures)?;
 
     Ok(fixtures)
 }

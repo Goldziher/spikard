@@ -11,9 +11,9 @@ Deno.test("grpc: should handle gRPC request: CORS-related metadata headers", asy
   // Tests CORS-related metadata in gRPC calls. Validates origin validation and cross-origin request handling.
 
   const metadata: Record<string, string> = {
+    "content-type": "application/grpc",
     "origin": "https://example.com",
     "access-control-request-method": "POST",
-    "content-type": "application/grpc",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.CorsService",

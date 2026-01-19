@@ -31,10 +31,10 @@ import {
 		assert(Object.hasOwn(responseData, "message"));
 		assertEquals(responseData.message, "Response with security headers");
 		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["x-xss-protection"], "1; mode=block");
-		assertEquals(responseHeaders["x-content-type-options"], "nosniff");
 		assertEquals(responseHeaders["x-frame-options"], "DENY");
+		assertEquals(responseHeaders["x-xss-protection"], "1; mode=block");
 		assertEquals(responseHeaders["strict-transport-security"], "max-age=31536000; includeSubDomains");
+		assertEquals(responseHeaders["x-content-type-options"], "nosniff");
 	});
 
 	Deno.test("lifecycle_hooks: preHandler - Authentication Failed Short Circuit", async () => {
@@ -135,8 +135,8 @@ import {
 		assert(Object.hasOwn(responseData, "request_id"));
 		assert(/.*/.test(responseData.request_id));
 		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["x-content-type-options"], "nosniff");
 		assert(/.*/.test(responseHeaders["x-request-id"]));
+		assertEquals(responseHeaders["x-content-type-options"], "nosniff");
 		assertEquals(responseHeaders["x-frame-options"], "DENY");
 		assert(/.*ms/.test(responseHeaders["x-response-time"]));
 	});

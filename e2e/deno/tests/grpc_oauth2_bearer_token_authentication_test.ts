@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: OAuth2 Bearer token authentication"
   // Tests OAuth2 Bearer token authentication. Validates token validation and scope checking.
 
   const metadata: Record<string, string> = {
-    "authorization": "Bearer ya29.a0AfH6SMBx...",
     "content-type": "application/grpc",
+    "authorization": "Bearer ya29.a0AfH6SMBx...",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.OAuth2Service",

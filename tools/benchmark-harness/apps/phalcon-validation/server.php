@@ -10,6 +10,240 @@ use Phalcon\Validation;
 use Phalcon\Validation\Validator\PresenceOf;
 use Phalcon\Validation\Validator\Numericality;
 
+/**
+ * Parse JSON request body without Phalcon.
+ */
+function jsonBodyPlain(): array
+{
+    $input = file_get_contents('php://input');
+    if ($input === false || $input === '') {
+        return [];
+    }
+    $decoded = json_decode($input, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+/**
+ * Send JSON response without Phalcon.
+ */
+function jsonResponsePlain(mixed $data, int $status = 200): void
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($data);
+}
+
+/**
+ * Validate small payload without Phalcon.
+ */
+function validateSmallPayloadPlain(array $data): array
+{
+    $errors = [];
+    if (!array_key_exists('name', $data) || $data['name'] === null || $data['name'] === '') {
+        $errors[] = 'name is required';
+    }
+    if (!array_key_exists('description', $data) || $data['description'] === null || $data['description'] === '') {
+        $errors[] = 'description is required';
+    }
+    if (!array_key_exists('price', $data) || $data['price'] === null || $data['price'] === '') {
+        $errors[] = 'price is required';
+    } elseif (!is_numeric($data['price'])) {
+        $errors[] = 'price must be numeric';
+    }
+
+    if ($errors !== []) {
+        return ['valid' => false, 'errors' => $errors];
+    }
+
+    return ['valid' => true, 'data' => $data];
+}
+
+/**
+ * Validate medium payload without Phalcon.
+ */
+function validateMediumPayloadPlain(array $data): array
+{
+    $errors = [];
+    if (!array_key_exists('name', $data) || $data['name'] === null || $data['name'] === '') {
+        $errors[] = 'name is required';
+    }
+    if (!array_key_exists('price', $data) || $data['price'] === null || $data['price'] === '') {
+        $errors[] = 'price is required';
+    } elseif (!is_numeric($data['price'])) {
+        $errors[] = 'price must be numeric';
+    }
+
+    if ($errors !== []) {
+        return ['valid' => false, 'errors' => $errors];
+    }
+
+    if (!isset($data['image']) || !is_array($data['image'])) {
+        return ['valid' => false, 'errors' => ['image is required and must be an object']];
+    }
+
+    if (!array_key_exists('url', $data['image']) || $data['image']['url'] === null || $data['image']['url'] === '') {
+        $errors[] = 'image.url is required';
+    }
+    if (!array_key_exists('name', $data['image']) || $data['image']['name'] === null || $data['image']['name'] === '') {
+        $errors[] = 'image.name is required';
+    }
+
+    if ($errors !== []) {
+        return ['valid' => false, 'errors' => $errors];
+    }
+
+    return ['valid' => true, 'data' => $data];
+}
+
+/**
+ * Validate large payload without Phalcon.
+ */
+function validateLargePayloadPlain(array $data): array
+{
+    $errors = [];
+    if (!array_key_exists('name', $data) || $data['name'] === null || $data['name'] === '') {
+        $errors[] = 'name is required';
+    }
+    if (!array_key_exists('price', $data) || $data['price'] === null || $data['price'] === '') {
+        $errors[] = 'price is required';
+    } elseif (!is_numeric($data['price'])) {
+        $errors[] = 'price must be numeric';
+    }
+
+    if ($errors !== []) {
+        return ['valid' => false, 'errors' => $errors];
+    }
+
+    if (!isset($data['seller']) || !is_array($data['seller'])) {
+        return ['valid' => false, 'errors' => ['seller is required and must be an object']];
+    }
+    if (!array_key_exists('name', $data['seller']) || $data['seller']['name'] === null || $data['seller']['name'] === '') {
+        $errors[] = 'seller.name is required';
+    }
+    if (!isset($data['seller']['address']) || !is_array($data['seller']['address'])) {
+        $errors[] = 'seller.address is required and must be an object';
+    }
+
+    if ($errors !== []) {
+        return ['valid' => false, 'errors' => $errors];
+    }
+
+    $address = $data['seller']['address'];
+    if (!array_key_exists('street', $address) || $address['street'] === null || $address['street'] === '') {
+        $errors[] = 'seller.address.street is required';
+    }
+    if (!array_key_exists('city', $address) || $address['city'] === null || $address['city'] === '') {
+        $errors[] = 'seller.address.city is required';
+    }
+    if (!isset($address['country']) || !is_array($address['country'])) {
+        $errors[] = 'seller.address.country is required and must be an object';
+    }
+
+    if ($errors !== []) {
+        return ['valid' => false, 'errors' => $errors];
+    }
+
+    $country = $address['country'];
+    if (!array_key_exists('name', $country) || $country['name'] === null || $country['name'] === '') {
+        $errors[] = 'seller.address.country.name is required';
+    }
+    if (!array_key_exists('code', $country) || $country['code'] === null || $country['code'] === '') {
+        $errors[] = 'seller.address.country.code is required';
+    }
+
+    if ($errors !== []) {
+        return ['valid' => false, 'errors' => $errors];
+    }
+
+    return ['valid' => true, 'data' => $data];
+}
+
+/**
+ * Validate very large payload without Phalcon.
+ */
+function validateVeryLargePayloadPlain(array $data): array
+{
+    $errors = [];
+    if (!array_key_exists('name', $data) || $data['name'] === null || $data['name'] === '') {
+        $errors[] = 'name is required';
+    }
+
+    if ($errors !== []) {
+        return ['valid' => false, 'errors' => $errors];
+    }
+
+    if (!isset($data['tags']) || !is_array($data['tags'])) {
+        return ['valid' => false, 'errors' => ['tags is required and must be an array']];
+    }
+    if (!isset($data['images']) || !is_array($data['images'])) {
+        return ['valid' => false, 'errors' => ['images is required and must be an array']];
+    }
+
+    foreach ($data['images'] as $index => $image) {
+        if (!is_array($image)) {
+            return ['valid' => false, 'errors' => ["images[$index] must be an object"]];
+        }
+        if (!array_key_exists('url', $image) || $image['url'] === null || $image['url'] === '') {
+            $errors[] = "images[$index].url is required";
+        }
+        if (!array_key_exists('name', $image) || $image['name'] === null || $image['name'] === '') {
+            $errors[] = "images[$index].name is required";
+        }
+        if ($errors !== []) {
+            return ['valid' => false, 'errors' => $errors];
+        }
+    }
+
+    return ['valid' => true, 'data' => $data];
+}
+
+$phalconAvailable = class_exists(Micro::class)
+    && class_exists(FactoryDefault::class)
+    && class_exists(Validation::class);
+
+if (!$phalconAvailable) {
+    $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+
+    if ($method === 'GET' && ($path === '/' || $path === '/health')) {
+        jsonResponsePlain(['status' => 'ok']);
+        return;
+    }
+
+    if ($method !== 'POST') {
+        jsonResponsePlain(['error' => 'Not found'], 404);
+        return;
+    }
+
+    $data = jsonBodyPlain();
+
+    switch ($path) {
+        case '/json/small':
+            $result = validateSmallPayloadPlain($data);
+            break;
+        case '/json/medium':
+            $result = validateMediumPayloadPlain($data);
+            break;
+        case '/json/large':
+            $result = validateLargePayloadPlain($data);
+            break;
+        case '/json/very-large':
+            $result = validateVeryLargePayloadPlain($data);
+            break;
+        default:
+            jsonResponsePlain(['error' => 'Not found'], 404);
+            return;
+    }
+
+    if (!$result['valid']) {
+        jsonResponsePlain(['errors' => $result['errors']], 400);
+        return;
+    }
+
+    jsonResponsePlain($result['data']);
+    return;
+}
+
 $di = new FactoryDefault();
 $app = new Micro($di);
 

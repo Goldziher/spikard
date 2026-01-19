@@ -143,11 +143,17 @@ fn ensure_empty_in_handler_globals<'py>(py: Python<'py>, handler: Bound<'py, PyA
         return Ok(());
     }
 
-    if let Ok(types_mod) = py.import("spikard._internal.types")
-        && let Ok(empty) = types_mod.getattr("Empty")
+    let builtins = py.import("builtins")?;
+    let empty = match py
+        .import("spikard._internal.types")
+        .and_then(|types_mod| types_mod.getattr("Empty"))
     {
-        let _ = globals.set_item("Empty", empty);
-    }
+        Ok(empty) => empty,
+        Err(_) => builtins.getattr("object")?.call0()?,
+    };
+
+    let _ = globals.set_item("Empty", empty);
+    let _ = builtins.setattr("Empty", empty);
 
     Ok(())
 }

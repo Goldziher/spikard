@@ -58,6 +58,9 @@ final class GrpcFixturesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        if (!\extension_loaded('grpc')) {
+            $this->markTestSkipped('gRPC extension not loaded.');
+        }
         $this->client = new GrpcTestClient('localhost:50051');
     }
 
