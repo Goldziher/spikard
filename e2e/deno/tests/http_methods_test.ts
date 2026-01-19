@@ -33,9 +33,9 @@ import {
 
 		assertEquals(response.statusCode, 200);
 		const responseHeaders = response.headers();
+		assertEquals(responseHeaders["access-control-allow-origin"], "https://example.com");
 		assertEquals(responseHeaders["access-control-allow-methods"], "GET, POST, PUT, DELETE, OPTIONS");
 		assertEquals(responseHeaders["access-control-max-age"], "86400");
-		assertEquals(responseHeaders["access-control-allow-origin"], "https://example.com");
 		assertEquals(responseHeaders["access-control-allow-headers"], "Content-Type");
 	});
 

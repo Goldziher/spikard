@@ -6,6 +6,7 @@ use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::codegen_utils::json_to_python;
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
+use crate::fixture_filter::is_http_fixture_category;
 use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
 use crate::grpc::GrpcFixture;
 use crate::jsonrpc::JsonRpcFixture;
@@ -37,6 +38,9 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
 
         if path.is_dir() {
             let category = path.file_name().unwrap().to_str().unwrap().to_string();
+            if !is_http_fixture_category(&category) {
+                continue;
+            }
             let fixtures = load_fixtures_from_dir(&path)?;
 
             if !fixtures.is_empty() {

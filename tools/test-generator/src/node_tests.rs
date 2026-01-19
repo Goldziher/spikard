@@ -9,6 +9,7 @@ use crate::codegen_utils::{
     is_value_effectively_empty, json_to_typescript,
 };
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
+use crate::fixture_filter::is_http_fixture_category;
 use crate::grpc::GrpcFixture;
 use crate::middleware::parse_middleware;
 use crate::streaming::streaming_data;
@@ -39,6 +40,9 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
 
         if path.is_dir() {
             let category = path.file_name().unwrap().to_str().unwrap().to_string();
+            if !is_http_fixture_category(&category) {
+                continue;
+            }
             let fixtures = load_fixtures_from_dir(&path)?;
 
             if !fixtures.is_empty() {

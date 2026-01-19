@@ -11,11 +11,11 @@ Deno.test("grpc: should handle gRPC request: Client streaming - metadata preserv
   // Tests client streaming RPC where request metadata is forwarded to and preserved in the response. Validates metadata propagation through streaming pipeline.
 
   const metadata: Record<string, string> = {
-    "custom-header": "custom-value",
     "x-user-id": "user-789",
-    "content-type": "application/grpc",
-    "x-trace-id": "trace-abc456",
     "authorization": "Bearer token-xyz123",
+    "content-type": "application/grpc",
+    "custom-header": "custom-value",
+    "x-trace-id": "trace-abc456",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.MetadataService",

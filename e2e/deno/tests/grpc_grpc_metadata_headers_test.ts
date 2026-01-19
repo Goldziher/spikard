@@ -11,9 +11,9 @@ Deno.test("grpc: should handle gRPC request: gRPC metadata headers", async () =>
   // Tests gRPC metadata handling for request/response headers including authorization, tracing IDs, and custom headers.
 
   const metadata: Record<string, string> = {
+    "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
     "x-custom-header": "custom-value",
     "content-type": "application/grpc",
-    "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
     "x-trace-id": "trace-abc123def456",
   };
   const request: GrpcRequest = {

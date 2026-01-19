@@ -5,6 +5,7 @@
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
+use crate::fixture_filter::is_http_fixture_category;
 use crate::grpc::GrpcFixture;
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use anyhow::{Context, Result};
@@ -158,6 +159,9 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
                 .and_then(|name| name.to_str())
                 .unwrap_or("fixtures")
                 .to_string();
+            if !is_http_fixture_category(&category) {
+                continue;
+            }
             let mut fixtures = load_fixtures_from_dir(&path)
                 .with_context(|| format!("Failed to load fixtures from {}", path.display()))?;
             fixtures.sort_by(|a, b| a.name.cmp(&b.name));

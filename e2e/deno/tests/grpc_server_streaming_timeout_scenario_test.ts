@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: Server streaming - timeout scenario
   // Tests server streaming RPC that exceeds the deadline/timeout. The server starts streaming but doesn't complete before the client-imposed timeout expires. Validates proper timeout handling and stream cancellation.
 
   const metadata: Record<string, string> = {
-    "content-type": "application/grpc",
     "grpc-timeout": "1000m",
+    "content-type": "application/grpc",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.StreamService",

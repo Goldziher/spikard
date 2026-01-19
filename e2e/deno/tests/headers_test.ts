@@ -377,8 +377,8 @@ import {
 
 		const headers = {
 			"X-Request-Id": "req-12345",
-			"X-Trace-Id": "trace-abc",
 			"X-Client-Version": "1.2.3",
+			"X-Trace-Id": "trace-abc",
 		};
 		const response = await client.get("/headers/multiple", headers);
 

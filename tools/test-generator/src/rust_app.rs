@@ -53,6 +53,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
+use crate::fixture_filter::is_http_fixture_category;
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::chunk_bytes;
 use anyhow::{Context, Result};
@@ -124,6 +125,9 @@ fn discover_fixture_categories(fixtures_dir: &Path) -> Result<BTreeMap<String, V
                 .and_then(|n| n.to_str())
                 .context("Invalid directory name")?
                 .to_string();
+            if !is_http_fixture_category(&category) {
+                continue;
+            }
 
             let mut fixtures =
                 load_fixtures_from_dir(&path).with_context(|| format!("Failed to load fixtures from {}", category))?;

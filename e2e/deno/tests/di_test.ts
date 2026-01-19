@@ -155,8 +155,8 @@ import {
 		assert(Object.hasOwn(responseData, "logged"));
 		assertEquals(responseData.logged, true);
 		const responseHeaders = response.headers();
-		assertEquals(responseHeaders["x-auth-mode"], "strict");
 		assertEquals(responseHeaders["x-log-level"], "debug");
+		assertEquals(responseHeaders["x-auth-mode"], "strict");
 	});
 
 	Deno.test("di: Ruby keyword argument injection - success", async () => {

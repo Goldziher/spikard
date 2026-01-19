@@ -4,6 +4,7 @@
 //! tests when the native extension is available.
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
+use crate::fixture_filter::is_http_fixture_category;
 use crate::grpc::GrpcFixture;
 use anyhow::{Context, Result};
 use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
@@ -70,7 +71,7 @@ fn load_fixtures_grouped(fixtures_dir: &Path) -> Result<BTreeMap<String, Vec<Fix
                 .and_then(|name| name.to_str())
                 .unwrap_or("fixtures")
                 .to_string();
-            if category == "sse" || category == "websockets" || category == "jsonrpc" {
+            if !is_http_fixture_category(&category) {
                 continue;
             }
             let mut fixtures = load_fixtures_from_dir(&path)

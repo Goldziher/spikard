@@ -13,6 +13,7 @@
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
+use crate::fixture_filter::is_http_fixture_category;
 use crate::grpc::GrpcFixture;
 use crate::jsonrpc::{JsonRpcFixture, load_jsonrpc_fixtures};
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
@@ -91,6 +92,9 @@ pub fn generate_python_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 
         if path.is_dir() {
             let category = path.file_name().unwrap().to_str().unwrap().to_string();
+            if !is_http_fixture_category(&category) {
+                continue;
+            }
             let fixtures = load_fixtures_from_dir(&path)?;
 
             if !fixtures.is_empty() {

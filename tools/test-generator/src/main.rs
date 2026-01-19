@@ -9,6 +9,7 @@ mod asyncapi;
 mod background;
 mod codegen_utils;
 mod dependencies;
+mod fixture_filter;
 mod graphql;
 mod graphql_tests;
 mod grpc;

@@ -9,6 +9,7 @@ use crate::codegen_utils::{
     json_to_typescript_string,
 };
 use crate::dependencies::{Dependency, DependencyConfig, has_cleanup, requires_multi_request_test};
+use crate::fixture_filter::is_http_fixture_category;
 use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
 use crate::grpc::GrpcFixture;
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
@@ -43,6 +44,9 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
                 .and_then(|n| n.to_str())
                 .ok_or_else(|| anyhow::anyhow!("Invalid fixture directory name: {:?}", path))?
                 .to_string();
+            if !is_http_fixture_category(&category) {
+                continue;
+            }
             let fixtures = load_fixtures_from_dir(&path)?;
 
             if !fixtures.is_empty() {

@@ -11,8 +11,8 @@ Deno.test("grpc: should handle gRPC request: Client streaming - message size lim
   // Tests client streaming RPC where one message exceeds the max_message_size limit. Server rejects the oversized message and terminates the stream.
 
   const metadata: Record<string, string> = {
-    "grpc-max-message-size": "4096",
     "content-type": "application/grpc",
+    "grpc-max-message-size": "4096",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.PayloadService",

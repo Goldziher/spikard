@@ -11,11 +11,11 @@ Deno.test("grpc: should handle gRPC request: Full authorization context with rol
   // Tests complete authorization context including user roles, permissions, and resource-level access control.
 
   const metadata: Record<string, string> = {
-    "x-user-permissions": "read,write,delete",
-    "x-user-roles": "admin,editor",
     "content-type": "application/grpc",
-    "x-user-id": "user-admin-001",
     "authorization": "Bearer token123",
+    "x-user-roles": "admin,editor",
+    "x-user-permissions": "read,write,delete",
+    "x-user-id": "user-admin-001",
   };
   const request: GrpcRequest = {
     serviceName: "example.v1.AuthzService",
