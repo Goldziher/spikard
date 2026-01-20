@@ -547,42 +547,7 @@ fn ruby_to_json(ruby: &Ruby, value: Value) -> Result<JsonValue, Error> {
 
 /// Helper to convert JSON to Ruby object
 fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
-    match value {
-        JsonValue::Null => Ok(ruby.qnil().as_value()),
-        JsonValue::Bool(b) => Ok(if *b {
-            ruby.qtrue().as_value()
-        } else {
-            ruby.qfalse().as_value()
-        }),
-        JsonValue::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                Ok(ruby.integer_from_i64(i).as_value())
-            } else if let Some(u) = n.as_u64() {
-                Ok(ruby.integer_from_i64(u as i64).as_value())
-            } else if let Some(f) = n.as_f64() {
-                Ok(ruby.float_from_f64(f).as_value())
-            } else {
-                Ok(ruby.qnil().as_value())
-            }
-        }
-        JsonValue::String(s) => Ok(ruby.str_new(s).as_value()),
-        JsonValue::Array(arr) => {
-            let ruby_arr = ruby.ary_new();
-            for item in arr {
-                let ruby_val = json_to_ruby(ruby, item)?;
-                ruby_arr.push(ruby_val)?;
-            }
-            Ok(ruby_arr.as_value())
-        }
-        JsonValue::Object(obj) => {
-            let ruby_hash = ruby.hash_new();
-            for (key, val) in obj {
-                let ruby_val = json_to_ruby(ruby, val)?;
-                ruby_hash.aset(ruby.str_new(key), ruby_val)?;
-            }
-            Ok(ruby_hash.as_value())
-        }
-    }
+    crate::conversion::json_to_ruby(ruby, value)
 }
 
 /// Initialize WebSocket test client bindings

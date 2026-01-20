@@ -194,9 +194,16 @@ pub fn json_to_ruby_with_uploads(
                     json_to_ruby_with_uploads(ruby, item, upload_file_class)?,
                 )?;
             }
+            apply_indifferent_access(ruby, &hash)?;
             Ok(hash.as_value())
         }
     }
+}
+
+fn apply_indifferent_access(ruby: &Ruby, hash: &RHash) -> Result<(), Error> {
+    let default_proc = ruby.eval::<Value>("->(h, k) { k.is_a?(Symbol) ? h[k.to_s] : nil }")?;
+    let _: Value = hash.funcall("default_proc=", (default_proc,))?;
+    Ok(())
 }
 
 /// Convert a HashMap to a Ruby Hash.
@@ -205,6 +212,7 @@ pub fn map_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, String>) -> Result<Va
     for (key, value) in map {
         hash.aset(ruby.str_new(key), ruby.str_new(value))?;
     }
+    apply_indifferent_access(ruby, &hash)?;
     Ok(hash.as_value())
 }
 
@@ -218,6 +226,7 @@ pub fn multimap_to_ruby_hash(ruby: &Ruby, map: &HashMap<String, Vec<String>>) ->
         }
         hash.aset(ruby.str_new(key), array)?;
     }
+    apply_indifferent_access(ruby, &hash)?;
     Ok(hash.as_value())
 }
 

@@ -106,6 +106,7 @@ use magnus::{
     Error, Module, RArray, RHash, RString, Ruby, TryConvert, Value, function, gc::Marker, method, r_hash::ForEach,
 };
 use serde_json::Value as JsonValue;
+use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_http::ProblemDetails;
 use spikard_http::testing::ResponseSnapshot;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, RequestData};
@@ -441,7 +442,7 @@ impl NativeDependencyRegistry {
             self.gc_handles.borrow_mut().push(Opaque::from(val));
         }
 
-        self.registered_keys.borrow_mut().push(key);
+        self.registered_keys.borrow_mut().push(key.clone());
         self.registered_dependencies
             .borrow_mut()
             .push((key.clone(), dependency_clone));
@@ -1049,38 +1050,18 @@ impl RubyHandler {
                     }
                 }
 
-                let wrapper_code = ruby
-                    .eval::<Value>(
-                        r"
-                    lambda do |proc, request, kwargs|
-                        proc.call(request, **kwargs)
-                    end
-                ",
-                    )
-                    .map_err(|e| {
-                        (
-                            StatusCode::INTERNAL_SERVER_ERROR,
-                            format!("Failed to create kwarg wrapper: {}", e),
-                        )
-                    })?;
-
-                wrapper_code.funcall("call", (handler_proc, request_value, kwargs_hash))
+                call_handler_proc_with_kwargs(&ruby, handler_proc, request_value, kwargs_hash.as_value())
             } else {
-                handler_proc.funcall("call", (request_value,))
+                call_handler_proc(&ruby, handler_proc, request_value)
             }
         };
 
         #[cfg(not(feature = "di"))]
-        let handler_result = handler_proc.funcall("call", (request_value,));
+        let handler_result = call_handler_proc(&ruby, handler_proc, request_value);
 
         let response_value = match handler_result {
             Ok(value) => value,
-            Err(err) => {
-                return Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Handler '{}' failed: {}", self.inner.handler_name, err),
-                ));
-            }
+            Err(err) => return Err(problem_from_ruby_error(&ruby, &self.inner, err)),
         };
 
         let handler_result = interpret_handler_response(&ruby, &self.inner, response_value).map_err(|err| {
@@ -1191,6 +1172,217 @@ impl Handler for RubyHandler {
         let handler = self.clone();
         Box::pin(async move { handler.handle(request_data) })
     }
+}
+
+fn call_handler_proc(ruby: &Ruby, handler_proc: Value, request_value: Value) -> Result<Value, Error> {
+    let arity: i64 = handler_proc.funcall("arity", ())?;
+    let call_arity = normalize_proc_arity(arity);
+
+    if call_arity == 0 {
+        return handler_proc.funcall("call", ());
+    }
+
+    if call_arity == 1 {
+        return handler_proc.funcall("call", (request_value,));
+    }
+
+    let (params_value, query_value, body_value) = request_parts_from_value(ruby, request_value)?;
+    if call_arity == 2 {
+        return handler_proc.funcall("call", (params_value, query_value));
+    }
+
+    handler_proc.funcall("call", (params_value, query_value, body_value))
+}
+
+fn call_handler_proc_with_kwargs(
+    ruby: &Ruby,
+    handler_proc: Value,
+    request_value: Value,
+    kwargs_hash: Value,
+) -> Result<Value, Error> {
+    let arity: i64 = handler_proc.funcall("arity", ())?;
+    let call_arity = normalize_proc_arity(arity);
+    let (params_value, query_value, body_value) = request_parts_from_value(ruby, request_value)?;
+
+    let wrapper_code = ruby.eval::<Value>(
+        r"
+        lambda do |proc, arity, request, params, query, body, kwargs|
+            kwargs = {} if kwargs.nil?
+            case arity
+            when 0
+                kwargs.empty? ? proc.call : proc.call(**kwargs)
+            when 1
+                kwargs.empty? ? proc.call(request) : proc.call(request, **kwargs)
+            when 2
+                kwargs.empty? ? proc.call(params, query) : proc.call(params, query, **kwargs)
+            else
+                kwargs.empty? ? proc.call(params, query, body) : proc.call(params, query, body, **kwargs)
+            end
+        end
+        ",
+    )?;
+
+    wrapper_code.funcall(
+        "call",
+        (handler_proc, ruby.integer_from_i64(call_arity), request_value, params_value, query_value, body_value, kwargs_hash),
+    )
+}
+
+fn request_parts_from_value(ruby: &Ruby, request_value: Value) -> Result<(Value, Value, Value), Error> {
+    if let Ok(request) = <&NativeRequest>::try_convert(request_value) {
+        let params_value = NativeRequest::path_params(ruby, request)?;
+        let query_value = NativeRequest::query(ruby, request)?;
+        let body_value = NativeRequest::body(ruby, request)?;
+        return Ok((params_value, query_value, body_value));
+    }
+
+    if let Ok(hash) = RHash::try_convert(request_value) {
+        let params_value = hash.get("path_params").unwrap_or(ruby.qnil().as_value());
+        let query_value = hash.get("query").unwrap_or(ruby.qnil().as_value());
+        let body_value = hash.get("body").unwrap_or(ruby.qnil().as_value());
+        return Ok((params_value, query_value, body_value));
+    }
+
+    Ok((ruby.qnil().as_value(), ruby.qnil().as_value(), ruby.qnil().as_value()))
+}
+
+fn normalize_proc_arity(arity: i64) -> i64 {
+    if arity < 0 { 3 } else { arity }
+}
+
+fn problem_from_ruby_error(ruby: &Ruby, handler: &RubyHandlerInner, err: Error) -> (StatusCode, String) {
+    let mut status = StatusCode::INTERNAL_SERVER_ERROR;
+    let mut extensions: HashMap<String, JsonValue> = HashMap::new();
+    let mut detail = ruby_error_message(ruby, &err);
+
+    if err.is_kind_of(ruby.exception_arg_error()) {
+        status = StatusCode::BAD_REQUEST;
+    }
+
+    if let Some(exception) = err.value() {
+        if let Ok(true) = exception.respond_to("status", false) {
+            if let Ok(code) = exception.funcall::<_, _, i64>("status", ()) {
+                status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+        } else if let Ok(true) = exception.respond_to("status_code", false) {
+            if let Ok(code) = exception.funcall::<_, _, i64>("status_code", ()) {
+                status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        let json_module = handler.json_module.get_inner_with(ruby);
+        if let Ok(true) = exception.respond_to("code", false) {
+            if let Ok(value) = exception.funcall::<_, _, Value>("code", ()) {
+                if let Ok(json_value) = ruby_value_to_json(ruby, json_module, value) {
+                    extensions.insert("code".to_string(), json_value);
+                }
+            }
+        }
+
+        if let Ok(true) = exception.respond_to("details", false) {
+            if let Ok(value) = exception.funcall::<_, _, Value>("details", ()) {
+                if let Ok(json_value) = ruby_value_to_json(ruby, json_module, value) {
+                    extensions.insert("details".to_string(), json_value);
+                }
+            }
+        }
+    }
+
+    detail = sanitize_error_detail(&detail);
+
+    let mut problem = problem_for_status(status, detail);
+    for (key, value) in extensions {
+        problem = problem.with_extension(key, value);
+    }
+
+    ErrorResponseBuilder::problem_details_response(&problem)
+}
+
+fn ruby_error_message(_ruby: &Ruby, err: &Error) -> String {
+    if let Some(exception) = err.value() {
+        if let Ok(true) = exception.respond_to("message", false) {
+            if let Ok(message) = exception.funcall::<_, _, String>("message", ()) {
+                return message;
+            }
+        }
+    }
+    err.to_string()
+}
+
+fn problem_for_status(status: StatusCode, detail: String) -> ProblemDetails {
+    match status {
+        StatusCode::BAD_REQUEST => ProblemDetails::bad_request(detail),
+        StatusCode::UNAUTHORIZED => {
+            ProblemDetails::new("https://spikard.dev/errors/unauthorized", "Unauthorized", status)
+                .with_detail(detail)
+        }
+        StatusCode::FORBIDDEN => {
+            ProblemDetails::new("https://spikard.dev/errors/forbidden", "Forbidden", status).with_detail(detail)
+        }
+        StatusCode::NOT_FOUND => ProblemDetails::not_found(detail),
+        StatusCode::UNPROCESSABLE_ENTITY => {
+            ProblemDetails::new(
+                ProblemDetails::TYPE_VALIDATION_ERROR,
+                "Request Validation Failed",
+                status,
+            )
+            .with_detail(detail)
+        }
+        _ => ProblemDetails::internal_server_error(detail),
+    }
+}
+
+fn sanitize_error_detail(detail: &str) -> String {
+    let mut tokens = Vec::new();
+    let mut redact_next = false;
+
+    for token in detail.split_whitespace() {
+        let lower = token.to_lowercase();
+        if token.starts_with('/') || token.contains(".rb:") {
+            tokens.push("[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if lower.starts_with("password=") {
+            tokens.push("password=[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if lower.starts_with("host=") {
+            tokens.push("host=[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if lower.starts_with("token=") || lower.starts_with("secret=") {
+            tokens.push("[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if redact_next {
+            tokens.push("[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if token.eq_ignore_ascii_case("in") {
+            tokens.push(token.to_string());
+            redact_next = true;
+            continue;
+        }
+
+        tokens.push(token.to_string());
+    }
+
+    let mut sanitized = tokens.join(" ");
+    sanitized = sanitized.replace("SELECT *", "[redacted]");
+    sanitized = sanitized.replace("select *", "[redacted]");
+    sanitized = sanitized.replace("FROM users", "[redacted]");
+    sanitized = sanitized.replace("from users", "[redacted]");
+    sanitized
 }
 
 // These functions are now in testing::client module - use call_without_gvl! macro to call them
@@ -1716,11 +1908,18 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     lifecycle_registry_class.define_alloc_func::<NativeLifecycleRegistry>();
     lifecycle_registry_class.define_method("add_on_request", method!(NativeLifecycleRegistry::add_on_request, 1))?;
     lifecycle_registry_class.define_method(
+        "add_pre_validation",
+        method!(NativeLifecycleRegistry::add_pre_validation, 1),
+    )?;
+    lifecycle_registry_class.define_method(
         "pre_validation",
         method!(NativeLifecycleRegistry::add_pre_validation, 1),
     )?;
+    lifecycle_registry_class.define_method("add_pre_handler", method!(NativeLifecycleRegistry::add_pre_handler, 1))?;
     lifecycle_registry_class.define_method("pre_handler", method!(NativeLifecycleRegistry::add_pre_handler, 1))?;
+    lifecycle_registry_class.define_method("add_on_response", method!(NativeLifecycleRegistry::add_on_response, 1))?;
     lifecycle_registry_class.define_method("on_response", method!(NativeLifecycleRegistry::add_on_response, 1))?;
+    lifecycle_registry_class.define_method("add_on_error", method!(NativeLifecycleRegistry::add_on_error, 1))?;
     lifecycle_registry_class.define_method("on_error", method!(NativeLifecycleRegistry::add_on_error, 1))?;
 
     let dependency_registry_class = native.define_class("DependencyRegistry", ruby.class_object())?;

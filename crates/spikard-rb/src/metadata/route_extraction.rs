@@ -422,36 +422,5 @@ pub fn ruby_value_to_json(ruby: &Ruby, _json_module: Value, value: Value) -> Res
 
 /// Convert JSON to Ruby value
 pub fn json_to_ruby(ruby: &Ruby, value: &JsonValue) -> Result<Value, Error> {
-    match value {
-        JsonValue::Null => Ok(ruby.qnil().as_value()),
-        JsonValue::Bool(b) => Ok(if *b {
-            ruby.qtrue().as_value()
-        } else {
-            ruby.qfalse().as_value()
-        }),
-        JsonValue::Number(num) => {
-            if let Some(i) = num.as_i64() {
-                Ok(ruby.integer_from_i64(i).as_value())
-            } else if let Some(f) = num.as_f64() {
-                Ok(ruby.float_from_f64(f).as_value())
-            } else {
-                Ok(ruby.qnil().as_value())
-            }
-        }
-        JsonValue::String(str_val) => Ok(ruby.str_new(str_val).as_value()),
-        JsonValue::Array(items) => {
-            let array = ruby.ary_new();
-            for item in items {
-                array.push(json_to_ruby(ruby, item)?)?;
-            }
-            Ok(array.as_value())
-        }
-        JsonValue::Object(map) => {
-            let hash = ruby.hash_new();
-            for (key, item) in map {
-                hash.aset(ruby.str_new(key), json_to_ruby(ruby, item)?)?;
-            }
-            Ok(hash.as_value())
-        }
-    }
+    crate::conversion::json_to_ruby(ruby, value)
 }

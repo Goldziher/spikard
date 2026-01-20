@@ -270,16 +270,9 @@ impl RubyHandler {
             .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 
         let handler_proc = self.inner.handler_proc.get_inner_with(&ruby);
-        let handler_result = handler_proc.funcall("call", (request_value,));
-        let response_value = match handler_result {
+        let response_value = match call_handler_proc(&ruby, handler_proc, request_value) {
             Ok(value) => value,
-            Err(err) => {
-                return Err(ErrorResponseBuilder::structured_error(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "handler_failed",
-                    format!("Handler '{}' failed: {}", self.inner.handler_name, err),
-                ));
-            }
+            Err(err) => return Err(problem_from_ruby_error(&ruby, &self.inner, err)),
         };
 
         let handler_result = interpret_handler_response(&ruby, &self.inner, response_value).map_err(|err| {
@@ -430,6 +423,168 @@ fn lookup_upload_file_class() -> Result<Option<Opaque<Value>>, Error> {
 
     let upload_file = ruby.eval::<Value>("Spikard::UploadFile").ok();
     Ok(upload_file.map(Opaque::from))
+}
+
+fn call_handler_proc(ruby: &Ruby, handler_proc: Value, request_value: Value) -> Result<Value, Error> {
+    let arity: i64 = handler_proc.funcall("arity", ())?;
+    if arity == 0 {
+        return handler_proc.funcall("call", ());
+    }
+
+    if arity == 1 {
+        return handler_proc.funcall("call", (request_value,));
+    }
+
+    let mut params_value = ruby.qnil().as_value();
+    let mut query_value = ruby.qnil().as_value();
+    let mut body_value = ruby.qnil().as_value();
+
+    if let Some(hash) = RHash::from_value(request_value) {
+        params_value = hash.get(*KEY_PATH_PARAMS).unwrap_or(ruby.qnil().as_value());
+        query_value = hash.get(*KEY_QUERY).unwrap_or(ruby.qnil().as_value());
+        body_value = hash.get(*KEY_BODY).unwrap_or(ruby.qnil().as_value());
+    }
+
+    if arity == 2 {
+        return handler_proc.funcall("call", (params_value, query_value));
+    }
+
+    handler_proc.funcall("call", (params_value, query_value, body_value))
+}
+
+fn problem_from_ruby_error(ruby: &Ruby, handler: &RubyHandlerInner, err: Error) -> (StatusCode, String) {
+    let mut status = StatusCode::INTERNAL_SERVER_ERROR;
+    let mut extensions: HashMap<String, JsonValue> = HashMap::new();
+    let mut detail = ruby_error_message(ruby, &err);
+
+    if err.is_kind_of(ruby.exception_arg_error()) {
+        status = StatusCode::BAD_REQUEST;
+    }
+
+    if let Some(exception) = err.value() {
+        if let Ok(true) = exception.respond_to("status", false) {
+            if let Ok(code) = exception.funcall::<_, _, i64>("status", ()) {
+                status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+        } else if let Ok(true) = exception.respond_to("status_code", false) {
+            if let Ok(code) = exception.funcall::<_, _, i64>("status_code", ()) {
+                status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        let json_module = handler.json_module.get_inner_with(ruby);
+        if let Ok(true) = exception.respond_to("code", false) {
+            if let Ok(value) = exception.funcall::<_, _, Value>("code", ()) {
+                if let Ok(json_value) = ruby_value_to_json(ruby, json_module, value) {
+                    extensions.insert("code".to_string(), json_value);
+                }
+            }
+        }
+
+        if let Ok(true) = exception.respond_to("details", false) {
+            if let Ok(value) = exception.funcall::<_, _, Value>("details", ()) {
+                if let Ok(json_value) = ruby_value_to_json(ruby, json_module, value) {
+                    extensions.insert("details".to_string(), json_value);
+                }
+            }
+        }
+    }
+
+    detail = sanitize_error_detail(&detail);
+
+    let mut problem = problem_for_status(status, detail);
+    for (key, value) in extensions {
+        problem = problem.with_extension(key, value);
+    }
+
+    ErrorResponseBuilder::problem_details_response(&problem)
+}
+
+fn ruby_error_message(_ruby: &Ruby, err: &Error) -> String {
+    if let Some(exception) = err.value() {
+        if let Ok(true) = exception.respond_to("message", false) {
+            if let Ok(message) = exception.funcall::<_, _, String>("message", ()) {
+                return message;
+            }
+        }
+    }
+    err.to_string()
+}
+
+fn problem_for_status(status: StatusCode, detail: String) -> ProblemDetails {
+    match status {
+        StatusCode::BAD_REQUEST => ProblemDetails::bad_request(detail),
+        StatusCode::UNAUTHORIZED => {
+            ProblemDetails::new("https://spikard.dev/errors/unauthorized", "Unauthorized", status)
+                .with_detail(detail)
+        }
+        StatusCode::FORBIDDEN => {
+            ProblemDetails::new("https://spikard.dev/errors/forbidden", "Forbidden", status).with_detail(detail)
+        }
+        StatusCode::NOT_FOUND => ProblemDetails::not_found(detail),
+        StatusCode::UNPROCESSABLE_ENTITY => {
+            ProblemDetails::new(
+                ProblemDetails::TYPE_VALIDATION_ERROR,
+                "Request Validation Failed",
+                status,
+            )
+            .with_detail(detail)
+        }
+        _ => ProblemDetails::internal_server_error(detail),
+    }
+}
+
+fn sanitize_error_detail(detail: &str) -> String {
+    let mut tokens = Vec::new();
+    let mut redact_next = false;
+
+    for token in detail.split_whitespace() {
+        let lower = token.to_lowercase();
+        if token.starts_with('/') || token.contains(".rb:") {
+            tokens.push("[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if lower.starts_with("password=") {
+            tokens.push("password=[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if lower.starts_with("host=") {
+            tokens.push("host=[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if lower.starts_with("token=") || lower.starts_with("secret=") {
+            tokens.push("[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if redact_next {
+            tokens.push("[redacted]".to_string());
+            redact_next = false;
+            continue;
+        }
+
+        if token.eq_ignore_ascii_case("in") {
+            tokens.push(token.to_string());
+            redact_next = true;
+            continue;
+        }
+
+        tokens.push(token.to_string());
+    }
+
+    let mut sanitized = tokens.join(" ");
+    sanitized = sanitized.replace("SELECT *", "[redacted]");
+    sanitized = sanitized.replace("select *", "[redacted]");
+    sanitized = sanitized.replace("FROM users", "[redacted]");
+    sanitized = sanitized.replace("from users", "[redacted]");
+    sanitized
 }
 
 /// Build a Ruby Hash request object from request data.
