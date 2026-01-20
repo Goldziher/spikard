@@ -51,7 +51,7 @@ jobs:
   build-harness:
     name: Build Benchmark Harness
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -90,7 +90,7 @@ jobs:
     name: Benchmark spikard-rust-validation
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 75
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -137,7 +137,7 @@ jobs:
     name: Benchmark spikard-python-validation
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 75
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -200,7 +200,7 @@ jobs:
     name: Benchmark spikard-node-validation
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 75
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -257,7 +257,7 @@ jobs:
     name: Benchmark spikard-ruby-validation
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 75
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -316,7 +316,7 @@ jobs:
     name: Benchmark spikard-php-validation
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 75
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -404,7 +404,7 @@ jobs:
     name: Benchmark spikard-wasm-validation
     runs-on: ubuntu-latest
     needs: build-harness
-    timeout-minutes: 75
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 

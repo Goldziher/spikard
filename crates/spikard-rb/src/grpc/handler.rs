@@ -107,7 +107,43 @@ pub struct RubyGrpcResponse {
 
 impl RubyGrpcResponse {
     /// Create a new Ruby gRPC response from Ruby
-    fn rb_new(payload: RString, metadata: Option<RHash>) -> Result<Self, Error> {
+    fn rb_new(ruby: &Ruby, args: &[Value]) -> Result<Self, Error> {
+        let (payload, metadata) = match args {
+            [single] => {
+                if let Ok(hash) = RHash::try_convert(*single) {
+                    let payload_value = get_kw(hash, ruby, "payload").ok_or_else(|| {
+                        Error::new(
+                            magnus::exception::arg_error(),
+                            "Response.new requires a payload",
+                        )
+                    })?;
+                    let payload = RString::try_convert(payload_value)?;
+                    let metadata_value = get_kw(hash, ruby, "metadata");
+                    let metadata = match metadata_value {
+                        Some(value) if !value.is_nil() => Some(RHash::try_convert(value)?),
+                        _ => None,
+                    };
+                    (payload, metadata)
+                } else {
+                    (RString::try_convert(*single)?, None)
+                }
+            }
+            [payload_value, metadata_value] => {
+                let payload = RString::try_convert(*payload_value)?;
+                let metadata = if metadata_value.is_nil() {
+                    None
+                } else {
+                    Some(RHash::try_convert(*metadata_value)?)
+                };
+                (payload, metadata)
+            }
+            _ => {
+                return Err(Error::new(
+                    magnus::exception::arg_error(),
+                    "Response.new expects payload or payload with metadata",
+                ));
+            }
+        };
         // SAFETY: RString::as_slice() is safe when the Ruby VM is active (which it is here since
         // we're in a Ruby method call). The slice is immediately copied to owned Vec<u8>.
         let payload_bytes = unsafe { payload.as_slice().to_vec() };
@@ -200,6 +236,11 @@ impl RubyGrpcResponse {
             self.payload.borrow().len()
         )
     }
+}
+
+fn get_kw(hash: RHash, ruby: &Ruby, key: &str) -> Option<Value> {
+    hash.get(ruby.to_symbol(key))
+        .or_else(|| hash.get(ruby.str_new(key)))
 }
 
 /// Convert Ruby hash to HashMap<String, String>
@@ -708,7 +749,7 @@ pub fn init(_ruby: &Ruby, spikard_module: &magnus::RModule) -> Result<(), Error>
 
     // Define Response class
     let response_class = grpc_module.define_class("Response", _ruby.class_object())?;
-    response_class.define_singleton_method("new", magnus::function!(RubyGrpcResponse::rb_new, 2))?;
+    response_class.define_singleton_method("new", magnus::function!(RubyGrpcResponse::rb_new, -1))?;
     response_class.define_method("payload", magnus::method!(RubyGrpcResponse::rb_payload, 0))?;
     response_class.define_method("payload=", magnus::method!(RubyGrpcResponse::rb_set_payload, 1))?;
     response_class.define_method("metadata", magnus::method!(RubyGrpcResponse::rb_metadata, 0))?;

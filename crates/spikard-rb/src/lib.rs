@@ -136,7 +136,7 @@ struct NativeTestClient {
 
 struct ClientInner {
     http_server: Arc<TestServer>,
-    transport_server: Arc<TestServer>,
+    transport_server: Option<Arc<TestServer>>,
     /// Keep Ruby handler closures alive for GC; accessed via the `mark` hook.
     _handlers: Vec<RubyHandler>,
 }
@@ -204,6 +204,7 @@ struct NativeDependencyRegistry {
     #[allow(dead_code)]
     gc_handles: RefCell<Vec<Opaque<Value>>>,
     registered_keys: RefCell<Vec<String>>,
+    registered_dependencies: RefCell<Vec<(String, Arc<dyn spikard_core::di::Dependency>)>>,
 }
 
 impl StreamingResponsePayload {
@@ -385,6 +386,7 @@ impl Default for NativeDependencyRegistry {
             container: RefCell::new(Some(spikard_core::di::DependencyContainer::new())),
             gc_handles: RefCell::new(Vec::new()),
             registered_keys: RefCell::new(Vec::new()),
+            registered_dependencies: RefCell::new(Vec::new()),
         }
     }
 }
@@ -426,6 +428,7 @@ impl NativeDependencyRegistry {
         let container = container_ref
             .as_mut()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "Dependency container already consumed"))?;
+        let dependency_clone = dependency.clone();
 
         container.register(key.clone(), dependency).map_err(|err| {
             Error::new(
@@ -439,6 +442,9 @@ impl NativeDependencyRegistry {
         }
 
         self.registered_keys.borrow_mut().push(key);
+        self.registered_dependencies
+            .borrow_mut()
+            .push((key.clone(), dependency_clone));
 
         Ok(())
     }
@@ -460,6 +466,19 @@ impl NativeDependencyRegistry {
                 "Dependency container already consumed",
             )
         })?;
+        Ok(container)
+    }
+
+    fn clone_container(&self, ruby: &Ruby) -> Result<spikard_core::di::DependencyContainer, Error> {
+        let mut container = spikard_core::di::DependencyContainer::new();
+        for (key, dependency) in self.registered_dependencies.borrow().iter() {
+            container.register(key.clone(), dependency.clone()).map_err(|err| {
+                Error::new(
+                    ruby.exception_runtime_error(),
+                    format!("Failed to clone dependency '{key}': {err}"),
+                )
+            })?;
+        }
         Ok(container)
     }
 
@@ -528,7 +547,7 @@ impl NativeTestClient {
         #[cfg(feature = "di")]
         {
             if let Ok(registry) = <&NativeDependencyRegistry>::try_convert(dependencies) {
-                server_config.di_container = Some(Arc::new(registry.take_container()?));
+                server_config.di_container = Some(Arc::new(registry.clone_container(ruby)?));
             } else if !dependencies.is_nil() {
                 match build_dependency_container(ruby, dependencies) {
                     Ok(container) => {
@@ -602,6 +621,8 @@ impl NativeTestClient {
             })?;
         }
 
+        let has_ws = !ws_endpoints.is_empty();
+
         use axum::routing::get;
         for (path, ws_state) in ws_endpoints {
             router = router.route(
@@ -627,22 +648,27 @@ impl NativeTestClient {
                 )
             })?;
 
-        let ws_config = TestServerConfig {
-            transport: Some(Transport::HttpRandomPort),
-            ..Default::default()
+        let transport_server = if has_ws {
+            let ws_config = TestServerConfig {
+                transport: Some(Transport::HttpRandomPort),
+                ..Default::default()
+            };
+            let server = runtime
+                .block_on(async { TestServer::new_with_config(router, ws_config) })
+                .map_err(|err| {
+                    Error::new(
+                        ruby.exception_runtime_error(),
+                        format!("Failed to initialise WebSocket transport server: {err}"),
+                    )
+                })?;
+            Some(Arc::new(server))
+        } else {
+            None
         };
-        let transport_server = runtime
-            .block_on(async { TestServer::new_with_config(router, ws_config) })
-            .map_err(|err| {
-                Error::new(
-                    ruby.exception_runtime_error(),
-                    format!("Failed to initialise WebSocket transport server: {err}"),
-                )
-            })?;
 
         *this.inner.borrow_mut() = Some(ClientInner {
             http_server: Arc::new(http_server),
-            transport_server: Arc::new(transport_server),
+            transport_server,
             _handlers: handler_refs,
         });
 
@@ -699,7 +725,12 @@ impl NativeTestClient {
             .as_ref()
             .ok_or_else(|| Error::new(ruby.exception_runtime_error(), "TestClient not initialised"))?;
 
-        let server = Arc::clone(&inner.transport_server);
+        let server = inner.transport_server.clone().ok_or_else(|| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                "WebSocket transport server unavailable (no WebSocket handlers registered)",
+            )
+        })?;
 
         drop(inner_borrow);
 

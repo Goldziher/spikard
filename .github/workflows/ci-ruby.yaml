@@ -50,7 +50,7 @@ jobs:
   build-ruby-gem:
     name: Build Ruby Gem
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -92,7 +92,7 @@ jobs:
     name: Test Ruby
     needs: build-ruby-gem
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:

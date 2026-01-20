@@ -21,10 +21,38 @@ module Spikard
     # @param min_size [Integer] Minimum response size in bytes to compress (default: 1024)
     # @param quality [Integer] Compression quality level (0-11 for brotli, 0-9 for gzip, default: 6)
     def initialize(gzip: true, brotli: true, min_size: 1024, quality: 6)
-      @gzip = gzip
-      @brotli = brotli
-      @min_size = min_size
-      @quality = quality
+      @gzip = normalize_boolean('gzip', gzip)
+      @brotli = normalize_boolean('brotli', brotli)
+      @min_size = normalize_nonnegative_integer('min_size', min_size)
+      @quality = normalize_quality(quality)
+    end
+
+    private
+
+    def normalize_boolean(name, value)
+      return value if value == true || value == false
+
+      raise ArgumentError, "#{name} must be a boolean"
+    end
+
+    def normalize_nonnegative_integer(name, value)
+      unless value.is_a?(Integer)
+        raise ArgumentError, "#{name} must be an Integer"
+      end
+      return value if value >= 0
+
+      raise ArgumentError, "#{name} must be >= 0"
+    end
+
+    def normalize_quality(value)
+      unless value.is_a?(Integer) || value.is_a?(Float)
+        raise ArgumentError, 'quality must be a number'
+      end
+
+      normalized = value.to_i
+      return normalized if normalized.between?(0, 11)
+
+      raise ArgumentError, 'quality must be between 0 and 11'
     end
   end
 
@@ -378,19 +406,81 @@ module Spikard
       openapi: nil
     )
       @host = host
-      @port = port
-      @workers = workers
-      @enable_request_id = enable_request_id
-      @max_body_size = max_body_size
-      @request_timeout = request_timeout
+      @port = normalize_port(port)
+      @workers = normalize_workers(workers)
+      @enable_request_id = normalize_boolean('enable_request_id', enable_request_id)
+      @max_body_size = normalize_optional_nonnegative_integer('max_body_size', max_body_size)
+      @request_timeout = normalize_timeout('request_timeout', request_timeout)
       @compression = compression
       @rate_limit = rate_limit
       @jwt_auth = jwt_auth
       @api_key_auth = api_key_auth
-      @static_files = static_files
-      @graceful_shutdown = graceful_shutdown
-      @shutdown_timeout = shutdown_timeout
+      @static_files = normalize_static_files(static_files)
+      @graceful_shutdown = normalize_boolean('graceful_shutdown', graceful_shutdown)
+      @shutdown_timeout = normalize_timeout('shutdown_timeout', shutdown_timeout)
       @openapi = openapi
+    end
+
+    private
+
+    def normalize_port(port)
+      unless port.is_a?(Integer)
+        raise ArgumentError, 'port must be an Integer'
+      end
+      return port if port.between?(1, 65_535)
+
+      raise ArgumentError, 'port must be between 1 and 65535'
+    end
+
+    def normalize_workers(workers)
+      unless workers.is_a?(Integer)
+        raise ArgumentError, 'workers must be an Integer'
+      end
+      return workers if workers >= 1
+
+      raise ArgumentError, 'workers must be >= 1'
+    end
+
+    def normalize_boolean(name, value)
+      return value if value == true || value == false
+
+      raise ArgumentError, "#{name} must be a boolean"
+    end
+
+    def normalize_optional_nonnegative_integer(name, value)
+      return nil if value.nil?
+      unless value.is_a?(Integer)
+        raise ArgumentError, "#{name} must be an Integer"
+      end
+      return value if value >= 0
+
+      raise ArgumentError, "#{name} must be >= 0"
+    end
+
+    def normalize_timeout(name, value)
+      return nil if value.nil?
+      unless value.is_a?(Integer) || value.is_a?(Float)
+        raise ArgumentError, "#{name} must be a number"
+      end
+
+      normalized = value.to_i
+      return normalized if normalized >= 0
+
+      raise ArgumentError, "#{name} must be >= 0"
+    end
+
+    def normalize_static_files(static_files)
+      return [] if static_files.nil?
+      unless static_files.is_a?(Array)
+        raise ArgumentError, 'static_files must be an Array'
+      end
+
+      static_files.each do |entry|
+        next if entry.is_a?(StaticFilesConfig)
+
+        raise ArgumentError, 'static_files entries must be StaticFilesConfig'
+      end
+      static_files
     end
   end
 end

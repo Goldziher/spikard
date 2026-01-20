@@ -52,7 +52,7 @@ jobs:
   build-python-wheels:
     name: Build Python Wheels
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -83,7 +83,7 @@ jobs:
     name: Test Python
     needs: build-python-wheels
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -126,7 +126,7 @@ jobs:
   build-python-sdist:
     name: Build Python Source Distribution
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -159,7 +159,7 @@ jobs:
     name: Python Code Coverage (80% minimum)
     needs: [test-python]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 

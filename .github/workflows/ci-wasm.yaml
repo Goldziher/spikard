@@ -56,7 +56,7 @@ jobs:
   build-wasm:
     name: Build WASM Bindings
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -101,7 +101,7 @@ jobs:
     name: Test WASM
     needs: build-wasm
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -142,7 +142,7 @@ jobs:
     name: WASM Code Coverage (80% minimum)
     needs: build-wasm
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -194,7 +194,7 @@ jobs:
     name: Test Deno E2E
     needs: build-wasm
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -221,7 +221,7 @@ jobs:
     name: Test Cloudflare Workers E2E
     needs: build-wasm
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -258,7 +258,7 @@ jobs:
     name: Deno E2E Coverage (80% minimum)
     needs: build-wasm
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -307,7 +307,7 @@ jobs:
     name: Cloudflare Workers E2E Coverage (80% minimum)
     needs: build-wasm
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 

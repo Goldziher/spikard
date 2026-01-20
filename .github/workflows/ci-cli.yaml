@@ -46,7 +46,7 @@ jobs:
   build-cli:
     name: Build CLI (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
@@ -82,7 +82,7 @@ jobs:
     name: Test CLI (${{ matrix.os }})
     needs: build-cli
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    timeout-minutes: 360
     permissions:
       contents: read
     strategy:

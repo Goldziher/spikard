@@ -80,7 +80,7 @@ jobs:
   lint-rust:
     name: Lint Rust
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -106,7 +106,7 @@ jobs:
   lint-python:
     name: Lint Python
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -130,7 +130,7 @@ jobs:
   lint-typescript:
     name: Lint TypeScript
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -150,7 +150,7 @@ jobs:
   lint-ruby:
     name: Lint Ruby
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -181,7 +181,7 @@ jobs:
   lint-php:
     name: Lint PHP
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:

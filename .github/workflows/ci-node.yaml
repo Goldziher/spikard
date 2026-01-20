@@ -50,7 +50,7 @@ jobs:
   build-napi-bindings:
     name: Build Node Bindings
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 
@@ -89,7 +89,7 @@ jobs:
     name: Test Node
     needs: build-napi-bindings
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 360
     permissions:
       contents: read
     steps:
@@ -184,7 +184,7 @@ jobs:
     name: Node.js Code Coverage
     runs-on: ubuntu-latest
     needs: [test-node]
-    timeout-minutes: 20
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v6
 

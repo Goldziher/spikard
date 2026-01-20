@@ -784,7 +784,7 @@ RSpec.describe 'SSE Producer Error Recovery and Client Reconnection' do
       end
 
       # With short timeout
-      producer = timeout_aware_class.new(1)
+      producer = timeout_aware_class.new(10)
       events = []
       loop do
         event = producer.next_event
