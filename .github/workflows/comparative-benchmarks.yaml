@@ -28,7 +28,7 @@ on:
         type: string
 
 concurrency:
-  group: benchmarks-${{ github.ref }}
+  group: benchmarks-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
