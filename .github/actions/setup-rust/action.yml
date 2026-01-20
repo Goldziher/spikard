@@ -33,6 +33,7 @@ runs:
       with:
         toolchain: ${{ inputs.toolchain }}
         components: ${{ inputs.components }}
+        cache: false
 
     - name: Setup sccache
       if: inputs.use-sccache == 'true'

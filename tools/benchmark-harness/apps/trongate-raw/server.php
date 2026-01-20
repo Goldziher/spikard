@@ -82,11 +82,11 @@ class SimpleRouter {
     }
 
     private function pathToPattern(string $path): string {
-        // Replace {id} with placeholder, escape, then restore as regex
-        $placeholder = '___ID_PLACEHOLDER___';
-        $temp = str_replace('{id}', $placeholder, $path);
+        // Replace {param} segments with a placeholder, escape, then restore as regex.
+        $placeholder = '___PARAM_PLACEHOLDER___';
+        $temp = preg_replace('/\{[^}]+\}/', $placeholder, $path);
         $escaped = preg_quote($temp, '#');
-        $pattern = str_replace(preg_quote($placeholder, '#'), '\\d+', $escaped);
+        $pattern = str_replace(preg_quote($placeholder, '#'), '[^/]+', $escaped);
         return '#^' . $pattern . '$#';
     }
 

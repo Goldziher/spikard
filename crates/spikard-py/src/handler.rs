@@ -152,7 +152,7 @@ fn ensure_empty_in_handler_globals<'py>(py: Python<'py>, handler: Bound<'py, PyA
         Err(_) => builtins.getattr("object")?.call0()?,
     };
 
-    let _ = globals.set_item("Empty", empty);
+    let _ = globals.set_item("Empty", &empty);
     let _ = builtins.setattr("Empty", empty);
 
     Ok(())
