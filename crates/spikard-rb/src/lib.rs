@@ -1224,7 +1224,15 @@ fn call_handler_proc_with_kwargs(
 
     wrapper_code.funcall(
         "call",
-        (handler_proc, ruby.integer_from_i64(call_arity), request_value, params_value, query_value, body_value, kwargs_hash),
+        (
+            handler_proc,
+            ruby.integer_from_i64(call_arity),
+            request_value,
+            params_value,
+            query_value,
+            body_value,
+            kwargs_hash,
+        ),
     )
 }
 
@@ -1313,21 +1321,18 @@ fn problem_for_status(status: StatusCode, detail: String) -> ProblemDetails {
     match status {
         StatusCode::BAD_REQUEST => ProblemDetails::bad_request(detail),
         StatusCode::UNAUTHORIZED => {
-            ProblemDetails::new("https://spikard.dev/errors/unauthorized", "Unauthorized", status)
-                .with_detail(detail)
+            ProblemDetails::new("https://spikard.dev/errors/unauthorized", "Unauthorized", status).with_detail(detail)
         }
         StatusCode::FORBIDDEN => {
             ProblemDetails::new("https://spikard.dev/errors/forbidden", "Forbidden", status).with_detail(detail)
         }
         StatusCode::NOT_FOUND => ProblemDetails::not_found(detail),
-        StatusCode::UNPROCESSABLE_ENTITY => {
-            ProblemDetails::new(
-                ProblemDetails::TYPE_VALIDATION_ERROR,
-                "Request Validation Failed",
-                status,
-            )
-            .with_detail(detail)
-        }
+        StatusCode::UNPROCESSABLE_ENTITY => ProblemDetails::new(
+            ProblemDetails::TYPE_VALIDATION_ERROR,
+            "Request Validation Failed",
+            status,
+        )
+        .with_detail(detail),
         _ => ProblemDetails::internal_server_error(detail),
     }
 }

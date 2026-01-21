@@ -515,21 +515,18 @@ fn problem_for_status(status: StatusCode, detail: String) -> ProblemDetails {
     match status {
         StatusCode::BAD_REQUEST => ProblemDetails::bad_request(detail),
         StatusCode::UNAUTHORIZED => {
-            ProblemDetails::new("https://spikard.dev/errors/unauthorized", "Unauthorized", status)
-                .with_detail(detail)
+            ProblemDetails::new("https://spikard.dev/errors/unauthorized", "Unauthorized", status).with_detail(detail)
         }
         StatusCode::FORBIDDEN => {
             ProblemDetails::new("https://spikard.dev/errors/forbidden", "Forbidden", status).with_detail(detail)
         }
         StatusCode::NOT_FOUND => ProblemDetails::not_found(detail),
-        StatusCode::UNPROCESSABLE_ENTITY => {
-            ProblemDetails::new(
-                ProblemDetails::TYPE_VALIDATION_ERROR,
-                "Request Validation Failed",
-                status,
-            )
-            .with_detail(detail)
-        }
+        StatusCode::UNPROCESSABLE_ENTITY => ProblemDetails::new(
+            ProblemDetails::TYPE_VALIDATION_ERROR,
+            "Request Validation Failed",
+            status,
+        )
+        .with_detail(detail),
         _ => ProblemDetails::internal_server_error(detail),
     }
 }

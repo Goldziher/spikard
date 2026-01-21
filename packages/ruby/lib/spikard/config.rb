@@ -30,24 +30,20 @@ module Spikard
     private
 
     def normalize_boolean(name, value)
-      return value if value == true || value == false
+      return value if [true, false].include?(value)
 
       raise ArgumentError, "#{name} must be a boolean"
     end
 
     def normalize_nonnegative_integer(name, value)
-      unless value.is_a?(Integer)
-        raise ArgumentError, "#{name} must be an Integer"
-      end
+      raise ArgumentError, "#{name} must be an Integer" unless value.is_a?(Integer)
       return value if value >= 0
 
       raise ArgumentError, "#{name} must be >= 0"
     end
 
     def normalize_quality(value)
-      unless value.is_a?(Integer) || value.is_a?(Float)
-        raise ArgumentError, 'quality must be a number'
-      end
+      raise ArgumentError, 'quality must be a number' unless value.is_a?(Integer) || value.is_a?(Float)
 
       normalized = value.to_i
       return normalized if normalized.between?(0, 11)
@@ -424,34 +420,28 @@ module Spikard
     private
 
     def normalize_port(port)
-      unless port.is_a?(Integer)
-        raise ArgumentError, 'port must be an Integer'
-      end
+      raise ArgumentError, 'port must be an Integer' unless port.is_a?(Integer)
       return port if port.between?(1, 65_535)
 
       raise ArgumentError, 'port must be between 1 and 65535'
     end
 
     def normalize_workers(workers)
-      unless workers.is_a?(Integer)
-        raise ArgumentError, 'workers must be an Integer'
-      end
+      raise ArgumentError, 'workers must be an Integer' unless workers.is_a?(Integer)
       return workers if workers >= 1
 
       raise ArgumentError, 'workers must be >= 1'
     end
 
     def normalize_boolean(name, value)
-      return value if value == true || value == false
+      return value if [true, false].include?(value)
 
       raise ArgumentError, "#{name} must be a boolean"
     end
 
     def normalize_optional_nonnegative_integer(name, value)
       return nil if value.nil?
-      unless value.is_a?(Integer)
-        raise ArgumentError, "#{name} must be an Integer"
-      end
+      raise ArgumentError, "#{name} must be an Integer" unless value.is_a?(Integer)
       return value if value >= 0
 
       raise ArgumentError, "#{name} must be >= 0"
@@ -459,9 +449,7 @@ module Spikard
 
     def normalize_timeout(name, value)
       return nil if value.nil?
-      unless value.is_a?(Integer) || value.is_a?(Float)
-        raise ArgumentError, "#{name} must be a number"
-      end
+      raise ArgumentError, "#{name} must be a number" unless value.is_a?(Integer) || value.is_a?(Float)
 
       normalized = value.to_i
       return normalized if normalized >= 0
@@ -471,9 +459,7 @@ module Spikard
 
     def normalize_static_files(static_files)
       return [] if static_files.nil?
-      unless static_files.is_a?(Array)
-        raise ArgumentError, 'static_files must be an Array'
-      end
+      raise ArgumentError, 'static_files must be an Array' unless static_files.is_a?(Array)
 
       static_files.each do |entry|
         next if entry.is_a?(StaticFilesConfig)

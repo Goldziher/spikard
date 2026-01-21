@@ -111,12 +111,8 @@ impl RubyGrpcResponse {
         let (payload, metadata) = match args {
             [single] => {
                 if let Ok(hash) = RHash::try_convert(*single) {
-                    let payload_value = get_kw(hash, ruby, "payload").ok_or_else(|| {
-                        Error::new(
-                            magnus::exception::arg_error(),
-                            "Response.new requires a payload",
-                        )
-                    })?;
+                    let payload_value = get_kw(hash, ruby, "payload")
+                        .ok_or_else(|| Error::new(magnus::exception::arg_error(), "Response.new requires a payload"))?;
                     let payload = RString::try_convert(payload_value)?;
                     let metadata_value = get_kw(hash, ruby, "metadata");
                     let metadata = match metadata_value {
@@ -239,8 +235,7 @@ impl RubyGrpcResponse {
 }
 
 fn get_kw(hash: RHash, ruby: &Ruby, key: &str) -> Option<Value> {
-    hash.get(ruby.to_symbol(key))
-        .or_else(|| hash.get(ruby.str_new(key)))
+    hash.get(ruby.to_symbol(key)).or_else(|| hash.get(ruby.str_new(key)))
 }
 
 /// Convert Ruby hash to HashMap<String, String>
