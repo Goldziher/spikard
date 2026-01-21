@@ -512,7 +512,7 @@ RSpec.describe 'HTTP Error Response Formatting and Translation' do
       json = response.json
       # Error should be generic enough for external consumption
       expect(json['detail']).to be_a(String)
-      expect(json['detail'].length).to be > 0
+      expect(json['detail'].length).to be_positive
     end
   end
 end

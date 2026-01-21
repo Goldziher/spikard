@@ -45,10 +45,7 @@
 	"expected_response": {
 		"status_code": "INTERNAL",
 		"message": "Error after processing 2 messages",
-		"stream": [
-			{ "id": 1, "status": "processed" },
-			{ "id": 2, "status": "processed" }
-		],
+		"stream": [{ "id": 1, "status": "processed" }, { "id": 2, "status": "processed" }],
 		"error": {
 			"code": 13,
 			"message": "Error after processing 2 messages"

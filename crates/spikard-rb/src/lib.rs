@@ -1245,9 +1245,9 @@ fn request_parts_from_value(ruby: &Ruby, request_value: Value) -> Result<(Value,
     }
 
     if let Ok(hash) = RHash::try_convert(request_value) {
-        let params_value = hash.get("path_params").unwrap_or(ruby.qnil().as_value());
-        let query_value = hash.get("query").unwrap_or(ruby.qnil().as_value());
-        let body_value = hash.get("body").unwrap_or(ruby.qnil().as_value());
+        let params_value = hash.get("path_params").unwrap_or_else(|| ruby.qnil().as_value());
+        let query_value = hash.get("query").unwrap_or_else(|| ruby.qnil().as_value());
+        let body_value = hash.get("body").unwrap_or_else(|| ruby.qnil().as_value());
         return Ok((params_value, query_value, body_value));
     }
 
@@ -1268,31 +1268,29 @@ fn problem_from_ruby_error(ruby: &Ruby, handler: &RubyHandlerInner, err: Error) 
     }
 
     if let Some(exception) = err.value() {
-        if let Ok(true) = exception.respond_to("status", false) {
+        if matches!(exception.respond_to("status", false), Ok(true)) {
             if let Ok(code) = exception.funcall::<_, _, i64>("status", ()) {
                 status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
             }
-        } else if let Ok(true) = exception.respond_to("status_code", false) {
-            if let Ok(code) = exception.funcall::<_, _, i64>("status_code", ()) {
-                status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-            }
+        } else if matches!(exception.respond_to("status_code", false), Ok(true))
+            && let Ok(code) = exception.funcall::<_, _, i64>("status_code", ())
+        {
+            status = StatusCode::from_u16(code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
         }
 
         let json_module = handler.json_module.get_inner_with(ruby);
-        if let Ok(true) = exception.respond_to("code", false) {
-            if let Ok(value) = exception.funcall::<_, _, Value>("code", ()) {
-                if let Ok(json_value) = ruby_value_to_json(ruby, json_module, value) {
-                    extensions.insert("code".to_string(), json_value);
-                }
-            }
+        if matches!(exception.respond_to("code", false), Ok(true))
+            && let Ok(value) = exception.funcall::<_, _, Value>("code", ())
+            && let Ok(json_value) = ruby_value_to_json(ruby, json_module, value)
+        {
+            extensions.insert("code".to_string(), json_value);
         }
 
-        if let Ok(true) = exception.respond_to("details", false) {
-            if let Ok(value) = exception.funcall::<_, _, Value>("details", ()) {
-                if let Ok(json_value) = ruby_value_to_json(ruby, json_module, value) {
-                    extensions.insert("details".to_string(), json_value);
-                }
-            }
+        if matches!(exception.respond_to("details", false), Ok(true))
+            && let Ok(value) = exception.funcall::<_, _, Value>("details", ())
+            && let Ok(json_value) = ruby_value_to_json(ruby, json_module, value)
+        {
+            extensions.insert("details".to_string(), json_value);
         }
     }
 
@@ -1307,12 +1305,11 @@ fn problem_from_ruby_error(ruby: &Ruby, handler: &RubyHandlerInner, err: Error) 
 }
 
 fn ruby_error_message(_ruby: &Ruby, err: &Error) -> String {
-    if let Some(exception) = err.value() {
-        if let Ok(true) = exception.respond_to("message", false) {
-            if let Ok(message) = exception.funcall::<_, _, String>("message", ()) {
-                return message;
-            }
-        }
+    if let Some(exception) = err.value()
+        && matches!(exception.respond_to("message", false), Ok(true))
+        && let Ok(message) = exception.funcall::<_, _, String>("message", ())
+    {
+        return message;
     }
     err.to_string()
 }

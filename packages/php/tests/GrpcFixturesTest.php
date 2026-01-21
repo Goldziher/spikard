@@ -473,10 +473,10 @@ final class GrpcFixturesTest extends TestCase
         /**  */
         $expectedResponse = $fixture['expected_response'];
         /** @var array<string, mixed> $expectedResponseArray */
-        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
+        $expectedResponseArray = $expectedResponse;
         $expectedError = $expectedResponseArray['error'] ?? null;
         $expectedStatusCode = $this->grpcCodeFromName($expectedResponseArray['status_code'] ?? null);
-        $expectsError = \is_array($expectedError);
+        $expectsError = $expectedError !== null;
 
         if ($expectsError) {
             /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
@@ -491,9 +491,11 @@ final class GrpcFixturesTest extends TestCase
             $status = $result['status'];
 
             $this->validateStreamResponse($responses, $expectedResponseArray);
+            /** @var array<string, mixed> $expectedErrorArray */
+            $expectedErrorArray = $expectedError;
             $expectedCode = null;
-            if (\is_array($expectedError) && \is_numeric($expectedError['code'] ?? null)) {
-                $expectedCode = (int) $expectedError['code'];
+            if (\is_numeric($expectedErrorArray['code'] ?? null)) {
+                $expectedCode = (int) $expectedErrorArray['code'];
             } elseif (\is_int($expectedStatusCode)) {
                 $expectedCode = $expectedStatusCode;
             }
@@ -501,9 +503,7 @@ final class GrpcFixturesTest extends TestCase
                 $this->assertSame($expectedCode, $status['code']);
             }
             $expectedMessage = null;
-            if (\is_array($expectedError)) {
-                $expectedMessage = $expectedError['message'] ?? null;
-            }
+            $expectedMessage = $expectedErrorArray['message'] ?? null;
             if ($expectedMessage === null) {
                 $expectedMessage = $expectedResponseArray['message'] ?? null;
             }
@@ -574,7 +574,7 @@ final class GrpcFixturesTest extends TestCase
         /**  */
         $expectedResponse = $fixture['expected_response'];
         /** @var array<string, mixed> $expectedResponseArray */
-        $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
+        $expectedResponseArray = $expectedResponse;
         $this->validateSingleResponse($response, $expectedResponseArray);
     }
 
@@ -622,7 +622,7 @@ final class GrpcFixturesTest extends TestCase
         $expectedResponseArray = \is_array($expectedResponse) ? $expectedResponse : [];
         $expectedError = $expectedResponseArray['error'] ?? null;
         $expectedStatusCode = $this->grpcCodeFromName($expectedResponseArray['status_code'] ?? null);
-        $expectsError = \is_array($expectedError);
+        $expectsError = $expectedError !== null;
 
         if ($expectsError) {
             /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
@@ -637,9 +637,11 @@ final class GrpcFixturesTest extends TestCase
             $status = $result['status'];
 
             $this->validateStreamResponse($responses, $expectedResponseArray);
+            /** @var array<string, mixed> $expectedErrorArray */
+            $expectedErrorArray = $expectedError;
             $expectedCode = null;
-            if (\is_array($expectedError) && \is_numeric($expectedError['code'] ?? null)) {
-                $expectedCode = (int) $expectedError['code'];
+            if (\is_numeric($expectedErrorArray['code'] ?? null)) {
+                $expectedCode = (int) $expectedErrorArray['code'];
             } elseif (\is_int($expectedStatusCode)) {
                 $expectedCode = $expectedStatusCode;
             }
@@ -647,9 +649,7 @@ final class GrpcFixturesTest extends TestCase
                 $this->assertSame($expectedCode, $status['code']);
             }
             $expectedMessage = null;
-            if (\is_array($expectedError)) {
-                $expectedMessage = $expectedError['message'] ?? null;
-            }
+            $expectedMessage = $expectedErrorArray['message'] ?? null;
             if ($expectedMessage === null) {
                 $expectedMessage = $expectedResponseArray['message'] ?? null;
             }
