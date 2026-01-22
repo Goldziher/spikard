@@ -473,7 +473,18 @@ importers:
 
   tools/benchmark-harness/apps/spikard-bun-raw: {}
 
-  tools/benchmark-harness/apps/spikard-bun-validation: {}
+  tools/benchmark-harness/apps/spikard-bun-validation:
+    dependencies:
+      '@spikard/node':
+        specifier: workspace:*
+        version: link:../../../../packages/node
+      zod:
+        specifier: ^4.3.5
+        version: 4.3.5
+    devDependencies:
+      '@types/node':
+        specifier: ^25.0.8
+        version: 25.0.8
 
   tools/benchmark-harness/apps/spikard-node-raw:
     dependencies:
