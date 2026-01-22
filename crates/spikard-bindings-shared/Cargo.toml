@@ -13,6 +13,7 @@ workspace = true
 [dependencies]
 serde = { workspace = true }
 serde_json.workspace = true
+simd-json = "0.14"
 axum.workspace = true
 tokio.workspace = true
 thiserror.workspace = true
@@ -22,6 +23,7 @@ tracing.workspace = true
 http.workspace = true
 http-body-util = "0.1"
 tonic = "0.14"
+bytes = "1.7"
 
 [features]
 default = []

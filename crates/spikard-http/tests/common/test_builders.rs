@@ -282,10 +282,10 @@ impl RequestBuilder {
 
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: build_query_json(&self.query_params),
+            query_params: Arc::new(build_query_json(&self.query_params)),
             validated_params: None,
             raw_query_params: Arc::new(self.query_params),
-            body: self.body,
+            body: Arc::new(self.body),
             raw_body: None,
             headers: Arc::new(self.headers),
             cookies: Arc::new(self.cookies),
@@ -409,10 +409,10 @@ mod tests {
         let request = Request::builder().body(Body::empty()).unwrap();
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: json!(null),
+            body: Arc::new(json!(null)),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -435,10 +435,10 @@ mod tests {
         let request = Request::builder().body(Body::empty()).unwrap();
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: json!(null),
+            body: Arc::new(json!(null)),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -463,10 +463,10 @@ mod tests {
         let request = Request::builder().body(Body::empty()).unwrap();
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: json!(null),
+            body: Arc::new(json!(null)),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -488,10 +488,10 @@ mod tests {
         let request = Request::builder().body(Body::empty()).unwrap();
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: json!(null),
+            body: Arc::new(json!(null)),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -527,7 +527,7 @@ mod tests {
 
         assert_eq!(request.method(), &Method::POST);
         assert_eq!(request_data.path, "/users");
-        assert_eq!(request_data.body, body);
+        assert_eq!(*request_data.body, body);
     }
 
     #[test]
@@ -609,7 +609,7 @@ mod tests {
 
         assert_eq!(request_data.method, "PUT");
         assert_eq!(request_data.path, "/users/42");
-        assert_eq!(request_data.body, body);
+        assert_eq!(*request_data.body, body);
         assert_eq!(
             request_data.headers.get("authorization"),
             Some(&"Bearer abc123".to_string())

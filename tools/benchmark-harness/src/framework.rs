@@ -662,7 +662,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 42);
+        assert_eq!(frameworks.len(), 44);
     }
 
     #[test]

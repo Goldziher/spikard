@@ -576,11 +576,11 @@ impl RequestContext {
     /// Returns an error if the request body cannot be deserialized into the provided type.
     pub fn json<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
         if !self.data.body.is_null() {
-            serde_json::from_value(self.data.body.clone()).map_err(|err| AppError::Decode(err.to_string()))
+            serde_json::from_value((*self.data.body).clone()).map_err(|err| AppError::Decode(err.to_string()))
         } else if let Some(raw_bytes) = &self.data.raw_body {
             serde_json::from_slice(raw_bytes).map_err(|err| AppError::Decode(err.to_string()))
         } else {
-            serde_json::from_value(self.data.body.clone()).map_err(|err| AppError::Decode(err.to_string()))
+            serde_json::from_value((*self.data.body).clone()).map_err(|err| AppError::Decode(err.to_string()))
         }
     }
 
@@ -590,12 +590,12 @@ impl RequestContext {
     ///
     /// Returns an error if the query parameters cannot be deserialized into the provided type.
     pub fn query<T: DeserializeOwned>(&self) -> std::result::Result<T, AppError> {
-        serde_json::from_value(self.data.query_params.clone()).map_err(|err| AppError::Decode(err.to_string()))
+        serde_json::from_value((*self.data.query_params).clone()).map_err(|err| AppError::Decode(err.to_string()))
     }
 
     /// Borrow the parsed query parameters as JSON.
     #[must_use]
-    pub const fn query_value(&self) -> &Value {
+    pub fn query_value(&self) -> &Value {
         &self.data.query_params
     }
 
@@ -653,7 +653,7 @@ impl RequestContext {
 
     /// Borrow the raw JSON request body.
     #[must_use]
-    pub const fn body_value(&self) -> &Value {
+    pub fn body_value(&self) -> &Value {
         &self.data.body
     }
 
@@ -818,11 +818,11 @@ mod tests {
             path: "/users/{id}".to_string(),
             headers: std::sync::Arc::new(headers),
             cookies: std::sync::Arc::new(cookies),
-            query_params: Value::Object(serde_json::Map::new()),
+            query_params: std::sync::Arc::new(Value::Object(serde_json::Map::new())),
             validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
             path_params: std::sync::Arc::new(path_params),
-            body: Value::Null,
+            body: std::sync::Arc::new(Value::Null),
             raw_body: None,
             #[cfg(feature = "di")]
             dependencies: None,

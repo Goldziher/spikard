@@ -95,7 +95,7 @@ fn build_js_payload(handler: &JsHandler, request_data: &RequestData, validated_p
         if let Some(raw_body) = request_data.raw_body.as_ref() {
             Value::Array(raw_body.iter().copied().map(|b| Value::Number(b.into())).collect())
         } else if !request_data.body.is_null() {
-            match &request_data.body {
+            match &*request_data.body {
                 Value::String(text) => Value::Array(
                     text.as_bytes()
                         .iter()
@@ -111,7 +111,7 @@ fn build_js_payload(handler: &JsHandler, request_data: &RequestData, validated_p
             Value::Null
         }
     } else if !request_data.body.is_null() {
-        request_data.body.clone()
+        (*request_data.body).clone()
     } else if let Some(raw_body) = request_data.raw_body.as_ref() {
         let content_type = request_data
             .headers
@@ -131,7 +131,7 @@ fn build_js_payload(handler: &JsHandler, request_data: &RequestData, validated_p
         Value::Null
     };
     let query: JsonMap<String, Value> = if request_data.raw_query_params.is_empty() {
-        match &request_data.query_params {
+        match &*request_data.query_params {
             Value::Object(map) => map.clone(),
             _ => JsonMap::new(),
         }
@@ -275,7 +275,7 @@ impl JsHandler {
             return Err((problem.status_code(), error_json));
         }
 
-        let payload = build_js_payload(self, &request_data, request_data.validated_params.clone());
+        let payload = build_js_payload(self, &request_data, request_data.validated_params.as_ref().map(|arc| (**arc).clone()));
 
         let js_result = self.call_js(payload).await.map_err(|e| {
             (

@@ -25,11 +25,11 @@ use std::pin::Pin;
 #[derive(Debug, Clone)]
 pub struct RequestData {
     pub path_params: std::sync::Arc<HashMap<String, String>>,
-    pub query_params: Value,
+    pub query_params: std::sync::Arc<Value>,
     /// Validated parameters produced by ParameterValidator (query/path/header/cookie combined).
-    pub validated_params: Option<Value>,
+    pub validated_params: Option<std::sync::Arc<Value>>,
     pub raw_query_params: std::sync::Arc<HashMap<String, Vec<String>>>,
-    pub body: Value,
+    pub body: std::sync::Arc<Value>,
     pub raw_body: Option<bytes::Bytes>,
     pub headers: std::sync::Arc<HashMap<String, String>>,
     pub cookies: std::sync::Arc<HashMap<String, String>>,
@@ -53,10 +53,10 @@ impl Serialize for RequestData {
 
         let mut state = serializer.serialize_struct("RequestData", field_count)?;
         state.serialize_field("path_params", &*self.path_params)?;
-        state.serialize_field("query_params", &self.query_params)?;
-        state.serialize_field("validated_params", &self.validated_params)?;
+        state.serialize_field("query_params", &*self.query_params)?;
+        state.serialize_field("validated_params", &self.validated_params.as_deref())?;
         state.serialize_field("raw_query_params", &*self.raw_query_params)?;
-        state.serialize_field("body", &self.body)?;
+        state.serialize_field("body", &*self.body)?;
         state.serialize_field("raw_body", &self.raw_body.as_ref().map(|b| b.as_ref()))?;
         state.serialize_field("headers", &*self.headers)?;
         state.serialize_field("cookies", &*self.cookies)?;
@@ -124,16 +124,16 @@ impl<'de> Deserialize<'de> for RequestData {
                             path_params = Some(std::sync::Arc::new(map.next_value()?));
                         }
                         Field::QueryParams => {
-                            query_params = Some(map.next_value()?);
+                            query_params = Some(std::sync::Arc::new(map.next_value()?));
                         }
                         Field::RawQueryParams => {
                             raw_query_params = Some(std::sync::Arc::new(map.next_value()?));
                         }
                         Field::ValidatedParams => {
-                            validated_params = Some(map.next_value()?);
+                            validated_params = Some(std::sync::Arc::new(map.next_value()?));
                         }
                         Field::Body => {
-                            body = Some(map.next_value()?);
+                            body = Some(std::sync::Arc::new(map.next_value()?));
                         }
                         Field::RawBody => {
                             let bytes_vec: Option<Vec<u8>> = map.next_value()?;
@@ -285,10 +285,10 @@ mod tests {
     fn minimal_request_data() -> RequestData {
         RequestData {
             path_params: std::sync::Arc::new(HashMap::new()),
-            query_params: Value::Object(serde_json::Map::new()),
+            query_params: std::sync::Arc::new(Value::Object(serde_json::Map::new())),
             validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: std::sync::Arc::new(Value::Null),
             raw_body: None,
             headers: std::sync::Arc::new(HashMap::new()),
             cookies: std::sync::Arc::new(HashMap::new()),
@@ -341,7 +341,7 @@ mod tests {
         });
 
         let data = RequestData {
-            query_params,
+            query_params: std::sync::Arc::new(query_params),
             ..minimal_request_data()
         };
 
@@ -416,7 +416,7 @@ mod tests {
         });
 
         let data = RequestData {
-            body,
+            body: std::sync::Arc::new(body),
             ..minimal_request_data()
         };
 
@@ -481,7 +481,7 @@ mod tests {
         });
 
         let data = RequestData {
-            body,
+            body: std::sync::Arc::new(body),
             ..minimal_request_data()
         };
 
@@ -512,10 +512,10 @@ mod tests {
 
         let data = RequestData {
             path_params: std::sync::Arc::new(path_params),
-            query_params: serde_json::json!({"page": 1}),
+            query_params: std::sync::Arc::new(serde_json::json!({"page": 1})),
             validated_params: None,
             raw_query_params: std::sync::Arc::new(raw_query_params),
-            body,
+            body: std::sync::Arc::new(body),
             raw_body: Some(raw_body),
             headers: std::sync::Arc::new(headers),
             cookies: std::sync::Arc::new(cookies),
@@ -642,14 +642,14 @@ mod tests {
                 map.insert("id".to_string(), "999".to_string());
                 map
             }),
-            query_params: serde_json::json!({"limit": 50, "offset": 10}),
+            query_params: std::sync::Arc::new(serde_json::json!({"limit": 50, "offset": 10})),
             validated_params: None,
             raw_query_params: std::sync::Arc::new({
                 let mut map = HashMap::new();
                 map.insert("sort".to_string(), vec!["name".to_string(), "date".to_string()]);
                 map
             }),
-            body: serde_json::json!({"title": "New Post", "content": "Hello World"}),
+            body: std::sync::Arc::new(serde_json::json!({"title": "New Post", "content": "Hello World"})),
             raw_body: None,
             headers: std::sync::Arc::new({
                 let mut map = HashMap::new();
@@ -689,7 +689,7 @@ mod tests {
         }
 
         let data = RequestData {
-            body: Value::Object(large_object),
+            body: std::sync::Arc::new(Value::Object(large_object)),
             ..minimal_request_data()
         };
 
@@ -704,10 +704,10 @@ mod tests {
     fn test_request_data_empty_collections() {
         let data = RequestData {
             path_params: std::sync::Arc::new(HashMap::new()),
-            query_params: Value::Object(serde_json::Map::new()),
+            query_params: std::sync::Arc::new(Value::Object(serde_json::Map::new())),
             validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
-            body: Value::Object(serde_json::Map::new()),
+            body: std::sync::Arc::new(Value::Object(serde_json::Map::new())),
             raw_body: None,
             headers: std::sync::Arc::new(HashMap::new()),
             cookies: std::sync::Arc::new(HashMap::new()),
@@ -738,7 +738,7 @@ mod tests {
             method: "POST".to_string(),
             path: "/api/v1/users\\test".to_string(),
             headers: std::sync::Arc::new(headers),
-            body: serde_json::json!({"note": "Contains\nnewline"}),
+            body: std::sync::Arc::new(serde_json::json!({"note": "Contains\nnewline"})),
             ..minimal_request_data()
         };
 
@@ -779,7 +779,7 @@ mod tests {
     #[test]
     fn test_request_data_serialization_null_body() {
         let data = RequestData {
-            body: Value::Null,
+            body: std::sync::Arc::new(Value::Null),
             ..minimal_request_data()
         };
 
@@ -791,7 +791,7 @@ mod tests {
     #[test]
     fn test_request_data_serialization_array_body() {
         let data = RequestData {
-            body: serde_json::json!([1, 2, 3, "four", {"five": 5}]),
+            body: std::sync::Arc::new(serde_json::json!([1, 2, 3, "four", {"five": 5}])),
             ..minimal_request_data()
         };
 
@@ -807,12 +807,12 @@ mod tests {
     #[test]
     fn test_request_data_serialization_numeric_edge_cases() {
         let data = RequestData {
-            body: serde_json::json!({
+            body: std::sync::Arc::new(serde_json::json!({
                 "zero": 0,
                 "negative": -42,
                 "large": 9223372036854775807i64,
                 "float": 3.14159
-            }),
+            })),
             ..minimal_request_data()
         };
 

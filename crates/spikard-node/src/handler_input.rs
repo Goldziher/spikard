@@ -10,11 +10,21 @@ use spikard_http::RequestData;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// Helper to unwrap Arc without cloning when possible
+#[inline(always)]
+fn unwrap_arc<T: Clone>(arc: Arc<T>) -> T {
+    Arc::try_unwrap(arc).unwrap_or_else(|arc| (*arc).clone())
+}
+
 /// Structured handler input passed to JavaScript handlers
 ///
 /// This struct replaces JSON string passing, eliminating serialization overhead.
 /// Fields are converted from `RequestData` using a direct `From` impl.
-#[napi(object)]
+///
+/// PERFORMANCE: `object_from_js = false` skips generating FromNapiValue since
+/// HandlerInput only flows Rust→JS, never JS→Rust. This eliminates unnecessary
+/// code generation and potential conversion overhead.
+#[napi(object, object_from_js = false)]
 pub struct HandlerInput {
     /// HTTP method (GET, POST, etc.)
     pub method: String,
@@ -41,29 +51,29 @@ impl From<&RequestData> for HandlerInput {
             path: data.path.clone(),
             headers: (*data.headers).clone(),
             cookies: (*data.cookies).clone(),
-            query_params: data.query_params.clone(),
-            validated_params: data.validated_params.clone(),
-            body: data.body.clone(),
+            query_params: (*data.query_params).clone(),
+            validated_params: data.validated_params.as_ref().map(|arc| (**arc).clone()),
+            body: (*data.body).clone(),
             path_params: (*data.path_params).clone(),
         }
     }
 }
 
-fn unwrap_arc_map<K: Clone, V: Clone>(map: Arc<HashMap<K, V>>) -> HashMap<K, V> {
-    Arc::try_unwrap(map).unwrap_or_else(|map| (*map).clone())
-}
 
 impl From<RequestData> for HandlerInput {
     fn from(data: RequestData) -> Self {
+        // PERFORMANCE: Try to unwrap Arcs to avoid cloning when possible
+        // When Arc refcount is 1 (typical case): Zero-copy, no allocation
+        // When Arc refcount > 1 (rare): Falls back to clone
         Self {
             method: data.method,
             path: data.path,
-            headers: unwrap_arc_map(data.headers),
-            cookies: unwrap_arc_map(data.cookies),
-            query_params: data.query_params,
-            validated_params: data.validated_params,
-            body: data.body,
-            path_params: unwrap_arc_map(data.path_params),
+            headers: unwrap_arc(data.headers),
+            cookies: unwrap_arc(data.cookies),
+            query_params: unwrap_arc(data.query_params),
+            validated_params: data.validated_params.map(unwrap_arc),
+            body: unwrap_arc(data.body),
+            path_params: unwrap_arc(data.path_params),
         }
     }
 }

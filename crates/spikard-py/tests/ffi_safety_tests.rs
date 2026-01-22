@@ -121,10 +121,10 @@ fn build_python_handler(code: &str, function_name: &str, is_async: bool) -> Arc<
 fn default_request_data() -> RequestData {
     RequestData {
         path_params: HashMap::new().into(),
-        query_params: Value::Null,
+        query_params: Arc::new(Value::Null),
         validated_params: None,
         raw_query_params: HashMap::new().into(),
-        body: json!({}),
+        body: Arc::new(json!({})),
         raw_body: None,
         headers: HashMap::new().into(),
         cookies: HashMap::new().into(),
@@ -184,10 +184,10 @@ async def handler(path_params, query_params, body, headers, cookies):
 
             let req_data = RequestData {
                 path_params: path_params.into(),
-                query_params: Value::Null,
+                query_params: Arc::new(Value::Null),
                 validated_params: None,
                 raw_query_params: HashMap::new().into(),
-                body: json!({}),
+                body: Arc::new(json!({})),
                 raw_body: None,
                 headers: HashMap::new().into(),
                 cookies: HashMap::new().into(),
@@ -347,8 +347,8 @@ def handler(path_params, query_params, body, headers, cookies):
         let h = handler.clone();
         let handle = tokio::spawn(async move {
             let req_data = RequestData {
-                body: Value::Null,
-                query_params: Value::Null,
+                body: Arc::new(Value::Null),
+                query_params: Arc::new(Value::Null),
                 validated_params: None,
                 ..default_request_data()
             };
@@ -675,7 +675,7 @@ def valid_handler(path_params, query_params, body, headers, cookies):
 
     let req_data = RequestData {
         path_params: path_params.into(),
-        body: json!({"name": "Alice", "age": 30}),
+        body: Arc::new(json!({"name": "Alice", "age": 30})),
         ..default_request_data()
     };
 
@@ -1146,7 +1146,7 @@ def handler(path_params, query_params, body, headers, cookies):
 
     let deep_handler = build_python_handler(deep_code, "handler", false);
     let req_data = RequestData {
-        body: nested,
+        body: Arc::new(nested),
         ..default_request_data()
     };
     let req = Request::builder()
@@ -1200,7 +1200,7 @@ def handler(path_params, query_params, body, headers, cookies):
 
     let array_handler = build_python_handler(array_code, "handler", false);
     let req_data = RequestData {
-        body: large_array,
+        body: Arc::new(large_array),
         ..default_request_data()
     };
     let req = Request::builder()
@@ -1254,7 +1254,7 @@ def handler(path_params, query_params, body, headers, cookies):
 
     let mixed_handler = build_python_handler(mixed_code, "handler", false);
     let req_data = RequestData {
-        body: mixed_array,
+        body: Arc::new(mixed_array),
         ..default_request_data()
     };
     let req = Request::builder()

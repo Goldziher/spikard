@@ -30,12 +30,12 @@ fn test_handler_input_basic_conversion() {
         path: "/api/users".to_string(),
         method: "POST".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({"limit": 10}),
+        query_params: Arc::new(json!({"limit": 10})),
         validated_params: None,
         headers: Arc::new(headers),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!({"name": "Alice"}),
+        body: Arc::new(json!({"name": "Alice"})),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -63,12 +63,12 @@ fn test_handler_input_path_params_conversion() {
         path: "/api/articles/:id/:slug".to_string(),
         method: "GET".to_string(),
         path_params: Arc::new(path_params),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: Value::Null,
+        body: Arc::new(Value::Null),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -92,12 +92,12 @@ fn test_handler_input_cookies_conversion() {
         path: "/dashboard".to_string(),
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(cookies),
         raw_query_params: Arc::new(HashMap::new()),
-        body: Value::Null,
+        body: Arc::new(Value::Null),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -130,12 +130,12 @@ fn test_handler_input_complex_body_conversion() {
         path: "/api/users".to_string(),
         method: "POST".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: complex_body.clone(),
+        body: Arc::new(complex_body.clone()),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -153,14 +153,14 @@ fn test_handler_input_complex_body_conversion() {
 /// Test HandlerInput with query parameters
 #[test]
 fn test_handler_input_query_params_conversion() {
-    let query_params = json!({
+    let query_params = Arc::new(json!({
         "page": 1,
         "limit": 20,
         "sort": "created_at",
         "filter": {
             "status": "active"
         }
-    });
+    }));
 
     let request = RequestData {
         path: "/api/items".to_string(),
@@ -171,7 +171,7 @@ fn test_handler_input_query_params_conversion() {
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: Value::Null,
+        body: Arc::new(Value::Null),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -290,12 +290,12 @@ fn test_header_case_preservation() {
         path: "/test".to_string(),
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(headers.clone()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: Value::Null,
+        body: Arc::new(Value::Null),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -322,12 +322,12 @@ fn test_header_special_characters() {
         path: "/test".to_string(),
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(headers),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: Value::Null,
+        body: Arc::new(Value::Null),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -349,12 +349,12 @@ fn test_cookie_special_characters() {
         path: "/test".to_string(),
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(cookies),
         raw_query_params: Arc::new(HashMap::new()),
-        body: Value::Null,
+        body: Arc::new(Value::Null),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -413,12 +413,12 @@ fn test_handler_input_empty_collections() {
         path: "/empty".to_string(),
         method: "GET".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: Value::Null,
+        body: Arc::new(Value::Null),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -463,12 +463,12 @@ fn test_handler_input_large_array_body() {
         path: "/api/items".to_string(),
         method: "POST".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!(large_array),
+        body: Arc::new(json!(large_array)),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,
@@ -492,12 +492,12 @@ fn test_handler_input_deeply_nested_body() {
         path: "/api/nested".to_string(),
         method: "POST".to_string(),
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
         raw_query_params: Arc::new(HashMap::new()),
-        body: nested.clone(),
+        body: Arc::new(nested.clone()),
         raw_body: None,
         #[cfg(feature = "di")]
         dependencies: None,

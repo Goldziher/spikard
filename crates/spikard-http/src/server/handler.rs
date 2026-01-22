@@ -43,9 +43,12 @@ impl Handler for ValidatingHandler {
         req: axum::http::Request<Body>,
         mut request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        let inner = self.inner.clone();
-        let request_validator = self.request_validator.clone();
-        let parameter_validator = self.parameter_validator.clone();
+        // Performance: Use references where possible to avoid Arc clones on every request.
+        // The Arc clones here are cheap (atomic increment), but we store references
+        // to Option<Arc<...>> to avoid cloning when validators are None (common case).
+        let inner = &self.inner;
+        let request_validator = &self.request_validator;
+        let parameter_validator = &self.parameter_validator;
 
         Box::pin(async move {
             let is_json_body = request_data.body.is_null()
@@ -57,15 +60,15 @@ impl Handler for ValidatingHandler {
 
             if is_json_body && request_validator.is_none() && !inner.prefers_raw_json_body() {
                 let raw_bytes = request_data.raw_body.as_ref().unwrap();
-                request_data.body = serde_json::from_slice::<Value>(raw_bytes)
-                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?;
+                request_data.body = Arc::new(serde_json::from_slice::<Value>(raw_bytes)
+                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?);
             }
 
             if let Some(validator) = request_validator {
                 if request_data.body.is_null() && request_data.raw_body.is_some() {
                     let raw_bytes = request_data.raw_body.as_ref().unwrap();
-                    request_data.body = serde_json::from_slice::<Value>(raw_bytes)
-                        .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?;
+                    request_data.body = Arc::new(serde_json::from_slice::<Value>(raw_bytes)
+                        .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?);
                 }
 
                 if let Err(errors) = validator.validate(&request_data.body) {
@@ -86,7 +89,7 @@ impl Handler for ValidatingHandler {
                     &request_data.cookies,
                 ) {
                     Ok(validated) => {
-                        request_data.validated_params = Some(validated);
+                        request_data.validated_params = Some(Arc::new(validated));
                     }
                     Err(errors) => {
                         let problem = ProblemDetails::from_validation_error(&errors);
@@ -124,10 +127,10 @@ mod tests {
     fn create_request_data(body: Value) -> RequestData {
         RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body,
+            body: Arc::new(body),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -142,10 +145,10 @@ mod tests {
     fn create_request_data_with_raw_body(raw_body: Vec<u8>) -> RequestData {
         RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: Some(bytes::Bytes::from(raw_body)),
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -261,10 +264,10 @@ mod tests {
         headers.insert("content-type".to_string(), "application/json".to_string());
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: Some(bytes::Bytes::from(br#"{"name":"Alice"}"#.to_vec())),
             headers: Arc::new(headers),
             cookies: Arc::new(HashMap::new()),
@@ -762,10 +765,10 @@ mod tests {
 
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -900,10 +903,10 @@ mod tests {
 
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: Some(bytes::Bytes::from(br#"{"id":42}"#.to_vec())),
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),

@@ -1,4 +1,9 @@
 //! Request parsing and data extraction utilities
+//!
+//! Performance optimizations in this module:
+//! - Static singletons for empty collections avoid repeated allocations
+//! - HashMap::with_capacity pre-allocates based on expected sizes
+//! - Arc wrapping enables cheap cloning of RequestData
 
 use crate::handler_trait::RequestData;
 use crate::query_parser::{parse_query_pairs_to_json, parse_query_string};
@@ -8,6 +13,28 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::OnceLock;
+
+// Performance: Static singletons for empty collections.
+// These avoid allocating new empty HashMaps/Values for every request that doesn't
+// need them (e.g., requests without query params, headers disabled, etc.).
+
+/// Static empty JSON object value, shared across all requests without query params.
+fn empty_json_object() -> Arc<Value> {
+    static EMPTY: OnceLock<Arc<Value>> = OnceLock::new();
+    Arc::clone(EMPTY.get_or_init(|| Arc::new(Value::Object(serde_json::Map::new()))))
+}
+
+/// Static null JSON value for requests without bodies.
+fn null_json_value() -> Arc<Value> {
+    static NULL: OnceLock<Arc<Value>> = OnceLock::new();
+    Arc::clone(NULL.get_or_init(|| Arc::new(Value::Null)))
+}
+
+/// Static empty path params map.
+fn empty_path_params() -> Arc<HashMap<String, String>> {
+    static EMPTY: OnceLock<Arc<HashMap<String, String>>> = OnceLock::new();
+    Arc::clone(EMPTY.get_or_init(|| Arc::new(HashMap::new())))
+}
 
 #[derive(Debug, Clone, Copy)]
 pub struct WithoutBodyExtractionOptions {
@@ -24,6 +51,7 @@ fn extract_query_params_and_raw(
 ) -> (Value, HashMap<String, Vec<String>>) {
     let query_string = uri.query().unwrap_or("");
     if query_string.is_empty() {
+        // Performance: Return empty object for empty query string.
         return (Value::Object(serde_json::Map::new()), HashMap::new());
     }
 
@@ -34,22 +62,23 @@ fn extract_query_params_and_raw(
             HashMap::new(),
         ),
         (true, false) => {
-            let raw =
-                parse_query_string(query_string.as_bytes(), '&')
-                    .into_iter()
-                    .fold(HashMap::new(), |mut acc, (k, v)| {
-                        acc.entry(k).or_insert_with(Vec::new).push(v);
-                        acc
-                    });
+            let pairs = parse_query_string(query_string.as_bytes(), '&');
+            // Performance: Pre-allocate HashMap with estimated unique key count.
+            // In practice, most keys are unique, so pairs.len() is a good estimate.
+            let mut raw = HashMap::with_capacity(pairs.len());
+            for (k, v) in pairs {
+                raw.entry(k).or_insert_with(Vec::new).push(v);
+            }
             (Value::Null, raw)
         }
         (true, true) => {
             let pairs = parse_query_string(query_string.as_bytes(), '&');
             let json = parse_query_pairs_to_json(&pairs, true);
-            let raw = pairs.into_iter().fold(HashMap::new(), |mut acc, (k, v)| {
-                acc.entry(k).or_insert_with(Vec::new).push(v);
-                acc
-            });
+            // Performance: Pre-allocate HashMap with estimated unique key count.
+            let mut raw = HashMap::with_capacity(pairs.len());
+            for (k, v) in pairs {
+                raw.entry(k).or_insert_with(Vec::new).push(v);
+            }
             (json, raw)
         }
     }
@@ -67,18 +96,21 @@ pub fn extract_query_params(uri: &axum::http::Uri) -> Value {
 
 /// Extract raw query parameters as strings (no type conversion)
 /// Used for validation error messages to show the actual input values
+///
+/// Performance: Pre-allocates HashMap based on parsed pair count.
 pub fn extract_raw_query_params(uri: &axum::http::Uri) -> HashMap<String, Vec<String>> {
     let query_string = uri.query().unwrap_or("");
     if query_string.is_empty() {
-        HashMap::new()
-    } else {
-        parse_query_string(query_string.as_bytes(), '&')
-            .into_iter()
-            .fold(HashMap::new(), |mut acc, (k, v)| {
-                acc.entry(k).or_insert_with(Vec::new).push(v);
-                acc
-            })
+        return HashMap::new();
     }
+
+    let pairs = parse_query_string(query_string.as_bytes(), '&');
+    // Performance: Pre-allocate with estimated unique key count.
+    let mut map = HashMap::with_capacity(pairs.len());
+    for (k, v) in pairs {
+        map.entry(k).or_insert_with(Vec::new).push(v);
+    }
+    map
 }
 
 /// Extract headers from request
@@ -107,13 +139,21 @@ fn extract_content_type_header(headers: &axum::http::HeaderMap) -> Arc<HashMap<S
 }
 
 /// Extract cookies from request headers
+///
+/// Performance: Pre-allocates HashMap capacity based on estimated cookie count
+/// by counting semicolons in the cookie string (each cookie separated by "; ").
 pub fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
-    let mut cookies = HashMap::new();
+    let Some(cookie_str) = headers.get(axum::http::header::COOKIE).and_then(|h| h.to_str().ok()) else {
+        return HashMap::new();
+    };
 
-    if let Some(cookie_str) = headers.get(axum::http::header::COOKIE).and_then(|h| h.to_str().ok()) {
-        for cookie in cookie::Cookie::split_parse(cookie_str).flatten() {
-            cookies.insert(cookie.name().to_string(), cookie.value().to_string());
-        }
+    // Performance: Estimate cookie count by counting semicolons + 1.
+    // Typical cookie string: "session=abc; user=123; theme=dark"
+    let estimated_count = cookie_str.bytes().filter(|&b| b == b';').count() + 1;
+    let mut cookies = HashMap::with_capacity(estimated_count);
+
+    for cookie in cookie::Cookie::split_parse(cookie_str).flatten() {
+        cookies.insert(cookie.name().to_string(), cookie.value().to_string());
     }
 
     cookies
@@ -132,6 +172,10 @@ fn empty_raw_query_map() -> Arc<HashMap<String, Vec<String>>> {
 /// Create RequestData from request parts (for requests without body)
 ///
 /// Wraps HashMaps in Arc to enable cheap cloning without duplicating data.
+///
+/// Performance optimizations:
+/// - Uses static singletons for empty path params, body, headers, cookies
+/// - Only allocates when data is present
 pub fn create_request_data_without_body(
     uri: &axum::http::Uri,
     method: &axum::http::Method,
@@ -141,9 +185,26 @@ pub fn create_request_data_without_body(
 ) -> RequestData {
     let (query_params, raw_query_params) =
         extract_query_params_and_raw(uri, options.include_raw_query_params, options.include_query_params_json);
+
+    // Performance: Use static singleton for empty path params (common for routes without params).
+    let path_params_arc = if path_params.is_empty() {
+        empty_path_params()
+    } else {
+        Arc::new(path_params)
+    };
+
+    // Performance: Use static singleton for empty query params.
+    let query_params_arc = if matches!(query_params, Value::Object(ref m) if m.is_empty()) {
+        empty_json_object()
+    } else if matches!(query_params, Value::Null) {
+        null_json_value()
+    } else {
+        Arc::new(query_params)
+    };
+
     RequestData {
-        path_params: Arc::new(path_params),
-        query_params,
+        path_params: path_params_arc,
+        query_params: query_params_arc,
         raw_query_params: if raw_query_params.is_empty() {
             empty_raw_query_map()
         } else {
@@ -160,7 +221,8 @@ pub fn create_request_data_without_body(
         } else {
             empty_string_map()
         },
-        body: Value::Null,
+        // Performance: Use static null value singleton.
+        body: null_json_value(),
         raw_body: None,
         method: method.as_str().to_string(),
         path: uri.path().to_string(),
@@ -172,8 +234,11 @@ pub fn create_request_data_without_body(
 /// Create RequestData from request parts (for requests with body)
 ///
 /// Wraps HashMaps in Arc to enable cheap cloning without duplicating data.
-/// Performance optimization: stores raw body bytes without parsing JSON.
-/// JSON parsing is deferred until actually needed (e.g., for validation).
+///
+/// Performance optimizations:
+/// - Stores raw body bytes without parsing JSON (deferred parsing)
+/// - Uses static singletons for empty collections
+/// - Pre-read body bytes are reused if available in extensions
 pub async fn create_request_data_with_body(
     parts: &axum::http::request::Parts,
     path_params: HashMap<String, String>,
@@ -200,15 +265,32 @@ pub async fn create_request_data_with_body(
     let (query_params, raw_query_params) =
         extract_query_params_and_raw(&parts.uri, include_raw_query_params, include_query_params_json);
 
-    let body_value = parts
-        .extensions
-        .get::<crate::middleware::PreParsedJson>()
-        .map(|parsed| parsed.0.clone())
-        .unwrap_or(Value::Null);
+    // Performance: Use static singleton for empty path params.
+    let path_params_arc = if path_params.is_empty() {
+        empty_path_params()
+    } else {
+        Arc::new(path_params)
+    };
+
+    // Performance: Use static singleton for empty/null query params.
+    let query_params_arc = if matches!(query_params, Value::Object(ref m) if m.is_empty()) {
+        empty_json_object()
+    } else if matches!(query_params, Value::Null) {
+        null_json_value()
+    } else {
+        Arc::new(query_params)
+    };
+
+    // Performance: Reuse pre-parsed JSON if available, otherwise use static null.
+    let body_arc = if let Some(parsed) = parts.extensions.get::<crate::middleware::PreParsedJson>() {
+        Arc::new(parsed.0.clone())
+    } else {
+        null_json_value()
+    };
 
     Ok(RequestData {
-        path_params: Arc::new(path_params),
-        query_params,
+        path_params: path_params_arc,
+        query_params: query_params_arc,
         raw_query_params: if raw_query_params.is_empty() {
             empty_raw_query_map()
         } else {
@@ -225,7 +307,7 @@ pub async fn create_request_data_with_body(
         } else {
             empty_string_map()
         },
-        body: body_value,
+        body: body_arc,
         raw_body: if body_bytes.is_empty() { None } else { Some(body_bytes) },
         method: parts.method.as_str().to_string(),
         path: parts.uri.path().to_string(),
@@ -477,11 +559,11 @@ mod tests {
         assert_eq!(result.method, "GET");
         assert_eq!(result.path, "/test");
         assert!(result.path_params.is_empty());
-        assert_eq!(result.query_params, json!({}));
+        assert_eq!(*result.query_params, json!({}));
         assert!(result.raw_query_params.is_empty());
         assert!(result.headers.is_empty());
         assert!(result.cookies.is_empty());
-        assert_eq!(result.body, Value::Null);
+        assert_eq!(*result.body, Value::Null);
         assert!(result.raw_body.is_none());
     }
 
@@ -507,7 +589,7 @@ mod tests {
 
         let result = create_request_data_without_body(&uri, &method, &headers, path_params, OPTIONS_ALL);
 
-        assert_eq!(result.query_params, json!({"q": "rust", "limit": 10}));
+        assert_eq!(*result.query_params, json!({"q": "rust", "limit": 10}));
         assert_eq!(result.raw_query_params.get("q"), Some(&vec!["rust".to_string()]));
         assert_eq!(result.raw_query_params.get("limit"), Some(&vec!["10".to_string()]));
     }
@@ -603,7 +685,7 @@ mod tests {
 
         assert_eq!(result.method, "POST");
         assert_eq!(result.path, "/test");
-        assert_eq!(result.body, Value::Null);
+        assert_eq!(*result.body, Value::Null);
         assert!(result.raw_body.is_none());
     }
 
@@ -624,7 +706,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(result.method, "POST");
-        assert_eq!(result.body, Value::Null);
+        assert_eq!(*result.body, Value::Null);
         assert!(result.raw_body.is_some());
         assert_eq!(result.raw_body.as_ref().unwrap().as_ref(), br#"{"key":"value"}"#);
     }
@@ -645,7 +727,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(result.query_params, json!({"foo": "bar", "baz": "qux"}));
+        assert_eq!(*result.query_params, json!({"foo": "bar", "baz": "qux"}));
     }
 
     #[tokio::test]
@@ -741,7 +823,7 @@ mod tests {
         assert_eq!(result.method, "PUT");
         assert_eq!(result.path, "/users/42");
         assert_eq!(result.path_params.get("user_id"), Some(&"42".to_string()));
-        assert_eq!(result.query_params, json!({"action": "update"}));
+        assert_eq!(*result.query_params, json!({"action": "update"}));
         assert!(result.headers.contains_key("authorization"));
         assert!(result.cookies.contains_key("session"));
         assert!(result.raw_body.is_some());

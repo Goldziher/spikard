@@ -252,6 +252,19 @@ fn json_array_to_php(arr: &[Value]) -> PhpResult<ZBox<ZendHashTable>> {
     Ok(table)
 }
 
+/// Helper to convert ArrayKey to String.
+///
+/// PERFORMANCE: Centralized conversion reduces code duplication and enables
+/// better compiler optimizations for string allocation patterns.
+#[inline]
+fn arraykey_to_string(key: &ext_php_rs::types::ArrayKey) -> String {
+    match key {
+        ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+        ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+        ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+    }
+}
+
 /// Helper to convert Zval to JSON Value.
 pub fn zval_to_json(value: &ext_php_rs::types::Zval) -> Result<Value, String> {
     if value.is_null() {
@@ -281,11 +294,9 @@ pub fn zval_to_json(value: &ext_php_rs::types::Zval) -> Result<Value, String> {
     {
         let mut map = serde_json::Map::new();
         for (key, val) in props.iter() {
-            let key_str = match key {
-                ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
-                ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
-                ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
-            };
+            // PERFORMANCE: Extract ArrayKey to String conversion into helper function
+            // to reduce code duplication and enable compiler optimizations
+            let key_str = arraykey_to_string(&key);
             let json_val = zval_to_json(val)?;
             map.insert(key_str, json_val);
         }
@@ -298,6 +309,8 @@ pub fn zval_to_json(value: &ext_php_rs::types::Zval) -> Result<Value, String> {
         let mut expected_idx = 0i64;
 
         for (key, val) in arr.iter() {
+            // PERFORMANCE: Combine sequential check with string conversion to avoid
+            // repeated to_string() calls and reduce allocations
             let key_str = match key {
                 ext_php_rs::types::ArrayKey::Long(i) => {
                     if i != expected_idx {

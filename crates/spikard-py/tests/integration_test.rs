@@ -116,10 +116,10 @@ def handler(body: Payload):
         headers.insert("content-type".to_string(), "application/json".to_string());
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: json!(null),
+            body: Arc::new(json!(null)),
             raw_body: Some(bytes::Bytes::from_static(br#"{"name":"x"}"#)),
             headers: Arc::new(headers),
             cookies: Arc::new(HashMap::new()),
@@ -197,10 +197,10 @@ def sync_handler(path_params, query_params, body, headers, cookies):
 
     let request_data = RequestData {
         path_params: HashMap::new().into(),
-        query_params: serde_json::Value::Null,
+        query_params: Arc::new(serde_json::Value::Null),
         validated_params: None,
         raw_query_params: HashMap::new().into(),
-        body: json!({"test": "data"}),
+        body: Arc::new(json!({"test": "data"})),
         raw_body: None,
         headers: HashMap::new().into(),
         cookies: HashMap::new().into(),
@@ -250,10 +250,10 @@ async def async_handler(path_params, query_params, body, headers, cookies):
 
     let request_data = RequestData {
         path_params: path_params.into(),
-        query_params: serde_json::Value::Null,
+        query_params: Arc::new(serde_json::Value::Null),
         validated_params: None,
         raw_query_params: HashMap::new().into(),
-        body: serde_json::Value::Null,
+        body: Arc::new(serde_json::Value::Null),
         raw_body: None,
         headers: HashMap::new().into(),
         cookies: HashMap::new().into(),
@@ -296,10 +296,10 @@ def handler(path_params, query_params, body, headers, cookies):
 
     let request_data = RequestData {
         path_params: HashMap::new().into(),
-        query_params: serde_json::Value::Null,
+        query_params: Arc::new(serde_json::Value::Null),
         validated_params: None,
         raw_query_params: HashMap::new().into(),
-        body: json!({"ignored": true}),
+        body: Arc::new(json!({"ignored": true})),
         raw_body: None,
         headers: HashMap::new().into(),
         cookies: HashMap::new().into(),
@@ -343,10 +343,10 @@ def error_handler(path_params, query_params, body, headers, cookies):
 
     let request_data = RequestData {
         path_params: HashMap::new().into(),
-        query_params: serde_json::Value::Null,
+        query_params: Arc::new(serde_json::Value::Null),
         validated_params: None,
         raw_query_params: HashMap::new().into(),
-        body: serde_json::Value::Null,
+        body: Arc::new(serde_json::Value::Null),
         raw_body: None,
         headers: HashMap::new().into(),
         cookies: HashMap::new().into(),
@@ -396,10 +396,10 @@ def echo_handler(path_params, query_params, body, headers, cookies):
 
     let request_data = RequestData {
         path_params: HashMap::new().into(),
-        query_params: serde_json::Value::Null,
+        query_params: Arc::new(serde_json::Value::Null),
         validated_params: None,
         raw_query_params: HashMap::new().into(),
-        body: serde_json::Value::Null,
+        body: Arc::new(serde_json::Value::Null),
         raw_body: None,
         headers: headers.clone().into(),
         cookies: cookies.clone().into(),

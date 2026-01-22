@@ -20,8 +20,8 @@ async fn test_request_data_serialization() {
     let mut cookies = HashMap::new();
     cookies.insert("session".to_string(), "abc123".to_string());
 
-    let query_params = json!({"page": "1", "limit": "10"});
-    let body = json!({"name": "test"});
+    let query_params = Arc::new(json!({"page": "1", "limit": "10"}));
+    let body = Arc::new(json!({"name": "test"}));
 
     let request_data = RequestData {
         path: "/api/users/123".to_string(),

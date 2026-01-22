@@ -3,6 +3,8 @@
 use crate::conversion::{json_to_python, python_to_json};
 use crate::handler_request::PyHandlerRequest;
 use crate::response::StreamingResponse;
+use crate::response_interpreter::PyResponseInterpreter;
+use spikard_bindings_shared::ResponseInterpreter;
 use axum::{
     body::Body,
     http::{Request, Response, StatusCode},
@@ -423,15 +425,14 @@ impl PythonHandler {
     ///
     /// This runs the Python code in a blocking task to avoid blocking the Tokio runtime
     pub async fn call(&self, _req: Request<Body>, request_data: RequestData) -> HandlerResult {
-        let validated_params = request_data.validated_params.clone();
+        // PERFORMANCE: Clone validated_params directly to avoid intermediate allocation
+        let validated_params_for_task = request_data.validated_params.clone();
 
         let handler = self.handler.clone();
         let is_async = self.is_async;
         let response_validator = self.response_validator.clone();
         let prefer_msgspec_json = true;
-        let _request_data_for_error = request_data.clone();
         let body_param_name = self.body_param_name.clone();
-        let validated_params_for_task = validated_params.clone();
         let needs_param_conversion = self.needs_param_conversion;
         let handler_params = self.handler_params.clone();
         let request_only_handler = self.request_only_handler;
@@ -461,8 +462,10 @@ impl PythonHandler {
                     let raw = request_data.raw_body.as_deref().ok_or_else(|| {
                         pyo3::exceptions::PyRuntimeError::new_err("Missing raw body bytes for JSON request")
                     })?;
+                    // PERFORMANCE: Take ownership of Arc first, then try_unwrap to avoid double-clone
                     let body_value = if !request_data.body.is_null() {
-                        request_data.body.clone()
+                        Arc::try_unwrap(request_data.body)
+                            .unwrap_or_else(|arc| (*arc).clone())
                     } else {
                         serde_json::from_slice::<Value>(raw)
                             .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?
@@ -551,8 +554,10 @@ impl PythonHandler {
                         let raw = request_data_for_sync.raw_body.as_deref().ok_or_else(|| {
                             pyo3::exceptions::PyRuntimeError::new_err("Missing raw body bytes for JSON request")
                         })?;
+                        // PERFORMANCE: Take ownership of Arc first, then try_unwrap to avoid double-clone
                         let body_value = if !request_data_for_sync.body.is_null() {
-                            request_data_for_sync.body.clone()
+                            Arc::try_unwrap(request_data_for_sync.body)
+                                .unwrap_or_else(|arc| (*arc).clone())
                         } else {
                             serde_json::from_slice::<Value>(raw).map_err(|e| {
                                 pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}"))
@@ -744,8 +749,10 @@ fn validated_params_to_py_kwargs<'py>(
 
         if is_json_content_type(&request_data.headers) {
             if !needs_param_conversion {
+                // PERFORMANCE: Clone Arc reference for try_unwrap; if sole owner, no clone occurs
                 let body_value = if !request_data.body.is_null() {
-                    request_data.body.clone()
+                    Arc::try_unwrap(Arc::clone(&request_data.body))
+                        .unwrap_or_else(|arc| (*arc).clone())
                 } else {
                     serde_json::from_slice::<Value>(raw_bytes)
                         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?
@@ -798,60 +805,56 @@ fn validated_params_to_py_kwargs<'py>(
 
 /// Convert Python object to Response`Result`
 ///
-/// Checks if the object is a `Response` instance with custom status/headers,
-/// otherwise treats it as JSON data
+/// Uses ResponseInterpreter to detect streaming, custom, or plain JSON responses.
+/// This consolidates response interpretation logic shared across all bindings.
 fn python_to_response_result(
     py: Python<'_>,
     obj: &Bound<'_, PyAny>,
     prefer_msgspec_json: bool,
 ) -> PyResult<ResponseResult> {
-    if obj.is_instance_of::<StreamingResponse>() {
-        let streaming: Py<StreamingResponse> = obj.extract()?;
-        let handler_response = streaming.borrow(py).to_handler_response(py)?;
-        return Ok(ResponseResult::Stream(handler_response));
-    }
+    let interpreter = PyResponseInterpreter;
+    let obj_py = obj.clone().unbind();
 
-    if obj.hasattr("status_code")? && obj.hasattr("content")? && obj.hasattr("headers")? {
-        let status_code: u16 = obj.getattr("status_code")?.extract()?;
-
-        let content_attr = obj.getattr("content")?;
-        let content = if content_attr.is_none() {
-            Value::Null
-        } else {
-            python_to_json(py, &content_attr)?
-        };
-
-        let headers_dict = obj.getattr("headers")?;
-        let mut headers = HashMap::new();
-
-        #[allow(deprecated)]
-        if let Ok(dict) = headers_dict.downcast::<PyDict>() {
-            for (key, value) in dict.iter() {
-                let key_str: String = key.extract()?;
-                let value_str: String = value.extract()?;
-                headers.insert(key_str, value_str);
+    match interpreter.interpret(&obj_py)? {
+        spikard_bindings_shared::InterpretedResponse::Streaming { .. } => {
+            // Convert the StreamSource trait object back to HandlerResponse
+            // We need to handle the streaming case specially since StreamingResponse
+            // already does the conversion
+            if obj.is_instance_of::<StreamingResponse>() {
+                let streaming: Py<StreamingResponse> = obj.extract()?;
+                let handler_response = streaming.borrow(py).to_handler_response(py)?;
+                Ok(ResponseResult::Stream(handler_response))
+            } else {
+                // For generic Python iterators, we'd need additional handling
+                // For now, we don't support raw Python iterators without StreamingResponse
+                // This maintains backward compatibility
+                Err(pyo3::exceptions::PyTypeError::new_err(
+                    "Streaming responses must be StreamingResponse instances or generators wrapped in StreamingResponse"
+                ))
             }
         }
-
-        Ok(ResponseResult::Custom {
-            content,
-            status_code,
-            headers,
-        })
-    } else {
-        if prefer_msgspec_json {
-            let bytes = msgspec_json_encode(py, obj)?;
-            let mut headers = HashMap::new();
-            headers.insert("content-type".to_string(), "application/json".to_string());
-            return Ok(ResponseResult::Raw {
-                body: bytes,
-                status_code: 200,
+        spikard_bindings_shared::InterpretedResponse::Custom { status, headers, body, .. } => {
+            let content = body.unwrap_or(Value::Null);
+            Ok(ResponseResult::Custom {
+                content,
+                status_code: status,
                 headers,
-            });
+            })
         }
-
-        let json_value = python_to_json(py, obj)?;
-        Ok(ResponseResult::Json(json_value))
+        spikard_bindings_shared::InterpretedResponse::Plain { body } => {
+            if prefer_msgspec_json {
+                let bytes = msgspec_json_encode(py, obj)?;
+                let mut headers = HashMap::new();
+                headers.insert("content-type".to_string(), "application/json".to_string());
+                Ok(ResponseResult::Raw {
+                    body: bytes,
+                    status_code: 200,
+                    headers,
+                })
+            } else {
+                Ok(ResponseResult::Json(body))
+            }
+        }
     }
 }
 
@@ -914,7 +917,7 @@ fn request_data_to_py_kwargs<'py>(
     }
 
     if handler_params.is_none() || handler_params.is_some_and(|set| set.contains("query_params")) {
-        if let Value::Object(query_map) = &request_data.query_params {
+        if let Value::Object(query_map) = &*request_data.query_params {
             let query_params = PyDict::new(py);
             for (key, value) in query_map {
                 let py_value = json_to_python(py, value)?;
@@ -950,8 +953,10 @@ fn request_data_to_py_kwargs<'py>(
 
         if is_json_content_type(&request_data.headers) {
             if !needs_param_conversion {
+                // PERFORMANCE: Clone Arc reference for try_unwrap; if sole owner, no clone occurs
                 let body_value = if !request_data.body.is_null() {
-                    request_data.body.clone()
+                    Arc::try_unwrap(Arc::clone(&request_data.body))
+                        .unwrap_or_else(|arc| (*arc).clone())
                 } else {
                     serde_json::from_slice::<Value>(raw_bytes)
                         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?

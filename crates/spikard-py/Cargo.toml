@@ -23,6 +23,7 @@ workspace = true
 [dependencies]
 spikard-core = { path = "../spikard-core", features = ["di"] }
 spikard-http = { path = "../spikard-http", features = ["di"] }
+spikard-bindings-shared = { path = "../spikard-bindings-shared" }
 spikard-graphql = { path = "../spikard-graphql", optional = true }
 http.workspace = true
 pyo3.workspace = true

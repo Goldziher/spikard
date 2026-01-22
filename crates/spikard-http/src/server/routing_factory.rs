@@ -19,6 +19,10 @@ use std::sync::Arc;
 use super::lifecycle_execution;
 use super::request_extraction;
 
+/// Execute handler with optional lifecycle hooks.
+///
+/// Performance: Checks if hooks are present and non-empty before incurring
+/// the overhead of lifecycle execution. Most requests don't have hooks.
 #[inline]
 async fn call_with_optional_hooks(
     req: Request<Body>,
@@ -26,8 +30,10 @@ async fn call_with_optional_hooks(
     handler: Arc<dyn Handler>,
     hooks: Option<Arc<crate::LifecycleHooks>>,
 ) -> HandlerResult {
+    // Performance: Fast path for requests without hooks (common case).
+    // Only invoke lifecycle execution when hooks are actually registered.
     if hooks.as_ref().is_some_and(|h| !h.is_empty()) {
-        call_with_optional_hooks(req, request_data, handler, hooks).await
+        lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
     } else {
         handler.call(req, request_data).await
     }
@@ -122,6 +128,9 @@ impl MethodRouterFactory {
     }
 
     /// Create a method router for a route with path parameters
+    ///
+    /// Performance: Each match arm only clones the Arc when needed for that specific
+    /// HTTP method, avoiding redundant clones at the function level.
     fn create_with_path_params(
         method: HttpMethod,
         handler: Arc<dyn Handler>,
@@ -131,8 +140,7 @@ impl MethodRouterFactory {
         include_headers: bool,
         include_cookies: bool,
     ) -> MethodRouter {
-        let handler_clone = handler.clone();
-        let hooks_clone = hooks.clone();
+        // Performance: Removed redundant outer clones. Each match arm clones only when needed.
         let without_body_options = request_extraction::WithoutBodyExtractionOptions {
             include_raw_query_params,
             include_query_params_json,
@@ -143,11 +151,12 @@ impl MethodRouterFactory {
         if method.expects_body() {
             match method {
                 HttpMethod::Post => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    // Performance: Clone directly from parameters, avoiding intermediate clone.
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::post(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let (parts, body) = req.into_parts();
                             let request_data = request_extraction::create_request_data_with_body(
@@ -172,11 +181,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Put => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::put(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let (parts, body) = req.into_parts();
                             let request_data = request_extraction::create_request_data_with_body(
@@ -201,11 +210,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Patch => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::patch(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let (parts, body) = req.into_parts();
                             let request_data = request_extraction::create_request_data_with_body(
@@ -234,11 +243,11 @@ impl MethodRouterFactory {
         } else {
             match method {
                 HttpMethod::Get => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::get(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -256,11 +265,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Delete => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::delete(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -278,11 +287,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Head => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::head(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -300,11 +309,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Trace => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::trace(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -322,11 +331,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Options => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::options(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -349,6 +358,9 @@ impl MethodRouterFactory {
     }
 
     /// Create a method router for a route without path parameters
+    ///
+    /// Performance: Each match arm only clones the Arc when needed for that specific
+    /// HTTP method, avoiding redundant clones at the function level.
     fn create_without_path_params(
         method: HttpMethod,
         handler: Arc<dyn Handler>,
@@ -358,8 +370,7 @@ impl MethodRouterFactory {
         include_headers: bool,
         include_cookies: bool,
     ) -> MethodRouter {
-        let handler_clone = handler.clone();
-        let hooks_clone = hooks.clone();
+        // Performance: Removed redundant outer clones. Each match arm clones only when needed.
         let without_body_options = request_extraction::WithoutBodyExtractionOptions {
             include_raw_query_params,
             include_query_params_json,
@@ -370,11 +381,11 @@ impl MethodRouterFactory {
         if method.expects_body() {
             match method {
                 HttpMethod::Post => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::post(move |req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let (parts, body) = req.into_parts();
                             let request_data = request_extraction::create_request_data_with_body(
@@ -399,11 +410,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Put => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::put(move |req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let (parts, body) = req.into_parts();
                             let request_data = request_extraction::create_request_data_with_body(
@@ -428,11 +439,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Patch => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::patch(move |req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let (parts, body) = req.into_parts();
                             let request_data = request_extraction::create_request_data_with_body(
@@ -461,11 +472,11 @@ impl MethodRouterFactory {
         } else {
             match method {
                 HttpMethod::Get => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::get(move |req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -483,11 +494,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Delete => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::delete(move |req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -505,11 +516,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Head => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::head(move |req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -527,11 +538,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Trace => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::trace(move |req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),
@@ -549,11 +560,11 @@ impl MethodRouterFactory {
                     })
                 }
                 HttpMethod::Options => {
-                    let handler_clone = handler_clone.clone();
-                    let hooks_clone = hooks_clone.clone();
+                    let handler_for_closure = handler.clone();
+                    let hooks_for_closure = hooks.clone();
                     axum::routing::options(move |req: AxumRequest| {
-                        let handler = handler_clone.clone();
-                        let hooks = hooks_clone.clone();
+                        let handler = handler_for_closure.clone();
+                        let hooks = hooks_for_closure.clone();
                         async move {
                             let request_data = request_extraction::create_request_data_without_body(
                                 req.uri(),

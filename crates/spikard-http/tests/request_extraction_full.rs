@@ -393,7 +393,7 @@ fn test_body_json_stored() {
         .json_body(body_json.clone())
         .build();
 
-    assert_eq!(request_data.body, body_json);
+    assert_eq!(*request_data.body, body_json);
 }
 
 /// Test empty body handling
@@ -404,7 +404,7 @@ fn test_body_json_stored() {
 fn test_body_empty() {
     let (_request, request_data) = RequestBuilder::new().method(Method::GET).path("/status").build();
 
-    assert_eq!(request_data.body, json!(null));
+    assert_eq!(*request_data.body, json!(null));
 }
 
 /// Test large JSON body
@@ -427,7 +427,7 @@ fn test_body_large_json() {
         .json_body(large_body.clone())
         .build();
 
-    assert_eq!(request_data.body, large_body);
+    assert_eq!(*request_data.body, large_body);
 }
 
 /// Test complete request with path, query, headers, cookies, and body
@@ -464,7 +464,7 @@ fn test_complete_request_with_all_components() {
     assert_eq!(request_data.cookies.get("session"), Some(&"xyz789".to_string()));
     assert_eq!(request_data.cookies.get("preferences"), Some(&"dark_mode".to_string()));
 
-    assert_eq!(request_data.body, body);
+    assert_eq!(*request_data.body, body);
 }
 
 /// Test Arc wrapping for efficient cloning

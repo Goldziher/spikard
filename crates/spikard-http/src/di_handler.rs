@@ -153,10 +153,15 @@ impl Handler for DependencyInjectingHandler {
 
             let core_request_data = spikard_core::RequestData {
                 path_params: Arc::clone(&request_data.path_params),
-                query_params: request_data.query_params.clone(),
-                validated_params: request_data.validated_params.clone(),
+                query_params: Arc::try_unwrap(Arc::clone(&request_data.query_params))
+                    .unwrap_or_else(|arc| (*arc).clone()),
+                validated_params: request_data.validated_params.as_ref().map(|arc| {
+                    Arc::try_unwrap(Arc::clone(arc))
+                        .unwrap_or_else(|a| (*a).clone())
+                }),
                 raw_query_params: Arc::clone(&request_data.raw_query_params),
-                body: request_data.body.clone(),
+                body: Arc::try_unwrap(Arc::clone(&request_data.body))
+                    .unwrap_or_else(|arc| (*arc).clone()),
                 raw_body: request_data.raw_body.clone(),
                 headers: Arc::clone(&request_data.headers),
                 cookies: Arc::clone(&request_data.cookies),
@@ -346,10 +351,10 @@ mod tests {
     fn create_request_data() -> RequestData {
         RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: serde_json::Value::Null,
+            query_params: Arc::new(serde_json::Value::Null),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: serde_json::Value::Null,
+            body: Arc::new(serde_json::Value::Null),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -1163,7 +1168,7 @@ mod tests {
             .unwrap();
         let mut request_data = create_request_data();
         request_data.method = "POST".to_string();
-        request_data.body = serde_json::json!({"key": "value"});
+        request_data.body = Arc::new(serde_json::json!({"key": "value"}));
 
         let result = di_handler.call(request, request_data).await;
 
@@ -1602,10 +1607,10 @@ mod tests {
 
         let request_data = RequestData {
             path_params: Arc::new(path_params.clone()),
-            query_params: serde_json::json!({"filter": "active", "sort": "name"}),
+            query_params: Arc::new(serde_json::json!({"filter": "active", "sort": "name"})),
             validated_params: None,
             raw_query_params: Arc::new(raw_query_params.clone()),
-            body: serde_json::json!({"name": "John", "email": "john@example.com"}),
+            body: Arc::new(serde_json::json!({"name": "John", "email": "john@example.com"})),
             raw_body: Some(bytes::Bytes::from(r#"{"name":"John","email":"john@example.com"}"#)),
             headers: Arc::new(headers.clone()),
             cookies: Arc::new(cookies.clone()),

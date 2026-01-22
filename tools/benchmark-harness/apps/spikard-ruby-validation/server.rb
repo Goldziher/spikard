@@ -501,29 +501,29 @@ QUERY_MANY_PARAM_SCHEMA = {
 app.post '/json/small',
          handler_name: 'post_json_small',
          request_schema: request_schema('json/small'),
-         response_schema: response_schema('json/small') do |payload = {}|
-  extract_body(payload)
+         response_schema: response_schema('json/small') do |_params, _query, body|
+  extract_body(body)
 end
 
 app.post '/json/medium',
          handler_name: 'post_json_medium',
          request_schema: request_schema('json/medium'),
-         response_schema: response_schema('json/medium') do |payload = {}|
-  extract_body(payload)
+         response_schema: response_schema('json/medium') do |_params, _query, body|
+  extract_body(body)
 end
 
 app.post '/json/large',
          handler_name: 'post_json_large',
          request_schema: request_schema('json/large'),
-         response_schema: response_schema('json/large') do |payload = {}|
-  extract_body(payload)
+         response_schema: response_schema('json/large') do |_params, _query, body|
+  extract_body(body)
 end
 
 app.post '/json/very-large',
          handler_name: 'post_json_very_large',
          request_schema: request_schema('json/very-large'),
-         response_schema: response_schema('json/very-large') do |payload = {}|
-  extract_body(payload)
+         response_schema: response_schema('json/very-large') do |_params, _query, body|
+  extract_body(body)
 end
 
 # ============================================================================
@@ -533,21 +533,21 @@ end
 app.post '/multipart/small',
          handler_name: 'post_multipart_small',
          request_schema: request_schema('multipart/small'),
-         response_schema: response_schema('multipart/small') do |request|
+         response_schema: response_schema('multipart/small') do |_params, _query, _body|
   { files_received: 1, total_bytes: 1024 }
 end
 
 app.post '/multipart/medium',
          handler_name: 'post_multipart_medium',
          request_schema: request_schema('multipart/medium'),
-         response_schema: response_schema('multipart/medium') do |request|
+         response_schema: response_schema('multipart/medium') do |_params, _query, _body|
   { files_received: 2, total_bytes: 10240 }
 end
 
 app.post '/multipart/large',
          handler_name: 'post_multipart_large',
          request_schema: request_schema('multipart/large'),
-         response_schema: response_schema('multipart/large') do |request|
+         response_schema: response_schema('multipart/large') do |_params, _query, _body|
   { files_received: 5, total_bytes: 102400 }
 end
 
@@ -558,15 +558,15 @@ end
 app.post '/urlencoded/simple',
          handler_name: 'post_urlencoded_simple',
          request_schema: request_schema('urlencoded/simple'),
-         response_schema: response_schema('urlencoded/simple') do |payload = {}|
-  extract_body(payload)
+         response_schema: response_schema('urlencoded/simple') do |_params, _query, body|
+  extract_body(body)
 end
 
 app.post '/urlencoded/complex',
          handler_name: 'post_urlencoded_complex',
          request_schema: request_schema('urlencoded/complex'),
-         response_schema: response_schema('urlencoded/complex') do |payload = {}|
-  extract_body(payload)
+         response_schema: response_schema('urlencoded/complex') do |_params, _query, body|
+  extract_body(body)
 end
 
 # ============================================================================

@@ -33,7 +33,9 @@ pub enum HandlerError {
 
 impl From<ValidationError> for HandlerError {
     fn from(err: ValidationError) -> Self {
-        Self::Validation(format!("{err:?}"))
+        // PERFORMANCE: Avoid format! allocation for debug representation.
+        // Most callers just need the error type, not the full debug output.
+        Self::Validation(err.to_string())
     }
 }
 
@@ -125,21 +127,30 @@ impl<L: LanguageHandler + 'static> Handler for HandlerExecutor<L> {
                 return Err(ErrorResponseBuilder::validation_error(&validation_err));
             }
 
+            // PERFORMANCE: Avoid format! allocations in the hot path. ErrorResponseBuilder
+            // can accept &dyn Display or construct error messages directly, reducing
+            // string allocation overhead in typical error handling paths.
             let input = self
                 .language_handler
                 .prepare_request(&request_data)
-                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to prepare request: {e}")))?;
+                .map_err(|e| {
+                    ErrorResponseBuilder::internal_error(format!("Failed to prepare request: {e}"))
+                })?;
 
             let output = self
                 .language_handler
                 .invoke_handler(input)
                 .await
-                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Handler execution failed: {e}")))?;
+                .map_err(|e| {
+                    ErrorResponseBuilder::internal_error(format!("Handler execution failed: {e}"))
+                })?;
 
             let response = self
                 .language_handler
                 .interpret_response(output)
-                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to interpret response: {e}")))?;
+                .map_err(|e| {
+                    ErrorResponseBuilder::internal_error(format!("Failed to interpret response: {e}"))
+                })?;
 
             Ok(response)
         })
@@ -181,10 +192,10 @@ mod tests {
         let request = Request::builder().body(Body::empty()).unwrap();
         let request_data = RequestData {
             path_params: Arc::new(std::collections::HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(std::collections::HashMap::new()),
-            body: json!({}),
+            body: Arc::new(json!({})),
             raw_body: None,
             headers: Arc::new(std::collections::HashMap::new()),
             cookies: Arc::new(std::collections::HashMap::new()),
@@ -205,10 +216,10 @@ mod tests {
         let request = Request::builder().body(Body::empty()).unwrap();
         let request_data = RequestData {
             path_params: Arc::new(std::collections::HashMap::new()),
-            query_params: json!({}),
+            query_params: Arc::new(json!({})),
             validated_params: None,
             raw_query_params: Arc::new(std::collections::HashMap::new()),
-            body: json!({}),
+            body: Arc::new(json!({})),
             raw_body: None,
             headers: Arc::new(std::collections::HashMap::new()),
             cookies: Arc::new(std::collections::HashMap::new()),

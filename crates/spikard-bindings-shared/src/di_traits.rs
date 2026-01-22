@@ -19,21 +19,21 @@ type DependencyFuture<'a> =
 /// Adapter trait for value dependencies across language bindings
 ///
 /// Language bindings should implement this trait to wrap their
-/// language-specific value storage (e.g., Py<PyAny>, Opaque<Value>, etc.)
+/// language-specific value storage (e.g., `Py<PyAny>`, `Opaque<Value>`, etc.)
 pub trait ValueDependencyAdapter: Send + Sync {
     /// Get the dependency key
     fn key(&self) -> &str;
 
     /// Resolve the stored value
     ///
-    /// Returns an Arc<dyn Any> that can be downcast to the concrete type
+    /// Returns an `Arc<dyn Any>` that can be downcast to the concrete type
     fn resolve_value(&self) -> DependencyFuture<'_>;
 }
 
 /// Adapter trait for factory dependencies across language bindings
 ///
 /// Language bindings should implement this trait to wrap their
-/// language-specific callable storage (e.g., Py<PyAny>, `ThreadsafeFunction`, etc.)
+/// language-specific callable storage (e.g., `Py<PyAny>`, `ThreadsafeFunction`, etc.)
 pub trait FactoryDependencyAdapter: Send + Sync {
     /// Get the dependency key
     fn key(&self) -> &str;
@@ -41,7 +41,7 @@ pub trait FactoryDependencyAdapter: Send + Sync {
     /// Invoke the factory with resolved dependencies
     ///
     /// The factory receives already-resolved dependencies and returns
-    /// a new instance wrapped in Arc<dyn Any>
+    /// a new instance wrapped in `Arc<dyn Any>`
     fn invoke_factory(
         &self,
         request: &Request<()>,
@@ -81,6 +81,9 @@ impl<T: ValueDependencyAdapter + 'static> Dependency for ValueDependencyBridge<T
         self.adapter.key()
     }
 
+    // PERFORMANCE: Value dependencies have no sub-dependencies.
+    // Returning an empty Vec is unavoidable if the trait requires it, but
+    // consider optimizing the DI system to use Option<&[String]> or a default method.
     fn depends_on(&self) -> Vec<String> {
         vec![]
     }
@@ -114,6 +117,9 @@ impl<T: FactoryDependencyAdapter + 'static> Dependency for FactoryDependencyBrid
         self.adapter.key()
     }
 
+    // PERFORMANCE: Factory dependencies may or may not have sub-dependencies.
+    // Language bindings should override this if they track dependencies.
+    // The default empty Vec is acceptable for language bindings that don't track explicit dependency graphs.
     fn depends_on(&self) -> Vec<String> {
         vec![]
     }

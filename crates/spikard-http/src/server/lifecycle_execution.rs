@@ -140,10 +140,10 @@ mod tests {
     fn empty_request_data() -> crate::handler_trait::RequestData {
         crate::handler_trait::RequestData {
             path_params: std::sync::Arc::new(HashMap::new()),
-            query_params: json!({}),
+            query_params: std::sync::Arc::new(json!({})),
             validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
-            body: json!(null),
+            body: std::sync::Arc::new(json!(null)),
             raw_body: None,
             headers: std::sync::Arc::new(HashMap::new()),
             cookies: std::sync::Arc::new(HashMap::new()),

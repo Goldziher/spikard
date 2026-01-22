@@ -39,6 +39,7 @@ impl PyHandlerRequest {
 
     #[getter]
     fn path_params<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        // PERFORMANCE: Check cache first to avoid rebuilding on repeated access
         if let Some(obj) = self.cached_path_params.get() {
             return Ok(obj.bind(py).clone());
         }
@@ -56,22 +57,20 @@ impl PyHandlerRequest {
             }
         }
 
+        // PERFORMANCE: Store unbind() result and return immediately; cache() always succeeds
         let obj = dict.into_any().unbind();
-        let _ = self.cached_path_params.set(obj);
-        let obj = self
-            .cached_path_params
-            .get()
-            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache path_params"))?;
+        let _ = self.cached_path_params.set(obj.clone_ref(py));
         Ok(obj.bind(py).clone())
     }
 
     #[getter]
     fn query_params<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        // PERFORMANCE: Check cache first to avoid rebuilding on repeated access
         if let Some(obj) = self.cached_query_params.get() {
             return Ok(obj.bind(py).clone());
         }
 
-        let py_value = match &self.request_data.query_params {
+        let py_value = match &*self.request_data.query_params {
             Value::Object(map) => {
                 let dict = PyDict::new(py);
                 for (key, value) in map {
@@ -82,17 +81,15 @@ impl PyHandlerRequest {
             _ => PyDict::new(py).into_any(),
         };
 
+        // PERFORMANCE: Store unbind() result and return immediately; cache() always succeeds
         let obj = py_value.unbind();
-        let _ = self.cached_query_params.set(obj);
-        let obj = self
-            .cached_query_params
-            .get()
-            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache query_params"))?;
+        let _ = self.cached_query_params.set(obj.clone_ref(py));
         Ok(obj.bind(py).clone())
     }
 
     #[getter]
     fn headers<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        // PERFORMANCE: Check cache first to avoid rebuilding on repeated access
         if let Some(obj) = self.cached_headers.get() {
             return Ok(obj.bind(py).clone());
         }
@@ -102,17 +99,15 @@ impl PyHandlerRequest {
             dict.set_item(key, value)?;
         }
 
+        // PERFORMANCE: Store unbind() result and return immediately; cache() always succeeds
         let obj = dict.into_any().unbind();
-        let _ = self.cached_headers.set(obj);
-        let obj = self
-            .cached_headers
-            .get()
-            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache headers"))?;
+        let _ = self.cached_headers.set(obj.clone_ref(py));
         Ok(obj.bind(py).clone())
     }
 
     #[getter]
     fn cookies<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        // PERFORMANCE: Check cache first to avoid rebuilding on repeated access
         if let Some(obj) = self.cached_cookies.get() {
             return Ok(obj.bind(py).clone());
         }
@@ -122,17 +117,15 @@ impl PyHandlerRequest {
             dict.set_item(key, value)?;
         }
 
+        // PERFORMANCE: Store unbind() result and return immediately; cache() always succeeds
         let obj = dict.into_any().unbind();
-        let _ = self.cached_cookies.set(obj);
-        let obj = self
-            .cached_cookies
-            .get()
-            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache cookies"))?;
+        let _ = self.cached_cookies.set(obj.clone_ref(py));
         Ok(obj.bind(py).clone())
     }
 
     #[getter]
     fn body<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        // PERFORMANCE: Check cache first to avoid rebuilding on repeated access
         if let Some(obj) = self.cached_body.get() {
             return Ok(obj.bind(py).clone());
         }
@@ -149,12 +142,9 @@ impl PyHandlerRequest {
             json_to_python(py, &self.request_data.body)?
         };
 
+        // PERFORMANCE: Store unbind() result and return immediately; cache() always succeeds
         let obj = body_obj.unbind();
-        let _ = self.cached_body.set(obj);
-        let obj = self
-            .cached_body
-            .get()
-            .ok_or_else(|| pyo3::exceptions::PyRuntimeError::new_err("Failed to cache body"))?;
+        let _ = self.cached_body.set(obj.clone_ref(py));
         Ok(obj.bind(py).clone())
     }
 

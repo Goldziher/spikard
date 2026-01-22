@@ -81,10 +81,10 @@ async fn test_handler_executor_with_validation_error() {
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!({"username": "john"}),
+        body: Arc::new(json!({"username": "john"})),
         raw_body: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
@@ -110,10 +110,10 @@ async fn test_handler_executor_prepare_failure() {
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!({}),
+        body: Arc::new(json!({})),
         raw_body: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
@@ -139,10 +139,10 @@ async fn test_handler_executor_invoke_failure() {
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!({}),
+        body: Arc::new(json!({})),
         raw_body: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
@@ -168,10 +168,10 @@ async fn test_handler_executor_interpret_failure() {
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!({}),
+        body: Arc::new(json!({})),
         raw_body: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),
@@ -210,10 +210,10 @@ async fn test_handler_executor_with_request_validator() {
 
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!({"name": "test"}),
+        body: Arc::new(json!({"name": "test"})),
         raw_body: None,
         headers: Arc::new(headers),
         cookies: Arc::new(HashMap::new()),
@@ -263,10 +263,10 @@ async fn test_handler_executor_builder_pattern() {
     let request = Request::builder().body(Body::empty()).unwrap();
     let request_data = RequestData {
         path_params: Arc::new(HashMap::new()),
-        query_params: json!({}),
+        query_params: Arc::new(json!({})),
         validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!({"email": "test@example.com"}),
+        body: Arc::new(json!({"email": "test@example.com"})),
         raw_body: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),

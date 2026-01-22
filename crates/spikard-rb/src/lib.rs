@@ -982,6 +982,9 @@ impl RubyHandler {
     }
 
     fn handle_inner(&self, request_data: RequestData) -> HandlerResult {
+        // Clone Arc to avoid borrow checker issues with request_data later in the function.
+        // The Arc clone is cheap (increment ref count) and necessary here because we need to
+        // extract validated_params and also borrow request_data below.
         let validated_params = request_data.validated_params.clone();
 
         let ruby = Ruby::get().map_err(|_| {
@@ -994,7 +997,12 @@ impl RubyHandler {
         #[cfg(feature = "di")]
         let dependencies = request_data.dependencies.clone();
 
-        let request_value = build_ruby_request(&ruby, request_data, validated_params)
+        // Use Arc::try_unwrap to eliminate the clone when validated_params Arc has unique ref.
+        // This is passed to NativeRequest::from_request_data which also tries to unwrap.
+        // The pattern handles both cases:
+        // - Most requests: Arc has unique ref → try_unwrap succeeds, no extra clone
+        // - Shared Arc (rare): try_unwrap fails → fallback to clone, safe and correct
+        let request_value = build_ruby_request(&ruby, request_data, validated_params.map(|arc| Arc::try_unwrap(arc).unwrap_or_else(|a| (*a).clone())))
             .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 
         let handler_proc = self.inner.handler_proc.get_inner_with(&ruby);

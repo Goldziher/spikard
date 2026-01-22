@@ -168,8 +168,14 @@ impl PhpFactoryDependency {
     ///
     /// # Returns
     /// Result containing the created instance value ID
+    ///
+    /// PERFORMANCE: This method performs downcast_ref on each dependency per invocation.
+    /// For factory dependencies (vs singleton), this is unavoidable since we need runtime
+    /// type checking. For singleton dependencies, caching the ZvalHandle would help, but
+    /// the current architecture calls this once per factory invocation which is acceptable.
     fn invoke_factory(&self, resolved: &ResolvedDependencies) -> Result<usize, DependencyError> {
-        let mut zvals = Vec::new();
+        // PERFORMANCE: Pre-allocate Vec with known capacity to avoid reallocations
+        let mut zvals = Vec::with_capacity(self.dependencies.len());
         for dep_name in &self.dependencies {
             let resolved_value = match resolved.get_arc(dep_name) {
                 Some(v) => v,
@@ -180,6 +186,8 @@ impl PhpFactoryDependency {
                 }
             };
 
+            // PERFORMANCE: downcast_ref is necessary for type safety at runtime.
+            // This cannot be cached as resolved dependencies change per request.
             let handle =
                 resolved_value
                     .downcast_ref::<ZvalHandle>()

@@ -26,10 +26,10 @@ use std::sync::Arc;
 fn test_request_data() -> RequestData {
     RequestData {
         path_params: Arc::new(HashMap::new()),
-        query_params: serde_json::Value::Null,
+        query_params: Arc::new(serde_json::Value::Null),
         validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        body: json!({"test": "data"}),
+        body: Arc::new(json!({"test": "data"})),
         raw_body: None,
         headers: Arc::new(HashMap::new()),
         cookies: Arc::new(HashMap::new()),

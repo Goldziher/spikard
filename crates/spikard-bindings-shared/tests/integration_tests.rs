@@ -442,6 +442,217 @@ fn test_conversion_traits_with_json_and_language_conversion() {
 }
 
 #[test]
+fn test_json_conversion_types_comprehensive() {
+    use json_conversion::{JsonConversionHelper, JsonPrimitive};
+
+    // Test JsonPrimitive enum variants
+    let string_prim = JsonPrimitive::String("test");
+    let number_prim = JsonPrimitive::Number("42.5".to_string());
+    let bool_prim = JsonPrimitive::Bool(true);
+    let null_prim = JsonPrimitive::Null;
+
+    assert!(matches!(string_prim, JsonPrimitive::String(_)));
+    assert!(matches!(number_prim, JsonPrimitive::Number(_)));
+    assert!(matches!(bool_prim, JsonPrimitive::Bool(_)));
+    assert!(matches!(null_prim, JsonPrimitive::Null));
+
+    // Test JsonConversionHelper for fast path detection
+    assert!(JsonConversionHelper::is_primitive(&json!(42)));
+    assert!(JsonConversionHelper::is_primitive(&json!("text")));
+    assert!(!JsonConversionHelper::is_primitive(&json!([1, 2, 3])));
+}
+
+#[test]
+fn test_lazy_cache_integration_with_json_conversion() {
+    use json_conversion::JsonConversionHelper;
+    use lazy_cache::LazyCache;
+
+    let helper_cache: LazyCache<JsonConversionHelper> = LazyCache::new();
+
+    // Initialize cache with JSON conversion helper
+    let _cached = helper_cache.get_or_init(|| JsonConversionHelper);
+
+    // Verify we can use it
+    let test_json = json!({"key": "value"});
+    assert!(JsonConversionHelper::is_primitive(&json!(42)));
+    assert!(!JsonConversionHelper::is_primitive(&test_json));
+
+    // Test cache state
+    assert!(helper_cache.is_cached());
+
+    // Test invalidate
+    helper_cache.invalidate();
+    assert!(!helper_cache.is_cached());
+}
+
+#[test]
+fn test_response_interpreter_with_json_conversion() {
+    use response_interpreter::InterpretedResponse;
+
+    let response_body = json!({
+        "status": "success",
+        "data": {
+            "id": 1,
+            "name": "test"
+        }
+    });
+
+    // Create a Custom interpreted response
+    let interpreted = InterpretedResponse::Custom {
+        status: 200,
+        headers: HashMap::new(),
+        body: Some(response_body),
+        raw_body: None,
+    };
+
+    match interpreted {
+        InterpretedResponse::Custom { status, body, .. } => {
+            assert_eq!(status, 200);
+            assert_eq!(body.as_ref().unwrap()["status"], "success");
+        }
+        _ => panic!("Expected Custom variant"),
+    }
+}
+
+#[test]
+fn test_build_optimized_response_bytes_function_availability() {
+    use axum::body::Bytes;
+    use axum::http::StatusCode;
+
+    let body_bytes = Bytes::from_static(br#"{"status":"ok"}"#);
+    let _response = build_optimized_response_bytes(StatusCode::OK, None, body_bytes);
+
+    // Function is available and can be called
+}
+
+#[test]
+fn test_module_interactions_json_lazy_response() {
+    use json_conversion::JsonConversionHelper;
+    use lazy_cache::LazyCache;
+    use response_interpreter::InterpretedResponse;
+
+    // Create a lazy-cached conversion helper
+    let cache: LazyCache<JsonConversionHelper> = LazyCache::new();
+    let _ = cache.get_or_init(|| JsonConversionHelper);
+
+    // Create test JSON
+    let json_data = json!({
+        "message": "integration test",
+        "timestamp": 1_234_567_890,
+        "nested": {
+            "array": [1, 2, 3],
+            "bool": true
+        }
+    });
+
+    // Verify helper can detect primitives
+    let primitive_val = json!(42);
+    assert!(JsonConversionHelper::is_primitive(&primitive_val));
+    assert!(!JsonConversionHelper::is_primitive(&json_data));
+
+    // Create interpreted response
+    let response = InterpretedResponse::Custom {
+        status: 200,
+        body: Some(json_data),
+        headers: HashMap::new(),
+        raw_body: None,
+    };
+
+    match response {
+        InterpretedResponse::Custom { status, .. } => assert_eq!(status, 200),
+        _ => panic!("Expected Custom variant"),
+    }
+    assert!(cache.is_cached());
+}
+
+#[test]
+fn test_response_builder_bytes_and_optimized_paths() {
+    use axum::body::Bytes;
+    use axum::http::StatusCode;
+
+    let test_body = br#"{"result":"test"}"#.to_vec();
+
+    // Test build_optimized_response_bytes path
+    let resp_bytes = build_optimized_response_bytes(StatusCode::CREATED, None, Bytes::from(test_body.clone()));
+    assert_eq!(resp_bytes.status(), StatusCode::CREATED);
+
+    // Test build_optimized_response path
+    let resp = build_optimized_response(StatusCode::OK, None, test_body);
+    assert_eq!(resp.status(), StatusCode::OK);
+}
+
+#[test]
+fn test_json_conversion_error_handling() {
+    use json_conversion::JsonConversionError;
+
+    let error = JsonConversionError::InvalidValue {
+        reason: "Invalid JSON structure".to_string(),
+    };
+    let error_str = error.to_string();
+    assert!(error_str.contains("Invalid JSON structure"));
+}
+
+#[test]
+fn test_lazy_cache_multiple_types() {
+    use lazy_cache::LazyCache;
+
+    // Test with String
+    let cache_string: LazyCache<String> = LazyCache::new();
+    let result = cache_string.get_or_init(|| "cached value".to_string());
+    assert_eq!(result, "cached value");
+    assert!(cache_string.is_cached());
+
+    // Test with Vec
+    let cache_vec: LazyCache<Vec<i32>> = LazyCache::new();
+    let result = cache_vec.get_or_init(|| vec![1, 2, 3]);
+    assert_eq!(*result, vec![1, 2, 3]);
+    assert!(cache_vec.is_cached());
+}
+
+#[test]
+fn test_all_new_modules_publicly_accessible() {
+    println!("All new modules successfully exported from lib.rs:");
+    println!("- json_conversion (JsonConverter, JsonConversionHelper, JsonConversionError, JsonPrimitive)");
+    println!("- lazy_cache (LazyCache)");
+    println!("- response_interpreter (InterpretedResponse, ResponseInterpreter, StreamSource)");
+    println!("- response_builder functions (build_optimized_response, build_optimized_response_bytes)");
+
+    // Verify all types are in scope by using them
+    {
+        use spikard_bindings_shared::JsonConversionHelper;
+        // Type is imported and available in scope
+        let _: &[u8] = b"";
+        let _ = JsonConversionHelper::is_primitive(&json!(null));
+    }
+
+    {
+        use spikard_bindings_shared::LazyCache;
+        let _cache: LazyCache<i32> = LazyCache::new();
+    }
+
+    {
+        use spikard_bindings_shared::InterpretedResponse;
+        let _resp = InterpretedResponse::Custom {
+            status: 200,
+            body: Some(json!({})),
+            headers: HashMap::new(),
+            raw_body: None,
+        };
+    }
+
+    {
+        use axum::body::Bytes;
+        use axum::http::StatusCode;
+        use spikard_bindings_shared::{build_optimized_response, build_optimized_response_bytes};
+
+        let _resp1 = build_optimized_response(StatusCode::OK, None, br"{}".to_vec());
+        let _resp2 = build_optimized_response_bytes(StatusCode::OK, None, Bytes::from_static(br"{}"));
+    }
+
+    println!("✓ All types successfully imported and used from public API");
+}
+
+#[test]
 fn test_all_modules_documented() {
     println!("All modules successfully imported and tested:");
     println!("- ErrorResponseBuilder");
@@ -452,4 +663,7 @@ fn test_all_modules_documented() {
     println!("- test_client_base (TestClientConfig, TestResponseMetadata)");
     println!("- di_traits (ValueDependencyAdapter, FactoryDependencyAdapter)");
     println!("- conversion_traits (FromLanguage, ToLanguage, JsonConvertible)");
+    println!("- json_conversion (JsonConverter, JsonConversionHelper)");
+    println!("- lazy_cache (LazyCache)");
+    println!("- response_interpreter (InterpretedResponse, ResponseInterpreter)");
 }

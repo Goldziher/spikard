@@ -294,6 +294,9 @@ impl PhpRequest {
     }
 
     /// Build from RequestData (used by Handler bridge).
+    ///
+    /// PERFORMANCE: This method clones all Arc-wrapped data. Prefer `from_request_data_owned()`
+    /// when consuming RequestData by value to avoid Arc clones via Arc::try_unwrap optimization.
     pub fn from_request_data(data: &spikard_http::RequestData) -> Self {
         Self {
             method: data.method.clone(),

@@ -297,6 +297,11 @@ impl StreamingResponse {
 }
 
 impl StreamingResponse {
+    /// Get a reference to the underlying stream
+    pub fn get_stream(&self) -> Py<PyAny> {
+        Python::attach(|py| self.stream.clone_ref(py))
+    }
+
     pub fn to_handler_response(&self, py: Python<'_>) -> PyResult<HandlerResponse> {
         let status = StatusCode::from_u16(self.status_code)
             .map_err(|e| PyValueError::new_err(format!("Invalid status code: {e}")))?;

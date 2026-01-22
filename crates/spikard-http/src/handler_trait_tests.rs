@@ -99,10 +99,10 @@ mod tests {
 
         let request_data = RequestData {
             path_params: Arc::new(path_params),
-            query_params: json!({"page": 1}),
+            query_params: Arc::new(json!({"page": 1})),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: json!({"test": "data"}),
+            body: Arc::new(json!({"test": "data"})),
             raw_body: None,
             headers: Arc::new(headers),
             cookies: Arc::new(HashMap::new()),
@@ -131,10 +131,10 @@ mod tests {
 
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: Value::Null,
+            query_params: Arc::new(Value::Null),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -170,10 +170,10 @@ mod tests {
 
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: json!({"api_key": "secret123"}),
+            query_params: Arc::new(json!({"api_key": "secret123"})),
             validated_params: None,
             raw_query_params: Arc::new(raw_query_params.clone()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -194,10 +194,10 @@ mod tests {
 
         let request_data_no_param = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: Value::Null,
+            query_params: Arc::new(Value::Null),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -232,10 +232,10 @@ mod tests {
 
         let request_data = RequestData {
             path_params: Arc::new(path_params),
-            query_params: json!({"filter": "active"}),
+            query_params: Arc::new(json!({"filter": "active"})),
             validated_params: None,
             raw_query_params: Arc::new(raw_query_params),
-            body: json!({"name": "test"}),
+            body: Arc::new(json!({"name": "test"})),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -251,17 +251,17 @@ mod tests {
         assert_eq!(deserialized.method, "PUT");
         assert_eq!(deserialized.path, "/users/42");
         assert_eq!(deserialized.path_params.get("user_id").unwrap(), "42");
-        assert_eq!(deserialized.body, json!({"name": "test"}));
+        assert_eq!(*deserialized.body, json!({"name": "test"}));
     }
 
     #[test]
     fn test_request_data_default_values() {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: Value::Null,
+            query_params: Arc::new(Value::Null),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
@@ -278,8 +278,8 @@ mod tests {
         assert!(request_data.raw_query_params.is_empty());
         assert!(request_data.headers.is_empty());
         assert!(request_data.cookies.is_empty());
-        assert_eq!(request_data.body, Value::Null);
-        assert_eq!(request_data.query_params, Value::Null);
+        assert_eq!(*request_data.body, Value::Null);
+        assert_eq!(*request_data.query_params, Value::Null);
     }
 
     #[test]

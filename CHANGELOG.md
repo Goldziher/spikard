@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING: RequestData Value Fields Arc-Wrapped** (Phase 2 Performance Optimization)
+  - `query_params: Value` → `query_params: Arc<Value>` reduces per-request clones from 24-30 to 0-6
+  - `body: Value` → `body: Arc<Value>` enables zero-copy when refcount is 1 via Arc::try_unwrap
+  - `validated_params: Option<Value>` → `validated_params: Option<Arc<Value>>` maintains consistency
+  - All RequestData construction sites updated across spikard-http crate
+  - Test helpers and fixtures updated to wrap Value fields in Arc::new()
+  - This is a pre-1.0 experimental breaking change; language bindings will be updated in Phase 3
+
 ## [0.9.1] - 2026-01-12
 
 ### Fixed

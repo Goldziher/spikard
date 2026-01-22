@@ -159,10 +159,10 @@ pub async fn handle_jsonrpc(
 fn create_jsonrpc_request_data(headers: &HeaderMap, uri: &axum::http::Uri) -> RequestData {
     RequestData {
         path_params: Arc::new(HashMap::new()),
-        query_params: serde_json::json!({}),
+        query_params: Arc::new(serde_json::json!({})),
         validated_params: None,
         raw_query_params: Arc::new(HashMap::new()),
-        body: serde_json::json!({}),
+        body: Arc::new(serde_json::json!({})),
         raw_body: None,
         headers: Arc::new(extract_headers(headers)),
         cookies: Arc::new(HashMap::new()),

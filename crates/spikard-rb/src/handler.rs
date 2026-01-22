@@ -255,9 +255,7 @@ impl RubyHandler {
         })
     }
 
-    fn handle_inner(&self, request_data: RequestData) -> HandlerResult {
-        let validated_params = request_data.validated_params.clone();
-
+    fn handle_inner(&self, mut request_data: RequestData) -> HandlerResult {
         let ruby = Ruby::get().map_err(|_| {
             ErrorResponseBuilder::structured_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -266,6 +264,18 @@ impl RubyHandler {
             )
         })?;
 
+        // Extract validated_params with Arc::try_unwrap to eliminate clone if possible.
+        // Arc::try_unwrap succeeds when Arc has unique ref (no other clones):
+        // - On success: returns Value without copy (pure move)
+        // - On failure (rare): returns Err(Arc), fallback to clone
+        // This optimizes the common case where validated_params isn't shared.
+        //
+        // PERFORMANCE: We take ownership of the Option<Arc> here (not as_ref) so that
+        // try_unwrap can potentially succeed. Using as_ref + Arc::clone would increment
+        // the refcount, causing try_unwrap to always fail.
+        let validated_params = request_data.validated_params.take().map(|arc| {
+            Arc::try_unwrap(arc).unwrap_or_else(|a| (*a).clone())
+        });
         let request_value = build_ruby_request(&ruby, &self.inner, &request_data, validated_params.as_ref())
             .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 
@@ -406,11 +416,12 @@ fn try_parse_raw_body(raw_body: Option<&Vec<u8>>) -> Result<Option<JsonValue>, S
     let Some(bytes) = raw_body else {
         return Ok(None);
     };
-    let text = String::from_utf8(bytes.clone()).map_err(|e| format!("Invalid UTF-8 in response body: {e}"))?;
-    if text.is_empty() {
+    if bytes.is_empty() {
         return Ok(None);
     }
-    serde_json::from_str(&text)
+    // PERFORMANCE: Use from_slice directly to avoid String allocation.
+    // serde_json handles UTF-8 validation internally.
+    serde_json::from_slice(bytes)
         .map(Some)
         .map_err(|e| format!("Failed to parse response body as JSON: {e}"))
 }

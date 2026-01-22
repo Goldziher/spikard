@@ -348,10 +348,10 @@ mod tests {
     fn create_test_request_data() -> RequestData {
         RequestData {
             path_params: Arc::new(HashMap::new()),
-            query_params: Value::Object(serde_json::Map::new()),
+            query_params: Arc::new(Value::Object(serde_json::Map::new())),
             validated_params: None,
             raw_query_params: Arc::new(HashMap::new()),
-            body: Value::Null,
+            body: Arc::new(Value::Null),
             raw_body: None,
             headers: Arc::new(HashMap::new()),
             cookies: Arc::new(HashMap::new()),
