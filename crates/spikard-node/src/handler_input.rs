@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Helper to unwrap Arc without cloning when possible
-#[inline(always)]
+#[inline]
 fn unwrap_arc<T: Clone>(arc: Arc<T>) -> T {
     Arc::try_unwrap(arc).unwrap_or_else(|arc| (*arc).clone())
 }
@@ -58,7 +58,6 @@ impl From<&RequestData> for HandlerInput {
         }
     }
 }
-
 
 impl From<RequestData> for HandlerInput {
     fn from(data: RequestData) -> Self {

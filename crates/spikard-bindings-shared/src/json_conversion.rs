@@ -241,7 +241,7 @@ pub enum JsonPrimitive<'a> {
     Bool(bool),
 
     /// JSON number - stored as string to preserve precision
-    /// (serde_json::Number stores the original text, so String clone is acceptable)
+    /// (`serde_json::Number` stores the original text, so String clone is acceptable)
     Number(String),
 
     /// JSON string value

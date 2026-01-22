@@ -60,15 +60,19 @@ impl Handler for ValidatingHandler {
 
             if is_json_body && request_validator.is_none() && !inner.prefers_raw_json_body() {
                 let raw_bytes = request_data.raw_body.as_ref().unwrap();
-                request_data.body = Arc::new(serde_json::from_slice::<Value>(raw_bytes)
-                    .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?);
+                request_data.body = Arc::new(
+                    serde_json::from_slice::<Value>(raw_bytes)
+                        .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?,
+                );
             }
 
             if let Some(validator) = request_validator {
                 if request_data.body.is_null() && request_data.raw_body.is_some() {
                     let raw_bytes = request_data.raw_body.as_ref().unwrap();
-                    request_data.body = Arc::new(serde_json::from_slice::<Value>(raw_bytes)
-                        .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?);
+                    request_data.body = Arc::new(
+                        serde_json::from_slice::<Value>(raw_bytes)
+                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?,
+                    );
                 }
 
                 if let Err(errors) = validator.validate(&request_data.body) {

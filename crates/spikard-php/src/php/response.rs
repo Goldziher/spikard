@@ -154,15 +154,10 @@ impl PhpResponse {
         Ok(response)
     }
 
-    /// Return a copy of this response with new cookies.
-    ///
-    /// PERFORMANCE: Uses move semantics to avoid unnecessary clones of body and headers
-    /// when the original response is no longer needed after this call.
+    /// Set cookies on this response.
     #[php(name = "withCookies")]
-    #[must_use]
-    pub fn with_cookies(mut self, cookies: HashMap<String, String>) -> Self {
+    pub fn with_cookies(&mut self, cookies: HashMap<String, String>) {
         self.cookies = cookies;
-        self
     }
 }
 

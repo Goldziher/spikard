@@ -273,9 +273,10 @@ impl RubyHandler {
         // PERFORMANCE: We take ownership of the Option<Arc> here (not as_ref) so that
         // try_unwrap can potentially succeed. Using as_ref + Arc::clone would increment
         // the refcount, causing try_unwrap to always fail.
-        let validated_params = request_data.validated_params.take().map(|arc| {
-            Arc::try_unwrap(arc).unwrap_or_else(|a| (*a).clone())
-        });
+        let validated_params = request_data
+            .validated_params
+            .take()
+            .map(|arc| Arc::try_unwrap(arc).unwrap_or_else(|a| (*a).clone()));
         let request_value = build_ruby_request(&ruby, &self.inner, &request_data, validated_params.as_ref())
             .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 

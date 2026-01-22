@@ -1,6 +1,6 @@
 [package]
 name = "test-generator"
-version = "0.9.1"
+version = "0.9.2"
 edition = "2024"
 license = "MIT"
 publish = false

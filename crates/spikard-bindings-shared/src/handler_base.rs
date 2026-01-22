@@ -133,24 +133,18 @@ impl<L: LanguageHandler + 'static> Handler for HandlerExecutor<L> {
             let input = self
                 .language_handler
                 .prepare_request(&request_data)
-                .map_err(|e| {
-                    ErrorResponseBuilder::internal_error(format!("Failed to prepare request: {e}"))
-                })?;
+                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to prepare request: {e}")))?;
 
             let output = self
                 .language_handler
                 .invoke_handler(input)
                 .await
-                .map_err(|e| {
-                    ErrorResponseBuilder::internal_error(format!("Handler execution failed: {e}"))
-                })?;
+                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Handler execution failed: {e}")))?;
 
             let response = self
                 .language_handler
                 .interpret_response(output)
-                .map_err(|e| {
-                    ErrorResponseBuilder::internal_error(format!("Failed to interpret response: {e}"))
-                })?;
+                .map_err(|e| ErrorResponseBuilder::internal_error(format!("Failed to interpret response: {e}")))?;
 
             Ok(response)
         })

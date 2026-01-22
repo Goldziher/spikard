@@ -94,7 +94,8 @@ impl PyResponseInterpreter {
 
         // Check for iterator protocol (__iter__ and __next__)
         if let Ok(has_iter) = value.hasattr("__iter__")
-            && has_iter && !value.is_instance_of::<PyDict>()
+            && has_iter
+            && !value.is_instance_of::<PyDict>()
         {
             // Don't treat dicts as iterators for streaming
             // Check for __next__ to confirm it's an iterator/generator

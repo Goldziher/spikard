@@ -1002,8 +1002,12 @@ impl RubyHandler {
         // The pattern handles both cases:
         // - Most requests: Arc has unique ref → try_unwrap succeeds, no extra clone
         // - Shared Arc (rare): try_unwrap fails → fallback to clone, safe and correct
-        let request_value = build_ruby_request(&ruby, request_data, validated_params.map(|arc| Arc::try_unwrap(arc).unwrap_or_else(|a| (*a).clone())))
-            .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
+        let request_value = build_ruby_request(
+            &ruby,
+            request_data,
+            validated_params.map(|arc| Arc::try_unwrap(arc).unwrap_or_else(|a| (*a).clone())),
+        )
+        .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
 
         let handler_proc = self.inner.handler_proc.get_inner_with(&ruby);
 

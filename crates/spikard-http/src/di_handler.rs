@@ -155,13 +155,12 @@ impl Handler for DependencyInjectingHandler {
                 path_params: Arc::clone(&request_data.path_params),
                 query_params: Arc::try_unwrap(Arc::clone(&request_data.query_params))
                     .unwrap_or_else(|arc| (*arc).clone()),
-                validated_params: request_data.validated_params.as_ref().map(|arc| {
-                    Arc::try_unwrap(Arc::clone(arc))
-                        .unwrap_or_else(|a| (*a).clone())
-                }),
+                validated_params: request_data
+                    .validated_params
+                    .as_ref()
+                    .map(|arc| Arc::try_unwrap(Arc::clone(arc)).unwrap_or_else(|a| (*a).clone())),
                 raw_query_params: Arc::clone(&request_data.raw_query_params),
-                body: Arc::try_unwrap(Arc::clone(&request_data.body))
-                    .unwrap_or_else(|arc| (*arc).clone()),
+                body: Arc::try_unwrap(Arc::clone(&request_data.body)).unwrap_or_else(|arc| (*arc).clone()),
                 raw_body: request_data.raw_body.clone(),
                 headers: Arc::clone(&request_data.headers),
                 cookies: Arc::clone(&request_data.cookies),

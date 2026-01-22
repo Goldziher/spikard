@@ -1,6 +1,6 @@
 # @spikard/wasm
 
-> **Note:** As of v0.2.1, this package has moved to `@spikard/wasm`. Update your imports from `'spikard-wasm'` to `'@spikard/wasm'`. See [MIGRATION-0.2.1.md](../../MIGRATION-0.2.1.md) for details.
+> **Note:** As of v0.9.2, this package has moved to `@spikard/wasm`. Update your imports from `'spikard-wasm'` to `'@spikard/wasm'`. See [MIGRATION-0.2.1.md](../../MIGRATION-0.2.1.md) for details.
 
 [![npm](https://img.shields.io/npm/v/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
 [![npm downloads](https://img.shields.io/npm/dm/@spikard/wasm.svg)](https://www.npmjs.com/package/@spikard/wasm)
@@ -75,7 +75,7 @@ export default {
 ### Deno
 
 ```typescript
-import { Spikard, get, post } from "npm:@spikard/wasm@0.2.1";
+import { Spikard, get, post } from "npm:@spikard/wasm@0.9.2";
 
 const app = new Spikard();
 

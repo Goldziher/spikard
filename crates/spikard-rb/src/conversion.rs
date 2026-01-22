@@ -116,9 +116,8 @@ fn ruby_value_to_json_fast(
         // Performance: Use from_utf8() with explicit error handling to avoid unnecessary allocation.
         // from_utf8_lossy() always allocates even for valid UTF-8, while from_utf8() returns
         // a zero-copy reference when the bytes are valid UTF-8 (which is the common case).
-        let string = String::from_utf8(slice.to_vec()).unwrap_or_else(|e| {
-            String::from_utf8_lossy(e.as_bytes()).into_owned()
-        });
+        let string =
+            String::from_utf8(slice.to_vec()).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned());
         return Ok(Some(JsonValue::String(string)));
     }
 
@@ -163,9 +162,7 @@ fn ruby_value_to_json_fast(
                 // Performance: Avoid unnecessary allocation for valid UTF-8 hash keys.
                 // Most Ruby hash keys are valid UTF-8 strings, so from_utf8() is faster
                 // than from_utf8_lossy() which always allocates.
-                String::from_utf8(slice.to_vec()).unwrap_or_else(|e| {
-                    String::from_utf8_lossy(e.as_bytes()).into_owned()
-                })
+                String::from_utf8(slice.to_vec()).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
             } else if let Ok(sym) = Symbol::try_convert(key) {
                 sym.name()?.into_owned()
             } else {
@@ -300,9 +297,6 @@ fn try_build_upload_file(
 
     let content_type = map.get("content_type").and_then(|v| v.as_str());
     let size = map.get("size").and_then(|v| v.as_u64());
-    // Performance: Use unwrap_or_else to defer HashMap allocation until needed.
-    // unwrap_or_default() always creates an empty HashMap even when not needed,
-    // while unwrap_or_else only allocates if the Option is None.
     let headers_value = map
         .get("headers")
         .and_then(|v| v.as_object())
@@ -311,7 +305,7 @@ fn try_build_upload_file(
                 .filter_map(|(k, v)| v.as_str().map(|val| (k.clone(), val.to_string())))
                 .collect::<HashMap<String, String>>()
         })
-        .unwrap_or_else(HashMap::new);
+        .unwrap_or_default();
     let headers = map_to_ruby_hash(ruby, &headers_value)?;
     let content_encoding = map.get("content_encoding").and_then(|v| v.as_str());
 

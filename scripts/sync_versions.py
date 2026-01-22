@@ -50,6 +50,21 @@ COMPOSER_JSON_PATHS = [
     Path("packages/php/composer.json"),
 ]
 
+README_PATHS = [
+    Path("crates/spikard/README.md"),
+    Path("crates/spikard-http/README.md"),
+    Path("crates/spikard-core/README.md"),
+    Path("crates/spikard-bindings-shared/README.md"),
+    Path("tests/test_apps/README.md"),
+    Path("tests/test_apps/python/README.md"),
+    Path("tests/test_apps/rust/README.md"),
+    Path("tests/test_apps/wasm/README.md"),
+    Path("tests/test_apps/php/README.md"),
+    Path("tests/test_apps/node/README.md"),
+    Path("tests/test_apps/ruby/README.md"),
+    Path("packages/wasm/README.md"),
+]
+
 
 def log_line(message: str) -> None:
     """Write a single message to stdout (ruff-safe helper)."""
@@ -146,6 +161,44 @@ def update_taskfile(version: str) -> bool:
     return True
 
 
+def update_readme_versions(path: Path, version: str) -> bool:
+    """Update version references in README files.
+
+    Updates:
+    - Cargo.toml dependency strings: spikard = "0.x.y"
+    - Test app version references: v0.x.y
+    - npm package version strings: @spikard/wasm@0.x.y
+    """
+    if not path.exists():
+        return False
+
+    content = path.read_text()
+    original = content
+
+    # Pattern 1: Cargo.toml dependencies (spikard = "0.x.y", spikard-http = "0.x.y", etc.)
+    cargo_dep_pattern = re.compile(
+        r'((?:_)?spikard(?:-[a-z]+)?\s*=\s*(?:\{\s*version\s*=\s*)?")([0-9]+\.[0-9]+\.[0-9]+)(")'
+    )
+    content = cargo_dep_pattern.sub(rf"\g<1>{version}\g<3>", content)
+
+    # Pattern 2: Version references like "v0.7.0" or "v0.x.y" in test documentation
+    version_ref_pattern = re.compile(r'\bv([0-9]+\.[0-9]+\.[0-9]+)\b')
+    content = version_ref_pattern.sub(rf"v{version}", content)
+
+    # Pattern 3: npm package versions (@spikard/wasm@0.x.y)
+    npm_package_pattern = re.compile(r'(@spikard/[a-z-]+@)([0-9]+\.[0-9]+\.[0-9]+)')
+    content = npm_package_pattern.sub(rf"\g<1>{version}", content)
+
+    # Pattern 4: Migration note references (As of v0.x.y)
+    migration_pattern = re.compile(r'(As of v)([0-9]+\.[0-9]+\.[0-9]+)')
+    content = migration_pattern.sub(rf"\g<1>{version}", content)
+
+    if content != original:
+        path.write_text(content)
+        return True
+    return False
+
+
 def main() -> None:
     """Entry point."""
     version_override = sys.argv[1] if len(sys.argv) > 1 else None
@@ -181,6 +234,11 @@ def main() -> None:
 
     if update_taskfile(version):
         changed_files.append(Path("Taskfile.yaml"))
+
+    for rel in README_PATHS:
+        path = REPO_ROOT / rel
+        if update_readme_versions(path, version):
+            changed_files.append(rel)
 
     if changed_files:
         log_line(f"Updated {len(changed_files)} file(s):")

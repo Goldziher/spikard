@@ -146,11 +146,8 @@ impl<T> LazyCache<T> {
                 // 2. RefCell stores values contiguously; dereferencing is valid
                 // 3. No RefCell borrow is held after this function returns
                 // 4. The lifetime is correctly extended to the cache's lifetime
-                let ptr = self.cache.as_ptr() as *const Option<T>;
-                match &*ptr {
-                    Some(v) => v,
-                    None => unreachable!(), // We checked is_some() above
-                }
+                let ptr = self.cache.as_ptr().cast_const();
+                (*ptr).as_ref().unwrap_or_else(|| unreachable!())
             };
         }
 
@@ -160,11 +157,8 @@ impl<T> LazyCache<T> {
 
         // SAFETY: We just set the value; same reasoning as above.
         unsafe {
-            let ptr = self.cache.as_ptr() as *const Option<T>;
-            match &*ptr {
-                Some(v) => v,
-                None => unreachable!(), // We just set Some
-            }
+            let ptr = self.cache.as_ptr().cast_const();
+            (*ptr).as_ref().unwrap_or_else(|| unreachable!())
         }
     }
 
@@ -223,11 +217,8 @@ impl<T> LazyCache<T> {
         if self.cache.borrow().is_some() {
             // SAFETY: Same as `get_or_init`; value is guaranteed to exist.
             return Ok(unsafe {
-                let ptr = self.cache.as_ptr() as *const Option<T>;
-                match &*ptr {
-                    Some(v) => v,
-                    None => unreachable!(),
-                }
+                let ptr = self.cache.as_ptr().cast_const();
+                (*ptr).as_ref().unwrap_or_else(|| unreachable!())
             });
         }
 
@@ -237,11 +228,8 @@ impl<T> LazyCache<T> {
 
         // SAFETY: We just set the value; same reasoning as get_or_init.
         Ok(unsafe {
-            let ptr = self.cache.as_ptr() as *const Option<T>;
-            match &*ptr {
-                Some(v) => v,
-                None => unreachable!(),
-            }
+            let ptr = self.cache.as_ptr().cast_const();
+            (*ptr).as_ref().unwrap_or_else(|| unreachable!())
         })
     }
 

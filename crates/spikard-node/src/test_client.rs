@@ -275,7 +275,11 @@ impl JsHandler {
             return Err((problem.status_code(), error_json));
         }
 
-        let payload = build_js_payload(self, &request_data, request_data.validated_params.as_ref().map(|arc| (**arc).clone()));
+        let payload = build_js_payload(
+            self,
+            &request_data,
+            request_data.validated_params.as_ref().map(|arc| (**arc).clone()),
+        );
 
         let js_result = self.call_js(payload).await.map_err(|e| {
             (

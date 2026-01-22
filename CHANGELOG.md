@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-01-22
+
+### Performance
+
+- **Arc::try_unwrap Pattern Across All Bindings**: Eliminates unnecessary clones when Arc has unique ownership
+  - Applied to Python, Ruby, PHP, and Node.js bindings for all RequestData fields
+  - 30-40% reduction in FFI conversion overhead measured in Python bindings
+  - Static singletons for empty collections in request_extraction.rs (shared Arc instances)
+  - OnceLock caching optimizations in Python handler_request.rs (eliminated double-clone patterns)
+
 ### Changed
 
 - **BREAKING: RequestData Value Fields Arc-Wrapped** (Phase 2 Performance Optimization)
@@ -15,7 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `validated_params: Option<Value>` → `validated_params: Option<Arc<Value>>` maintains consistency
   - All RequestData construction sites updated across spikard-http crate
   - Test helpers and fixtures updated to wrap Value fields in Arc::new()
-  - This is a pre-1.0 experimental breaking change; language bindings will be updated in Phase 3
+  - This is a pre-1.0 experimental breaking change; language bindings updated in this release
+
+### Fixed
+
+- Ruby handler: Eliminated double-clone in validated_params handling (line 274)
+- Ruby handler: Fixed raw body clone by using serde_json::from_slice directly
+- PHP response: Changed with_cookies to use &mut self (PHP heap-allocated object constraint)
+- All binding tests: Updated to match Arc-wrapped RequestData struct changes
+- Clippy lints: Fixed ptr_cast_constness and unnecessary_option_map_or_else warnings
 
 ## [0.9.1] - 2026-01-12
 

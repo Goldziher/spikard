@@ -4,7 +4,6 @@ use crate::conversion::{json_to_python, python_to_json};
 use crate::handler_request::PyHandlerRequest;
 use crate::response::StreamingResponse;
 use crate::response_interpreter::PyResponseInterpreter;
-use spikard_bindings_shared::ResponseInterpreter;
 use axum::{
     body::Body,
     http::{Request, Response, StatusCode},
@@ -15,6 +14,7 @@ use pyo3::sync::PyOnceLock;
 use pyo3::types::{PyDict, PyTuple};
 use pyo3_async_runtimes::TaskLocals;
 use serde_json::{Value, json};
+use spikard_bindings_shared::ResponseInterpreter;
 use spikard_core::errors::StructuredError;
 use spikard_http::{Handler, HandlerResponse, HandlerResult, ParameterValidator, RequestData};
 use spikard_http::{ProblemDetails, SchemaValidator};
@@ -464,8 +464,7 @@ impl PythonHandler {
                     })?;
                     // PERFORMANCE: Take ownership of Arc first, then try_unwrap to avoid double-clone
                     let body_value = if !request_data.body.is_null() {
-                        Arc::try_unwrap(request_data.body)
-                            .unwrap_or_else(|arc| (*arc).clone())
+                        Arc::try_unwrap(request_data.body).unwrap_or_else(|arc| (*arc).clone())
                     } else {
                         serde_json::from_slice::<Value>(raw)
                             .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?
@@ -556,8 +555,7 @@ impl PythonHandler {
                         })?;
                         // PERFORMANCE: Take ownership of Arc first, then try_unwrap to avoid double-clone
                         let body_value = if !request_data_for_sync.body.is_null() {
-                            Arc::try_unwrap(request_data_for_sync.body)
-                                .unwrap_or_else(|arc| (*arc).clone())
+                            Arc::try_unwrap(request_data_for_sync.body).unwrap_or_else(|arc| (*arc).clone())
                         } else {
                             serde_json::from_slice::<Value>(raw).map_err(|e| {
                                 pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}"))
@@ -751,8 +749,7 @@ fn validated_params_to_py_kwargs<'py>(
             if !needs_param_conversion {
                 // PERFORMANCE: Clone Arc reference for try_unwrap; if sole owner, no clone occurs
                 let body_value = if !request_data.body.is_null() {
-                    Arc::try_unwrap(Arc::clone(&request_data.body))
-                        .unwrap_or_else(|arc| (*arc).clone())
+                    Arc::try_unwrap(Arc::clone(&request_data.body)).unwrap_or_else(|arc| (*arc).clone())
                 } else {
                     serde_json::from_slice::<Value>(raw_bytes)
                         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?
@@ -829,11 +826,13 @@ fn python_to_response_result(
                 // For now, we don't support raw Python iterators without StreamingResponse
                 // This maintains backward compatibility
                 Err(pyo3::exceptions::PyTypeError::new_err(
-                    "Streaming responses must be StreamingResponse instances or generators wrapped in StreamingResponse"
+                    "Streaming responses must be StreamingResponse instances or generators wrapped in StreamingResponse",
                 ))
             }
         }
-        spikard_bindings_shared::InterpretedResponse::Custom { status, headers, body, .. } => {
+        spikard_bindings_shared::InterpretedResponse::Custom {
+            status, headers, body, ..
+        } => {
             let content = body.unwrap_or(Value::Null);
             Ok(ResponseResult::Custom {
                 content,
@@ -955,8 +954,7 @@ fn request_data_to_py_kwargs<'py>(
             if !needs_param_conversion {
                 // PERFORMANCE: Clone Arc reference for try_unwrap; if sole owner, no clone occurs
                 let body_value = if !request_data.body.is_null() {
-                    Arc::try_unwrap(Arc::clone(&request_data.body))
-                        .unwrap_or_else(|arc| (*arc).clone())
+                    Arc::try_unwrap(Arc::clone(&request_data.body)).unwrap_or_else(|arc| (*arc).clone())
                 } else {
                     serde_json::from_slice::<Value>(raw_bytes)
                         .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid JSON body: {e}")))?

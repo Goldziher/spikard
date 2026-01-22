@@ -123,12 +123,10 @@ impl NativeRequest {
             path,
             path_params,
             // Arc::try_unwrap eliminates clone when possible (most requests have unique Arc ref)
-            query_params: Arc::try_unwrap(query_params)
-                .unwrap_or_else(|arc| (*arc).clone()),
+            query_params: Arc::try_unwrap(query_params).unwrap_or_else(|arc| (*arc).clone()),
             raw_query_params,
             // Arc::try_unwrap eliminates clone when possible (most requests have unique Arc ref)
-            body: Arc::try_unwrap(body)
-                .unwrap_or_else(|arc| (*arc).clone()),
+            body: Arc::try_unwrap(body).unwrap_or_else(|arc| (*arc).clone()),
             raw_body,
             headers,
             cookies,
