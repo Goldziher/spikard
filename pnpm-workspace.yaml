@@ -1,6 +1,7 @@
 packages:
   - "packages/node"
   - "packages/wasm"
+  - "packages/wasm/runtime"
   - "crates/spikard-node"
   - "crates/spikard-wasm"
   - "e2e/node"
@@ -8,4 +9,6 @@ packages:
   - "e2e/deno"
   - "e2e/cloudflare"
   - "examples/*"
+  - "tests/test_apps/node"
+  - "tests/test_apps/wasm"
   - "tools/benchmark-harness/apps/*"
