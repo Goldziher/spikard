@@ -1078,7 +1078,7 @@ tasks:
       - bench:harness:build
       - bench:build:rust
     cmds:
-      - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust.json
+      - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust-gen --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust.json
 
   bench:run:php:
     desc: "Run benchmark against Spikard-PHP server"

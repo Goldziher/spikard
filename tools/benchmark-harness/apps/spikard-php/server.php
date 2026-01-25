@@ -504,9 +504,6 @@ $app->get('/query/basic', function(Request $request): array {
 
 $app->get('/query/multi-type', function(Request $request): array {
     $response = [];
-    if (isset($request->queryParams['score'])) {
-        $response['score'] = $request->queryParams['score'];
-    }
     if (isset($request->queryParams['age'])) {
         $response['age'] = $request->queryParams['age'];
     }
@@ -515,6 +512,9 @@ $app->get('/query/multi-type', function(Request $request): array {
     }
     if (isset($request->queryParams['active'])) {
         $response['active'] = $request->queryParams['active'];
+    }
+    if (isset($request->queryParams['score'])) {
+        $response['score'] = $request->queryParams['score'];
     }
     return $response;
 });

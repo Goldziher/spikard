@@ -785,6 +785,9 @@ app.get(
 	"/query/multi-type",
 	wrapHandler(async ({ queryParams }) => {
 		const response: Record<string, unknown> = {};
+		if (queryParams["score"] !== undefined) {
+			response["score"] = queryParams["score"];
+		}
 		if (queryParams["active"] !== undefined) {
 			response["active"] = queryParams["active"];
 		}
@@ -793,9 +796,6 @@ app.get(
 		}
 		if (queryParams["name"] !== undefined) {
 			response["name"] = queryParams["name"];
-		}
-		if (queryParams["score"] !== undefined) {
-			response["score"] = queryParams["score"];
 		}
 		return response;
 	}),
