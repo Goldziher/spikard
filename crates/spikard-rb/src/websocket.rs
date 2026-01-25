@@ -346,17 +346,24 @@ unsafe impl Sync for RubyWebSocketHandler {}
 /// Create WebSocketState from Ruby handler object
 ///
 /// This function is designed to be called from Ruby to register WebSocket handlers.
+/// Returns None if the factory returns nil (no handler for this endpoint).
 #[allow(dead_code)]
 pub fn create_websocket_state(
     ruby: &magnus::Ruby,
     handler_factory: Value,
-) -> Result<spikard_http::WebSocketState<RubyWebSocketHandler>, magnus::Error> {
+) -> Result<Option<spikard_http::WebSocketState<RubyWebSocketHandler>>, magnus::Error> {
+    // Test the factory with an initial call to check if it returns nil
     let handler_instance: Value = handler_factory.funcall("call", ()).map_err(|e| {
         magnus::Error::new(
             ruby.exception_runtime_error(),
             format!("Failed to create WebSocket handler: {}", e),
         )
     })?;
+
+    // If factory returns nil, skip creating a handler (return None)
+    if handler_instance.is_nil() {
+        return Ok(None);
+    }
 
     let message_schema = handler_instance
         .funcall::<_, _, Value>("instance_variable_get", (ruby.to_symbol("@_message_schema"),))
@@ -379,6 +386,8 @@ pub fn create_websocket_state(
                 RubyWebSocketHandler::ruby_to_json(ruby, v).ok()
             }
         });
+
+    let (message_schema, response_schema) = (message_schema, response_schema);
 
     let handler_factory = Opaque::from(handler_factory);
     let (factory_tx, factory_rx) = mpsc::channel();
@@ -412,13 +421,15 @@ pub fn create_websocket_state(
         }
     };
 
-    if message_schema.is_some() || response_schema.is_some() {
+    let ws_state = if message_schema.is_some() || response_schema.is_some() {
         spikard_http::WebSocketState::with_factory(handler_builder, message_schema, response_schema)
-            .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))
+            .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))?
     } else {
         spikard_http::WebSocketState::with_factory(handler_builder, None, None)
-            .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))
-    }
+            .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e))?
+    };
+
+    Ok(Some(ws_state))
 }
 
 fn websocket_factory_worker_loop(
@@ -444,6 +455,7 @@ fn websocket_factory_worker_loop(
                     let handler_instance: Value = factory_value
                         .funcall("call", ())
                         .map_err(|e| format!("Failed to create WebSocket handler: {}", e))?;
+
                     RubyWebSocketHandler::from_handler(ruby, handler_instance).map_err(|e| e.to_string())
                 })();
                 let _ = reply.send(result);

@@ -13,5 +13,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 magnus = { version = "0.8.2", features = ["rb-sys"] }
-# Use vendored crates for packaged gem distribution
-spikard_rb_core = { package = "spikard-rb", path = "../../vendor/crates/spikard-rb" }
+# Use crates from the workspace root
+spikard_rb_core = { package = "spikard-rb", path = "../../../../crates/spikard-rb" }

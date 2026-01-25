@@ -154,9 +154,9 @@ impl NativeTestClient {
 
             ws_hash.foreach(
                 |path: String, factory: Value| -> Result<magnus::r_hash::ForEach, Error> {
-                    let ws_state = crate::websocket::create_websocket_state(ruby, factory)?;
-
-                    ws_endpoints.push((path, ws_state));
+                    if let Some(ws_state) = crate::websocket::create_websocket_state(ruby, factory)? {
+                        ws_endpoints.push((path, ws_state));
+                    }
 
                     Ok(magnus::r_hash::ForEach::Continue)
                 },

@@ -238,9 +238,9 @@ pub fn run_server(
             .ok_or_else(|| Error::new(ruby.exception_arg_error(), "WebSocket handlers must be a Hash"))?;
 
         ws_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
-            let ws_state = crate::websocket::create_websocket_state(ruby, factory)?;
-
-            ws_endpoints.push((path, ws_state));
+            if let Some(ws_state) = crate::websocket::create_websocket_state(ruby, factory)? {
+                ws_endpoints.push((path, ws_state));
+            }
 
             Ok(ForEach::Continue)
         })?;

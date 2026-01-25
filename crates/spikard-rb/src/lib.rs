@@ -488,6 +488,18 @@ impl NativeDependencyRegistry {
     fn keys(&self) -> Vec<String> {
         self.registered_keys.borrow().clone()
     }
+
+    fn resolve(ruby: &Ruby, this: &Self, key: String) -> Result<Value, Error> {
+        let registered = this.registered_keys.borrow();
+        if registered.contains(&key) {
+            Ok(ruby.qnil().as_value())
+        } else {
+            Err(Error::new(
+                ruby.exception_runtime_error(),
+                format!("Failed to resolve dependency '{}': key '{}' not registered", key, key),
+            ))
+        }
+    }
 }
 
 fn poll_stream_chunk(enumerator: &Arc<Opaque<Value>>) -> Result<Option<Bytes>, io::Error> {
@@ -674,9 +686,9 @@ impl NativeTestClient {
                 .ok_or_else(|| Error::new(ruby.exception_arg_error(), "WebSocket handlers must be a Hash"))?;
 
             ws_hash.foreach(|path: String, factory: Value| -> Result<ForEach, Error> {
-                let ws_state = crate::websocket::create_websocket_state(ruby, factory)?;
-
-                ws_endpoints.push((path, ws_state));
+                if let Some(ws_state) = crate::websocket::create_websocket_state(ruby, factory)? {
+                    ws_endpoints.push((path, ws_state));
+                }
 
                 Ok(ForEach::Continue)
             })?;
@@ -1850,6 +1862,20 @@ fn fetch_handler(ruby: &Ruby, handlers: &RHash, name: &str) -> Result<Value, Err
 }
 
 pub(crate) fn validate_route_metadata(ruby: &Ruby, meta: &RouteMetadata) -> Result<(), Error> {
+    // Validate method field is a valid HTTP method (must be uppercase)
+    match meta.method.as_str() {
+        "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS" | "TRACE" => {}
+        _ => {
+            return Err(Error::new(
+                ruby.exception_arg_error(),
+                format!(
+                    "Invalid routes JSON: method must be a valid HTTP method in uppercase (got '{}')",
+                    meta.method
+                ),
+            ));
+        }
+    }
+
     if meta.path.trim().is_empty() || !meta.path.starts_with('/') {
         return Err(Error::new(
             ruby.exception_arg_error(),
@@ -2056,6 +2082,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
         method!(NativeDependencyRegistry::register_factory, 5),
     )?;
     dependency_registry_class.define_method("keys", method!(NativeDependencyRegistry::keys, 0))?;
+    dependency_registry_class.define_method("resolve", method!(NativeDependencyRegistry::resolve, 1))?;
 
     let spikard_module = ruby.define_module("Spikard")?;
     testing::websocket::init(ruby, &spikard_module)?;

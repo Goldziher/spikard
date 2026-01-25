@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'securerandom'
 
 RSpec.describe 'SSE Producer Error Recovery and Client Reconnection' do
   # Test 1: Producer#next_event raises → stream continues (error logged)
@@ -1002,8 +1003,8 @@ RSpec.describe 'SSE Producer Error Recovery and Client Reconnection' do
         end
 
         def on_connect
-          @is_connected = true
           reset_state
+          @is_connected = true
         end
 
         def next_event

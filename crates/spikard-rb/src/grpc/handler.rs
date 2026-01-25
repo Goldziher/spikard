@@ -113,7 +113,14 @@ impl RubyGrpcResponse {
                 if let Ok(hash) = RHash::try_convert(*single) {
                     let payload_value = get_kw(hash, ruby, "payload")
                         .ok_or_else(|| Error::new(magnus::exception::arg_error(), "Response.new requires a payload"))?;
-                    let payload = RString::try_convert(payload_value)?;
+
+                    // Validate that payload is not nil
+                    if payload_value.is_nil() {
+                        return Err(Error::new(magnus::exception::arg_error(), "payload cannot be nil"));
+                    }
+
+                    let payload = RString::try_convert(payload_value)
+                        .map_err(|_| Error::new(magnus::exception::arg_error(), "payload must be a String"))?;
                     let metadata_value = get_kw(hash, ruby, "metadata");
                     let metadata = match metadata_value {
                         Some(value) if !value.is_nil() => Some(RHash::try_convert(value)?),
@@ -121,11 +128,24 @@ impl RubyGrpcResponse {
                     };
                     (payload, metadata)
                 } else {
-                    (RString::try_convert(*single)?, None)
+                    // Validate that single is not nil
+                    if single.is_nil() {
+                        return Err(Error::new(magnus::exception::arg_error(), "payload cannot be nil"));
+                    }
+
+                    let payload = RString::try_convert(*single)
+                        .map_err(|_| Error::new(magnus::exception::arg_error(), "payload must be a String"))?;
+                    (payload, None)
                 }
             }
             [payload_value, metadata_value] => {
-                let payload = RString::try_convert(*payload_value)?;
+                // Validate that payload is not nil
+                if payload_value.is_nil() {
+                    return Err(Error::new(magnus::exception::arg_error(), "payload cannot be nil"));
+                }
+
+                let payload = RString::try_convert(*payload_value)
+                    .map_err(|_| Error::new(magnus::exception::arg_error(), "payload must be a String"))?;
                 let metadata = if metadata_value.is_nil() {
                     None
                 } else {
@@ -209,8 +229,15 @@ impl RubyGrpcResponse {
     }
 
     /// Set metadata
-    fn rb_set_metadata(&self, metadata: RHash) -> Result<(), Error> {
-        let meta = ruby_hash_to_string_map(&metadata)?;
+    fn rb_set_metadata(&self, metadata: Value) -> Result<(), Error> {
+        // Handle nil metadata - treat as empty hash
+        if metadata.is_nil() {
+            *self.metadata.borrow_mut() = HashMap::new();
+            return Ok(());
+        }
+
+        let hash = RHash::try_convert(metadata)?;
+        let meta = ruby_hash_to_string_map(&hash)?;
         if meta.len() > MAX_METADATA_ENTRIES {
             return Err(Error::new(
                 magnus::exception::arg_error(),

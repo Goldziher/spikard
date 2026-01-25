@@ -281,7 +281,7 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
           Spikard::Native::TestClient.new(
             JSON.generate([
                             {
-                              method: :GET, # Should be uppercase String
+                              method: :get, # Should be uppercase String
                               path: '/test',
                               handler_name: 'test_handler',
                               status: '200 OK',
@@ -422,28 +422,16 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
   end
 
   describe 'SSE producer data field type checking' do
-    let(:valid_routes_json) do
-      JSON.generate([
-                      {
-                        method: 'GET',
-                        path: '/sse',
-                        handler_name: 'sse_handler',
-                        status: '200 OK',
-                        request_schema: nil,
-                        response_schema: nil,
-                        path_params: [],
-                        path_regex: nil,
-                        handler_dependencies: []
-                      }
-                    ])
+    let(:empty_routes_json) do
+      JSON.generate([])
     end
 
     context 'with valid SSE data' do
       it 'accepts serializable data in SSE events' do
         expect do
           Spikard::Native::TestClient.new(
-            valid_routes_json,
-            { sse_handler: proc { |_req| } },
+            empty_routes_json,
+            {},
             Spikard::ServerConfig.new,
             nil,
             { '/sse' => proc { Spikard::SseEventProducer.new } },
@@ -743,9 +731,11 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
           nil
         )
 
-        expect do
-          client.request('GET', '/test')
-        end.to raise_error
+        response = client.request('GET', '/test')
+        expect(response[:status_code]).to eq(500)
+        expect(response[:body_text]).not_to be_nil
+        parsed = JSON.parse(response[:body_text])
+        expect(parsed['status']).to eq(500)
       end
 
       it 'prevents unwrap panics from crossing FFI boundary' do
