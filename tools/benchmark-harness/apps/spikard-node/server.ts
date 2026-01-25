@@ -13,8 +13,701 @@ async function health(_request: HandlerInput): Promise<HandlerOutput> {
 	};
 }
 
+async function get_protected_user(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_data(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_protected(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_admin(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_background_events(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_body_limit_under(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_body_limit_over(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_compression_gzip(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_compression_skip(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_accept_test_id(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.pathParams?.['id'] !== undefined) {
+		response['id'] = request.pathParams['id'];
+	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
 async function post_items_1(_request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_data(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_upload(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_api_v1_resource(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_items_1(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_items_cookies(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_users_me(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_users_me_auth(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookie(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_cookies_validated(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_cookies_min_length(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_cookies_pattern(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookies_delete(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookies_set_with_domain(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookies_set_with_path(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookies_session(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookies_samesite_strict(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookies_samesite_lax(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookies_samesite_none(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_cookies_multiple(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_secure(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_data(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_api_data(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_api_form(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_config(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_timestamp(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_db_status(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_auth_status(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_app_counter(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_request_id(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_circular(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_missing_dep(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_type_mismatch(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_cleanup_test(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_multi_cleanup_test(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_python_type_inject(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_python_name_inject(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_node_destructure(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_ruby_kwargs(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_override_test(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_mixed_caching(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_hook_di_test(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_numbers(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_calculations(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_nested(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_strings(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_nulls(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_search(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.queryParams?.['term'] !== undefined) {
+		response['term'] = request.queryParams['term'];
+	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_items_2(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.queryParams?.['filter'] !== undefined) {
+		response['filter'] = request.queryParams['filter'];
+	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_calculate(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_text(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_users(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_messages(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_files(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_items_2(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_echo(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_content_type(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_accept(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_bearer_auth(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_multiple(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_validated(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_accept_language(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_referer(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_pattern(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_host(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_max_length(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_basic_auth(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_origin(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_accept_encoding(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_headers_underscore(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_protected(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function put_items_id(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.pathParams?.['id'] !== undefined) {
+		response['id'] = request.pathParams['id'];
+	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function patch_items_id(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.pathParams?.['id'] !== undefined) {
+		response['id'] = request.pathParams['id'];
+	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function delete_items_id(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.pathParams?.['id'] !== undefined) {
+		response['id'] = request.pathParams['id'];
+	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function head_items_id(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.pathParams?.['id'] !== undefined) {
+		response['id'] = request.pathParams['id'];
+	}
 	return {
 		status: 200,
 		body: response,
@@ -69,34 +762,7 @@ async function post_events(_request: HandlerInput): Promise<HandlerOutput> {
 	};
 }
 
-async function patch_items_id(request: HandlerInput): Promise<HandlerOutput> {
-	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["id"] !== undefined) {
-		response["id"] = request.pathParams["id"];
-	}
-	return {
-		status: 200,
-		body: response,
-	};
-}
-
-async function post_users(_request: HandlerInput): Promise<HandlerOutput> {
-	const response: Record<string, unknown> = {};
-	return {
-		status: 200,
-		body: response,
-	};
-}
-
 async function post_products(_request: HandlerInput): Promise<HandlerOutput> {
-	const response: Record<string, unknown> = {};
-	return {
-		status: 200,
-		body: response,
-	};
-}
-
-async function post_items_2(_request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
 	return {
 		status: 200,
@@ -144,7 +810,95 @@ async function post_billing(_request: HandlerInput): Promise<HandlerOutput> {
 	};
 }
 
-async function post_data(_request: HandlerInput): Promise<HandlerOutput> {
+async function get_api_test_on_request(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_api_test_rate_limit(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_api_test_rate_limit_exceeded(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_protected_resource(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_protected_resource_fail(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_admin_only(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_admin_only_forbidden(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_test_security_headers(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_test_timing(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_test_error(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_api_full_lifecycle(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_api_test_hook_order(_request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
 	return {
 		status: 200,
@@ -224,18 +978,10 @@ async function post_files_required(_request: HandlerInput): Promise<HandlerOutpu
 	};
 }
 
-async function post_upload(_request: HandlerInput): Promise<HandlerOutput> {
-	const response: Record<string, unknown> = {};
-	return {
-		status: 200,
-		body: response,
-	};
-}
-
 async function get_path_str_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -245,8 +991,8 @@ async function get_path_str_item_id(request: HandlerInput): Promise<HandlerOutpu
 
 async function get_path_int_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -256,8 +1002,8 @@ async function get_path_int_item_id(request: HandlerInput): Promise<HandlerOutpu
 
 async function get_path_float_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -267,8 +1013,8 @@ async function get_path_float_item_id(request: HandlerInput): Promise<HandlerOut
 
 async function get_items_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["id"] !== undefined) {
-		response["id"] = request.pathParams["id"];
+	if (request.pathParams?.['id'] !== undefined) {
+		response['id'] = request.pathParams['id'];
 	}
 	return {
 		status: 200,
@@ -278,8 +1024,8 @@ async function get_items_id(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_path_param_gt_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -289,8 +1035,8 @@ async function get_path_param_gt_item_id(request: HandlerInput): Promise<Handler
 
 async function get_path_param_minlength_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -300,8 +1046,8 @@ async function get_path_param_minlength_item_id(request: HandlerInput): Promise<
 
 async function get_models_model_name(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["model_name"] !== undefined) {
-		response["model_name"] = request.pathParams["model_name"];
+	if (request.pathParams?.['model_name'] !== undefined) {
+		response['model_name'] = request.pathParams['model_name'];
 	}
 	return {
 		status: 200,
@@ -311,8 +1057,8 @@ async function get_models_model_name(request: HandlerInput): Promise<HandlerOutp
 
 async function get_files_file_path(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["file_path"] !== undefined) {
-		response["file_path"] = request.pathParams["file_path"];
+	if (request.pathParams?.['file_path'] !== undefined) {
+		response['file_path'] = request.pathParams['file_path'];
 	}
 	return {
 		status: 200,
@@ -322,17 +1068,17 @@ async function get_files_file_path(request: HandlerInput): Promise<HandlerOutput
 
 async function get_version_service_id_user_id_order_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["version"] !== undefined) {
-		response["version"] = request.pathParams["version"];
+	if (request.pathParams?.['version'] !== undefined) {
+		response['version'] = request.pathParams['version'];
 	}
-	if (request.pathParams?.["service_id"] !== undefined) {
-		response["service_id"] = request.pathParams["service_id"];
+	if (request.pathParams?.['service_id'] !== undefined) {
+		response['service_id'] = request.pathParams['service_id'];
 	}
-	if (request.pathParams?.["user_id"] !== undefined) {
-		response["user_id"] = request.pathParams["user_id"];
+	if (request.pathParams?.['user_id'] !== undefined) {
+		response['user_id'] = request.pathParams['user_id'];
 	}
-	if (request.pathParams?.["order_id"] !== undefined) {
-		response["order_id"] = request.pathParams["order_id"];
+	if (request.pathParams?.['order_id'] !== undefined) {
+		response['order_id'] = request.pathParams['order_id'];
 	}
 	return {
 		status: 200,
@@ -342,8 +1088,8 @@ async function get_version_service_id_user_id_order_id(request: HandlerInput): P
 
 async function get_path_bool_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -353,8 +1099,8 @@ async function get_path_bool_item_id(request: HandlerInput): Promise<HandlerOutp
 
 async function get_path_param_ge_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -364,8 +1110,8 @@ async function get_path_param_ge_item_id(request: HandlerInput): Promise<Handler
 
 async function get_path_param_le_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -375,8 +1121,8 @@ async function get_path_param_le_item_id(request: HandlerInput): Promise<Handler
 
 async function get_path_param_lt_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -386,8 +1132,8 @@ async function get_path_param_lt_item_id(request: HandlerInput): Promise<Handler
 
 async function get_path_param_lt_gt_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -397,8 +1143,8 @@ async function get_path_param_lt_gt_item_id(request: HandlerInput): Promise<Hand
 
 async function get_path_param_maxlength_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.pathParams["item_id"];
+	if (request.pathParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.pathParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -408,8 +1154,8 @@ async function get_path_param_maxlength_item_id(request: HandlerInput): Promise<
 
 async function get_date_date_param(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["date_param"] !== undefined) {
-		response["date_param"] = request.pathParams["date_param"];
+	if (request.pathParams?.['date_param'] !== undefined) {
+		response['date_param'] = request.pathParams['date_param'];
 	}
 	return {
 		status: 200,
@@ -419,8 +1165,8 @@ async function get_date_date_param(request: HandlerInput): Promise<HandlerOutput
 
 async function get_events_date(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["date"] !== undefined) {
-		response["date"] = request.pathParams["date"];
+	if (request.pathParams?.['date'] !== undefined) {
+		response['date'] = request.pathParams['date'];
 	}
 	return {
 		status: 200,
@@ -430,8 +1176,8 @@ async function get_events_date(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_bookings_timestamp(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["timestamp"] !== undefined) {
-		response["timestamp"] = request.pathParams["timestamp"];
+	if (request.pathParams?.['timestamp'] !== undefined) {
+		response['timestamp'] = request.pathParams['timestamp'];
 	}
 	return {
 		status: 200,
@@ -441,8 +1187,8 @@ async function get_bookings_timestamp(request: HandlerInput): Promise<HandlerOut
 
 async function get_delays_duration(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["duration"] !== undefined) {
-		response["duration"] = request.pathParams["duration"];
+	if (request.pathParams?.['duration'] !== undefined) {
+		response['duration'] = request.pathParams['duration'];
 	}
 	return {
 		status: 200,
@@ -452,8 +1198,8 @@ async function get_delays_duration(request: HandlerInput): Promise<HandlerOutput
 
 async function get_prices_amount(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["amount"] !== undefined) {
-		response["amount"] = request.pathParams["amount"];
+	if (request.pathParams?.['amount'] !== undefined) {
+		response['amount'] = request.pathParams['amount'];
 	}
 	return {
 		status: 200,
@@ -463,8 +1209,8 @@ async function get_prices_amount(request: HandlerInput): Promise<HandlerOutput> 
 
 async function get_users_username(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["username"] !== undefined) {
-		response["username"] = request.pathParams["username"];
+	if (request.pathParams?.['username'] !== undefined) {
+		response['username'] = request.pathParams['username'];
 	}
 	return {
 		status: 200,
@@ -474,11 +1220,11 @@ async function get_users_username(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_repos_owner_repo(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["owner"] !== undefined) {
-		response["owner"] = request.pathParams["owner"];
+	if (request.pathParams?.['owner'] !== undefined) {
+		response['owner'] = request.pathParams['owner'];
 	}
-	if (request.pathParams?.["repo"] !== undefined) {
-		response["repo"] = request.pathParams["repo"];
+	if (request.pathParams?.['repo'] !== undefined) {
+		response['repo'] = request.pathParams['repo'];
 	}
 	return {
 		status: 200,
@@ -488,8 +1234,8 @@ async function get_repos_owner_repo(request: HandlerInput): Promise<HandlerOutpu
 
 async function get_repos_owner(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["owner"] !== undefined) {
-		response["owner"] = request.pathParams["owner"];
+	if (request.pathParams?.['owner'] !== undefined) {
+		response['owner'] = request.pathParams['owner'];
 	}
 	return {
 		status: 200,
@@ -499,8 +1245,8 @@ async function get_repos_owner(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_offset_value(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["value"] !== undefined) {
-		response["value"] = request.pathParams["value"];
+	if (request.pathParams?.['value'] !== undefined) {
+		response['value'] = request.pathParams['value'];
 	}
 	return {
 		status: 200,
@@ -510,8 +1256,8 @@ async function get_offset_value(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_type_syntax_items_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["id"] !== undefined) {
-		response["id"] = request.pathParams["id"];
+	if (request.pathParams?.['id'] !== undefined) {
+		response['id'] = request.pathParams['id'];
 	}
 	return {
 		status: 200,
@@ -521,8 +1267,8 @@ async function get_type_syntax_items_id(request: HandlerInput): Promise<HandlerO
 
 async function get_type_syntax_users_user_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["user_id"] !== undefined) {
-		response["user_id"] = request.pathParams["user_id"];
+	if (request.pathParams?.['user_id'] !== undefined) {
+		response['user_id'] = request.pathParams['user_id'];
 	}
 	return {
 		status: 200,
@@ -532,8 +1278,8 @@ async function get_type_syntax_users_user_id(request: HandlerInput): Promise<Han
 
 async function get_type_syntax_items_count_count(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.["count"] !== undefined) {
-		response["count"] = request.pathParams["count"];
+	if (request.pathParams?.['count'] !== undefined) {
+		response['count'] = request.pathParams['count'];
 	}
 	return {
 		status: 200,
@@ -543,8 +1289,8 @@ async function get_type_syntax_items_count_count(request: HandlerInput): Promise
 
 async function get_query(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["query"] !== undefined) {
-		response["query"] = request.queryParams["query"];
+	if (request.queryParams?.['query'] !== undefined) {
+		response['query'] = request.queryParams['query'];
 	}
 	return {
 		status: 200,
@@ -554,8 +1300,8 @@ async function get_query(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["query"] !== undefined) {
-		response["query"] = request.queryParams["query"];
+	if (request.queryParams?.['query'] !== undefined) {
+		response['query'] = request.queryParams['query'];
 	}
 	return {
 		status: 200,
@@ -565,8 +1311,8 @@ async function get_query_int(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_optional(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["query"] !== undefined) {
-		response["query"] = request.queryParams["query"];
+	if (request.queryParams?.['query'] !== undefined) {
+		response['query'] = request.queryParams['query'];
 	}
 	return {
 		status: 200,
@@ -576,8 +1322,8 @@ async function get_query_optional(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_query_int_optional(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["query"] !== undefined) {
-		response["query"] = request.queryParams["query"];
+	if (request.queryParams?.['query'] !== undefined) {
+		response['query'] = request.queryParams['query'];
 	}
 	return {
 		status: 200,
@@ -587,8 +1333,8 @@ async function get_query_int_optional(request: HandlerInput): Promise<HandlerOut
 
 async function get_query_int_default(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["query"] !== undefined) {
-		response["query"] = request.queryParams["query"];
+	if (request.queryParams?.['query'] !== undefined) {
+		response['query'] = request.queryParams['query'];
 	}
 	return {
 		status: 200,
@@ -598,8 +1344,8 @@ async function get_query_int_default(request: HandlerInput): Promise<HandlerOutp
 
 async function get_query_list(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["device_ids"] !== undefined) {
-		response["device_ids"] = request.queryParams["device_ids"];
+	if (request.queryParams?.['device_ids'] !== undefined) {
+		response['device_ids'] = request.queryParams['device_ids'];
 	}
 	return {
 		status: 200,
@@ -609,19 +1355,8 @@ async function get_query_list(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_list_default(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["tags"] !== undefined) {
-		response["tags"] = request.queryParams["tags"];
-	}
-	return {
-		status: 200,
-		body: response,
-	};
-}
-
-async function get_items_1(request: HandlerInput): Promise<HandlerOutput> {
-	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["q"] !== undefined) {
-		response["q"] = request.queryParams["q"];
+	if (request.queryParams?.['tags'] !== undefined) {
+		response['tags'] = request.queryParams['tags'];
 	}
 	return {
 		status: 200,
@@ -631,11 +1366,11 @@ async function get_items_1(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_test(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["special"] !== undefined) {
-		response["special"] = request.queryParams["special"];
+	if (request.queryParams?.['email'] !== undefined) {
+		response['email'] = request.queryParams['email'];
 	}
-	if (request.queryParams?.["email"] !== undefined) {
-		response["email"] = request.queryParams["email"];
+	if (request.queryParams?.['special'] !== undefined) {
+		response['special'] = request.queryParams['special'];
 	}
 	return {
 		status: 200,
@@ -645,8 +1380,8 @@ async function get_test(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_bool(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["flag"] !== undefined) {
-		response["flag"] = request.queryParams["flag"];
+	if (request.queryParams?.['flag'] !== undefined) {
+		response['flag'] = request.queryParams['flag'];
 	}
 	return {
 		status: 200,
@@ -656,8 +1391,8 @@ async function get_query_bool(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_uuid(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["item_id"] !== undefined) {
-		response["item_id"] = request.queryParams["item_id"];
+	if (request.queryParams?.['item_id'] !== undefined) {
+		response['item_id'] = request.queryParams['item_id'];
 	}
 	return {
 		status: 200,
@@ -667,8 +1402,8 @@ async function get_query_uuid(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_enum(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["model"] !== undefined) {
-		response["model"] = request.queryParams["model"];
+	if (request.queryParams?.['model'] !== undefined) {
+		response['model'] = request.queryParams['model'];
 	}
 	return {
 		status: 200,
@@ -678,8 +1413,8 @@ async function get_query_enum(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int_ge(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["value"] !== undefined) {
-		response["value"] = request.queryParams["value"];
+	if (request.queryParams?.['value'] !== undefined) {
+		response['value'] = request.queryParams['value'];
 	}
 	return {
 		status: 200,
@@ -689,8 +1424,8 @@ async function get_query_int_ge(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int_le(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["value"] !== undefined) {
-		response["value"] = request.queryParams["value"];
+	if (request.queryParams?.['value'] !== undefined) {
+		response['value'] = request.queryParams['value'];
 	}
 	return {
 		status: 200,
@@ -700,8 +1435,8 @@ async function get_query_int_le(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int_lt(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["value"] !== undefined) {
-		response["value"] = request.queryParams["value"];
+	if (request.queryParams?.['value'] !== undefined) {
+		response['value'] = request.queryParams['value'];
 	}
 	return {
 		status: 200,
@@ -711,8 +1446,8 @@ async function get_query_int_lt(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int_gt(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["value"] !== undefined) {
-		response["value"] = request.queryParams["value"];
+	if (request.queryParams?.['value'] !== undefined) {
+		response['value'] = request.queryParams['value'];
 	}
 	return {
 		status: 200,
@@ -722,8 +1457,8 @@ async function get_query_int_gt(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_str_max_length(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["name"] !== undefined) {
-		response["name"] = request.queryParams["name"];
+	if (request.queryParams?.['name'] !== undefined) {
+		response['name'] = request.queryParams['name'];
 	}
 	return {
 		status: 200,
@@ -733,8 +1468,8 @@ async function get_query_str_max_length(request: HandlerInput): Promise<HandlerO
 
 async function get_query_str_min_length(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["name"] !== undefined) {
-		response["name"] = request.queryParams["name"];
+	if (request.queryParams?.['name'] !== undefined) {
+		response['name'] = request.queryParams['name'];
 	}
 	return {
 		status: 200,
@@ -744,8 +1479,8 @@ async function get_query_str_min_length(request: HandlerInput): Promise<HandlerO
 
 async function get_query_date(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["event_date"] !== undefined) {
-		response["event_date"] = request.queryParams["event_date"];
+	if (request.queryParams?.['event_date'] !== undefined) {
+		response['event_date'] = request.queryParams['event_date'];
 	}
 	return {
 		status: 200,
@@ -755,8 +1490,8 @@ async function get_query_date(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_datetime(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["timestamp"] !== undefined) {
-		response["timestamp"] = request.queryParams["timestamp"];
+	if (request.queryParams?.['timestamp'] !== undefined) {
+		response['timestamp'] = request.queryParams['timestamp'];
 	}
 	return {
 		status: 200,
@@ -766,8 +1501,8 @@ async function get_query_datetime(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_query_pattern(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["code"] !== undefined) {
-		response["code"] = request.queryParams["code"];
+	if (request.queryParams?.['code'] !== undefined) {
+		response['code'] = request.queryParams['code'];
 	}
 	return {
 		status: 200,
@@ -777,8 +1512,8 @@ async function get_query_pattern(request: HandlerInput): Promise<HandlerOutput> 
 
 async function get_query_basic(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["name"] !== undefined) {
-		response["name"] = request.queryParams["name"];
+	if (request.queryParams?.['name'] !== undefined) {
+		response['name'] = request.queryParams['name'];
 	}
 	return {
 		status: 200,
@@ -788,17 +1523,17 @@ async function get_query_basic(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_multi_type(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["age"] !== undefined) {
-		response["age"] = request.queryParams["age"];
+	if (request.queryParams?.['age'] !== undefined) {
+		response['age'] = request.queryParams['age'];
 	}
-	if (request.queryParams?.["score"] !== undefined) {
-		response["score"] = request.queryParams["score"];
+	if (request.queryParams?.['active'] !== undefined) {
+		response['active'] = request.queryParams['active'];
 	}
-	if (request.queryParams?.["name"] !== undefined) {
-		response["name"] = request.queryParams["name"];
+	if (request.queryParams?.['score'] !== undefined) {
+		response['score'] = request.queryParams['score'];
 	}
-	if (request.queryParams?.["active"] !== undefined) {
-		response["active"] = request.queryParams["active"];
+	if (request.queryParams?.['name'] !== undefined) {
+		response['name'] = request.queryParams['name'];
 	}
 	return {
 		status: 200,
@@ -808,8 +1543,8 @@ async function get_query_multi_type(request: HandlerInput): Promise<HandlerOutpu
 
 async function get_query_optional_default(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["limit"] !== undefined) {
-		response["limit"] = request.queryParams["limit"];
+	if (request.queryParams?.['limit'] !== undefined) {
+		response['limit'] = request.queryParams['limit'];
 	}
 	return {
 		status: 200,
@@ -819,8 +1554,8 @@ async function get_query_optional_default(request: HandlerInput): Promise<Handle
 
 async function get_query_float_ge(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["price"] !== undefined) {
-		response["price"] = request.queryParams["price"];
+	if (request.queryParams?.['price'] !== undefined) {
+		response['price'] = request.queryParams['price'];
 	}
 	return {
 		status: 200,
@@ -830,8 +1565,8 @@ async function get_query_float_ge(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_items_negative(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["offset"] !== undefined) {
-		response["offset"] = request.queryParams["offset"];
+	if (request.queryParams?.['offset'] !== undefined) {
+		response['offset'] = request.queryParams['offset'];
 	}
 	return {
 		status: 200,
@@ -841,19 +1576,8 @@ async function get_items_negative(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_stats(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["threshold"] !== undefined) {
-		response["threshold"] = request.queryParams["threshold"];
-	}
-	return {
-		status: 200,
-		body: response,
-	};
-}
-
-async function get_search(request: HandlerInput): Promise<HandlerOutput> {
-	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["term"] !== undefined) {
-		response["term"] = request.queryParams["term"];
+	if (request.queryParams?.['threshold'] !== undefined) {
+		response['threshold'] = request.queryParams['threshold'];
 	}
 	return {
 		status: 200,
@@ -863,19 +1587,8 @@ async function get_search(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_subscribe(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["email"] !== undefined) {
-		response["email"] = request.queryParams["email"];
-	}
-	return {
-		status: 200,
-		body: response,
-	};
-}
-
-async function get_items_2(request: HandlerInput): Promise<HandlerOutput> {
-	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["limit"] !== undefined) {
-		response["limit"] = request.queryParams["limit"];
+	if (request.queryParams?.['email'] !== undefined) {
+		response['email'] = request.queryParams['email'];
 	}
 	return {
 		status: 200,
@@ -885,8 +1598,8 @@ async function get_items_2(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_network(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["ip"] !== undefined) {
-		response["ip"] = request.queryParams["ip"];
+	if (request.queryParams?.['ip'] !== undefined) {
+		response['ip'] = request.queryParams['ip'];
 	}
 	return {
 		status: 200,
@@ -896,8 +1609,8 @@ async function get_network(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_network_ipv6(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["ip"] !== undefined) {
-		response["ip"] = request.queryParams["ip"];
+	if (request.queryParams?.['ip'] !== undefined) {
+		response['ip'] = request.queryParams['ip'];
 	}
 	return {
 		status: 200,
@@ -907,8 +1620,8 @@ async function get_network_ipv6(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_redirect(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["url"] !== undefined) {
-		response["url"] = request.queryParams["url"];
+	if (request.queryParams?.['url'] !== undefined) {
+		response['url'] = request.queryParams['url'];
 	}
 	return {
 		status: 200,
@@ -918,9 +1631,151 @@ async function get_redirect(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_dns(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.["host"] !== undefined) {
-		response["host"] = request.queryParams["host"];
+	if (request.queryParams?.['host'] !== undefined) {
+		response['host'] = request.queryParams['host'];
 	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_rate_limit_basic(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_rate_limit_exceeded(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_request_id_generated(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_request_id_preserved(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_request_id_disabled(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_timeouts_fast(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_timeouts_slow(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_public_hello_txt(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_app(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_status_test_code(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.pathParams?.['code'] !== undefined) {
+		response['code'] = request.pathParams['code'];
+	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_tasks(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function delete_status_test_code(request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	if (request.pathParams?.['code'] !== undefined) {
+		response['code'] = request.pathParams['code'];
+	}
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_redirect_post(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function post_slow_endpoint(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_stream_json_lines(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_stream_csv_report(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
+async function get_stream_logfile(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
 	return {
 		status: 200,
 		body: response,
@@ -1023,6 +1878,14 @@ async function post_settings(_request: HandlerInput): Promise<HandlerOutput> {
 	};
 }
 
+async function post_profiles(_request: HandlerInput): Promise<HandlerOutput> {
+	const response: Record<string, unknown> = {};
+	return {
+		status: 200,
+		body: response,
+	};
+}
+
 export function createApp() {
 	return {
 		routes: [
@@ -1033,9 +1896,513 @@ export function createApp() {
 				is_async: true,
 			},
 			{
+				method: "GET",
+				path: "/protected/user",
+				handler_name: "get_protected_user",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/data",
+				handler_name: "get_api_data",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/protected",
+				handler_name: "get_api_protected",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/admin",
+				handler_name: "get_api_admin",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/background/events",
+				handler_name: "post_background_events",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/body-limit/under",
+				handler_name: "post_body_limit_under",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/body-limit/over",
+				handler_name: "post_body_limit_over",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/compression/gzip",
+				handler_name: "get_compression_gzip",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/compression/skip",
+				handler_name: "get_compression_skip",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/accept-test/{id}",
+				handler_name: "get_accept_test_id",
+				is_async: true,
+			},
+			{
 				method: "POST",
 				path: "/items/",
 				handler_name: "post_items_1",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/data",
+				handler_name: "post_data",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/upload",
+				handler_name: "post_upload",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/api/v1/resource",
+				handler_name: "post_api_v1_resource",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/items/",
+				handler_name: "get_items_1",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/items/cookies",
+				handler_name: "get_items_cookies",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/users/me",
+				handler_name: "get_users_me",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/users/me/auth",
+				handler_name: "get_users_me_auth",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookie/",
+				handler_name: "post_cookie",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/cookies/validated",
+				handler_name: "get_cookies_validated",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/cookies/min-length",
+				handler_name: "get_cookies_min_length",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/cookies/pattern",
+				handler_name: "get_cookies_pattern",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookies/delete",
+				handler_name: "post_cookies_delete",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookies/set-with-domain",
+				handler_name: "post_cookies_set_with_domain",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookies/set-with-path",
+				handler_name: "post_cookies_set_with_path",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookies/session",
+				handler_name: "post_cookies_session",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookies/samesite-strict",
+				handler_name: "post_cookies_samesite_strict",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookies/samesite-lax",
+				handler_name: "post_cookies_samesite_lax",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookies/samesite-none",
+				handler_name: "post_cookies_samesite_none",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/cookies/multiple",
+				handler_name: "post_cookies_multiple",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/secure",
+				handler_name: "get_secure",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/data",
+				handler_name: "get_data",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/api/data",
+				handler_name: "post_api_data",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/api/form",
+				handler_name: "post_api_form",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/config",
+				handler_name: "get_api_config",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/timestamp",
+				handler_name: "get_api_timestamp",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/db-status",
+				handler_name: "get_api_db_status",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/auth-status",
+				handler_name: "get_api_auth_status",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/app-counter",
+				handler_name: "get_api_app_counter",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/request-id",
+				handler_name: "get_api_request_id",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/circular",
+				handler_name: "get_api_circular",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/missing-dep",
+				handler_name: "get_api_missing_dep",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/type-mismatch",
+				handler_name: "get_api_type_mismatch",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/cleanup-test",
+				handler_name: "get_api_cleanup_test",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/multi-cleanup-test",
+				handler_name: "get_api_multi_cleanup_test",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/python-type-inject",
+				handler_name: "get_api_python_type_inject",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/python-name-inject",
+				handler_name: "get_api_python_name_inject",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/node-destructure",
+				handler_name: "get_api_node_destructure",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/ruby-kwargs",
+				handler_name: "get_api_ruby_kwargs",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/override-test",
+				handler_name: "get_api_override_test",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/mixed-caching",
+				handler_name: "get_api_mixed_caching",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/hook-di-test",
+				handler_name: "get_api_hook_di_test",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/numbers/",
+				handler_name: "post_numbers",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/calculations/",
+				handler_name: "post_calculations",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/nested/",
+				handler_name: "post_nested",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/strings/",
+				handler_name: "post_strings",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/nulls/",
+				handler_name: "post_nulls",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/search",
+				handler_name: "get_search",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/items",
+				handler_name: "get_items_2",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/calculate",
+				handler_name: "post_calculate",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/text",
+				handler_name: "post_text",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/users",
+				handler_name: "post_users",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/messages",
+				handler_name: "post_messages",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/files",
+				handler_name: "post_files",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/items",
+				handler_name: "post_items_2",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/echo",
+				handler_name: "post_echo",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/content-type",
+				handler_name: "get_headers_content_type",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/accept",
+				handler_name: "get_headers_accept",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/bearer-auth",
+				handler_name: "get_headers_bearer_auth",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/multiple",
+				handler_name: "get_headers_multiple",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/validated",
+				handler_name: "get_headers_validated",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/accept-language",
+				handler_name: "get_headers_accept_language",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/referer",
+				handler_name: "get_headers_referer",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/pattern",
+				handler_name: "get_headers_pattern",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/host",
+				handler_name: "get_headers_host",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/max-length",
+				handler_name: "get_headers_max_length",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/basic-auth",
+				handler_name: "get_headers_basic_auth",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/origin",
+				handler_name: "get_headers_origin",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/accept-encoding",
+				handler_name: "get_headers_accept_encoding",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/headers/underscore",
+				handler_name: "get_headers_underscore",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/protected",
+				handler_name: "get_protected",
+				is_async: true,
+			},
+			{
+				method: "PUT",
+				path: "/items/{id}",
+				handler_name: "put_items_id",
+				is_async: true,
+			},
+			{
+				method: "PATCH",
+				path: "/items/{id}",
+				handler_name: "patch_items_id",
+				is_async: true,
+			},
+			{
+				method: "DELETE",
+				path: "/items/{id}",
+				handler_name: "delete_items_id",
+				is_async: true,
+			},
+			{
+				method: "HEAD",
+				path: "/items/{id}",
+				handler_name: "head_items_id",
 				is_async: true,
 			},
 			{
@@ -1075,27 +2442,9 @@ export function createApp() {
 				is_async: true,
 			},
 			{
-				method: "PATCH",
-				path: "/items/{id}",
-				handler_name: "patch_items_id",
-				is_async: true,
-			},
-			{
-				method: "POST",
-				path: "/users",
-				handler_name: "post_users",
-				is_async: true,
-			},
-			{
 				method: "POST",
 				path: "/products",
 				handler_name: "post_products",
-				is_async: true,
-			},
-			{
-				method: "POST",
-				path: "/items",
-				handler_name: "post_items_2",
 				is_async: true,
 			},
 			{
@@ -1129,9 +2478,75 @@ export function createApp() {
 				is_async: true,
 			},
 			{
+				method: "GET",
+				path: "/api/test-on-request",
+				handler_name: "get_api_test_on_request",
+				is_async: true,
+			},
+			{
 				method: "POST",
-				path: "/data",
-				handler_name: "post_data",
+				path: "/api/test-rate-limit",
+				handler_name: "post_api_test_rate_limit",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/api/test-rate-limit-exceeded",
+				handler_name: "post_api_test_rate_limit_exceeded",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/protected-resource",
+				handler_name: "get_api_protected_resource",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/protected-resource-fail",
+				handler_name: "get_api_protected_resource_fail",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/admin-only",
+				handler_name: "get_api_admin_only",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/admin-only-forbidden",
+				handler_name: "get_api_admin_only_forbidden",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/test-security-headers",
+				handler_name: "get_api_test_security_headers",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/test-timing",
+				handler_name: "get_api_test_timing",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/test-error",
+				handler_name: "get_api_test_error",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/api/full-lifecycle",
+				handler_name: "post_api_full_lifecycle",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/api/test-hook-order",
+				handler_name: "get_api_test_hook_order",
 				is_async: true,
 			},
 			{
@@ -1186,12 +2601,6 @@ export function createApp() {
 				method: "POST",
 				path: "/files/required",
 				handler_name: "post_files_required",
-				is_async: true,
-			},
-			{
-				method: "POST",
-				path: "/upload",
-				handler_name: "post_upload",
 				is_async: true,
 			},
 			{
@@ -1400,12 +2809,6 @@ export function createApp() {
 			},
 			{
 				method: "GET",
-				path: "/items/",
-				handler_name: "get_items_1",
-				is_async: true,
-			},
-			{
-				method: "GET",
 				path: "/test",
 				handler_name: "get_test",
 				is_async: true,
@@ -1520,20 +2923,8 @@ export function createApp() {
 			},
 			{
 				method: "GET",
-				path: "/search",
-				handler_name: "get_search",
-				is_async: true,
-			},
-			{
-				method: "GET",
 				path: "/subscribe",
 				handler_name: "get_subscribe",
-				is_async: true,
-			},
-			{
-				method: "GET",
-				path: "/items",
-				handler_name: "get_items_2",
 				is_async: true,
 			},
 			{
@@ -1558,6 +2949,108 @@ export function createApp() {
 				method: "GET",
 				path: "/dns",
 				handler_name: "get_dns",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/rate-limit/basic",
+				handler_name: "get_rate_limit_basic",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/rate-limit/exceeded",
+				handler_name: "get_rate_limit_exceeded",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/request-id/generated",
+				handler_name: "get_request_id_generated",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/request-id/preserved",
+				handler_name: "get_request_id_preserved",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/request-id/disabled",
+				handler_name: "get_request_id_disabled",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/timeouts/fast",
+				handler_name: "get_timeouts_fast",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/timeouts/slow",
+				handler_name: "get_timeouts_slow",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/public/hello.txt",
+				handler_name: "get_public_hello_txt",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/app",
+				handler_name: "get_app",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/status-test/{code}",
+				handler_name: "get_status_test_code",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/tasks/",
+				handler_name: "post_tasks",
+				is_async: true,
+			},
+			{
+				method: "DELETE",
+				path: "/status-test/{code}",
+				handler_name: "delete_status_test_code",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/redirect-post",
+				handler_name: "post_redirect_post",
+				is_async: true,
+			},
+			{
+				method: "POST",
+				path: "/slow-endpoint",
+				handler_name: "post_slow_endpoint",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/stream/json-lines",
+				handler_name: "get_stream_json_lines",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/stream/csv-report",
+				handler_name: "get_stream_csv_report",
+				is_async: true,
+			},
+			{
+				method: "GET",
+				path: "/stream/logfile",
+				handler_name: "get_stream_logfile",
 				is_async: true,
 			},
 			{
@@ -1632,26 +3125,124 @@ export function createApp() {
 				handler_name: "post_settings",
 				is_async: true,
 			},
+			{
+				method: "POST",
+				path: "/profiles",
+				handler_name: "post_profiles",
+				is_async: true,
+			},
 		],
 		handlers: {
 			health,
+			get_protected_user,
+			get_api_data,
+			get_api_protected,
+			get_api_admin,
+			post_background_events,
+			post_body_limit_under,
+			post_body_limit_over,
+			get_compression_gzip,
+			get_compression_skip,
+			get_accept_test_id,
 			post_items_1,
+			post_data,
+			post_upload,
+			post_api_v1_resource,
+			get_items_1,
+			get_items_cookies,
+			get_users_me,
+			get_users_me_auth,
+			post_cookie,
+			get_cookies_validated,
+			get_cookies_min_length,
+			get_cookies_pattern,
+			post_cookies_delete,
+			post_cookies_set_with_domain,
+			post_cookies_set_with_path,
+			post_cookies_session,
+			post_cookies_samesite_strict,
+			post_cookies_samesite_lax,
+			post_cookies_samesite_none,
+			post_cookies_multiple,
+			get_secure,
+			get_data,
+			post_api_data,
+			post_api_form,
+			get_api_config,
+			get_api_timestamp,
+			get_api_db_status,
+			get_api_auth_status,
+			get_api_app_counter,
+			get_api_request_id,
+			get_api_circular,
+			get_api_missing_dep,
+			get_api_type_mismatch,
+			get_api_cleanup_test,
+			get_api_multi_cleanup_test,
+			get_api_python_type_inject,
+			get_api_python_name_inject,
+			get_api_node_destructure,
+			get_api_ruby_kwargs,
+			get_api_override_test,
+			get_api_mixed_caching,
+			get_api_hook_di_test,
+			post_numbers,
+			post_calculations,
+			post_nested,
+			post_strings,
+			post_nulls,
+			get_search,
+			get_items_2,
+			post_calculate,
+			post_text,
+			post_users,
+			post_messages,
+			post_files,
+			post_items_2,
+			post_echo,
+			get_headers_content_type,
+			get_headers_accept,
+			get_headers_bearer_auth,
+			get_headers_multiple,
+			get_headers_validated,
+			get_headers_accept_language,
+			get_headers_referer,
+			get_headers_pattern,
+			get_headers_host,
+			get_headers_max_length,
+			get_headers_basic_auth,
+			get_headers_origin,
+			get_headers_accept_encoding,
+			get_headers_underscore,
+			get_protected,
+			put_items_id,
+			patch_items_id,
+			delete_items_id,
+			head_items_id,
 			post_items_nested,
 			post_items_list,
 			post_items_validated,
 			post_items_optional_all,
 			post_items_list_validated,
 			post_events,
-			patch_items_id,
-			post_users,
 			post_products,
-			post_items_2,
 			post_payment,
 			post_contact,
 			post_api_v1_data,
 			post_config,
 			post_billing,
-			post_data,
+			get_api_test_on_request,
+			post_api_test_rate_limit,
+			post_api_test_rate_limit_exceeded,
+			get_api_protected_resource,
+			get_api_protected_resource_fail,
+			get_api_admin_only,
+			get_api_admin_only_forbidden,
+			get_api_test_security_headers,
+			get_api_test_timing,
+			get_api_test_error,
+			post_api_full_lifecycle,
+			get_api_test_hook_order,
 			post_root,
 			post_files_optional,
 			post_files_list,
@@ -1661,7 +3252,6 @@ export function createApp() {
 			post_files_validated,
 			post_files_images_only,
 			post_files_required,
-			post_upload,
 			get_path_str_item_id,
 			get_path_int_item_id,
 			get_path_float_item_id,
@@ -1696,7 +3286,6 @@ export function createApp() {
 			get_query_int_default,
 			get_query_list,
 			get_query_list_default,
-			get_items_1,
 			get_test,
 			get_query_bool,
 			get_query_uuid,
@@ -1716,13 +3305,28 @@ export function createApp() {
 			get_query_float_ge,
 			get_items_negative,
 			get_stats,
-			get_search,
 			get_subscribe,
-			get_items_2,
 			get_network,
 			get_network_ipv6,
 			get_redirect,
 			get_dns,
+			get_rate_limit_basic,
+			get_rate_limit_exceeded,
+			get_request_id_generated,
+			get_request_id_preserved,
+			get_request_id_disabled,
+			get_timeouts_fast,
+			get_timeouts_slow,
+			get_public_hello_txt,
+			get_app,
+			get_status_test_code,
+			post_tasks,
+			delete_status_test_code,
+			post_redirect_post,
+			post_slow_endpoint,
+			get_stream_json_lines,
+			get_stream_csv_report,
+			get_stream_logfile,
 			post_login,
 			post_register_1,
 			post_form,
@@ -1735,6 +3339,7 @@ export function createApp() {
 			post_tags,
 			post_subscribe,
 			post_settings,
+			post_profiles,
 		},
 	};
 }
