@@ -1052,7 +1052,7 @@ tasks:
   bench:build:php:
     desc: "Verify generated PHP benchmark app syntax"
     deps:
-      - build:php
+      - php:build
     cmds:
       - php -l tools/benchmark-harness/apps/spikard-php/server.php
 

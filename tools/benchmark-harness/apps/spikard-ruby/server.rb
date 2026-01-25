@@ -453,9 +453,9 @@ end)
 
 app.get('/query/multi-type', &Spikard::HandlerWrapper.wrap_handler do |_params, query, _body|
   response = {}
-  response[:score] = query[:score] if query[:score]
   response[:name] = query[:name] if query[:name]
   response[:age] = query[:age] if query[:age]
+  response[:score] = query[:score] if query[:score]
   response[:active] = query[:active] if query[:active]
   response
 end)

@@ -628,11 +628,11 @@ app.get(
 	"/test",
 	wrapHandler(async ({ queryParams }) => {
 		const response: Record<string, unknown> = {};
-		if (queryParams["special"] !== undefined) {
-			response["special"] = queryParams["special"];
-		}
 		if (queryParams["email"] !== undefined) {
 			response["email"] = queryParams["email"];
+		}
+		if (queryParams["special"] !== undefined) {
+			response["special"] = queryParams["special"];
 		}
 		return response;
 	}),
@@ -785,17 +785,17 @@ app.get(
 	"/query/multi-type",
 	wrapHandler(async ({ queryParams }) => {
 		const response: Record<string, unknown> = {};
-		if (queryParams["name"] !== undefined) {
-			response["name"] = queryParams["name"];
-		}
 		if (queryParams["active"] !== undefined) {
 			response["active"] = queryParams["active"];
 		}
-		if (queryParams["score"] !== undefined) {
-			response["score"] = queryParams["score"];
-		}
 		if (queryParams["age"] !== undefined) {
 			response["age"] = queryParams["age"];
+		}
+		if (queryParams["name"] !== undefined) {
+			response["name"] = queryParams["name"];
+		}
+		if (queryParams["score"] !== undefined) {
+			response["score"] = queryParams["score"];
 		}
 		return response;
 	}),

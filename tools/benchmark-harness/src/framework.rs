@@ -90,6 +90,43 @@ fn php_extension_available(extension: &str) -> bool {
 
 fn framework_registry() -> Vec<FrameworkConfig> {
     let mut frameworks = vec![
+        // Generated benchmark apps (from app-generator)
+        FrameworkConfig::new(
+            "spikard-python",
+            vec!["server.py".to_string()],
+            None,
+            "uv run python server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-rust",
+            vec!["Cargo.toml".to_string(), "server.rs".to_string()],
+            Some("cargo build --release".to_string()),
+            "./target/release/server {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-node",
+            vec!["server.ts".to_string()],
+            None,
+            "pnpm tsx server.ts {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-ruby",
+            vec!["server.rb".to_string()],
+            None,
+            "bundle exec ruby server.rb {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-php",
+            vec!["server.php".to_string()],
+            None,
+            "php -S 0.0.0.0:{port} server.php",
+            None,
+        ),
+        // Pre-existing validation apps
         FrameworkConfig::new(
             "spikard-rust-validation",
             vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
@@ -662,7 +699,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 44);
+        assert_eq!(frameworks.len(), 49); // Added 5 generated benchmark frameworks
     }
 
     #[test]

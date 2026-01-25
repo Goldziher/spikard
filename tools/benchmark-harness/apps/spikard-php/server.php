@@ -507,14 +507,14 @@ $app->get('/query/multi-type', function(Request $request): array {
     if (isset($request->queryParams['score'])) {
         $response['score'] = $request->queryParams['score'];
     }
+    if (isset($request->queryParams['age'])) {
+        $response['age'] = $request->queryParams['age'];
+    }
     if (isset($request->queryParams['name'])) {
         $response['name'] = $request->queryParams['name'];
     }
     if (isset($request->queryParams['active'])) {
         $response['active'] = $request->queryParams['active'];
-    }
-    if (isset($request->queryParams['age'])) {
-        $response['age'] = $request->queryParams['age'];
     }
     return $response;
 });
