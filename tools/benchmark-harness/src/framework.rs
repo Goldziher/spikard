@@ -109,8 +109,8 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-node",
             vec!["server.ts".to_string()],
             None,
-            "pnpm tsx server.ts {port}",
-            None,
+            "pnpm tsx tools/benchmark-harness/apps/spikard-node/server.ts {port}",
+            Some("../../../..".to_string()),
         ),
         FrameworkConfig::new(
             "spikard-ruby",

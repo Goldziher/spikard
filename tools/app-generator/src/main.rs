@@ -85,12 +85,12 @@ fn main() -> Result<()> {
             let analysis = analyzer::analyze_fixtures(&loaded_fixtures);
             eprintln!("Found {} unique routes", analysis.stats.unique_routes);
 
-            let (code, extension, needs_manifest) = match framework.as_str() {
-                "spikard-rust" | "rust" => (generators::spikard_rust::generate(&analysis)?, "rs", true),
-                "spikard-python" | "python" => (generators::spikard_python::generate(&analysis)?, "py", false),
-                "spikard-node" | "node" => (generators::spikard_node::generate(&analysis)?, "ts", false),
-                "spikard-ruby" | "ruby" => (generators::spikard_ruby::generate(&analysis)?, "rb", false),
-                "spikard-php" | "php" => (generators::spikard_php::generate(&analysis)?, "php", false),
+            let (code, extension, needs_manifest, needs_package_json) = match framework.as_str() {
+                "spikard-rust" | "rust" => (generators::spikard_rust::generate(&analysis)?, "rs", true, false),
+                "spikard-python" | "python" => (generators::spikard_python::generate(&analysis)?, "py", false, false),
+                "spikard-node" | "node" => (generators::spikard_node::generate(&analysis)?, "ts", false, true),
+                "spikard-ruby" | "ruby" => (generators::spikard_ruby::generate(&analysis)?, "rb", false, false),
+                "spikard-php" | "php" => (generators::spikard_php::generate(&analysis)?, "php", false, false),
                 _ => {
                     return Err(anyhow::anyhow!(
                         "Unknown framework: {}. Use: spikard-rust, spikard-python, spikard-node, spikard-ruby, spikard-php",
@@ -109,6 +109,12 @@ fn main() -> Result<()> {
                 let cargo_toml = generate_cargo_toml();
                 fs::write(output.join("Cargo.toml"), cargo_toml)?;
                 eprintln!("Generated Cargo.toml");
+            }
+
+            if needs_package_json {
+                let package_json = generate_package_json();
+                fs::write(output.join("package.json"), package_json)?;
+                eprintln!("Generated package.json");
             }
         }
     }
@@ -166,6 +172,24 @@ tokio = { version = "1", features = ["full"] }
 axum = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+"#
+    .to_string()
+}
+
+fn generate_package_json() -> String {
+    r#"{
+  "name": "spikard-node-benchmark",
+  "version": "0.9.2",
+  "type": "module",
+  "description": "Auto-generated Spikard-Node benchmark server",
+  "main": "server.ts",
+  "scripts": {
+    "start": "tsx server.ts"
+  },
+  "dependencies": {
+    "@spikard/node": "workspace:*"
+  }
+}
 "#
     .to_string()
 }

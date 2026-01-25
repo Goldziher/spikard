@@ -517,6 +517,12 @@ importers:
         specifier: ^25.0.10
         version: 25.0.10
 
+  tools/benchmark-harness/apps/spikard-node:
+    dependencies:
+      '@spikard/node':
+        specifier: workspace:*
+        version: link:../../../../packages/node
+
   tools/benchmark-harness/apps/spikard-node-raw:
     dependencies:
       '@spikard/node':
