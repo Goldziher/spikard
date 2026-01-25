@@ -55,8 +55,8 @@ fn generate_imports() -> String {
 
 use spikard_http::{
     handler_trait::{Handler, HandlerResult, RequestData},
-    router::Route,
     server::build_router_with_handlers,
+    Route,
     RouteMetadata,
     SchemaRegistry,
 };
@@ -280,7 +280,6 @@ fn generate_main(analysis: &RouteAnalysis, handler_names: &HashMap<String, Strin
             is_async: true,
             cors: None,
             body_param_name: None,
-            #[cfg(feature = "di")]
             handler_dependencies: None,
             jsonrpc_method: None,
         }}, &registry)?,
@@ -316,7 +315,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {{
             is_async: true,
             cors: None,
             body_param_name: None,
-            #[cfg(feature = "di")]
             handler_dependencies: None,
             jsonrpc_method: None,
         }}, &registry)?,
@@ -325,7 +323,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {{
 
 {}
 
-    let app = build_router_with_handlers(routes, None)?;
+    let app = build_router_with_handlers(routes, None, None)?;
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await?;

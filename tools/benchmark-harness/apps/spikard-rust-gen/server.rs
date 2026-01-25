@@ -12,9 +12,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use spikard::UploadFile;
 use spikard_http::{
-    RouteMetadata, SchemaRegistry,
+    Route, RouteMetadata, SchemaRegistry,
     handler_trait::{Handler, HandlerResult, RequestData},
-    router::Route,
     server::build_router_with_handlers,
 };
 use std::future::Future;
@@ -895,17 +894,17 @@ impl Handler for GetVersionServiceIdUserIdOrderId {
         Box::pin(async move {
             let mut response = json!({});
 
-            if let Some(val) = request_data.path_params.get("order_id") {
-                response["order_id"] = json!(val);
-            }
-            if let Some(val) = request_data.path_params.get("user_id") {
-                response["user_id"] = json!(val);
-            }
             if let Some(val) = request_data.path_params.get("version") {
                 response["version"] = json!(val);
             }
             if let Some(val) = request_data.path_params.get("service_id") {
                 response["service_id"] = json!(val);
+            }
+            if let Some(val) = request_data.path_params.get("order_id") {
+                response["order_id"] = json!(val);
+            }
+            if let Some(val) = request_data.path_params.get("user_id") {
+                response["user_id"] = json!(val);
             }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -2012,14 +2011,14 @@ impl Handler for GetQueryMultiType {
             if let Some(val) = request_data.query_params.get("active") {
                 response["active"] = val.clone();
             }
-            if let Some(val) = request_data.query_params.get("name") {
-                response["name"] = val.clone();
-            }
             if let Some(val) = request_data.query_params.get("age") {
                 response["age"] = val.clone();
             }
             if let Some(val) = request_data.query_params.get("score") {
                 response["score"] = val.clone();
+            }
+            if let Some(val) = request_data.query_params.get("name") {
+                response["name"] = val.clone();
             }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -2629,7 +2628,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2651,7 +2649,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2673,7 +2670,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2695,7 +2691,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2717,7 +2712,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2739,7 +2733,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2761,7 +2754,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2783,7 +2775,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2805,7 +2796,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2827,7 +2817,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2849,7 +2838,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2871,7 +2859,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2893,7 +2880,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2915,7 +2901,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2937,7 +2922,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2959,7 +2943,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -2981,7 +2964,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3003,7 +2985,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3025,7 +3006,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3047,7 +3027,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3069,7 +3048,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3091,7 +3069,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3113,7 +3090,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3135,7 +3111,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3157,7 +3132,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3179,7 +3153,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3201,7 +3174,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3223,7 +3195,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3245,7 +3216,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3267,7 +3237,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3289,7 +3258,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3311,7 +3279,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3333,7 +3300,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3355,7 +3321,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3377,7 +3342,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3399,7 +3363,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3421,7 +3384,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3443,7 +3405,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3465,7 +3426,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3487,7 +3447,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3509,7 +3468,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3531,7 +3489,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3553,7 +3510,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3575,7 +3531,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3597,7 +3552,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3619,7 +3573,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3641,7 +3594,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3663,7 +3615,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3685,7 +3636,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3707,7 +3657,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3729,7 +3678,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3751,7 +3699,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3773,7 +3720,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3795,7 +3741,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3817,7 +3762,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3839,7 +3783,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3861,7 +3804,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3883,7 +3825,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3905,7 +3846,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3927,7 +3867,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3949,7 +3888,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3971,7 +3909,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -3993,7 +3930,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4015,7 +3951,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4037,7 +3972,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4059,7 +3993,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4081,7 +4014,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4103,7 +4035,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4125,7 +4056,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4147,7 +4077,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4169,7 +4098,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4191,7 +4119,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4213,7 +4140,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4235,7 +4161,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4257,7 +4182,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4279,7 +4203,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4301,7 +4224,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4323,7 +4245,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4345,7 +4266,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4367,7 +4287,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4389,7 +4308,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4411,7 +4329,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4433,7 +4350,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4455,7 +4371,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4477,7 +4392,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4499,7 +4413,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4521,7 +4434,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4543,7 +4455,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4565,7 +4476,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4587,7 +4497,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4609,7 +4518,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4631,7 +4539,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4653,7 +4560,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4675,7 +4581,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4697,7 +4602,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4719,7 +4623,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4741,7 +4644,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4763,7 +4665,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4785,7 +4686,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4807,7 +4707,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4829,7 +4728,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 is_async: true,
                 cors: None,
                 body_param_name: None,
-                #[cfg(feature = "di")]
                 handler_dependencies: None,
                 jsonrpc_method: None,
             },
@@ -4838,7 +4736,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Arc::new(PostSettings {}) as Arc<dyn Handler>,
     ));
 
-    let app = build_router_with_handlers(routes, None)?;
+    let app = build_router_with_handlers(routes, None, None)?;
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(addr).await?;

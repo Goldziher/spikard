@@ -10,6 +10,7 @@ name = "server"
 path = "server.rs"
 
 [dependencies]
+spikard = { path = "../../../../crates/spikard" }
 spikard-http = { path = "../../../../crates/spikard-http" }
 tokio = { version = "1", features = ["full"] }
 axum = "0.8"
