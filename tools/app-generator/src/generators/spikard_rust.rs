@@ -280,6 +280,9 @@ fn generate_main(analysis: &RouteAnalysis, handler_names: &HashMap<String, Strin
             is_async: true,
             cors: None,
             body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
+            jsonrpc_method: None,
         }}, &registry)?,
         Arc::new({} {{}}) as Arc<dyn Handler>,
     ));"#,
@@ -313,6 +316,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {{
             is_async: true,
             cors: None,
             body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
+            jsonrpc_method: None,
         }}, &registry)?,
         Arc::new(HealthHandler {{}}) as Arc<dyn Handler>,
     ));
