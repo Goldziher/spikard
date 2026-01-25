@@ -894,17 +894,17 @@ impl Handler for GetVersionServiceIdUserIdOrderId {
         Box::pin(async move {
             let mut response = json!({});
 
-            if let Some(val) = request_data.path_params.get("user_id") {
-                response["user_id"] = json!(val);
-            }
-            if let Some(val) = request_data.path_params.get("version") {
-                response["version"] = json!(val);
-            }
             if let Some(val) = request_data.path_params.get("order_id") {
                 response["order_id"] = json!(val);
             }
             if let Some(val) = request_data.path_params.get("service_id") {
                 response["service_id"] = json!(val);
+            }
+            if let Some(val) = request_data.path_params.get("user_id") {
+                response["user_id"] = json!(val);
+            }
+            if let Some(val) = request_data.path_params.get("version") {
+                response["version"] = json!(val);
             }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -2014,11 +2014,11 @@ impl Handler for GetQueryMultiType {
             if let Some(val) = request_data.query_params.get("active") {
                 response["active"] = val.clone();
             }
-            if let Some(val) = request_data.query_params.get("age") {
-                response["age"] = val.clone();
-            }
             if let Some(val) = request_data.query_params.get("score") {
                 response["score"] = val.clone();
+            }
+            if let Some(val) = request_data.query_params.get("age") {
+                response["age"] = val.clone();
             }
 
             let body = serde_json::to_vec(&response).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;

@@ -116,7 +116,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "spikard-ruby",
             vec!["server.rb".to_string()],
             None,
-            "bundle exec ruby server.rb {port}",
+            "ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(

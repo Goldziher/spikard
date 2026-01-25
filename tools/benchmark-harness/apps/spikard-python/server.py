@@ -629,15 +629,15 @@ async def get_query_basic(name: str) -> dict[str, Any]:
 
 
 @get("/query/multi-type")
-async def get_query_multi_type(score: float, name: str, age: int, active: bool) -> dict[str, Any]:
+async def get_query_multi_type(name: str, age: int, score: float, active: bool) -> dict[str, Any]:
     """Handler for GET /query/multi-type."""
     response = {}
-    if score is not None:
-        response["score"] = score
     if name is not None:
         response["name"] = name
     if age is not None:
         response["age"] = age
+    if score is not None:
+        response["score"] = score
     if active is not None:
         response["active"] = active
     return response
