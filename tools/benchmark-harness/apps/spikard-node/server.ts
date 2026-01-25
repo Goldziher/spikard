@@ -785,14 +785,14 @@ app.get(
 	"/query/multi-type",
 	wrapHandler(async ({ queryParams }) => {
 		const response: Record<string, unknown> = {};
+		if (queryParams["score"] !== undefined) {
+			response["score"] = queryParams["score"];
+		}
 		if (queryParams["age"] !== undefined) {
 			response["age"] = queryParams["age"];
 		}
 		if (queryParams["name"] !== undefined) {
 			response["name"] = queryParams["name"];
-		}
-		if (queryParams["score"] !== undefined) {
-			response["score"] = queryParams["score"];
 		}
 		if (queryParams["active"] !== undefined) {
 			response["active"] = queryParams["active"];
@@ -1019,6 +1019,8 @@ app.post(
 );
 
 // Start the server
-const port = process.argv[2] ? parseInt(process.argv[2]) : 8000;
-console.error(`[spikard-node] Starting server on port ${port}`);
-await app.run({ host: "0.0.0.0", port });
+(async () => {
+	const port = process.argv[2] ? parseInt(process.argv[2]) : 8000;
+	console.error(`[spikard-node] Starting server on port ${port}`);
+	await app.run({ host: "0.0.0.0", port });
+})();

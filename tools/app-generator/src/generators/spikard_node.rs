@@ -191,9 +191,11 @@ fn generate_handler_body(route: &RouteInfo, has_query: bool, has_body: bool) -> 
 fn generate_main(_analysis: &RouteAnalysis) -> String {
     r#"
 // Start the server
-const port = process.argv[2] ? parseInt(process.argv[2]) : 8000;
-console.error(`[spikard-node] Starting server on port ${port}`);
-await app.run({ host: "0.0.0.0", port });
+(async () => {
+    const port = process.argv[2] ? parseInt(process.argv[2]) : 8000;
+    console.error(`[spikard-node] Starting server on port ${port}`);
+    await app.run({ host: "0.0.0.0", port });
+})();
 "#
     .to_string()
 }
