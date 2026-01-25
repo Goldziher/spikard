@@ -12,7 +12,7 @@
 		"kitojs": "1.0.0-alpha.8"
 	},
 	"devDependencies": {
-		"@types/node": "^25.0.8",
+		"@types/node": "^25.0.10",
 		"tsx": "^4.21.0"
 	},
 	"engines": {

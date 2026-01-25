@@ -47,7 +47,7 @@ Creates:
 user_service/
 ├── Gemfile                     # Dependency specification
 ├── Gemfile.lock                # Locked dependencies
-├── .ruby-version               # Ruby 3.2+
+├── .ruby-version               # Ruby 3.2-4.x
 ├── lib/
 │   └── user_service/
 │       ├── version.rb          # Version constant
@@ -250,7 +250,7 @@ Gemfile                 # Dependency specification
 ├── gem "rspec", groups: [:development, :test]
 └── gem "rubocop", groups: [:development]
 
-.ruby-version           # Ruby version (3.2+)
+.ruby-version           # Ruby version (3.2-4.x)
 
 sig/                    # Type signatures (RBS)
 ├── project.rbs        # Type definitions

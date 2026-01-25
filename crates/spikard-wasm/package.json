@@ -61,7 +61,7 @@
     "clean": "rm -rf dist-bundler dist-node dist-web node_modules"
   },
   "devDependencies": {
-    "wasm-pack": "^0.13.1"
+    "wasm-pack": "^0.14.0"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

@@ -5,7 +5,7 @@ exclude: ^docs/snippets/|vendor/|node_modules/|target/|v3/|invalid*|dist/|artifa
 
 repos:
   - repo: https://github.com/Goldziher/gitfluff
-    rev: v0.7.0
+    rev: v0.8.0
     hooks:
       - id: gitfluff-lint
         args: ["--write"]
@@ -43,12 +43,12 @@ repos:
       - id: biome-format
       - id: biome-lint
   - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.39.0
+    rev: v1.41.0
     hooks:
       - id: oxlint
         args: ["--fix"]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.11
+    rev: v0.14.13
     hooks:
       - id: ruff
         args: ["--fix", "--unsafe-fixes"]

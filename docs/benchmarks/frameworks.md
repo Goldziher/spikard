@@ -13,7 +13,7 @@ Core Spikard implementations across different language bindings.
 | `spikard-rust` | Rust | Native | Tower middleware | Pure Rust implementation, baseline performance |
 | `spikard-python` | Python | CPython 3.12+ | msgspec | PyO3 bindings with msgspec validation |
 | `spikard-node` | TypeScript | Node 20+ | Zod | napi-rs bindings with optional Zod validation |
-| `spikard-ruby` | Ruby | Ruby 3.2+ | RBS | magnus bindings with RBS type definitions |
+| `spikard-ruby` | Ruby | Ruby 3.2-4.x | RBS | magnus bindings with RBS type definitions |
 | `spikard-php` | PHP | PHP 8.2+ | Native types | ext-php-rs bindings with typed properties |
 | `spikard-wasm` | JavaScript | WASM runtime | None | WebAssembly bindings via wasm-bindgen |
 

@@ -26,7 +26,7 @@ bundle exec rake ext:build
 ```
 
 **Requirements:**
-- Ruby 3.2+
+- Ruby 3.2-4.x
 - Bundler
 - Rust toolchain (for building native extension)
 
@@ -548,7 +548,7 @@ bundle exec steep check
 
 Ruby bindings use:
 - **Magnus** for zero-overhead FFI
-- **rb-sys** for modern Ruby 3.2+ integration
+- **rb-sys** for modern Ruby 3.2-4.x integration
 - Idiomatic Ruby blocks and procs
 - GC-safe handler storage
 

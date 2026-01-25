@@ -8,7 +8,7 @@ dev = [
   "msgspec>=0.19.0",
   "mypy>=1.19.1",
   "orjson>=3.11.4",
-  "prek>=0.2.28",
+  "prek>=0.3.0",
   "pydantic>=2.12.5",
   "pyjwt>=2.10.1",
   "pytest>=9.0.2",
@@ -16,7 +16,7 @@ dev = [
   "pytest-cov>=7.0.0",
   "pytest-mock>=3.15.1",
   "pytest-timeout>=2.4.0",
-  "ruff>=0.14.11",
+  "ruff>=0.14.14",
   "uv-bump",
   "uvicorn>=0.40.0",
   "websockets>=16.0",
@@ -26,7 +26,7 @@ docs = [
   "mkdocs-git-revision-date-localized-plugin>=1.5.0",
   "mkdocs-material>=9.7.1",
   "mkdocs-minify-plugin>=0.8.0",
-  "mkdocstrings>=1.0.0",
+  "mkdocstrings>=1.0.2",
   "mkdocstrings-python>=2.0.1",
 ]
 doc = [
@@ -37,7 +37,7 @@ doc = [
   "mkdocs-literate-nav>=0.6.2",
   "mkdocs-material[imaging]>=9.7.1",
   "mkdocs-minify-plugin>=0.8.0",
-  "mkdocstrings[python]>=1.0.0",
+  "mkdocstrings[python]>=1.0.2",
 ]
 
 [tool.setuptools]

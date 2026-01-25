@@ -55,10 +55,10 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.5.1",
-    "@types/node": "^25.0.8",
-    "@vitest/coverage-v8": "^4.0.17",
+    "@types/node": "^25.0.10",
+    "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.18"
   },
   "napi": {
     "binaryName": "spikard-node",
@@ -73,6 +73,6 @@
     }
   },
   "dependencies": {
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   }
 }

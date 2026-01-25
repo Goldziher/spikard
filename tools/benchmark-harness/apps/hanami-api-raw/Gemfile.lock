@@ -16,7 +16,7 @@ GEM
       hansi (~> 0.2.0)
       mustermann (= 3.0.4)
     nio4r (2.7.5)
-    puma (7.1.0)
+    puma (7.2.0)
       nio4r (~> 2.0)
     rack (3.2.4)
     rackup (2.3.1)

@@ -386,7 +386,7 @@ wheels = [
 
 [[package]]
 name = "spikard"
-version = "0.9.1"
+version = "0.9.2"
 source = { editable = "../../../../packages/python" }
 dependencies = [
     { name = "cloudpickle" },
@@ -411,7 +411,7 @@ requires-dist = [
     { name = "typing-extensions", specifier = ">=4" },
     { name = "uvloop", marker = "sys_platform != 'win32'", specifier = ">=0.22" },
     { name = "uvloop", marker = "sys_platform != 'win32' and extra == 'uvloop'", specifier = ">=0.22" },
-    { name = "websockets", specifier = ">=16.0" },
+    { name = "websockets", specifier = ">=16" },
 ]
 provides-extras = ["uvloop"]
 
@@ -439,7 +439,7 @@ requires-dist = [
     { name = "msgspec", specifier = ">=0.20" },
     { name = "pyinstrument", specifier = ">=5.1.2" },
     { name = "spikard", editable = "../../../../packages/python" },
-    { name = "websockets", specifier = ">=16.0" },
+    { name = "websockets", specifier = ">=16" },
 ]
 
 [[package]]

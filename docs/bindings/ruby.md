@@ -47,7 +47,7 @@ end
 
 ## Deployment
 - Local: `ruby app.rb`.
-- Native extension requires Ruby 3.2+ and a Rust toolchain; ensure `bundle exec rake ext:build` has been run.
+- Native extension requires Ruby 3.2-4.x and a Rust toolchain; ensure `bundle exec rake ext:build` has been run.
 
 ## Troubleshooting
 - If build fails, confirm Rust is on PATH and `bundle config set build.spikard --with-cflags="-std=c++17"` where needed.

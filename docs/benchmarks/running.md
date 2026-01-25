@@ -23,7 +23,7 @@ This guide explains how to run Spikard benchmarks locally, interpret results, an
 3. **Language runtimes** (for frameworks you want to test)
    - Python 3.10+ with uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
    - Node 20+ with pnpm: `curl -fsSL https://get.pnpm.io/install.sh | sh`
-   - Ruby 3.2+ with rbenv: `brew install rbenv ruby-build`
+   - Ruby 3.2-4.x with rbenv: `brew install rbenv ruby-build`
    - PHP 8.2+ with composer: `brew install php composer`
    - Bun 1.x: `curl -fsSL https://bun.sh/install | bash`
 

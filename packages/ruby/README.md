@@ -3,7 +3,7 @@
 [![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
 [![Gem Version](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Gem Downloads](https://img.shields.io/gem/dt/spikard.svg)](https://rubygems.org/gems/spikard)
-[![Ruby Version](https://img.shields.io/badge/ruby-%3E%3D%203.2-red.svg)](https://www.ruby-lang.org/)
+[![Ruby Version](https://img.shields.io/badge/ruby-3.2--4.x-red.svg)](https://www.ruby-lang.org/)
 [![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -35,7 +35,7 @@ bundle install
 bundle exec rake ext:build
 ```
 
-**Requirements:** Ruby 3.2+, Bundler, and Rust toolchain (for building from source). On Windows, use RubyInstaller with MSYS2 DevKit and the GNU Rust toolchain.
+**Requirements:** Ruby 3.2-4.x, Bundler, and Rust toolchain (for building from source). On Windows, use RubyInstaller with MSYS2 DevKit and the GNU Rust toolchain.
 
 ## Quick Start
 
