@@ -626,13 +626,13 @@ pub fn build_router_with_handlers_and_config(
     route_metadata: Vec<crate::RouteMetadata>,
 ) -> Result<AxumRouter, String> {
     #[cfg(feature = "di")]
-    if config.di_container.is_none() {
-        eprintln!("[spikard-di] build_router: di_container is None");
-    } else {
+    if let Some(di_container) = config.di_container.as_ref() {
         eprintln!(
             "[spikard-di] build_router: di_container has keys: {:?}",
-            config.di_container.as_ref().unwrap().keys()
+            di_container.keys()
         );
+    } else {
+        eprintln!("[spikard-di] build_router: di_container is None");
     }
     let hooks = config.lifecycle_hooks.clone();
 

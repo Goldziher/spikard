@@ -154,7 +154,7 @@ RSpec.describe 'Schema Validation Edge Cases' do
 
       expect(response.status).to eq(422)
       body = response.json
-      expect(body['errors']&.length).to be.positive?
+      expect(body['errors']&.length).to be > 0
       error = body['errors']&.find { |e| e['loc']&.include?('skip') }
       expect(error).not_to be_nil
     end
@@ -183,7 +183,7 @@ RSpec.describe 'Schema Validation Edge Cases' do
       expect([400, 422]).to include(response.status)
       body = response.json
       expect(body).to include('errors')
-      expect(body['errors'].length).to be.positive?
+      expect(body['errors'].length).to be > 0
     end
   end
 
@@ -207,7 +207,7 @@ RSpec.describe 'Schema Validation Edge Cases' do
 
       # Should have errors with nested paths
       nested_errors = errors.select { |e| e['loc'].length > 2 }
-      expect(nested_errors.length).to be.positive?
+      expect(nested_errors.length).to be > 0
 
       # Check for path like ["body", "seller", "name"]
       name_error = nested_errors.find { |e| e['loc'].include?('name') }
@@ -586,7 +586,7 @@ RSpec.describe 'Schema Validation Edge Cases' do
       body = response.json
       error = body['errors']&.find { |e| e['loc'] == %w[body age] }
       expect(error).not_to be_nil
-      expect(error['ctx']&.key?('gt')).to be true
+      expect(error['ctx']&.key?('ge')).to be true
     end
 
     it 'enforces numeric maximum constraint' do
@@ -740,7 +740,7 @@ RSpec.describe 'Schema Validation Edge Cases' do
       expect(response.status).to eq(422)
       body = response.json
       error = body['errors']&.first
-      expect(error['ctx']).to include('gt')
+      expect(error['ctx']).to include('ge')
 
       # Test maximum bound violation
       response = client.post(

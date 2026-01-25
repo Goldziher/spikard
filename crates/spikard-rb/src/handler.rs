@@ -12,7 +12,7 @@ use magnus::prelude::*;
 use magnus::value::LazyId;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
-use serde_json::Value as JsonValue;
+use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::problem::ProblemDetails;
 use spikard_http::SchemaValidator;
@@ -170,6 +170,7 @@ impl RubyHandler {
                 "Ruby VM unavailable while creating handler",
             ));
         };
+        let handler_value = crate::conversion::ensure_callable(&ruby, handler_value, &route.handler_name)?;
         let method_value = Opaque::from(ruby.str_new(&method).as_value());
         let path_value = Opaque::from(ruby.str_new(&path).as_value());
 
@@ -192,7 +193,7 @@ impl RubyHandler {
     ///
     /// This is used by run_server to create handlers from Ruby Procs
     pub fn new_for_server(
-        _ruby: &Ruby,
+        ruby: &Ruby,
         handler_value: Value,
         handler_name: String,
         method: String,
@@ -205,12 +206,7 @@ impl RubyHandler {
         } else {
             None
         };
-        let Ok(ruby) = Ruby::get() else {
-            return Err(Error::new(
-                magnus::exception::runtime_error(),
-                "Ruby VM unavailable while creating handler",
-            ));
-        };
+        let handler_value = crate::conversion::ensure_callable(ruby, handler_value, &handler_name)?;
         let method_value = Opaque::from(ruby.str_new(&method).as_value());
         let path_value = Opaque::from(ruby.str_new(&path).as_value());
 
@@ -605,10 +601,34 @@ fn build_ruby_request(
     hash.aset(*KEY_METHOD, handler.method_value.get_inner_with(ruby))?;
     hash.aset(*KEY_PATH, handler.path_value.get_inner_with(ruby))?;
 
-    let path_params = map_to_ruby_hash(ruby, request_data.path_params.as_ref())?;
+    let path_params = if let Some(validated) = validated_params {
+        if let Some(subset) = validated_subset(validated, request_data.path_params.keys()) {
+            json_to_ruby(ruby, &subset)?
+        } else {
+            map_to_ruby_hash(ruby, request_data.path_params.as_ref())?
+        }
+    } else {
+        map_to_ruby_hash(ruby, request_data.path_params.as_ref())?
+    };
     hash.aset(*KEY_PATH_PARAMS, path_params)?;
 
-    let query_value = json_to_ruby(ruby, &request_data.query_params)?;
+    let query_value = if let Some(validated) = validated_params {
+        let subset = if !request_data.raw_query_params.is_empty() {
+            validated_subset(validated, request_data.raw_query_params.keys())
+        } else if let Some(query_map) = request_data.query_params.as_object() {
+            validated_subset(validated, query_map.keys())
+        } else {
+            None
+        };
+
+        if let Some(subset) = subset {
+            json_to_ruby(ruby, &subset)?
+        } else {
+            json_to_ruby(ruby, &request_data.query_params)?
+        }
+    } else {
+        json_to_ruby(ruby, &request_data.query_params)?
+    };
     hash.aset(*KEY_QUERY, query_value)?;
 
     let raw_query = multimap_to_ruby_hash(ruby, request_data.raw_query_params.as_ref())?;
@@ -638,6 +658,24 @@ fn build_ruby_request(
     hash.aset(*KEY_PARAMS, params_value)?;
 
     Ok(hash.as_value())
+}
+
+fn validated_subset<'a, I>(validated: &JsonValue, keys: I) -> Option<JsonValue>
+where
+    I: Iterator<Item = &'a String>,
+{
+    let validated_map = validated.as_object()?;
+    let mut subset = JsonMap::new();
+    for key in keys {
+        if let Some(value) = validated_map.get(key) {
+            subset.insert(key.clone(), value.clone());
+        }
+    }
+    if subset.is_empty() {
+        None
+    } else {
+        Some(JsonValue::Object(subset))
+    }
 }
 
 /// Build default params from already converted Ruby values, avoiding double conversion.

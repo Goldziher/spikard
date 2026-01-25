@@ -388,28 +388,16 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
   end
 
   describe 'WebSocket handler return values' do
-    let(:valid_routes_json) do
-      JSON.generate([
-                      {
-                        method: 'GET',
-                        path: '/ws',
-                        handler_name: 'ws_handler',
-                        status: '200 OK',
-                        request_schema: nil,
-                        response_schema: nil,
-                        path_params: [],
-                        path_regex: nil,
-                        handler_dependencies: []
-                      }
-                    ])
+    let(:empty_routes_json) do
+      JSON.generate([])
     end
 
     context 'with valid WebSocket handlers' do
       it 'accepts a Hash for WebSocket handler configuration' do
         expect do
           Spikard::Native::TestClient.new(
-            valid_routes_json,
-            { ws_handler: proc { |_req| } },
+            empty_routes_json,
+            {},
             Spikard::ServerConfig.new,
             { '/ws' => proc { Spikard::WebSocketHandler.new } },
             nil,
@@ -421,8 +409,8 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
       it 'accepts nil from WebSocket factory' do
         expect do
           Spikard::Native::TestClient.new(
-            valid_routes_json,
-            { ws_handler: proc { |_req| } },
+            empty_routes_json,
+            {},
             Spikard::ServerConfig.new,
             { '/ws' => proc {} },
             nil,
@@ -458,7 +446,7 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
             { sse_handler: proc { |_req| } },
             Spikard::ServerConfig.new,
             nil,
-            { '/sse' => proc { Spikard::SseProducer.new } },
+            { '/sse' => proc { Spikard::SseEventProducer.new } },
             nil
           )
         end.not_to raise_error
@@ -654,7 +642,8 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
           error_message = e.message
         end
 
-        expect(error_message).to be_present if error_message
+        expect(error_message).to_not be_nil
+        expect(error_message).to_not be_empty
       end
 
       it 'includes actual type received in error message' do
@@ -672,7 +661,8 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
           error_message = e.message
         end
 
-        expect(error_message).to be_present if error_message
+        expect(error_message).to_not be_nil
+        expect(error_message).to_not be_empty
       end
 
       it 'provides helpful context for required parameters' do
@@ -715,7 +705,8 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
         end
 
         # Should mention the constraint
-        expect(error_message).to be_present
+        expect(error_message).to_not be_nil
+        expect(error_message).to_not be_empty
       end
     end
   end

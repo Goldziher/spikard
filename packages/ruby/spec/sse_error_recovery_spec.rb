@@ -363,7 +363,7 @@ RSpec.describe 'SSE Producer Error Recovery and Client Reconnection' do
       # Resume from after last ID
       resume_producer = resume_producer_class.new
       resume_producer.instance_variable_get(:@events).each_with_index do |_evt, idx|
-        break if idx.to_s >= last_id.to_i
+        break if idx >= last_id.to_i
 
         resume_producer.next_event
       end
@@ -915,15 +915,17 @@ RSpec.describe 'SSE Producer Error Recovery and Client Reconnection' do
 
     it 'allows concurrent tracking of multiple producers' do
       tracked_producer_class = Class.new(Spikard::SseEventProducer) do
-        # rubocop:disable Style/ClassVars
-        @@active_producers = Set.new
-        # rubocop:enable Style/ClassVars
+        @active_producers = Set.new
+
+        class << self
+          attr_reader :active_producers
+        end
 
         attr_reader :producer_id
 
         def initialize(producer_id)
           @producer_id = producer_id
-          @@active_producers.add(producer_id)
+          self.class.active_producers.add(producer_id)
         end
 
         def next_event
@@ -931,11 +933,11 @@ RSpec.describe 'SSE Producer Error Recovery and Client Reconnection' do
         end
 
         def shutdown
-          @@active_producers.delete(@producer_id)
+          self.class.active_producers.delete(@producer_id)
         end
 
         def self.active_count
-          @@active_producers.size
+          active_producers.size
         end
       end
 
@@ -1020,7 +1022,7 @@ RSpec.describe 'SSE Producer Error Recovery and Client Reconnection' do
           @is_connected = false
         end
 
-        attr_reader :sent_events
+        attr_reader :event_counter, :sent_events
       end
 
       producer = resettable_class.new

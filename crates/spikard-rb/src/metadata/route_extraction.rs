@@ -33,7 +33,7 @@ pub fn build_route_metadata(
         .const_get("JSON")
         .map_err(|_| Error::new(ruby.exception_runtime_error(), "JSON module not available"))?;
 
-    let request_schema = if request_schema_value.is_nil() {
+    let mut request_schema = if request_schema_value.is_nil() {
         None
     } else {
         Some(ruby_value_to_json(ruby, json_module, request_schema_value)?)
@@ -43,7 +43,7 @@ pub fn build_route_metadata(
     } else {
         Some(ruby_value_to_json(ruby, json_module, response_schema_value)?)
     };
-    let parameter_schema = if parameter_schema_value.is_nil() {
+    let mut parameter_schema = if parameter_schema_value.is_nil() {
         None
     } else {
         Some(ruby_value_to_json(ruby, json_module, parameter_schema_value)?)
@@ -53,6 +53,12 @@ pub fn build_route_metadata(
     } else {
         Some(ruby_value_to_json(ruby, json_module, file_params_value)?)
     };
+
+    if parameter_schema.is_none()
+        && let Some(derived) = derive_parameter_schema_from_request(&mut request_schema)
+    {
+        parameter_schema = Some(derived);
+    }
 
     let cors = parse_cors_config(ruby, cors_value)?;
     let handler_dependencies = extract_handler_dependencies_from_ruby(ruby, handler_value)?;
@@ -114,6 +120,78 @@ pub fn build_route_metadata(
     }
 
     route_metadata_to_ruby(ruby, &metadata)
+}
+
+fn derive_parameter_schema_from_request(request_schema: &mut Option<JsonValue>) -> Option<JsonValue> {
+    let schema = request_schema.as_ref()?;
+    let schema_obj = schema.as_object()?;
+    let properties = schema_obj.get("properties")?.as_object()?;
+
+    let mut param_properties = JsonMap::new();
+    let mut required = Vec::new();
+    let mut has_params = false;
+
+    let sources = [
+        ("path", "path"),
+        ("query", "query"),
+        ("headers", "header"),
+        ("cookies", "cookie"),
+    ];
+
+    for (section_key, source) in sources {
+        let Some(section_schema) = properties.get(section_key) else {
+            continue;
+        };
+        let Some(section_props) = section_schema.get("properties").and_then(|value| value.as_object()) else {
+            continue;
+        };
+
+        has_params = true;
+        for (name, schema_value) in section_props {
+            let mut schema_obj = if let Some(obj) = schema_value.as_object() {
+                obj.clone()
+            } else {
+                let mut wrapped = JsonMap::new();
+                wrapped.insert("const".to_string(), schema_value.clone());
+                wrapped
+            };
+            schema_obj.insert("source".to_string(), JsonValue::String(source.to_string()));
+            param_properties.insert(name.clone(), JsonValue::Object(schema_obj));
+        }
+
+        if let Some(required_list) = section_schema.get("required").and_then(|value| value.as_array()) {
+            for item in required_list {
+                if let Some(name) = item.as_str() {
+                    required.push(name.to_string());
+                }
+            }
+        }
+    }
+
+    if !has_params {
+        return None;
+    }
+
+    let mut derived = JsonMap::new();
+    derived.insert("type".to_string(), JsonValue::String("object".to_string()));
+    derived.insert("properties".to_string(), JsonValue::Object(param_properties));
+
+    if !required.is_empty() {
+        required.sort();
+        required.dedup();
+        derived.insert(
+            "required".to_string(),
+            JsonValue::Array(required.into_iter().map(JsonValue::String).collect()),
+        );
+    }
+
+    if let Some(body_schema) = properties.get("body") {
+        *request_schema = Some(body_schema.clone());
+    } else {
+        *request_schema = None;
+    }
+
+    Some(JsonValue::Object(derived))
 }
 
 /// Convert a RouteMetadata to a Ruby hash

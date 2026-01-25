@@ -58,8 +58,11 @@ impl Handler for ValidatingHandler {
                     .get("content-type")
                     .is_some_and(|ct| crate::middleware::validation::is_json_like_str(ct));
 
-            if is_json_body && request_validator.is_none() && !inner.prefers_raw_json_body() {
-                let raw_bytes = request_data.raw_body.as_ref().unwrap();
+            if is_json_body
+                && request_validator.is_none()
+                && !inner.prefers_raw_json_body()
+                && let Some(raw_bytes) = request_data.raw_body.as_ref()
+            {
                 request_data.body = Arc::new(
                     serde_json::from_slice::<Value>(raw_bytes)
                         .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?,
@@ -67,8 +70,9 @@ impl Handler for ValidatingHandler {
             }
 
             if let Some(validator) = request_validator {
-                if request_data.body.is_null() && request_data.raw_body.is_some() {
-                    let raw_bytes = request_data.raw_body.as_ref().unwrap();
+                if request_data.body.is_null()
+                    && let Some(raw_bytes) = request_data.raw_body.as_ref()
+                {
                     request_data.body = Arc::new(
                         serde_json::from_slice::<Value>(raw_bytes)
                             .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?,

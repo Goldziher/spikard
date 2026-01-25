@@ -13,7 +13,7 @@ use magnus::value::InnerValue;
 use magnus::value::LazyId;
 use magnus::value::Opaque;
 use magnus::{Error, RHash, RString, Ruby, Symbol, Value, gc::Marker};
-use serde_json::Value as JsonValue;
+use serde_json::{Map as JsonMap, Value as JsonValue};
 use spikard_http::RequestData;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -175,6 +175,21 @@ impl NativeRequest {
         } {
             return Ok(cached);
         }
+        if let Some(validated) = &this.validated_params
+            && let Some(validated_map) = validated.as_object()
+        {
+            let mut subset = JsonMap::new();
+            for key in this.path_params.keys() {
+                if let Some(value) = validated_map.get(key) {
+                    subset.insert(key.clone(), value.clone());
+                }
+            }
+            if !subset.is_empty() {
+                let value = json_to_ruby(ruby, &JsonValue::Object(subset))?;
+                let mut cache = this.cache.borrow_mut();
+                return Ok(Self::cache_set(&mut cache.path_params, value));
+            }
+        }
         let value = map_to_ruby_hash(ruby, this.path_params.as_ref())?;
         let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.path_params, value))
@@ -186,6 +201,30 @@ impl NativeRequest {
             Self::cache_get(cache.query.as_ref(), ruby)
         } {
             return Ok(cached);
+        }
+        if let Some(validated) = &this.validated_params
+            && let Some(validated_map) = validated.as_object()
+        {
+            let mut subset = JsonMap::new();
+            if !this.raw_query_params.is_empty() {
+                for key in this.raw_query_params.keys() {
+                    if let Some(value) = validated_map.get(key) {
+                        subset.insert(key.clone(), value.clone());
+                    }
+                }
+            } else if let Some(query_map) = this.query_params.as_object() {
+                for key in query_map.keys() {
+                    if let Some(value) = validated_map.get(key) {
+                        subset.insert(key.clone(), value.clone());
+                    }
+                }
+            }
+
+            if !subset.is_empty() {
+                let value = json_to_ruby(ruby, &JsonValue::Object(subset))?;
+                let mut cache = this.cache.borrow_mut();
+                return Ok(Self::cache_set(&mut cache.query, value));
+            }
         }
         let value = json_to_ruby(ruby, &this.query_params)?;
         let mut cache = this.cache.borrow_mut();

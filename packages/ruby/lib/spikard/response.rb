@@ -165,8 +165,31 @@ module Spikard
         JSON.parse(@body)
       end
 
+      def graphql_data
+        return nil if @body.nil? || @body.empty?
+
+        payload = parse_graphql_json
+        payload['data']
+      end
+
+      def graphql_errors
+        return [] if @body.nil? || @body.empty?
+
+        payload = parse_graphql_json
+        errors = payload['errors']
+        errors.is_a?(Array) ? errors : []
+      end
+
       def bytes
         body_bytes.bytes
+      end
+
+      private
+
+      def parse_graphql_json
+        JSON.parse(@body)
+      rescue JSON::ParserError => e
+        raise "Failed to parse GraphQL response: #{e.message}"
       end
     end
   end

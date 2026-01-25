@@ -46,7 +46,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	beforeEach(() => clearLog());
 
 	it("should execute onRequest hook before handler", async () => {
-		const handler: HandlerFunction = async (req) => {
+		const handler: HandlerFunction = async (_req) => {
 			logExecution("handler", "execute");
 			return { status: 200, body: { result: "ok" } };
 		};
@@ -75,7 +75,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should execute multiple hooks on same event in registration order", async () => {
-		const handler: HandlerFunction = async (req) => {
+		const handler: HandlerFunction = async (_req) => {
 			logExecution("handler", "execute");
 			return { status: 200, body: { result: "ok" } };
 		};
@@ -340,7 +340,7 @@ describe("Lifecycle Hooks - Execution Order", () => {
 	// ========================================================================
 
 	it("should handle structured response objects with status and body", async () => {
-		const handler: HandlerFunction = async (req: Request) => {
+		const handler: HandlerFunction = async (_req: Request) => {
 			return {
 				status: 201,
 				body: {

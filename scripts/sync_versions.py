@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -182,21 +182,43 @@ def update_readme_versions(path: Path, version: str) -> bool:
     content = cargo_dep_pattern.sub(rf"\g<1>{version}\g<3>", content)
 
     # Pattern 2: Version references like "v0.7.0" or "v0.x.y" in test documentation
-    version_ref_pattern = re.compile(r'\bv([0-9]+\.[0-9]+\.[0-9]+)\b')
+    version_ref_pattern = re.compile(r"\bv([0-9]+\.[0-9]+\.[0-9]+)\b")
     content = version_ref_pattern.sub(rf"v{version}", content)
 
     # Pattern 3: npm package versions (@spikard/wasm@0.x.y)
-    npm_package_pattern = re.compile(r'(@spikard/[a-z-]+@)([0-9]+\.[0-9]+\.[0-9]+)')
+    npm_package_pattern = re.compile(r"(@spikard/[a-z-]+@)([0-9]+\.[0-9]+\.[0-9]+)")
     content = npm_package_pattern.sub(rf"\g<1>{version}", content)
 
     # Pattern 4: Migration note references (As of v0.x.y)
-    migration_pattern = re.compile(r'(As of v)([0-9]+\.[0-9]+\.[0-9]+)')
+    migration_pattern = re.compile(r"(As of v)([0-9]+\.[0-9]+\.[0-9]+)")
     content = migration_pattern.sub(rf"\g<1>{version}", content)
 
     if content != original:
         path.write_text(content)
         return True
     return False
+
+
+def update_path_list(
+    paths: Iterable[Path],
+    updater: Callable[[Path, str], bool],
+    version: str,
+    changed_files: list[Path],
+) -> None:
+    """Update a list of files and collect changed paths."""
+    for rel in paths:
+        path = REPO_ROOT / rel
+        if updater(path, version):
+            changed_files.append(rel)
+
+
+def update_cargo_files(version: str, changed_files: list[Path]) -> None:
+    """Update Cargo.toml files and collect changed paths."""
+    for cargo_path in REPO_ROOT.rglob("Cargo.toml"):
+        if "target" in cargo_path.parts or "node_modules" in cargo_path.parts:
+            continue
+        if update_cargo_versions(cargo_path, version):
+            changed_files.append(cargo_path.relative_to(REPO_ROOT))
 
 
 def main() -> None:
@@ -206,39 +228,16 @@ def main() -> None:
 
     changed_files: list[Path] = []
 
-    for rel in PACKAGE_JSON_PATHS:
-        path = REPO_ROOT / rel
-        if update_package_json(path, version):
-            changed_files.append(rel)
-
-    for rel in COMPOSER_JSON_PATHS:
-        path = REPO_ROOT / rel
-        if update_package_json(path, version):
-            changed_files.append(rel)
-
-    for rel in PYPROJECT_PATHS:
-        path = REPO_ROOT / rel
-        if update_pyproject(path, version):
-            changed_files.append(rel)
-
-    for rel in RUBY_VERSION_PATHS:
-        path = REPO_ROOT / rel
-        if update_ruby_version(path, version):
-            changed_files.append(rel)
-
-    for cargo_path in REPO_ROOT.rglob("Cargo.toml"):
-        if "target" in cargo_path.parts or "node_modules" in cargo_path.parts:
-            continue
-        if update_cargo_versions(cargo_path, version):
-            changed_files.append(cargo_path.relative_to(REPO_ROOT))
+    update_path_list(PACKAGE_JSON_PATHS, update_package_json, version, changed_files)
+    update_path_list(COMPOSER_JSON_PATHS, update_package_json, version, changed_files)
+    update_path_list(PYPROJECT_PATHS, update_pyproject, version, changed_files)
+    update_path_list(RUBY_VERSION_PATHS, update_ruby_version, version, changed_files)
+    update_cargo_files(version, changed_files)
 
     if update_taskfile(version):
         changed_files.append(Path("Taskfile.yaml"))
 
-    for rel in README_PATHS:
-        path = REPO_ROOT / rel
-        if update_readme_versions(path, version):
-            changed_files.append(rel)
+    update_path_list(README_PATHS, update_readme_versions, version, changed_files)
 
     if changed_files:
         log_line(f"Updated {len(changed_files)} file(s):")

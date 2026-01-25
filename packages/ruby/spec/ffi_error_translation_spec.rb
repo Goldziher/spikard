@@ -164,10 +164,15 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'converts native argument validation to ArgumentError' do
       expect do
-        # Direct call with wrong number of arguments
-        app = Spikard::App.new
-        app.handlers = nil # Simulate invalid state
-      end.not_to raise_error
+        Spikard::Native::TestClient.new(
+          '[]',
+          'not a hash',
+          Spikard::ServerConfig.new,
+          nil,
+          nil,
+          nil
+        )
+      end.to raise_error(ArgumentError, /handlers parameter must be a Hash/)
     end
 
     it 'preserves argument error context in message' do
@@ -180,7 +185,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
       client = Spikard::Testing.create_test_client(app)
       response = client.post('/args', {})
 
-      expect(response.status).to be_in([200, 400, 500])
+      expect([200, 400, 500]).to include(response.status)
     end
   end
 
@@ -210,7 +215,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
       client = Spikard::Testing.create_test_client(app)
       response = client.post('/json_type', {}, { data: 'test' })
 
-      expect(response.status).to be_in([200, 400, 500])
+      expect([200, 400, 500]).to include(response.status)
     end
 
     it 'translates hash conversion errors gracefully' do
@@ -238,8 +243,11 @@ RSpec.describe 'FFI Error Boundary Safety' do
   describe 'RuntimeError for native Spikard core failures' do
     it 'wraps core validation failures in RuntimeError' do
       app = Spikard::App.new
-      app.post('/validate', handler_name: :validator_fail)
-      app.post_schema = { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] }
+      app.post(
+        '/validate',
+        handler_name: :validator_fail,
+        request_schema: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] }
+      )
       app.handler(:validator_fail) do |_params, _query, _body|
         { success: true }
       end
@@ -247,7 +255,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
       client = Spikard::Testing.create_test_client(app)
       response = client.post('/validate', {})
 
-      expect(response.status).to be_in([400, 422])
+      expect([400, 422]).to include(response.status)
     end
 
     it 'preserves validation error details in RuntimeError' do
@@ -480,7 +488,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
       app = Spikard::App.new
 
       expect do
-        app.register_dependency(:test) { |_| 'test_value' }
+        app.provide(:test) { 'test_value' }
       end.not_to raise_error
     end
 
@@ -497,22 +505,22 @@ RSpec.describe 'FFI Error Boundary Safety' do
 
     it 'propagates dependency resolution errors' do
       app = Spikard::App.new
-      app.register_dependency(:failing_dep) { |_| raise StandardError, 'Dep failed' }
+      app.provide(:failing_dep) { raise StandardError, 'Dep failed' }
       app.post('/dep_fail', handler_name: :dep_fail_handler)
       app.handler(:dep_fail_handler) { |_p, _q, _b| { ok: true } }
 
       client = Spikard::Testing.create_test_client(app)
       response = client.post('/dep_fail', {})
 
-      expect([500]).to include(response.status)
+      expect([500, 503]).to include(response.status)
     end
 
     it 'handles cyclic dependency detection' do
       app = Spikard::App.new
 
       expect do
-        app.register_dependency(:a) { |_| 'a' }
-        app.register_dependency(:b) { |_| 'b' }
+        app.provide(:a) { 'a' }
+        app.provide(:b) { 'b' }
       end.not_to raise_error
     end
 

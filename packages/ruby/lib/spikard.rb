@@ -34,6 +34,17 @@ rescue LoadError => e
   MSG
 end
 
+if defined?(Spikard::Native::TestClient) && !Spikard::Native::TestClient.method_defined?(:__spikard_native_request,
+                                                                                         false)
+  Spikard::Native::TestClient.class_eval do
+    alias_method :__spikard_native_request, :request
+
+    def request(method, path, options = nil)
+      __spikard_native_request(method, path, options)
+    end
+  end
+end
+
 # Convenience aliases and methods at top level
 module Spikard
   TestClient = Testing::TestClient

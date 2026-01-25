@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   DESC
   spec.homepage      = 'https://github.com/Goldziher/spikard'
   spec.license       = 'MIT'
-  spec.required_ruby_version = Gem::Requirement.new(">= 3.2.0", "< 5.0")
+  spec.required_ruby_version = Gem::Requirement.new('>= 3.2.0', '< 5.0')
 
   spec.metadata = {
     'homepage_uri' => spec.homepage,

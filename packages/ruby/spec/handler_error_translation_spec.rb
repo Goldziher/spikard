@@ -436,7 +436,8 @@ RSpec.describe 'HTTP Error Response Formatting and Translation' do
     before do
       app.on_request do |req|
         # Set a request ID for tracking
-        req.headers['X-Request-ID'] ||= SecureRandom.uuid
+        req[:headers]['X-Request-ID'] ||= SecureRandom.uuid
+        req
       end
 
       app.post('/error/tracked') do |_params, _query, body|
@@ -445,9 +446,9 @@ RSpec.describe 'HTTP Error Response Formatting and Translation' do
         { ok: true }
       end
 
-      app.on_error do |error, req|
+      app.on_error do |response|
         # Error handler can access request info
-        nil
+        response
       end
     end
 

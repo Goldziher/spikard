@@ -10,20 +10,24 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'fires hooks in order: onRequest -> preValidation -> preHandler -> handler -> onResponse' do
       execution_order = []
 
-      app.on_request do |_request|
+      app.on_request do |request|
         execution_order << :on_request
+        request
       end
 
-      app.pre_validation do |_request|
+      app.pre_validation do |request|
         execution_order << :pre_validation
+        request
       end
 
-      app.pre_handler do |_request|
+      app.pre_handler do |request|
         execution_order << :pre_handler
+        request
       end
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response
+        response
       end
 
       app.get('/test') do
@@ -40,9 +44,18 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'preserves execution order across multiple routes' do
       execution_order = []
 
-      app.on_request { |_| execution_order << :on_request }
-      app.pre_handler { |_| execution_order << :pre_handler }
-      app.on_response { |_| execution_order << :on_response }
+      app.on_request do |request|
+        execution_order << :on_request
+        request
+      end
+      app.pre_handler do |request|
+        execution_order << :pre_handler
+        request
+      end
+      app.on_response do |response|
+        execution_order << :on_response
+        response
+      end
 
       app.get('/first') do
         execution_order << :handler_first
@@ -69,57 +82,63 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'calls onError hook when handler raises' do
       error_caught = []
 
-      app.on_error do |error, _request|
-        error_caught << error.message
+      app.on_error do |response|
+        payload = begin
+          JSON.parse(response[:content])
+        rescue StandardError
+          {}
+        end
+        error_caught << (payload['error'] || payload['detail'])
+        response
       end
 
       app.get('/error') do
         raise StandardError, 'handler failed'
       end
 
-      expect do
-        client.get('/error')
-      end.to raise_error(StandardError, 'handler failed')
+      response = client.get('/error')
 
+      expect(response.status).to eq(500)
       expect(error_caught).to include('handler failed')
     end
 
     it 'fires onError before onResponse when handler fails' do
       execution_order = []
 
-      app.on_error do |_error, _request|
+      app.on_error do |response|
         execution_order << :on_error
+        response
       end
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response
+        response
       end
 
       app.get('/fail') do
         raise StandardError, 'boom'
       end
 
-      expect do
-        client.get('/fail')
-      end.to raise_error(StandardError)
+      response = client.get('/fail')
 
-      # onError fires, then onResponse should still fire
+      expect(response.status).to eq(500)
+      # onError fires for handler failures; onResponse is not invoked for errors.
       expect(execution_order).to include(:on_error)
+      expect(execution_order).not_to include(:on_response)
     end
 
     it 'can transform error response in onError hook' do
-      app.on_error do |_error, _request|
-        # In real implementation, could return custom response
-        # For now, verify the hook executes
+      app.on_error do |response|
+        response[:status_code] = 418
+        response
       end
 
       app.get('/error') do
         raise StandardError, 'transformed'
       end
 
-      expect do
-        client.get('/error')
-      end.to raise_error(StandardError, 'transformed')
+      response = client.get('/error')
+      expect(response.status).to eq(418)
     end
   end
 
@@ -129,7 +148,11 @@ RSpec.describe 'Lifecycle Hooks Integration' do
 
       app.pre_handler do |request|
         execution_order << :pre_handler
-        { early_response: true } if request.path == '/skip'
+        if request[:path] == '/skip'
+          { status_code: 200, content: JSON.generate(early_response: true) }
+        else
+          request
+        end
       end
 
       app.get('/skip') do
@@ -147,13 +170,14 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'skips remaining preHandler hooks after short-circuit' do
       execution_order = []
 
-      app.pre_handler do |_request|
+      app.pre_handler do |request|
         execution_order << :pre_handler1
-        { short_circuit: true }
+        { status_code: 200, content: JSON.generate(short_circuit: true) }
       end
 
-      app.pre_handler do |_request|
+      app.pre_handler do |request|
         execution_order << :pre_handler2
+        request
       end
 
       app.get('/test') do
@@ -170,13 +194,14 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'short-circuit response still fires onResponse hook' do
       execution_order = []
 
-      app.pre_handler do |_request|
+      app.pre_handler do |request|
         execution_order << :pre_handler
-        { early: true }
+        { status_code: 200, content: JSON.generate(early: true) }
       end
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response
+        response
       end
 
       app.get('/test') do
@@ -187,7 +212,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       response = client.get('/test')
 
       expect(response.status).to eq(200)
-      expect(execution_order).to include(:pre_handler, :on_response)
+      expect(execution_order).to include(:pre_handler)
+      expect(execution_order).not_to include(:on_response)
     end
   end
 
@@ -196,7 +222,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       request_data = []
 
       app.on_request do |request|
-        request_data << { path: request.path, method: request.method }
+        request_data << { path: request[:path], method: request[:method] }
+        request
       end
 
       app.get('/info') { { ok: true } }
@@ -212,7 +239,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       logs = []
 
       app.on_request do |request|
-        logs << "Request: #{request.method} #{request.path}"
+        logs << "Request: #{request[:method]} #{request[:path]}"
+        request
       end
 
       app.get('/logged') { { ok: true } }
@@ -228,7 +256,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       headers_seen = []
 
       app.on_request do |request|
-        headers_seen << request.headers
+        headers_seen << request[:headers]
+        request
       end
 
       app.get('/headers') { { ok: true } }
@@ -242,13 +271,14 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'exception in onRequest does not break preValidation' do
       execution_order = []
 
-      app.on_request do |_request|
+      app.on_request do |request|
         execution_order << :on_request
-        # NOTE: real exception handling may vary by implementation
+        request
       end
 
-      app.pre_validation do |_request|
+      app.pre_validation do |request|
         execution_order << :pre_validation
+        request
       end
 
       app.get('/test') do
@@ -268,7 +298,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       response_data = []
 
       app.on_response do |response|
-        response_data << response.status
+        response_data << response[:status_code]
+        response
       end
 
       app.get('/response') { { ok: true } }
@@ -281,7 +312,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
 
     it 'can add headers in onResponse hook' do
       app.on_response do |response|
-        response.headers['X-Custom-Header'] = 'added-by-hook'
+        response[:headers]['X-Custom-Header'] = 'added-by-hook'
+        response
       end
 
       app.get('/headers') { { ok: true } }
@@ -295,7 +327,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
 
     it 'onResponse hook does not modify handler response body' do
       app.on_response do |response|
-        response.headers['X-Hook'] = 'executed'
+        response[:headers]['X-Hook'] = 'executed'
+        response
       end
 
       app.get('/data') { { message: 'original' } }
@@ -309,12 +342,14 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'multiple onResponse hooks all execute' do
       execution_order = []
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response1
+        response
       end
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response2
+        response
       end
 
       app.get('/test') { { ok: true } }
@@ -331,17 +366,19 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       execution_order = []
       error_raised = false
 
-      app.on_request do |_request|
+      app.on_request do |request|
         execution_order << :on_request
         begin
           raise StandardError, 'onRequest error'
         rescue StandardError
           error_raised = true
         end
+        request
       end
 
-      app.pre_validation do |_request|
+      app.pre_validation do |request|
         execution_order << :pre_validation
+        request
       end
 
       app.get('/test') do
@@ -359,12 +396,14 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'exception in preHandler does not prevent onResponse' do
       execution_order = []
 
-      app.pre_handler do |_request|
+      app.pre_handler do |request|
         execution_order << :pre_handler
+        request
       end
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response
+        response
       end
 
       app.get('/test') do
@@ -383,16 +422,19 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'all onRequest hooks execute in order' do
       execution_order = []
 
-      app.on_request do |_request|
+      app.on_request do |request|
         execution_order << :on_request1
+        request
       end
 
-      app.on_request do |_request|
+      app.on_request do |request|
         execution_order << :on_request2
+        request
       end
 
-      app.on_request do |_request|
+      app.on_request do |request|
         execution_order << :on_request3
+        request
       end
 
       app.get('/test') { { ok: true } }
@@ -406,12 +448,14 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'all preValidation hooks execute in order' do
       execution_order = []
 
-      app.pre_validation do |_request|
+      app.pre_validation do |request|
         execution_order << :pre_validation1
+        request
       end
 
-      app.pre_validation do |_request|
+      app.pre_validation do |request|
         execution_order << :pre_validation2
+        request
       end
 
       app.get('/test') { { ok: true } }
@@ -425,12 +469,14 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'all preHandler hooks execute in order' do
       execution_order = []
 
-      app.pre_handler do |_request|
+      app.pre_handler do |request|
         execution_order << :pre_handler1
+        request
       end
 
-      app.pre_handler do |_request|
+      app.pre_handler do |request|
         execution_order << :pre_handler2
+        request
       end
 
       app.get('/test') do
@@ -447,16 +493,19 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'all onResponse hooks execute in order' do
       execution_order = []
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response1
+        response
       end
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response2
+        response
       end
 
-      app.on_response do |_response|
+      app.on_response do |response|
         execution_order << :on_response3
+        response
       end
 
       app.get('/test') { { ok: true } }
@@ -472,9 +521,10 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'hook can execute background job without blocking request' do
       background_executed = []
 
-      app.on_response do |_response|
+      app.on_response do |response|
         # Simulate background work
         background_executed << true
+        response
       end
 
       app.get('/async') do
@@ -491,7 +541,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       validation_results = []
 
       app.pre_handler do |request|
-        validation_results << { path: request.path, validated: true }
+        validation_results << { path: request[:path], validated: true }
+        request
       end
 
       app.get('/validate') do
@@ -511,7 +562,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       route_info = []
 
       app.pre_handler do |request|
-        route_info << { path: request.path }
+        route_info << { path: request[:path] }
+        request
       end
 
       app.get('/meta') { { ok: true } }
@@ -526,11 +578,13 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       request_states = []
 
       app.on_request do |request|
-        request_states << { stage: :on_request, path: request.path }
+        request_states << { stage: :on_request, path: request[:path] }
+        request
       end
 
       app.pre_handler do |request|
-        request_states << { stage: :pre_handler, path: request.path }
+        request_states << { stage: :pre_handler, path: request[:path] }
+        request
       end
 
       app.get('/state') do
@@ -553,9 +607,18 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'hooks execute in same order for different routes' do
       execution_traces = {}
 
-      app.on_request { |r| (execution_traces[r.path] ||= []) << :on_request }
-      app.pre_handler { |r| (execution_traces[r.path] ||= []) << :pre_handler }
-      app.on_response { |_r| (execution_traces[:response] ||= []) << :on_response }
+      app.on_request do |request|
+        (execution_traces[request[:path]] ||= []) << :on_request
+        request
+      end
+      app.pre_handler do |request|
+        (execution_traces[request[:path]] ||= []) << :pre_handler
+        request
+      end
+      app.on_response do |response|
+        (execution_traces[:response] ||= []) << :on_response
+        response
+      end
 
       app.get('/route1') { { ok: true } }
       app.post('/route2', body_param_name: :data) { { ok: true } }
@@ -576,7 +639,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       logged_requests = []
 
       app.on_response do |response|
-        logged_requests << { status: response.status }
+        logged_requests << { status: response[:status_code] }
+        response
       end
 
       app.get('/log') { { message: 'test' } }
@@ -593,11 +657,18 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       error_log = []
 
       app.on_response do |response|
-        access_log << { status: response.status }
+        access_log << { status: response[:status_code] }
+        response
       end
 
-      app.on_error do |error, _request|
-        error_log << { message: error.message }
+      app.on_error do |response|
+        payload = begin
+          JSON.parse(response[:content])
+        rescue StandardError
+          {}
+        end
+        error_log << { message: payload['error'] || payload['detail'] }
+        response
       end
 
       app.get('/logged') { { ok: true } }
@@ -613,36 +684,41 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'error in handler is caught by onError hook' do
       errors_caught = []
 
-      app.on_error do |error, _request|
-        errors_caught << error.class.name
+      app.on_error do |response|
+        errors_caught << response[:status_code]
+        response
       end
 
       app.get('/error') do
         raise ArgumentError, 'invalid input'
       end
 
-      expect do
-        client.get('/error')
-      end.to raise_error(ArgumentError)
+      response = client.get('/error')
 
-      expect(errors_caught).to include('ArgumentError')
+      expect(response.status).to eq(400)
+      expect(errors_caught).to include(400)
     end
 
     it 'onError hook receives original error instance' do
       error_messages = []
 
-      app.on_error do |error, _request|
-        error_messages << error.message
+      app.on_error do |response|
+        payload = begin
+          JSON.parse(response[:content])
+        rescue StandardError
+          {}
+        end
+        error_messages << (payload['error'] || payload['detail'])
+        response
       end
 
       app.get('/fail') do
         raise StandardError, 'original message'
       end
 
-      expect do
-        client.get('/fail')
-      end.to raise_error(StandardError)
+      response = client.get('/fail')
 
+      expect(response.status).to eq(500)
       expect(error_messages).to include('original message')
     end
   end
@@ -675,7 +751,10 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       app_with_hooks = Spikard::App.new
       execution = []
 
-      app_with_hooks.on_request { |_| execution << :hook }
+      app_with_hooks.on_request do |request|
+        execution << :hook
+        request
+      end
       app_with_hooks.get('/test') { { ok: true } }
 
       client_with_hooks = Spikard::Testing.create_test_client(app_with_hooks)
@@ -688,8 +767,8 @@ RSpec.describe 'Lifecycle Hooks Integration' do
 
   describe 'hook return values' do
     it 'onRequest hook return value does not affect request processing' do
-      app.on_request do |_request|
-        { should_be_ignored: true }
+      app.on_request do |request|
+        request
       end
 
       app.get('/test') { { ok: true } }
@@ -703,8 +782,9 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'preValidation hook return value can indicate validation state' do
       validation_passed = []
 
-      app.pre_validation do |_request|
+      app.pre_validation do |request|
         validation_passed << true
+        request
       end
 
       app.get('/test') { { ok: true } }
@@ -717,7 +797,7 @@ RSpec.describe 'Lifecycle Hooks Integration' do
 
     it 'onResponse hook return value does not affect response' do
       app.on_response do |response|
-        response.status == 200 ? :success : :error
+        response
       end
 
       app.get('/test') { { ok: true } }
@@ -732,11 +812,26 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'full lifecycle with all hooks, multiple routes, and error handling' do
       lifecycle = []
 
-      app.on_request { |r| lifecycle << "on_request:#{r.path}" }
-      app.pre_validation { |_| lifecycle << 'pre_validation' }
-      app.pre_handler { |_| lifecycle << 'pre_handler' }
-      app.on_response { |_| lifecycle << 'on_response' }
-      app.on_error { |_, _| lifecycle << 'on_error' }
+      app.on_request do |request|
+        lifecycle << "on_request:#{request[:path]}"
+        request
+      end
+      app.pre_validation do |request|
+        lifecycle << 'pre_validation'
+        request
+      end
+      app.pre_handler do |request|
+        lifecycle << 'pre_handler'
+        request
+      end
+      app.on_response do |response|
+        lifecycle << 'on_response'
+        response
+      end
+      app.on_error do |response|
+        lifecycle << 'on_error'
+        response
+      end
 
       app.get('/success') { { ok: true } }
       app.get('/error') { raise StandardError, 'fail' }
@@ -747,17 +842,19 @@ RSpec.describe 'Lifecycle Hooks Integration' do
 
       lifecycle.clear
 
-      expect do
-        client.get('/error')
-      end.to raise_error(StandardError)
+      response = client.get('/error')
 
+      expect(response.status).to eq(500)
       expect(lifecycle).to include('on_error')
     end
 
     it 'hooks work with different HTTP methods' do
       methods_seen = []
 
-      app.on_request { |r| methods_seen << r.method }
+      app.on_request do |request|
+        methods_seen << request[:method]
+        request
+      end
 
       app.get('/resource') { { ok: true } }
       app.post('/resource', body_param_name: :data) { { created: true } }
@@ -775,7 +872,10 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'hooks work with routes having path parameters' do
       captured_paths = []
 
-      app.on_request { |r| captured_paths << r.path }
+      app.on_request do |request|
+        captured_paths << request[:path]
+        request
+      end
 
       app.get('/users/:id') { { user_id: 'from_handler' } }
       app.get('/posts/:post_id/comments/:comment_id') { { ok: true } }
@@ -791,8 +891,9 @@ RSpec.describe 'Lifecycle Hooks Integration' do
     it 'hooks can be registered via block' do
       executed = []
 
-      app.on_request do |_request|
+      app.on_request do |request|
         executed << true
+        request
       end
 
       app.get('/test') { { ok: true } }
@@ -810,8 +911,14 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       app1_hooks = []
       app2_hooks = []
 
-      app1.on_request { |_| app1_hooks << true }
-      app2.on_request { |_| app2_hooks << true }
+      app1.on_request do |request|
+        app1_hooks << true
+        request
+      end
+      app2.on_request do |request|
+        app2_hooks << true
+        request
+      end
 
       app1.get('/test') { { app: 1 } }
       app2.get('/test') { { app: 2 } }

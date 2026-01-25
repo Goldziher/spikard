@@ -369,6 +369,8 @@ impl NativeLifecycleRegistry {
     where
         F: Fn(&mut spikard_http::LifecycleHooks, Arc<crate::lifecycle::RubyLifecycleHook>),
     {
+        let ruby = Ruby::get().map_err(|err| Error::new(magnus::exception::runtime_error(), err.to_string()))?;
+        let hook_value = crate::conversion::ensure_callable(&ruby, hook_value, kind)?;
         let idx = self.ruby_hooks.borrow().len();
         let hook = Arc::new(crate::lifecycle::RubyLifecycleHook::new(
             format!("{kind}_{idx}"),
@@ -528,6 +530,23 @@ impl NativeTestClient {
         sse_producers: Value,
         dependencies: Value,
     ) -> Result<(), Error> {
+        let (hooks_value, dependencies_value) = if let Some(arg_hash) = RHash::from_value(dependencies) {
+            let hooks_value = arg_hash.get(ruby.to_symbol("hooks")).or_else(|| arg_hash.get("hooks"));
+            let dependencies_value = arg_hash
+                .get(ruby.to_symbol("dependencies"))
+                .or_else(|| arg_hash.get("dependencies"));
+
+            if hooks_value.is_some() || dependencies_value.is_some() {
+                (
+                    hooks_value.unwrap_or_else(|| ruby.qnil().as_value()),
+                    dependencies_value.unwrap_or_else(|| ruby.qnil().as_value()),
+                )
+            } else {
+                (ruby.qnil().as_value(), dependencies)
+            }
+        } else {
+            (ruby.qnil().as_value(), dependencies)
+        };
         let metadata: Vec<RouteMetadata> = serde_json::from_str(&routes_json)
             .map_err(|err| Error::new(ruby.exception_arg_error(), format!("Invalid routes JSON: {err}")))?;
 
@@ -547,10 +566,10 @@ impl NativeTestClient {
 
         #[cfg(feature = "di")]
         {
-            if let Ok(registry) = <&NativeDependencyRegistry>::try_convert(dependencies) {
+            if let Ok(registry) = <&NativeDependencyRegistry>::try_convert(dependencies_value) {
                 server_config.di_container = Some(Arc::new(registry.clone_container(ruby)?));
-            } else if !dependencies.is_nil() {
-                match build_dependency_container(ruby, dependencies) {
+            } else if !dependencies_value.is_nil() {
+                match build_dependency_container(ruby, dependencies_value) {
                     Ok(container) => {
                         server_config.di_container = Some(Arc::new(container));
                     }
@@ -564,15 +583,77 @@ impl NativeTestClient {
             }
         }
 
+        let lifecycle_hooks = if let Ok(registry) = <&NativeLifecycleRegistry>::try_convert(hooks_value) {
+            Some(registry.take_hooks())
+        } else if !hooks_value.is_nil() {
+            let hooks_hash = RHash::from_value(hooks_value)
+                .ok_or_else(|| Error::new(ruby.exception_arg_error(), "lifecycle_hooks parameter must be a Hash"))?;
+
+            let mut hooks = spikard_http::LifecycleHooks::new();
+            type RubyHook = Arc<
+                dyn spikard_http::lifecycle::LifecycleHook<
+                        axum::http::Request<axum::body::Body>,
+                        axum::http::Response<axum::body::Body>,
+                    >,
+            >;
+
+            let extract_hooks = |key: &str| -> Result<Vec<RubyHook>, Error> {
+                let key_sym = ruby.to_symbol(key);
+                if let Some(hooks_array) = hooks_hash.get(key_sym)
+                    && !hooks_array.is_nil()
+                {
+                    let array = magnus::RArray::from_value(hooks_array)
+                        .ok_or_else(|| Error::new(ruby.exception_type_error(), format!("{} must be an Array", key)))?;
+
+                    let mut result = Vec::new();
+                    let len = array.len();
+                    for i in 0..len {
+                        let hook_value: Value = array.entry(i as isize)?;
+                        let name = format!("{}_{}", key, i);
+                        let ruby_hook = crate::lifecycle::RubyLifecycleHook::new(name, hook_value);
+                        result.push(Arc::new(ruby_hook) as RubyHook);
+                    }
+                    Ok(result)
+                } else {
+                    Ok(Vec::new())
+                }
+            };
+
+            for hook in extract_hooks("on_request")? {
+                hooks.add_on_request(hook);
+            }
+            for hook in extract_hooks("pre_validation")? {
+                hooks.add_pre_validation(hook);
+            }
+            for hook in extract_hooks("pre_handler")? {
+                hooks.add_pre_handler(hook);
+            }
+            for hook in extract_hooks("on_response")? {
+                hooks.add_on_response(hook);
+            }
+            for hook in extract_hooks("on_error")? {
+                hooks.add_on_error(hook);
+            }
+
+            Some(hooks)
+        } else {
+            None
+        };
+
+        if let Some(hooks) = lifecycle_hooks {
+            server_config.lifecycle_hooks = Some(Arc::new(hooks));
+        }
+
         let schema_registry = spikard_http::SchemaRegistry::new();
         let mut prepared_routes = Vec::with_capacity(metadata.len());
         let mut handler_refs = Vec::with_capacity(metadata.len());
         let mut route_metadata_vec = Vec::with_capacity(metadata.len());
 
         for meta in metadata.clone() {
-            let handler_value = fetch_handler(ruby, &handlers_hash, &meta.handler_name)?;
+            validate_route_metadata(ruby, &meta)?;
             let route = Route::from_metadata(meta.clone(), &schema_registry)
                 .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build route: {err}")))?;
+            let handler_value = fetch_handler(ruby, &handlers_hash, &meta.handler_name)?;
 
             let handler = RubyHandler::new(&route, handler_value, json_module)?;
             prepared_routes.push((route, Arc::new(handler.clone()) as Arc<dyn spikard_http::Handler>));
@@ -925,6 +1006,14 @@ fn to_ws_url(mut url: Url) -> Result<Url, WebSocketConnectError> {
 
 impl RubyHandler {
     fn new(route: &Route, handler_value: Value, json_module: Value) -> Result<Self, Error> {
+        let ruby = Ruby::get().map_err(|_| {
+            Error::new(
+                magnus::exception::runtime_error(),
+                "Ruby VM unavailable while creating handler",
+            )
+        })?;
+        let handler_value = crate::conversion::ensure_callable(&ruby, handler_value, &route.handler_name)?;
+
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
@@ -941,12 +1030,14 @@ impl RubyHandler {
     ///
     /// This is used by run_server to create handlers from Ruby Procs
     fn new_for_server(
-        _ruby: &Ruby,
+        ruby: &Ruby,
         handler_value: Value,
         handler_name: String,
         json_module: Value,
         route: &Route,
     ) -> Result<Self, Error> {
+        let handler_value = crate::conversion::ensure_callable(ruby, handler_value, &handler_name)?;
+
         Ok(Self {
             inner: Arc::new(RubyHandlerInner {
                 handler_proc: Opaque::from(handler_value),
@@ -1272,8 +1363,10 @@ fn normalize_proc_arity(arity: i64) -> i64 {
 
 fn problem_from_ruby_error(ruby: &Ruby, handler: &RubyHandlerInner, err: Error) -> (StatusCode, String) {
     let mut status = StatusCode::INTERNAL_SERVER_ERROR;
-    let mut extensions: HashMap<String, JsonValue> = HashMap::new();
     let mut detail = ruby_error_message(ruby, &err);
+    let mut code_value: Option<JsonValue> = None;
+    let mut details_value: Option<JsonValue> = None;
+    let mut extensions: HashMap<String, JsonValue> = HashMap::new();
 
     if err.is_kind_of(ruby.exception_arg_error()) {
         status = StatusCode::BAD_REQUEST;
@@ -1295,18 +1388,24 @@ fn problem_from_ruby_error(ruby: &Ruby, handler: &RubyHandlerInner, err: Error) 
             && let Ok(value) = exception.funcall::<_, _, Value>("code", ())
             && let Ok(json_value) = ruby_value_to_json(ruby, json_module, value)
         {
-            extensions.insert("code".to_string(), json_value);
+            code_value = Some(json_value);
         }
 
         if matches!(exception.respond_to("details", false), Ok(true))
             && let Ok(value) = exception.funcall::<_, _, Value>("details", ())
             && let Ok(json_value) = ruby_value_to_json(ruby, json_module, value)
         {
-            extensions.insert("details".to_string(), json_value);
+            details_value = Some(json_value);
         }
     }
 
     detail = sanitize_error_detail(&detail);
+
+    let code_value = code_value.unwrap_or_else(|| JsonValue::String(error_code_for_status(status).to_string()));
+    let details_value = details_value.unwrap_or_else(|| JsonValue::Object(serde_json::Map::new()));
+    extensions.insert("error".to_string(), JsonValue::String(detail.clone()));
+    extensions.insert("code".to_string(), code_value);
+    extensions.insert("details".to_string(), details_value);
 
     let mut problem = problem_for_status(status, detail);
     for (key, value) in extensions {
@@ -1343,6 +1442,21 @@ fn problem_for_status(status: StatusCode, detail: String) -> ProblemDetails {
         )
         .with_detail(detail),
         _ => ProblemDetails::internal_server_error(detail),
+    }
+}
+
+fn error_code_for_status(status: StatusCode) -> &'static str {
+    match status {
+        StatusCode::BAD_REQUEST => "bad_request",
+        StatusCode::UNAUTHORIZED => "unauthorized",
+        StatusCode::FORBIDDEN => "forbidden",
+        StatusCode::NOT_FOUND => "not_found",
+        StatusCode::METHOD_NOT_ALLOWED => "method_not_allowed",
+        StatusCode::REQUEST_TIMEOUT => "request_timeout",
+        StatusCode::CONFLICT => "conflict",
+        StatusCode::SERVICE_UNAVAILABLE => "service_unavailable",
+        StatusCode::UNPROCESSABLE_ENTITY => "unprocessable_entity",
+        _ => "internal_error",
     }
 }
 
@@ -1732,20 +1846,18 @@ fn get_kw(ruby: &Ruby, hash: RHash, name: &str) -> Option<Value> {
 }
 
 fn fetch_handler(ruby: &Ruby, handlers: &RHash, name: &str) -> Result<Value, Error> {
-    let symbol_key = ruby.intern(name);
-    if let Some(value) = handlers.get(symbol_key) {
-        return Ok(value);
+    crate::conversion::fetch_handler(ruby, handlers, name)
+}
+
+pub(crate) fn validate_route_metadata(ruby: &Ruby, meta: &RouteMetadata) -> Result<(), Error> {
+    if meta.path.trim().is_empty() || !meta.path.starts_with('/') {
+        return Err(Error::new(
+            ruby.exception_arg_error(),
+            format!("Invalid routes JSON: path must start with '/' (got '{}')", meta.path),
+        ));
     }
 
-    let string_key = ruby.str_new(name);
-    if let Some(value) = handlers.get(string_key) {
-        return Ok(value);
-    }
-
-    Err(Error::new(
-        ruby.exception_name_error(),
-        format!("Handler '{name}' not provided"),
-    ))
+    Ok(())
 }
 
 /// GC mark hook so Ruby keeps handler closures alive.

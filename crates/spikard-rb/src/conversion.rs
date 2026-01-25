@@ -372,18 +372,38 @@ pub fn problem_to_json(problem: &ProblemDetails) -> String {
         .unwrap_or_else(|err| format!("Failed to serialise problem details: {err}"))
 }
 
+/// Ensure the handler value can be invoked via `call`.
+pub fn ensure_callable(ruby: &Ruby, value: Value, name: &str) -> Result<Value, Error> {
+    if value.is_nil() {
+        return Err(Error::new(
+            ruby.exception_type_error(),
+            format!("Handler '{name}' must respond to #call"),
+        ));
+    }
+
+    let call_sym = ruby.intern("call");
+    if !value.respond_to(call_sym, false)? {
+        return Err(Error::new(
+            ruby.exception_type_error(),
+            format!("Handler '{name}' must respond to #call"),
+        ));
+    }
+
+    Ok(value)
+}
+
 /// Fetch a handler from a Ruby Hash by name.
 ///
 /// Tries both symbol and string keys.
 pub fn fetch_handler(ruby: &Ruby, handlers: &RHash, name: &str) -> Result<Value, Error> {
     let symbol_key = ruby.intern(name);
     if let Some(value) = handlers.get(symbol_key) {
-        return Ok(value);
+        return ensure_callable(ruby, value, name);
     }
 
     let string_key = ruby.str_new(name);
     if let Some(value) = handlers.get(string_key) {
-        return Ok(value);
+        return ensure_callable(ruby, value, name);
     }
 
     Err(Error::new(

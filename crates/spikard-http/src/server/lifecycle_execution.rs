@@ -29,6 +29,25 @@ pub async fn execute_with_lifecycle_hooks(
         return handler.call(req, request_data).await;
     }
 
+    let req = match hooks.execute_on_request(req).await {
+        Ok(HookResult::Continue(r)) => r,
+        Ok(HookResult::ShortCircuit(response)) => return Ok(response),
+        Err(e) => {
+            let error_response = axum::http::Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::from(format!("{{\"error\":\"onRequest hook failed: {}\"}}", e)))
+                .unwrap();
+
+            return match hooks.execute_on_error(error_response).await {
+                Ok(resp) => Ok(resp),
+                Err(_) => Ok(axum::http::Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from("{\"error\":\"Hook execution failed\"}"))
+                    .unwrap()),
+            };
+        }
+    };
+
     let req = match hooks.execute_pre_validation(req).await {
         Ok(HookResult::Continue(r)) => r,
         Ok(HookResult::ShortCircuit(response)) => return Ok(response),

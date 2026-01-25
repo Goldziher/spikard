@@ -21,11 +21,81 @@
  *     - See generateStream() for generation logic
  */
 
-import { readdirSync, readFileSync } from "node:fs";
+import { type ChildProcess, spawn } from "node:child_process";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import net from "node:net";
 import { join } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { GrpcTestClient } from "./grpc_test_client";
+
+const GRPC_SERVER_HOST = "127.0.0.1";
+const GRPC_SERVER_PORT = 50051;
+const GRPC_SERVER_TIMEOUT_MS = 15000;
+
+let grpcServerProcess: ChildProcess | null = null;
+let startedGrpcServer = false;
+
+function isPortOpen(host: string, port: number): Promise<boolean> {
+	return new Promise((resolve) => {
+		const socket = net.connect({ host, port });
+		socket.on("connect", () => {
+			socket.destroy();
+			resolve(true);
+		});
+		socket.on("error", () => {
+			socket.destroy();
+			resolve(false);
+		});
+	});
+}
+
+async function waitForPort(host: string, port: number, timeoutMs: number): Promise<void> {
+	const start = Date.now();
+	while (Date.now() - start < timeoutMs) {
+		if (await isPortOpen(host, port)) {
+			return;
+		}
+		await delay(200);
+	}
+	throw new Error(`gRPC fixture server did not start within ${timeoutMs}ms`);
+}
+
+function resolvePythonExecutable(): string {
+	const repoRoot = join(__dirname, "../../..");
+	const venvFromEnv = process.env.VIRTUAL_ENV ? join(process.env.VIRTUAL_ENV, "bin", "python") : null;
+	const venvFromRepo = join(repoRoot, ".venv", "bin", "python");
+
+	if (venvFromEnv && existsSync(venvFromEnv)) {
+		return venvFromEnv;
+	}
+
+	if (existsSync(venvFromRepo)) {
+		return venvFromRepo;
+	}
+
+	return process.env.PYTHON ?? "python3";
+}
+
+async function ensureGrpcServerRunning(): Promise<void> {
+	if (await isPortOpen(GRPC_SERVER_HOST, GRPC_SERVER_PORT)) {
+		return;
+	}
+
+	const repoRoot = join(__dirname, "../../..");
+	const scriptPath = join(repoRoot, "scripts", "start_grpc_test_server.py");
+	const python = resolvePythonExecutable();
+
+	grpcServerProcess = spawn(python, [scriptPath], {
+		cwd: repoRoot,
+		stdio: "ignore",
+		env: { ...process.env },
+	});
+
+	startedGrpcServer = true;
+	await waitForPort(GRPC_SERVER_HOST, GRPC_SERVER_PORT, GRPC_SERVER_TIMEOUT_MS);
+}
 
 /**
  * Load all fixtures from a category directory.
@@ -356,6 +426,16 @@ const serverStreamingFixtures = loadFixturesByCategory("server");
 const clientStreamingFixtures = loadFixturesByCategory("client");
 const bidirectionalFixtures = loadFixturesByCategory("bidirectional");
 const errorFixtures = loadFixturesByCategory("errors");
+
+beforeAll(async () => {
+	await ensureGrpcServerRunning();
+});
+
+afterAll(() => {
+	if (startedGrpcServer && grpcServerProcess) {
+		grpcServerProcess.kill("SIGTERM");
+	}
+});
 
 describe("gRPC Server Streaming Fixtures", () => {
 	let client: GrpcTestClient;

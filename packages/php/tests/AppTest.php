@@ -780,11 +780,21 @@ final class AppTest extends TestCase
 
     public function testHooksToNativeAllHooks(): void
     {
-        $onRequest = static function (Request $request): HookResult { return HookResult::continue(); };
-        $preValidation = static function (Request $request): HookResult { return HookResult::continue(); };
-        $preHandler = static function (Request $request): HookResult { return HookResult::continue(); };
-        $onResponse = static function (Request $request, HookResult $hookResult): HookResult { return $hookResult; };
-        $onError = static function (Request $request, Throwable $error): HookResult { return HookResult::continue(); };
+        $onRequest = static function (Request $request): HookResult {
+            return HookResult::continue();
+        };
+        $preValidation = static function (Request $request): HookResult {
+            return HookResult::continue();
+        };
+        $preHandler = static function (Request $request): HookResult {
+            return HookResult::continue();
+        };
+        $onResponse = static function (Request $request, HookResult $hookResult): HookResult {
+            return $hookResult;
+        };
+        $onError = static function (Request $request, Throwable $error): HookResult {
+            return HookResult::continue();
+        };
 
         $hooks = LifecycleHooks::builder()
             ->withOnRequest($onRequest)
@@ -812,8 +822,12 @@ final class AppTest extends TestCase
 
     public function testHooksToNativePartialHooks(): void
     {
-        $onRequest = static function (Request $request): HookResult { return HookResult::continue(); };
-        $onResponse = static function (Request $request, HookResult $hookResult): HookResult { return $hookResult; };
+        $onRequest = static function (Request $request): HookResult {
+            return HookResult::continue();
+        };
+        $onResponse = static function (Request $request, HookResult $hookResult): HookResult {
+            return $hookResult;
+        };
 
         $hooks = LifecycleHooks::builder()
             ->withOnRequest($onRequest)
@@ -843,7 +857,9 @@ final class AppTest extends TestCase
 
     public function testHooksToNativeSingleHook(): void
     {
-        $onError = static function (Request $request, Throwable $error): HookResult { return HookResult::continue(); };
+        $onError = static function (Request $request, Throwable $error): HookResult {
+            return HookResult::continue();
+        };
 
         $hooks = LifecycleHooks::builder()
             ->withOnError($onError)

@@ -38,8 +38,10 @@ module Spikard
       handlers = app.handler_map.transform_keys(&:to_sym)
       ws_handlers = app.websocket_handlers || {}
       sse_producers = app.sse_producers || {}
+      hooks = app.instance_variable_get(:@native_hooks)
       dependencies = app.dependencies || {}
-      Spikard::Native::TestClient.new(routes_json, handlers, config, ws_handlers, sse_producers, dependencies)
+      payload = { hooks: hooks, dependencies: dependencies }
+      Spikard::Native::TestClient.new(routes_json, handlers, config, ws_handlers, sse_producers, payload)
     end
 
     # High level wrapper around the native test client.

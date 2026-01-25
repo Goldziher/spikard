@@ -308,9 +308,10 @@ impl PhpRequest {
             raw_query: (*data.raw_query_params).clone(),
             headers: (*data.headers).clone(),
             cookies: (*data.cookies).clone(),
-            validated_params: data.validated_params.as_ref().map(|arc| {
-                Arc::try_unwrap(arc.clone()).unwrap_or_else(|arc| (*arc).clone())
-            }),
+            validated_params: data
+                .validated_params
+                .as_ref()
+                .map(|arc| Arc::try_unwrap(arc.clone()).unwrap_or_else(|arc| (*arc).clone())),
             cached_body: RefCell::new(None),
             cached_files: RefCell::new(None),
             cached_headers: RefCell::new(None),
@@ -341,9 +342,9 @@ impl PhpRequest {
             raw_query: Self::unwrap_arc_multimap(data.raw_query_params),
             headers: Self::unwrap_arc_map(data.headers),
             cookies: Self::unwrap_arc_map(data.cookies),
-            validated_params: data.validated_params.map(|arc| {
-                Arc::try_unwrap(arc).unwrap_or_else(|arc| (*arc).clone())
-            }),
+            validated_params: data
+                .validated_params
+                .map(|arc| Arc::try_unwrap(arc).unwrap_or_else(|arc| (*arc).clone())),
             cached_body: RefCell::new(None),
             cached_files: RefCell::new(None),
             cached_headers: RefCell::new(None),
