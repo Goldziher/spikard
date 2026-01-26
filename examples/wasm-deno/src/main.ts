@@ -243,7 +243,11 @@ async function startServer(): Promise<void> {
 	);
 }
 
-await startServer().catch((error: unknown) => {
-	console.error("Failed to start server:", error);
-	Deno.exit(1);
-});
+async function main() {
+	await startServer().catch((error: unknown) => {
+		console.error("Failed to start server:", error);
+		Deno.exit(1);
+	});
+}
+
+main();

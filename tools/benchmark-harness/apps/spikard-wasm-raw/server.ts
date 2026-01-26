@@ -99,7 +99,7 @@ interface PathResponse {
 	readonly [key: string]: string | number;
 }
 
-const SmallPayloadSchema = {
+const _SmallPayloadSchema = {
 	type: "object",
 	required: ["name", "description", "price", "tax"],
 	properties: {
@@ -111,7 +111,7 @@ const SmallPayloadSchema = {
 	additionalProperties: false,
 } as const;
 
-const MediumPayloadSchema = {
+const _MediumPayloadSchema = {
 	type: "object",
 	required: ["name", "price", "image"],
 	properties: {
@@ -130,7 +130,7 @@ const MediumPayloadSchema = {
 	additionalProperties: false,
 } as const;
 
-const LargePayloadSchema = {
+const _LargePayloadSchema = {
 	type: "object",
 	required: ["name", "price", "seller"],
 	properties: {
@@ -166,7 +166,7 @@ const LargePayloadSchema = {
 	additionalProperties: false,
 } as const;
 
-const VeryLargePayloadSchema = {
+const _VeryLargePayloadSchema = {
 	type: "object",
 	required: ["name", "tags", "images"],
 	properties: {
@@ -188,7 +188,7 @@ const VeryLargePayloadSchema = {
 	additionalProperties: false,
 } as const;
 
-const UrlencodedSimpleSchema = {
+const _UrlencodedSimpleSchema = {
 	type: "object",
 	required: ["name", "email", "age", "subscribe"],
 	properties: {
@@ -200,7 +200,7 @@ const UrlencodedSimpleSchema = {
 	additionalProperties: false,
 } as const;
 
-const UrlencodedComplexSchema = {
+const _UrlencodedComplexSchema = {
 	type: "object",
 	required: [
 		"username",
@@ -259,7 +259,7 @@ const MultipartFileSchema = {
 	additionalProperties: false,
 } as const;
 
-const MultipartSchema = {
+const _MultipartSchema = {
 	type: "object",
 	required: ["file"],
 	properties: {
@@ -313,7 +313,7 @@ const PathIntParamSchema = {
 	required: ["id"],
 } as const;
 
-const PathUuidParamSchema = {
+const _PathUuidParamSchema = {
 	type: "object",
 	properties: {
 		uuid: { type: "string", format: "uuid", source: "path" },
@@ -321,7 +321,7 @@ const PathUuidParamSchema = {
 	required: ["uuid"],
 } as const;
 
-const PathDateParamSchema = {
+const _PathDateParamSchema = {
 	type: "object",
 	properties: {
 		date: { type: "string", format: "date", source: "path" },
@@ -329,7 +329,7 @@ const PathDateParamSchema = {
 	required: ["date"],
 } as const;
 
-const QueryFewParamSchema = {
+const _QueryFewParamSchema = {
 	type: "object",
 	properties: {
 		q: { type: "string", source: "query" },
@@ -339,7 +339,7 @@ const QueryFewParamSchema = {
 	required: ["q", "page", "limit"],
 } as const;
 
-const QueryMediumParamSchema = {
+const _QueryMediumParamSchema = {
 	type: "object",
 	properties: {
 		category: { type: "string", source: "query" },
@@ -354,7 +354,7 @@ const QueryMediumParamSchema = {
 	required: ["category", "tags", "min_price", "max_price", "sort", "order", "page", "limit"],
 } as const;
 
-const QueryManyParamSchema = {
+const _QueryManyParamSchema = {
 	type: "object",
 	properties: {
 		q: { type: "string", source: "query" },

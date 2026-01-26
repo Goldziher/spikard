@@ -642,7 +642,7 @@ mod tests {
             assert!(!names.contains(&"phalcon-validation"));
         }
 
-        let expected_len = if php_extension_available("phalcon") { 44 } else { 42 };
+        let expected_len = if php_extension_available("phalcon") { 49 } else { 47 };
         assert_eq!(registry.len(), expected_len);
     }
 
@@ -699,7 +699,8 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 49); // Added 5 generated benchmark frameworks
+        let expected_len = if php_extension_available("phalcon") { 49 } else { 47 };
+        assert_eq!(frameworks.len(), expected_len); // Base: 47, +2 with phalcon
     }
 
     #[test]

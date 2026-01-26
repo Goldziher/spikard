@@ -154,7 +154,7 @@ RSpec.describe 'Schema Validation Edge Cases' do
 
       expect(response.status).to eq(422)
       body = response.json
-      expect(body['errors']&.length).to be > 0
+      expect(body['errors']&.length).to be_positive
       error = body['errors']&.find { |e| e['loc']&.include?('skip') }
       expect(error).not_to be_nil
     end
@@ -183,7 +183,7 @@ RSpec.describe 'Schema Validation Edge Cases' do
       expect([400, 422]).to include(response.status)
       body = response.json
       expect(body).to include('errors')
-      expect(body['errors'].length).to be > 0
+      expect(body['errors'].length).to be_positive
     end
   end
 
@@ -207,7 +207,7 @@ RSpec.describe 'Schema Validation Edge Cases' do
 
       # Should have errors with nested paths
       nested_errors = errors.select { |e| e['loc'].length > 2 }
-      expect(nested_errors.length).to be > 0
+      expect(nested_errors.length).to be_positive
 
       # Check for path like ["body", "seller", "name"]
       name_error = nested_errors.find { |e| e['loc'].include?('name') }

@@ -307,7 +307,7 @@ class DataServiceHandler {
 		const allowed = this.rateLimiter.checkLimit(userId, this.MAX_REQUESTS_PER_MINUTE, this.RATE_LIMIT_WINDOW_MS);
 
 		if (!allowed) {
-			const remaining = this.rateLimiter.getRemainingRequests(
+			const _remaining = this.rateLimiter.getRemainingRequests(
 				userId,
 				this.MAX_REQUESTS_PER_MINUTE,
 				this.RATE_LIMIT_WINDOW_MS,
