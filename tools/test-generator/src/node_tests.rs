@@ -134,7 +134,7 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
 
                 match target.runtime {
                     crate::ts_target::Runtime::Deno => {
-                        final_code.push_str(&format!("import {{ {}, type GrpcRequest, type GrpcResponse }} from \"../app/main.ts\";\n", handler_name));
+                        final_code.push_str(&format!("import {{ {} }} from \"../app/main.ts\";\n", handler_name));
                         final_code.push_str("import { assertEquals, assert } from \"jsr:@std/assert@1\";\n");
                         final_code.push_str("import { Buffer } from \"node:buffer\";\n\n");
 
@@ -146,7 +146,7 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
                         final_code.push_str(&deno_test);
                     }
                     _ => {
-                        final_code.push_str(&format!("import {{ {}, type GrpcRequest, type GrpcResponse }} from \"../app/main.ts\";\n", handler_name));
+                        final_code.push_str(&format!("import {{ {} }} from \"../app/main.ts\";\n", handler_name));
                         final_code.push_str("import { describe, expect, test } from \"vitest\";\n");
                         final_code.push_str("import { Buffer } from \"node:buffer\";\n\n");
                         final_code.push_str("describe(\"grpc\", () => {\n");
