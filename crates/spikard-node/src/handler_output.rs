@@ -13,11 +13,7 @@ use std::collections::HashMap;
 ///
 /// This struct is returned directly from handlers without JSON serialization,
 /// completing the zero-copy request/response pattern.
-///
-/// PERFORMANCE: `object_to_js = false` skips generating ToNapiValue since
-/// HandlerOutput only flows JS→Rust, never Rust→JS. This eliminates unnecessary
-/// code generation and potential conversion overhead.
-#[napi(object, object_to_js = false)]
+#[napi(object)]
 pub struct HandlerOutput {
     /// HTTP status code (e.g., 200, 404, 500)
     pub status: u16,
