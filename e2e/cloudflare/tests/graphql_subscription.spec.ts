@@ -12,17 +12,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_error" },
-				json: {
-					query: `subscription {\n  invalidSubscription {\n    id\n    data\n  }\n}`,
-					variables: null,
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_error" },
+			json: {
+				query: `subscription {\n  invalidSubscription {\n    id\n    data\n  }\n}`,
+				variables: null,
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(400);
 		const responseBody = response.json();
@@ -35,17 +32,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_unsubscribe" },
-				json: {
-					query: `subscription OnTick {\n  ticker {\n    id\n    symbol\n    price\n    timestamp\n  }\n}`,
-					variables: null,
-					operationName: "OnTick",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_unsubscribe" },
+			json: {
+				query: `subscription OnTick {\n  ticker {\n    id\n    symbol\n    price\n    timestamp\n  }\n}`,
+				variables: null,
+				operationName: "OnTick",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -68,17 +62,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_connection_params" },
-				json: {
-					query: `subscription {\n  secureStream {\n    id\n    data\n    timestamp\n  }\n}`,
-					variables: null,
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_connection_params" },
+			json: {
+				query: `subscription {\n  secureStream {\n    id\n    data\n    timestamp\n  }\n}`,
+				variables: null,
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(101);
 		const responseBody = response.json();
@@ -99,17 +90,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "simple_subscription" },
-				json: {
-					query: `subscription {\n  messageAdded {\n    id\n    text\n    timestamp\n  }\n}`,
-					variables: null,
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "simple_subscription" },
+			json: {
+				query: `subscription {\n  messageAdded {\n    id\n    text\n    timestamp\n  }\n}`,
+				variables: null,
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -130,17 +118,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_multiple_fields" },
-				json: {
-					query: `subscription MultiStream {\n  messageAdded {\n    id\n    text\n    author\n  }\n  userOnline {\n    userId\n    username\n    isOnline\n    lastSeen\n  }\n}`,
-					variables: null,
-					operationName: "MultiStream",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_multiple_fields" },
+			json: {
+				query: `subscription MultiStream {\n  messageAdded {\n    id\n    text\n    author\n  }\n  userOnline {\n    userId\n    username\n    isOnline\n    lastSeen\n  }\n}`,
+				variables: null,
+				operationName: "MultiStream",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -170,17 +155,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_with_variables" },
-				json: {
-					query: `subscription OnUserActivity($userId: ID!) {\n  userActivity(userId: $userId) {\n    id\n    userId\n    action\n    description\n    timestamp\n  }\n}`,
-					variables: { userId: "user123" },
-					operationName: "OnUserActivity",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_with_variables" },
+			json: {
+				query: `subscription OnUserActivity($userId: ID!) {\n  userActivity(userId: $userId) {\n    id\n    userId\n    action\n    description\n    timestamp\n  }\n}`,
+				variables: { userId: "user123" },
+				operationName: "OnUserActivity",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -205,17 +187,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_with_auth_middleware" },
-				json: {
-					query: `subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}`,
-					variables: null,
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_with_auth_middleware" },
+			json: {
+				query: `subscription {\n  privateNotifications {\n    id\n    userId\n    type\n    message\n    priority\n    createdAt\n  }\n}`,
+				variables: null,
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(101);
 		const responseBody = response.json();
@@ -242,17 +221,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_rate_limited" },
-				json: {
-					query: `subscription OnStockUpdate($symbol: String!) {\n  stockTicker(symbol: $symbol) {\n    id\n    symbol\n    price\n    change\n    changePercent\n    timestamp\n    volume\n  }\n}`,
-					variables: { symbol: "AAPL" },
-					operationName: "OnStockUpdate",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_rate_limited" },
+			json: {
+				query: `subscription OnStockUpdate($symbol: String!) {\n  stockTicker(symbol: $symbol) {\n    id\n    symbol\n    price\n    change\n    changePercent\n    timestamp\n    volume\n  }\n}`,
+				variables: { symbol: "AAPL" },
+				operationName: "OnStockUpdate",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -281,17 +257,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_authentication" },
-				json: {
-					query: `subscription {\n  privateMessages {\n    id\n    from\n    content\n    isPrivate\n  }\n}`,
-					variables: null,
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_authentication" },
+			json: {
+				query: `subscription {\n  privateMessages {\n    id\n    from\n    content\n    isPrivate\n  }\n}`,
+				variables: null,
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(401);
 		const responseBody = response.json();
@@ -304,17 +277,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "subscription_with_filtering" },
-				json: {
-					query: `subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}`,
-					variables: { authorId: "123", statuses: ["PUBLISHED", "DRAFT"], tagFilter: "graphql", scoreThreshold: 50 },
-					operationName: "OnPostUpdated",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "subscription_with_filtering" },
+			json: {
+				query: `subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}`,
+				variables: { authorId: "123", statuses: ["PUBLISHED", "DRAFT"], tagFilter: "graphql", scoreThreshold: 50 },
+				operationName: "OnPostUpdated",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -328,7 +298,9 @@ describe("GraphQL subscription", () => {
 		expect(data.postUpdated).toHaveProperty("authorId");
 		expect(data.postUpdated.authorId).toBe("123");
 		expect(data.postUpdated).toHaveProperty("content");
-		expect(data.postUpdated.content).toBe("A comprehensive guide to GraphQL subscriptions with advanced filtering techniques...");
+		expect(data.postUpdated.content).toBe(
+			"A comprehensive guide to GraphQL subscriptions with advanced filtering techniques...",
+		);
 		expect(data.postUpdated).toHaveProperty("status");
 		expect(data.postUpdated.status).toBe("PUBLISHED");
 		expect(data.postUpdated).toHaveProperty("tags");
@@ -348,17 +320,14 @@ describe("GraphQL subscription", () => {
 		const app = createAppGraphqlSubscription();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "filtered_subscription" },
-				json: {
-					query: `subscription OnOrderUpdated($status: OrderStatus) {\n  orderUpdated(status: $status) {\n    id\n    orderId\n    status\n    amount\n    updatedAt\n  }\n}`,
-					variables: { status: "SHIPPED" },
-					operationName: "OnOrderUpdated",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "filtered_subscription" },
+			json: {
+				query: `subscription OnOrderUpdated($status: OrderStatus) {\n  orderUpdated(status: $status) {\n    id\n    orderId\n    status\n    amount\n    updatedAt\n  }\n}`,
+				variables: { status: "SHIPPED" },
+				operationName: "OnOrderUpdated",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -378,5 +347,4 @@ describe("GraphQL subscription", () => {
 		const errors = responseBody.errors;
 		expect(errors?.length ?? 0).toBe(0);
 	});
-
 });
