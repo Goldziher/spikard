@@ -510,10 +510,10 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
     }
 
     // Prefer validation variants when multiple frameworks match
-    if matches.len() > 1 {
-        if let Some(validation_match) = matches.iter().find(|fw| fw.name.contains("-validation")) {
-            return Ok(validation_match.clone());
-        }
+    if matches.len() > 1
+        && let Some(validation_match) = matches.iter().find(|fw| fw.name.contains("-validation"))
+    {
+        return Ok(validation_match.clone());
     }
 
     matches.sort_by(|a, b| b.detect_files.len().cmp(&a.detect_files.len()));
