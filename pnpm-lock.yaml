@@ -473,8 +473,8 @@ importers:
   tools/benchmark-harness/apps/morojs-raw:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.18
-        version: 1.7.18(@grpc/grpc-js@1.14.3)(@grpc/proto-loader@0.8.0)(ws@8.19.0)
+        specifier: ^1.7.19
+        version: 1.7.19(@grpc/grpc-js@1.14.3)(@grpc/proto-loader@0.8.0)(ws@8.19.0)
     devDependencies:
       '@types/node':
         specifier: ^25.0.10
@@ -489,8 +489,8 @@ importers:
   tools/benchmark-harness/apps/morojs-validation:
     dependencies:
       '@morojs/moro':
-        specifier: ^1.7.18
-        version: 1.7.18(@grpc/grpc-js@1.14.3)(@grpc/proto-loader@0.8.0)(ws@8.19.0)
+        specifier: ^1.7.19
+        version: 1.7.19(@grpc/grpc-js@1.14.3)(@grpc/proto-loader@0.8.0)(ws@8.19.0)
     devDependencies:
       '@types/node':
         specifier: ^25.0.10
@@ -1386,8 +1386,8 @@ packages:
     resolution: {integrity: sha512-OWV6DnaMd+kRikdQLZHzIiVYT1usFg/yw9Ey+qeWrll0GwkWpS6TS6mvYbNCqPzeG8Yq70ux3kP2ApiVhO7WoA==}
     engines: {node: '>= 10'}
 
-  '@morojs/moro@1.7.18':
-    resolution: {integrity: sha512-9IrSGPFesndrn90rIIqAAmdSeUbhaTrPSyAA5hV+8qDDVxeCwugKPWoeI0VfiQDCCicncqxmdAT9lY5bdcaazA==}
+  '@morojs/moro@1.7.19':
+    resolution: {integrity: sha512-djy5ku2feiLnIMa7lIgy+HgNENSsodzReEBJa5Pm79QNxoUpAb8HDBuo5NCKGyFCohDa3oi/maqJxDzg2HsdGA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@aws-sdk/client-ses': '>=3.927.0'
@@ -4069,7 +4069,7 @@ snapshots:
 
   '@kitojs/kito-core@1.0.0-alpha.8': {}
 
-  '@morojs/moro@1.7.18(@grpc/grpc-js@1.14.3)(@grpc/proto-loader@0.8.0)(ws@8.19.0)':
+  '@morojs/moro@1.7.19(@grpc/grpc-js@1.14.3)(@grpc/proto-loader@0.8.0)(ws@8.19.0)':
     optionalDependencies:
       '@grpc/grpc-js': 1.14.3
       '@grpc/proto-loader': 0.8.0
