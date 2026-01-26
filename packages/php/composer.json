@@ -1,93 +1,86 @@
 {
-  "name": "spikard/spikard",
-  "description": "High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with ext-php-rs bindings, async handlers, dependency injection, and lifecycle hooks.",
-  "version": "0.9.2",
-  "type": "library",
-  "license": "MIT",
-  "keywords": [
-    "framework",
-    "http",
-    "rust",
-    "performance",
-    "websocket",
-    "sse",
-    "async",
-    "ffi",
-    "ext-php-rs",
-    "tower-http",
-    "axum",
-    "tokio",
-    "web-framework",
-    "rest-api",
-    "php8"
-  ],
-  "homepage": "https://github.com/Goldziher/spikard",
-  "support": {
-    "issues": "https://github.com/Goldziher/spikard/issues",
-    "source": "https://github.com/Goldziher/spikard",
-    "docs": "https://github.com/Goldziher/spikard/tree/main/packages/php"
-  },
-  "authors": [
-    {
-      "name": "Na'aman Hirschfeld",
-      "email": "nhirschfeld@gmail.com",
-      "role": "creator"
-    }
-  ],
-  "require": {
-    "php": "^8.2"
-  },
-  "require-dev": {
-    "friendsofphp/php-cs-fixer": "^3.91",
-    "google/protobuf": "^4.27",
-    "grpc/grpc": "^1.60",
-    "phpstan/extension-installer": "^1.4",
-    "phpstan/phpstan": "^1.12",
-    "phpunit/phpunit": "^11.3",
-    "symfony/console": "^7.4",
-    "symfony/event-dispatcher": "^7.4",
-    "symfony/filesystem": "^7.4",
-    "symfony/finder": "^7.4",
-    "symfony/options-resolver": "^7.4",
-    "symfony/process": "^7.4",
-    "symfony/stopwatch": "^7.4",
-    "symfony/string": "^7.4"
-  },
-  "autoload": {
-    "psr-4": {
-      "Spikard\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Spikard\\Tests\\": "tests/"
-    }
-  },
-  "scripts": {
-    "phpstan": "PHPRC=$(pwd)/packages/php/phpstan.ini PHPSTAN_MEMORY_LIMIT=1G PHP_MEMORY_LIMIT=1G php -d detect_unicode=0 -d memory_limit=1G vendor/bin/phpstan analyse src tests --configuration=phpstan.neon --memory-limit=1G --no-progress",
-    "csfixer": "php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php src tests",
-    "format": "@csfixer",
-    "format:check": "php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php --dry-run src tests",
-    "test": "php -d detect_unicode=0 vendor/bin/phpunit --configuration phpunit.xml",
-    "lint": "@phpstan",
-    "lint:fix": [
-      "@csfixer",
-      "@phpstan"
-    ],
-    "generate-dto": "@php bin/generate-dto.php",
-    "post-install-cmd": [
-      "@php bin/install-extension.php"
-    ],
-    "post-update-cmd": [
-      "@php bin/install-extension.php"
-    ]
-  },
-  "config": {
-    "sort-packages": true,
-    "allow-plugins": {
-      "phpstan/extension-installer": true
-    }
-  },
-  "minimum-stability": "stable",
-  "prefer-stable": true
+	"name": "spikard/spikard",
+	"description": "High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with ext-php-rs bindings, async handlers, dependency injection, and lifecycle hooks.",
+	"version": "0.9.2",
+	"type": "library",
+	"license": "MIT",
+	"keywords": [
+		"framework",
+		"http",
+		"rust",
+		"performance",
+		"websocket",
+		"sse",
+		"async",
+		"ffi",
+		"ext-php-rs",
+		"tower-http",
+		"axum",
+		"tokio",
+		"web-framework",
+		"rest-api",
+		"php8"
+	],
+	"homepage": "https://github.com/Goldziher/spikard",
+	"support": {
+		"issues": "https://github.com/Goldziher/spikard/issues",
+		"source": "https://github.com/Goldziher/spikard",
+		"docs": "https://github.com/Goldziher/spikard/tree/main/packages/php"
+	},
+	"authors": [
+		{
+			"name": "Na'aman Hirschfeld",
+			"email": "nhirschfeld@gmail.com",
+			"role": "creator"
+		}
+	],
+	"require": {
+		"php": "^8.2"
+	},
+	"require-dev": {
+		"friendsofphp/php-cs-fixer": "^3.91",
+		"google/protobuf": "^4.27",
+		"grpc/grpc": "^1.60",
+		"phpstan/extension-installer": "^1.4",
+		"phpstan/phpstan": "^1.12",
+		"phpunit/phpunit": "^11.3",
+		"symfony/console": "^7.4",
+		"symfony/event-dispatcher": "^7.4",
+		"symfony/filesystem": "^7.4",
+		"symfony/finder": "^7.4",
+		"symfony/options-resolver": "^7.4",
+		"symfony/process": "^7.4",
+		"symfony/stopwatch": "^7.4",
+		"symfony/string": "^7.4"
+	},
+	"autoload": {
+		"psr-4": {
+			"Spikard\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Spikard\\Tests\\": "tests/"
+		}
+	},
+	"scripts": {
+		"phpstan": "PHPRC=$(pwd)/packages/php/phpstan.ini PHPSTAN_MEMORY_LIMIT=1G PHP_MEMORY_LIMIT=1G php -d detect_unicode=0 -d memory_limit=1G vendor/bin/phpstan analyse src tests --configuration=phpstan.neon --memory-limit=1G --no-progress",
+		"csfixer": "php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php src tests",
+		"format": "@csfixer",
+		"format:check": "php vendor/bin/php-cs-fixer fix --config php-cs-fixer.php --dry-run src tests",
+		"test": "php -d detect_unicode=0 vendor/bin/phpunit --configuration phpunit.xml",
+		"lint": "@phpstan",
+		"lint:fix": ["@csfixer", "@phpstan"],
+		"generate-dto": "@php bin/generate-dto.php",
+		"post-install-cmd": ["@php bin/install-extension.php"],
+		"post-update-cmd": ["@php bin/install-extension.php"]
+	},
+	"config": {
+		"sort-packages": true,
+		"allow-plugins": {
+			"phpstan/extension-installer": true
+		}
+	},
+	"minimum-stability": "stable",
+	"prefer-stable": true
 }

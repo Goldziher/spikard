@@ -87,8 +87,8 @@ async function get_compression_skip(_request: HandlerInput): Promise<HandlerOutp
 
 async function get_accept_test_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['id'] !== undefined) {
-		response['id'] = request.pathParams['id'];
+	if (request.pathParams?.["id"] !== undefined) {
+		response["id"] = request.pathParams["id"];
 	}
 	return {
 		status: 200,
@@ -474,8 +474,8 @@ async function post_nulls(_request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_search(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['term'] !== undefined) {
-		response['term'] = request.queryParams['term'];
+	if (request.queryParams?.["term"] !== undefined) {
+		response["term"] = request.queryParams["term"];
 	}
 	return {
 		status: 200,
@@ -485,8 +485,8 @@ async function get_search(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_items_2(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['filter'] !== undefined) {
-		response['filter'] = request.queryParams['filter'];
+	if (request.queryParams?.["filter"] !== undefined) {
+		response["filter"] = request.queryParams["filter"];
 	}
 	return {
 		status: 200,
@@ -672,8 +672,8 @@ async function get_protected(_request: HandlerInput): Promise<HandlerOutput> {
 
 async function put_items_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['id'] !== undefined) {
-		response['id'] = request.pathParams['id'];
+	if (request.pathParams?.["id"] !== undefined) {
+		response["id"] = request.pathParams["id"];
 	}
 	return {
 		status: 200,
@@ -683,8 +683,8 @@ async function put_items_id(request: HandlerInput): Promise<HandlerOutput> {
 
 async function patch_items_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['id'] !== undefined) {
-		response['id'] = request.pathParams['id'];
+	if (request.pathParams?.["id"] !== undefined) {
+		response["id"] = request.pathParams["id"];
 	}
 	return {
 		status: 200,
@@ -694,8 +694,8 @@ async function patch_items_id(request: HandlerInput): Promise<HandlerOutput> {
 
 async function delete_items_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['id'] !== undefined) {
-		response['id'] = request.pathParams['id'];
+	if (request.pathParams?.["id"] !== undefined) {
+		response["id"] = request.pathParams["id"];
 	}
 	return {
 		status: 200,
@@ -705,8 +705,8 @@ async function delete_items_id(request: HandlerInput): Promise<HandlerOutput> {
 
 async function head_items_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['id'] !== undefined) {
-		response['id'] = request.pathParams['id'];
+	if (request.pathParams?.["id"] !== undefined) {
+		response["id"] = request.pathParams["id"];
 	}
 	return {
 		status: 200,
@@ -980,8 +980,8 @@ async function post_files_required(_request: HandlerInput): Promise<HandlerOutpu
 
 async function get_path_str_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -991,8 +991,8 @@ async function get_path_str_item_id(request: HandlerInput): Promise<HandlerOutpu
 
 async function get_path_int_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1002,8 +1002,8 @@ async function get_path_int_item_id(request: HandlerInput): Promise<HandlerOutpu
 
 async function get_path_float_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1013,8 +1013,8 @@ async function get_path_float_item_id(request: HandlerInput): Promise<HandlerOut
 
 async function get_items_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['id'] !== undefined) {
-		response['id'] = request.pathParams['id'];
+	if (request.pathParams?.["id"] !== undefined) {
+		response["id"] = request.pathParams["id"];
 	}
 	return {
 		status: 200,
@@ -1024,8 +1024,8 @@ async function get_items_id(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_path_param_gt_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1035,8 +1035,8 @@ async function get_path_param_gt_item_id(request: HandlerInput): Promise<Handler
 
 async function get_path_param_minlength_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1046,8 +1046,8 @@ async function get_path_param_minlength_item_id(request: HandlerInput): Promise<
 
 async function get_models_model_name(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['model_name'] !== undefined) {
-		response['model_name'] = request.pathParams['model_name'];
+	if (request.pathParams?.["model_name"] !== undefined) {
+		response["model_name"] = request.pathParams["model_name"];
 	}
 	return {
 		status: 200,
@@ -1057,8 +1057,8 @@ async function get_models_model_name(request: HandlerInput): Promise<HandlerOutp
 
 async function get_files_file_path(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['file_path'] !== undefined) {
-		response['file_path'] = request.pathParams['file_path'];
+	if (request.pathParams?.["file_path"] !== undefined) {
+		response["file_path"] = request.pathParams["file_path"];
 	}
 	return {
 		status: 200,
@@ -1068,17 +1068,17 @@ async function get_files_file_path(request: HandlerInput): Promise<HandlerOutput
 
 async function get_version_service_id_user_id_order_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['version'] !== undefined) {
-		response['version'] = request.pathParams['version'];
+	if (request.pathParams?.["version"] !== undefined) {
+		response["version"] = request.pathParams["version"];
 	}
-	if (request.pathParams?.['service_id'] !== undefined) {
-		response['service_id'] = request.pathParams['service_id'];
+	if (request.pathParams?.["service_id"] !== undefined) {
+		response["service_id"] = request.pathParams["service_id"];
 	}
-	if (request.pathParams?.['user_id'] !== undefined) {
-		response['user_id'] = request.pathParams['user_id'];
+	if (request.pathParams?.["user_id"] !== undefined) {
+		response["user_id"] = request.pathParams["user_id"];
 	}
-	if (request.pathParams?.['order_id'] !== undefined) {
-		response['order_id'] = request.pathParams['order_id'];
+	if (request.pathParams?.["order_id"] !== undefined) {
+		response["order_id"] = request.pathParams["order_id"];
 	}
 	return {
 		status: 200,
@@ -1088,8 +1088,8 @@ async function get_version_service_id_user_id_order_id(request: HandlerInput): P
 
 async function get_path_bool_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1099,8 +1099,8 @@ async function get_path_bool_item_id(request: HandlerInput): Promise<HandlerOutp
 
 async function get_path_param_ge_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1110,8 +1110,8 @@ async function get_path_param_ge_item_id(request: HandlerInput): Promise<Handler
 
 async function get_path_param_le_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1121,8 +1121,8 @@ async function get_path_param_le_item_id(request: HandlerInput): Promise<Handler
 
 async function get_path_param_lt_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1132,8 +1132,8 @@ async function get_path_param_lt_item_id(request: HandlerInput): Promise<Handler
 
 async function get_path_param_lt_gt_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1143,8 +1143,8 @@ async function get_path_param_lt_gt_item_id(request: HandlerInput): Promise<Hand
 
 async function get_path_param_maxlength_item_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.pathParams['item_id'];
+	if (request.pathParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.pathParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1154,8 +1154,8 @@ async function get_path_param_maxlength_item_id(request: HandlerInput): Promise<
 
 async function get_date_date_param(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['date_param'] !== undefined) {
-		response['date_param'] = request.pathParams['date_param'];
+	if (request.pathParams?.["date_param"] !== undefined) {
+		response["date_param"] = request.pathParams["date_param"];
 	}
 	return {
 		status: 200,
@@ -1165,8 +1165,8 @@ async function get_date_date_param(request: HandlerInput): Promise<HandlerOutput
 
 async function get_events_date(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['date'] !== undefined) {
-		response['date'] = request.pathParams['date'];
+	if (request.pathParams?.["date"] !== undefined) {
+		response["date"] = request.pathParams["date"];
 	}
 	return {
 		status: 200,
@@ -1176,8 +1176,8 @@ async function get_events_date(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_bookings_timestamp(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['timestamp'] !== undefined) {
-		response['timestamp'] = request.pathParams['timestamp'];
+	if (request.pathParams?.["timestamp"] !== undefined) {
+		response["timestamp"] = request.pathParams["timestamp"];
 	}
 	return {
 		status: 200,
@@ -1187,8 +1187,8 @@ async function get_bookings_timestamp(request: HandlerInput): Promise<HandlerOut
 
 async function get_delays_duration(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['duration'] !== undefined) {
-		response['duration'] = request.pathParams['duration'];
+	if (request.pathParams?.["duration"] !== undefined) {
+		response["duration"] = request.pathParams["duration"];
 	}
 	return {
 		status: 200,
@@ -1198,8 +1198,8 @@ async function get_delays_duration(request: HandlerInput): Promise<HandlerOutput
 
 async function get_prices_amount(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['amount'] !== undefined) {
-		response['amount'] = request.pathParams['amount'];
+	if (request.pathParams?.["amount"] !== undefined) {
+		response["amount"] = request.pathParams["amount"];
 	}
 	return {
 		status: 200,
@@ -1209,8 +1209,8 @@ async function get_prices_amount(request: HandlerInput): Promise<HandlerOutput> 
 
 async function get_users_username(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['username'] !== undefined) {
-		response['username'] = request.pathParams['username'];
+	if (request.pathParams?.["username"] !== undefined) {
+		response["username"] = request.pathParams["username"];
 	}
 	return {
 		status: 200,
@@ -1220,11 +1220,11 @@ async function get_users_username(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_repos_owner_repo(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['owner'] !== undefined) {
-		response['owner'] = request.pathParams['owner'];
+	if (request.pathParams?.["owner"] !== undefined) {
+		response["owner"] = request.pathParams["owner"];
 	}
-	if (request.pathParams?.['repo'] !== undefined) {
-		response['repo'] = request.pathParams['repo'];
+	if (request.pathParams?.["repo"] !== undefined) {
+		response["repo"] = request.pathParams["repo"];
 	}
 	return {
 		status: 200,
@@ -1234,8 +1234,8 @@ async function get_repos_owner_repo(request: HandlerInput): Promise<HandlerOutpu
 
 async function get_repos_owner(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['owner'] !== undefined) {
-		response['owner'] = request.pathParams['owner'];
+	if (request.pathParams?.["owner"] !== undefined) {
+		response["owner"] = request.pathParams["owner"];
 	}
 	return {
 		status: 200,
@@ -1245,8 +1245,8 @@ async function get_repos_owner(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_offset_value(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['value'] !== undefined) {
-		response['value'] = request.pathParams['value'];
+	if (request.pathParams?.["value"] !== undefined) {
+		response["value"] = request.pathParams["value"];
 	}
 	return {
 		status: 200,
@@ -1256,8 +1256,8 @@ async function get_offset_value(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_type_syntax_items_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['id'] !== undefined) {
-		response['id'] = request.pathParams['id'];
+	if (request.pathParams?.["id"] !== undefined) {
+		response["id"] = request.pathParams["id"];
 	}
 	return {
 		status: 200,
@@ -1267,8 +1267,8 @@ async function get_type_syntax_items_id(request: HandlerInput): Promise<HandlerO
 
 async function get_type_syntax_users_user_id(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['user_id'] !== undefined) {
-		response['user_id'] = request.pathParams['user_id'];
+	if (request.pathParams?.["user_id"] !== undefined) {
+		response["user_id"] = request.pathParams["user_id"];
 	}
 	return {
 		status: 200,
@@ -1278,8 +1278,8 @@ async function get_type_syntax_users_user_id(request: HandlerInput): Promise<Han
 
 async function get_type_syntax_items_count_count(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['count'] !== undefined) {
-		response['count'] = request.pathParams['count'];
+	if (request.pathParams?.["count"] !== undefined) {
+		response["count"] = request.pathParams["count"];
 	}
 	return {
 		status: 200,
@@ -1289,8 +1289,8 @@ async function get_type_syntax_items_count_count(request: HandlerInput): Promise
 
 async function get_query(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['query'] !== undefined) {
-		response['query'] = request.queryParams['query'];
+	if (request.queryParams?.["query"] !== undefined) {
+		response["query"] = request.queryParams["query"];
 	}
 	return {
 		status: 200,
@@ -1300,8 +1300,8 @@ async function get_query(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['query'] !== undefined) {
-		response['query'] = request.queryParams['query'];
+	if (request.queryParams?.["query"] !== undefined) {
+		response["query"] = request.queryParams["query"];
 	}
 	return {
 		status: 200,
@@ -1311,8 +1311,8 @@ async function get_query_int(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_optional(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['query'] !== undefined) {
-		response['query'] = request.queryParams['query'];
+	if (request.queryParams?.["query"] !== undefined) {
+		response["query"] = request.queryParams["query"];
 	}
 	return {
 		status: 200,
@@ -1322,8 +1322,8 @@ async function get_query_optional(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_query_int_optional(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['query'] !== undefined) {
-		response['query'] = request.queryParams['query'];
+	if (request.queryParams?.["query"] !== undefined) {
+		response["query"] = request.queryParams["query"];
 	}
 	return {
 		status: 200,
@@ -1333,8 +1333,8 @@ async function get_query_int_optional(request: HandlerInput): Promise<HandlerOut
 
 async function get_query_int_default(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['query'] !== undefined) {
-		response['query'] = request.queryParams['query'];
+	if (request.queryParams?.["query"] !== undefined) {
+		response["query"] = request.queryParams["query"];
 	}
 	return {
 		status: 200,
@@ -1344,8 +1344,8 @@ async function get_query_int_default(request: HandlerInput): Promise<HandlerOutp
 
 async function get_query_list(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['device_ids'] !== undefined) {
-		response['device_ids'] = request.queryParams['device_ids'];
+	if (request.queryParams?.["device_ids"] !== undefined) {
+		response["device_ids"] = request.queryParams["device_ids"];
 	}
 	return {
 		status: 200,
@@ -1355,8 +1355,8 @@ async function get_query_list(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_list_default(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['tags'] !== undefined) {
-		response['tags'] = request.queryParams['tags'];
+	if (request.queryParams?.["tags"] !== undefined) {
+		response["tags"] = request.queryParams["tags"];
 	}
 	return {
 		status: 200,
@@ -1366,11 +1366,11 @@ async function get_query_list_default(request: HandlerInput): Promise<HandlerOut
 
 async function get_test(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['email'] !== undefined) {
-		response['email'] = request.queryParams['email'];
+	if (request.queryParams?.["email"] !== undefined) {
+		response["email"] = request.queryParams["email"];
 	}
-	if (request.queryParams?.['special'] !== undefined) {
-		response['special'] = request.queryParams['special'];
+	if (request.queryParams?.["special"] !== undefined) {
+		response["special"] = request.queryParams["special"];
 	}
 	return {
 		status: 200,
@@ -1380,8 +1380,8 @@ async function get_test(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_bool(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['flag'] !== undefined) {
-		response['flag'] = request.queryParams['flag'];
+	if (request.queryParams?.["flag"] !== undefined) {
+		response["flag"] = request.queryParams["flag"];
 	}
 	return {
 		status: 200,
@@ -1391,8 +1391,8 @@ async function get_query_bool(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_uuid(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['item_id'] !== undefined) {
-		response['item_id'] = request.queryParams['item_id'];
+	if (request.queryParams?.["item_id"] !== undefined) {
+		response["item_id"] = request.queryParams["item_id"];
 	}
 	return {
 		status: 200,
@@ -1402,8 +1402,8 @@ async function get_query_uuid(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_enum(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['model'] !== undefined) {
-		response['model'] = request.queryParams['model'];
+	if (request.queryParams?.["model"] !== undefined) {
+		response["model"] = request.queryParams["model"];
 	}
 	return {
 		status: 200,
@@ -1413,8 +1413,8 @@ async function get_query_enum(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int_ge(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['value'] !== undefined) {
-		response['value'] = request.queryParams['value'];
+	if (request.queryParams?.["value"] !== undefined) {
+		response["value"] = request.queryParams["value"];
 	}
 	return {
 		status: 200,
@@ -1424,8 +1424,8 @@ async function get_query_int_ge(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int_le(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['value'] !== undefined) {
-		response['value'] = request.queryParams['value'];
+	if (request.queryParams?.["value"] !== undefined) {
+		response["value"] = request.queryParams["value"];
 	}
 	return {
 		status: 200,
@@ -1435,8 +1435,8 @@ async function get_query_int_le(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int_lt(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['value'] !== undefined) {
-		response['value'] = request.queryParams['value'];
+	if (request.queryParams?.["value"] !== undefined) {
+		response["value"] = request.queryParams["value"];
 	}
 	return {
 		status: 200,
@@ -1446,8 +1446,8 @@ async function get_query_int_lt(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_int_gt(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['value'] !== undefined) {
-		response['value'] = request.queryParams['value'];
+	if (request.queryParams?.["value"] !== undefined) {
+		response["value"] = request.queryParams["value"];
 	}
 	return {
 		status: 200,
@@ -1457,8 +1457,8 @@ async function get_query_int_gt(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_str_max_length(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['name'] !== undefined) {
-		response['name'] = request.queryParams['name'];
+	if (request.queryParams?.["name"] !== undefined) {
+		response["name"] = request.queryParams["name"];
 	}
 	return {
 		status: 200,
@@ -1468,8 +1468,8 @@ async function get_query_str_max_length(request: HandlerInput): Promise<HandlerO
 
 async function get_query_str_min_length(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['name'] !== undefined) {
-		response['name'] = request.queryParams['name'];
+	if (request.queryParams?.["name"] !== undefined) {
+		response["name"] = request.queryParams["name"];
 	}
 	return {
 		status: 200,
@@ -1479,8 +1479,8 @@ async function get_query_str_min_length(request: HandlerInput): Promise<HandlerO
 
 async function get_query_date(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['event_date'] !== undefined) {
-		response['event_date'] = request.queryParams['event_date'];
+	if (request.queryParams?.["event_date"] !== undefined) {
+		response["event_date"] = request.queryParams["event_date"];
 	}
 	return {
 		status: 200,
@@ -1490,8 +1490,8 @@ async function get_query_date(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_datetime(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['timestamp'] !== undefined) {
-		response['timestamp'] = request.queryParams['timestamp'];
+	if (request.queryParams?.["timestamp"] !== undefined) {
+		response["timestamp"] = request.queryParams["timestamp"];
 	}
 	return {
 		status: 200,
@@ -1501,8 +1501,8 @@ async function get_query_datetime(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_query_pattern(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['code'] !== undefined) {
-		response['code'] = request.queryParams['code'];
+	if (request.queryParams?.["code"] !== undefined) {
+		response["code"] = request.queryParams["code"];
 	}
 	return {
 		status: 200,
@@ -1512,8 +1512,8 @@ async function get_query_pattern(request: HandlerInput): Promise<HandlerOutput> 
 
 async function get_query_basic(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['name'] !== undefined) {
-		response['name'] = request.queryParams['name'];
+	if (request.queryParams?.["name"] !== undefined) {
+		response["name"] = request.queryParams["name"];
 	}
 	return {
 		status: 200,
@@ -1523,17 +1523,17 @@ async function get_query_basic(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_query_multi_type(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['age'] !== undefined) {
-		response['age'] = request.queryParams['age'];
+	if (request.queryParams?.["age"] !== undefined) {
+		response["age"] = request.queryParams["age"];
 	}
-	if (request.queryParams?.['active'] !== undefined) {
-		response['active'] = request.queryParams['active'];
+	if (request.queryParams?.["active"] !== undefined) {
+		response["active"] = request.queryParams["active"];
 	}
-	if (request.queryParams?.['score'] !== undefined) {
-		response['score'] = request.queryParams['score'];
+	if (request.queryParams?.["score"] !== undefined) {
+		response["score"] = request.queryParams["score"];
 	}
-	if (request.queryParams?.['name'] !== undefined) {
-		response['name'] = request.queryParams['name'];
+	if (request.queryParams?.["name"] !== undefined) {
+		response["name"] = request.queryParams["name"];
 	}
 	return {
 		status: 200,
@@ -1543,8 +1543,8 @@ async function get_query_multi_type(request: HandlerInput): Promise<HandlerOutpu
 
 async function get_query_optional_default(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['limit'] !== undefined) {
-		response['limit'] = request.queryParams['limit'];
+	if (request.queryParams?.["limit"] !== undefined) {
+		response["limit"] = request.queryParams["limit"];
 	}
 	return {
 		status: 200,
@@ -1554,8 +1554,8 @@ async function get_query_optional_default(request: HandlerInput): Promise<Handle
 
 async function get_query_float_ge(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['price'] !== undefined) {
-		response['price'] = request.queryParams['price'];
+	if (request.queryParams?.["price"] !== undefined) {
+		response["price"] = request.queryParams["price"];
 	}
 	return {
 		status: 200,
@@ -1565,8 +1565,8 @@ async function get_query_float_ge(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_items_negative(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['offset'] !== undefined) {
-		response['offset'] = request.queryParams['offset'];
+	if (request.queryParams?.["offset"] !== undefined) {
+		response["offset"] = request.queryParams["offset"];
 	}
 	return {
 		status: 200,
@@ -1576,8 +1576,8 @@ async function get_items_negative(request: HandlerInput): Promise<HandlerOutput>
 
 async function get_stats(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['threshold'] !== undefined) {
-		response['threshold'] = request.queryParams['threshold'];
+	if (request.queryParams?.["threshold"] !== undefined) {
+		response["threshold"] = request.queryParams["threshold"];
 	}
 	return {
 		status: 200,
@@ -1587,8 +1587,8 @@ async function get_stats(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_subscribe(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['email'] !== undefined) {
-		response['email'] = request.queryParams['email'];
+	if (request.queryParams?.["email"] !== undefined) {
+		response["email"] = request.queryParams["email"];
 	}
 	return {
 		status: 200,
@@ -1598,8 +1598,8 @@ async function get_subscribe(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_network(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['ip'] !== undefined) {
-		response['ip'] = request.queryParams['ip'];
+	if (request.queryParams?.["ip"] !== undefined) {
+		response["ip"] = request.queryParams["ip"];
 	}
 	return {
 		status: 200,
@@ -1609,8 +1609,8 @@ async function get_network(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_network_ipv6(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['ip'] !== undefined) {
-		response['ip'] = request.queryParams['ip'];
+	if (request.queryParams?.["ip"] !== undefined) {
+		response["ip"] = request.queryParams["ip"];
 	}
 	return {
 		status: 200,
@@ -1620,8 +1620,8 @@ async function get_network_ipv6(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_redirect(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['url'] !== undefined) {
-		response['url'] = request.queryParams['url'];
+	if (request.queryParams?.["url"] !== undefined) {
+		response["url"] = request.queryParams["url"];
 	}
 	return {
 		status: 200,
@@ -1631,8 +1631,8 @@ async function get_redirect(request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_dns(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.queryParams?.['host'] !== undefined) {
-		response['host'] = request.queryParams['host'];
+	if (request.queryParams?.["host"] !== undefined) {
+		response["host"] = request.queryParams["host"];
 	}
 	return {
 		status: 200,
@@ -1714,8 +1714,8 @@ async function get_app(_request: HandlerInput): Promise<HandlerOutput> {
 
 async function get_status_test_code(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['code'] !== undefined) {
-		response['code'] = request.pathParams['code'];
+	if (request.pathParams?.["code"] !== undefined) {
+		response["code"] = request.pathParams["code"];
 	}
 	return {
 		status: 200,
@@ -1733,8 +1733,8 @@ async function post_tasks(_request: HandlerInput): Promise<HandlerOutput> {
 
 async function delete_status_test_code(request: HandlerInput): Promise<HandlerOutput> {
 	const response: Record<string, unknown> = {};
-	if (request.pathParams?.['code'] !== undefined) {
-		response['code'] = request.pathParams['code'];
+	if (request.pathParams?.["code"] !== undefined) {
+		response["code"] = request.pathParams["code"];
 	}
 	return {
 		status: 200,

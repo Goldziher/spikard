@@ -22,10 +22,10 @@ dependencies = [
   "granian>=2.6.1",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
-  "msgspec>=0.20.0",
+  "msgspec>=0.20",
   "pyinstrument>=5.1.2",
   "spikard",
-  "websockets>=16.0",
+  "websockets>=16",
 ]
 
 [tool.uv.sources]
