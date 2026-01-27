@@ -279,7 +279,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "litestar-raw",
+            "litestar-uvicorn-raw",
             vec!["server.py".to_string()],
             None,
             "uv run server.py {port}",
@@ -383,14 +383,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
         FrameworkConfig::new(
-            "litestar-uvicorn",
+            "litestar-uvicorn-validation",
             vec!["server.py".to_string()],
             None,
             "uv run server.py {port}",
             None,
         ),
         FrameworkConfig::new(
-            "litestar-granian",
+            "litestar-granian-validation",
             vec!["server.py".to_string()],
             None,
             "uv run server.py {port}",
@@ -613,13 +613,13 @@ mod tests {
         assert!(names.contains(&"fastapi-uvicorn-raw"));
         assert!(names.contains(&"fastapi-python"));
         assert!(names.contains(&"fastapi-granian-validation"));
-        assert!(names.contains(&"litestar-uvicorn"));
-        assert!(names.contains(&"litestar-granian"));
+        assert!(names.contains(&"litestar-uvicorn-validation"));
+        assert!(names.contains(&"litestar-granian-validation"));
         assert!(names.contains(&"robyn-validation"));
 
         assert!(names.contains(&"fastapi-raw"));
         assert!(names.contains(&"fastapi-granian-raw"));
-        assert!(names.contains(&"litestar-raw"));
+        assert!(names.contains(&"litestar-uvicorn-raw"));
         assert!(names.contains(&"litestar-granian-raw"));
         assert!(names.contains(&"robyn-raw"));
 

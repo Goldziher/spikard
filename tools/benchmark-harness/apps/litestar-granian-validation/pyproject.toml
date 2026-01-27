@@ -1,13 +1,14 @@
 # /// script
 # dependencies = [
-#     "msgspec>=0.20.0",
+#     "litestar[standard]",
+#     "granian",
 # ]
 # ///
 
 [project]
-name = "spikard-python-benchmark"
+name = "litestar-granian-benchmark"
 version = "0.1.0"
-description = "Spikard Python benchmark application"
+description = "Litestar + Granian benchmark application with validation"
 requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
@@ -17,9 +18,4 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = [
-  "spikard",
-]
-
-[tool.uv.sources]
-spikard = { workspace = true }
+dependencies = []

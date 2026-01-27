@@ -65,7 +65,7 @@ tower-http = { version = "0.6.8", features = [
 
 # Middleware and auth
 "tower_governor" = "0.8"
-jsonwebtoken = { version = "10.2", features = ["use_pem", "rust_crypto"] }
+jsonwebtoken = { version = "10.3", features = ["use_pem", "rust_crypto"] }
 
 # OpenAPI
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }

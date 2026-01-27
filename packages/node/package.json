@@ -66,7 +66,7 @@
 		"LICENSE"
 	],
 	"devDependencies": {
-		"@biomejs/biome": "^2.3.12",
+		"@biomejs/biome": "^2.3.13",
 		"@grpc/grpc-js": "^1.14.3",
 		"@grpc/proto-loader": "^0.8.0",
 		"@napi-rs/cli": "^3.5.1",

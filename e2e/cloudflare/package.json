@@ -8,12 +8,12 @@
 		"test:watch": "vitest"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.12.6",
-		"@cloudflare/workers-types": "^4.20260124.0",
+		"@cloudflare/vitest-pool-workers": "^0.12.7",
+		"@cloudflare/workers-types": "^4.20260127.0",
 		"@spikard/wasm": "workspace:*",
 		"@vitest/coverage-v8": "^4.0.18",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.18",
-		"wrangler": "^4.60.0"
+		"wrangler": "^4.61.0"
 	}
 }

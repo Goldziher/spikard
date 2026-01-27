@@ -73,631 +73,219 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  bench-spikard-rust-validation:
-    name: spikard-rust-validation
+  # Group 1: Spikard Rust + WASM + PHP (6 frameworks)
+  benchmark-spikard-native:
+    name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - spikard-rust-validation
+          - spikard-rust-raw
+          - spikard-wasm-validation
+          - spikard-wasm-raw
+          - spikard-php-validation
+          - spikard-php-raw
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-rust-validation
+          framework: ${{ matrix.framework }}
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-rust-raw:
-    name: spikard-rust-raw
+  # Group 2: Spikard Python + Ruby (4 frameworks)
+  benchmark-spikard-dynamic:
+    name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - spikard-python-validation
+          - spikard-python-raw
+          - spikard-ruby-validation
+          - spikard-ruby-raw
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-rust-raw
+          framework: ${{ matrix.framework }}
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-python-validation:
-    name: spikard-python-validation
+  # Group 3: Spikard Node/Bun (4 frameworks)
+  benchmark-spikard-js:
+    name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - spikard-node-validation
+          - spikard-node-raw
+          - spikard-bun-validation
+          - spikard-bun-raw
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-python-validation
+          framework: ${{ matrix.framework }}
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-python-raw:
-    name: spikard-python-raw
+  # Group 4: FastAPI variants (5 frameworks)
+  benchmark-fastapi:
+    name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - fastapi-uvicorn-validation
+          - fastapi-uvicorn-raw
+          - fastapi-granian-validation
+          - fastapi-granian-raw
+          - robyn-raw
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-python-raw
+          framework: ${{ matrix.framework }}
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-node-validation:
-    name: spikard-node-validation
+  # Group 5: Litestar variants (4 frameworks - NEW)
+  benchmark-litestar:
+    name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - litestar-uvicorn-validation
+          - litestar-uvicorn-raw
+          - litestar-granian-validation
+          - litestar-granian-raw
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-node-validation
+          framework: ${{ matrix.framework }}
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-bun-validation:
-    name: spikard-bun-validation
+  # Group 6: Node.js frameworks part 1 (6 frameworks)
+  benchmark-nodejs-1:
+    name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - fastify-validation
+          - fastify-raw
+          - hono-validation
+          - hono-raw
+          - express-validation
+          - express-raw
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-bun-validation
+          framework: ${{ matrix.framework }}
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-node-raw:
-    name: spikard-node-raw
+  # Group 7: Node.js frameworks part 2 (5 frameworks)
+  benchmark-nodejs-2:
+    name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - elysia-validation
+          - morojs-validation
+          - morojs-raw
+          - kito-validation
+          - kito-raw
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-node-raw
+          framework: ${{ matrix.framework }}
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  bench-spikard-bun-raw:
-    name: spikard-bun-raw
+  # Group 8: Ruby + PHP frameworks (7 frameworks)
+  benchmark-ruby-php:
+    name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - hanami-api-validation
+          - hanami-api-raw
+          - roda-validation
+          - roda-raw
+          - phalcon-validation
+          - phalcon-raw
+          - trongate-raw
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
-          framework: spikard-bun-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-spikard-ruby-validation:
-    name: spikard-ruby-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: spikard-ruby-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-spikard-ruby-raw:
-    name: spikard-ruby-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: spikard-ruby-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-spikard-wasm-validation:
-    name: spikard-wasm-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: spikard-wasm-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-spikard-wasm-raw:
-    name: spikard-wasm-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: spikard-wasm-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-fastapi-uvicorn-validation:
-    name: fastapi-uvicorn-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: fastapi-uvicorn-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-fastapi-granian-validation:
-    name: fastapi-granian-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: fastapi-granian-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-fastapi-uvicorn-raw:
-    name: fastapi-uvicorn-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: fastapi-uvicorn-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-fastapi-granian-raw:
-    name: fastapi-granian-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: fastapi-granian-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-robyn-raw:
-    name: robyn-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: robyn-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-fastify-validation:
-    name: fastify-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: fastify-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-fastify-raw:
-    name: fastify-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: fastify-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-hono-validation:
-    name: hono-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: hono-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-elysia-validation:
-    name: elysia-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: elysia-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-hono-raw:
-    name: hono-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: hono-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-express-validation:
-    name: express-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: express-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-express-raw:
-    name: express-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: express-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-morojs-validation:
-    name: morojs-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: morojs-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-morojs-raw:
-    name: morojs-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: morojs-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-kito-validation:
-    name: kito-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: kito-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-kito-raw:
-    name: kito-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: kito-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-hanami-api-validation:
-    name: hanami-api-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: hanami-api-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-hanami-api-raw:
-    name: hanami-api-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: hanami-api-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-roda-validation:
-    name: roda-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: roda-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-roda-raw:
-    name: roda-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: roda-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-phalcon-validation:
-    name: phalcon-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: phalcon-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-phalcon-raw:
-    name: phalcon-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: phalcon-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-spikard-php-validation:
-    name: spikard-php-validation
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: spikard-php-validation
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-spikard-php-raw:
-    name: spikard-php-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: spikard-php-raw
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
-  bench-trongate-raw:
-    name: trongate-raw
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: trongate-raw
+          framework: ${{ matrix.framework }}
           suite: ${{ inputs.suite || 'all' }}
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
@@ -707,43 +295,15 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs:
-      - bench-spikard-rust-validation
-      - bench-spikard-rust-raw
-      - bench-spikard-python-validation
-      - bench-spikard-python-raw
-      - bench-spikard-node-validation
-      - bench-spikard-bun-validation
-      - bench-spikard-node-raw
-      - bench-spikard-bun-raw
-      - bench-spikard-ruby-validation
-      - bench-spikard-ruby-raw
-      - bench-spikard-wasm-validation
-      - bench-spikard-wasm-raw
-      - bench-fastapi-uvicorn-validation
-      - bench-fastapi-granian-validation
-      - bench-fastapi-uvicorn-raw
-      - bench-fastapi-granian-raw
-      - bench-robyn-raw
-      - bench-fastify-validation
-      - bench-fastify-raw
-      - bench-hono-validation
-      - bench-elysia-validation
-      - bench-hono-raw
-      - bench-express-validation
-      - bench-express-raw
-      - bench-morojs-validation
-      - bench-morojs-raw
-      - bench-kito-validation
-      - bench-kito-raw
-      - bench-hanami-api-validation
-      - bench-hanami-api-raw
-      - bench-roda-validation
-      - bench-roda-raw
-      - bench-phalcon-validation
-      - bench-phalcon-raw
-      - bench-spikard-php-validation
-      - bench-spikard-php-raw
-      - bench-trongate-raw
+      - build-harness
+      - benchmark-spikard-native
+      - benchmark-spikard-dynamic
+      - benchmark-spikard-js
+      - benchmark-fastapi
+      - benchmark-litestar
+      - benchmark-nodejs-1
+      - benchmark-nodejs-2
+      - benchmark-ruby-php
     permissions:
       contents: read
     steps:

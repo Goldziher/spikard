@@ -56,7 +56,7 @@ runs:
           echo "language=rust" >> $GITHUB_OUTPUT
         elif [[ "$framework" == phalcon* ]] || [[ "$framework" == "trongate-raw" ]] || [[ "$framework" == "spikard-php-"* ]]; then
           echo "language=php" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == fastapi* ]] || [[ "$framework" == robyn* ]] || [[ "$framework" == "spikard-python-"* ]]; then
+        elif [[ "$framework" == fastapi* ]] || [[ "$framework" == litestar* ]] || [[ "$framework" == robyn* ]] || [[ "$framework" == "spikard-python-"* ]]; then
           echo "language=python" >> $GITHUB_OUTPUT
         elif [[ "$framework" == "spikard-node-"* ]] || [[ "$framework" == "spikard-bun-"* ]] || [[ "$framework" == fastify* ]] || [[ "$framework" == hono* ]] || [[ "$framework" == express* ]] || [[ "$framework" == elysia* ]] || [[ "$framework" == morojs* ]] || [[ "$framework" == kito* ]]; then
           echo "language=node" >> $GITHUB_OUTPUT
