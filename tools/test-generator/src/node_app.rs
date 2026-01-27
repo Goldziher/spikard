@@ -150,60 +150,41 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
     Ok(())
 }
 
-/// Generate package.json for the e2e Node.js project
+/// Generate package.json for the e2e Node.js project by reading from workspace templates
 fn generate_package_json(target: &TypeScriptTarget) -> String {
-    match target.runtime {
-        crate::ts_target::Runtime::CloudflareWorkers => {
-            format!(
-                r#"{{
-		"name": "{name}",
-		"version": "0.1.0",
-		"private": true,
-		"type": "module",
-		"scripts": {{
-			"test": "vitest run",
-			"test:watch": "vitest"
-			}},
-					"devDependencies": {{
-						"{dependency}": "workspace:*",
-						"@cloudflare/vitest-pool-workers": "^0.12.6",
-						"@cloudflare/workers-types": "^4.20260124.0",
-						"@vitest/coverage-v8": "^4.0.18",
-					"typescript": "^5.9.3",
-					"vitest": "^4.0.18",
-					"wrangler": "^4.60.0"
-				}}
-		}}
-			"#,
-                name = target.e2e_package_name,
-                dependency = target.dependency_package
-            )
-        }
-        _ => {
-            format!(
-                r#"{{
-		"name": "{name}",
-		"version": "0.1.0",
-		"private": true,
-		"type": "module",
-		"scripts": {{
-			"test": "vitest run",
-			"test:watch": "vitest"
-		}},
-			"devDependencies": {{
-				"{dependency}": "workspace:*",
-		        "@types/node": "^25.0.8",
-				"@vitest/coverage-v8": "^4.0.18",
-				"typescript": "^5.9.3",
-				"vitest": "^4.0.18"
-			}}
-	}}
-	"#,
-                name = target.e2e_package_name,
-                dependency = target.dependency_package
-            )
+    // Determine template path based on runtime
+    let template_path = match target.runtime {
+        crate::ts_target::Runtime::CloudflareWorkers => "e2e/cloudflare/package.json",
+        _ => "e2e/node/package.json",
+    };
+
+    // Read and parse template package.json
+    let template_content = fs::read_to_string(template_path)
+        .unwrap_or_else(|e| panic!("Failed to read template {}: {}", template_path, e));
+
+    let mut package_json: Value = serde_json::from_str(&template_content)
+        .unwrap_or_else(|e| panic!("Failed to parse template {}: {}", template_path, e));
+
+    // Update package name
+    if let Some(obj) = package_json.as_object_mut() {
+        obj.insert("name".to_string(), Value::String(target.e2e_package_name.to_string()));
+
+        // Update the workspace dependency to match target
+        if let Some(Value::Object(dev_deps)) = obj.get_mut("devDependencies") {
+            // Remove old workspace dependency (could be @spikard/node or @spikard/wasm)
+            dev_deps.retain(|k, _| !k.starts_with("@spikard/"));
+
+            // Add the correct workspace dependency for this target
+            dev_deps.insert(
+                target.dependency_package.to_string(),
+                Value::String("workspace:*".to_string())
+            );
         }
     }
+
+    // Serialize back to pretty JSON
+    serde_json::to_string_pretty(&package_json)
+        .unwrap_or_else(|e| panic!("Failed to serialize package.json: {}", e))
 }
 
 /// Generate minimal package.json for Deno (workspace linking only)
