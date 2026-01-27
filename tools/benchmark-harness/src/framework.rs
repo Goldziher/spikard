@@ -282,14 +282,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "litestar-uvicorn-raw",
             vec!["server.py".to_string()],
             None,
-            "uv run server.py {port}",
+            "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
             "litestar-granian-raw",
             vec!["server.py".to_string()],
             None,
-            "uv run server.py {port}",
+            "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
@@ -386,14 +386,14 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "litestar-uvicorn-validation",
             vec!["server.py".to_string()],
             None,
-            "uv run server.py {port}",
+            "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
             "litestar-granian-validation",
             vec!["server.py".to_string()],
             None,
-            "uv run server.py {port}",
+            "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(

@@ -17,47 +17,47 @@ async def _parse_urlencoded(request: Request) -> dict[str, Any]:
     return {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
 
 
-@post("/json/small")
+@post("/json/small", status_code=200)
 async def post_json_small(request: Request) -> dict[str, Any]:
     return await request.json()
 
 
-@post("/json/medium")
+@post("/json/medium", status_code=200)
 async def post_json_medium(request: Request) -> dict[str, Any]:
     return await request.json()
 
 
-@post("/json/large")
+@post("/json/large", status_code=200)
 async def post_json_large(request: Request) -> dict[str, Any]:
     return await request.json()
 
 
-@post("/json/very-large")
+@post("/json/very-large", status_code=200)
 async def post_json_very_large(request: Request) -> dict[str, Any]:
     return await request.json()
 
 
-@post("/multipart/small")
+@post("/multipart/small", status_code=200)
 async def post_multipart_small() -> dict[str, int]:
     return {"files_received": 1, "total_bytes": 1024}
 
 
-@post("/multipart/medium")
+@post("/multipart/medium", status_code=200)
 async def post_multipart_medium() -> dict[str, int]:
     return {"files_received": 2, "total_bytes": 10240}
 
 
-@post("/multipart/large")
+@post("/multipart/large", status_code=200)
 async def post_multipart_large() -> dict[str, int]:
     return {"files_received": 5, "total_bytes": 102400}
 
 
-@post("/urlencoded/simple")
+@post("/urlencoded/simple", status_code=200)
 async def post_urlencoded_simple(request: Request) -> dict[str, Any]:
     return await _parse_urlencoded(request)
 
 
-@post("/urlencoded/complex")
+@post("/urlencoded/complex", status_code=200)
 async def post_urlencoded_complex(request: Request) -> dict[str, Any]:
     return await _parse_urlencoded(request)
 

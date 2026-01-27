@@ -64,47 +64,47 @@ class VeryLargePayload(Struct):
     images: list[Image]
 
 
-@post("/json/small")
+@post("/json/small", status_code=200)
 async def post_json_small(data: SmallPayload) -> SmallPayload:
     return data
 
 
-@post("/json/medium")
+@post("/json/medium", status_code=200)
 async def post_json_medium(data: MediumPayload) -> MediumPayload:
     return data
 
 
-@post("/json/large")
+@post("/json/large", status_code=200)
 async def post_json_large(data: LargePayload) -> LargePayload:
     return data
 
 
-@post("/json/very-large")
+@post("/json/very-large", status_code=200)
 async def post_json_very_large(data: VeryLargePayload) -> VeryLargePayload:
     return data
 
 
-@post("/multipart/small")
+@post("/multipart/small", status_code=200)
 async def post_multipart_small() -> dict[str, int]:
     return {"files_received": 1, "total_bytes": 1024}
 
 
-@post("/multipart/medium")
+@post("/multipart/medium", status_code=200)
 async def post_multipart_medium() -> dict[str, int]:
     return {"files_received": 2, "total_bytes": 10240}
 
 
-@post("/multipart/large")
+@post("/multipart/large", status_code=200)
 async def post_multipart_large() -> dict[str, int]:
     return {"files_received": 5, "total_bytes": 102400}
 
 
-@post("/urlencoded/simple")
+@post("/urlencoded/simple", status_code=200)
 async def post_urlencoded_simple(request: Request) -> dict[str, Any]:
     return await _parse_urlencoded(request)
 
 
-@post("/urlencoded/complex")
+@post("/urlencoded/complex", status_code=200)
 async def post_urlencoded_complex(request: Request) -> dict[str, Any]:
     return await _parse_urlencoded(request)
 
