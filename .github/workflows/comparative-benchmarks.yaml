@@ -19,7 +19,7 @@ on:
       duration:
         description: 'Duration per workload (seconds)'
         required: false
-        default: '30'
+        default: '10'
         type: string
       concurrency:
         description: 'Concurrent connections'
@@ -87,7 +87,7 @@ jobs:
         with:
           framework: spikard-rust-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-rust-raw:
@@ -104,7 +104,7 @@ jobs:
         with:
           framework: spikard-rust-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-python-validation:
@@ -121,7 +121,7 @@ jobs:
         with:
           framework: spikard-python-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-python-raw:
@@ -138,7 +138,7 @@ jobs:
         with:
           framework: spikard-python-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-node-validation:
@@ -155,7 +155,7 @@ jobs:
         with:
           framework: spikard-node-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-bun-validation:
@@ -172,7 +172,7 @@ jobs:
         with:
           framework: spikard-bun-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-node-raw:
@@ -189,7 +189,7 @@ jobs:
         with:
           framework: spikard-node-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-bun-raw:
@@ -206,7 +206,7 @@ jobs:
         with:
           framework: spikard-bun-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-ruby-validation:
@@ -223,7 +223,7 @@ jobs:
         with:
           framework: spikard-ruby-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-ruby-raw:
@@ -240,7 +240,7 @@ jobs:
         with:
           framework: spikard-ruby-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-wasm-validation:
@@ -257,7 +257,7 @@ jobs:
         with:
           framework: spikard-wasm-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-wasm-raw:
@@ -274,7 +274,7 @@ jobs:
         with:
           framework: spikard-wasm-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-fastapi-uvicorn-validation:
@@ -291,7 +291,7 @@ jobs:
         with:
           framework: fastapi-uvicorn-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-fastapi-granian-validation:
@@ -308,7 +308,7 @@ jobs:
         with:
           framework: fastapi-granian-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-fastapi-uvicorn-raw:
@@ -325,7 +325,7 @@ jobs:
         with:
           framework: fastapi-uvicorn-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-fastapi-granian-raw:
@@ -342,7 +342,7 @@ jobs:
         with:
           framework: fastapi-granian-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-robyn-raw:
@@ -359,7 +359,7 @@ jobs:
         with:
           framework: robyn-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-fastify-validation:
@@ -376,7 +376,7 @@ jobs:
         with:
           framework: fastify-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-fastify-raw:
@@ -393,7 +393,7 @@ jobs:
         with:
           framework: fastify-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-hono-validation:
@@ -410,7 +410,7 @@ jobs:
         with:
           framework: hono-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-elysia-validation:
@@ -427,7 +427,7 @@ jobs:
         with:
           framework: elysia-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-hono-raw:
@@ -444,7 +444,7 @@ jobs:
         with:
           framework: hono-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-express-validation:
@@ -461,7 +461,7 @@ jobs:
         with:
           framework: express-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-express-raw:
@@ -478,7 +478,7 @@ jobs:
         with:
           framework: express-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-morojs-validation:
@@ -495,7 +495,7 @@ jobs:
         with:
           framework: morojs-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-morojs-raw:
@@ -512,7 +512,7 @@ jobs:
         with:
           framework: morojs-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-kito-validation:
@@ -529,7 +529,7 @@ jobs:
         with:
           framework: kito-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-kito-raw:
@@ -546,7 +546,7 @@ jobs:
         with:
           framework: kito-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-hanami-api-validation:
@@ -563,7 +563,7 @@ jobs:
         with:
           framework: hanami-api-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-hanami-api-raw:
@@ -580,7 +580,7 @@ jobs:
         with:
           framework: hanami-api-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-roda-validation:
@@ -597,7 +597,7 @@ jobs:
         with:
           framework: roda-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-roda-raw:
@@ -614,7 +614,7 @@ jobs:
         with:
           framework: roda-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-phalcon-validation:
@@ -631,7 +631,7 @@ jobs:
         with:
           framework: phalcon-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-phalcon-raw:
@@ -648,7 +648,7 @@ jobs:
         with:
           framework: phalcon-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-php-validation:
@@ -665,7 +665,7 @@ jobs:
         with:
           framework: spikard-php-validation
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-spikard-php-raw:
@@ -682,7 +682,7 @@ jobs:
         with:
           framework: spikard-php-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   bench-trongate-raw:
@@ -699,7 +699,7 @@ jobs:
         with:
           framework: trongate-raw
           suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '30' }}
+          duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
   aggregate-results:
