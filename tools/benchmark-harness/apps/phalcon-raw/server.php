@@ -138,8 +138,8 @@ $app->get('/path/simple/{id}', function (string $id): Response {
     return jsonResponse(['id' => $id]);
 });
 
-$app->get('/path/multiple/{user_id}/{post_id}', function (string $userId, string $postId): Response {
-    return jsonResponse(['user_id' => $userId, 'post_id' => $postId]);
+$app->get('/path/multiple/{user_id}/{post_id}', function (string $user_id, string $post_id): Response {
+    return jsonResponse(['user_id' => $user_id, 'post_id' => $post_id]);
 });
 
 $app->get('/path/deep/{org}/{team}/{project}/{resource}/{id}', function (

@@ -74,7 +74,7 @@ jobs:
           if-no-files-found: error
 
   # Group 1: Spikard Rust + WASM + PHP (6 frameworks)
-  benchmark-spikard-native:
+  spikard-rust-wasm-php:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -102,7 +102,7 @@ jobs:
           concurrency: ${{ inputs.concurrency || '100' }}
 
   # Group 2: Spikard Python + Ruby (4 frameworks)
-  benchmark-spikard-dynamic:
+  spikard-python-ruby:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -127,8 +127,8 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Group 3: Spikard Node/Bun (4 frameworks)
-  benchmark-spikard-js:
+  # Group 3: Spikard Node.js + Bun (4 frameworks)
+  spikard-nodejs-bun:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -153,8 +153,8 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Group 4: FastAPI variants (5 frameworks)
-  benchmark-fastapi:
+  # Group 4: Python FastAPI + Robyn (5 frameworks)
+  python-fastapi-robyn:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -180,8 +180,8 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Group 5: Litestar variants (4 frameworks - NEW)
-  benchmark-litestar:
+  # Group 5: Python Litestar (4 frameworks)
+  python-litestar:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -206,8 +206,8 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Group 6: Node.js frameworks part 1 (6 frameworks)
-  benchmark-nodejs-1:
+  # Group 6: Node.js Fastify + Hono + Express (6 frameworks)
+  nodejs-fastify-hono-express:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -234,8 +234,8 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Group 7: Node.js frameworks part 2 (5 frameworks)
-  benchmark-nodejs-2:
+  # Group 7: Node.js Elysia + MoroJS + Kito (5 frameworks)
+  nodejs-elysia-morojs-kito:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -261,8 +261,8 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # Group 8: Ruby + PHP frameworks (7 frameworks)
-  benchmark-ruby-php:
+  # Group 8: Ruby Hanami + Roda, PHP Phalcon + Trongate (7 frameworks)
+  ruby-php-frameworks:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -296,14 +296,14 @@ jobs:
     if: always()
     needs:
       - build-harness
-      - benchmark-spikard-native
-      - benchmark-spikard-dynamic
-      - benchmark-spikard-js
-      - benchmark-fastapi
-      - benchmark-litestar
-      - benchmark-nodejs-1
-      - benchmark-nodejs-2
-      - benchmark-ruby-php
+      - spikard-rust-wasm-php
+      - spikard-python-ruby
+      - spikard-nodejs-bun
+      - python-fastapi-robyn
+      - python-litestar
+      - nodejs-fastify-hono-express
+      - nodejs-elysia-morojs-kito
+      - ruby-php-frameworks
     permissions:
       contents: read
     steps:
