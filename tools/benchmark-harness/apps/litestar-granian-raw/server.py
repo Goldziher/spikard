@@ -159,4 +159,5 @@ if __name__ == "__main__":
         interface=Interfaces.ASGI,
         workers=1,
         log_level="error",
+        http1_buffer_size=16 * 1024 * 1024,
     ).serve()

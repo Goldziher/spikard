@@ -425,6 +425,24 @@ impl From<OhaOutput> for LatencyMetrics {
 
         let to_ms = |opt: Option<f64>| opt.map_or(0.0, |secs| secs * 1000.0);
 
+        let p25_ms = to_ms(p.p25);
+        let p75_ms = to_ms(p.p75);
+        let min_ms = to_ms(s.fastest);
+        let max_ms = to_ms(s.slowest);
+
+        // Estimate stddev from available percentile data.
+        // IQR method: for a normal distribution, IQR ≈ 1.35σ
+        let iqr = p75_ms - p25_ms;
+        let sigma_iqr = if iqr > 0.0 { iqr / 1.35 } else { 0.0 };
+        // Range method: range ≈ 6σ (covers ±3σ)
+        let range = max_ms - min_ms;
+        let sigma_range = if range > 0.0 { range / 6.0 } else { 0.0 };
+        let stddev_ms = if sigma_iqr > 0.0 && sigma_range > 0.0 {
+            (sigma_iqr + sigma_range) / 2.0
+        } else {
+            sigma_iqr.max(sigma_range)
+        };
+
         Self {
             mean_ms: to_ms(s.average),
             p50_ms: to_ms(p.p50),
@@ -432,9 +450,9 @@ impl From<OhaOutput> for LatencyMetrics {
             p95_ms: to_ms(p.p95),
             p99_ms: to_ms(p.p99),
             p999_ms: to_ms(p.p99_9),
-            max_ms: to_ms(s.slowest),
-            min_ms: to_ms(s.fastest),
-            stddev_ms: 0.0,
+            max_ms,
+            min_ms,
+            stddev_ms,
         }
     }
 }

@@ -455,6 +455,19 @@ impl ProfileRunner {
         })
     }
 
+    /// Resolve the actual application PID for resource monitoring.
+    /// Wrapper processes (uv, npm, bundle, etc.) are skipped in favour of the real runtime.
+    fn resolve_target_pid(&self, server: &ServerHandle) -> u32 {
+        match self.detect_language().as_str() {
+            "python" => find_descendant_pid_by_name(server.pid(), "python", 10).unwrap_or(server.pid()),
+            "node" => find_descendant_pid_by_name(server.pid(), "node", 10).unwrap_or(server.pid()),
+            "ruby" => find_descendant_pid_by_name(server.pid(), "ruby", 10).unwrap_or(server.pid()),
+            "php" => find_descendant_pid_by_name(server.pid(), "php", 10).unwrap_or(server.pid()),
+            "wasm" => find_descendant_pid_by_name(server.pid(), "deno", 10).unwrap_or(server.pid()),
+            _ => server.pid(),
+        }
+    }
+
     fn python_target_pid(&self, server: &ServerHandle) -> u32 {
         // The server is frequently started via a wrapper (e.g. `uv`), so we find the actual
         // Python child process when possible.
@@ -523,7 +536,8 @@ impl ProfileRunner {
     ) -> Result<WorkloadResult> {
         let fixture = self.create_fixture_from_workload(workload_def)?;
 
-        let monitor = ResourceMonitor::new(server.pid());
+        let monitor_pid = self.resolve_target_pid(&server);
+        let monitor = ResourceMonitor::new(monitor_pid);
         let monitor_handle = monitor.start_monitoring(100);
 
         if self.config.warmup_secs > 0 {

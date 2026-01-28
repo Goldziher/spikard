@@ -636,18 +636,20 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 			bodyBytes = new Uint8Array(response.body);
 		} else if (response.body == null) {
 			bodyBytes = null;
-		} else {
+		} else if (typeof response.body === "object") {
 			const record = response.body as Record<string, unknown>;
 			if ("0" in record) {
 				const values = Object.values(record);
 				if (values.length > 0 && values.every((value) => typeof value === "number")) {
 					bodyBytes = Uint8Array.from(values as number[]);
 				} else {
-					bodyBytes = new Uint8Array(0);
+					bodyBytes = new TextEncoder().encode(JSON.stringify(response.body));
 				}
 			} else {
-				bodyBytes = new Uint8Array(0);
+				bodyBytes = new TextEncoder().encode(JSON.stringify(response.body));
 			}
+		} else {
+			bodyBytes = new TextEncoder().encode(String(response.body));
 		}
 
 		return new Response(bodyBytes, {

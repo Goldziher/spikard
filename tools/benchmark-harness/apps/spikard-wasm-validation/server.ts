@@ -838,10 +838,10 @@ Deno.serve({ port }, async (req: Request): Promise<Response> => {
 				if (values.length > 0 && values.every((value) => typeof value === "number")) {
 					bodyBytes = Uint8Array.from(values as number[]);
 				} else {
-					bodyBytes = new Uint8Array(0);
+					bodyBytes = new TextEncoder().encode(JSON.stringify(response.body));
 				}
 			} else {
-				bodyBytes = new Uint8Array(0);
+				bodyBytes = new TextEncoder().encode(JSON.stringify(response.body));
 			}
 		}
 

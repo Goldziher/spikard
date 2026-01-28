@@ -187,3 +187,5 @@ e2e/php/var/
 .codex/skills/binding-crate-architecture-patterns/SKILL.md
 .codex/skills/git-standards/SKILL.md
 .codex/skills/fixture-schema-validation/SKILL.md
+.benchmark_results/
+.comparative_benchmark_results/
