@@ -145,7 +145,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
+          python-version: "3.14"
           cache-prefix: grpc-server
 
       - name: Setup Composer Cache
@@ -264,7 +264,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
+          python-version: "3.14"
           cache-prefix: grpc-server
 
       - name: Install LLVM/Clang (for ext-php-rs bindgen)
