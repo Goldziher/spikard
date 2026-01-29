@@ -62,18 +62,6 @@ agents:
       - ../../../crates/spikard-php/src/
       - ../../../crates/spikard-php/src/handler.rs
 
-  - name: binding-implementer-wasm
-    description: |
-      Implements WebAssembly (wasm-bindgen) Handler binding. Direct Rust implementation exposed to
-      JavaScript via wasm-bindgen. Manages JsValue conversion to RequestData, Promise handling for
-      async operations, and response serialization. Owns /crates/spikard-wasm/ WASM binding.
-    model: sonnet
-    context:
-      - HANDLER-ABSTRACTION.md
-      - ../../../crates/spikard-wasm/src/
-      - ../../../crates/spikard-wasm/src/handler.rs
-      - ../../../crates/spikard-wasm/tests/
-
   - name: di-handler-engineer
     description: |
       Implements DependencyInjectingHandler wrapper. Manages request-scoped dependency resolution

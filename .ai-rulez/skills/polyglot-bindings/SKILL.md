@@ -26,7 +26,6 @@ Each binding crate (Python, TypeScript, Ruby, PHP, Go, Java, C#) follows:
 - **html-to-markdown-node**: NAPI-RS bindings → packages/typescript npm package
 - **html-to-markdown-rb**: Magnus bindings → packages/ruby gem (Ruby 3.2+)
 - **html-to-markdown-php**: ext-php-rs extension → packages/php Composer package
-- **html-to-markdown-wasm**: wasm-bindgen → browser + Wasmtime targets
 - **html-to-markdown-ffi**: C-compatible FFI library → Go, Java, C# consumers
 - **html-to-markdown-cli**: Standalone CLI using core library
 

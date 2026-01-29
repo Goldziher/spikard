@@ -29,7 +29,6 @@ html-to-markdown-py        # PyO3 → Python
 html-to-markdown-node      # NAPI-RS → Node.js/TypeScript
 html-to-markdown-rb        # Magnus → Ruby
 html-to-markdown-php       # ext-php-rs → PHP
-html-to-markdown-wasm      # wasm-bindgen → WebAssembly
 html-to-markdown-ffi       # C FFI → Go, Java, C#
 ```
 
@@ -375,35 +374,6 @@ pub unsafe extern "C" fn htm2md_converter_free(handle: HtmlConverterHandle) {
 pub unsafe extern "C" fn htm2md_free_string(ptr: *mut c_char) {
     if !ptr.is_null() {
         let _ = CString::from_raw(ptr);
-    }
-}
-```
-
-## wasm-bindgen Pattern (WebAssembly)
-
-**lib.rs pattern**:
-
-```rust
-use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-pub struct HtmlConverter {
-    inner: html_to_markdown::HtmlConverter,
-}
-
-#[wasm_bindgen]
-impl HtmlConverter {
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> HtmlConverter {
-        HtmlConverter {
-            inner: html_to_markdown::HtmlConverter::new(),
-        }
-    }
-
-    #[wasm_bindgen]
-    pub fn convert(&self, html: &str) -> Result<String, JsValue> {
-        self.inner.convert(html)
-            .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
 ```

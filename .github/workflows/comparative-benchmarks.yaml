@@ -96,30 +96,6 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # WASM frameworks
-  wasm:
-    name: "Benchmark: ${{ matrix.framework }}"
-    needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        framework:
-          - spin
-          - hono-wasm
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ./.github/actions/setup-benchmark-tools
-      - uses: ./.github/actions/benchmark-framework
-        with:
-          framework: ${{ matrix.framework }}
-          suite: ${{ inputs.suite || 'all' }}
-          duration: ${{ inputs.duration || '10' }}
-          concurrency: ${{ inputs.concurrency || '100' }}
-
   # Python frameworks
   python:
     name: "Benchmark: ${{ matrix.framework }}"
@@ -260,7 +236,6 @@ jobs:
     needs:
       - build-harness
       - spikard-core
-      - wasm
       - python
       - bun
       - nodejs

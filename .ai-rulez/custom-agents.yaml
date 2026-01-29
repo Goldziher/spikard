@@ -66,12 +66,12 @@ agents:
   - name: rust-polyglot-architect
     model: sonnet
     description: |
-      Designs Rust-first APIs for spikard-http and keeps Python, Node, Ruby, PHP,
-      and WASM bindings aligned with shared memory-safety and error contracts.
-      Responsible for Handler trait abstraction, FFI boundaries, and cross-language
-      error handling semantics. Ensures thin binding pattern architecture where
-      all business logic, validation, and middleware live in Rust with language
-      bindings providing only idiomatic type translation.
+      Designs Rust-first APIs for spikard-http and keeps Python, Node, Ruby, and PHP
+      bindings aligned with shared memory-safety and error contracts. Responsible for
+      Handler trait abstraction, FFI boundaries, and cross-language error handling
+      semantics. Ensures thin binding pattern architecture where all business logic,
+      validation, and middleware live in Rust with language bindings providing only
+      idiomatic type translation.
 
       Handles: Handler trait design, FFI boundary contracts, error serialization
       across languages, thin binding pattern enforcement, cross-language testing strategy.
@@ -166,24 +166,6 @@ agents:
       - ServerConfig configuration API
       - PHPStan level 9 static analysis
       - packages/php PSR-4 autoloading
-
-  - name: wasm-engineer
-    model: haiku
-    description: |
-      Maintains WebAssembly bindings via wasm-bindgen for browser and server-side
-      WASM runtimes of spikard HTTP. Optimizes WASM binary size, manages wasm-pack
-      bundling, and ensures JavaScript/TypeScript interop with proper type safety.
-      Coordinates async handler patterns compatible with JavaScript Promise chains.
-
-      Handles: wasm-bindgen HTTP binding implementation, WASM binary optimization,
-      wasm-pack bundling, JavaScript/TypeScript interop, async Promise patterns.
-
-    scope:
-      - crates/spikard-wasm HTTP binding implementation
-      - WASM binary size optimization
-      - wasm-pack bundling configuration
-      - JavaScript/TypeScript interop
-      - async Promise-based handler callbacks
 
   # =========================================================================
   # QUALITY ASSURANCE & TESTING
@@ -294,11 +276,11 @@ agents:
   - name: interop-build-engineer
     model: haiku
     description: |
-      Ensures binding build scripts for PyO3, napi-rs, magnus/rb-sys, ext-php-rs,
-      and wasm-pack stay in sync and optimized. Manages Cargo.toml manifest
-      coordination and ensures pyproject.toml, package.json, Gemfile, and
-      composer.json stay aligned. Handles maturin configuration, build feature gates,
-      and cross-language dependency synchronization.
+      Ensures binding build scripts for PyO3, napi-rs, magnus/rb-sys, and ext-php-rs
+      stay in sync and optimized. Manages Cargo.toml manifest coordination and ensures
+      pyproject.toml, package.json, Gemfile, and composer.json stay aligned. Handles
+      maturin configuration, build feature gates, and cross-language dependency
+      synchronization.
 
       Handles: Build manifest coordination, maturin configuration,
       feature flag management, dependency version synchronization.
@@ -308,7 +290,6 @@ agents:
       - crates/spikard-node package.json and Cargo.toml
       - crates/spikard-rb Gemfile and Cargo.toml
       - crates/spikard-php composer.json and Cargo.toml
-      - crates/spikard-wasm package.json and Cargo.toml
       - Dependency version synchronization
 
 # =============================================================================
@@ -320,7 +301,7 @@ agents:
 #   - Middleware design must follow thin binding pattern
 #   - ServerConfig must be serializable across FFI boundaries
 #
-# rust-polyglot-architect ↔ {python,typescript,ruby,php,wasm}-engineer
+# rust-polyglot-architect ↔ {python,typescript,ruby,php}-engineer
 #   - Handler trait design drives binding implementation
 #   - Error serialization contracts must be honored
 #   - Type mapping conventions established upfront

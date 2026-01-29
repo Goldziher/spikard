@@ -15,7 +15,6 @@ Core Spikard implementations across different language bindings.
 | `spikard-node` | TypeScript | Node 20+ | Zod | napi-rs bindings with optional Zod validation |
 | `spikard-ruby` | Ruby | Ruby 3.2-4.x | RBS | magnus bindings with RBS type definitions |
 | `spikard-php` | PHP | PHP 8.2+ | Native types | ext-php-rs bindings with typed properties |
-| `spikard-wasm` | JavaScript | WASM runtime | None | WebAssembly bindings via wasm-bindgen |
 
 ### Python Ecosystem
 

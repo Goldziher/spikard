@@ -150,36 +150,6 @@
 			"run_count": 112,
 			"runtime": "rustc 1.92.0 (ded5c06cf 2025-12-08)"
 		},
-		{
-			"avg_latency_ms": 10.616111549032022,
-			"avg_requests_per_sec": 9138.748701960545,
-			"categories": {
-				"forms": {
-					"avg_latency_ms": 19.73257350259975,
-					"avg_requests_per_sec": 5049.18171218074
-				},
-				"json-bodies": {
-					"avg_latency_ms": 13.800643990212828,
-					"avg_requests_per_sec": 6463.38912652826
-				},
-				"multipart": {
-					"avg_latency_ms": 16.694624892506997,
-					"avg_requests_per_sec": 7254.512652083558
-				},
-				"path-params": {
-					"avg_latency_ms": 5.760036243771539,
-					"avg_requests_per_sec": 16303.785641880455
-				},
-				"query-params": {
-					"avg_latency_ms": 12.037653190808273,
-					"avg_requests_per_sec": 7477.800171297298
-				}
-			},
-			"language": "wasm",
-			"name": "spikard-wasm",
-			"run_count": 112,
-			"runtime": "deno 2.6.1 (stable, release, x86_64-unknown-linux-gnu)"
-		}
 	],
 	"generated_at": "2025-12-21T06:32:28.942639+00:00",
 	"input_count": 898,

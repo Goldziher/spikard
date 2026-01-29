@@ -160,7 +160,7 @@ def update_readme_versions(path: Path, version: str) -> bool:
     Updates:
     - Cargo.toml dependency strings: spikard = "0.x.y"
     - Test app version references: v0.x.y
-    - npm package version strings: @spikard/wasm@0.x.y
+    - npm package version strings: @spikard/node@0.x.y
     """
     if not path.exists():
         return False
@@ -178,8 +178,8 @@ def update_readme_versions(path: Path, version: str) -> bool:
     version_ref_pattern = re.compile(r"\bv([0-9]+\.[0-9]+\.[0-9]+)\b")
     content = version_ref_pattern.sub(rf"v{version}", content)
 
-    # Pattern 3: npm package versions (@spikard/wasm@0.x.y)
-    npm_package_pattern = re.compile(r"(@spikard/[a-z-]+@)([0-9]+\.[0-9]+\.[0-9]+)")
+    # Pattern 3: npm package versions (@spikard/node@0.x.y)
+    npm_package_pattern = re.compile(r"(@spikard/node@)([0-9]+\.[0-9]+\.[0-9]+)")
     content = npm_package_pattern.sub(rf"\g<1>{version}", content)
 
     # Pattern 4: Migration note references (As of v0.x.y)

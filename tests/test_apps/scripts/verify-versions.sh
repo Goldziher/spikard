@@ -20,16 +20,6 @@ else
 	ERRORS=$((ERRORS + 1))
 fi
 
-# WASM
-echo "Checking WASM test app..."
-WASM_VERSION=$(jq -r '.dependencies["@spikard/wasm"]' tests/test_apps/wasm/package.json)
-if [ "$WASM_VERSION" = "$EXPECTED_VERSION" ]; then
-	echo "✅ WASM: $WASM_VERSION"
-else
-	echo "❌ WASM: Expected $EXPECTED_VERSION, got $WASM_VERSION"
-	ERRORS=$((ERRORS + 1))
-fi
-
 # Ruby
 echo "Checking Ruby test app..."
 RUBY_VERSION=$(grep "gem 'spikard'" tests/test_apps/ruby/Gemfile | grep -o "'[0-9.]*'" | tr -d "'")

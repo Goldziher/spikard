@@ -4,7 +4,7 @@
 
 ## Context
 
-Spikard's gRPC runtime is implemented in Rust (`spikard-http`) using Tonic and needs to be exposed to five languages (Python, TypeScript/Node.js, Ruby, PHP, WASM) through FFI bindings. The challenge is bridging:
+Spikard's gRPC runtime is implemented in Rust (`spikard-http`) using Tonic and needs to be exposed to four languages (Python, TypeScript/Node.js, Ruby, PHP) through FFI bindings. The challenge is bridging:
 
 1. **Binary protocol** - Protobuf messages as raw bytes across FFI boundary
 2. **Async execution** - gRPC uses async I/O, but some language runtimes (Ruby, PHP) are blocking
@@ -12,7 +12,7 @@ Spikard's gRPC runtime is implemented in Rust (`spikard-http`) using Tonic and n
 4. **Metadata handling** - gRPC headers/trailers as key-value pairs
 5. **Error mapping** - 17 gRPC status codes → language-native exceptions
 
-Each language has different FFI mechanisms (PyO3, napi-rs, Magnus, ext-php-rs, wasm-bindgen) with varying capabilities and limitations.
+Each language has different FFI mechanisms (PyO3, napi-rs, Magnus, ext-php-rs) with varying capabilities and limitations.
 
 ## Decision
 
@@ -29,8 +29,7 @@ crates/
 ├── spikard-py/src/grpc/        # Python (PyO3)
 ├── spikard-node/src/grpc/      # Node.js (napi-rs)
 ├── spikard-rb/src/grpc/        # Ruby (Magnus)
-├── spikard-php/src/grpc/       # PHP (ext-php-rs)
-└── spikard-wasm/src/grpc/      # WASM (wasm-bindgen)
+└── spikard-php/src/grpc/       # PHP (ext-php-rs)
 ```
 
 ### Core Principles
@@ -161,7 +160,6 @@ impl RubyGrpcRequest {
 - napi-rs: AsyncIterator support in Node.js
 - Magnus: Ruby Enumerator for lazy iteration
 - ext-php-rs: PHP Generator objects
-- wasm-bindgen: JavaScript AsyncIterator
 
 ### Error Handling Strategy
 
@@ -231,11 +229,6 @@ end
 - String handling: `ZendStr` wrapper
 - Object lifecycle tied to PHP GC
 
-**WASM (wasm-bindgen)**:
-- Ownership model: Rust owns data, JS gets references
-- `Uint8Array` for binary data
-- No garbage collection conflicts (Rust heap vs JS heap)
-
 ## Consequences
 
 **Benefits**:
@@ -275,7 +268,6 @@ end
 - Node.js bindings: `crates/spikard-node/src/grpc/`
 - Ruby bindings: `crates/spikard-rb/src/grpc/`
 - PHP bindings: `crates/spikard-php/src/grpc/`
-- WASM bindings: `crates/spikard-wasm/src/grpc/`
 - Runtime core: `crates/spikard-http/src/grpc/`
 - Python tests: `tests/test_grpc_python.py` (103 tests)
 - Ruby tests: `packages/ruby/spec/grpc_spec.rb` (144 tests)

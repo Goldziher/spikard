@@ -16,11 +16,6 @@ cd ruby && bundle install && bundle exec rackup
 
 # Rust lifecycle hooks
 cd rust-lifecycle-hooks && cargo run --example lifecycle
-
-# WebAssembly
-cd wasm-rollup && pnpm install && pnpm build
-cd wasm-deno && deno task run
-cd wasm-cloudflare && pnpm install && pnpm run dev
 ```
 
 ## Available Examples
@@ -38,9 +33,6 @@ cd wasm-cloudflare && pnpm install && pnpm run dev
 | **rust-lifecycle-hooks/** | Lifecycle demo | Rust |
 | **asyncapi/** | WebSocket/SSE | AsyncAPI |
 | **di/** | Dependency injection | Multiple |
-| **wasm-rollup/** | WASM + Rollup | WebAssembly |
-| **wasm-deno/** | WASM + Deno | WebAssembly |
-| **wasm-cloudflare/** | WASM edge | Cloudflare Workers |
 
 ## Schemas
 
@@ -76,14 +68,13 @@ Tests validate against fixtures in `testing_data/`:
 - **Node.js** (napi-rs, TypeScript, strict mode)
 - **Ruby** (magnus, RBS types, Steep)
 - **PHP** (ext-php-rs, PSR-4, PSR-12)
-- **WebAssembly** (wasm-bindgen)
 - **Rust** (Tokio, Tower-HTTP)
 
 ## Architecture
 
 - **Schemas** (`schemas/`) - OpenAPI & AsyncAPI specifications
 - **Rust core** - Business logic, validation, middleware
-- **Language bindings** - Thin adapters over Rust (PyO3, napi-rs, magnus, ext-php-rs, wasm-bindgen)
+- **Language bindings** - Thin adapters over Rust (PyO3, napi-rs, magnus, ext-php-rs)
 - **Fixtures** (`testing_data/`) - Shared test data across all platforms
 - **Lifecycle hooks** - onRequest, preValidation, preHandler, onResponse, onError
 

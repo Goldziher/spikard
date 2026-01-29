@@ -5,7 +5,7 @@
 
 ## Context
 
-Spikard's bindings cross FFI boundaries into Python, Node.js, Ruby, PHP, and WebAssembly. Rust panics that cross these boundaries cause undefined behavior, process crashes, or memory corruption in the host language runtime. Panic shielding is critical to maintain stability and convert fatal errors into structured, serializable error payloads that all languages understand.
+Spikard's bindings cross FFI boundaries into Python, Node.js, Ruby, and PHP. Rust panics that cross these boundaries cause undefined behavior, process crashes, or memory corruption in the host language runtime. Panic shielding is critical to maintain stability and convert fatal errors into structured, serializable error payloads that all languages understand.
 
 The challenge is twofold:
 1. **Catch panics before they escape**: All Rust code exposed to FFI must wrap panics using `std::panic::catch_unwind`.
@@ -113,24 +113,6 @@ match result {
 }
 ```
 
-#### WebAssembly (`crates/spikard-wasm`)
-
-wasm-bindgen exports wrap panics and convert to JavaScript errors:
-
-```rust
-use spikard_core::errors::shield_panic;
-
-#[wasm_bindgen]
-pub async fn handle_request(req: JsValue) -> Result<JsValue, JsValue> {
-    shield_panic(|| {
-        // Handler logic
-    })
-    .map_err(|err| {
-        let error_json = serde_json::to_string(&err).unwrap_or_default();
-        JsValue::from_str(&error_json)
-    })
-}
-```
 
 ### Panic Handling in HTTP Handlers
 
@@ -189,7 +171,6 @@ This matches the RFC 9457-compatible `ProblemDetails` struct and aligns with `te
 - [x] Node binding panic handling in `crates/spikard-node/src/handler.rs`
 - [x] Ruby binding panic handling in `crates/spikard-rb/src/handler.rs`
 - [x] PHP binding panic handling in `crates/spikard-php/src/php/handler.rs`
-- [x] WASM binding panic handling in `crates/spikard-wasm/src/lib.rs`
 - [x] HTTP server panic handling in `crates/spikard-http/src/server/handler.rs`
 - [x] Panic fixtures in `testing_data/panic_handling`
 - [ ] Panic scenarios in `packages/python/tests/test_all_fixtures.py`
@@ -202,7 +183,6 @@ This matches the RFC 9457-compatible `ProblemDetails` struct and aligns with `te
 - **Node binding**: `crates/spikard-node/src/handler.rs`
 - **Ruby binding**: `crates/spikard-rb/src/handler.rs`
 - **PHP binding**: `crates/spikard-php/src/php/handler.rs`
-- **WASM binding**: `crates/spikard-wasm/src/lib.rs`
 - **HTTP runtime**: `crates/spikard-http/src/server/handler.rs`
 - **Error format**: `testing_data/validation_errors/schema.json`
 - **Related ADRs**: [ADR 0001](0001-architecture-and-principles.md) (Architecture), [ADR 0005](0005-lifecycle-hooks.md) (Lifecycle Hooks)

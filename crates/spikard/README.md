@@ -29,7 +29,7 @@ High-performance HTTP framework built on Axum and Tower-HTTP with type-safe rout
 - **Testing utilities** with in-memory test server
 - **File upload** handling with multipart form support
 - **Streaming responses** with native async/await
-- **Multi-language bindings** (Python, Node.js, Ruby, PHP, WebAssembly)
+- **Multi-language bindings** (Python, Node.js, Ruby, PHP)
 
 ## Installation
 
@@ -460,11 +460,6 @@ composer require spikard/spikard
 ```
 See [spikard-php](../spikard-php/README.md) for details.
 
-### WebAssembly
-```bash
-npm install spikard-wasm
-```
-See [spikard-wasm](../spikard-wasm/README.md) for details.
 
 ## Documentation
 
@@ -496,7 +491,6 @@ Latest comparative run (2025-12-20, commit `25e4fdf`, Linux x86_64, AMD EPYC 776
 | spikard-node | 24,283 | 2.22 |
 | spikard-php | 20,176 | 2.66 |
 | spikard-python | 11,902 | 4.41 |
-| spikard-wasm | 10,658 | 5.70 |
 | spikard-ruby | 8,271 | 6.50 |
 
 Spikard Rust is the fastest binding, delivering native performance as the reference implementation. All workloads include JSON, query/path params, forms, and multipart requests.

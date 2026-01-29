@@ -234,20 +234,6 @@ try {
 }
 ```
 
-### WebAssembly (wasm-bindgen)
-
-Errors are converted to JavaScript Error objects:
-
-```javascript
-try {
-    await wasmModule.someOperation();
-} catch (error) {
-    const payload = JSON.parse(error.message);
-    console.log(payload.code);   // e.g., 'validation_error'
-    console.log(payload.error);  // e.g., 'Invalid email'
-}
-```
-
 ## HTTP Response Examples
 
 ### 400 Bad Request

@@ -39,12 +39,11 @@ All 14 original agents categorized and documented:
 - **workspace-architect** (sonnet) - crate layering and FFI isolation
 - **rust-polyglot-architect** (sonnet) - Handler trait and FFI boundaries
 
-#### Language-Specific HTTP Binding Engineers (5 agents)
+#### Language-Specific HTTP Binding Engineers (4 agents)
 - **python-engineer** (haiku) - PyO3 HTTP bindings specifics (crates/spikard-py)
 - **typescript-engineer** (haiku) - napi-rs HTTP bindings specifics
 - **ruby-engineer** (haiku) - magnus/rb-sys HTTP bindings specifics
 - **php-engineer** (haiku) - ext-php-rs HTTP bindings specifics
-- **wasm-engineer** (haiku) - wasm-bindgen HTTP bindings specifics
 
 #### Quality Assurance & Testing (2 agents)
 - **fixture-tester** (haiku) - testing_data/ fixture evolution and schemas
@@ -69,7 +68,7 @@ All 14 original agents categorized and documented:
 - middleware-architect: Tower-HTTP specific, not in shared ai-rulez
 - rust-polyglot-architect: Spikard's Handler trait design (vs. generic polyglot)
 - workspace-architect: Spikard's specific crate layering (vs. generic workspace)
-- {python,typescript,ruby,php,wasm}-engineer: HTTP-specific implementations (vs. generic bindings)
+- {python,typescript,ruby,php}-engineer: HTTP-specific implementations (vs. generic bindings)
 - fixture-tester, integration-qa: Spikard's fixture-first testing approach
 - docs-strategist, docs-scribe: Spikard-specific documentation patterns
 - build-and-ci-ops, interop-build-engineer: Spikard's multi-language orchestration
@@ -162,9 +161,9 @@ spikard-web-framework
   - code-reviewer
   - docs-writer / api-doc-writer / tutorial-writer
 
-- **Custom Agents** (14 from custom-agents.yaml)
+- **Custom Agents** (13 from custom-agents.yaml)
   - middleware-architect, workspace-architect, rust-polyglot-architect
-  - python-engineer, typescript-engineer, ruby-engineer, php-engineer, wasm-engineer
+  - python-engineer, typescript-engineer, ruby-engineer, php-engineer
   - fixture-tester, integration-qa
   - docs-strategist, docs-scribe
   - build-and-ci-ops, interop-build-engineer
@@ -414,14 +413,14 @@ profiles:
 
 ### Created Files
 
-1. `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/custom-agents.yaml` (14 agents)
+1. `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/custom-agents.yaml` (13 agents)
 2. `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/custom-rules.yaml` (30 rules)
 3. `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/custom-profiles.yaml` (1 profile)
 4. `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/MIGRATION_SUMMARY.md` (this file)
 
 ### Preserved Files
 
-- `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/agents/*.md` (14 original files)
+- `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/agents/*.md` (13 original files)
 - `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/rules/*.md` (30 original files)
 - `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/config.yaml` (existing config)
 - `/Users/naamanhirschfeld/workspace/spikard/.ai-rulez/mcp.yaml` (existing MCP config)
@@ -459,7 +458,7 @@ profiles:
 ---
 
 **Migration Completed**: 2025-12-29
-**Total Agents Migrated**: 14
+**Total Agents Migrated**: 13
 **Total Rules Migrated**: 30
 **Profiles Created**: 1
 **Schema Version**: ai-rules-v3

@@ -20,11 +20,9 @@
 | hono-validation | 10,615 | 8.29 | 13.64 | 0.0 | 96.2 |
 | spikard-ruby-raw | 10,325 | 9.66 | 14.18 | 46.1 | 92.1 |
 | fastify-validation | 10,299 | 8.54 | 20.90 | 0.0 | 96.2 |
-| spikard-wasm-validation | 10,267 | 16.82 | 20.47 | 46.4 | 203.1 |
 | express-raw | 10,136 | 9.39 | 17.55 | 0.0 | 96.3 |
 | kito-validation | 9,644 | 11.70 | 23.72 | 0.0 | 96.2 |
 | litestar-uvicorn-validation | 9,432 | 10.31 | 20.38 | 0.0 | 53.4 |
-| spikard-wasm-raw | 9,323 | 18.08 | 24.61 | 47.0 | 197.3 |
 | litestar-granian-validation | 9,289 | 11.37 | 14.00 | 0.0 | 51.3 |
 | litestar-uvicorn-raw | 9,227 | 10.75 | 20.87 | 0.0 | 53.2 |
 | litestar-granian-raw | 9,042 | 11.59 | 14.31 | 0.0 | 52.7 |

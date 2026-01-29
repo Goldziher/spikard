@@ -18,7 +18,6 @@ html-to-markdown/
 │   ├── html-to-markdown-node/      # NAPI-RS bindings for Node.js
 │   ├── html-to-markdown-rb/        # Magnus bindings for Ruby
 │   ├── html-to-markdown-php/       # ext-php-rs extension for PHP
-│   ├── html-to-markdown-wasm/      # wasm-bindgen for WebAssembly
 │   ├── html-to-markdown-ffi/       # C FFI library (Go, Java, C# wrapper)
 │   ├── html-to-markdown-cli/       # Standalone CLI binary
 │   └── Cargo.toml                  # Workspace manifest
@@ -66,7 +65,6 @@ html-to-markdown/
 │   ├── ci-rust.yaml                # Rust unit + coverage
 │   ├── ci-python.yaml              # Python binding + CLI build/tests
 │   ├── ci-node.yaml                # Node/TypeScript bindings + tests
-│   ├── ci-wasm.yaml                # WASM builds and Wasmtime tests
 │   ├── ci-ruby.yaml                # Ruby bindings
 │   ├── ci-php.yaml                 # PHP bindings
 │   ├── ci-go.yaml                  # Go linting (golangci-lint)

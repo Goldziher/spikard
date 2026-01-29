@@ -4,7 +4,7 @@ Spikard splits concerns between a Rust core and language-specific bindings so te
 
 ## Layers
 - **Rust core (`crates/spikard`)** – routing, middleware, request parsing, streaming, and error handling.
-- **Binding crates (`crates/spikard-py`, `crates/spikard-node`, `crates/spikard-rb`, `crates/spikard-wasm`)** – expose idiomatic APIs per language while delegating execution to the Rust runtime.
+- **Binding crates (`crates/spikard-py`, `crates/spikard-node`, `crates/spikard-rb`, `crates/spikard-php`)** – expose idiomatic APIs per language while delegating execution to the Rust runtime.
 - **CLI (`crates/spikard-cli`)** – entrypoint that boots the HTTP server, loads binding code, and orchestrates code generation.
 - **Codegen (`crates/spikard-codegen`, `tools/test-generator`)** – generates DTOs/handlers and fixture-driven tests from OpenAPI/AsyncAPI contracts.
 

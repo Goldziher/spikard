@@ -31,7 +31,6 @@ python-support = ["pyo3", "pyo3-async-runtimes"]
 node-support = ["napi", "napi-derive"]
 ruby-support = ["magnus"]
 php-support = ["ext-php-rs"]
-wasm-support = ["wasm-bindgen"]
 
 [dependencies.pyo3]
 version = "0.27"
@@ -59,10 +58,6 @@ optional = true
 
 [dependencies.ext-php-rs]
 version = "0.15"
-optional = true
-
-[dependencies.wasm-bindgen]
-version = "0.2"
 optional = true
 
 [dev-dependencies]

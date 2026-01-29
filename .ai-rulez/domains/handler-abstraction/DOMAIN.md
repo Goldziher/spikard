@@ -4,7 +4,7 @@ priority: high
 
 # Handler Abstraction Domain
 
-**Unified handler trait across languages (Rust, Python, Node.js, Ruby, PHP, WebAssembly)**
+**Unified handler trait across languages (Rust, Python, Node.js, Ruby, PHP)**
 
 ## Overview
 
@@ -89,7 +89,6 @@ Each language binding implements Handler by:
    - Node.js: `napi-rs` with libuv event loop
    - Ruby: `magnus` with background threads
    - PHP: `ext-php-rs` with async-php support
-   - WASM: Native JS Promise support
 
 ### Implementation Patterns by Language
 
@@ -158,26 +157,6 @@ class Handler {
 - Synchronous execution model with thread pool
 - `ext-php-rs` for Rust extension
 - Type declarations via phpstan
-
-#### WebAssembly (wasm-bindgen)
-
-Located in `/crates/spikard-wasm/`:
-
-```rust
-#[wasm_bindgen]
-pub struct WasmHandler { /* ... */ }
-
-#[wasm_bindgen]
-impl WasmHandler {
-    pub async fn handle(&self, request_data: JsValue) -> Result<JsValue, JsValue> {
-        // Process request
-    }
-}
-```
-
-- Direct Rust implementation (no language crossing)
-- Uses `wasm-bindgen` for JS interop
-- Native Promise support
 
 ## DI (Dependency Injection) Handler
 
@@ -287,6 +266,6 @@ Converts to HTTP status codes:
 
 - **HTTP Framework**: Handler receives RequestData, returns HandlerResponse
 - **Code Generation**: OpenAPI/GraphQL/AsyncAPI generators produce Handler implementations
-- **Language Bindings**: Python/Node/Ruby/PHP/WASM all implement Handler trait
+- **Language Bindings**: Python/Node/Ruby/PHP all implement Handler trait
 - **Middleware**: Lifecycle hooks integrate Handler execution
 - **Testing**: Fixture tests validate Handler behavior across all languages

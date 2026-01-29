@@ -11,6 +11,5 @@ pub mod python;
 pub mod ruby;
 pub mod runner;
 pub mod rust;
-pub mod wasm;
 
 pub use runner::{ProfileRunner, ProfileRunnerConfig};

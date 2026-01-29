@@ -4,7 +4,7 @@ priority: high
 
 # Thin Binding Pattern Architecture
 
-All language bindings (Python/PyO3, Node/napi-rs, Ruby/Magnus, PHP/ext-php-rs, WASM/wasm-bindgen)
+All language bindings (Python/PyO3, Node/napi-rs, Ruby/Magnus, PHP/ext-php-rs)
 must follow the "thin binding" pattern: expose only language-idiomatic APIs over the Rust core.
 NEVER duplicate business logic, validation, middleware, or routing across bindings. All heavy
 lifting lives in `crates/spikard` and `crates/spikard-http`; bindings translate to/from language

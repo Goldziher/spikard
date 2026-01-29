@@ -74,16 +74,6 @@ rules:
       - Validate phpstan type definitions
       - Optimize for request-response cycles
 
-  - name: wasm-binding-promises
-    description: |
-      WebAssembly binding must:
-      - Direct Rust implementation (no separate binding)
-      - Use wasm-bindgen for JS interop
-      - Support Promise-based async operations
-      - Convert JsValue to RequestData
-      - Serialize responses to JsValue
-      - Minimize WASM binary size
-
   - name: di-optional-feature
     description: |
       DependencyInjectingHandler must:

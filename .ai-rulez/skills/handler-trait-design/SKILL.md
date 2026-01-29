@@ -131,21 +131,6 @@ pub struct HandlerResponse {
   end
   ```
 
-### WebAssembly Handler (`packages/wasm/src/lib.rs`)
-
-**Pattern:** Direct Rust implementation with wasm-bindgen
-
-- **Execution:** Native Rust in WebAssembly runtime (Wasmtime)
-- **Request Binding:**
-  ```rust
-  #[wasm_bindgen]
-  pub async fn handle_request(req: JsValue) -> Result<JsValue, JsValue> {
-      let request: RequestData = serde_wasm_bindgen::from_value(req)?;
-      // ... handle request ...
-      Ok(serde_wasm_bindgen::to_value(&response)?)
-  }
-  ```
-
 ## Request/Response Data Structures
 
 ### RequestData

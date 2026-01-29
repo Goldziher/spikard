@@ -95,7 +95,6 @@ profiles:
       - typescript-engineer               # Haiku: crates/spikard-node specifics
       - ruby-engineer                     # Haiku: crates/spikard-rb specifics
       - php-engineer                      # Haiku: crates/spikard-php specifics
-      - wasm-engineer                     # Haiku: crates/spikard-wasm specifics
       - fixture-tester                    # Haiku: testing_data/ fixture evolution
       - integration-qa                    # Haiku: cross-language fixture parity
       - docs-strategist                   # Haiku: docs/adr/ and architecture docs
@@ -229,7 +228,6 @@ profiles:
         - typescript
         - ruby
         - php
-        - wasm
 
     platforms:
       required:
@@ -278,11 +276,6 @@ profiles:
         linter: phpstan
         package_manager: composer
         binding: ext-php-rs
-
-      wasm:
-        target: wasm32-unknown-unknown
-        bundler: wasm-pack
-        binding: wasm-bindgen
 
     # =========================================================================
     # SPIKARD QUALITY GATES
@@ -358,8 +351,8 @@ profiles:
 
     tasks:
       test:
-        - description: "Run all tests (Rust, Python, Node, Ruby, PHP, WASM)"
-        - includes: ["test:rust", "test:python", "test:node", "test:ruby", "test:php", "test:wasm"]
+        - description: "Run all tests (Rust, Python, Node, Ruby, PHP)"
+        - includes: ["test:rust", "test:python", "test:node", "test:ruby", "test:php"]
 
       test:rust:
         - description: "Run Rust tests with 95% coverage requirement"
@@ -381,17 +374,13 @@ profiles:
         - description: "Run PHP tests with PSR compliance"
         - command: "composer test"
 
-      test:wasm:
-        - description: "Run WASM tests in browser and Node environments"
-        - command: "wasm-pack test --node"
-
       lint:
         - description: "Run all formatters and linters"
         - includes: ["lint:rust", "lint:python", "lint:typescript", "lint:ruby", "lint:php"]
 
       build:
         - description: "Build all language targets (release mode)"
-        - includes: ["build:rust", "build:python", "build:node", "build:ruby", "build:php", "build:wasm"]
+        - includes: ["build:rust", "build:python", "build:node", "build:ruby", "build:php"]
 
       build:rust:
         - description: "Build Rust core and HTTP runtime"
@@ -472,7 +461,6 @@ profiles:
           "typescript-engineer",
           "ruby-engineer",
           "php-engineer",
-          "wasm-engineer",
           "rust-polyglot-architect"
         ]
         focus: "Handler implementation parity, error handling, configuration APIs"
@@ -514,7 +502,7 @@ profiles:
         - "Binding crates only provide language-idiomatic translation"
 
       cross_language_parity:
-        - "All fixtures pass across Rust, Python, Node, Ruby, PHP, WASM"
+        - "All fixtures pass across Rust, Python, Node, Ruby, PHP"
         - "Error handling produces identical JSON across all languages"
         - "ServerConfig configuration APIs available in all bindings"
 
@@ -543,7 +531,7 @@ profiles:
 #
 # 1. Building HTTP servers/frameworks with:
 #    - Rust core (tower-http middleware)
-#    - Multi-language bindings (Python, Node, Ruby, PHP, WASM)
+#    - Multi-language bindings (Python, Node, Ruby, PHP)
 #    - Fixture-driven development
 #
 # 2. Maintaining existing Spikard monorepo

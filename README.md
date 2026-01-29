@@ -13,7 +13,7 @@ A Rust-centric multi-language toolkit for building and validating typed web serv
 - **Multi-Language Code Generation**: Generate type-safe handlers from OpenAPI 3.0.x, GraphQL SDL, gRPC/Protobuf, AsyncAPI 2.x, or OpenRPC 1.x specifications
 - **Project Scaffolding**: `spikard init` bootstraps production-ready projects with language-specific tooling
 - **Automatic Quality Validation**: Syntax, type checking, and linting automatically applied to generated code
-- **Zero-Copy Bindings**: Performance-optimized FFI layers (PyO3, napi-rs, magnus, ext-php-rs, wasm-bindgen)
+- **Zero-Copy Bindings**: Performance-optimized FFI layers (PyO3, napi-rs, magnus, ext-php-rs)
 - **Tower-HTTP Runtime**: Complete HTTP/gRPC server with compression, rate limiting, authentication, and CORS
 - **Fixture-Driven Testing**: Comprehensive test coverage with JSON-based fixtures
 
@@ -26,7 +26,6 @@ A Rust-centric multi-language toolkit for building and validating typed web serv
 | Ruby | 3.2+ | bundler |
 | PHP | 8.2+ | Composer |
 | Rust | 2024 | cargo |
-| WebAssembly | Latest | wasm-pack |
 
 ## Quick Start
 
@@ -101,8 +100,6 @@ class Handlers {
     }
 }
 ```
-
-
 
 ## Code Generation Support
 

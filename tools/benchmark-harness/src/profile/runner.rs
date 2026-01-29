@@ -7,7 +7,7 @@ use crate::{
     monitor::ResourceMonitor,
     schema::{
         Configuration, FrameworkInfo, Latency, Metadata, NodeProfilingData, PhpProfilingData, ProfilingData,
-        PythonProfilingData, Resources, RubyProfilingData, RustProfilingData, Throughput, WasmProfilingData,
+        PythonProfilingData, Resources, RubyProfilingData, RustProfilingData, Throughput,
         profile::{
             BaselineComparison, CategorySummary, ProfileResult, ProfileSummary, SuiteResult, WorkloadComparison,
             WorkloadMetrics, WorkloadResult,
@@ -162,8 +162,6 @@ impl ProfileRunner {
 
         let suite_php_profiler = self.config.profiler.as_deref() == Some("php") && framework_info.language == "php";
         let suite_node_profiler = self.config.profiler.as_deref() == Some("node") && framework_info.language == "node";
-        let suite_wasm_profiler =
-            matches!(self.config.profiler.as_deref(), Some("wasm" | "perf")) && framework_info.language == "wasm";
 
         let php_profile_output = suite_php_profiler
             .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
@@ -305,28 +303,6 @@ impl ProfileRunner {
                 }
             }
         }
-        if suite_wasm_profiler {
-            for suite in &mut suite_results {
-                for workload in &mut suite.workloads {
-                    let existing_flamegraph = match workload.results.profiling.take() {
-                        Some(ProfilingData::Wasm(data)) => data.flamegraph_path,
-                        other => {
-                            workload.results.profiling = other;
-                            None
-                        }
-                    };
-                    workload.results.profiling = Some(ProfilingData::Wasm(WasmProfilingData {
-                        rss_mb: None,
-                        heap_total_mb: None,
-                        heap_used_mb: None,
-                        external_mb: None,
-                        v8_log_path: None,
-                        flamegraph_path: existing_flamegraph,
-                    }));
-                }
-            }
-        }
-
         Ok(ProfileResult {
             metadata,
             framework: framework_info,
@@ -403,7 +379,6 @@ impl ProfileRunner {
             "node" => find_descendant_pid_by_name(server.pid(), "node", 10).unwrap_or(server.pid()),
             "ruby" => find_descendant_pid_by_name(server.pid(), "ruby", 10).unwrap_or(server.pid()),
             "php" => find_descendant_pid_by_name(server.pid(), "php", 10).unwrap_or(server.pid()),
-            "wasm" => find_descendant_pid_by_name(server.pid(), "wasmtime", 10).unwrap_or(server.pid()),
             _ => server.pid(),
         }
     }
@@ -585,7 +560,6 @@ impl ProfileRunner {
                         )?))
                     }
                 }
-                "wasm" => None,
                 _ => {
                     eprintln!("  ⚠ Unknown profiler type: {profiler_type}");
                     None
@@ -666,18 +640,6 @@ impl ProfileRunner {
                         flamegraph_path,
                     }),
                     "php" => ProfilingData::Php(PhpProfilingData { flamegraph_path }),
-                    "rust" => ProfilingData::Rust(RustProfilingData {
-                        heap_allocated_mb: None,
-                        flamegraph_path,
-                    }),
-                    "wasm" => ProfilingData::Wasm(WasmProfilingData {
-                        rss_mb: None,
-                        heap_total_mb: None,
-                        heap_used_mb: None,
-                        external_mb: None,
-                        v8_log_path: None,
-                        flamegraph_path,
-                    }),
                     _ => ProfilingData::Rust(RustProfilingData {
                         heap_allocated_mb: None,
                         flamegraph_path,
@@ -1080,9 +1042,7 @@ impl ProfileRunner {
     }
 
     fn detect_language(&self) -> String {
-        if self.config.framework.contains("wasm") {
-            "wasm".to_string()
-        } else if self.config.app_dir.join("server.py").exists() {
+        if self.config.app_dir.join("server.py").exists() {
             "python".to_string()
         } else if self.config.app_dir.join("server.ts").exists() {
             "node".to_string()
@@ -1118,14 +1078,6 @@ impl ProfileRunner {
                     return format!("Node {}", version.trim());
                 }
                 "Node.js".to_string()
-            }
-            "wasm" => {
-                if let Ok(output) = std::process::Command::new("wasmtime").arg("--version").output()
-                    && let Ok(version) = String::from_utf8(output.stdout)
-                {
-                    return version.trim().to_string();
-                }
-                "wasmtime".to_string()
             }
             "ruby" => {
                 if let Ok(output) = std::process::Command::new("ruby").arg("--version").output()

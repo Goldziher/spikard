@@ -1,7 +1,0 @@
-name = "hono-wasm-bench"
-main = "src/index.ts"
-compatibility_date = "2025-01-01"
-
-[dev]
-port = 8080
-local_protocol = "http"

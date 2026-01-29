@@ -136,8 +136,7 @@ rules:
       bindings (spikard-py, spikard-node, spikard-rb, spikard-php) implement this
       trait with Arc<dyn Handler> wrappers. The HTTP server accepts
       `Vec<(Route, Arc<dyn Handler>)>` enabling clean separation: spikard-http has
-      zero FFI dependencies, all Python/Node/Ruby/PHP/WASM code lives in binding
-      crates.
+      zero FFI dependencies, all Python/Node/Ruby/PHP code lives in binding crates.
 
       Implementation:
       - Define Handler trait in crates/spikard-http/src/handler.rs
@@ -412,12 +411,11 @@ rules:
   - name: thin-binding-pattern-architecture
     priority: high
     description: |
-      All language bindings (Python/PyO3, Node/napi-rs, Ruby/Magnus, PHP/ext-php-rs,
-      WASM/wasm-bindgen) must follow the "thin binding" pattern: expose only
-      language-idiomatic APIs over the Rust core. NEVER duplicate business logic,
-      validation, middleware, or routing across bindings. All heavy lifting lives
-      in crates/spikard and crates/spikard-http; bindings translate to/from
-      language types and forward to Rust via the Handler trait.
+      All language bindings (Python/PyO3, Node/napi-rs, Ruby/Magnus, PHP/ext-php-rs)
+      must follow the "thin binding" pattern: expose only language-idiomatic APIs over
+      the Rust core. NEVER duplicate business logic, validation, middleware, or routing
+      across bindings. All heavy lifting lives in crates/spikard and crates/spikard-http;
+      bindings translate to/from language types and forward to Rust via the Handler trait.
 
       Implementation:
       - Keep all business logic in crates/spikard and crates/spikard-http
@@ -610,11 +608,10 @@ rules:
     description: |
       Implement cross-cutting logic in crates/spikard/src and expose it through
       thin adapters in crates/spikard-http, crates/spikard-py, crates/spikard-node,
-      crates/spikard-rb, crates/spikard-php, and crates/spikard-wasm. Keep build
-      metadata confined to each binding's manifest (pyproject.toml,
-      crates/spikard-node/package.json, crates/spikard-wasm/package.json,
-      composer.json) and register new workflows in Taskfile.yaml so
-      task build/task lint continue to orchestrate the monorepo.
+      crates/spikard-rb, and crates/spikard-php. Keep build metadata confined to each
+      binding's manifest (pyproject.toml, crates/spikard-node/package.json, composer.json)
+      and register new workflows in Taskfile.yaml so task build/task lint continue to
+      orchestrate the monorepo.
 
       Implementation:
       - Core types and logic: crates/spikard/src
@@ -623,7 +620,6 @@ rules:
       - Adapter for Node: crates/spikard-node/src (thin layer only)
       - Adapter for Ruby: crates/spikard-rb/src (thin layer only)
       - Adapter for PHP: crates/spikard-php/src (thin layer only)
-      - Adapter for WASM: crates/spikard-wasm/src (thin layer only)
       - Build tasks: register in Taskfile.yaml
       - Each binding has separate manifest (pyproject.toml, package.json, etc.)
       - No duplication of domain logic across crates
@@ -638,11 +634,10 @@ rules:
   - name: workspace-separation
     priority: medium
     description: |
-      Keep language-neutral logic inside crates/spikard/src and limit each
-      binding crate (spikard-py, spikard-node, spikard-wasm) to thin adapters
-      over that core. When introducing new modules, register them in the relevant
-      Cargo.toml, mirror usage in examples/, and avoid duplicating business
-      rules across bindings.
+      Keep language-neutral logic inside crates/spikard/src and limit each binding
+      crate (spikard-py, spikard-node, spikard-rb, spikard-php) to thin adapters over
+      that core. When introducing new modules, register them in the relevant Cargo.toml,
+      mirror usage in examples/, and avoid duplicating business rules across bindings.
 
       Implementation:
       - New domain modules: crates/spikard/src (single location)
@@ -719,10 +714,10 @@ rules:
     description: |
       Consolidate heavy computation inside the shared Rust core (crates/spikard)
       and expose thin bindings in crates/spikard-py, packages/python,
-      crates/spikard-node, crates/spikard-rb, crates/spikard-php, and
-      crates/spikard-wasm; stress-test large or deeply nested payloads with
-      testing_data/edge_cases and verify optimized builds via task build:rust,
-      task build:py, task build:node, task build:ruby, and task build:php.
+      crates/spikard-node, crates/spikard-rb, and crates/spikard-php; stress-test
+      large or deeply nested payloads with testing_data/edge_cases and verify optimized
+      builds via task build:rust, task build:py, task build:node, task build:ruby,
+      and task build:php.
 
       Implementation:
       - Keep computation in Rust (crates/spikard, crates/spikard-http)
@@ -817,4 +812,4 @@ rules:
 # Performance verified via cross-target-performance with testing_data/edge_cases
 #
 # This ensures spikard handlers are reliable, testable, and consistent across
-# all language bindings (Python, Node, Ruby, PHP, WASM).
+# all language bindings (Python, Node, Ruby, PHP).

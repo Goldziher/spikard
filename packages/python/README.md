@@ -194,7 +194,6 @@ See [examples/README.md](../../examples/README.md) for all languages and code ge
 - **TypeScript:** [npm (@spikard/node)](https://www.npmjs.com/package/@spikard/node)
 - **Ruby:** [RubyGems](https://rubygems.org/gems/spikard)
 - **PHP:** [Packagist](https://packagist.org/packages/spikard/spikard)
-- **WebAssembly:** [npm (@spikard/wasm)](https://www.npmjs.com/package/@spikard/wasm)
 
 ## License
 

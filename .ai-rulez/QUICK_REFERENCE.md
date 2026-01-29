@@ -30,7 +30,6 @@ A quick lookup guide for the migrated spikard configuration files.
 - **typescript-engineer**: crates/spikard-node, napi-rs, TypeScript types, ThreadsafeFunction
 - **ruby-engineer**: crates/spikard-rb, magnus/rb-sys, RBS types, Steep
 - **php-engineer**: crates/spikard-php, ext-php-rs, PSR compliance, PHPStan
-- **wasm-engineer**: crates/spikard-wasm, wasm-bindgen, WASM optimization
 
 ### Testing & Quality (Use Haiku)
 - **fixture-tester**: testing_data/ schemas, fixture creation, parametrized tests
@@ -167,7 +166,7 @@ ai-rulez list-agents           # See all available agents
 1. **rust-polyglot-architect**: Design FFI boundary
 2. **workspace-architect**: Plan crate and manifest structure
 3. **interop-build-engineer**: Coordinate manifest files
-4. **{python,typescript,ruby,php,wasm}-engineer**: Implement binding
+4. **{python,typescript,ruby,php}-engineer**: Implement binding
 5. **fixture-tester**: Ensure all fixtures represented
 6. **integration-qa**: Validate fixture parity with other languages
 7. **docs-strategist**: Document binding in ADR
@@ -178,7 +177,7 @@ ai-rulez list-agents           # See all available agents
 1. **integration-qa**: Identify which fixtures fail
 2. **fixture-tester**: Review fixture schema vs. implementation
 3. **rust-polyglot-architect**: Review error contract or Handler contract
-4. **{python,typescript,ruby,php,wasm}-engineer**: Fix language binding
+4. **{python,typescript,ruby,php}-engineer**: Fix language binding
 5. **integration-qa**: Validate fix across all languages
 6. **code-reviewer**: Multi-language review
 7. **build-and-ci-ops**: Ensure CI passes all targets

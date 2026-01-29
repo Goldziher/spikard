@@ -57,8 +57,6 @@ runs:
           echo "language=node" >> $GITHUB_OUTPUT
         elif [[ "$framework" == "spikard-ruby" ]] || [[ "$framework" == "hanami-api" ]] || [[ "$framework" == "roda" ]]; then
           echo "language=ruby" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == "spin" ]] || [[ "$framework" == "hono-wasm" ]]; then
-          echo "language=wasm" >> $GITHUB_OUTPUT
         else
           echo "language=unknown" >> $GITHUB_OUTPUT
         fi
@@ -237,37 +235,7 @@ runs:
           composer install --no-dev --optimize-autoloader
         fi
 
-    - name: Setup WASM toolchain
-      if: steps.detect.outputs.language == 'wasm'
-      shell: bash
-      run: |
-        # Add wasm32-wasip2 target for Rust-based WASM components
-        rustup target add wasm32-wasip2
-
-        # Install wasmtime CLI
-        curl https://wasmtime.dev/install.sh -sSf | bash
-        echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
-
-    - name: Install Spin CLI
-      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'spin'
-      shell: bash
-      run: |
-        curl -fsSL https://developer.fermyon.com/downloads/install.sh | bash
-        sudo mv spin /usr/local/bin/
-
-    - name: Setup Node for hono-wasm
-      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'hono-wasm'
-      uses: ./.github/actions/setup-node-workspace
-      with:
-        node-version: '24'
-
-    - name: Install WASM benchmark app dependencies
-      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'hono-wasm'
-      shell: bash
-      working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
-      run: pnpm install --frozen-lockfile
-
-- name: Create results directory
+    - name: Create results directory
       shell: bash
       run: mkdir -p results/${{ inputs.framework }}
 

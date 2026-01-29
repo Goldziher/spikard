@@ -70,14 +70,6 @@ jobs:
             MISSING+=("npm:@spikard/node")
           fi
 
-          # npm (@spikard/wasm)
-          if curl -s "https://registry.npmjs.org/@spikard/wasm/$VERSION" | jq -e '.version' > /dev/null 2>&1; then
-            echo "✓ npm: @spikard/wasm $VERSION found"
-          else
-            echo "✗ npm: @spikard/wasm $VERSION not found"
-            MISSING+=("npm:@spikard/wasm")
-          fi
-
           # RubyGems
           if curl -s "https://rubygems.org/api/v1/versions/spikard.json" | jq -e ".[] | select(.number == \"$VERSION\")" > /dev/null 2>&1; then
             echo "✓ RubyGems: spikard $VERSION found"
@@ -296,44 +288,9 @@ jobs:
         working-directory: tests/test_apps/rust
         run: cargo test --locked
 
-  test-wasm:
-    name: Test WASM package
-    needs: prepare
-    if: needs.prepare.outputs.registries_ready == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          package_json_file: package.json
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-          cache: 'pnpm'
-
-      - name: Update package.json version
-        working-directory: tests/test_apps/wasm
-        run: |
-          VERSION="${{ needs.prepare.outputs.version }}"
-          jq ".dependencies[\"@spikard/wasm\"] = \"$VERSION\"" package.json > package.json.tmp
-          mv package.json.tmp package.json
-
-      - name: Install dependencies
-        working-directory: tests/test_apps/wasm
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Run tests
-        working-directory: tests/test_apps/wasm
-        run: pnpm test
-
   report:
     name: Report test results
-    needs: [prepare, test-python, test-node, test-ruby, test-php, test-rust, test-wasm]
+    needs: [prepare, test-python, test-node, test-ruby, test-php, test-rust]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -364,9 +321,6 @@ jobs:
           if [ "${{ needs.test-rust.result }}" != "success" ]; then
             FAILED+=("Rust")
           fi
-          if [ "${{ needs.test-wasm.result }}" != "success" ]; then
-            FAILED+=("WASM")
-          fi
 
           if [ ${#FAILED[@]} -gt 0 ]; then
             echo "Tests failed for: ${FAILED[*]}"
@@ -390,7 +344,6 @@ jobs:
           ### Related Links
           - [PyPI: spikard](https://pypi.org/project/spikard/$VERSION/)
           - [npm: @spikard/node](https://www.npmjs.com/package/@spikard/node/v/$VERSION)
-          - [npm: @spikard/wasm](https://www.npmjs.com/package/@spikard/wasm/v/$VERSION)
           - [RubyGems: spikard](https://rubygems.org/gems/spikard/versions/$VERSION)
           - [Packagist: spikard/spikard](https://packagist.org/packages/spikard/spikard#$VERSION)
           - [crates.io: spikard](https://crates.io/crates/spikard/$VERSION)

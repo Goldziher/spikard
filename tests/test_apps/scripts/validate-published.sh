@@ -36,13 +36,6 @@ else
 	# Don't fail on npm for now
 fi
 
-if curl -sSf "https://registry.npmjs.org/@spikard/wasm/$VERSION" >/dev/null 2>&1; then
-	echo "✓ @spikard/wasm $VERSION found on npm"
-else
-	echo "✗ @spikard/wasm $VERSION NOT found on npm (may not be published yet)"
-	# Don't fail on npm for now
-fi
-
 # Check RubyGems (when published)
 echo ""
 echo "Checking RubyGems..."

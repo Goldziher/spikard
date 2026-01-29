@@ -33,11 +33,7 @@ pub fn generate_graphql_tests(fixtures_dir: &Path, output_dir: &Path, target: &T
         fixtures_by_category.entry(category).or_insert_with(Vec::new).push(fixture);
     }
 
-    let test_suffix = if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
-        "_test.ts"
-    } else {
-        ".spec.ts"
-    };
+    let test_suffix = ".spec.ts";
 
     // Generate test file for each category
     for (category, category_fixtures) in fixtures_by_category.iter() {
@@ -64,13 +60,7 @@ fn generate_graphql_test_file(category: &str, fixtures: &[GraphQLFixture], targe
         "import {{ TestClient }} from \"{}\";\n",
         target.binding_package
     ));
-
-    match target.runtime {
-        crate::ts_target::Runtime::Deno => {}
-        _ => {
-            code.push_str("import { describe, expect, test } from \"vitest\";\n");
-        }
-    }
+    code.push_str("import { describe, expect, test } from \"vitest\";\n");
 
     code.push_str(&format!(
         "import {{ createAppGraphql{} }} from \"../app/main.ts\";\n\n",
@@ -86,10 +76,6 @@ fn generate_graphql_test_file(category: &str, fixtures: &[GraphQLFixture], targe
     }
 
     code.push_str("});\n");
-
-    if matches!(target.runtime, crate::ts_target::Runtime::Deno) {
-        code = convert_graphql_to_deno_syntax(&code, category);
-    }
 
     Ok(code)
 }
@@ -265,171 +251,4 @@ fn capitalize(s: &str) -> String {
         None => String::new(),
         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
     }
-}
-
-/// Convert Vitest syntax to Deno.test() syntax with proper assertion handling
-fn convert_graphql_to_deno_syntax(code: &str, category: &str) -> String {
-    let mut result = code.to_string();
-
-    // Remove describe block wrapper
-    let mut filtered_lines: Vec<&str> = result
-        .lines()
-        .filter(|line| {
-            let trimmed = line.trim_start();
-            !trimmed.starts_with(&format!("describe(\"GraphQL {}\"", category))
-        })
-        .collect();
-
-    while matches!(filtered_lines.last(), Some(l) if l.trim().is_empty()) {
-        filtered_lines.pop();
-    }
-    if matches!(filtered_lines.last(), Some(l) if l.trim() == "});") {
-        filtered_lines.pop();
-    }
-    result = filtered_lines.join("\n");
-
-    // Convert test() to Deno.test()
-    let lines: Vec<String> = result
-        .lines()
-        .map(|line| {
-            if line.contains("test(\"") {
-                if let Some(start) = line.find("test(\"") {
-                    if let Some(end) = line[start + 6..].find("\"") {
-                        let test_name = &line[start + 6..start + 6 + end];
-                        return line.replace(
-                            &format!("test(\"{}\"", test_name),
-                            &format!("Deno.test(\"GraphQL {}: {}\"", category, test_name),
-                        );
-                    }
-                }
-            }
-            line.to_string()
-        })
-        .collect();
-    result = lines.join("\n");
-
-    // Convert expect() assertions to Deno std/assert helpers
-    result = convert_assertions_to_deno(&result);
-
-    // Remove import from vitest
-    result = result.replace("import { describe, expect, test } from \"vitest\";\n", "");
-
-    // Add Deno assert import if needed
-    if result.contains("assertEquals(") || result.contains("assert(") {
-        let import_line = "import { assertEquals, assert } from \"jsr:@std/assert@1\";\n";
-        if !result.contains(import_line) {
-            if let Some(pos) = result.find("import {") {
-                result = format!("{}{}", import_line, &result[pos..]);
-            }
-        }
-    }
-
-    result
-}
-
-/// Convert individual expect() assertions to proper Deno assertions
-fn convert_assertions_to_deno(code: &str) -> String {
-    let mut result = String::new();
-    let mut pos = 0;
-
-    while pos < code.len() {
-        // Look for expect( patterns
-        if code[pos..].starts_with("expect(") {
-            // Extract the expression inside expect()
-            let (expr, expr_len) = extract_expect_expr(&code[pos + 7..]);
-            let after_expr_pos = pos + 7 + expr_len;
-
-            // Now check what comes after the closing paren
-            if after_expr_pos >= code.len() {
-                // End of string, shouldn't happen with well-formed code
-                result.push_str(&format!("expect({})", expr));
-                pos = after_expr_pos;
-            } else {
-                let remaining = &code[after_expr_pos..];
-
-                if remaining.starts_with(".toBe(") {
-                    // expect(value).toBe(expected) → assertEquals(value, expected)
-                    let (expected, expected_len) = extract_expect_expr(&remaining[6..]);
-                    result.push_str(&format!("assertEquals({}, {})", expr, expected));
-                    pos = after_expr_pos + 6 + expected_len; // expected_len already includes closing paren
-                } else if remaining.starts_with(".toContain(") {
-                    // expect(value).toContain(substring) → assert(value.includes(substring))
-                    let (substring, substring_len) = extract_expect_expr(&remaining[11..]);
-                    result.push_str(&format!("assert({}.includes({}))", expr, substring));
-                    pos = after_expr_pos + 11 + substring_len; // substring_len already includes closing paren
-                } else if remaining.starts_with(".toBeDefined()") {
-                    // expect(value).toBeDefined() → assert(value !== undefined)
-                    result.push_str(&format!("assert({} !== undefined)", expr));
-                    pos = after_expr_pos + 14; // length of ".toBeDefined()"
-                } else if remaining.starts_with(".toHaveProperty(") {
-                    // expect(object).toHaveProperty("key") → assert(object.hasOwnProperty("key"))
-                    let (key, key_len) = extract_expect_expr(&remaining[16..]);
-                    result.push_str(&format!("assert({}.hasOwnProperty({}))", expr, key));
-                    pos = after_expr_pos + 16 + key_len; // key_len already includes closing paren
-                } else {
-                    // Fallback for unknown assertion types - just output as-is
-                    result.push_str(&format!("expect({})", expr));
-                    pos = after_expr_pos;
-                }
-            }
-        } else {
-            if let Some(ch) = code.chars().nth(pos) {
-                result.push(ch);
-                pos += ch.len_utf8();
-            } else {
-                break;
-            }
-        }
-    }
-
-    result
-}
-
-/// Extract the expression inside parentheses, handling nested structures
-/// Returns the expression and the number of bytes consumed (including closing paren)
-fn extract_expect_expr(input: &str) -> (String, usize) {
-    let mut expr = String::new();
-    let mut paren_depth = 1; // We're already inside the opening paren
-    let mut in_string = false;
-    let mut string_char = '\0';
-    let mut byte_count = 0;
-    let mut iter = input.char_indices().peekable();
-
-    while let Some((idx, ch)) = iter.next() {
-        byte_count = idx + ch.len_utf8();
-        match ch {
-            '"' | '\'' | '`' if !in_string => {
-                in_string = true;
-                string_char = ch;
-                expr.push(ch);
-            }
-            c if in_string && c == string_char => {
-                in_string = false;
-                expr.push(ch);
-            }
-            '\\' if in_string => {
-                expr.push(ch);
-                if let Some((next_idx, next_ch)) = iter.next() {
-                    expr.push(next_ch);
-                    byte_count = next_idx + next_ch.len_utf8();
-                }
-            }
-            '(' if !in_string => {
-                paren_depth += 1;
-                expr.push(ch);
-            }
-            ')' if !in_string => {
-                paren_depth -= 1;
-                if paren_depth == 0 {
-                    break;
-                }
-                expr.push(ch);
-            }
-            _ => {
-                expr.push(ch);
-            }
-        }
-    }
-
-    (expr, byte_count)
 }

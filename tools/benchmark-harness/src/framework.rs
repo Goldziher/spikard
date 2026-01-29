@@ -115,20 +115,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "./start.sh {port}",
             None,
         ),
-FrameworkConfig::new(
-            "spin",
-            vec!["spin.toml".to_string(), "Cargo.toml".to_string()],
-            Some("spin build".to_string()),
-            "spin up --listen 0.0.0.0:{port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "hono-wasm",
-            vec!["wrangler.toml".to_string(), "src/index.ts".to_string()],
-            Some("pnpm install".to_string()),
-            "npx wrangler dev --port {port} --local",
-            None,
-        ),
         // --- Third-party Python frameworks ---
         FrameworkConfig::new(
             "fastapi",
@@ -361,8 +347,6 @@ mod tests {
         assert!(names.contains(&"spikard-bun"));
         assert!(names.contains(&"spikard-ruby"));
         assert!(names.contains(&"spikard-php"));
-        assert!(names.contains(&"spin"));
-        assert!(names.contains(&"hono-wasm"));
 
         assert!(names.contains(&"fastapi"));
         assert!(names.contains(&"litestar"));
@@ -385,7 +369,7 @@ mod tests {
             assert!(!names.contains(&"phalcon"));
         }
 
-        let expected_len = if php_extension_available("phalcon") { 20 } else { 19 };
+        let expected_len = if php_extension_available("phalcon") { 18 } else { 17 };
         assert_eq!(registry.len(), expected_len);
     }
 
@@ -444,7 +428,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        let expected_len = if php_extension_available("phalcon") { 20 } else { 19 };
+        let expected_len = if php_extension_available("phalcon") { 18 } else { 17 };
         assert_eq!(frameworks.len(), expected_len);
     }
 

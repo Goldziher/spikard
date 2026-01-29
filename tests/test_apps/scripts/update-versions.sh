@@ -57,25 +57,6 @@ if [[ -f "$TEST_APPS_DIR/ruby/spec/app_spec.rb" ]]; then
 	echo "✓ Updated Ruby tests to $VERSION"
 fi
 
-# WASM: package.json (when implemented)
-if [[ -f "$TEST_APPS_DIR/wasm/package.json" ]]; then
-	echo "Updating WASM test app..."
-	if command -v jq &>/dev/null; then
-		jq ".dependencies[\"@spikard/wasm\"] = \"$VERSION\"" "$TEST_APPS_DIR/wasm/package.json" >"$TEST_APPS_DIR/wasm/package.json.tmp"
-		mv "$TEST_APPS_DIR/wasm/package.json.tmp" "$TEST_APPS_DIR/wasm/package.json"
-	else
-		sed -i.bak "s|\"@spikard/wasm\": \"[^\"]*\"|\"@spikard/wasm\": \"$VERSION\"|" "$TEST_APPS_DIR/wasm/package.json"
-		rm -f "$TEST_APPS_DIR/wasm/package.json.bak"
-	fi
-	echo "✓ Updated WASM app to $VERSION"
-fi
-
-if [[ -f "$TEST_APPS_DIR/wasm/test.spec.js" ]]; then
-	sed -i.bak "/@spikard\\/wasm/ s|toBe(\"[0-9.]*\")|toBe(\"$VERSION\")|" "$TEST_APPS_DIR/wasm/test.spec.js"
-	rm -f "$TEST_APPS_DIR/wasm/test.spec.js.bak"
-	echo "✓ Updated WASM tests to $VERSION"
-fi
-
 # PHP: composer.json (when implemented)
 if [[ -f "$TEST_APPS_DIR/php/composer.json" ]]; then
 	if command -v jq &>/dev/null; then

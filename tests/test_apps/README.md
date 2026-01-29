@@ -143,7 +143,6 @@ jobs:
 
 ### npm Package Not Found
 - Verify publication: `npm view @spikard/node@0.9.2`
-- Verify publication: `npm view @spikard/wasm@0.9.2`
 - Wait for npm registry sync
 - Check npm status: https://status.npmjs.org/
 

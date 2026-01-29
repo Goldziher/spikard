@@ -65,7 +65,7 @@ enum Commands {
     /// Generate test suite for a language
     Tests {
         /// Target language
-        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby", "wasm", "php", "deno", "cloudflare"])]
+        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby", "php"])]
         lang: String,
 
         /// Fixtures directory
@@ -164,22 +164,7 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
             node_tests::generate_node_tests(&fixtures, &output, &ts_target::NODE_TARGET)?;
             graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::NODE_TARGET)?;
         }
-        "wasm" => {
-            node_app::generate_node_app(&fixtures, &output, &ts_target::WASM_TARGET)?;
-            node_tests::generate_node_tests(&fixtures, &output, &ts_target::WASM_TARGET)?;
-            graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::WASM_TARGET)?;
-        }
-        "deno" => {
-            node_app::generate_node_app(&fixtures, &output, &ts_target::DENO_TARGET)?;
-            node_tests::generate_node_tests(&fixtures, &output, &ts_target::DENO_TARGET)?;
-            graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::DENO_TARGET)?;
-        }
-        "cloudflare" => {
-            node_app::generate_node_app(&fixtures, &output, &ts_target::CLOUDFLARE_TARGET)?;
-            node_tests::generate_node_tests(&fixtures, &output, &ts_target::CLOUDFLARE_TARGET)?;
-            graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::CLOUDFLARE_TARGET)?;
-        }
-"ruby" => {
+        "ruby" => {
             ruby_app::generate_ruby_app(&fixtures, &output)?;
             ruby_tests::generate_ruby_tests(&fixtures, &output)?;
         }

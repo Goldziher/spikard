@@ -255,7 +255,6 @@ Spikard is available across multiple languages:
 | **Rust** | [spikard](https://crates.io/crates/spikard) | Stable |
 | **Ruby** | [spikard](https://rubygems.org/gems/spikard) | Stable |
 | **PHP** | [spikard/spikard](https://packagist.org/packages/spikard/spikard) | Stable |
-| **WebAssembly** | [@spikard/wasm](https://www.npmjs.com/package/@spikard/wasm) | Stable |
 
 ## License
 

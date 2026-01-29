@@ -19,10 +19,6 @@ skills:
     file: ../../../.ai-rulez/skills/php-8-2-phpstan/SKILL.md
     description: ext-php-rs bindings, thread pools, phpstan validation
 
-  - name: wasm-bindgen-standards
-    file: ../../../.ai-rulez/skills/wasm-bindgen-standards/SKILL.md
-    description: wasm-bindgen FFI, JsValue conversion, Promise integration
-
   - name: spikard-error-handling
     file: ../../../.ai-rulez/skills/spikard-error-handling/SKILL.md
     description: HandlerError mapping, exception conversion
