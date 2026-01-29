@@ -47,7 +47,7 @@ PY
 CARGO_UPDATE_TIMEOUT="${CARGO_UPDATE_TIMEOUT:-300}"
 
 # shellcheck disable=SC2043
-for app in spikard-rust-raw spikard-rust-validation; do
+for app in spikard-rust; do
 	echo "Updating $app..."
 	cd "tools/benchmark-harness/apps/$app" && run_with_timeout "$CARGO_UPDATE_TIMEOUT" cargo update
 	cd - >/dev/null

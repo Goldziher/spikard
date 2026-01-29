@@ -97,11 +97,7 @@ impl WorkloadSuite {
         Self {
             name: "query-params".to_string(),
             description: "Query string parsing (raw + validated)".to_string(),
-            workloads: Self::with_validated(vec![
-                Self::query_few(),
-                Self::query_medium(),
-                Self::query_many(),
-            ]),
+            workloads: Self::with_validated(vec![Self::query_few(), Self::query_medium(), Self::query_many()]),
         }
     }
 
@@ -111,10 +107,7 @@ impl WorkloadSuite {
         Self {
             name: "forms".to_string(),
             description: "Form data handling (raw + validated)".to_string(),
-            workloads: Self::with_validated(vec![
-                Self::urlencoded_simple(),
-                Self::urlencoded_complex(),
-            ]),
+            workloads: Self::with_validated(vec![Self::urlencoded_simple(), Self::urlencoded_complex()]),
         }
     }
 

@@ -514,7 +514,7 @@ impl ProfileRunner {
     ) -> Result<WorkloadResult> {
         let fixture = self.create_fixture_from_workload(workload_def)?;
 
-        let monitor_pid = self.resolve_target_pid(&server);
+        let monitor_pid = self.resolve_target_pid(server);
         let monitor = ResourceMonitor::new(monitor_pid);
         let monitor_handle = monitor.start_monitoring(100);
 

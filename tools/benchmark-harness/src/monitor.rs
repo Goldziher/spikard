@@ -82,7 +82,7 @@ impl ResourceMonitor {
                 if depth > 32 {
                     break;
                 }
-                current = self.system.process(parent_pid).and_then(|p| p.parent());
+                current = self.system.process(parent_pid).and_then(sysinfo::Process::parent);
             }
         }
         result

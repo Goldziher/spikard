@@ -170,8 +170,12 @@ app.get("/validated/path/deep/:org/:team/:project/:resource/:id").handler((req, 
 );
 
 app.get("/validated/path/int/:id").handler(params(IntParamSchema)((req, res) => res.json({ id: req.params.id })));
-app.get("/validated/path/uuid/:uuid").handler(params(UuidParamSchema)((req, res) => res.json({ uuid: req.params.uuid })));
-app.get("/validated/path/date/:date").handler(params(DateParamSchema)((req, res) => res.json({ date: req.params.date })));
+app
+	.get("/validated/path/uuid/:uuid")
+	.handler(params(UuidParamSchema)((req, res) => res.json({ uuid: req.params.uuid })));
+app
+	.get("/validated/path/date/:date")
+	.handler(params(DateParamSchema)((req, res) => res.json({ date: req.params.date })));
 
 app.get("/validated/query/few").handler((req, res) => res.json(req.query));
 app.get("/validated/query/medium").handler((req, res) => res.json(req.query));

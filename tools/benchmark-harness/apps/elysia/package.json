@@ -11,7 +11,7 @@
 		"elysia": "^1.4.22"
 	},
 	"devDependencies": {
-		"@types/bun": "^1.3.6"
+		"@types/bun": "^1.3.7"
 	},
 	"engines": {
 		"bun": ">=1.0.0"

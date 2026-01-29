@@ -471,7 +471,9 @@ async def post_validated_json_small(body: dict[str, Any]) -> dict[str, Any]:
     return body
 
 
-@post("/validated/json/medium", body_schema=request_schema("json/medium"), response_schema=response_schema("json/medium"))
+@post(
+    "/validated/json/medium", body_schema=request_schema("json/medium"), response_schema=response_schema("json/medium")
+)
 @profile_once("validated-json-medium")
 async def post_validated_json_medium(body: dict[str, Any]) -> dict[str, Any]:
     """Medium JSON payload (nested object) - validated."""
@@ -596,28 +598,42 @@ async def get_validated_path_deep(
     }
 
 
-@get("/validated/path/int/{id}", response_schema=response_schema("path/int"), parameter_schema=parameter_schema("path/int"))
+@get(
+    "/validated/path/int/{id}",
+    response_schema=response_schema("path/int"),
+    parameter_schema=parameter_schema("path/int"),
+)
 @profile_once("validated-path-int")
 async def get_validated_path_int(id: int = Path()) -> dict[str, JsonScalar]:
     """Integer path parameter - validated."""
     return {"id": id}
 
 
-@get("/validated/path/uuid/{uuid}", response_schema=response_schema("path/uuid"), parameter_schema=parameter_schema("path/uuid"))
+@get(
+    "/validated/path/uuid/{uuid}",
+    response_schema=response_schema("path/uuid"),
+    parameter_schema=parameter_schema("path/uuid"),
+)
 @profile_once("validated-path-uuid")
 async def get_validated_path_uuid(uuid: UUID = Path()) -> dict[str, JsonScalar]:
     """UUID path parameter - validated."""
     return {"uuid": str(uuid)}
 
 
-@get("/validated/path/date/{date}", response_schema=response_schema("path/date"), parameter_schema=parameter_schema("path/date"))
+@get(
+    "/validated/path/date/{date}",
+    response_schema=response_schema("path/date"),
+    parameter_schema=parameter_schema("path/date"),
+)
 @profile_once("validated-path-date")
 async def get_validated_path_date(date: DateType = Path()) -> dict[str, JsonScalar]:
     """Date path parameter - validated."""
     return {"date": date.isoformat()}
 
 
-@get("/validated/query/few", response_schema=response_schema("query/few"), parameter_schema=parameter_schema("query/few"))
+@get(
+    "/validated/query/few", response_schema=response_schema("query/few"), parameter_schema=parameter_schema("query/few")
+)
 @profile_once("validated-query-few")
 async def get_validated_query_few(
     q: str | None = Query(default=None),
@@ -629,7 +645,9 @@ async def get_validated_query_few(
 
 
 @get(
-    "/validated/query/medium", response_schema=response_schema("query/medium"), parameter_schema=parameter_schema("query/medium")
+    "/validated/query/medium",
+    response_schema=response_schema("query/medium"),
+    parameter_schema=parameter_schema("query/medium"),
 )
 @profile_once("validated-query-medium")
 async def get_validated_query_medium(
@@ -655,7 +673,11 @@ async def get_validated_query_medium(
     }
 
 
-@get("/validated/query/many", response_schema=response_schema("query/many"), parameter_schema=parameter_schema("query/many"))
+@get(
+    "/validated/query/many",
+    response_schema=response_schema("query/many"),
+    parameter_schema=parameter_schema("query/many"),
+)
 @profile_once("validated-query-many")
 async def get_validated_query_many(
     q: str | None = Query(default=None),

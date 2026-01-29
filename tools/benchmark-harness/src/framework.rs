@@ -272,7 +272,6 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
         return Ok(matches.swap_remove(index));
     }
 
-
     matches.sort_by(|a, b| b.detect_files.len().cmp(&a.detect_files.len()));
 
     Ok(matches.into_iter().next().unwrap())

@@ -102,9 +102,7 @@ def _write_figure(fig: go.Figure, output_dir: Path, name: str, fmt: str) -> list
     return paths
 
 
-def generate_throughput_chart(
-    data: dict[str, Any], output_dir: Path, title: str, fmt: str
-) -> list[Path]:
+def generate_throughput_chart(data: dict[str, Any], output_dir: Path, title: str, fmt: str) -> list[Path]:
     """Generate throughput comparison chart."""
     df = extract_framework_data(data)
 
@@ -160,9 +158,7 @@ def generate_throughput_chart(
     return _write_figure(fig, output_dir, "throughput-by-framework", fmt)
 
 
-def generate_latency_chart(
-    data: dict[str, Any], output_dir: Path, title: str, fmt: str
-) -> list[Path]:
+def generate_latency_chart(data: dict[str, Any], output_dir: Path, title: str, fmt: str) -> list[Path]:
     """Generate latency percentile comparison (2x2 subplot)."""
     df = extract_framework_data(data)
 
@@ -220,9 +216,7 @@ def generate_latency_chart(
     return _write_figure(fig, output_dir, "latency-percentiles", fmt)
 
 
-def generate_validation_overhead_chart(
-    data: dict[str, Any], output_dir: Path, title: str, fmt: str
-) -> list[Path]:
+def generate_validation_overhead_chart(data: dict[str, Any], output_dir: Path, title: str, fmt: str) -> list[Path]:
     """Generate validation vs raw comparison chart."""
     df = extract_framework_data(data)
 
@@ -322,9 +316,7 @@ def generate_validation_overhead_chart(
     return _write_figure(fig, output_dir, "validation-overhead", fmt)
 
 
-def generate_resource_chart(
-    data: dict[str, Any], output_dir: Path, title: str, fmt: str
-) -> list[Path]:
+def generate_resource_chart(data: dict[str, Any], output_dir: Path, title: str, fmt: str) -> list[Path]:
     """Generate resource utilization chart (dual-axis: memory bars + CPU line)."""
     df = extract_framework_data(data)
 
@@ -379,9 +371,7 @@ def generate_resource_chart(
     return _write_figure(fig, output_dir, "resources", fmt)
 
 
-def generate_throughput_summary(
-    data: dict[str, Any], output_dir: Path, fmt: str
-) -> list[Path]:
+def generate_throughput_summary(data: dict[str, Any], output_dir: Path, fmt: str) -> list[Path]:
     """Generate a simple horizontal bar chart of avg RPS per framework (for README)."""
     df = extract_framework_data(data)
     if df.empty:
@@ -418,9 +408,7 @@ def generate_throughput_summary(
     return _write_figure(fig, output_dir, "throughput-summary", fmt)
 
 
-def generate_latency_summary(
-    data: dict[str, Any], output_dir: Path, fmt: str
-) -> list[Path]:
+def generate_latency_summary(data: dict[str, Any], output_dir: Path, fmt: str) -> list[Path]:
     """Generate a simple horizontal bar chart of P99 latency per framework (for README)."""
     df = extract_framework_data(data)
     if df.empty:
@@ -429,9 +417,7 @@ def generate_latency_summary(
     # All frameworks now run all workloads (raw + validated), so no need to filter for common workloads
     n_workloads = df["workload"].nunique()
     summary = (
-        df.groupby("framework", as_index=False)["latency_p99_ms"]
-        .mean()
-        .sort_values("latency_p99_ms", ascending=True)
+        df.groupby("framework", as_index=False)["latency_p99_ms"].mean().sort_values("latency_p99_ms", ascending=True)
     )
 
     colors = get_color_scheme()
@@ -499,9 +485,7 @@ def generate_markdown_table(data: dict[str, Any], output_file: Path | None = Non
 
 def generate_metadata(data: dict[str, Any], output_dir: Path, charts: list[str]) -> None:
     """Generate metadata.json for dynamic injection into docs."""
-    chart_files = []
-    for name in charts:
-        chart_files.append(f"{name}.html")
+    chart_files = [f"{name}.html" for name in charts]
 
     metadata = {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -592,7 +576,6 @@ def main() -> None:
         else:
             md_path = Path(args.markdown)
             table = generate_markdown_table(data, md_path)
-            print(f"Markdown table written to {md_path}")
 
     if "summary" in data:
         generate_metadata(data, args.output, generated_charts)

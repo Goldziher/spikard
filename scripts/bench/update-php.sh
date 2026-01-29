@@ -46,8 +46,15 @@ PY
 
 COMPOSER_UPDATE_TIMEOUT="${COMPOSER_UPDATE_TIMEOUT:-300}"
 
-for app in phalcon-raw trongate-raw spikard-php-raw spikard-php-validation; do
+for app in phalcon trongate spikard-php; do
 	echo "Updating $app..."
-	cd "tools/benchmark-harness/apps/$app" && run_with_timeout "$COMPOSER_UPDATE_TIMEOUT" composer update --no-interaction --no-progress
+	app_dir="tools/benchmark-harness/apps/$app"
+
+	if [[ ! -f "$app_dir/composer.json" ]]; then
+		echo "  Skipping $app (no composer.json)"
+		continue
+	fi
+
+	cd "$app_dir" && run_with_timeout "$COMPOSER_UPDATE_TIMEOUT" composer update --no-interaction --no-progress
 	cd - >/dev/null
 done

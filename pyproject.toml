@@ -55,9 +55,9 @@ benchmarks = [
   "uvicorn[standard]>=0.40.0",
 ]
 visualize = [
-    "kaleido>=1.2.0",
-    "pandas>=3.0.0",
-    "plotly>=6.5.2",
+  "kaleido>=1.2.0",
+  "pandas>=3.0.0",
+  "plotly>=6.5.2",
 ]
 
 [tool.setuptools]

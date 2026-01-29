@@ -59,15 +59,16 @@ if [[ "$USE_RBENV" -eq 1 && -z "$RBENV_VERSION" ]]; then
 	exit 1
 fi
 
-for app in hanami-api-validation hanami-api-raw roda-validation roda-raw spikard-ruby-validation spikard-ruby-raw; do
+for app in hanami-api roda spikard-ruby; do
 	echo "Updating $app..."
-	cd "tools/benchmark-harness/apps/$app"
+	app_dir="tools/benchmark-harness/apps/$app"
 
-	# For spikard-ruby, regenerate Gemfile.lock to avoid platform mismatch
-	# since it's a path-based gem with native extensions
-	if [[ "$app" == "spikard-ruby" ]]; then
-		rm -f Gemfile.lock
+	if [[ ! -f "$app_dir/Gemfile" ]]; then
+		echo "  Skipping $app (no Gemfile)"
+		continue
 	fi
+
+	cd "$app_dir"
 
 	if [[ "$USE_RBENV" -eq 1 ]]; then
 		run_with_timeout "$BUNDLE_UPDATE_TIMEOUT" env RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle update --all

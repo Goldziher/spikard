@@ -438,7 +438,7 @@ impl From<OhaOutput> for LatencyMetrics {
         let range = max_ms - min_ms;
         let sigma_range = if range > 0.0 { range / 6.0 } else { 0.0 };
         let stddev_ms = if sigma_iqr > 0.0 && sigma_range > 0.0 {
-            (sigma_iqr + sigma_range) / 2.0
+            f64::midpoint(sigma_iqr, sigma_range)
         } else {
             sigma_iqr.max(sigma_range)
         };

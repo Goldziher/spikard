@@ -220,7 +220,7 @@ jobs:
         if: matrix.framework == 'phalcon' || matrix.framework == 'trongate'
         run: |
           sudo pecl install openswoole
-          echo "extension=openswoole.so" | sudo tee /etc/php/$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')/cli/conf.d/20-openswoole.ini
+          echo "extension=openswoole.so" | sudo tee "/etc/php/$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')/cli/conf.d/20-openswoole.ini"
           php -m | grep -i openswoole
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework

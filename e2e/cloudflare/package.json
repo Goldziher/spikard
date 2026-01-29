@@ -9,7 +9,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.12.7",
-		"@cloudflare/workers-types": "^4.20260127.0",
+		"@cloudflare/workers-types": "^4.20260129.0",
 		"@spikard/wasm": "workspace:*",
 		"@vitest/coverage-v8": "^4.0.18",
 		"typescript": "^5.9.3",

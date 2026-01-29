@@ -299,11 +299,31 @@ get("/", get_root);
 post("/validated/json/small", post_json_small, requestSchema("json/small"), responseSchema("json/small"));
 post("/validated/json/medium", post_json_medium, requestSchema("json/medium"), responseSchema("json/medium"));
 post("/validated/json/large", post_json_large, requestSchema("json/large"), responseSchema("json/large"));
-post("/validated/json/very-large", post_json_very_large, requestSchema("json/very-large"), responseSchema("json/very-large"));
+post(
+	"/validated/json/very-large",
+	post_json_very_large,
+	requestSchema("json/very-large"),
+	responseSchema("json/very-large"),
+);
 
-post("/validated/multipart/small", post_multipart_small, requestSchema("multipart/small"), responseSchema("multipart/small"));
-post("/validated/multipart/medium", post_multipart_medium, requestSchema("multipart/medium"), responseSchema("multipart/medium"));
-post("/validated/multipart/large", post_multipart_large, requestSchema("multipart/large"), responseSchema("multipart/large"));
+post(
+	"/validated/multipart/small",
+	post_multipart_small,
+	requestSchema("multipart/small"),
+	responseSchema("multipart/small"),
+);
+post(
+	"/validated/multipart/medium",
+	post_multipart_medium,
+	requestSchema("multipart/medium"),
+	responseSchema("multipart/medium"),
+);
+post(
+	"/validated/multipart/large",
+	post_multipart_large,
+	requestSchema("multipart/large"),
+	responseSchema("multipart/large"),
+);
 
 post(
 	"/validated/urlencoded/simple",
