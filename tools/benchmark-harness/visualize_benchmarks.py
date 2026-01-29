@@ -241,7 +241,9 @@ def generate_validation_overhead_chart(data: dict[str, Any], output_dir: Path, t
 
     if not pivot.empty:
         pivot = pivot.reset_index()
-        pivot = pivot.dropna(subset=[False, True])
+        drop_cols = [c for c in [False, True] if c in pivot.columns]
+        if drop_cols:
+            pivot = pivot.dropna(subset=drop_cols)
 
     if pivot.empty or False not in pivot.columns or True not in pivot.columns:
         fig = go.Figure()

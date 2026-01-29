@@ -112,7 +112,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
+          python-version: "3.14"
           cache-prefix: grpc-server
 
       - name: Download Node bindings
@@ -204,7 +204,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.10"
+          python-version: "3.14"
           cache-prefix: grpc-server
 
       - name: Install dependencies
