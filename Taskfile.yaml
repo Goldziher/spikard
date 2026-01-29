@@ -65,7 +65,6 @@ tasks:
       - task: rust:build
       - task: python:build
       - task: js:build
-      - task: wasm:build
       - task: ruby:build
       - task: php:build
   test:
@@ -618,17 +617,6 @@ tasks:
     cmds:
       - task: build:node
 
-  wasm:build:
-    desc: "Build WebAssembly bindings with wasm-bindgen"
-    dir: packages/wasm
-    cmds:
-      - pnpm run build
-
-  build:wasm:
-    desc: "Alias for wasm:build"
-    cmds:
-      - task: wasm:build
-
   generate:openapi:
     desc: "Generate OpenAPI spec from test fixtures"
     cmds:
@@ -654,23 +642,11 @@ tasks:
       - rm -rf e2e/node
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang node --output e2e/node
 
-  generate:tests:wasm:
-    desc: "Generate WASM e2e test suite from fixtures (vitest)"
+  generate:tests:wasmtime:
+    desc: "Generate wasmtime e2e test suite from fixtures (vitest + wasmtime serve)"
     cmds:
-      - rm -rf e2e/wasm
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang wasm --output e2e/wasm
-
-  generate:tests:deno:
-    desc: "Generate Deno e2e test suite from fixtures (Deno.test)"
-    cmds:
-      - rm -rf e2e/deno
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang deno --output e2e/deno
-
-  generate:tests:cloudflare:
-    desc: "Generate Cloudflare Workers e2e test suite from fixtures (vitest with workerd)"
-    cmds:
-      - rm -rf e2e/cloudflare
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang cloudflare --output e2e/cloudflare
+      - rm -rf e2e/wasmtime
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang wasmtime --output e2e/wasmtime
 
   generate:tests:ruby:
     desc: "Generate Ruby e2e test suite from fixtures"
@@ -689,9 +665,7 @@ tasks:
       - task: generate:tests:rust
       - task: generate:tests:python
       - task: generate:tests:node
-      - task: generate:tests:wasm
-      - task: generate:tests:deno
-      - task: generate:tests:cloudflare
+      - task: generate:tests:wasmtime
       - task: generate:tests:ruby
       - task: generate:tests:php
 
@@ -764,27 +738,9 @@ tasks:
     cmds:
       - pnpm test
 
-  test:e2e:wasm:
-    desc: "Run WASM e2e tests (fixture-driven integration tests with vitest)"
-    dir: e2e/wasm
-    deps:
-      - build:js
-    cmds:
-      - pnpm test
-
-  test:e2e:deno:
-    desc: "Run Deno e2e tests (fixture-driven integration tests)"
-    dir: e2e/deno
-    deps:
-      - build:wasm
-    cmds:
-      - deno test --no-check --sloppy-imports --allow-read --allow-net --allow-env tests/
-
-  test:e2e:cloudflare:
-    desc: "Run Cloudflare Workers e2e tests (local workerd)"
-    dir: e2e/cloudflare
-    deps:
-      - build:wasm
+  test:e2e:wasmtime:
+    desc: "Run wasmtime e2e tests (WASIp3 HTTP component tests)"
+    dir: e2e/wasmtime
     cmds:
       - pnpm install
       - pnpm test
@@ -819,17 +775,14 @@ tasks:
       - task: test:e2e:rust
       - task: test:e2e:python
       - task: test:e2e:node
-      - task: test:e2e:wasm
-      - task: test:e2e:deno
-      - task: test:e2e:cloudflare
+      - task: test:e2e:wasmtime
       - task: test:e2e:ruby
       - task: test:e2e:php
 
   build:js:
-    desc: "Build all JavaScript/TypeScript packages (node, wasm)"
+    desc: "Build all JavaScript/TypeScript packages"
     cmds:
       - task: build:node
-      - pnpm --filter @spikard/wasm run build
 
   run:cli:
     desc: "Run the CLI tool"
@@ -1436,13 +1389,6 @@ tasks:
     cmds:
       - cargo test --locked
 
-  test:apps:wasm:
-    desc: "Run WASM published package test app"
-    dir: tests/test_apps/wasm
-    cmds:
-      - pnpm install --frozen-lockfile
-      - pnpm test
-
   test:apps:all:
     desc: "Run all published package test apps"
     cmds:
@@ -1451,7 +1397,6 @@ tasks:
       - task: test:apps:ruby
       - task: test:apps:php
       - task: test:apps:rust
-      - task: test:apps:wasm
 
   test:apps:update-versions:
     desc: "Update all test app package versions"

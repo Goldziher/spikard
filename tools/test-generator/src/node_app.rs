@@ -142,6 +142,22 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
             println!("  ✓ Generated tsconfig.json");
             println!("  ✓ Generated vitest.config.ts");
         }
+        crate::ts_target::Runtime::Wasmtime => {
+            let package_json = generate_package_json(target);
+            fs::write(output_dir.join("package.json"), package_json).context("Failed to write package.json")?;
+
+            let tsconfig = generate_tsconfig(target);
+            fs::write(output_dir.join("tsconfig.json"), tsconfig).context("Failed to write tsconfig.json")?;
+
+            let vitest_config = generate_vitest_config(target);
+            fs::write(output_dir.join("vitest.config.ts"), vitest_config)
+                .context("Failed to write vitest.config.ts")?;
+
+            println!("  ✓ Generated app/main.ts");
+            println!("  ✓ Generated package.json");
+            println!("  ✓ Generated tsconfig.json");
+            println!("  ✓ Generated vitest.config.ts");
+        }
     }
 
     if !matches!(target.runtime, crate::ts_target::Runtime::Deno) {
@@ -425,6 +441,9 @@ fn generate_app_file_per_fixture(
                 code.push_str("import { Buffer } from \"node:buffer\";\n");
             }
             crate::ts_target::Runtime::CloudflareWorkers => {
+                code.push_str("import { Buffer } from \"node:buffer\";\n");
+            }
+            crate::ts_target::Runtime::Wasmtime => {
                 code.push_str("import { Buffer } from \"node:buffer\";\n");
             }
         }

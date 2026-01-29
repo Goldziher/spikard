@@ -73,8 +73,8 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Spikard core (Rust + WASM)
-  spikard:
+  # Spikard core (native Rust)
+  spikard-core:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
     runs-on: ubuntu-latest
@@ -86,7 +86,31 @@ jobs:
       matrix:
         framework:
           - spikard-rust
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-benchmark-tools
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: ${{ matrix.framework }}
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '10' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
+  # WASM frameworks
+  wasm:
+    name: "Benchmark: ${{ matrix.framework }}"
+    needs: build-harness
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
           - spikard-wasm
+          - spin
+          - hono-wasm
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup-benchmark-tools
@@ -236,7 +260,8 @@ jobs:
     if: always()
     needs:
       - build-harness
-      - spikard
+      - spikard-core
+      - wasm
       - python
       - bun
       - nodejs

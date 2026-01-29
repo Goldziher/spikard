@@ -57,7 +57,7 @@ runs:
           echo "language=node" >> $GITHUB_OUTPUT
         elif [[ "$framework" == "spikard-ruby" ]] || [[ "$framework" == "hanami-api" ]] || [[ "$framework" == "roda" ]]; then
           echo "language=ruby" >> $GITHUB_OUTPUT
-        elif [[ "$framework" == "spikard-wasm" ]]; then
+        elif [[ "$framework" == "spikard-wasm" ]] || [[ "$framework" == "spin" ]] || [[ "$framework" == "hono-wasm" ]]; then
           echo "language=wasm" >> $GITHUB_OUTPUT
         else
           echo "language=unknown" >> $GITHUB_OUTPUT
@@ -237,51 +237,41 @@ runs:
           composer install --no-dev --optimize-autoloader
         fi
 
-    - name: Setup Deno for WASM
+    - name: Setup WASM toolchain
       if: steps.detect.outputs.language == 'wasm'
-      uses: denoland/setup-deno@v2
-      with:
-        deno-version: v2.x
-
-    - name: Cache Deno dependencies
-      if: steps.detect.outputs.language == 'wasm'
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/deno
-        key: deno-${{ runner.os }}-${{ hashFiles(format('tools/benchmark-harness/apps/{0}/deno.json', inputs.framework), format('tools/benchmark-harness/apps/{0}/deno.lock', inputs.framework)) }}
-        restore-keys: |
-          deno-${{ runner.os }}-
-
-    - name: Cache wasm-pack
-      if: steps.detect.outputs.language == 'wasm'
-      uses: actions/cache@v4
-      with:
-        path: ~/.cargo/bin/wasm-pack
-        key: wasm-pack-${{ runner.os }}-v1
-
-    - name: Build WASM binding (if needed)
-      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'spikard-wasm'
       shell: bash
       run: |
-        # Build the WASM module using wasm-pack for Deno
-        cd $GITHUB_WORKSPACE/crates/spikard-wasm
-        rustup target add wasm32-unknown-unknown
-        if ! command -v wasm-pack &> /dev/null; then
-          cargo install wasm-pack --locked
-        fi
-        # Build with deno target, which outputs to dist-deno
-        wasm-pack build --target deno --out-dir dist-deno --release
-        # Copy the deno build to the benchmark app pkg directory
-        mkdir -p "$GITHUB_WORKSPACE/tools/benchmark-harness/apps/spikard-wasm/pkg"
-        cp -r dist-deno/* "$GITHUB_WORKSPACE/tools/benchmark-harness/apps/spikard-wasm/pkg/"
+        # Add wasm32-wasip2 target for Rust-based WASM components
+        rustup target add wasm32-wasip2
+
+        # Install wasmtime CLI
+        curl https://wasmtime.dev/install.sh -sSf | bash
+        echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
+
+    - name: Install Spin CLI
+      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'spin'
+      shell: bash
+      run: |
+        curl -fsSL https://developer.fermyon.com/downloads/install.sh | bash
+        sudo mv spin /usr/local/bin/
+
+    - name: Setup Node for hono-wasm
+      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'hono-wasm'
+      uses: ./.github/actions/setup-node-workspace
+      with:
+        node-version: '24'
 
     - name: Install WASM benchmark app dependencies
-      if: steps.detect.outputs.language == 'wasm'
+      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'hono-wasm'
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
-      run: |
-        # Deno doesn't need explicit install, dependencies are cached on first run
-        echo "Deno will fetch dependencies on first run"
+      run: pnpm install --frozen-lockfile
+
+    - name: Build WASM component
+      if: steps.detect.outputs.language == 'wasm' && inputs.framework == 'spikard-wasm'
+      shell: bash
+      working-directory: tools/benchmark-harness/apps/spikard-wasm
+      run: cargo build --target wasm32-wasip2 --release
 
     - name: Create results directory
       shell: bash

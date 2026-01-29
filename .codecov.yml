@@ -69,12 +69,6 @@ flags:
     target: 80%
     threshold: 2%
 
-  wasm:
-    paths:
-      - packages/wasm/src/
-    target: 75%
-    threshold: 3%
-
 ignore:
   # Test files
   - "**/*_test.rs"

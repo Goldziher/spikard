@@ -168,12 +168,6 @@ impl ProfileRunner {
         let php_profile_output = suite_php_profiler
             .then(|| std::env::var("SPIKARD_PHP_PROFILE_OUTPUT").ok().map(PathBuf::from))
             .flatten();
-        let wasm_metrics_output = suite_wasm_profiler
-            .then(|| std::env::var("SPIKARD_WASM_METRICS_FILE").ok().map(PathBuf::from))
-            .flatten();
-        let wasm_v8_log_output = suite_wasm_profiler
-            .then(|| std::env::var("SPIKARD_WASM_V8_LOG_OUTPUT").ok().map(PathBuf::from))
-            .flatten();
 
         let mut server_env = Vec::new();
         if let Some(ref output_path) = php_profile_output {
@@ -185,18 +179,6 @@ impl ProfileRunner {
         if self.config.profiler.is_some() {
             server_env.push(("SPIKARD_PROFILE_ENABLED".to_string(), "1".to_string()));
         }
-        if let Some(ref output_path) = wasm_metrics_output {
-            server_env.push((
-                "SPIKARD_WASM_METRICS_FILE".to_string(),
-                output_path.display().to_string(),
-            ));
-        }
-        if let Some(ref output_path) = wasm_v8_log_output {
-            server_env.push((
-                "SPIKARD_WASM_V8_LOG_OUTPUT".to_string(),
-                output_path.display().to_string(),
-            ));
-        }
 
         let node_cpu_profile_dir = suite_node_profiler.then(|| {
             self.config
@@ -206,10 +188,6 @@ impl ProfileRunner {
         });
         if let Some(ref dir) = node_cpu_profile_dir {
             let _ = std::fs::create_dir_all(dir);
-        }
-
-        if suite_wasm_profiler {
-            let _ = std::fs::remove_file(self.config.app_dir.join("v8.log"));
         }
 
         let node_start_cmd_override = match node_cpu_profile_dir.as_ref() {
@@ -235,14 +213,7 @@ impl ProfileRunner {
             app_dir: self.config.app_dir.clone(),
             variant: self.config.variant.clone(),
             env: server_env,
-            start_cmd_override: if suite_wasm_profiler {
-                Some(
-                    "deno run --allow-net --allow-read --allow-env --allow-write --v8-flags=--prof,--logfile=v8.log server.ts {port}"
-                        .to_string(),
-                )
-            } else {
-                node_start_cmd_override
-            },
+            start_cmd_override: node_start_cmd_override,
         };
 
         let server = start_server(server_config).await?;
@@ -335,15 +306,6 @@ impl ProfileRunner {
             }
         }
         if suite_wasm_profiler {
-            let metrics = wasm_metrics_output
-                .as_ref()
-                .and_then(|p| p.to_str())
-                .and_then(crate::profile::wasm::wait_for_metrics_output);
-            let v8_log_path = wasm_v8_log_output
-                .as_ref()
-                .and_then(|p| crate::profile::wasm::collect_v8_log(&self.config.app_dir, p).ok())
-                .flatten();
-
             for suite in &mut suite_results {
                 for workload in &mut suite.workloads {
                     let existing_flamegraph = match workload.results.profiling.take() {
@@ -354,11 +316,11 @@ impl ProfileRunner {
                         }
                     };
                     workload.results.profiling = Some(ProfilingData::Wasm(WasmProfilingData {
-                        rss_mb: metrics.as_ref().and_then(|m| m.rss_mb),
-                        heap_total_mb: metrics.as_ref().and_then(|m| m.heap_total_mb),
-                        heap_used_mb: metrics.as_ref().and_then(|m| m.heap_used_mb),
-                        external_mb: metrics.as_ref().and_then(|m| m.external_mb),
-                        v8_log_path: v8_log_path.clone(),
+                        rss_mb: None,
+                        heap_total_mb: None,
+                        heap_used_mb: None,
+                        external_mb: None,
+                        v8_log_path: None,
                         flamegraph_path: existing_flamegraph,
                     }));
                 }
@@ -441,7 +403,7 @@ impl ProfileRunner {
             "node" => find_descendant_pid_by_name(server.pid(), "node", 10).unwrap_or(server.pid()),
             "ruby" => find_descendant_pid_by_name(server.pid(), "ruby", 10).unwrap_or(server.pid()),
             "php" => find_descendant_pid_by_name(server.pid(), "php", 10).unwrap_or(server.pid()),
-            "wasm" => find_descendant_pid_by_name(server.pid(), "deno", 10).unwrap_or(server.pid()),
+            "wasm" => find_descendant_pid_by_name(server.pid(), "wasmtime", 10).unwrap_or(server.pid()),
             _ => server.pid(),
         }
     }
@@ -1158,12 +1120,12 @@ impl ProfileRunner {
                 "Node.js".to_string()
             }
             "wasm" => {
-                if let Ok(output) = std::process::Command::new("deno").arg("--version").output()
+                if let Ok(output) = std::process::Command::new("wasmtime").arg("--version").output()
                     && let Ok(version) = String::from_utf8(output.stdout)
                 {
-                    return version.lines().next().unwrap_or("Deno").trim().to_string();
+                    return version.trim().to_string();
                 }
-                "Deno".to_string()
+                "wasmtime".to_string()
             }
             "ruby" => {
                 if let Ok(output) = std::process::Command::new("ruby").arg("--version").output()

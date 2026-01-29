@@ -27,12 +27,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_JSON_PATHS = [
     Path("package.json"),
     Path("packages/node/package.json"),
-    Path("packages/wasm/package.json"),
     Path("crates/spikard-node/package.json"),
-    Path("crates/spikard-wasm/package.json"),
-    Path("crates/spikard-wasm/dist-node/package.json"),
-    Path("crates/spikard-wasm/dist-web/package.json"),
-    Path("crates/spikard-wasm/dist-bundler/package.json"),
 ]
 
 PYPROJECT_PATHS = [
@@ -58,11 +53,9 @@ README_PATHS = [
     Path("tests/test_apps/README.md"),
     Path("tests/test_apps/python/README.md"),
     Path("tests/test_apps/rust/README.md"),
-    Path("tests/test_apps/wasm/README.md"),
     Path("tests/test_apps/php/README.md"),
     Path("tests/test_apps/node/README.md"),
     Path("tests/test_apps/ruby/README.md"),
-    Path("packages/wasm/README.md"),
 ]
 
 

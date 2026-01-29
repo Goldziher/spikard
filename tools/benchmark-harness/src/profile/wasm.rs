@@ -1,45 +1,49 @@
-//! WASM (Deno) profiling integration
+//! WASM profiling integration
 //!
-//! Deno does not currently provide a stable, portable CPU profiler output format that we can
-//! enable without external tooling. For CI benchmarks we capture:
-//! - Application-level memory metrics via `Deno.memoryUsage()` written on shutdown.
-//! - Optional V8 `v8.log` output when `--v8-flags=--prof` is enabled (best-effort).
+//! For `WASIp3` components running under wasmtime, we measure process-level RSS
+//! via the `sysinfo` crate (same approach as native Rust profiling).
+//! Deno-specific metrics are no longer applicable.
 
 use crate::error::Result;
-use serde::Deserialize;
 use std::path::Path;
-use std::time::{Duration, Instant};
 
-/// Metrics emitted by the Deno benchmark app.
-#[derive(Debug, Deserialize)]
-pub struct WasmMetricsFile {
+/// Metrics collected from a WASM component process.
+#[derive(Debug)]
+pub struct WasmProcessMetrics {
     pub rss_mb: Option<f64>,
-    pub heap_total_mb: Option<f64>,
-    pub heap_used_mb: Option<f64>,
-    pub external_mb: Option<f64>,
 }
 
+/// Collect process-level memory metrics for a WASM runtime process.
+///
+/// Uses `/proc/{pid}/status` on Linux or equivalent OS APIs.
 #[must_use]
-pub fn wait_for_metrics_output(path: &str) -> Option<WasmMetricsFile> {
-    let start = Instant::now();
-    while start.elapsed() < Duration::from_secs(5) {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            match serde_json::from_str::<WasmMetricsFile>(&content) {
-                Ok(metrics) => return Some(metrics),
-                Err(e) => {
-                    eprintln!("  ⚠ Failed to parse WASM metrics file {path}: {e}");
-                    return None;
+#[allow(clippy::missing_const_for_fn)] // reads /proc on linux
+pub fn collect_process_metrics(pid: u32) -> WasmProcessMetrics {
+    #[cfg(target_os = "linux")]
+    {
+        // Read RSS from /proc on Linux
+        if let Ok(status) = std::fs::read_to_string(format!("/proc/{pid}/status")) {
+            for line in status.lines() {
+                if let Some(value) = line.strip_prefix("VmRSS:") {
+                    let kb: f64 = value.trim().trim_end_matches(" kB").trim().parse().unwrap_or(0.0);
+                    return WasmProcessMetrics {
+                        rss_mb: Some(kb / 1024.0),
+                    };
                 }
             }
         }
-        std::thread::sleep(Duration::from_millis(50));
     }
-    None
+
+    #[cfg(not(target_os = "linux"))]
+    let _ = pid; // unused on non-Linux platforms
+
+    // Fallback: no metrics available
+    WasmProcessMetrics { rss_mb: None }
 }
 
-/// Copy `v8.log` (if produced) into a stable location under the results directory.
-pub fn collect_v8_log(app_dir: &Path, output_path: &Path) -> Result<Option<String>> {
-    let source = app_dir.join("v8.log");
+/// Copy wasmtime profiling output if available.
+pub fn collect_wasmtime_profile(app_dir: &Path, output_path: &Path) -> Result<Option<String>> {
+    let source = app_dir.join("wasmtime-profile.json");
     if !source.exists() {
         return Ok(None);
     }

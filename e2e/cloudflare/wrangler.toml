@@ -1,4 +1,0 @@
-name = "spikard-e2e-cloudflare"
-main = "app/main.ts"
-compatibility_date = "2025-01-08"
-compatibility_flags = ["nodejs_compat"]

@@ -6,353 +6,81 @@ on:
     branches: [main]
     paths:
       - 'crates/spikard-wasm/**'
-      - 'packages/wasm/**'
-      - 'e2e/deno/**'
-      - 'e2e/cloudflare/**'
-      - 'pnpm-lock.yaml'
+      - 'crates/spikard-core/**/*.rs'
       - 'crates/spikard/**/*.rs'
-      - 'crates/spikard-http/**/*.rs'
+      - 'e2e/wasmtime/**'
       - 'testing_data/**'
       - 'tools/test-generator/**'
       - '.cargo/config.toml'
       - '.github/workflows/ci-wasm.yaml'
-      - '.github/actions/setup-node-workspace/**'
       - '.github/actions/setup-rust/**'
   pull_request:
     branches: [main]
     paths:
       - 'crates/spikard-wasm/**'
-      - 'packages/wasm/**'
-      - 'e2e/deno/**'
-      - 'e2e/cloudflare/**'
-      - 'pnpm-lock.yaml'
+      - 'crates/spikard-core/**/*.rs'
       - 'crates/spikard/**/*.rs'
-      - 'crates/spikard-http/**/*.rs'
+      - 'e2e/wasmtime/**'
       - 'testing_data/**'
       - 'tools/test-generator/**'
       - '.cargo/config.toml'
       - '.github/workflows/ci-wasm.yaml'
-      - '.github/actions/setup-node-workspace/**'
       - '.github/actions/setup-rust/**'
 
 concurrency:
-  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-wasm-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
-permissions:
-  contents: read
 
 env:
   RUST_BACKTRACE: short
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 0
-  CARGO_PROFILE_DEV_DEBUG: 0
-
-defaults:
-  run:
-    shell: bash
 
 jobs:
-  build-wasm:
-    name: Build WASM Bindings
+  check-wasm:
+    name: Check spikard-wasm (host target)
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
         with:
-          cache-key-prefix: wasm-bindings
-          use-sccache: 'false'
+          cache-key-prefix: ci-wasm-check
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
+      - name: Check spikard-wasm compiles
+        run: cargo check -p spikard-wasm
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Clippy
+        run: cargo clippy -p spikard-wasm -- -D warnings
+
+  build-wasm-component:
+    name: Build WASIp2 component
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
         with:
-          node-version: "20"
+          cache-key-prefix: ci-wasm-build
 
-      - name: Install workspace dependencies
-        shell: bash
-        run: pnpm install --frozen-lockfile
+      - name: Add wasm32-wasip2 target
+        run: rustup target add wasm32-wasip2
 
-      - name: Build WASM bindings
-        working-directory: crates/spikard-wasm
-        shell: bash
-        run: |
-          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target bundler --out-dir dist-bundler --release --no-opt
-          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target nodejs --out-dir dist-node --release --no-opt
-          PATH="$HOME/.cargo/bin:$PATH" pnpm exec wasm-pack build --target web --out-dir dist-web --release --no-opt
+      - name: Build WASM component
+        run: cargo build -p spikard-wasm --target wasm32-wasip2 --release
 
-      - name: Upload WASM bindings
+      - name: Upload WASM artifact
         uses: actions/upload-artifact@v6
         with:
-          name: wasm-bindings
-          path: |
-            crates/spikard-wasm/dist-node/
-            crates/spikard-wasm/dist-web/
-            crates/spikard-wasm/dist-bundler/
-          retention-days: 7
+          name: spikard-wasm-component
+          path: target/wasm32-wasip2/release/spikard_wasm.wasm
+          retention-days: 1
           if-no-files-found: error
-
-  test-wasm:
-    name: Test WASM
-    needs: build-wasm
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-
-      - name: Download WASM bindings
-        uses: actions/download-artifact@v7
-        with:
-          name: wasm-bindings
-          path: crates/spikard-wasm/
-
-      - name: Verify bindings downloaded
-        shell: bash
-        run: ls -la packages/wasm/
-
-      - name: Install dependencies
-        working-directory: packages/wasm
-        shell: bash
-        run: pnpm install
-
-      - name: Prepare WASM runtime
-        working-directory: packages/wasm
-        shell: bash
-        run: pnpm run prepare:wasm
-
-      - name: Run tests
-        working-directory: packages/wasm
-        shell: bash
-        run: pnpm test
-
-  coverage-wasm:
-    name: WASM Code Coverage (80% minimum)
-    needs: build-wasm
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-
-      - name: Download WASM bindings
-        uses: actions/download-artifact@v7
-        with:
-          name: wasm-bindings
-          path: crates/spikard-wasm/
-
-      - name: Install dependencies
-        run: cd "$GITHUB_WORKSPACE/packages/wasm" && pnpm install --frozen-lockfile
-
-      - name: Prepare WASM runtime
-        working-directory: packages/wasm
-        run: pnpm run prepare:wasm
-
-      - name: Run WASM coverage
-        working-directory: packages/wasm
-        run: pnpm test --coverage
-
-      - name: Upload coverage to Codecov
-        if: github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./packages/wasm/coverage/lcov.info
-          flags: wasm
-          name: wasm-coverage
-          fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Archive coverage report
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: wasm-coverage-report
-          path: packages/wasm/coverage/
-          retention-days: 30
-
-  test-deno:
-    name: Test Deno E2E
-    needs: build-wasm
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      - name: Download WASM bindings
-        uses: actions/download-artifact@v7
-        with:
-          name: wasm-bindings
-          path: crates/spikard-wasm/
-
-      - name: Generate Deno e2e tests
-        run: |
-          cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang deno --output e2e/deno
-
-      - name: Run Deno tests
-        working-directory: e2e/deno
-        run: deno test --no-check --sloppy-imports --allow-read --allow-net --allow-env tests/
-
-  test-cloudflare:
-    name: Test Cloudflare Workers E2E
-    needs: build-wasm
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-
-      - name: Download WASM bindings
-        uses: actions/download-artifact@v7
-        with:
-          name: wasm-bindings
-          path: crates/spikard-wasm/
-
-      - name: Generate Cloudflare e2e tests
-        run: |
-          cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang cloudflare --output e2e/cloudflare
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build WASM package
-        run: pnpm -C packages/wasm build
-
-      - name: Run Cloudflare Workers tests
-        working-directory: e2e/cloudflare
-        run: pnpm test
-
-  coverage-deno:
-    name: Deno E2E Coverage (80% minimum)
-    needs: build-wasm
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-
-      - name: Download WASM bindings
-        uses: actions/download-artifact@v7
-        with:
-          name: wasm-bindings
-          path: crates/spikard-wasm/
-
-      - name: Generate Deno e2e tests
-        run: |
-          cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang deno --output e2e/deno
-
-      - name: Run Deno coverage
-        working-directory: e2e/deno
-        run: |
-          deno test --no-check --sloppy-imports --allow-read --allow-net --allow-env --coverage=coverage_profile/ tests/
-          mkdir -p coverage
-          deno coverage coverage_profile/ --lcov --output=coverage/lcov.info
-
-      - name: Upload coverage to Codecov
-        if: github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./e2e/deno/coverage/lcov.info
-          flags: deno-e2e
-          name: deno-e2e-coverage
-          fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Archive coverage report
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: deno-e2e-coverage-report
-          path: e2e/deno/coverage/
-          retention-days: 30
-
-  coverage-cloudflare:
-    name: Cloudflare Workers E2E Coverage (80% minimum)
-    needs: build-wasm
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-
-      - name: Download WASM bindings
-        uses: actions/download-artifact@v7
-        with:
-          name: wasm-bindings
-          path: crates/spikard-wasm/
-
-      - name: Generate Cloudflare e2e tests
-        run: |
-          cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang cloudflare --output e2e/cloudflare
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build WASM package
-        run: pnpm -C packages/wasm build
-
-      - name: Run Cloudflare coverage
-        working-directory: e2e/cloudflare
-        run: pnpm test --coverage
-
-      - name: Upload coverage to Codecov
-        if: github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./e2e/cloudflare/coverage/lcov.info
-          flags: cloudflare-e2e
-          name: cloudflare-e2e-coverage
-          fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Archive coverage report
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: cloudflare-e2e-coverage-report
-          path: e2e/cloudflare/coverage/
-          retention-days: 30
