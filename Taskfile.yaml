@@ -1381,6 +1381,18 @@ tasks:
       - task: benchmarks:aggregate
       - task: benchmarks:visualize
 
+  visualize:
+    desc: "Generate benchmark charts and markdown table from aggregated results"
+    cmds:
+      - uv run --group visualize python tools/benchmark-harness/visualize_benchmarks.py --input .comparative_benchmark_results/benchmark-aggregated-results/aggregated.json --output docs/assets/benchmarks/ --format html --markdown docs/assets/benchmarks/summary.md
+      - echo "Charts generated in docs/assets/benchmarks/"
+
+  visualize:all:
+    desc: "Generate benchmark charts in all formats (HTML + SVG + PNG)"
+    cmds:
+      - uv run --group visualize python tools/benchmark-harness/visualize_benchmarks.py --input .comparative_benchmark_results/benchmark-aggregated-results/aggregated.json --output docs/assets/benchmarks/ --format all --markdown docs/assets/benchmarks/summary.md
+      - echo "Charts generated in docs/assets/benchmarks/ (HTML + SVG + PNG)"
+
   benchmarks:clean:
     desc: "Clean benchmark results and charts"
     dir: "{{.ROOT_DIR}}"

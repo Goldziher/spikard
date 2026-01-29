@@ -1,0 +1,24 @@
+{
+	"name": "fastify-benchmark",
+	"version": "0.1.0",
+	"description": "Fastify benchmark server for workload comparison",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "tsx server.ts",
+		"dev": "tsx watch server.ts"
+	},
+	"dependencies": {
+		"@fastify/formbody": "^8.0.2",
+		"@fastify/multipart": "^9.4.0",
+		"fastify": "^5.7.2"
+	},
+	"devDependencies": {
+		"@types/node": "^25.0.10",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
+}

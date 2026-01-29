@@ -29,19 +29,63 @@ impl ResourceMonitor {
         }
     }
 
-    /// Take a single sample of resource usage
+    /// Take a single sample of resource usage, summing across the entire process tree
+    /// (parent + all descendant processes). This is critical for frameworks like
+    /// Python/Node/PHP where the monitored PID spawns child worker processes.
     pub fn sample(&mut self) -> Option<ResourceSample> {
         self.system.refresh_all();
 
-        let process = self.system.process(self.pid)?;
+        // Check the root process still exists
+        self.system.process(self.pid)?;
+
+        // Collect all PIDs that are descendants of our monitored PID
+        let descendant_pids = self.collect_descendants();
+
+        let mut total_memory: u64 = 0;
+        let mut total_cpu: f32 = 0.0;
+
+        for &pid in &descendant_pids {
+            if let Some(proc) = self.system.process(pid) {
+                total_memory += proc.memory();
+                total_cpu += proc.cpu_usage();
+            }
+        }
 
         let sample = ResourceSample {
-            memory_bytes: process.memory(),
-            cpu_percent: f64::from(process.cpu_usage()),
+            memory_bytes: total_memory,
+            cpu_percent: f64::from(total_cpu),
         };
 
         self.samples.push(sample.clone());
         Some(sample)
+    }
+
+    /// Collect all PIDs in the process tree rooted at self.pid.
+    /// Walks parent chains of all system processes to find descendants.
+    fn collect_descendants(&self) -> Vec<Pid> {
+        let mut result = vec![self.pid];
+        // For each process in the system, check if it's a descendant of our root PID
+        // by walking the parent chain.
+        for (&pid, process) in self.system.processes() {
+            if pid == self.pid {
+                continue;
+            }
+            // Walk up the parent chain (max depth 32 to avoid infinite loops)
+            let mut current = process.parent();
+            let mut depth = 0;
+            while let Some(parent_pid) = current {
+                if parent_pid == self.pid {
+                    result.push(pid);
+                    break;
+                }
+                depth += 1;
+                if depth > 32 {
+                    break;
+                }
+                current = self.system.process(parent_pid).and_then(|p| p.parent());
+            }
+        }
+        result
     }
 
     /// Start monitoring in the background

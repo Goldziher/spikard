@@ -54,6 +54,11 @@ benchmarks = [
   "sniffio>=1.3.1",
   "uvicorn[standard]>=0.40.0",
 ]
+visualize = [
+    "kaleido>=1.2.0",
+    "pandas>=3.0.0",
+    "plotly>=6.5.2",
+]
 
 [tool.setuptools]
 packages = [  ]
@@ -71,17 +76,10 @@ cache-keys = [
 members = [
   "packages/python",
   # Python benchmark apps (workspace-managed)
-  "tools/benchmark-harness/apps/fastapi-uvicorn-validation",
-  "tools/benchmark-harness/apps/fastapi-uvicorn-raw",
-  "tools/benchmark-harness/apps/fastapi-granian-validation",
-  "tools/benchmark-harness/apps/fastapi-granian-raw",
-  "tools/benchmark-harness/apps/robyn-raw",
-  "tools/benchmark-harness/apps/spikard-python-validation",
-  "tools/benchmark-harness/apps/spikard-python-raw",
-  "tools/benchmark-harness/apps/litestar-uvicorn-validation",
-  "tools/benchmark-harness/apps/litestar-uvicorn-raw",
-  "tools/benchmark-harness/apps/litestar-granian-validation",
-  "tools/benchmark-harness/apps/litestar-granian-raw",
+  "tools/benchmark-harness/apps/fastapi",
+  "tools/benchmark-harness/apps/litestar",
+  "tools/benchmark-harness/apps/robyn",
+  "tools/benchmark-harness/apps/spikard-python",
 ]
 
 [tool.uv.sources]

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -34,7 +35,8 @@ def extract_framework_data(data: dict[str, Any]) -> pd.DataFrame:
 
         for suite in profile.get("suites", []):
             for workload in suite.get("workloads", []):
-                metrics = workload.get("metrics", {})
+                # Support both "results" (actual schema) and "metrics" (legacy)
+                metrics = workload.get("results", workload.get("metrics", {}))
                 throughput = metrics.get("throughput", {})
                 latency = metrics.get("latency", {})
                 resources = metrics.get("resources", {})
@@ -48,7 +50,7 @@ def extract_framework_data(data: dict[str, Any]) -> pd.DataFrame:
                     "total_requests": throughput.get("total_requests", 0),
                     "success_rate": throughput.get("success_rate", 0) * 100,
                     "latency_mean_ms": latency.get("mean_ms", 0),
-                    "latency_p50_ms": latency.get("p50_ms", 0),
+                    "latency_p50_ms": latency.get("median_ms", latency.get("p50_ms", 0)),
                     "latency_p90_ms": latency.get("p90_ms", 0),
                     "latency_p95_ms": latency.get("p95_ms", 0),
                     "latency_p99_ms": latency.get("p99_ms", 0),
@@ -81,12 +83,33 @@ def get_color_scheme() -> list[str]:
     ]
 
 
-def generate_throughput_chart(data: dict[str, Any], output_dir: Path, title: str) -> Path:
+def _write_figure(fig: go.Figure, output_dir: Path, name: str, fmt: str) -> list[Path]:
+    """Write a figure in the requested format(s). Returns list of output paths."""
+    paths: list[Path] = []
+
+    formats = ["html", "svg", "png"] if fmt == "all" else [fmt]
+
+    for f in formats:
+        if f == "html":
+            p = output_dir / f"{name}.html"
+            fig.write_html(str(p))
+            paths.append(p)
+        elif f in ("svg", "png"):
+            p = output_dir / f"{name}.{f}"
+            fig.write_image(str(p), format=f)
+            paths.append(p)
+
+    return paths
+
+
+def generate_throughput_chart(
+    data: dict[str, Any], output_dir: Path, title: str, fmt: str
+) -> list[Path]:
     """Generate throughput comparison chart."""
     df = extract_framework_data(data)
 
     if df.empty:
-        return output_dir / "throughput-by-framework.html"
+        return []
 
     json_workloads = df[df["suite"] == "json-bodies"]
 
@@ -134,17 +157,17 @@ def generate_throughput_chart(data: dict[str, Any], output_dir: Path, title: str
         },
     )
 
-    output_path = output_dir / "throughput-by-framework.html"
-    fig.write_html(str(output_path))
-    return output_path
+    return _write_figure(fig, output_dir, "throughput-by-framework", fmt)
 
 
-def generate_latency_chart(data: dict[str, Any], output_dir: Path, title: str) -> Path:
+def generate_latency_chart(
+    data: dict[str, Any], output_dir: Path, title: str, fmt: str
+) -> list[Path]:
     """Generate latency percentile comparison (2x2 subplot)."""
     df = extract_framework_data(data)
 
     if df.empty:
-        return output_dir / "latency-percentiles.html"
+        return []
 
     small_json = df[(df["suite"] == "json-bodies") & (df["workload"].str.contains("small"))]
 
@@ -194,36 +217,39 @@ def generate_latency_chart(data: dict[str, Any], output_dir: Path, title: str) -
         showlegend=False,
     )
 
-    output_path = output_dir / "latency-percentiles.html"
-    fig.write_html(str(output_path))
-    return output_path
+    return _write_figure(fig, output_dir, "latency-percentiles", fmt)
 
 
-def generate_validation_overhead_chart(data: dict[str, Any], output_dir: Path, title: str) -> Path:
+def generate_validation_overhead_chart(
+    data: dict[str, Any], output_dir: Path, title: str, fmt: str
+) -> list[Path]:
     """Generate validation vs raw comparison chart."""
     df = extract_framework_data(data)
 
     if df.empty:
-        return output_dir / "validation-overhead.html"
+        return []
 
-    df["base_framework"] = df["framework"].str.replace("-validation|-raw", "", regex=True)
-    df["variant"] = df["framework"].str.extract(r"(validation|raw)$")[0]
+    df["is_validated"] = df["workload"].str.startswith("validated/")
+    df["base_workload"] = df["workload"].str.replace("^validated/", "", regex=True)
 
     json_small = df[(df["suite"] == "json-bodies") & (df["workload"].str.contains("small"))]
 
     if json_small.empty:
         json_small = df
 
-    paired = json_small[json_small["variant"].notna()]
-
-    pivot = paired.pivot_table(
-        index="base_framework",
-        columns="variant",
+    # Pair raw and validated workloads for each framework
+    pivot = json_small.pivot_table(
+        index=["framework", "base_workload"],
+        columns="is_validated",
         values="requests_per_sec",
         aggfunc="mean",
-    ).dropna()
+    )
 
-    if "validation" not in pivot.columns or "raw" not in pivot.columns:
+    if not pivot.empty:
+        pivot = pivot.reset_index()
+        pivot = pivot.dropna(subset=[False, True])
+
+    if pivot.empty or False not in pivot.columns or True not in pivot.columns:
         fig = go.Figure()
         fig.add_annotation(
             text="Insufficient validation/raw pairs for comparison",
@@ -235,40 +261,42 @@ def generate_validation_overhead_chart(data: dict[str, Any], output_dir: Path, t
             font={"size": 16},
         )
     else:
-        pivot["overhead_pct"] = ((pivot["raw"] - pivot["validation"]) / pivot["raw"]) * 100
+        pivot["overhead_pct"] = ((pivot[False] - pivot[True]) / pivot[False]) * 100
 
         fig = go.Figure()
 
         colors = get_color_scheme()
+        color_idx = 0
 
-        for idx, fw in enumerate(pivot.index):
+        for _, row in pivot.iterrows():
+            fw = row["framework"]
             fig.add_trace(
                 go.Bar(
-                    name=f"{fw}-validation",
-                    x=[fw],
-                    y=[pivot.loc[fw, "validation"]],
-                    marker_color=colors[idx * 2 % len(colors)],
-                    text=f"{pivot.loc[fw, 'validation']:.0f}",
+                    name="Raw",
+                    x=[f"{fw}\n{row['base_workload']}"],
+                    y=[row[False]],
+                    marker_color=colors[color_idx % len(colors)],
+                    text=f"{row[False]:.0f}",
                     textposition="outside",
-                    showlegend=False,
+                    showlegend=(color_idx == 0),
                 )
             )
             fig.add_trace(
                 go.Bar(
-                    name=f"{fw}-raw",
-                    x=[fw],
-                    y=[pivot.loc[fw, "raw"]],
-                    marker_color=colors[(idx * 2 + 1) % len(colors)],
-                    text=f"{pivot.loc[fw, 'raw']:.0f}",
+                    name="Validated",
+                    x=[f"{fw}\n{row['base_workload']}"],
+                    y=[row[True]],
+                    marker_color=colors[(color_idx + 1) % len(colors)],
+                    text=f"{row[True]:.0f}",
                     textposition="outside",
-                    showlegend=False,
+                    showlegend=(color_idx == 0),
                 )
             )
 
-            overhead = pivot.loc[fw, "overhead_pct"]
+            overhead = row["overhead_pct"]
             fig.add_annotation(
-                x=fw,
-                y=max(pivot.loc[fw, "validation"], pivot.loc[fw, "raw"]),
+                x=f"{fw}\n{row['base_workload']}",
+                y=max(row[False], row[True]),
                 text=f"{overhead:.1f}% overhead",
                 showarrow=True,
                 arrowhead=2,
@@ -279,6 +307,7 @@ def generate_validation_overhead_chart(data: dict[str, Any], output_dir: Path, t
                 ay=-40,
                 font={"size": 10, "color": "red" if overhead > 20 else "green" if overhead < 5 else "orange"},
             )
+            color_idx += 2
 
     fig.update_layout(
         title=f"{title} - Validation Overhead",
@@ -290,17 +319,17 @@ def generate_validation_overhead_chart(data: dict[str, Any], output_dir: Path, t
         font={"family": "Roboto, sans-serif", "size": 12},
     )
 
-    output_path = output_dir / "validation-overhead.html"
-    fig.write_html(str(output_path))
-    return output_path
+    return _write_figure(fig, output_dir, "validation-overhead", fmt)
 
 
-def generate_resource_chart(data: dict[str, Any], output_dir: Path, title: str) -> Path:
+def generate_resource_chart(
+    data: dict[str, Any], output_dir: Path, title: str, fmt: str
+) -> list[Path]:
     """Generate resource utilization chart (dual-axis: memory bars + CPU line)."""
     df = extract_framework_data(data)
 
     if df.empty:
-        return output_dir / "resources.html"
+        return []
 
     resources = (
         df.groupby("framework", as_index=False)[["memory_peak_mb", "cpu_avg_percent"]]
@@ -347,13 +376,133 @@ def generate_resource_chart(data: dict[str, Any], output_dir: Path, title: str) 
         hovermode="x unified",
     )
 
-    output_path = output_dir / "resources.html"
-    fig.write_html(str(output_path))
-    return output_path
+    return _write_figure(fig, output_dir, "resources", fmt)
 
 
-def generate_metadata(data: dict[str, Any], output_dir: Path) -> None:
+def generate_throughput_summary(
+    data: dict[str, Any], output_dir: Path, fmt: str
+) -> list[Path]:
+    """Generate a simple horizontal bar chart of avg RPS per framework (for README)."""
+    df = extract_framework_data(data)
+    if df.empty:
+        return []
+
+    # All frameworks now run all workloads (raw + validated), so no need to filter for common workloads
+    summary = (
+        df.groupby("framework", as_index=False)["requests_per_sec"]
+        .mean()
+        .sort_values("requests_per_sec", ascending=True)
+    )
+
+    n_workloads = df["workload"].nunique()
+    colors = get_color_scheme()
+    fig = go.Figure(
+        go.Bar(
+            y=summary["framework"],
+            x=summary["requests_per_sec"],
+            orientation="h",
+            marker_color=[colors[i % len(colors)] for i in range(len(summary))],
+            text=[f"{v:,.0f}" for v in summary["requests_per_sec"]],
+            textposition="outside",
+        )
+    )
+    fig.update_layout(
+        title=f"Average Requests/sec by Framework (across {n_workloads} workloads)",
+        xaxis_title="Requests / second",
+        template="plotly_white",
+        height=max(400, len(summary) * 35 + 100),
+        margin={"l": 200},
+        font={"family": "Roboto, sans-serif", "size": 12},
+    )
+
+    return _write_figure(fig, output_dir, "throughput-summary", fmt)
+
+
+def generate_latency_summary(
+    data: dict[str, Any], output_dir: Path, fmt: str
+) -> list[Path]:
+    """Generate a simple horizontal bar chart of P99 latency per framework (for README)."""
+    df = extract_framework_data(data)
+    if df.empty:
+        return []
+
+    # All frameworks now run all workloads (raw + validated), so no need to filter for common workloads
+    n_workloads = df["workload"].nunique()
+    summary = (
+        df.groupby("framework", as_index=False)["latency_p99_ms"]
+        .mean()
+        .sort_values("latency_p99_ms", ascending=True)
+    )
+
+    colors = get_color_scheme()
+    fig = go.Figure(
+        go.Bar(
+            y=summary["framework"],
+            x=summary["latency_p99_ms"],
+            orientation="h",
+            marker_color=[colors[i % len(colors)] for i in range(len(summary))],
+            text=[f"{v:.2f} ms" for v in summary["latency_p99_ms"]],
+            textposition="outside",
+        )
+    )
+    fig.update_layout(
+        title=f"P99 Latency by Framework (across {n_workloads} workloads)",
+        xaxis_title="Latency (ms)",
+        template="plotly_white",
+        height=max(400, len(summary) * 35 + 100),
+        margin={"l": 200},
+        font={"family": "Roboto, sans-serif", "size": 12},
+    )
+
+    return _write_figure(fig, output_dir, "latency-summary", fmt)
+
+
+def generate_markdown_table(data: dict[str, Any], output_file: Path | None = None) -> str:
+    """Generate a markdown summary table of benchmark results."""
+    df = extract_framework_data(data)
+    if df.empty:
+        return "No benchmark data available."
+
+    summary = (
+        df.groupby("framework", as_index=False)
+        .agg(
+            avg_rps=("requests_per_sec", "mean"),
+            p50_ms=("latency_p50_ms", "mean"),
+            p99_ms=("latency_p99_ms", "mean"),
+            cpu_pct=("cpu_avg_percent", "mean"),
+            mem_mb=("memory_peak_mb", "mean"),
+        )
+        .sort_values("avg_rps", ascending=False)
+    )
+
+    lines = [
+        "| Framework | Avg RPS | P50 (ms) | P99 (ms) | CPU (%) | Mem (MB) |",
+        "|-----------|---------|----------|----------|---------|----------|",
+    ]
+    for _, row in summary.iterrows():
+        lines.append(
+            f"| {row['framework']} "
+            f"| {row['avg_rps']:,.0f} "
+            f"| {row['p50_ms']:.2f} "
+            f"| {row['p99_ms']:.2f} "
+            f"| {row['cpu_pct']:.1f} "
+            f"| {row['mem_mb']:.1f} |"
+        )
+
+    table = "\n".join(lines)
+
+    if output_file is not None:
+        output_file.write_text(table + "\n")
+
+    return table
+
+
+def generate_metadata(data: dict[str, Any], output_dir: Path, charts: list[str]) -> None:
     """Generate metadata.json for dynamic injection into docs."""
+    chart_files = []
+    for name in charts:
+        chart_files.append(f"{name}.html")
+
     metadata = {
         "generated_at": datetime.now(UTC).isoformat(),
         "workflow_run_id": data["metadata"]["run_id"],
@@ -365,12 +514,7 @@ def generate_metadata(data: dict[str, Any], output_dir: Path) -> None:
             "completed": data["summary"]["completed"],
             "failed": data["summary"]["failed"],
         },
-        "charts": [
-            "throughput-by-framework.html",
-            "latency-percentiles.html",
-            "validation-overhead.html",
-            "resources.html",
-        ],
+        "charts": chart_files,
     }
 
     output_path = output_dir / "metadata.json"
@@ -386,9 +530,22 @@ def main() -> None:
     parser.add_argument(
         "--charts",
         default="all",
-        help="Comma-separated chart types: throughput,latency,validation,resources,all",
+        help="Comma-separated chart types: throughput,latency,validation,resources,throughput-summary,latency-summary,all",
     )
     parser.add_argument("--title", default="Benchmark Results", help="Title prefix for charts")
+    parser.add_argument(
+        "--format",
+        default="html",
+        choices=["html", "svg", "png", "all"],
+        help="Output format: html (interactive), svg/png (static images), all",
+    )
+    parser.add_argument(
+        "--markdown",
+        nargs="?",
+        const="-",
+        default=None,
+        help="Output markdown table to file (or stdout if no path / '-' given)",
+    )
     args = parser.parse_args()
 
     data = load_aggregated_results(args.input)
@@ -397,21 +554,48 @@ def main() -> None:
 
     chart_types = [c.strip() for c in args.charts.split(",")]
     if "all" in chart_types:
-        chart_types = ["throughput", "latency", "validation", "resources"]
+        chart_types = [
+            "throughput",
+            "latency",
+            "validation",
+            "resources",
+            "throughput-summary",
+            "latency-summary",
+        ]
+
+    generated_charts: list[str] = []
 
     for chart_type in chart_types:
         if chart_type == "throughput":
-            generate_throughput_chart(data, args.output, args.title)
+            generate_throughput_chart(data, args.output, args.title, args.format)
+            generated_charts.append("throughput-by-framework")
         elif chart_type == "latency":
-            generate_latency_chart(data, args.output, args.title)
+            generate_latency_chart(data, args.output, args.title, args.format)
+            generated_charts.append("latency-percentiles")
         elif chart_type == "validation":
-            generate_validation_overhead_chart(data, args.output, args.title)
+            generate_validation_overhead_chart(data, args.output, args.title, args.format)
+            generated_charts.append("validation-overhead")
         elif chart_type == "resources":
-            generate_resource_chart(data, args.output, args.title)
-        else:
-            pass
+            generate_resource_chart(data, args.output, args.title, args.format)
+            generated_charts.append("resources")
+        elif chart_type == "throughput-summary":
+            generate_throughput_summary(data, args.output, args.format)
+            generated_charts.append("throughput-summary")
+        elif chart_type == "latency-summary":
+            generate_latency_summary(data, args.output, args.format)
+            generated_charts.append("latency-summary")
 
-    generate_metadata(data, args.output)
+    if args.markdown is not None:
+        if args.markdown == "-":
+            table = generate_markdown_table(data)
+            sys.stdout.write(table + "\n")
+        else:
+            md_path = Path(args.markdown)
+            table = generate_markdown_table(data, md_path)
+            print(f"Markdown table written to {md_path}")
+
+    if "summary" in data:
+        generate_metadata(data, args.output, generated_charts)
 
 
 if __name__ == "__main__":

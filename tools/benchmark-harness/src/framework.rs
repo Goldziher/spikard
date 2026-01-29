@@ -11,7 +11,7 @@ use std::process::Command;
 /// Configuration for a framework
 #[derive(Debug, Clone)]
 pub struct FrameworkConfig {
-    /// Framework name (e.g., "spikard-rust-validation", "fastapi")
+    /// Framework name (e.g., "spikard-rust", "fastapi")
     pub name: String,
 
     /// Files to look for when detecting this framework
@@ -29,10 +29,6 @@ pub struct FrameworkConfig {
     /// Optional subdirectory hint for where to run the framework from
     /// (e.g., "." for root, "crates/spikard-rust" for workspace crates)
     pub working_dir_hint: Option<String>,
-
-    /// Optional list of workload categories supported by this framework.
-    /// If None, all categories are assumed supported.
-    pub supported_categories: Option<Vec<String>>,
 }
 
 impl FrameworkConfig {
@@ -50,21 +46,7 @@ impl FrameworkConfig {
             build_cmd,
             start_cmd: start_cmd.into(),
             working_dir_hint,
-            supported_categories: None,
         }
-    }
-
-    #[must_use]
-    pub fn with_supported_categories(mut self, categories: Vec<String>) -> Self {
-        self.supported_categories = Some(categories);
-        self
-    }
-
-    #[must_use]
-    pub fn supports_category(&self, category: &str) -> bool {
-        self.supported_categories
-            .as_ref()
-            .is_none_or(|categories| categories.iter().any(|item| item == category))
     }
 
     /// Checks if all `detect_files` exist in the given directory
@@ -90,7 +72,7 @@ fn php_extension_available(extension: &str) -> bool {
 
 fn framework_registry() -> Vec<FrameworkConfig> {
     let mut frameworks = vec![
-        // Generated benchmark apps (from app-generator)
+        // --- Spikard bindings (generated benchmark apps) ---
         FrameworkConfig::new(
             "spikard-python",
             vec!["server.py".to_string()],
@@ -100,334 +82,125 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
         FrameworkConfig::new(
             "spikard-rust",
-            vec!["Cargo.toml".to_string(), "server.rs".to_string()],
+            vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
             Some("cargo build --release".to_string()),
-            "./target/release/server {port}",
+            "./target/release/spikard-rust-bench {port}",
             None,
         ),
         FrameworkConfig::new(
             "spikard-node",
             vec!["server.ts".to_string()],
             None,
-            "pnpm tsx tools/benchmark-harness/apps/spikard-node/server.ts {port}",
-            Some("../../../..".to_string()),
+            "pnpm start -- {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "spikard-bun",
+            vec!["server.ts".to_string()],
+            None,
+            "bun run server.ts {port}",
+            None,
         ),
         FrameworkConfig::new(
             "spikard-ruby",
             vec!["server.rb".to_string()],
             None,
-            "ruby server.rb {port}",
+            "bundle exec ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(
             "spikard-php",
             vec!["server.php".to_string()],
             None,
-            "php -S 0.0.0.0:{port} server.php",
-            None,
-        ),
-        // Pre-existing validation apps
-        FrameworkConfig::new(
-            "spikard-rust-validation",
-            vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
-            Some("cargo build --release".to_string()),
-            "./target/release/spikard-rust-bench {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "spikard-python-validation",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "spikard-node-validation",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm start -- {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "spikard-bun-validation",
-            vec!["server.ts".to_string()],
-            None,
-            "bun run server.ts {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "spikard-ruby-validation",
-            vec!["server.rb".to_string()],
-            None,
-            "bundle exec ruby server.rb {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "spikard-php-validation",
-            vec!["server.php".to_string()],
-            None,
             "./start.sh {port}",
             None,
         ),
+        // NOTE: WASM validation may appear faster than raw because validation passes
+        // JSON schemas to the Rust core, enabling optimized parsing paths. Raw mode
+        // does ad-hoc parsing in the JS/WASM glue layer. Future: flamegraph profiling.
         FrameworkConfig::new(
-            "spikard-wasm-validation",
+            "spikard-wasm",
             vec!["server.ts".to_string()],
             None,
             "deno run --allow-net --allow-read server.ts {port}",
             None,
         ),
+        // --- Third-party Python frameworks ---
         FrameworkConfig::new(
-            "spikard-rust-raw",
-            vec!["Cargo.toml".to_string(), "src/main.rs".to_string()],
-            Some("cargo build --release".to_string()),
-            "./target/release/spikard-rust-bench {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "spikard-python-raw",
+            "fastapi",
             vec!["server.py".to_string()],
             None,
             "uv run python server.py {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-node-raw",
+            "litestar",
+            vec!["server.py".to_string()],
+            None,
+            "uv run python server.py {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "robyn",
+            vec!["server.py".to_string()],
+            None,
+            "uv run python server.py {port}",
+            None,
+        ),
+        // --- Third-party Node/Bun frameworks ---
+        FrameworkConfig::new(
+            "fastify",
             vec!["server.ts".to_string()],
             None,
             "pnpm start -- {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-bun-raw",
+            "hono",
+            vec!["server.ts".to_string()],
+            None,
+            "pnpm run start -- {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "elysia",
             vec!["server.ts".to_string()],
             None,
             "bun run server.ts {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-ruby-raw",
+            "morojs",
+            vec!["server.ts".to_string()],
+            None,
+            "pnpm run start -- {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "kito",
+            vec!["server.ts".to_string()],
+            None,
+            "pnpm run start -- {port}",
+            None,
+        ),
+        // --- Third-party Ruby frameworks ---
+        FrameworkConfig::new(
+            "hanami-api",
             vec!["server.rb".to_string()],
             None,
             "bundle exec ruby server.rb {port}",
             None,
         ),
         FrameworkConfig::new(
-            "spikard-php-raw",
-            vec!["server.php".to_string()],
-            None,
-            "./start.sh {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "spikard-wasm-raw",
-            vec!["server.ts".to_string()],
-            None,
-            "deno run --allow-net --allow-read server.ts {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "fastapi-uvicorn-validation",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "fastapi-uvicorn-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "fastapi-python",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "fastapi-granian-validation",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "robyn-validation",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "fastapi-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "fastapi-granian-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "litestar-uvicorn-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "litestar-granian-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "robyn-raw",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "fastify-validation",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string(), "forms".to_string()]),
-        FrameworkConfig::new(
-            "fastify-raw",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm start -- {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "hono-validation",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "hono-raw",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "elysia-validation",
-            vec!["server.ts".to_string()],
-            None,
-            "bun run server.ts {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "morojs-validation",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "morojs-raw",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "kito-validation",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "kito-raw",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "express-validation",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm start -- {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string()]),
-        FrameworkConfig::new(
-            "express-raw",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm start -- {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "litestar-uvicorn-validation",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "litestar-granian-validation",
-            vec!["server.py".to_string()],
-            None,
-            "uv run python server.py {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "hanami-api-validation",
-            vec!["server.rb".to_string()],
-            None,
-            "bundle exec ruby server.rb {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string(), "forms".to_string()]),
-        FrameworkConfig::new(
-            "hanami-api-raw",
+            "roda",
             vec!["server.rb".to_string()],
             None,
             "bundle exec ruby server.rb {port}",
             None,
         ),
+        // --- Third-party PHP frameworks ---
         FrameworkConfig::new(
-            "roda-validation",
-            vec!["server.rb".to_string()],
-            None,
-            "bundle exec ruby server.rb {port}",
-            None,
-        )
-        .with_supported_categories(vec!["json-bodies".to_string(), "forms".to_string()]),
-        FrameworkConfig::new(
-            "roda-raw",
-            vec!["server.rb".to_string()],
-            None,
-            "bundle exec ruby server.rb {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "trongate-raw",
+            "trongate",
             vec!["server.php".to_string()],
             None,
             "php server.php {port}",
@@ -437,22 +210,12 @@ fn framework_registry() -> Vec<FrameworkConfig> {
 
     if php_extension_available("phalcon") {
         frameworks.push(FrameworkConfig::new(
-            "phalcon-raw",
+            "phalcon",
             vec!["server.php".to_string(), "composer.json".to_string()],
             Some("composer install --no-dev --optimize-autoloader".to_string()),
-            "php -S 0.0.0.0:{port} server.php",
+            "php server.php {port}",
             None,
         ));
-        frameworks.push(
-            FrameworkConfig::new(
-                "phalcon-validation",
-                vec!["server.php".to_string(), "composer.json".to_string()],
-                Some("composer install --no-dev --optimize-autoloader".to_string()),
-                "php -S 0.0.0.0:{port} server.php",
-                None,
-            )
-            .with_supported_categories(vec!["json-bodies".to_string()]),
-        );
     }
 
     frameworks
@@ -509,12 +272,6 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
         return Ok(matches.swap_remove(index));
     }
 
-    // Prefer validation variants when multiple frameworks match
-    if matches.len() > 1
-        && let Some(validation_match) = matches.iter().find(|fw| fw.name.contains("-validation"))
-    {
-        return Ok(validation_match.clone());
-    }
 
     matches.sort_by(|a, b| b.detect_files.len().cmp(&a.detect_files.len()));
 
@@ -558,7 +315,7 @@ pub fn list_frameworks() -> Vec<FrameworkConfig> {
 /// ```no_run
 /// use benchmark_harness::framework::get_framework;
 ///
-/// if let Some(config) = get_framework("spikard-rust-validation") {
+/// if let Some(config) = get_framework("spikard-rust") {
 ///     println!("Start command: {}", config.start_cmd);
 /// }
 /// ```
@@ -594,62 +351,37 @@ mod tests {
         let registry = framework_registry();
         let names: Vec<&str> = registry.iter().map(|f| f.name.as_str()).collect();
 
-        assert!(names.contains(&"spikard-rust-validation"));
-        assert!(names.contains(&"spikard-python-validation"));
-        assert!(names.contains(&"spikard-node-validation"));
-        assert!(names.contains(&"spikard-bun-validation"));
-        assert!(names.contains(&"spikard-ruby-validation"));
-        assert!(names.contains(&"spikard-php-validation"));
-        assert!(names.contains(&"spikard-wasm-validation"));
-        assert!(names.contains(&"spikard-rust-raw"));
-        assert!(names.contains(&"spikard-python-raw"));
-        assert!(names.contains(&"spikard-node-raw"));
-        assert!(names.contains(&"spikard-bun-raw"));
-        assert!(names.contains(&"spikard-ruby-raw"));
-        assert!(names.contains(&"spikard-php-raw"));
-        assert!(names.contains(&"spikard-wasm-raw"));
+        // Raw (base) frameworks
+        assert!(names.contains(&"spikard-rust"));
+        assert!(names.contains(&"spikard-python"));
+        assert!(names.contains(&"spikard-node"));
+        assert!(names.contains(&"spikard-bun"));
+        assert!(names.contains(&"spikard-ruby"));
+        assert!(names.contains(&"spikard-php"));
+        assert!(names.contains(&"spikard-wasm"));
 
-        assert!(names.contains(&"fastapi-uvicorn-validation"));
-        assert!(names.contains(&"fastapi-uvicorn-raw"));
-        assert!(names.contains(&"fastapi-python"));
-        assert!(names.contains(&"fastapi-granian-validation"));
-        assert!(names.contains(&"litestar-uvicorn-validation"));
-        assert!(names.contains(&"litestar-granian-validation"));
-        assert!(names.contains(&"robyn-validation"));
+        assert!(names.contains(&"fastapi"));
+        assert!(names.contains(&"litestar"));
+        assert!(names.contains(&"robyn"));
 
-        assert!(names.contains(&"fastapi-raw"));
-        assert!(names.contains(&"fastapi-granian-raw"));
-        assert!(names.contains(&"litestar-uvicorn-raw"));
-        assert!(names.contains(&"litestar-granian-raw"));
-        assert!(names.contains(&"robyn-raw"));
+        assert!(names.contains(&"fastify"));
+        assert!(names.contains(&"hono"));
+        assert!(names.contains(&"elysia"));
+        assert!(names.contains(&"morojs"));
+        assert!(names.contains(&"kito"));
 
-        assert!(names.contains(&"fastify-validation"));
-        assert!(names.contains(&"fastify-raw"));
-        assert!(names.contains(&"hono-validation"));
-        assert!(names.contains(&"hono-raw"));
-        assert!(names.contains(&"elysia-validation"));
-        assert!(names.contains(&"morojs-validation"));
-        assert!(names.contains(&"morojs-raw"));
-        assert!(names.contains(&"express-validation"));
-        assert!(names.contains(&"express-raw"));
-        assert!(names.contains(&"kito-validation"));
-        assert!(names.contains(&"kito-raw"));
+        assert!(names.contains(&"hanami-api"));
+        assert!(names.contains(&"roda"));
 
-        assert!(names.contains(&"hanami-api-validation"));
-        assert!(names.contains(&"hanami-api-raw"));
-        assert!(names.contains(&"roda-validation"));
-        assert!(names.contains(&"roda-raw"));
+        assert!(names.contains(&"trongate"));
 
-        assert!(names.contains(&"trongate-raw"));
         if php_extension_available("phalcon") {
-            assert!(names.contains(&"phalcon-raw"));
-            assert!(names.contains(&"phalcon-validation"));
+            assert!(names.contains(&"phalcon"));
         } else {
-            assert!(!names.contains(&"phalcon-raw"));
-            assert!(!names.contains(&"phalcon-validation"));
+            assert!(!names.contains(&"phalcon"));
         }
 
-        let expected_len = if php_extension_available("phalcon") { 49 } else { 47 };
+        let expected_len = if php_extension_available("phalcon") { 19 } else { 18 };
         assert_eq!(registry.len(), expected_len);
     }
 
@@ -665,13 +397,14 @@ mod tests {
     #[test]
     fn test_detect_framework_rust() {
         let temp_dir = TempDir::new().unwrap();
-        fs::write(temp_dir.path().join("Cargo.toml"), "[package]").unwrap();
-        fs::create_dir_all(temp_dir.path().join("src")).unwrap();
-        fs::write(temp_dir.path().join("src").join("main.rs"), "fn main()").unwrap();
+        let app_dir = temp_dir.path().join("spikard-rust");
+        fs::create_dir_all(app_dir.join("src")).unwrap();
+        fs::write(app_dir.join("Cargo.toml"), "[package]").unwrap();
+        fs::write(app_dir.join("src").join("main.rs"), "fn main()").unwrap();
 
-        let result = detect_framework(temp_dir.path());
+        let result = detect_framework(&app_dir);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-rust-validation");
+        assert_eq!(result.unwrap().name, "spikard-rust");
     }
 
     #[test]
@@ -681,18 +414,19 @@ mod tests {
         fs::create_dir_all(temp_dir.path().join("src")).unwrap();
         fs::write(temp_dir.path().join("src").join("main.rs"), "fn main()").unwrap();
 
+        // Only spikard-rust has Cargo.toml + src/main.rs detect files
         let result = detect_framework(temp_dir.path());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-rust-validation");
+        assert_eq!(result.unwrap().name, "spikard-rust");
     }
 
     #[test]
     fn test_get_framework() {
-        let framework = get_framework("spikard-rust-validation");
+        let framework = get_framework("spikard-rust");
         assert!(framework.is_some());
 
         let config = framework.unwrap();
-        assert_eq!(config.name, "spikard-rust-validation");
+        assert_eq!(config.name, "spikard-rust");
         assert!(config.build_cmd.is_some());
         assert!(config.detect_files.contains(&"Cargo.toml".to_string()));
     }
@@ -706,8 +440,8 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        let expected_len = if php_extension_available("phalcon") { 49 } else { 47 };
-        assert_eq!(frameworks.len(), expected_len); // Base: 47, +2 with phalcon
+        let expected_len = if php_extension_available("phalcon") { 19 } else { 18 };
+        assert_eq!(frameworks.len(), expected_len);
     }
 
     #[test]
@@ -737,62 +471,62 @@ mod tests {
     #[test]
     fn test_detect_spikard_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        let app_dir = temp_dir.path().join("spikard-python-validation");
+        let app_dir = temp_dir.path().join("spikard-python");
         fs::create_dir_all(&app_dir).unwrap();
         fs::write(app_dir.join("server.py"), "# python server").unwrap();
 
         let result = detect_framework(&app_dir);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-python-validation");
+        assert_eq!(result.unwrap().name, "spikard-python");
     }
 
     #[test]
     fn test_detect_spikard_node_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        let app_dir = temp_dir.path().join("spikard-node-validation");
+        let app_dir = temp_dir.path().join("spikard-node");
         fs::create_dir_all(&app_dir).unwrap();
         fs::write(app_dir.join("server.ts"), "// typescript server").unwrap();
 
         let result = detect_framework(&app_dir);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-node-validation");
+        assert_eq!(result.unwrap().name, "spikard-node");
     }
 
     #[test]
     fn test_detect_spikard_ruby_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        let app_dir = temp_dir.path().join("spikard-ruby-validation");
+        let app_dir = temp_dir.path().join("spikard-ruby");
         fs::create_dir_all(&app_dir).unwrap();
         fs::write(app_dir.join("server.rb"), "# ruby server").unwrap();
 
         let result = detect_framework(&app_dir);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().name, "spikard-ruby-validation");
+        assert_eq!(result.unwrap().name, "spikard-ruby");
     }
 
     #[test]
     fn test_detect_spikard_wasm_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        let app_dir = temp_dir.path().join("spikard-wasm-validation");
+        let app_dir = temp_dir.path().join("spikard-wasm");
         fs::create_dir_all(&app_dir).unwrap();
         fs::write(app_dir.join("server.ts"), "// wasm server").unwrap();
 
         let result = detect_framework(&app_dir);
         assert!(result.is_ok());
         let name = result.unwrap().name;
-        assert_eq!(name, "spikard-wasm-validation");
+        assert_eq!(name, "spikard-wasm");
     }
 
     #[test]
     fn test_detect_fastify_with_server_only() {
         let temp_dir = TempDir::new().unwrap();
-        let app_dir = temp_dir.path().join("fastify-raw");
+        let app_dir = temp_dir.path().join("fastify");
         fs::create_dir_all(&app_dir).unwrap();
         fs::write(app_dir.join("server.ts"), "// fastify server").unwrap();
 
         let result = detect_framework(&app_dir);
         assert!(result.is_ok());
         let name = result.unwrap().name;
-        assert_eq!(name, "fastify-raw");
+        assert_eq!(name, "fastify");
     }
 }

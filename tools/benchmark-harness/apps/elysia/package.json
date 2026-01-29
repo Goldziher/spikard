@@ -1,0 +1,19 @@
+{
+	"name": "elysia-benchmark",
+	"version": "0.1.0",
+	"description": "Elysia benchmark server for workload comparison (Bun runtime)",
+	"type": "module",
+	"main": "server.ts",
+	"scripts": {
+		"start": "bun run server.ts"
+	},
+	"dependencies": {
+		"elysia": "^1.4.22"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.3.6"
+	},
+	"engines": {
+		"bun": ">=1.0.0"
+	}
+}

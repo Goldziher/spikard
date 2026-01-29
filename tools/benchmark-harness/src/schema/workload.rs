@@ -30,13 +30,13 @@ pub struct WorkloadSuite {
 }
 
 impl WorkloadSuite {
-    /// Get all built-in workload definitions
+    /// Get all built-in workload definitions (raw + validated)
     #[must_use]
     pub fn all() -> Self {
         Self {
             name: "all".to_string(),
-            description: "All workloads".to_string(),
-            workloads: vec![
+            description: "All workloads (raw + validated)".to_string(),
+            workloads: Self::with_validated(vec![
                 Self::json_small(),
                 Self::json_medium(),
                 Self::json_large(),
@@ -55,73 +55,80 @@ impl WorkloadSuite {
                 Self::multipart_small(),
                 Self::multipart_medium(),
                 Self::multipart_large(),
-            ],
+            ]),
         }
     }
 
-    /// JSON bodies suite
+    /// JSON bodies suite (raw + validated)
     #[must_use]
     pub fn json_bodies() -> Self {
         Self {
             name: "json-bodies".to_string(),
-            description: "JSON serialization workloads".to_string(),
-            workloads: vec![
+            description: "JSON serialization workloads (raw + validated)".to_string(),
+            workloads: Self::with_validated(vec![
                 Self::json_small(),
                 Self::json_medium(),
                 Self::json_large(),
                 Self::json_very_large(),
-            ],
+            ]),
         }
     }
 
-    /// Path parameters suite
+    /// Path parameters suite (raw + validated)
     #[must_use]
     pub fn path_params() -> Self {
         Self {
             name: "path-params".to_string(),
-            description: "Path parameter extraction".to_string(),
-            workloads: vec![
+            description: "Path parameter extraction (raw + validated)".to_string(),
+            workloads: Self::with_validated(vec![
                 Self::path_simple(),
                 Self::path_multiple(),
                 Self::path_deep(),
                 Self::path_int(),
                 Self::path_uuid(),
                 Self::path_date(),
-            ],
+            ]),
         }
     }
 
-    /// Query parameters suite
+    /// Query parameters suite (raw + validated)
     #[must_use]
     pub fn query_params() -> Self {
         Self {
             name: "query-params".to_string(),
-            description: "Query string parsing".to_string(),
-            workloads: vec![Self::query_few(), Self::query_medium(), Self::query_many()],
+            description: "Query string parsing (raw + validated)".to_string(),
+            workloads: Self::with_validated(vec![
+                Self::query_few(),
+                Self::query_medium(),
+                Self::query_many(),
+            ]),
         }
     }
 
-    /// Forms suite
+    /// Forms suite (raw + validated)
     #[must_use]
     pub fn forms() -> Self {
         Self {
             name: "forms".to_string(),
-            description: "Form data handling".to_string(),
-            workloads: vec![Self::urlencoded_simple(), Self::urlencoded_complex()],
+            description: "Form data handling (raw + validated)".to_string(),
+            workloads: Self::with_validated(vec![
+                Self::urlencoded_simple(),
+                Self::urlencoded_complex(),
+            ]),
         }
     }
 
-    /// Multipart suite
+    /// Multipart suite (raw + validated)
     #[must_use]
     pub fn multipart() -> Self {
         Self {
             name: "multipart".to_string(),
-            description: "Multipart file uploads".to_string(),
-            workloads: vec![
+            description: "Multipart file uploads (raw + validated)".to_string(),
+            workloads: Self::with_validated(vec![
                 Self::multipart_small(),
                 Self::multipart_medium(),
                 Self::multipart_large(),
-            ],
+            ]),
         }
     }
 
@@ -393,6 +400,30 @@ impl WorkloadSuite {
             body_file: Some("multipart-large.bin".to_string()),
             content_type: Some("multipart/form-data".to_string()),
         }
+    }
+
+    /// Create a validated variant of a workload (prepends /validated to endpoint path)
+    fn validated(workload: WorkloadDef) -> WorkloadDef {
+        WorkloadDef {
+            name: format!("validated/{}", workload.name),
+            description: format!("{} (validated)", workload.description),
+            category: format!("validated-{}", workload.category),
+            endpoint: Endpoint {
+                method: workload.endpoint.method,
+                path: format!("/validated{}", workload.endpoint.path),
+            },
+            payload_size_bytes: workload.payload_size_bytes,
+            body_file: workload.body_file,
+            content_type: workload.content_type,
+        }
+    }
+
+    /// Add validated variants to a list of workloads (raw + validated for each)
+    fn with_validated(workloads: Vec<WorkloadDef>) -> Vec<WorkloadDef> {
+        let validated: Vec<WorkloadDef> = workloads.iter().cloned().map(Self::validated).collect();
+        let mut all = workloads;
+        all.extend(validated);
+        all
     }
 
     /// Load suite by name
