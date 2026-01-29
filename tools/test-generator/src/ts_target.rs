@@ -11,8 +11,6 @@ pub enum Runtime {
     CloudflareWorkers,
     /// Node.js runtime with WASM bindings (for comparison testing)
     NodeWasm,
-    /// Wasmtime runtime with WASIp3 HTTP component (real HTTP requests)
-    Wasmtime,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -55,9 +53,3 @@ pub const CLOUDFLARE_TARGET: TypeScriptTarget = TypeScriptTarget {
     runtime: Runtime::CloudflareWorkers,
 };
 
-pub const WASMTIME_TARGET: TypeScriptTarget = TypeScriptTarget {
-    binding_package: "",
-    dependency_package: "",
-    e2e_package_name: "spikard-e2e-wasmtime",
-    runtime: Runtime::Wasmtime,
-};

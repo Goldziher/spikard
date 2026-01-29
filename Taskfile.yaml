@@ -642,12 +642,6 @@ tasks:
       - rm -rf e2e/node
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang node --output e2e/node
 
-  generate:tests:wasmtime:
-    desc: "Generate wasmtime e2e test suite from fixtures (vitest + wasmtime serve)"
-    cmds:
-      - rm -rf e2e/wasmtime
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang wasmtime --output e2e/wasmtime
-
   generate:tests:ruby:
     desc: "Generate Ruby e2e test suite from fixtures"
     cmds:
@@ -665,7 +659,6 @@ tasks:
       - task: generate:tests:rust
       - task: generate:tests:python
       - task: generate:tests:node
-      - task: generate:tests:wasmtime
       - task: generate:tests:ruby
       - task: generate:tests:php
 
@@ -738,13 +731,6 @@ tasks:
     cmds:
       - pnpm test
 
-  test:e2e:wasmtime:
-    desc: "Run wasmtime e2e tests (WASIp3 HTTP component tests)"
-    dir: e2e/wasmtime
-    cmds:
-      - pnpm install
-      - pnpm test
-
   test:e2e:ruby:
     desc: "Run Ruby e2e tests (fixture-driven integration tests)"
     dir: e2e/ruby
@@ -775,7 +761,6 @@ tasks:
       - task: test:e2e:rust
       - task: test:e2e:python
       - task: test:e2e:node
-      - task: test:e2e:wasmtime
       - task: test:e2e:ruby
       - task: test:e2e:php
 

@@ -115,14 +115,7 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "./start.sh {port}",
             None,
         ),
-        FrameworkConfig::new(
-            "spikard-wasm",
-            vec!["Cargo.toml".to_string(), "src/lib.rs".to_string()],
-            Some("cargo build --target wasm32-wasip2 --release".to_string()),
-            "wasmtime serve --addr 0.0.0.0:{port} target/wasm32-wasip2/release/spikard_wasm_bench.wasm",
-            None,
-        ),
-        FrameworkConfig::new(
+FrameworkConfig::new(
             "spin",
             vec!["spin.toml".to_string(), "Cargo.toml".to_string()],
             Some("spin build".to_string()),
@@ -368,7 +361,6 @@ mod tests {
         assert!(names.contains(&"spikard-bun"));
         assert!(names.contains(&"spikard-ruby"));
         assert!(names.contains(&"spikard-php"));
-        assert!(names.contains(&"spikard-wasm"));
         assert!(names.contains(&"spin"));
         assert!(names.contains(&"hono-wasm"));
 
@@ -393,7 +385,7 @@ mod tests {
             assert!(!names.contains(&"phalcon"));
         }
 
-        let expected_len = if php_extension_available("phalcon") { 21 } else { 20 };
+        let expected_len = if php_extension_available("phalcon") { 20 } else { 19 };
         assert_eq!(registry.len(), expected_len);
     }
 
@@ -452,7 +444,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        let expected_len = if php_extension_available("phalcon") { 21 } else { 20 };
+        let expected_len = if php_extension_available("phalcon") { 20 } else { 19 };
         assert_eq!(frameworks.len(), expected_len);
     }
 
@@ -514,20 +506,6 @@ mod tests {
         let result = detect_framework(&app_dir);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().name, "spikard-ruby");
-    }
-
-    #[test]
-    fn test_detect_spikard_wasm_with_server_only() {
-        let temp_dir = TempDir::new().unwrap();
-        let app_dir = temp_dir.path().join("spikard-wasm");
-        fs::create_dir_all(app_dir.join("src")).unwrap();
-        fs::write(app_dir.join("Cargo.toml"), "[package]").unwrap();
-        fs::write(app_dir.join("src").join("lib.rs"), "// wasm component").unwrap();
-
-        let result = detect_framework(&app_dir);
-        assert!(result.is_ok());
-        let name = result.unwrap().name;
-        assert_eq!(name, "spikard-wasm");
     }
 
     #[test]

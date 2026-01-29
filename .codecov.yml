@@ -83,7 +83,6 @@ ignore:
   - "crates/spikard-node/src/**"
   - "crates/spikard-rb/src/**"
   - "crates/spikard-php/src/**"
-  - "crates/spikard-wasm/src/**"
 
   # Generated code
   - "**/generated/**"

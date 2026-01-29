@@ -2,7 +2,6 @@ packages:
   - "packages/node"
   - "crates/spikard-node"
   - "e2e/node"
-  - "e2e/wasmtime"
   - "examples/*"
   - "tests/test_apps/node"
   - "tools/benchmark-harness/apps/*"

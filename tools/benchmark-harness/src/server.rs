@@ -428,7 +428,6 @@ mod tests {
             "spikard-python",
             "spikard-node",
             "spikard-ruby",
-            "spikard-wasm",
             "fastapi",
             "robyn",
         ];
