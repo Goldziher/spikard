@@ -68,7 +68,7 @@ runs:
       uses: ./.github/actions/build-python-binding
 
     - name: Setup Python environment for non-spikard apps
-      if: steps.detect.outputs.language == 'python' && !inputs.framework == 'spikard-python'
+      if: steps.detect.outputs.language == 'python' && inputs.framework != 'spikard-python'
       uses: ./.github/actions/setup-python-env
       with:
         python-version: "3.13"
@@ -145,7 +145,7 @@ runs:
         cp -v $GITHUB_WORKSPACE/packages/ruby/lib/spikard_rb.* $GITHUB_WORKSPACE/packages/ruby/lib/spikard/ || true
 
     - name: Setup Ruby environment for non-spikard apps
-      if: steps.detect.outputs.language == 'ruby' && !inputs.framework == 'spikard-ruby'
+      if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'
       uses: ruby/setup-ruby@v1
       with:
         ruby-version: '3.2'
@@ -153,7 +153,7 @@ runs:
         bundler-cache: false
 
     - name: Cache Ruby gems
-      if: steps.detect.outputs.language == 'ruby' && !inputs.framework == 'spikard-ruby'
+      if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'
       uses: actions/cache@v4
       with:
         path: |
@@ -229,7 +229,7 @@ runs:
       run: composer install
 
     - name: Install non-Spikard PHP benchmark app dependencies
-      if: steps.detect.outputs.language == 'php' && !inputs.framework == 'spikard-php'
+      if: steps.detect.outputs.language == 'php' && inputs.framework != 'spikard-php'
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: |
