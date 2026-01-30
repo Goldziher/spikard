@@ -604,7 +604,12 @@ async def get_path_simple_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "Path parameter 'id' must be non-empty, alphanumeric (with - or _), and max 255 characters"}),
+            description=jsonify(
+                {
+                    "error": "Validation failed",
+                    "details": "Path parameter 'id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+                }
+            ),
         )
     return jsonify({"id": id_value})
 
@@ -618,13 +623,23 @@ async def get_path_multiple_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "Path parameter 'user_id' must be non-empty, alphanumeric (with - or _), and max 255 characters"}),
+            description=jsonify(
+                {
+                    "error": "Validation failed",
+                    "details": "Path parameter 'user_id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+                }
+            ),
         )
     if not post_id or len(post_id) > 255 or not post_id.replace("-", "").replace("_", "").isalnum():
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "Path parameter 'post_id' must be non-empty, alphanumeric (with - or _), and max 255 characters"}),
+            description=jsonify(
+                {
+                    "error": "Validation failed",
+                    "details": "Path parameter 'post_id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+                }
+            ),
         )
     return jsonify(
         {
@@ -643,12 +658,23 @@ async def get_path_deep_validated(request: Request):
     resource = request.path_params["resource"]
     id_value = request.path_params["id"]
 
-    for param_name, param_value in [("org", org), ("team", team), ("project", project), ("resource", resource), ("id", id_value)]:
+    for param_name, param_value in [
+        ("org", org),
+        ("team", team),
+        ("project", project),
+        ("resource", resource),
+        ("id", id_value),
+    ]:
         if not param_value or len(param_value) > 255 or not param_value.replace("-", "").replace("_", "").isalnum():
             return Response(
                 status_code=400,
                 headers={"Content-Type": "application/json"},
-                description=jsonify({"error": "Validation failed", "details": f"Path parameter '{param_name}' must be non-empty, alphanumeric (with - or _), and max 255 characters"}),
+                description=jsonify(
+                    {
+                        "error": "Validation failed",
+                        "details": f"Path parameter '{param_name}' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+                    }
+                ),
             )
 
     return jsonify(
@@ -672,9 +698,7 @@ async def get_path_int_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify(
-                {"error": "Validation failed", "details": "Invalid integer format"}
-            ),
+            description=jsonify({"error": "Validation failed", "details": "Invalid integer format"}),
         )
 
 
@@ -688,9 +712,7 @@ async def get_path_uuid_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify(
-                {"error": "Validation failed", "details": "Invalid UUID format"}
-            ),
+            description=jsonify({"error": "Validation failed", "details": "Invalid UUID format"}),
         )
 
 
@@ -704,9 +726,7 @@ async def get_path_date_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify(
-                {"error": "Validation failed", "details": "Invalid ISO date format"}
-            ),
+            description=jsonify({"error": "Validation failed", "details": "Invalid ISO date format"}),
         )
 
 

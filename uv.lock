@@ -2524,6 +2524,12 @@ wheels = [
 name = "robyn-benchmark"
 version = "0.1.0"
 source = { virtual = "tools/benchmark-harness/apps/robyn" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2" }]
 
 [[package]]
 name = "rpds-py"

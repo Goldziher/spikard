@@ -348,6 +348,7 @@ async def post_multipart_small_validated(request: Request) -> dict[str, Any]:
             total_bytes += len(content)
     if files_received == 0:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail="No files received")
     return {"files_received": files_received, "total_bytes": total_bytes}
 
@@ -365,6 +366,7 @@ async def post_multipart_medium_validated(request: Request) -> dict[str, Any]:
             total_bytes += len(content)
     if files_received == 0:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail="No files received")
     return {"files_received": files_received, "total_bytes": total_bytes}
 
@@ -382,6 +384,7 @@ async def post_multipart_large_validated(request: Request) -> dict[str, Any]:
             total_bytes += len(content)
     if files_received == 0:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=400, detail="No files received")
     return {"files_received": files_received, "total_bytes": total_bytes}
 
@@ -417,7 +420,11 @@ async def get_path_simple_validated(id: str) -> dict[str, Any]:
     """Single path parameter with validation."""
     if not id or len(id) > 255 or not id.replace("-", "").replace("_", "").isalnum():
         from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="Path parameter 'id' must be non-empty, alphanumeric (with - or _), and max 255 characters")
+
+        raise HTTPException(
+            status_code=400,
+            detail="Path parameter 'id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+        )
     return {"id": id}
 
 
@@ -426,10 +433,18 @@ async def get_path_multiple_validated(user_id: str, post_id: str) -> dict[str, A
     """Multiple path parameters with validation."""
     if not user_id or len(user_id) > 255 or not user_id.replace("-", "").replace("_", "").isalnum():
         from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="Path parameter 'user_id' must be non-empty, alphanumeric (with - or _), and max 255 characters")
+
+        raise HTTPException(
+            status_code=400,
+            detail="Path parameter 'user_id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+        )
     if not post_id or len(post_id) > 255 or not post_id.replace("-", "").replace("_", "").isalnum():
         from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="Path parameter 'post_id' must be non-empty, alphanumeric (with - or _), and max 255 characters")
+
+        raise HTTPException(
+            status_code=400,
+            detail="Path parameter 'post_id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+        )
     return {"user_id": user_id, "post_id": post_id}
 
 
@@ -437,9 +452,19 @@ async def get_path_multiple_validated(user_id: str, post_id: str) -> dict[str, A
 async def get_path_deep_validated(org: str, team: str, project: str, resource: str, id: str) -> dict[str, Any]:
     """Deep nested path parameters with validation."""
     from fastapi import HTTPException
-    for param_name, param_value in [("org", org), ("team", team), ("project", project), ("resource", resource), ("id", id)]:
+
+    for param_name, param_value in [
+        ("org", org),
+        ("team", team),
+        ("project", project),
+        ("resource", resource),
+        ("id", id),
+    ]:
         if not param_value or len(param_value) > 255 or not param_value.replace("-", "").replace("_", "").isalnum():
-            raise HTTPException(status_code=400, detail=f"Path parameter '{param_name}' must be non-empty, alphanumeric (with - or _), and max 255 characters")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Path parameter '{param_name}' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+            )
     return {
         "org": org,
         "team": team,

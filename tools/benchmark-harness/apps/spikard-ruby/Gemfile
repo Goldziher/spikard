@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# The spikard-ruby benchmark app loads the Ruby binding directly from
+# packages/ruby/lib via $LOAD_PATH manipulation in server.rb, so no
+# gem dependency is needed here. This Gemfile exists only so that
+# bundle exec ruby server.rb resolves correctly for the benchmark
+# harness start command.

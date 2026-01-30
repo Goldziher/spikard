@@ -221,20 +221,52 @@ const DateParamSchema = z.object({
 });
 
 const StringParamSimpleSchema = z.object({
-	id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	id: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
 });
 
 const StringParamMultipleSchema = z.object({
-	user_id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	post_id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	user_id: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	post_id: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
 });
 
 const StringParamDeepSchema = z.object({
-	org: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	team: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	project: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	resource: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	org: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	team: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	project: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	resource: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	id: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
 });
 
 const UrlencodedSimpleSchema = z.object({

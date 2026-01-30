@@ -6,7 +6,6 @@
 
 use crate::Result;
 use std::path::Path;
-use std::process::Command;
 
 /// Configuration for a framework
 #[derive(Debug, Clone)]
@@ -74,20 +73,6 @@ impl FrameworkConfig {
 }
 
 /// Registry of all supported frameworks
-fn php_extension_available(extension: &str) -> bool {
-    let output = Command::new("php").arg("-m").output();
-    let Ok(output) = output else {
-        return false;
-    };
-    if !output.status.success() {
-        return false;
-    }
-    let Ok(stdout) = String::from_utf8(output.stdout) else {
-        return false;
-    };
-    stdout.lines().any(|line| line.trim().eq_ignore_ascii_case(extension))
-}
-
 fn framework_registry() -> Vec<FrameworkConfig> {
     let mut frameworks = vec![
         // --- Spikard bindings (generated benchmark apps) ---
@@ -208,26 +193,26 @@ fn framework_registry() -> Vec<FrameworkConfig> {
         ),
     ];
 
-    // Third-party PHP frameworks require OpenSwoole as their async server
-    if php_extension_available("openswoole") {
-        frameworks.push(FrameworkConfig::new(
-            "trongate",
-            vec!["server.php".to_string()],
-            None,
-            "php server.php {port}",
-            None,
-        ));
+    // Third-party PHP frameworks -- always registered so detection and
+    // explicit --framework lookups succeed even when the PHP extensions
+    // (openswoole, phalcon) are not installed. The server will fail at
+    // startup when the extension is missing; the harness handles that
+    // gracefully via health-check timeouts.
+    frameworks.push(FrameworkConfig::new(
+        "trongate",
+        vec!["server.php".to_string(), "composer.json".to_string()],
+        Some("composer install --no-dev --optimize-autoloader".to_string()),
+        "php server.php {port}",
+        None,
+    ));
 
-        if php_extension_available("phalcon") {
-            frameworks.push(FrameworkConfig::new(
-                "phalcon",
-                vec!["server.php".to_string(), "composer.json".to_string()],
-                Some("composer install --no-dev --optimize-autoloader".to_string()),
-                "php server.php {port}",
-                None,
-            ));
-        }
-    }
+    frameworks.push(FrameworkConfig::new(
+        "phalcon",
+        vec!["server.php".to_string(), "composer.json".to_string()],
+        Some("composer install --no-dev --optimize-autoloader".to_string()),
+        "php server.php {port}",
+        None,
+    ));
 
     frameworks
 }
@@ -386,25 +371,11 @@ mod tests {
         assert!(names.contains(&"hanami-api"));
         assert!(names.contains(&"roda"));
 
-        let has_openswoole = php_extension_available("openswoole");
-        let has_phalcon = php_extension_available("phalcon");
+        // phalcon and trongate are always registered regardless of PHP extensions
+        assert!(names.contains(&"trongate"));
+        assert!(names.contains(&"phalcon"));
 
-        if has_openswoole {
-            assert!(names.contains(&"trongate"));
-        } else {
-            assert!(!names.contains(&"trongate"));
-        }
-
-        if has_openswoole && has_phalcon {
-            assert!(names.contains(&"phalcon"));
-        } else {
-            assert!(!names.contains(&"phalcon"));
-        }
-
-        let mut expected_len = 16; // base frameworks (excludes openswoole-gated PHP)
-        if has_openswoole { expected_len += 1; } // trongate
-        if has_openswoole && has_phalcon { expected_len += 1; } // phalcon
-        assert_eq!(registry.len(), expected_len);
+        assert_eq!(registry.len(), 18);
     }
 
     #[test]
@@ -462,12 +433,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        let has_openswoole = php_extension_available("openswoole");
-        let has_phalcon = php_extension_available("phalcon");
-        let mut expected_len = 16; // base frameworks (excludes openswoole-gated PHP)
-        if has_openswoole { expected_len += 1; } // trongate
-        if has_openswoole && has_phalcon { expected_len += 1; } // phalcon
-        assert_eq!(frameworks.len(), expected_len);
+        assert_eq!(frameworks.len(), 18);
     }
 
     #[test]

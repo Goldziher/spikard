@@ -135,22 +135,20 @@ runs:
       if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
       uses: ./.github/actions/build-ruby-binding
 
-    - name: Copy Ruby binding to packages
+    - name: Verify Ruby binding was compiled
       if: steps.detect.outputs.language == 'ruby' && inputs.framework == 'spikard-ruby'
       shell: bash
       run: |
-        mkdir -p $GITHUB_WORKSPACE/packages/ruby/lib/spikard
-        # Find the compiled .so in target/release and copy it
-        SO_FILE=$(find $GITHUB_WORKSPACE/target/release -maxdepth 1 -name "libspikard_rb.so" -o -name "spikard_rb.so" -o -name "libspikard_rb.dylib" | head -1)
-        if [ -n "$SO_FILE" ]; then
-          cp -v "$SO_FILE" $GITHUB_WORKSPACE/packages/ruby/lib/spikard/
-        else
-          echo "WARNING: Could not find compiled Ruby binding in target/release" >&2
-          ls -la $GITHUB_WORKSPACE/target/release/libspikard_rb* $GITHUB_WORKSPACE/target/release/spikard_rb* 2>/dev/null || true
-          # Also check packages/ruby/lib for existing bindings
-          ls -la $GITHUB_WORKSPACE/packages/ruby/lib/spikard_rb* 2>/dev/null || true
+        # The Rakefile ext:build task compiles and copies the .so to packages/ruby/lib/
+        # Verify it exists after rake compile
+        DLLEXT=$(ruby -e 'require "rbconfig"; puts RbConfig::CONFIG["DLEXT"]')
+        BINDING="$GITHUB_WORKSPACE/packages/ruby/lib/spikard_rb.${DLLEXT}"
+        if [ ! -f "$BINDING" ]; then
+          echo "ERROR: Ruby binding not found at $BINDING after rake compile" >&2
+          ls -la $GITHUB_WORKSPACE/packages/ruby/lib/ 2>/dev/null || true
+          exit 1
         fi
-        cp -v $GITHUB_WORKSPACE/packages/ruby/lib/spikard_rb.* $GITHUB_WORKSPACE/packages/ruby/lib/spikard/ 2>/dev/null || true
+        echo "Ruby binding found: $BINDING"
 
     - name: Setup Ruby environment for non-spikard apps
       if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'

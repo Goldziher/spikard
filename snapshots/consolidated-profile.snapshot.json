@@ -149,7 +149,7 @@
 			"name": "spikard-rust",
 			"run_count": 112,
 			"runtime": "rustc 1.92.0 (ded5c06cf 2025-12-08)"
-		},
+		}
 	],
 	"generated_at": "2025-12-21T06:32:28.942639+00:00",
 	"input_count": 898,

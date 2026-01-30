@@ -299,31 +299,39 @@ app.get("/validated/path/simple/:id", ({ params: { id } }) => ({ id }), {
 	}),
 });
 
-app.get("/validated/path/multiple/:user_id/:post_id", ({ params: { user_id, post_id } }) => ({
-	user_id,
-	post_id,
-}), {
-	params: t.Object({
-		user_id: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
-		post_id: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+app.get(
+	"/validated/path/multiple/:user_id/:post_id",
+	({ params: { user_id, post_id } }) => ({
+		user_id,
+		post_id,
 	}),
-});
+	{
+		params: t.Object({
+			user_id: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+			post_id: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+		}),
+	},
+);
 
-app.get("/validated/path/deep/:org/:team/:project/:resource/:id", ({ params: { org, team, project, resource, id } }) => ({
-	org,
-	team,
-	project,
-	resource,
-	id,
-}), {
-	params: t.Object({
-		org: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
-		team: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
-		project: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
-		resource: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
-		id: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+app.get(
+	"/validated/path/deep/:org/:team/:project/:resource/:id",
+	({ params: { org, team, project, resource, id } }) => ({
+		org,
+		team,
+		project,
+		resource,
+		id,
 	}),
-});
+	{
+		params: t.Object({
+			org: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+			team: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+			project: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+			resource: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+			id: t.String({ minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" }),
+		}),
+	},
+);
 
 app.get(
 	"/validated/path/int/:id",

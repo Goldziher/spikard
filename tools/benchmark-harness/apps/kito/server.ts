@@ -243,24 +243,56 @@ const dateParamSchema = schema({
 
 const stringParamSimpleSchema = schema({
 	params: t.object({
-		id: t.str().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+		id: t
+			.str()
+			.min(1)
+			.max(255)
+			.regex(/^[a-zA-Z0-9_-]+$/),
 	}),
 });
 
 const stringParamMultipleSchema = schema({
 	params: t.object({
-		user_id: t.str().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-		post_id: t.str().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+		user_id: t
+			.str()
+			.min(1)
+			.max(255)
+			.regex(/^[a-zA-Z0-9_-]+$/),
+		post_id: t
+			.str()
+			.min(1)
+			.max(255)
+			.regex(/^[a-zA-Z0-9_-]+$/),
 	}),
 });
 
 const stringParamDeepSchema = schema({
 	params: t.object({
-		org: t.str().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-		team: t.str().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-		project: t.str().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-		resource: t.str().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-		id: t.str().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+		org: t
+			.str()
+			.min(1)
+			.max(255)
+			.regex(/^[a-zA-Z0-9_-]+$/),
+		team: t
+			.str()
+			.min(1)
+			.max(255)
+			.regex(/^[a-zA-Z0-9_-]+$/),
+		project: t
+			.str()
+			.min(1)
+			.max(255)
+			.regex(/^[a-zA-Z0-9_-]+$/),
+		resource: t
+			.str()
+			.min(1)
+			.max(255)
+			.regex(/^[a-zA-Z0-9_-]+$/),
+		id: t
+			.str()
+			.min(1)
+			.max(255)
+			.regex(/^[a-zA-Z0-9_-]+$/),
 	}),
 });
 

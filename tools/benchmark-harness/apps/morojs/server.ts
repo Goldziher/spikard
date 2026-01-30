@@ -168,20 +168,52 @@ const DateParamSchema = z.object({
 });
 
 const StringParamSimpleSchema = z.object({
-	id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	id: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
 });
 
 const StringParamMultipleSchema = z.object({
-	user_id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	post_id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	user_id: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	post_id: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
 });
 
 const StringParamDeepSchema = z.object({
-	org: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	team: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	project: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	resource: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
-	id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	org: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	team: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	project: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	resource: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
+	id: z
+		.string()
+		.min(1)
+		.max(255)
+		.regex(/^[a-zA-Z0-9_-]+$/),
 });
 
 const UrlencodedSimpleSchema = z.object({
@@ -325,14 +357,26 @@ app.post("/validated/multipart/large").handler(async (req, res) => {
 	return res.json({ files_received, total_bytes });
 });
 
-app.post("/validated/urlencoded/simple").body(UrlencodedSimpleSchema).handler((req, res) => res.json(req.body));
-app.post("/validated/urlencoded/complex").body(UrlencodedComplexSchema).handler((req, res) => res.json(req.body));
+app
+	.post("/validated/urlencoded/simple")
+	.body(UrlencodedSimpleSchema)
+	.handler((req, res) => res.json(req.body));
+app
+	.post("/validated/urlencoded/complex")
+	.body(UrlencodedComplexSchema)
+	.handler((req, res) => res.json(req.body));
 
-app.get("/validated/path/simple/:id").handler(params(StringParamSimpleSchema)((req, res) => res.json({ id: req.params.id })));
+app
+	.get("/validated/path/simple/:id")
+	.handler(params(StringParamSimpleSchema)((req, res) => res.json({ id: req.params.id })));
 
 app
 	.get("/validated/path/multiple/:user_id/:post_id")
-	.handler(params(StringParamMultipleSchema)((req, res) => res.json({ user_id: req.params.user_id, post_id: req.params.post_id })));
+	.handler(
+		params(StringParamMultipleSchema)((req, res) =>
+			res.json({ user_id: req.params.user_id, post_id: req.params.post_id }),
+		),
+	);
 
 app.get("/validated/path/deep/:org/:team/:project/:resource/:id").handler(
 	params(StringParamDeepSchema)((req, res) =>
@@ -354,9 +398,18 @@ app
 	.get("/validated/path/date/:date")
 	.handler(params(DateParamSchema)((req, res) => res.json({ date: req.params.date })));
 
-app.get("/validated/query/few").query(QueryFewSchema).handler((req, res) => res.json(req.query));
-app.get("/validated/query/medium").query(QueryMediumSchema).handler((req, res) => res.json(req.query));
-app.get("/validated/query/many").query(QueryManySchema).handler((req, res) => res.json(req.query));
+app
+	.get("/validated/query/few")
+	.query(QueryFewSchema)
+	.handler((req, res) => res.json(req.query));
+app
+	.get("/validated/query/medium")
+	.query(QueryMediumSchema)
+	.handler((req, res) => res.json(req.query));
+app
+	.get("/validated/query/many")
+	.query(QueryManySchema)
+	.handler((req, res) => res.json(req.query));
 
 // ============================================================================
 // Server Startup

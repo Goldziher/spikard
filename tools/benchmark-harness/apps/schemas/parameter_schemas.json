@@ -9,7 +9,13 @@
 	"path/multiple": {
 		"type": "object",
 		"properties": {
-			"user_id": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
+			"user_id": {
+				"type": "string",
+				"source": "path",
+				"minLength": 1,
+				"maxLength": 255,
+				"pattern": "^[a-zA-Z0-9_-]+$"
+			},
 			"post_id": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" }
 		},
 		"required": ["user_id", "post_id"]
@@ -19,8 +25,20 @@
 		"properties": {
 			"org": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
 			"team": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
-			"project": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
-			"resource": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
+			"project": {
+				"type": "string",
+				"source": "path",
+				"minLength": 1,
+				"maxLength": 255,
+				"pattern": "^[a-zA-Z0-9_-]+$"
+			},
+			"resource": {
+				"type": "string",
+				"source": "path",
+				"minLength": 1,
+				"maxLength": 255,
+				"pattern": "^[a-zA-Z0-9_-]+$"
+			},
 			"id": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" }
 		},
 		"required": ["org", "team", "project", "resource", "id"]

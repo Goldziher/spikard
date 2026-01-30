@@ -10,4 +10,4 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-dependencies = ["pydantic>=2.0"]
+dependencies = [ "pydantic>=2" ]
