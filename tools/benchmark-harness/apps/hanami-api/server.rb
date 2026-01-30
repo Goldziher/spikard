@@ -143,26 +143,26 @@ class BenchmarkApp < Hanami::API
 
   # JSON body endpoints - parse and echo without validation
   post '/json/small' do
-    env['rack.input'].rewind
-    body = JSON.parse(env['rack.input'].read)
+    request = Rack::Request.new(env)
+    body = JSON.parse(request.body.read)
     json(body)
   end
 
   post '/json/medium' do
-    env['rack.input'].rewind
-    body = JSON.parse(env['rack.input'].read)
+    request = Rack::Request.new(env)
+    body = JSON.parse(request.body.read)
     json(body)
   end
 
   post '/json/large' do
-    env['rack.input'].rewind
-    body = JSON.parse(env['rack.input'].read)
+    request = Rack::Request.new(env)
+    body = JSON.parse(request.body.read)
     json(body)
   end
 
   post '/json/very-large' do
-    env['rack.input'].rewind
-    body = JSON.parse(env['rack.input'].read)
+    request = Rack::Request.new(env)
+    body = JSON.parse(request.body.read)
     json(body)
   end
 
@@ -284,8 +284,8 @@ class BenchmarkApp < Hanami::API
 
   # JSON body endpoints - validate and echo back
   post '/validated/json/small' do
-    env['rack.input'].rewind
-    body = JSON.parse(env['rack.input'].read)
+    request = Rack::Request.new(env)
+    body = JSON.parse(request.body.read)
     result = SmallPayloadSchema.call(body)
 
     if result.success?
@@ -296,8 +296,8 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/medium' do
-    env['rack.input'].rewind
-    body = JSON.parse(env['rack.input'].read)
+    request = Rack::Request.new(env)
+    body = JSON.parse(request.body.read)
     result = MediumPayloadSchema.call(body)
 
     if result.success?
@@ -308,8 +308,8 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/large' do
-    env['rack.input'].rewind
-    body = JSON.parse(env['rack.input'].read)
+    request = Rack::Request.new(env)
+    body = JSON.parse(request.body.read)
     result = LargePayloadSchema.call(body)
 
     if result.success?
@@ -320,8 +320,8 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/very-large' do
-    env['rack.input'].rewind
-    body = JSON.parse(env['rack.input'].read)
+    request = Rack::Request.new(env)
+    body = JSON.parse(request.body.read)
     result = VeryLargePayloadSchema.call(body)
 
     if result.success?
