@@ -828,52 +828,40 @@ $app->get('/query/many', function (): Response {
 
 $port = (int)($argv[1] ?? 8000);
 
-if (class_exists(\OpenSwoole\Http\Server::class)) {
-    $server = new \OpenSwoole\Http\Server('0.0.0.0', $port);
-    $server->set([
-        'worker_num' => openswoole_cpu_num(),
-        'enable_coroutine' => true,
-        'log_level' => OPENSWOOLE_LOG_WARNING,
-    ]);
-    $server->on('request', function (\OpenSwoole\Http\Request $swReq, \OpenSwoole\Http\Response $swResp) use ($app, $di): void {
-        // Populate PHP superglobals for Phalcon compatibility
-        $_SERVER['REQUEST_METHOD'] = $swReq->server['request_method'] ?? 'GET';
-        $_SERVER['REQUEST_URI'] = $swReq->server['request_uri'] ?? '/';
-        $_SERVER['CONTENT_TYPE'] = $swReq->header['content-type'] ?? '';
-        $_GET = $swReq->get ?? [];
-        $_POST = $swReq->post ?? [];
-        $_FILES = $swReq->files ?? [];
-
-        ob_start();
-        try {
-            $app->handle($_SERVER['REQUEST_URI']);
-            $body = ob_get_clean();
-            $response = $app->response;
-            $swResp->status($response->getStatusCode() ?: 200);
-            $swResp->header('Content-Type', 'application/json');
-            $swResp->end($response->getContent() ?: $body);
-        } catch (\Throwable $e) {
-            ob_end_clean();
-            $swResp->status(500);
-            $swResp->header('Content-Type', 'application/json');
-            $swResp->end(json_encode(['error' => $e->getMessage()]));
-        }
-    });
-    fwrite(STDERR, "[phalcon] Starting Swoole server on 0.0.0.0:$port\n");
-    $server->start();
-} else {
-    // Fallback to built-in PHP server (single-threaded, for local dev only)
-    fwrite(STDERR, "[phalcon] Swoole not available, falling back to php -S (single-threaded)\n");
-
-    // When run directly from CLI, spawn php -S pointing back to this script as a router
-    if (php_sapi_name() === 'cli') {
-        $cmd = sprintf('php -S 0.0.0.0:%d %s', $port, escapeshellarg(__FILE__));
-        fwrite(STDERR, "[phalcon] Launching: $cmd\n");
-        $exitCode = null;
-        passthru($cmd, $exitCode);
-        exit($exitCode ?? 1);
-    }
-
-    // When invoked as built-in server router, handle the request
-    $app->handle($_SERVER['REQUEST_URI'] ?? '/');
+if (!class_exists(\OpenSwoole\Http\Server::class)) {
+    fwrite(STDERR, "[phalcon] ERROR: OpenSwoole extension is required but not installed.\n");
+    fwrite(STDERR, "[phalcon] Install with: pecl install openswoole\n");
+    exit(1);
 }
+
+$server = new \OpenSwoole\Http\Server('0.0.0.0', $port);
+$server->set([
+    'worker_num' => openswoole_cpu_num(),
+    'enable_coroutine' => true,
+    'log_level' => OPENSWOOLE_LOG_WARNING,
+]);
+$server->on('request', function (\OpenSwoole\Http\Request $swReq, \OpenSwoole\Http\Response $swResp) use ($app, $di): void {
+    $_SERVER['REQUEST_METHOD'] = $swReq->server['request_method'] ?? 'GET';
+    $_SERVER['REQUEST_URI'] = $swReq->server['request_uri'] ?? '/';
+    $_SERVER['CONTENT_TYPE'] = $swReq->header['content-type'] ?? '';
+    $_GET = $swReq->get ?? [];
+    $_POST = $swReq->post ?? [];
+    $_FILES = $swReq->files ?? [];
+
+    ob_start();
+    try {
+        $app->handle($_SERVER['REQUEST_URI']);
+        $body = ob_get_clean();
+        $response = $app->response;
+        $swResp->status($response->getStatusCode() ?: 200);
+        $swResp->header('Content-Type', 'application/json');
+        $swResp->end($response->getContent() ?: $body);
+    } catch (\Throwable $e) {
+        ob_end_clean();
+        $swResp->status(500);
+        $swResp->header('Content-Type', 'application/json');
+        $swResp->end(json_encode(['error' => $e->getMessage()]));
+    }
+});
+fwrite(STDERR, "[phalcon] Starting OpenSwoole server on 0.0.0.0:$port\n");
+$server->start();

@@ -206,24 +206,27 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "bundle exec ruby server.rb {port}",
             None,
         ),
-        // --- Third-party PHP frameworks ---
-        FrameworkConfig::new(
+    ];
+
+    // Third-party PHP frameworks require OpenSwoole as their async server
+    if php_extension_available("openswoole") {
+        frameworks.push(FrameworkConfig::new(
             "trongate",
             vec!["server.php".to_string()],
             None,
             "php server.php {port}",
             None,
-        ),
-    ];
-
-    if php_extension_available("phalcon") {
-        frameworks.push(FrameworkConfig::new(
-            "phalcon",
-            vec!["server.php".to_string(), "composer.json".to_string()],
-            Some("composer install --no-dev --optimize-autoloader".to_string()),
-            "php server.php {port}",
-            None,
         ));
+
+        if php_extension_available("phalcon") {
+            frameworks.push(FrameworkConfig::new(
+                "phalcon",
+                vec!["server.php".to_string(), "composer.json".to_string()],
+                Some("composer install --no-dev --optimize-autoloader".to_string()),
+                "php server.php {port}",
+                None,
+            ));
+        }
     }
 
     frameworks
@@ -383,15 +386,24 @@ mod tests {
         assert!(names.contains(&"hanami-api"));
         assert!(names.contains(&"roda"));
 
-        assert!(names.contains(&"trongate"));
+        let has_openswoole = php_extension_available("openswoole");
+        let has_phalcon = php_extension_available("phalcon");
 
-        if php_extension_available("phalcon") {
+        if has_openswoole {
+            assert!(names.contains(&"trongate"));
+        } else {
+            assert!(!names.contains(&"trongate"));
+        }
+
+        if has_openswoole && has_phalcon {
             assert!(names.contains(&"phalcon"));
         } else {
             assert!(!names.contains(&"phalcon"));
         }
 
-        let expected_len = if php_extension_available("phalcon") { 18 } else { 17 };
+        let mut expected_len = 16; // base frameworks (excludes openswoole-gated PHP)
+        if has_openswoole { expected_len += 1; } // trongate
+        if has_openswoole && has_phalcon { expected_len += 1; } // phalcon
         assert_eq!(registry.len(), expected_len);
     }
 
@@ -450,7 +462,11 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        let expected_len = if php_extension_available("phalcon") { 18 } else { 17 };
+        let has_openswoole = php_extension_available("openswoole");
+        let has_phalcon = php_extension_available("phalcon");
+        let mut expected_len = 16; // base frameworks (excludes openswoole-gated PHP)
+        if has_openswoole { expected_len += 1; } // trongate
+        if has_openswoole && has_phalcon { expected_len += 1; } // phalcon
         assert_eq!(frameworks.len(), expected_len);
     }
 

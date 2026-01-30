@@ -285,7 +285,7 @@ impl CompareAnalyzer {
     ///
     /// Statistical test result with t-statistic, p-value, and confidence interval.
     /// Returns a non-significant placeholder if either sample has < 2 observations.
-    #[must_use] 
+    #[must_use]
     pub fn welch_t_test(&self, sample1: &[f64], sample2: &[f64], metric_name: &str) -> StatisticalTest {
         if sample1.is_empty() || sample2.is_empty() {
             return StatisticalTest {
@@ -391,7 +391,7 @@ impl CompareAnalyzer {
     /// # Returns
     ///
     /// Effect size with Cohen's d value and magnitude classification
-    #[must_use] 
+    #[must_use]
     pub fn cohens_d(&self, sample1: &[f64], sample2: &[f64], metric_name: &str) -> EffectSize {
         if sample1.is_empty() || sample2.is_empty() {
             return EffectSize {

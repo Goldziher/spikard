@@ -158,6 +158,7 @@ jobs:
       fail-fast: false
       matrix:
         framework:
+          - spikard-node
           - fastify
           - hono
           - morojs
@@ -184,6 +185,7 @@ jobs:
       fail-fast: false
       matrix:
         framework:
+          - spikard-ruby
           - hanami-api
           - roda
     steps:
@@ -196,7 +198,7 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
-  # PHP frameworks
+  # PHP frameworks (third-party use OpenSwoole as async server; spikard-php uses native Rust server)
   php:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
@@ -208,12 +210,13 @@ jobs:
       fail-fast: false
       matrix:
         framework:
+          - spikard-php
           - phalcon
           - trongate
     steps:
       - uses: actions/checkout@v6
       - name: Install OpenSwoole PHP extension
-        if: matrix.framework == 'phalcon' || matrix.framework == 'trongate'
+        if: matrix.framework != 'spikard-php'
         run: |
           sudo pecl install openswoole
           echo "extension=openswoole.so" | sudo tee "/etc/php/$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')/cli/conf.d/20-openswoole.ini"

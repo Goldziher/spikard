@@ -893,146 +893,47 @@ function setupRoutes(): SimpleRouter {
 if (php_sapi_name() === 'cli' && isset($argv[0]) && basename($argv[0]) === 'server.php') {
     $router = setupRoutes();
 
-    if (class_exists(\OpenSwoole\Http\Server::class)) {
-        // Swoole async HTTP server (multi-coroutine, production-grade)
-        $server = new \OpenSwoole\Http\Server('0.0.0.0', $port);
-        $server->set([
-            'worker_num' => openswoole_cpu_num(),
-            'enable_coroutine' => true,
-            'log_level' => OPENSWOOLE_LOG_WARNING,
-        ]);
-        $server->on('request', function (\OpenSwoole\Http\Request $swReq, \OpenSwoole\Http\Response $swResp) use ($router): void {
-            $method = strtoupper($swReq->server['request_method'] ?? 'GET');
-            $uri = $swReq->server['request_uri'] ?? '/';
-            $query = $swReq->get ?? [];
-
-            $contentType = $swReq->header['content-type'] ?? '';
-            $rawBody = $swReq->rawContent();
-            $body = [];
-
-            // Populate $_FILES for multipart requests
-            $_FILES = [];
-            if ($swReq->files) {
-                $_FILES = $swReq->files;
-            }
-
-            if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE']) && !empty($rawBody)) {
-                if (str_contains($contentType, 'application/json')) {
-                    $body = json_decode($rawBody, true) ?? [];
-                } elseif (str_contains($contentType, 'application/x-www-form-urlencoded')) {
-                    parse_str($rawBody, $body);
-                }
-            }
-
-            $result = $router->dispatch($method, $uri, $query, $body);
-
-            $swResp->status($result['status'] ?? 200);
-            $swResp->header('Content-Type', 'application/json');
-            $swResp->end(json_encode($result['body'] ?? []));
-        });
-
-        error_log("[trongate] Starting Swoole server on 0.0.0.0:$port");
-        $server->start();
-    } else {
-        // Fallback: blocking socket server (single-threaded, for local dev only)
-        error_log("[trongate] Swoole not available, falling back to blocking socket server");
-        error_log("[trongate] Starting server on 0.0.0.0:$port");
-
-        $sock = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        if (!$sock) {
-            die("Failed to create socket\n");
-        }
-        socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
-        if (!@socket_bind($sock, '0.0.0.0', $port)) {
-            die("Failed to bind to port $port\n");
-        }
-        if (!@socket_listen($sock, 128)) {
-            die("Failed to listen\n");
-        }
-
-        while (true) {
-            $client = @socket_accept($sock);
-            if (!$client) { usleep(1000); continue; }
-
-            $buffer = '';
-            while (strlen($buffer) < 65536) {
-                $chunk = @socket_read($client, 4096);
-                if ($chunk === false || $chunk === '') { break; }
-                $buffer .= $chunk;
-                if (strpos($buffer, "\r\n\r\n") !== false) { break; }
-            }
-            if (empty($buffer)) { @socket_close($client); continue; }
-
-            [$requestLine, ] = explode("\r\n", $buffer, 2);
-            $parts = explode(' ', $requestLine);
-            $method = $parts[0] ?? 'GET';
-            $requestUri = $parts[1] ?? '/';
-            [$hdrs, $rawBody] = explode("\r\n\r\n", $buffer, 2);
-            $headerLines = explode("\r\n", $hdrs);
-            $parsedUrl = parse_url($requestUri);
-            $path = $parsedUrl['path'] ?? '/';
-            $queryStr = $parsedUrl['query'] ?? '';
-            $query = [];
-            if (!empty($queryStr)) { parse_str($queryStr, $query); }
-
-            $contentType = '';
-            foreach ($headerLines as $header) {
-                if (stripos($header, 'Content-Type:') === 0) {
-                    $contentType = trim(substr($header, 13));
-                }
-            }
-
-            $requestBody = [];
-            if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE']) && !empty($rawBody)) {
-                if (strpos($contentType, 'application/json') !== false) {
-                    $requestBody = json_decode($rawBody, true) ?? [];
-                } elseif (strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
-                    parse_str($rawBody, $requestBody);
-                } elseif (strpos($contentType, 'multipart/form-data') !== false) {
-                    // Parse multipart/form-data manually for socket server
-                    preg_match('/boundary=(.*)$/', $contentType, $matches);
-                    $boundary = $matches[1] ?? '';
-                    if (!empty($boundary)) {
-                        $_FILES = [];
-                        $parts = array_slice(explode('--' . $boundary, $rawBody), 1, -1);
-                        foreach ($parts as $part) {
-                            if (empty(trim($part))) continue;
-
-                            [$headers, $content] = explode("\r\n\r\n", $part, 2);
-                            $content = substr($content, 0, -2); // Remove trailing \r\n
-
-                            // Parse Content-Disposition header
-                            if (preg_match('/name="([^"]+)"(?:;\s*filename="([^"]*)")?/', $headers, $match)) {
-                                $name = $match[1];
-                                $filename = $match[2] ?? '';
-
-                                if (!empty($filename)) {
-                                    // This is a file upload
-                                    $_FILES[$name] = [
-                                        'name' => $filename,
-                                        'type' => '',
-                                        'size' => strlen($content),
-                                        'tmp_name' => '',
-                                        'error' => 0,
-                                    ];
-                                } else {
-                                    // Regular form field
-                                    $requestBody[$name] = $content;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            $response = $router->dispatch($method, $path, $query, $requestBody);
-            $status = $response['status'] ?? 200;
-            $statusTexts = [200=>'OK',201=>'Created',204=>'No Content',400=>'Bad Request',404=>'Not Found',500=>'Internal Server Error'];
-            $responseBody = json_encode($response['body'] ?? []);
-            $out = "HTTP/1.1 $status " . ($statusTexts[$status] ?? 'Unknown') . "\r\nContent-Type: application/json\r\nContent-Length: " . strlen($responseBody) . "\r\nConnection: close\r\n\r\n" . $responseBody;
-            @socket_write($client, $out);
-            @socket_close($client);
-        }
-        socket_close($sock);
+    if (!class_exists(\OpenSwoole\Http\Server::class)) {
+        fwrite(STDERR, "[trongate] ERROR: OpenSwoole extension is required but not installed.\n");
+        fwrite(STDERR, "[trongate] Install with: pecl install openswoole\n");
+        exit(1);
     }
+
+    $server = new \OpenSwoole\Http\Server('0.0.0.0', $port);
+    $server->set([
+        'worker_num' => openswoole_cpu_num(),
+        'enable_coroutine' => true,
+        'log_level' => OPENSWOOLE_LOG_WARNING,
+    ]);
+    $server->on('request', function (\OpenSwoole\Http\Request $swReq, \OpenSwoole\Http\Response $swResp) use ($router): void {
+        $method = strtoupper($swReq->server['request_method'] ?? 'GET');
+        $uri = $swReq->server['request_uri'] ?? '/';
+        $query = $swReq->get ?? [];
+
+        $contentType = $swReq->header['content-type'] ?? '';
+        $rawBody = $swReq->rawContent();
+        $body = [];
+
+        $_FILES = [];
+        if ($swReq->files) {
+            $_FILES = $swReq->files;
+        }
+
+        if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE']) && !empty($rawBody)) {
+            if (str_contains($contentType, 'application/json')) {
+                $body = json_decode($rawBody, true) ?? [];
+            } elseif (str_contains($contentType, 'application/x-www-form-urlencoded')) {
+                parse_str($rawBody, $body);
+            }
+        }
+
+        $result = $router->dispatch($method, $uri, $query, $body);
+
+        $swResp->status($result['status'] ?? 200);
+        $swResp->header('Content-Type', 'application/json');
+        $swResp->end(json_encode($result['body'] ?? []));
+    });
+
+    error_log("[trongate] Starting OpenSwoole server on 0.0.0.0:$port");
+    $server->start();
 }

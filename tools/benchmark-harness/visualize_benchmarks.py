@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate interactive Plotly HTML charts from aggregated benchmark results."""
+"""Generate focused benchmark charts with language-based color coding."""
 
 from __future__ import annotations
 
@@ -10,42 +10,157 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+# ---------------------------------------------------------------------------
+# Language / color mapping
+# ---------------------------------------------------------------------------
+
+LANGUAGE_GROUPS: dict[str, tuple[str, int]] = {
+    # (language, shade_index)
+    "spikard-rust": ("Rust", 0),
+    "spikard-python": ("Python", 0),
+    "fastapi": ("Python", 1),
+    "litestar": ("Python", 2),
+    "robyn": ("Python", 3),
+    "spikard-node": ("Node.js", 0),
+    "fastify": ("Node.js", 1),
+    "hono": ("Node.js", 2),
+    "morojs": ("Node.js", 3),
+    "kito": ("Node.js", 4),
+    "spikard-bun": ("Bun", 0),
+    "elysia": ("Bun", 1),
+    "spikard-ruby": ("Ruby", 0),
+    "hanami-api": ("Ruby", 1),
+    "roda": ("Ruby", 2),
+    "spikard-php": ("PHP", 0),
+    "trongate": ("PHP", 1),
+    "phalcon": ("PHP", 2),
+}
+
+LANGUAGE_BASE_COLORS: dict[str, str] = {
+    "Rust": "#1565C0",
+    "Python": "#2E7D32",
+    "Node.js": "#E65100",
+    "Bun": "#F57C00",
+    "Ruby": "#C62828",
+    "PHP": "#6A1B9A",
+}
+
+# Pre-computed shade variants per language
+_LANGUAGE_SHADES: dict[str, list[str]] = {
+    "Rust": ["#1565C0"],
+    "Python": ["#1B5E20", "#2E7D32", "#43A047", "#66BB6A"],
+    "Node.js": ["#BF360C", "#D84315", "#E65100", "#EF6C00", "#F57C00"],
+    "Bun": ["#F57C00", "#FFA726"],
+    "Ruby": ["#B71C1C", "#C62828", "#D32F2F"],
+    "PHP": ["#4A148C", "#6A1B9A", "#7B1FA2"],
+}
+
+CATEGORY_ORDER = ["json-bodies", "path-params", "query-params", "urlencoded", "multipart"]
+CATEGORY_LABELS = {
+    "json-bodies": "JSON Bodies",
+    "path-params": "Path Params",
+    "query-params": "Query Params",
+    "urlencoded": "URL-Encoded",
+    "multipart": "Multipart",
+}
+
+# Workload prefix -> category
+_PREFIX_TO_CATEGORY = {
+    "json-": "json-bodies",
+    "path-": "path-params",
+    "query-": "query-params",
+    "urlencoded-": "urlencoded",
+    "multipart-": "multipart",
+}
+
+# JSON body sizes for scaling chart
+_JSON_SIZE_ORDER = ["json-small", "json-medium", "json-large", "json-very-large"]
+_JSON_SIZE_LABELS = {"json-small": "Small", "json-medium": "Medium", "json-large": "Large", "json-very-large": "V-Large"}
+
+# Chart layout defaults
+_LAYOUT_DEFAULTS: dict[str, Any] = {
+    "template": "plotly_white",
+    "font": {"family": "Inter, Roboto, sans-serif", "size": 12},
+    "margin": {"t": 60, "b": 60, "l": 160, "r": 40},
+}
+
+_IMG_KWARGS: dict[str, Any] = {"width": 1200, "height": 800, "scale": 2}
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _workload_category(name: str) -> str:
+    for prefix, cat in _PREFIX_TO_CATEGORY.items():
+        if name.startswith(prefix):
+            return cat
+    return "other"
+
+
+def _fw_color(framework: str) -> str:
+    lang, idx = LANGUAGE_GROUPS.get(framework, ("Unknown", 0))
+    shades = _LANGUAGE_SHADES.get(lang, ["#9E9E9E"])
+    return shades[min(idx, len(shades) - 1)]
+
+
+def _fw_language(framework: str) -> str:
+    lang, _ = LANGUAGE_GROUPS.get(framework, ("Unknown", 0))
+    return lang
+
+
+def _lang_sort_key(framework: str) -> tuple[int, str, str]:
+    lang = _fw_language(framework)
+    lang_order = list(LANGUAGE_BASE_COLORS.keys())
+    try:
+        idx = lang_order.index(lang)
+    except ValueError:
+        idx = len(lang_order)
+    return (idx, lang, framework)
+
+
+def _sorted_frameworks(frameworks: list[str]) -> list[str]:
+    return sorted(frameworks, key=_lang_sort_key)
+
 
 def load_aggregated_results(path: Path) -> dict[str, Any]:
-    """Load and validate aggregated benchmark JSON."""
     with path.open() as f:
         return json.load(f)
 
 
 def extract_framework_data(data: dict[str, Any]) -> pd.DataFrame:
-    """Extract framework performance data into a pandas DataFrame."""
     rows = []
-
     for fw_result in data["frameworks"]:
         framework = fw_result["framework"]
-        profile = fw_result["profile"]
-        status = fw_result["status"]
-
-        if status != "completed":
+        if fw_result["status"] != "completed":
             continue
 
-        for suite in profile.get("suites", []):
+        for suite in fw_result["profile"].get("suites", []):
             for workload in suite.get("workloads", []):
-                # Support both "results" (actual schema) and "metrics" (legacy)
                 metrics = workload.get("results", workload.get("metrics", {}))
                 throughput = metrics.get("throughput", {})
                 latency = metrics.get("latency", {})
                 resources = metrics.get("resources", {})
 
-                row = {
+                wname = workload["name"]
+                is_validated = wname.startswith("validated/")
+                base_workload = wname.removeprefix("validated/")
+
+                rows.append({
                     "framework": framework,
                     "suite": suite["name"],
-                    "workload": workload["name"],
-                    "status": status,
+                    "workload": wname,
+                    "base_workload": base_workload,
+                    "is_validated": is_validated,
+                    "category": _workload_category(base_workload),
+                    "language": _fw_language(framework),
+                    "color": _fw_color(framework),
                     "requests_per_sec": throughput.get("requests_per_sec", 0),
                     "total_requests": throughput.get("total_requests", 0),
                     "success_rate": throughput.get("success_rate", 0) * 100,
@@ -59,394 +174,528 @@ def extract_framework_data(data: dict[str, Any]) -> pd.DataFrame:
                     "cpu_peak_percent": resources.get("cpu", {}).get("peak_percent", 0),
                     "memory_avg_mb": resources.get("memory", {}).get("avg_mb", 0),
                     "memory_peak_mb": resources.get("memory", {}).get("peak_mb", 0),
-                }
-                rows.append(row)
+                })
 
     return pd.DataFrame(rows)
 
 
-def get_color_scheme() -> list[str]:
-    """Material Design color palette matching MkDocs theme."""
-    return [
-        "#1976d2",  # Blue
-        "#388e3c",  # Green
-        "#f57c00",  # Orange
-        "#c62828",  # Red
-        "#7b1fa2",  # Purple
-        "#00796b",  # Teal
-        "#c2185b",  # Pink
-        "#5d4037",  # Brown
-        "#455a64",  # Blue Grey
-        "#fbc02d",  # Yellow
-        "#0288d1",  # Light Blue
-        "#689f38",  # Light Green
-    ]
-
-
 def _write_figure(fig: go.Figure, output_dir: Path, name: str, fmt: str) -> list[Path]:
-    """Write a figure in the requested format(s). Returns list of output paths."""
     paths: list[Path] = []
-
     formats = ["html", "svg", "png"] if fmt == "all" else [fmt]
-
     for f in formats:
+        p = output_dir / f"{name}.{f}"
         if f == "html":
-            p = output_dir / f"{name}.html"
             fig.write_html(str(p))
-            paths.append(p)
-        elif f in ("svg", "png"):
-            p = output_dir / f"{name}.{f}"
-            fig.write_image(str(p), format=f)
-            paths.append(p)
-
+        else:
+            fig.write_image(str(p), format=f, **_IMG_KWARGS)
+        paths.append(p)
     return paths
 
 
-def generate_throughput_chart(data: dict[str, Any], output_dir: Path, title: str, fmt: str) -> list[Path]:
-    """Generate throughput comparison chart."""
-    df = extract_framework_data(data)
+def _add_language_dividers(fig: go.Figure, frameworks: list[str], horizontal: bool = True) -> None:
+    prev_lang = None
+    for i, fw in enumerate(frameworks):
+        lang = _fw_language(fw)
+        if prev_lang is not None and lang != prev_lang:
+            pos = i - 0.5
+            if horizontal:
+                fig.add_hline(y=pos, line_dash="dot", line_color="#BDBDBD", line_width=1)
+            else:
+                fig.add_vline(x=pos, line_dash="dot", line_color="#BDBDBD", line_width=1)
+        prev_lang = lang
 
+
+# ---------------------------------------------------------------------------
+# Chart 01: Overall Throughput Leaderboard
+# ---------------------------------------------------------------------------
+
+
+def chart_throughput_leaderboard(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
     if df.empty:
         return []
 
-    json_workloads = df[df["suite"] == "json-bodies"]
+    summary = df.groupby("framework", as_index=False).agg(
+        median_rps=("requests_per_sec", "median"),
+        q25=("requests_per_sec", lambda x: x.quantile(0.25)),
+        q75=("requests_per_sec", lambda x: x.quantile(0.75)),
+    )
 
-    if json_workloads.empty:
-        json_workloads = df
-
-    pivot = json_workloads.pivot_table(
-        index="framework",
-        columns="workload",
-        values="requests_per_sec",
-        aggfunc="mean",
-    ).fillna(0)
+    fws = _sorted_frameworks(summary["framework"].tolist())
+    summary = summary.set_index("framework").loc[fws].reset_index()
 
     fig = go.Figure()
+    fig.add_trace(go.Bar(
+        y=summary["framework"],
+        x=summary["median_rps"],
+        orientation="h",
+        marker_color=[_fw_color(fw) for fw in summary["framework"]],
+        error_x=dict(
+            type="data",
+            symmetric=False,
+            array=(summary["q75"] - summary["median_rps"]).tolist(),
+            arrayminus=(summary["median_rps"] - summary["q25"]).tolist(),
+            color="#888",
+            thickness=1.5,
+        ),
+        text=[f"{v:,.0f}" for v in summary["median_rps"]],
+        textposition="outside",
+    ))
 
-    colors = get_color_scheme()
-    for idx, col in enumerate(pivot.columns):
-        fig.add_trace(
-            go.Bar(
-                name=col,
-                x=pivot.index,
-                y=pivot[col],
-                marker_color=colors[idx % len(colors)],
-                text=[f"{v:.0f}" for v in pivot[col]],
-                textposition="outside",
-            )
-        )
+    _add_language_dividers(fig, fws, horizontal=True)
 
     fig.update_layout(
-        title=f"{title} - Throughput Comparison",
-        xaxis_title="Framework",
-        yaxis_title="Requests / second",
-        barmode="group",
-        template="plotly_white",
-        height=600,
-        font={"family": "Roboto, sans-serif", "size": 12},
-        showlegend=True,
-        legend={
-            "title": "Workload",
-            "orientation": "v",
-            "yanchor": "top",
-            "y": 1,
-            "xanchor": "left",
-            "x": 1.02,
-        },
+        **_LAYOUT_DEFAULTS,
+        title="Overall Throughput (Median RPS, IQR error bars)",
+        xaxis_title="Requests / second",
+        height=max(500, len(fws) * 38 + 120),
+        yaxis=dict(autorange="reversed"),
     )
 
-    return _write_figure(fig, output_dir, "throughput-by-framework", fmt)
+    return _write_figure(fig, output_dir, "01-throughput-leaderboard", fmt)
 
 
-def generate_latency_chart(data: dict[str, Any], output_dir: Path, title: str, fmt: str) -> list[Path]:
-    """Generate latency percentile comparison (2x2 subplot)."""
-    df = extract_framework_data(data)
+# ---------------------------------------------------------------------------
+# Chart 02: Throughput by Category
+# ---------------------------------------------------------------------------
 
-    if df.empty:
+
+def chart_throughput_by_category(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
+    raw = df[~df["is_validated"]].copy()
+    if raw.empty:
         return []
 
-    small_json = df[(df["suite"] == "json-bodies") & (df["workload"].str.contains("small"))]
+    cats = [c for c in CATEGORY_ORDER if c in raw["category"].unique()]
+    n = len(cats)
+    if n == 0:
+        return []
 
-    if small_json.empty:
-        small_json = df.groupby("framework", as_index=False).mean(numeric_only=True)
+    rows, cols = (2, 3) if n > 3 else (1, n)
+    fig = make_subplots(
+        rows=rows, cols=cols,
+        subplot_titles=[CATEGORY_LABELS.get(c, c) for c in cats],
+        horizontal_spacing=0.12,
+        vertical_spacing=0.15,
+    )
+
+    fws = _sorted_frameworks(raw["framework"].unique().tolist())
+
+    for i, cat in enumerate(cats):
+        r, c = divmod(i, cols)
+        r += 1
+        c += 1
+        cat_df = raw[raw["category"] == cat]
+        cat_mean = cat_df.groupby("framework", as_index=False)["requests_per_sec"].mean()
+        cat_mean = cat_mean.set_index("framework").reindex(fws).dropna().reset_index()
+        cat_mean = cat_mean.sort_values("requests_per_sec", ascending=True)
+
+        fig.add_trace(go.Bar(
+            y=cat_mean["framework"],
+            x=cat_mean["requests_per_sec"],
+            orientation="h",
+            marker_color=[_fw_color(fw) for fw in cat_mean["framework"]],
+            text=[f"{v:,.0f}" for v in cat_mean["requests_per_sec"]],
+            textposition="outside",
+            showlegend=False,
+        ), row=r, col=c)
+
+    fig.update_layout(
+        **_LAYOUT_DEFAULTS,
+        title="Throughput by Category (Raw Workloads)",
+        height=900,
+    )
+
+    return _write_figure(fig, output_dir, "02-throughput-by-category", fmt)
+
+
+# ---------------------------------------------------------------------------
+# Chart 03: Raw vs Validated Throughput (side-by-side, no derived %)
+# ---------------------------------------------------------------------------
+
+
+def chart_raw_vs_validated(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
+    raw_df = df[~df["is_validated"]].groupby("framework", as_index=False)["requests_per_sec"].mean()
+    val_df = df[df["is_validated"]].groupby("framework", as_index=False)["requests_per_sec"].mean()
+
+    merged = raw_df.merge(val_df, on="framework", suffixes=("_raw", "_val"), how="inner")
+    if merged.empty:
+        return []
+
+    fws = _sorted_frameworks(merged["framework"].tolist())
+    merged = merged.set_index("framework").loc[fws].reset_index()
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        y=merged["framework"],
+        x=merged["requests_per_sec_raw"],
+        orientation="h",
+        name="Raw",
+        marker_color=[_fw_color(fw) for fw in merged["framework"]],
+        text=[f"{v:,.0f}" for v in merged["requests_per_sec_raw"]],
+        textposition="outside",
+        opacity=1.0,
+    ))
+    fig.add_trace(go.Bar(
+        y=merged["framework"],
+        x=merged["requests_per_sec_val"],
+        orientation="h",
+        name="Validated",
+        marker_color=[_fw_color(fw) for fw in merged["framework"]],
+        marker_pattern_shape="/",
+        text=[f"{v:,.0f}" for v in merged["requests_per_sec_val"]],
+        textposition="outside",
+        opacity=0.6,
+    ))
+
+    _add_language_dividers(fig, fws, horizontal=True)
+
+    fig.update_layout(
+        **_LAYOUT_DEFAULTS,
+        title="Raw vs Validated Throughput (Mean RPS)",
+        xaxis_title="Requests / second",
+        barmode="group",
+        height=max(500, len(fws) * 45 + 120),
+        yaxis=dict(autorange="reversed"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+    )
+
+    return _write_figure(fig, output_dir, "03-raw-vs-validated", fmt)
+
+
+# ---------------------------------------------------------------------------
+# Chart 04: Latency Faceted by Language
+# ---------------------------------------------------------------------------
+
+
+def chart_latency_by_language(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
+    raw = df[~df["is_validated"]]
+    if raw.empty:
+        return []
+
+    langs = [l for l in LANGUAGE_BASE_COLORS if l in raw["language"].unique()]
+    n = len(langs)
+    if n == 0:
+        return []
 
     fig = make_subplots(
-        rows=2,
-        cols=2,
-        subplot_titles=("P50 (Median)", "P90", "P95", "P99"),
-        vertical_spacing=0.12,
-        horizontal_spacing=0.10,
+        rows=1, cols=n,
+        subplot_titles=langs,
+        horizontal_spacing=0.06,
     )
 
-    colors = get_color_scheme()
     percentiles = [
-        ("latency_p50_ms", 1, 1),
-        ("latency_p90_ms", 1, 2),
-        ("latency_p95_ms", 2, 1),
-        ("latency_p99_ms", 2, 2),
+        ("latency_p50_ms", "P50"),
+        ("latency_p90_ms", "P90"),
+        ("latency_p95_ms", "P95"),
+        ("latency_p99_ms", "P99"),
     ]
+    p_colors = ["#1976D2", "#F57C00", "#E53935", "#4A148C"]
 
-    for col_name, row, col in percentiles:
-        sorted_df = small_json.sort_values(col_name)
-        fig.add_trace(
-            go.Bar(
-                x=sorted_df["framework"],
-                y=sorted_df[col_name],
-                marker_color=[colors[i % len(colors)] for i in range(len(sorted_df))],
-                text=[f"{v:.2f}" for v in sorted_df[col_name]],
+    for col_idx, lang in enumerate(langs, 1):
+        lang_df = raw[raw["language"] == lang]
+        fws = _sorted_frameworks(lang_df["framework"].unique().tolist())
+        means = lang_df.groupby("framework", as_index=False)[[p[0] for p in percentiles]].mean()
+        means = means.set_index("framework").reindex(fws).dropna().reset_index()
+
+        for pi, (pcol, pname) in enumerate(percentiles):
+            fig.add_trace(go.Bar(
+                x=means["framework"],
+                y=means[pcol],
+                name=pname,
+                marker_color=p_colors[pi],
+                showlegend=(col_idx == 1),
+                text=[f"{v:.1f}" for v in means[pcol]],
                 textposition="outside",
-                showlegend=False,
-            ),
-            row=row,
-            col=col,
-        )
-
-    fig.update_xaxes(tickangle=-45)
-    fig.update_yaxes(title_text="Latency (ms)", row=1, col=1)
-    fig.update_yaxes(title_text="Latency (ms)", row=2, col=1)
+                textfont=dict(size=9),
+            ), row=1, col=col_idx)
 
     fig.update_layout(
-        title_text=f"{title} - Latency Percentiles",
-        template="plotly_white",
-        height=800,
-        font={"family": "Roboto, sans-serif", "size": 12},
-        showlegend=False,
-    )
-
-    return _write_figure(fig, output_dir, "latency-percentiles", fmt)
-
-
-def generate_validation_overhead_chart(data: dict[str, Any], output_dir: Path, title: str, fmt: str) -> list[Path]:
-    """Generate validation vs raw comparison chart."""
-    df = extract_framework_data(data)
-
-    if df.empty:
-        return []
-
-    df["is_validated"] = df["workload"].str.startswith("validated/")
-    df["base_workload"] = df["workload"].str.replace("^validated/", "", regex=True)
-
-    json_small = df[(df["suite"] == "json-bodies") & (df["workload"].str.contains("small"))]
-
-    if json_small.empty:
-        json_small = df
-
-    # Pair raw and validated workloads for each framework
-    pivot = json_small.pivot_table(
-        index=["framework", "base_workload"],
-        columns="is_validated",
-        values="requests_per_sec",
-        aggfunc="mean",
-    )
-
-    if not pivot.empty:
-        pivot = pivot.reset_index()
-        drop_cols = [c for c in [False, True] if c in pivot.columns]
-        if drop_cols:
-            pivot = pivot.dropna(subset=drop_cols)
-
-    if pivot.empty or False not in pivot.columns or True not in pivot.columns:
-        fig = go.Figure()
-        fig.add_annotation(
-            text="Insufficient validation/raw pairs for comparison",
-            xref="paper",
-            yref="paper",
-            x=0.5,
-            y=0.5,
-            showarrow=False,
-            font={"size": 16},
-        )
-    else:
-        pivot["overhead_pct"] = ((pivot[False] - pivot[True]) / pivot[False]) * 100
-
-        fig = go.Figure()
-
-        colors = get_color_scheme()
-        color_idx = 0
-
-        for _, row in pivot.iterrows():
-            fw = row["framework"]
-            fig.add_trace(
-                go.Bar(
-                    name="Raw",
-                    x=[f"{fw}\n{row['base_workload']}"],
-                    y=[row[False]],
-                    marker_color=colors[color_idx % len(colors)],
-                    text=f"{row[False]:.0f}",
-                    textposition="outside",
-                    showlegend=(color_idx == 0),
-                )
-            )
-            fig.add_trace(
-                go.Bar(
-                    name="Validated",
-                    x=[f"{fw}\n{row['base_workload']}"],
-                    y=[row[True]],
-                    marker_color=colors[(color_idx + 1) % len(colors)],
-                    text=f"{row[True]:.0f}",
-                    textposition="outside",
-                    showlegend=(color_idx == 0),
-                )
-            )
-
-            overhead = row["overhead_pct"]
-            fig.add_annotation(
-                x=f"{fw}\n{row['base_workload']}",
-                y=max(row[False], row[True]),
-                text=f"{overhead:.1f}% overhead",
-                showarrow=True,
-                arrowhead=2,
-                arrowsize=1,
-                arrowwidth=1,
-                arrowcolor="gray",
-                ax=0,
-                ay=-40,
-                font={"size": 10, "color": "red" if overhead > 20 else "green" if overhead < 5 else "orange"},
-            )
-            color_idx += 2
-
-    fig.update_layout(
-        title=f"{title} - Validation Overhead",
-        xaxis_title="Framework",
-        yaxis_title="Requests / second",
+        **_LAYOUT_DEFAULTS,
+        title="Latency Percentiles by Language Group",
         barmode="group",
-        template="plotly_white",
         height=600,
-        font={"family": "Roboto, sans-serif", "size": 12},
+        legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
     )
+    for i in range(1, n + 1):
+        fig.update_yaxes(title_text="Latency (ms)" if i == 1 else "", row=1, col=i)
 
-    return _write_figure(fig, output_dir, "validation-overhead", fmt)
+    return _write_figure(fig, output_dir, "04-latency-by-language", fmt)
 
 
-def generate_resource_chart(data: dict[str, Any], output_dir: Path, title: str, fmt: str) -> list[Path]:
-    """Generate resource utilization chart (dual-axis: memory bars + CPU line)."""
-    df = extract_framework_data(data)
+# ---------------------------------------------------------------------------
+# Chart 05: P99 Latency Leaderboard
+# ---------------------------------------------------------------------------
 
+
+def chart_latency_p99_leaderboard(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
     if df.empty:
         return []
 
-    resources = (
-        df.groupby("framework", as_index=False)[["memory_peak_mb", "cpu_avg_percent"]]
-        .mean()
-        .sort_values("memory_peak_mb", ascending=False)
-    )
+    summary = df.groupby("framework", as_index=False)["latency_p99_ms"].mean()
+    summary = summary.sort_values("latency_p99_ms", ascending=True)
 
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-    colors = get_color_scheme()
-    fig.add_trace(
-        go.Bar(
-            name="Peak Memory",
-            x=resources["framework"],
-            y=resources["memory_peak_mb"],
-            marker_color=colors[0],
-            text=[f"{v:.1f}" for v in resources["memory_peak_mb"]],
-            textposition="outside",
-        ),
-        secondary_y=False,
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            name="Avg CPU",
-            x=resources["framework"],
-            y=resources["cpu_avg_percent"],
-            mode="lines+markers",
-            marker={"color": colors[2], "size": 8},
-            line={"width": 2, "color": colors[2]},
-        ),
-        secondary_y=True,
-    )
-
-    fig.update_xaxes(title_text="Framework", tickangle=-45)
-    fig.update_yaxes(title_text="Memory (MB)", secondary_y=False)
-    fig.update_yaxes(title_text="CPU (%)", secondary_y=True)
+    fig = go.Figure(go.Bar(
+        y=summary["framework"],
+        x=summary["latency_p99_ms"],
+        orientation="h",
+        marker_color=[_fw_color(fw) for fw in summary["framework"]],
+        text=[f"{v:.2f} ms" for v in summary["latency_p99_ms"]],
+        textposition="outside",
+    ))
 
     fig.update_layout(
-        title=f"{title} - Resource Utilization",
-        template="plotly_white",
-        height=600,
-        font={"family": "Roboto, sans-serif", "size": 12},
-        hovermode="x unified",
-    )
-
-    return _write_figure(fig, output_dir, "resources", fmt)
-
-
-def generate_throughput_summary(data: dict[str, Any], output_dir: Path, fmt: str) -> list[Path]:
-    """Generate a simple horizontal bar chart of avg RPS per framework (for README)."""
-    df = extract_framework_data(data)
-    if df.empty:
-        return []
-
-    # All frameworks now run all workloads (raw + validated), so no need to filter for common workloads
-    summary = (
-        df.groupby("framework", as_index=False)["requests_per_sec"]
-        .mean()
-        .sort_values("requests_per_sec", ascending=True)
-    )
-
-    n_workloads = df["workload"].nunique()
-    colors = get_color_scheme()
-    fig = go.Figure(
-        go.Bar(
-            y=summary["framework"],
-            x=summary["requests_per_sec"],
-            orientation="h",
-            marker_color=[colors[i % len(colors)] for i in range(len(summary))],
-            text=[f"{v:,.0f}" for v in summary["requests_per_sec"]],
-            textposition="outside",
-        )
-    )
-    fig.update_layout(
-        title=f"Average Requests/sec by Framework (across {n_workloads} workloads)",
-        xaxis_title="Requests / second",
-        template="plotly_white",
-        height=max(400, len(summary) * 35 + 100),
-        margin={"l": 200},
-        font={"family": "Roboto, sans-serif", "size": 12},
-    )
-
-    return _write_figure(fig, output_dir, "throughput-summary", fmt)
-
-
-def generate_latency_summary(data: dict[str, Any], output_dir: Path, fmt: str) -> list[Path]:
-    """Generate a simple horizontal bar chart of P99 latency per framework (for README)."""
-    df = extract_framework_data(data)
-    if df.empty:
-        return []
-
-    # All frameworks now run all workloads (raw + validated), so no need to filter for common workloads
-    n_workloads = df["workload"].nunique()
-    summary = (
-        df.groupby("framework", as_index=False)["latency_p99_ms"].mean().sort_values("latency_p99_ms", ascending=True)
-    )
-
-    colors = get_color_scheme()
-    fig = go.Figure(
-        go.Bar(
-            y=summary["framework"],
-            x=summary["latency_p99_ms"],
-            orientation="h",
-            marker_color=[colors[i % len(colors)] for i in range(len(summary))],
-            text=[f"{v:.2f} ms" for v in summary["latency_p99_ms"]],
-            textposition="outside",
-        )
-    )
-    fig.update_layout(
-        title=f"P99 Latency by Framework (across {n_workloads} workloads)",
+        **_LAYOUT_DEFAULTS,
+        title="P99 Latency Ranking",
         xaxis_title="Latency (ms)",
-        template="plotly_white",
-        height=max(400, len(summary) * 35 + 100),
-        margin={"l": 200},
-        font={"family": "Roboto, sans-serif", "size": 12},
+        xaxis_type="log",
+        height=max(400, len(summary) * 35 + 120),
     )
 
-    return _write_figure(fig, output_dir, "latency-summary", fmt)
+    return _write_figure(fig, output_dir, "05-latency-p99-leaderboard", fmt)
+
+
+# ---------------------------------------------------------------------------
+# Chart 06: JSON Payload Scaling (all frameworks)
+# ---------------------------------------------------------------------------
+
+
+def chart_payload_scaling_all(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
+    raw = df[(~df["is_validated"]) & (df["category"] == "json-bodies")]
+    if raw.empty:
+        return []
+
+    sizes = [s for s in _JSON_SIZE_ORDER if s in raw["base_workload"].unique()]
+    if len(sizes) < 2:
+        return []
+
+    fws = _sorted_frameworks(raw["framework"].unique().tolist())
+    fig = go.Figure()
+
+    for fw in fws:
+        fw_df = raw[raw["framework"] == fw]
+        means = fw_df.groupby("base_workload", as_index=False)["requests_per_sec"].mean()
+        means = means.set_index("base_workload").reindex(sizes).dropna()
+        if means.empty:
+            continue
+        fig.add_trace(go.Scatter(
+            x=[_JSON_SIZE_LABELS.get(s, s) for s in means.index],
+            y=means["requests_per_sec"],
+            mode="lines+markers",
+            name=fw,
+            line=dict(color=_fw_color(fw), width=2),
+            marker=dict(size=7),
+        ))
+
+    fig.update_layout(
+        **_LAYOUT_DEFAULTS,
+        title="JSON Throughput vs Body Size (All Frameworks)",
+        xaxis_title="Body Size",
+        yaxis_title="Requests / second",
+        height=600,
+        legend=dict(font=dict(size=10)),
+    )
+
+    return _write_figure(fig, output_dir, "06-payload-scaling-all", fmt)
+
+
+# ---------------------------------------------------------------------------
+# Chart 07: Payload Scaling (best per language)
+# ---------------------------------------------------------------------------
+
+
+def chart_payload_scaling_best(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
+    raw = df[(~df["is_validated"]) & (df["category"] == "json-bodies")]
+    if raw.empty:
+        return []
+
+    lang_best: dict[str, str] = {}
+    for lang in LANGUAGE_BASE_COLORS:
+        lang_df = raw[raw["language"] == lang]
+        if lang_df.empty:
+            continue
+        best = lang_df.groupby("framework")["requests_per_sec"].median().idxmax()
+        lang_best[lang] = best
+
+    sizes = [s for s in _JSON_SIZE_ORDER if s in raw["base_workload"].unique()]
+    if len(sizes) < 2:
+        return []
+
+    fig = go.Figure()
+    for lang, fw in lang_best.items():
+        fw_df = raw[raw["framework"] == fw]
+        means = fw_df.groupby("base_workload", as_index=False)["requests_per_sec"].mean()
+        means = means.set_index("base_workload").reindex(sizes).dropna()
+        if means.empty:
+            continue
+        fig.add_trace(go.Scatter(
+            x=[_JSON_SIZE_LABELS.get(s, s) for s in means.index],
+            y=means["requests_per_sec"],
+            mode="lines+markers",
+            name=f"{fw} ({lang})",
+            line=dict(color=LANGUAGE_BASE_COLORS[lang], width=3),
+            marker=dict(size=9),
+        ))
+
+    fig.update_layout(
+        **_LAYOUT_DEFAULTS,
+        title="JSON Throughput vs Body Size (Best per Language)",
+        xaxis_title="Body Size",
+        yaxis_title="Requests / second",
+        height=600,
+    )
+
+    return _write_figure(fig, output_dir, "07-payload-scaling-best", fmt)
+
+
+# ---------------------------------------------------------------------------
+# Chart 08: Resource Efficiency Scatter
+# ---------------------------------------------------------------------------
+
+
+def chart_resource_efficiency(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
+    if df.empty:
+        return []
+
+    summary = df.groupby("framework", as_index=False).agg(
+        mean_rps=("requests_per_sec", "mean"),
+        peak_mem=("memory_peak_mb", "mean"),
+        avg_cpu=("cpu_avg_percent", "mean"),
+    )
+
+    cpu_vals = summary["avg_cpu"]
+    if cpu_vals.max() > cpu_vals.min():
+        norm = (cpu_vals - cpu_vals.min()) / (cpu_vals.max() - cpu_vals.min())
+    else:
+        norm = pd.Series([0.5] * len(cpu_vals))
+    sizes = 10 + norm * 30
+
+    fig = go.Figure()
+    for i, row in summary.iterrows():
+        fw = row["framework"]
+        fig.add_trace(go.Scatter(
+            x=[row["peak_mem"]],
+            y=[row["mean_rps"]],
+            mode="markers+text",
+            marker=dict(size=sizes.iloc[i], color=_fw_color(fw), opacity=0.8),  # type: ignore[arg-type]
+            text=[fw],
+            textposition="top center",
+            textfont=dict(size=10),
+            name=f"{fw} (CPU {row['avg_cpu']:.0f}%)",
+            showlegend=True,
+        ))
+
+    fig.update_layout(
+        **_LAYOUT_DEFAULTS,
+        title="Throughput vs Memory (point size = CPU%)",
+        xaxis_title="Peak Memory (MB)",
+        yaxis_title="Mean RPS",
+        height=700,
+        legend=dict(font=dict(size=9)),
+    )
+
+    return _write_figure(fig, output_dir, "08-resource-efficiency", fmt)
+
+
+# ---------------------------------------------------------------------------
+# Chart 09: Resource Usage Bars
+# ---------------------------------------------------------------------------
+
+
+def chart_resource_usage(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
+    if df.empty:
+        return []
+
+    summary = df.groupby("framework", as_index=False).agg(
+        peak_mem=("memory_peak_mb", "mean"),
+        avg_cpu=("cpu_avg_percent", "mean"),
+    )
+    fws = _sorted_frameworks(summary["framework"].tolist())
+    summary = summary.set_index("framework").loc[fws].reset_index()
+
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=["Peak Memory (MB)", "Avg CPU (%)"],
+        horizontal_spacing=0.15,
+    )
+
+    fig.add_trace(go.Bar(
+        y=summary["framework"],
+        x=summary["peak_mem"],
+        orientation="h",
+        marker_color=[_fw_color(fw) for fw in summary["framework"]],
+        text=[f"{v:.0f}" for v in summary["peak_mem"]],
+        textposition="outside",
+        showlegend=False,
+    ), row=1, col=1)
+
+    fig.add_trace(go.Bar(
+        y=summary["framework"],
+        x=summary["avg_cpu"],
+        orientation="h",
+        marker_color=[_fw_color(fw) for fw in summary["framework"]],
+        text=[f"{v:.0f}%" for v in summary["avg_cpu"]],
+        textposition="outside",
+        showlegend=False,
+    ), row=1, col=2)
+
+    _add_language_dividers(fig, fws, horizontal=True)
+
+    fig.update_layout(
+        **_LAYOUT_DEFAULTS,
+        title="Resource Usage by Framework",
+        height=max(500, len(fws) * 38 + 120),
+    )
+    fig.update_yaxes(autorange="reversed", row=1, col=1)
+    fig.update_yaxes(autorange="reversed", row=1, col=2)
+
+    return _write_figure(fig, output_dir, "09-resource-usage", fmt)
+
+
+# ---------------------------------------------------------------------------
+# Chart 10: Throughput Heatmap
+# ---------------------------------------------------------------------------
+
+
+def chart_throughput_heatmap(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[Path]:
+    raw = df[~df["is_validated"]]
+    if raw.empty:
+        return []
+
+    pivot = raw.groupby(["framework", "category"])["requests_per_sec"].mean().unstack(fill_value=0)
+    cats = [c for c in CATEGORY_ORDER if c in pivot.columns]
+    if not cats:
+        return []
+
+    pivot = pivot[cats]
+    fws = _sorted_frameworks(pivot.index.tolist())
+    pivot = pivot.reindex(fws)
+
+    fig = go.Figure(go.Heatmap(
+        z=pivot.values,
+        x=[CATEGORY_LABELS.get(c, c) for c in cats],
+        y=pivot.index.tolist(),
+        colorscale="Blues",
+        text=[[f"{v:,.0f}" for v in row] for row in pivot.values],
+        texttemplate="%{text}",
+        textfont=dict(size=10),
+        colorbar=dict(title="RPS"),
+    ))
+
+    fig.update_layout(
+        **_LAYOUT_DEFAULTS,
+        title="Throughput Heatmap (Mean RPS by Category)",
+        height=max(500, len(fws) * 35 + 120),
+        yaxis=dict(autorange="reversed"),
+    )
+
+    return _write_figure(fig, output_dir, "10-throughput-heatmap", fmt)
+
+
+# ---------------------------------------------------------------------------
+# Markdown table
+# ---------------------------------------------------------------------------
 
 
 def generate_markdown_table(data: dict[str, Any], output_file: Path | None = None) -> str:
-    """Generate a markdown summary table of benchmark results."""
     df = extract_framework_data(data)
     if df.empty:
         return "No benchmark data available."
@@ -478,17 +727,17 @@ def generate_markdown_table(data: dict[str, Any], output_file: Path | None = Non
         )
 
     table = "\n".join(lines)
-
     if output_file is not None:
         output_file.write_text(table + "\n")
-
     return table
 
 
-def generate_metadata(data: dict[str, Any], output_dir: Path, charts: list[str]) -> None:
-    """Generate metadata.json for dynamic injection into docs."""
-    chart_files = [f"{name}.html" for name in charts]
+# ---------------------------------------------------------------------------
+# Metadata
+# ---------------------------------------------------------------------------
 
+
+def generate_metadata(data: dict[str, Any], output_dir: Path, charts: list[str]) -> None:
     metadata = {
         "generated_at": datetime.now(UTC).isoformat(),
         "workflow_run_id": data["metadata"]["run_id"],
@@ -500,87 +749,103 @@ def generate_metadata(data: dict[str, Any], output_dir: Path, charts: list[str])
             "completed": data["summary"]["completed"],
             "failed": data["summary"]["failed"],
         },
-        "charts": chart_files,
+        "charts": charts,
     }
-
-    output_path = output_dir / "metadata.json"
-    with output_path.open("w") as f:
+    with (output_dir / "metadata.json").open("w") as f:
         json.dump(metadata, f, indent=2)
 
 
+# ---------------------------------------------------------------------------
+# Chart registry
+# ---------------------------------------------------------------------------
+
+ALL_CHARTS = [
+    "throughput-leaderboard",
+    "throughput-by-category",
+    "raw-vs-validated",
+    "latency-by-language",
+    "latency-p99-leaderboard",
+    "payload-scaling-all",
+    "payload-scaling-best",
+    "resource-efficiency",
+    "resource-usage",
+    "throughput-heatmap",
+]
+
+_CHART_FUNCS: dict[str, Any] = {
+    "throughput-leaderboard": chart_throughput_leaderboard,
+    "throughput-by-category": chart_throughput_by_category,
+    "raw-vs-validated": chart_raw_vs_validated,
+    "latency-by-language": chart_latency_by_language,
+    "latency-p99-leaderboard": chart_latency_p99_leaderboard,
+    "payload-scaling-all": chart_payload_scaling_all,
+    "payload-scaling-best": chart_payload_scaling_best,
+    "resource-efficiency": chart_resource_efficiency,
+    "resource-usage": chart_resource_usage,
+    "throughput-heatmap": chart_throughput_heatmap,
+}
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
 def main() -> None:
-    """Main entry point."""
-    parser = argparse.ArgumentParser(description="Generate Plotly HTML charts from aggregated benchmark results")
+    parser = argparse.ArgumentParser(description="Generate benchmark charts with language-based color coding")
     parser.add_argument("--input", type=Path, required=True, help="Path to aggregated.json")
     parser.add_argument("--output", type=Path, required=True, help="Output directory for charts")
     parser.add_argument(
         "--charts",
         default="all",
-        help="Comma-separated chart types: throughput,latency,validation,resources,throughput-summary,latency-summary,all",
+        help=f"Comma-separated chart names: {','.join(ALL_CHARTS)},all",
     )
-    parser.add_argument("--title", default="Benchmark Results", help="Title prefix for charts")
+    parser.add_argument("--title", default="Benchmark Results", help="Title prefix (unused, kept for compat)")
     parser.add_argument(
         "--format",
         default="html",
         choices=["html", "svg", "png", "all"],
-        help="Output format: html (interactive), svg/png (static images), all",
+        help="Output format",
     )
     parser.add_argument(
         "--markdown",
         nargs="?",
         const="-",
         default=None,
-        help="Output markdown table to file (or stdout if no path / '-' given)",
+        help="Output markdown table to file (or stdout if '-')",
     )
     args = parser.parse_args()
 
     data = load_aggregated_results(args.input)
-
     args.output.mkdir(parents=True, exist_ok=True)
 
-    chart_types = [c.strip() for c in args.charts.split(",")]
-    if "all" in chart_types:
-        chart_types = [
-            "throughput",
-            "latency",
-            "validation",
-            "resources",
-            "throughput-summary",
-            "latency-summary",
-        ]
+    chart_names = [c.strip() for c in args.charts.split(",")]
+    if "all" in chart_names:
+        chart_names = list(ALL_CHARTS)
 
-    generated_charts: list[str] = []
+    df = extract_framework_data(data)
+    generated: list[str] = []
 
-    for chart_type in chart_types:
-        if chart_type == "throughput":
-            generate_throughput_chart(data, args.output, args.title, args.format)
-            generated_charts.append("throughput-by-framework")
-        elif chart_type == "latency":
-            generate_latency_chart(data, args.output, args.title, args.format)
-            generated_charts.append("latency-percentiles")
-        elif chart_type == "validation":
-            generate_validation_overhead_chart(data, args.output, args.title, args.format)
-            generated_charts.append("validation-overhead")
-        elif chart_type == "resources":
-            generate_resource_chart(data, args.output, args.title, args.format)
-            generated_charts.append("resources")
-        elif chart_type == "throughput-summary":
-            generate_throughput_summary(data, args.output, args.format)
-            generated_charts.append("throughput-summary")
-        elif chart_type == "latency-summary":
-            generate_latency_summary(data, args.output, args.format)
-            generated_charts.append("latency-summary")
+    for name in chart_names:
+        func = _CHART_FUNCS.get(name)
+        if func is None:
+            print(f"Warning: unknown chart '{name}', skipping", file=sys.stderr)
+            continue
+        paths = func(df, args.output, args.format)
+        if paths:
+            generated.append(name)
+            print(f"  Generated: {paths[0].name}")
 
     if args.markdown is not None:
         if args.markdown == "-":
-            table = generate_markdown_table(data)
-            sys.stdout.write(table + "\n")
+            sys.stdout.write(generate_markdown_table(data) + "\n")
         else:
-            md_path = Path(args.markdown)
-            table = generate_markdown_table(data, md_path)
+            generate_markdown_table(data, Path(args.markdown))
 
     if "summary" in data:
-        generate_metadata(data, args.output, generated_charts)
+        generate_metadata(data, args.output, generated)
+
+    print(f"\nDone: {len(generated)} charts generated in {args.output}")
 
 
 if __name__ == "__main__":

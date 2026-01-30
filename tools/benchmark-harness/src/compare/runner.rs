@@ -425,46 +425,45 @@ impl CompareRunner {
                             if let Some(fw_suite) = fw_profile.suites.iter().find(|s| s.name == baseline_suite.name)
                                 && let Some(fw_workload) =
                                     fw_suite.workloads.iter().find(|w| w.name == baseline_workload.name)
-                                {
-                                    // For baseline (idx == 0), no statistical tests
-                                    let (statistical_tests, effect_sizes, verdict) = if idx == 0 {
-                                        (None, None, Some("baseline".to_string()))
-                                    } else {
-                                        // Perform statistical comparison for this workload
-                                        let baseline_rps = vec![baseline_workload.results.throughput.requests_per_sec];
-                                        let fw_rps = vec![fw_workload.results.throughput.requests_per_sec];
+                            {
+                                // For baseline (idx == 0), no statistical tests
+                                let (statistical_tests, effect_sizes, verdict) = if idx == 0 {
+                                    (None, None, Some("baseline".to_string()))
+                                } else {
+                                    // Perform statistical comparison for this workload
+                                    let baseline_rps = vec![baseline_workload.results.throughput.requests_per_sec];
+                                    let fw_rps = vec![fw_workload.results.throughput.requests_per_sec];
 
-                                        let rps_test =
-                                            analyzer.welch_t_test(&baseline_rps, &fw_rps, "requests_per_sec");
-                                        let rps_effect = analyzer.cohens_d(&baseline_rps, &fw_rps, "requests_per_sec");
+                                    let rps_test = analyzer.welch_t_test(&baseline_rps, &fw_rps, "requests_per_sec");
+                                    let rps_effect = analyzer.cohens_d(&baseline_rps, &fw_rps, "requests_per_sec");
 
-                                        let verdict_str = if rps_test.is_significant {
-                                            if rps_test.statistic < 0.0 {
-                                                "significantly_better"
-                                            } else {
-                                                "significantly_worse"
-                                            }
+                                    let verdict_str = if rps_test.is_significant {
+                                        if rps_test.statistic < 0.0 {
+                                            "significantly_better"
                                         } else {
-                                            "similar"
-                                        };
-
-                                        (
-                                            Some(vec![rps_test]),
-                                            Some(vec![rps_effect]),
-                                            Some(verdict_str.to_string()),
-                                        )
+                                            "significantly_worse"
+                                        }
+                                    } else {
+                                        "similar"
                                     };
 
-                                    framework_results.push(FrameworkResult {
-                                        framework: fw_name.clone(),
-                                        throughput: fw_workload.results.throughput.clone(),
-                                        latency: fw_workload.results.latency.clone(),
-                                        resources: fw_workload.results.resources.clone(),
-                                        statistical_tests,
-                                        effect_sizes,
-                                        verdict,
-                                    });
-                                }
+                                    (
+                                        Some(vec![rps_test]),
+                                        Some(vec![rps_effect]),
+                                        Some(verdict_str.to_string()),
+                                    )
+                                };
+
+                                framework_results.push(FrameworkResult {
+                                    framework: fw_name.clone(),
+                                    throughput: fw_workload.results.throughput.clone(),
+                                    latency: fw_workload.results.latency.clone(),
+                                    resources: fw_workload.results.resources.clone(),
+                                    statistical_tests,
+                                    effect_sizes,
+                                    verdict,
+                                });
+                            }
                         }
 
                         // Determine workload winner (highest RPS)
@@ -553,13 +552,14 @@ impl CompareRunner {
 
                 for (fw_name, fw_profile) in profile_results.iter().skip(1) {
                     if let Some(fw_suite) = fw_profile.suites.iter().find(|s| s.name == suite.name)
-                        && let Some(fw_workload) = fw_suite.workloads.iter().find(|w| w.name == workload.name) {
-                            let fw_rps = fw_workload.results.throughput.requests_per_sec;
-                            if fw_rps > best_rps {
-                                best_rps = fw_rps;
-                                winner.clone_from(fw_name);
-                            }
+                        && let Some(fw_workload) = fw_suite.workloads.iter().find(|w| w.name == workload.name)
+                    {
+                        let fw_rps = fw_workload.results.throughput.requests_per_sec;
+                        if fw_rps > best_rps {
+                            best_rps = fw_rps;
+                            winner.clone_from(fw_name);
                         }
+                    }
                 }
 
                 // Increment win count
