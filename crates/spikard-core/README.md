@@ -33,7 +33,7 @@ Shared transport-agnostic primitives and types for building Spikard runtimes acr
 
 ```toml
 [dependencies]
-spikard-core = "0.9.2"
+spikard-core = "0.10.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 ```
@@ -42,7 +42,7 @@ serde_json = "1.0"
 
 ```toml
 [dependencies]
-spikard-core = { version = "0.9.2", features = ["di"] }
+spikard-core = { version = "0.10.0", features = ["di"] }
 ```
 
 - `di` - Enables dependency injection support with Tokio async runtime

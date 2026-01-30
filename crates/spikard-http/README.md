@@ -55,7 +55,7 @@ Full benchmark methodology: `tools/benchmark-harness/`
 
 ```toml
 [dependencies]
-spikard-http = "0.9.2"
+spikard-http = "0.10.0"
 tokio = { version = "1", features = ["full"] }
 axum = "0.8"
 ```
@@ -64,7 +64,7 @@ axum = "0.8"
 
 ```toml
 [dependencies]
-spikard-http = { version = "0.9.2", features = ["di"] }
+spikard-http = { version = "0.10.0", features = ["di"] }
 ```
 
 - `di` - Enables dependency injection support

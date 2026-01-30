@@ -189,3 +189,4 @@ e2e/php/var/
 .codex/skills/fixture-schema-validation/SKILL.md
 .benchmark_results/
 .comparative_benchmark_results/
+snapshots

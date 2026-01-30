@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-01-30
+
+### Removed
+
+- **WASM bindings**: The `spikard-wasm` crate has been removed from the workspace. WASM support will return in a future release targeting WASIp3 HTTP components.
+
+### Fixed
+
+- **Node.js bindings**: Resolved JSON deserialization regression in Node.js bindings.
+- **Ruby bindings**: Fixed lifecycle hooks implementation and improved test coverage.
+
+### Changed
+
+- **Dependencies**: Updated across all ecosystems (Rust, Python, Node.js, Ruby, PHP).
+
 ## [0.9.2] - 2026-01-22
 
 ### Performance

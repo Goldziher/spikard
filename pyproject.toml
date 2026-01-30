@@ -7,7 +7,7 @@ dev = [
   "maturin>=1.11.5",
   "msgspec>=0.19.0",
   "mypy>=1.19.1",
-  "orjson>=3.11.4",
+  "orjson>=3.11.6",
   "prek>=0.3.0",
   "pydantic>=2.12.5",
   "pyjwt>=2.10.1",
@@ -46,7 +46,7 @@ benchmarks = [
   # Litestar + dependencies
   "litestar[standard]",
   "msgspec>=0.19.0",
-  "orjson>=3.11.4",
+  "orjson>=3.11.6",
   # Shared dependencies
   "pydantic>=2.12.5",
   # Robyn

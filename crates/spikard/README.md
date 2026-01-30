@@ -37,7 +37,7 @@ High-performance HTTP framework built on Axum and Tower-HTTP with type-safe rout
 
 ```toml
 [dependencies]
-spikard = "0.9.2"
+spikard = "0.10.0"
 serde = { version = "1.0", features = ["derive"] }
 schemars = "0.8"  # For JSON Schema generation
 tokio = { version = "1", features = ["full"] }

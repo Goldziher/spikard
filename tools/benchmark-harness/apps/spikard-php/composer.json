@@ -1,14 +1,14 @@
 {
-    "name": "spikard/benchmark-php",
-    "description": "Spikard PHP benchmark server",
-    "type": "project",
-    "require": {
-        "php": ">=8.2"
-    },
-    "autoload": {
-        "psr-4": {}
-    },
-    "config": {
-        "sort-packages": true
-    }
+	"name": "spikard/benchmark-php",
+	"description": "Spikard PHP benchmark server",
+	"type": "project",
+	"require": {
+		"php": ">=8.2"
+	},
+	"autoload": {
+		"psr-4": {}
+	},
+	"config": {
+		"sort-packages": true
+	}
 }

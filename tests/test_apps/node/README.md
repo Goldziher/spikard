@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test application that validates the published `@spikard/node` npm package (v0.9.2) works correctly in a real Node.js environment.
+Test application that validates the published `@spikard/node` npm package (v0.10.0) works correctly in a real Node.js environment.
 
 ## Setup
 
@@ -20,7 +20,7 @@ pnpm test
 ## Troubleshooting
 
 ### Package not found
-- Verify `@spikard/node@0.9.2` is published to npm
+- Verify `@spikard/node@0.10.0` is published to npm
 - Check registry access: `pnpm view @spikard/node versions`
 - Try clearing cache: `pnpm store prune`
 
