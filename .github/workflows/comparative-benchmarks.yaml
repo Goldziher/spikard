@@ -215,12 +215,6 @@ jobs:
           - trongate
     steps:
       - uses: actions/checkout@v6
-      - name: Install OpenSwoole PHP extension
-        if: matrix.framework != 'spikard-php'
-        run: |
-          sudo pecl install openswoole
-          echo "extension=openswoole.so" | sudo tee "/etc/php/$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')/cli/conf.d/20-openswoole.ini"
-          php -m | grep -i openswoole
       - uses: ./.github/actions/setup-benchmark-tools
       - uses: ./.github/actions/benchmark-framework
         with:
