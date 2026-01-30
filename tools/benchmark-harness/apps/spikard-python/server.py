@@ -559,7 +559,7 @@ async def post_validated_json_very_large(body: dict[str, Any]) -> dict[str, Any]
     response_schema=response_schema("multipart/small"),
 )
 @profile_once("validated-multipart-small")
-async def post_validated_multipart_small(body: dict[str, Any]) -> dict[str, int] | Response:
+async def post_validated_multipart_small(body: dict[str, Any]) -> dict[str, int]:
     """Small multipart form (~1KB) - validated."""
     files = body.get("files", {})
     files_received = 0
@@ -582,7 +582,7 @@ async def post_validated_multipart_small(body: dict[str, Any]) -> dict[str, int]
     response_schema=response_schema("multipart/medium"),
 )
 @profile_once("validated-multipart-medium")
-async def post_validated_multipart_medium(body: dict[str, Any]) -> dict[str, int] | Response:
+async def post_validated_multipart_medium(body: dict[str, Any]) -> dict[str, int]:
     """Medium multipart form (~10KB) - validated."""
     files = body.get("files", {})
     files_received = 0
@@ -605,7 +605,7 @@ async def post_validated_multipart_medium(body: dict[str, Any]) -> dict[str, int
     response_schema=response_schema("multipart/large"),
 )
 @profile_once("validated-multipart-large")
-async def post_validated_multipart_large(body: dict[str, Any]) -> dict[str, int] | Response:
+async def post_validated_multipart_large(body: dict[str, Any]) -> dict[str, int]:
     """Large multipart form (~100KB) - validated."""
     files = body.get("files", {})
     files_received = 0
