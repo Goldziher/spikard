@@ -1,5 +1,5 @@
 {
-	"name": "@spikard/node",
+	"name": "@spikard/node-native",
 	"version": "0.10.0",
 	"description": "High-performance HTTP framework for Node.js and Bun. Type-safe routing, validation, and testing powered by Rust core.",
 	"main": "index.js",
@@ -69,7 +69,7 @@
 			"x86_64-pc-windows-msvc"
 		],
 		"package": {
-			"name": "@spikard/node"
+			"name": "@spikard/node-native"
 		}
 	},
 	"dependencies": {

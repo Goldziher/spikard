@@ -133,7 +133,7 @@ jobs:
 
       - name: Check npm for existing version
         id: check
-        run: bash scripts/publish/check_npm.sh "@spikard/node" "${{ needs.prepare.outputs.version }}"
+        run: bash scripts/publish/check_npm.sh "@spikard/node-native" "${{ needs.prepare.outputs.version }}"
 
   check-rubygems:
     name: Check if Ruby gem exists on RubyGems
@@ -1212,6 +1212,16 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: bash scripts/publish/node/publish-native-packages.sh
+
+      - name: Wait for native packages npm indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        run: sleep 30
+
+      - name: Build and publish @spikard/node wrapper package
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bash scripts/publish/node/publish-wrapper-package.sh
 
   publish-cli-release:
     name: Upload CLI to GitHub release

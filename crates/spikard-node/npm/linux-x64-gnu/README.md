@@ -1,3 +1,3 @@
-# `@spikard/node-linux-x64-gnu`
+# `@spikard/node-native-linux-x64-gnu`
 
-This is the **x86_64-unknown-linux-gnu** binary for `@spikard/node`
+This is the **x86_64-unknown-linux-gnu** binary for `@spikard/node-native`

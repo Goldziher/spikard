@@ -1,5 +1,5 @@
 {
-	"name": "@spikard/node-darwin-arm64",
+	"name": "@spikard/node-native-darwin-arm64",
 	"version": "0.3.1",
 	"cpu": [
 		"arm64"

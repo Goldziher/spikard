@@ -4,7 +4,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd -P)"
 
-cd "${REPO_ROOT}/crates/spikard-node"
+cd "${REPO_ROOT}/packages/node"
+
+# Build the TypeScript wrapper (tsup)
+pnpm run build || {
+	echo "::error::Failed to build @spikard/node wrapper package"
+	exit 1
+}
+
 publish_log="$(mktemp)"
 set +e
 pnpm publish --access public --no-git-checks 2>&1 | tee "${publish_log}"
@@ -12,8 +19,8 @@ status=${PIPESTATUS[0]}
 set -e
 if [ "${status}" -ne 0 ]; then
 	if grep -q "previously published versions" "${publish_log}"; then
-		echo "::notice::@spikard/node-native already published; skipping."
-		echo "@spikard/node-native already published; skipping." >>"${GITHUB_STEP_SUMMARY}"
+		echo "::notice::@spikard/node already published; skipping."
+		echo "@spikard/node already published; skipping." >>"${GITHUB_STEP_SUMMARY}"
 	else
 		exit "${status}"
 	fi
