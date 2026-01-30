@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+// STDERR is not defined in cli-server SAPI (php -S router mode)
+if (!defined('STDERR')) {
+    define('STDERR', fopen('php://stderr', 'w'));
+}
+
 /**
  * Phalcon HTTP server for workload benchmarking.
  *
