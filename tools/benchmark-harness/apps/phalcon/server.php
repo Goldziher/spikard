@@ -836,9 +836,9 @@ if (!class_exists(\OpenSwoole\Http\Server::class)) {
 
 $server = new \OpenSwoole\Http\Server('0.0.0.0', $port);
 $server->set([
-    'worker_num' => openswoole_cpu_num(),
+    'worker_num' => \OpenSwoole\Util::getCPUNum(),
     'enable_coroutine' => true,
-    'log_level' => OPENSWOOLE_LOG_WARNING,
+    'log_level' => \OpenSwoole\Constant::LOG_WARNING,
 ]);
 $server->on('request', function (\OpenSwoole\Http\Request $swReq, \OpenSwoole\Http\Response $swResp) use ($app, $di): void {
     $_SERVER['REQUEST_METHOD'] = $swReq->server['request_method'] ?? 'GET';

@@ -901,9 +901,9 @@ if (php_sapi_name() === 'cli' && isset($argv[0]) && basename($argv[0]) === 'serv
 
     $server = new \OpenSwoole\Http\Server('0.0.0.0', $port);
     $server->set([
-        'worker_num' => openswoole_cpu_num(),
+        'worker_num' => \OpenSwoole\Util::getCPUNum(),
         'enable_coroutine' => true,
-        'log_level' => OPENSWOOLE_LOG_WARNING,
+        'log_level' => \OpenSwoole\Constant::LOG_WARNING,
     ]);
     $server->on('request', function (\OpenSwoole\Http\Request $swReq, \OpenSwoole\Http\Response $swResp) use ($router): void {
         $method = strtoupper($swReq->server['request_method'] ?? 'GET');
