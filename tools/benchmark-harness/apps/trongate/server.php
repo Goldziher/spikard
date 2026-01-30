@@ -187,6 +187,364 @@ function echoHandler(string $path, array $query, array $body): array {
     return jsonResponse($body ?? [], 200);
 }
 
+// ============================================================================
+// Validation Functions
+// ============================================================================
+
+/**
+ * Validate fields against a schema definition.
+ *
+ * @param array $data Data to validate
+ * @param array $schema Schema definition [field => [type, required, ...]]
+ * @return array ['valid' => bool, 'errors' => [...]]
+ */
+function validateFields(array $data, array $schema): array {
+    $errors = [];
+
+    foreach ($schema as $field => $rules) {
+        $type = $rules['type'] ?? 'string';
+        $required = $rules['required'] ?? true;
+        $nullable = $rules['nullable'] ?? false;
+
+        // Check if field exists
+        if (!isset($data[$field])) {
+            if ($required) {
+                $errors[$field] = "Field '$field' is required";
+            }
+            continue;
+        }
+
+        $value = $data[$field];
+
+        // Check null
+        if ($value === null) {
+            if (!$nullable) {
+                $errors[$field] = "Field '$field' cannot be null";
+            }
+            continue;
+        }
+
+        // Type validation
+        switch ($type) {
+            case 'string':
+                if (!is_string($value)) {
+                    $errors[$field] = "Field '$field' must be a string";
+                } elseif (empty($value) && $required) {
+                    $errors[$field] = "Field '$field' cannot be empty";
+                }
+                break;
+
+            case 'numeric':
+                if (!is_numeric($value)) {
+                    $errors[$field] = "Field '$field' must be numeric";
+                }
+                break;
+
+            case 'integer':
+                if (filter_var($value, FILTER_VALIDATE_INT) === false) {
+                    $errors[$field] = "Field '$field' must be an integer";
+                }
+                break;
+
+            case 'boolean':
+                // Accept boolean-like values
+                if (!is_bool($value) && !in_array($value, ['true', 'false', '1', '0', 1, 0, 'on', 'off'], true)) {
+                    $errors[$field] = "Field '$field' must be a boolean";
+                }
+                break;
+
+            case 'array':
+                if (!is_array($value)) {
+                    $errors[$field] = "Field '$field' must be an array";
+                } elseif (isset($rules['items']) && !empty($value)) {
+                    // Validate array items
+                    $itemSchema = $rules['items'];
+                    foreach ($value as $idx => $item) {
+                        if (isset($itemSchema['type']) && $itemSchema['type'] === 'object' && isset($itemSchema['properties'])) {
+                            $itemResult = validateFields($item, $itemSchema['properties']);
+                            if (!$itemResult['valid']) {
+                                foreach ($itemResult['errors'] as $itemField => $itemError) {
+                                    $errors["$field[$idx].$itemField"] = $itemError;
+                                }
+                            }
+                        } elseif (isset($itemSchema['type']) && $itemSchema['type'] === 'string' && !is_string($item)) {
+                            $errors["$field[$idx]"] = "Array item must be a string";
+                        }
+                    }
+                }
+                break;
+
+            case 'object':
+                if (!is_array($value)) {
+                    $errors[$field] = "Field '$field' must be an object";
+                } elseif (isset($rules['properties'])) {
+                    // Validate nested object
+                    $nestedResult = validateFields($value, $rules['properties']);
+                    if (!$nestedResult['valid']) {
+                        foreach ($nestedResult['errors'] as $nestedField => $nestedError) {
+                            $errors["$field.$nestedField"] = $nestedError;
+                        }
+                    }
+                }
+                break;
+        }
+    }
+
+    return [
+        'valid' => empty($errors),
+        'errors' => $errors,
+    ];
+}
+
+function validatedJsonSmallHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'name' => ['type' => 'string', 'required' => true],
+        'description' => ['type' => 'string', 'required' => true],
+        'price' => ['type' => 'numeric', 'required' => true],
+        'tax' => ['type' => 'numeric', 'required' => true, 'nullable' => true],
+    ];
+
+    $result = validateFields($body, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($body, 200);
+}
+
+function validatedJsonMediumHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'name' => ['type' => 'string', 'required' => true],
+        'price' => ['type' => 'numeric', 'required' => true],
+        'image' => [
+            'type' => 'object',
+            'required' => true,
+            'properties' => [
+                'url' => ['type' => 'string', 'required' => true],
+                'name' => ['type' => 'string', 'required' => true],
+            ],
+        ],
+    ];
+
+    $result = validateFields($body, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($body, 200);
+}
+
+function validatedJsonLargeHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'name' => ['type' => 'string', 'required' => true],
+        'price' => ['type' => 'numeric', 'required' => true],
+        'seller' => [
+            'type' => 'object',
+            'required' => true,
+            'properties' => [
+                'name' => ['type' => 'string', 'required' => true],
+                'address' => [
+                    'type' => 'object',
+                    'required' => true,
+                    'properties' => [
+                        'street' => ['type' => 'string', 'required' => true],
+                        'city' => ['type' => 'string', 'required' => true],
+                        'country' => [
+                            'type' => 'object',
+                            'required' => true,
+                            'properties' => [
+                                'name' => ['type' => 'string', 'required' => true],
+                                'code' => ['type' => 'string', 'required' => true],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    $result = validateFields($body, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($body, 200);
+}
+
+function validatedJsonVeryLargeHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'name' => ['type' => 'string', 'required' => true],
+        'tags' => [
+            'type' => 'array',
+            'required' => true,
+            'items' => ['type' => 'string'],
+        ],
+        'images' => [
+            'type' => 'array',
+            'required' => true,
+            'items' => [
+                'type' => 'object',
+                'properties' => [
+                    'url' => ['type' => 'string', 'required' => true],
+                    'name' => ['type' => 'string', 'required' => true],
+                ],
+            ],
+        ],
+    ];
+
+    $result = validateFields($body, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($body, 200);
+}
+
+function validatedUrlencodedSimpleHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'name' => ['type' => 'string', 'required' => true],
+        'email' => ['type' => 'string', 'required' => true],
+        'age' => ['type' => 'integer', 'required' => true],
+        'subscribe' => ['type' => 'boolean', 'required' => true],
+    ];
+
+    $result = validateFields($body, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($body, 200);
+}
+
+function validatedUrlencodedComplexHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'username' => ['type' => 'string', 'required' => true],
+        'password' => ['type' => 'string', 'required' => true],
+        'email' => ['type' => 'string', 'required' => true],
+        'first_name' => ['type' => 'string', 'required' => true],
+        'last_name' => ['type' => 'string', 'required' => true],
+        'age' => ['type' => 'integer', 'required' => true],
+        'country' => ['type' => 'string', 'required' => true],
+        'state' => ['type' => 'string', 'required' => true],
+        'city' => ['type' => 'string', 'required' => true],
+        'zip' => ['type' => 'string', 'required' => true],
+        'phone' => ['type' => 'string', 'required' => true],
+        'company' => ['type' => 'string', 'required' => true],
+        'job_title' => ['type' => 'string', 'required' => true],
+        'subscribe' => ['type' => 'boolean', 'required' => true],
+        'newsletter' => ['type' => 'boolean', 'required' => true],
+        'terms_accepted' => ['type' => 'boolean', 'required' => true],
+        'privacy_accepted' => ['type' => 'boolean', 'required' => true],
+        'marketing_consent' => ['type' => 'boolean', 'required' => true],
+        'two_factor_enabled' => ['type' => 'boolean', 'required' => true],
+    ];
+
+    $result = validateFields($body, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($body, 200);
+}
+
+function validatedQueryFewHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'q' => ['type' => 'string', 'required' => true],
+        'page' => ['type' => 'integer', 'required' => false],
+        'limit' => ['type' => 'integer', 'required' => false],
+    ];
+
+    $result = validateFields($query, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($query, 200);
+}
+
+function validatedQueryMediumHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'search' => ['type' => 'string', 'required' => true],
+        'category' => ['type' => 'string', 'required' => false],
+        'sort' => ['type' => 'string', 'required' => false],
+        'order' => ['type' => 'string', 'required' => false],
+        'page' => ['type' => 'integer', 'required' => false],
+        'limit' => ['type' => 'integer', 'required' => false],
+        'filter' => ['type' => 'string', 'required' => false],
+    ];
+
+    $result = validateFields($query, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($query, 200);
+}
+
+function validatedQueryManyHandler(string $path, array $query, array $body): array {
+    $schema = [
+        'q' => ['type' => 'string', 'required' => true],
+        'category' => ['type' => 'string', 'required' => false],
+        'subcategory' => ['type' => 'string', 'required' => false],
+        'brand' => ['type' => 'string', 'required' => false],
+        'min_price' => ['type' => 'numeric', 'required' => false],
+        'max_price' => ['type' => 'numeric', 'required' => false],
+        'color' => ['type' => 'string', 'required' => false],
+        'size' => ['type' => 'string', 'required' => false],
+        'material' => ['type' => 'string', 'required' => false],
+        'rating' => ['type' => 'integer', 'required' => false],
+        'sort' => ['type' => 'string', 'required' => false],
+        'order' => ['type' => 'string', 'required' => false],
+        'page' => ['type' => 'integer', 'required' => false],
+        'limit' => ['type' => 'integer', 'required' => false],
+        'in_stock' => ['type' => 'boolean', 'required' => false],
+        'on_sale' => ['type' => 'boolean', 'required' => false],
+    ];
+
+    $result = validateFields($query, $schema);
+    if (!$result['valid']) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => $result['errors'],
+        ], 400);
+    }
+
+    return jsonResponse($query, 200);
+}
+
 function fileUploadHandler(string $path, array $query, array $body): array {
     $filesReceived = count($_FILES);
     $totalBytes = 0;
@@ -197,6 +555,32 @@ function fileUploadHandler(string $path, array $query, array $body): array {
         } else {
             $totalBytes += $fileInfo['size'] ?? 0;
         }
+    }
+
+    return jsonResponse([
+        'files_received' => $filesReceived,
+        'total_bytes' => $totalBytes,
+    ], 200);
+}
+
+function validatedFileUploadHandler(string $path, array $query, array $body): array {
+    $filesReceived = count($_FILES);
+    $totalBytes = 0;
+
+    foreach ($_FILES as $fileInfo) {
+        if (is_array($fileInfo['size'] ?? null)) {
+            $totalBytes += array_sum($fileInfo['size']);
+        } else {
+            $totalBytes += $fileInfo['size'] ?? 0;
+        }
+    }
+
+    if ($filesReceived === 0) {
+        return jsonResponse([
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['files' => 'At least one file is required'],
+        ], 400);
     }
 
     return jsonResponse([
@@ -253,6 +637,9 @@ function setupRoutes(): SimpleRouter {
     // Health check
     $router->register('GET', '/health', fn($p, $q, $b) => healthHandler($p, $q, $b));
 
+    // Root endpoint
+    $router->register('GET', '/', fn($p, $q, $b) => healthHandler($p, $q, $b));
+
     // Benchmark JSON endpoints
     $router->register('POST', '/json/small', fn($p, $q, $b) => echoHandler($p, $q, $b));
     $router->register('POST', '/json/medium', fn($p, $q, $b) => echoHandler($p, $q, $b));
@@ -303,49 +690,27 @@ function setupRoutes(): SimpleRouter {
     });
 
     $router->register('GET', '/path/int/{id}', function (string $p, array $q, array $b): array {
-        // Extract and validate integer from path
+        // Extract raw integer from path (no validation)
         if (preg_match('#/path/int/([^/]+)$#', $p, $matches)) {
             $id = $matches[1];
-            if (filter_var($id, FILTER_VALIDATE_INT) === false) {
-                return jsonResponse([
-                    'error' => 'Invalid integer',
-                    'code' => 'VALIDATION_ERROR',
-                    'details' => ['id' => 'must be a valid integer'],
-                ], 400);
-            }
-            return jsonResponse(['id' => (int) $id], 200);
+            return jsonResponse(['id' => $id], 200);
         }
         return jsonResponse(['error' => 'Invalid path'], 400);
     });
 
     $router->register('GET', '/path/uuid/{uuid}', function (string $p, array $q, array $b): array {
-        // Extract and validate UUID from path
+        // Extract raw UUID from path (no validation)
         if (preg_match('#/path/uuid/([^/]+)$#', $p, $matches)) {
             $uuid = $matches[1];
-            if (!preg_match('/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i', $uuid)) {
-                return jsonResponse([
-                    'error' => 'Invalid UUID',
-                    'code' => 'VALIDATION_ERROR',
-                    'details' => ['uuid' => 'must be a valid RFC 4122 UUID'],
-                ], 400);
-            }
             return jsonResponse(['uuid' => $uuid], 200);
         }
         return jsonResponse(['error' => 'Invalid path'], 400);
     });
 
     $router->register('GET', '/path/date/{date}', function (string $p, array $q, array $b): array {
-        // Extract and validate date from path
+        // Extract raw date from path (no validation)
         if (preg_match('#/path/date/([^/]+)$#', $p, $matches)) {
             $date = $matches[1];
-            $parsed = DateTimeImmutable::createFromFormat('Y-m-d', $date);
-            if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
-                return jsonResponse([
-                    'error' => 'Invalid date',
-                    'code' => 'VALIDATION_ERROR',
-                    'details' => ['date' => 'must be in Y-m-d format'],
-                ], 400);
-            }
             return jsonResponse(['date' => $date], 200);
         }
         return jsonResponse(['error' => 'Invalid path'], 400);
@@ -355,6 +720,108 @@ function setupRoutes(): SimpleRouter {
     $router->register('GET', '/query/few', fn($p, $q, $b) => jsonResponse($q, 200));
     $router->register('GET', '/query/medium', fn($p, $q, $b) => jsonResponse($q, 200));
     $router->register('GET', '/query/many', fn($p, $q, $b) => jsonResponse($q, 200));
+
+    // Validated benchmark endpoints (mirror of raw endpoints under /validated/ prefix)
+    $router->register('POST', '/validated/json/small', fn($p, $q, $b) => validatedJsonSmallHandler($p, $q, $b));
+    $router->register('POST', '/validated/json/medium', fn($p, $q, $b) => validatedJsonMediumHandler($p, $q, $b));
+    $router->register('POST', '/validated/json/large', fn($p, $q, $b) => validatedJsonLargeHandler($p, $q, $b));
+    $router->register('POST', '/validated/json/very-large', fn($p, $q, $b) => validatedJsonVeryLargeHandler($p, $q, $b));
+    $router->register('POST', '/validated/multipart/small', fn($p, $q, $b) => validatedFileUploadHandler($p, $q, $b));
+    $router->register('POST', '/validated/multipart/medium', fn($p, $q, $b) => validatedFileUploadHandler($p, $q, $b));
+    $router->register('POST', '/validated/multipart/large', fn($p, $q, $b) => validatedFileUploadHandler($p, $q, $b));
+    $router->register('POST', '/validated/urlencoded/simple', fn($p, $q, $b) => validatedUrlencodedSimpleHandler($p, $q, $b));
+    $router->register('POST', '/validated/urlencoded/complex', fn($p, $q, $b) => validatedUrlencodedComplexHandler($p, $q, $b));
+    $router->register('GET', '/validated/path/simple/{id}', function (string $p, array $q, array $b): array {
+        if (preg_match('#/validated/path/simple/([^/]+)$#', $p, $matches)) {
+            $id = $matches[1];
+            if (!preg_match('/^[a-zA-Z0-9_-]+$/', $id) || empty($id) || strlen($id) > 255) {
+                return jsonResponse([
+                    'error' => 'Invalid path parameter',
+                    'code' => 'VALIDATION_ERROR',
+                    'details' => ['id' => 'must be alphanumeric with _ or -, non-empty, max 255 chars'],
+                ], 400);
+            }
+            return jsonResponse(['id' => $id], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+    $router->register('GET', '/validated/path/multiple/{user_id}/{post_id}', function (string $p, array $q, array $b): array {
+        if (preg_match('#/validated/path/multiple/([^/]+)/([^/]+)$#', $p, $matches)) {
+            $user_id = $matches[1];
+            $post_id = $matches[2];
+            if (!preg_match('/^[a-zA-Z0-9_-]+$/', $user_id) || empty($user_id) || strlen($user_id) > 255) {
+                return jsonResponse([
+                    'error' => 'Invalid path parameter',
+                    'code' => 'VALIDATION_ERROR',
+                    'details' => ['user_id' => 'must be alphanumeric with _ or -, non-empty, max 255 chars'],
+                ], 400);
+            }
+            if (!preg_match('/^[a-zA-Z0-9_-]+$/', $post_id) || empty($post_id) || strlen($post_id) > 255) {
+                return jsonResponse([
+                    'error' => 'Invalid path parameter',
+                    'code' => 'VALIDATION_ERROR',
+                    'details' => ['post_id' => 'must be alphanumeric with _ or -, non-empty, max 255 chars'],
+                ], 400);
+            }
+            return jsonResponse(['user_id' => $user_id, 'post_id' => $post_id], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+    $router->register('GET', '/validated/path/deep/{org}/{team}/{project}/{resource}/{id}', function (string $p, array $q, array $b): array {
+        if (preg_match('#/validated/path/deep/([^/]+)/([^/]+)/([^/]+)/([^/]+)/([^/]+)$#', $p, $matches)) {
+            $org = $matches[1];
+            $team = $matches[2];
+            $project = $matches[3];
+            $resource = $matches[4];
+            $id = $matches[5];
+            $params = ['org' => $org, 'team' => $team, 'project' => $project, 'resource' => $resource, 'id' => $id];
+            foreach ($params as $name => $value) {
+                if (!preg_match('/^[a-zA-Z0-9_-]+$/', $value) || empty($value) || strlen($value) > 255) {
+                    return jsonResponse([
+                        'error' => 'Invalid path parameter',
+                        'code' => 'VALIDATION_ERROR',
+                        'details' => [$name => 'must be alphanumeric with _ or -, non-empty, max 255 chars'],
+                    ], 400);
+                }
+            }
+            return jsonResponse($params, 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+    $router->register('GET', '/validated/path/int/{id}', function (string $p, array $q, array $b): array {
+        if (preg_match('#/validated/path/int/([^/]+)$#', $p, $matches)) {
+            $id = $matches[1];
+            if (filter_var($id, FILTER_VALIDATE_INT) === false) {
+                return jsonResponse(['error' => 'Invalid integer', 'code' => 'VALIDATION_ERROR', 'details' => ['id' => 'must be a valid integer']], 400);
+            }
+            return jsonResponse(['id' => (int) $id], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+    $router->register('GET', '/validated/path/uuid/{uuid}', function (string $p, array $q, array $b): array {
+        if (preg_match('#/validated/path/uuid/([^/]+)$#', $p, $matches)) {
+            $uuid = $matches[1];
+            if (!preg_match('/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i', $uuid)) {
+                return jsonResponse(['error' => 'Invalid UUID', 'code' => 'VALIDATION_ERROR', 'details' => ['uuid' => 'must be a valid RFC 4122 UUID']], 400);
+            }
+            return jsonResponse(['uuid' => $uuid], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+    $router->register('GET', '/validated/path/date/{date}', function (string $p, array $q, array $b): array {
+        if (preg_match('#/validated/path/date/([^/]+)$#', $p, $matches)) {
+            $date = $matches[1];
+            $parsed = DateTimeImmutable::createFromFormat('Y-m-d', $date);
+            if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
+                return jsonResponse(['error' => 'Invalid date', 'code' => 'VALIDATION_ERROR', 'details' => ['date' => 'must be in Y-m-d format']], 400);
+            }
+            return jsonResponse(['date' => $date], 200);
+        }
+        return jsonResponse(['error' => 'Invalid path'], 400);
+    });
+    $router->register('GET', '/validated/query/few', fn($p, $q, $b) => validatedQueryFewHandler($p, $q, $b));
+    $router->register('GET', '/validated/query/medium', fn($p, $q, $b) => validatedQueryMediumHandler($p, $q, $b));
+    $router->register('GET', '/validated/query/many', fn($p, $q, $b) => validatedQueryManyHandler($p, $q, $b));
 
     // User CRUD
     $router->register('POST', '/users', fn($p, $q, $b) => createUserHandler($p, $q, $b));
@@ -443,18 +910,17 @@ if (php_sapi_name() === 'cli' && isset($argv[0]) && basename($argv[0]) === 'serv
             $rawBody = $swReq->rawContent();
             $body = [];
 
+            // Populate $_FILES for multipart requests
+            $_FILES = [];
+            if ($swReq->files) {
+                $_FILES = $swReq->files;
+            }
+
             if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE']) && !empty($rawBody)) {
                 if (str_contains($contentType, 'application/json')) {
                     $body = json_decode($rawBody, true) ?? [];
                 } elseif (str_contains($contentType, 'application/x-www-form-urlencoded')) {
                     parse_str($rawBody, $body);
-                } elseif (str_contains($contentType, 'multipart/form-data')) {
-                    $fileCount = count($swReq->files ?? []);
-                    $totalBytes = 0;
-                    foreach ($swReq->files ?? [] as $f) {
-                        $totalBytes += $f['size'] ?? 0;
-                    }
-                    $body = ['files' => $fileCount, 'bytes' => $totalBytes];
                 }
             }
 
@@ -522,6 +988,40 @@ if (php_sapi_name() === 'cli' && isset($argv[0]) && basename($argv[0]) === 'serv
                     $requestBody = json_decode($rawBody, true) ?? [];
                 } elseif (strpos($contentType, 'application/x-www-form-urlencoded') !== false) {
                     parse_str($rawBody, $requestBody);
+                } elseif (strpos($contentType, 'multipart/form-data') !== false) {
+                    // Parse multipart/form-data manually for socket server
+                    preg_match('/boundary=(.*)$/', $contentType, $matches);
+                    $boundary = $matches[1] ?? '';
+                    if (!empty($boundary)) {
+                        $_FILES = [];
+                        $parts = array_slice(explode('--' . $boundary, $rawBody), 1, -1);
+                        foreach ($parts as $part) {
+                            if (empty(trim($part))) continue;
+
+                            [$headers, $content] = explode("\r\n\r\n", $part, 2);
+                            $content = substr($content, 0, -2); // Remove trailing \r\n
+
+                            // Parse Content-Disposition header
+                            if (preg_match('/name="([^"]+)"(?:;\s*filename="([^"]*)")?/', $headers, $match)) {
+                                $name = $match[1];
+                                $filename = $match[2] ?? '';
+
+                                if (!empty($filename)) {
+                                    // This is a file upload
+                                    $_FILES[$name] = [
+                                        'name' => $filename,
+                                        'type' => '',
+                                        'size' => strlen($content),
+                                        'tmp_name' => '',
+                                        'error' => 0,
+                                    ];
+                                } else {
+                                    // Regular form field
+                                    $requestBody[$name] = $content;
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

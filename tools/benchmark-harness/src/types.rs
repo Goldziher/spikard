@@ -47,10 +47,6 @@ pub struct BenchmarkResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_metrics: Option<ErrorMetrics>,
 
-    /// Serialization overhead metrics (optional)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub serialization: Option<SerializationMetrics>,
-
     /// Per-pattern breakdown (deprecated - use `route_types` instead)
     #[serde(default)]
     pub patterns: Vec<PatternMetrics>,
@@ -109,7 +105,8 @@ pub struct LatencyMetrics {
     /// Minimum latency observed
     pub min_ms: f64,
 
-    /// Standard deviation
+    /// Standard deviation (estimated from IQR and range when not provided by load generator)
+    /// WARNING: This is an approximation for right-skewed distributions. Do not use for statistical tests.
     pub stddev_ms: f64,
 }
 
@@ -160,12 +157,6 @@ pub struct PatternMetrics {
 /// Startup and initialization metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StartupMetrics {
-    /// Time to spawn the process (ms)
-    pub process_spawn_ms: f64,
-
-    /// Time from spawn to first successful health check (ms)
-    pub time_to_first_response_ms: f64,
-
     /// Memory footprint after initialization (MB)
     pub initialization_memory_mb: f64,
 
@@ -263,45 +254,14 @@ pub struct RouteTypeMetrics {
 /// Error handling performance metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ErrorMetrics {
-    /// p99 latency for validation errors (400 responses) in ms
-    pub validation_error_p99_ms: f64,
-
-    /// p99 latency for not found errors (404 responses) in ms
-    pub not_found_p99_ms: f64,
-
-    /// p99 latency for server errors (500 responses) in ms
-    pub server_error_p99_ms: f64,
-
-    /// Throughput when serving error responses (req/s)
-    pub error_throughput_rps: f64,
-
-    /// Memory impact of error handling (MB)
-    pub error_memory_impact_mb: f64,
-
     /// Total error count
     pub total_errors: u64,
 
     /// Error rate (errors / total requests)
     pub error_rate: f64,
-}
 
-/// Serialization and validation overhead metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SerializationMetrics {
-    /// Average time parsing request JSON (ms)
-    pub json_parse_overhead_ms: f64,
-
-    /// Average time serializing response JSON (ms)
-    pub json_serialize_overhead_ms: f64,
-
-    /// Average time validating request schemas (ms)
-    pub validation_overhead_ms: f64,
-
-    /// Total serialization overhead as % of total latency
-    pub total_overhead_pct: f64,
-
-    /// Number of samples used for calculation
-    pub sample_count: u64,
+    /// Throughput when serving error responses (req/s)
+    pub error_throughput_rps: f64,
 }
 
 /// Result of a streaming benchmark (WebSocket/SSE).
@@ -431,6 +391,13 @@ impl From<OhaOutput> for LatencyMetrics {
         let max_ms = to_ms(s.slowest);
 
         // Estimate stddev from available percentile data.
+        // NOTE: These are approximations valid only for approximately normal distributions.
+        // Latency distributions are typically right-skewed, so these estimates may understate
+        // the true standard deviation. oha does not provide stddev in its JSON output.
+        //
+        // WARNING: Do NOT use this estimated stddev for statistical significance testing.
+        // It is provided only for descriptive purposes and visualization.
+        //
         // IQR method: for a normal distribution, IQR ≈ 1.35σ
         let iqr = p75_ms - p25_ms;
         let sigma_iqr = if iqr > 0.0 { iqr / 1.35 } else { 0.0 };
@@ -438,6 +405,7 @@ impl From<OhaOutput> for LatencyMetrics {
         let range = max_ms - min_ms;
         let sigma_range = if range > 0.0 { range / 6.0 } else { 0.0 };
         let stddev_ms = if sigma_iqr > 0.0 && sigma_range > 0.0 {
+            // Average the two estimates (replacing nightly-only f64::midpoint)
             f64::midpoint(sigma_iqr, sigma_range)
         } else {
             sigma_iqr.max(sigma_range)

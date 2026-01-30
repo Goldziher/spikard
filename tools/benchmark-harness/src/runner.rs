@@ -6,13 +6,61 @@ use crate::load_generator::{LoadGeneratorType, LoadTestConfig, run_load_test};
 use crate::monitor::ResourceMonitor;
 use crate::server::{ServerConfig, find_available_port, start_server};
 use crate::types::{
-    BenchmarkResult, ErrorMetrics, LatencyMetrics, RouteType, RouteTypeMetrics, SerializationMetrics, StartupMetrics,
-    ThroughputMetrics,
+    BenchmarkResult, ErrorMetrics, LatencyMetrics, RouteType, RouteTypeMetrics, StartupMetrics, ThroughputMetrics,
 };
 use chrono::Utc;
 use std::path::PathBuf;
 use std::time::Instant;
+use sysinfo::{Pid, System};
 use tokio::time::{Duration, sleep};
+
+/// Find a descendant process by name, searching up to `max_depth` levels deep
+fn find_descendant_pid_by_name(root_pid: u32, needle: &str, max_depth: usize) -> Option<u32> {
+    let mut system = System::new();
+    system.refresh_all();
+
+    let root = Pid::from_u32(root_pid);
+    let needle = needle.to_lowercase();
+
+    // Build parent->children map
+    let mut children: std::collections::HashMap<Pid, Vec<Pid>> = std::collections::HashMap::new();
+    for (&pid, proc_) in system.processes() {
+        if let Some(parent) = proc_.parent() {
+            children.entry(parent).or_default().push(pid);
+        }
+    }
+
+    // BFS traversal
+    let mut queue: std::collections::VecDeque<(Pid, usize)> = std::collections::VecDeque::new();
+    queue.push_back((root, 0));
+
+    while let Some((pid, depth)) = queue.pop_front() {
+        if depth > max_depth {
+            continue;
+        }
+
+        if let Some(proc_) = system.process(pid) {
+            let name = proc_.name().to_string_lossy().to_lowercase();
+            // Skip the root process if it's just a wrapper (depth > 0 ensures we look for descendants first)
+            if depth > 0 && name.contains(&needle) {
+                return Some(pid.as_u32());
+            }
+        }
+
+        // Enqueue children
+        if let Some(kids) = children.get(&pid) {
+            for &child in kids {
+                queue.push_back((child, depth + 1));
+            }
+        }
+    }
+
+    // Fallback: check if root itself matches
+    system
+        .process(root)
+        .filter(|proc_| proc_.name().to_string_lossy().to_lowercase().contains(&needle))
+        .map(|_| root_pid)
+}
 
 /// Runner configuration
 pub struct RunnerConfig {
@@ -36,9 +84,35 @@ impl BenchmarkRunner {
     /// Create a new benchmark runner
     pub fn new(config: RunnerConfig) -> Result<Self> {
         let load_generator = crate::load_generator::find_load_generator()
-            .ok_or_else(|| Error::LoadGeneratorNotFound("oha or bombardier".to_string()))?;
+            .ok_or_else(|| Error::LoadGeneratorNotFound("oha".to_string()))?;
 
         Ok(Self { config, load_generator })
+    }
+
+    /// Resolve the actual application PID for resource monitoring.
+    /// Wrapper processes (uv, pnpm, npm, bundle, etc.) are skipped in favor of the real runtime.
+    fn resolve_target_pid(&self, server: &crate::server::ServerHandle) -> u32 {
+        let root_pid = server.pid();
+
+        // Determine the runtime name based on framework naming patterns
+        let runtime_name = if self.config.framework.contains("python") || self.config.framework.contains("spikard-py") {
+            "python"
+        } else if self.config.framework.contains("node")
+            || self.config.framework.contains("fastify")
+            || self.config.framework.contains("hono")
+        {
+            "node"
+        } else if self.config.framework.contains("ruby") {
+            "ruby"
+        } else if self.config.framework.contains("php") {
+            "php"
+        } else {
+            // If we can't determine, just use the root PID
+            return root_pid;
+        };
+
+        // Search for descendant process matching the runtime
+        find_descendant_pid_by_name(root_pid, runtime_name, 10).unwrap_or(root_pid)
     }
 
     /// Run a single benchmark
@@ -69,7 +143,8 @@ impl BenchmarkRunner {
 
         println!("Server started with PID {pid} (startup: {total_startup_ms:.2}ms)");
 
-        let init_monitor = ResourceMonitor::new(pid);
+        let target_pid = self.resolve_target_pid(&server);
+        let init_monitor = ResourceMonitor::new(target_pid);
         let init_monitor_handle = init_monitor.start_monitoring(50);
 
         sleep(Duration::from_millis(200)).await;
@@ -86,8 +161,6 @@ impl BenchmarkRunner {
         };
 
         let startup_metrics = StartupMetrics {
-            process_spawn_ms: total_startup_ms * 0.1,
-            time_to_first_response_ms: total_startup_ms * 0.9,
             initialization_memory_mb,
             total_startup_ms,
         };
@@ -103,7 +176,9 @@ impl BenchmarkRunner {
                 fixture: fixture.cloned(),
             };
 
-            let _ = run_load_test(warmup_config, self.load_generator).await;
+            if let Err(e) = run_load_test(warmup_config, self.load_generator).await {
+                eprintln!("⚠ Warmup failed (continuing anyway): {e}");
+            }
             sleep(Duration::from_secs(2)).await;
         }
 
@@ -112,7 +187,7 @@ impl BenchmarkRunner {
             self.config.duration_secs, self.config.concurrency
         );
 
-        let monitor = ResourceMonitor::new(pid);
+        let monitor = ResourceMonitor::new(target_pid);
         let monitor_handle = monitor.start_monitoring(100);
 
         let load_config = LoadTestConfig {
@@ -137,9 +212,7 @@ impl BenchmarkRunner {
             Ok((oha_output, throughput)) => {
                 let latency = LatencyMetrics::from(oha_output);
 
-                let error_metrics = calculate_error_metrics(&throughput, &latency);
-
-                let serialization_metrics = calculate_serialization_metrics(&throughput, &latency);
+                let error_metrics = calculate_error_metrics(&throughput);
 
                 let route_types = if let Some(fixture) = fixture {
                     let route_type = classify_route_type(fixture);
@@ -168,7 +241,6 @@ impl BenchmarkRunner {
                     resources,
                     route_types,
                     error_metrics: Some(error_metrics),
-                    serialization: Some(serialization_metrics),
                     patterns: vec![],
                     success: true,
                     error: None,
@@ -204,11 +276,10 @@ impl BenchmarkRunner {
                     concurrency: self.config.concurrency,
                     startup: Some(startup_metrics),
                     throughput: empty_throughput.clone(),
-                    latency: empty_latency.clone(),
+                    latency: empty_latency,
                     resources,
                     route_types: vec![],
-                    error_metrics: Some(calculate_error_metrics(&empty_throughput, &empty_latency)),
-                    serialization: Some(calculate_serialization_metrics(&empty_throughput, &empty_latency)),
+                    error_metrics: Some(calculate_error_metrics(&empty_throughput)),
                     patterns: vec![],
                     success: false,
                     error: Some(e.to_string()),
@@ -290,8 +361,8 @@ fn is_nested_json(value: &serde_json::Value, depth: usize) -> bool {
     }
 }
 
-/// Calculate error metrics from throughput and latency data
-fn calculate_error_metrics(throughput: &ThroughputMetrics, latency: &LatencyMetrics) -> ErrorMetrics {
+/// Calculate error metrics from throughput data
+fn calculate_error_metrics(throughput: &ThroughputMetrics) -> ErrorMetrics {
     let total_requests = throughput.total_requests.max(1) as f64;
     let error_count = throughput.failed_requests;
     let error_rate = if total_requests > 0.0 {
@@ -300,63 +371,12 @@ fn calculate_error_metrics(throughput: &ThroughputMetrics, latency: &LatencyMetr
         0.0
     };
 
-    let _errors_per_type = if error_count > 0 { error_count / 3 } else { 0 };
-
-    let validation_error_latency = (latency.p99_ms * 0.6).max(1.0);
-    let not_found_latency = (latency.p99_ms * 0.5).max(0.8);
-    let server_error_latency = (latency.p99_ms * 0.8).min(latency.p99_ms);
-
     let error_throughput = throughput.requests_per_sec * error_rate;
 
-    let error_memory_impact = 0.01;
-
     ErrorMetrics {
-        validation_error_p99_ms: validation_error_latency,
-        not_found_p99_ms: not_found_latency,
-        server_error_p99_ms: server_error_latency,
-        error_throughput_rps: error_throughput,
-        error_memory_impact_mb: error_memory_impact,
         total_errors: error_count,
         error_rate,
-    }
-}
-
-/// Calculate serialization metrics from throughput and latency data
-fn calculate_serialization_metrics(throughput: &ThroughputMetrics, latency: &LatencyMetrics) -> SerializationMetrics {
-    let total_requests = throughput.total_requests.max(1);
-    let mean_latency = latency.mean_ms;
-
-    let json_parse_overhead = if mean_latency > 0.0 {
-        (mean_latency * 0.12).max(0.1)
-    } else {
-        0.1
-    };
-
-    let json_serialize_overhead = if mean_latency > 0.0 {
-        (mean_latency * 0.10).max(0.08)
-    } else {
-        0.08
-    };
-
-    let validation_overhead = if mean_latency > 0.0 {
-        (mean_latency * 0.06).max(0.05)
-    } else {
-        0.05
-    };
-
-    let total_serialization_overhead = json_parse_overhead + json_serialize_overhead + validation_overhead;
-    let total_overhead_pct = if mean_latency > 0.0 {
-        (total_serialization_overhead / mean_latency) * 100.0
-    } else {
-        0.0
-    };
-
-    SerializationMetrics {
-        json_parse_overhead_ms: json_parse_overhead,
-        json_serialize_overhead_ms: json_serialize_overhead,
-        validation_overhead_ms: validation_overhead,
-        total_overhead_pct,
-        sample_count: total_requests,
+        error_throughput_rps: error_throughput,
     }
 }
 
@@ -364,7 +384,6 @@ fn calculate_serialization_metrics(throughput: &ThroughputMetrics, latency: &Lat
 mod tests {
     use super::*;
     use crate::fixture::{ExpectedResponse, Handler, Parameters, Request};
-    use crate::types::LatencyMetrics;
     use std::collections::HashMap;
 
     fn create_test_fixture(
@@ -500,26 +519,11 @@ mod tests {
             success_rate: 1.0,
         };
 
-        let latency = LatencyMetrics {
-            mean_ms: 10.0,
-            p50_ms: 8.0,
-            p90_ms: 15.0,
-            p95_ms: 20.0,
-            p99_ms: 30.0,
-            p999_ms: 50.0,
-            max_ms: 100.0,
-            min_ms: 1.0,
-            stddev_ms: 5.0,
-        };
-
-        let metrics = calculate_error_metrics(&throughput, &latency);
+        let metrics = calculate_error_metrics(&throughput);
 
         assert_eq!(metrics.total_errors, 0);
         assert!(metrics.error_rate.abs() < 1e-10);
         assert!(metrics.error_throughput_rps.abs() < 1e-10);
-        assert!(metrics.validation_error_p99_ms > 0.0);
-        assert!(metrics.not_found_p99_ms > 0.0);
-        assert!(metrics.server_error_p99_ms > 0.0);
     }
 
     #[test]
@@ -532,147 +536,11 @@ mod tests {
             success_rate: 0.95,
         };
 
-        let latency = LatencyMetrics {
-            mean_ms: 10.0,
-            p50_ms: 8.0,
-            p90_ms: 15.0,
-            p95_ms: 20.0,
-            p99_ms: 30.0,
-            p999_ms: 50.0,
-            max_ms: 100.0,
-            min_ms: 1.0,
-            stddev_ms: 5.0,
-        };
-
-        let metrics = calculate_error_metrics(&throughput, &latency);
+        let metrics = calculate_error_metrics(&throughput);
 
         assert_eq!(metrics.total_errors, 50);
         assert!(metrics.error_rate > 0.04 && metrics.error_rate < 0.06);
         assert!(metrics.error_throughput_rps > 0.0);
         assert!(metrics.error_throughput_rps <= 100.0);
-    }
-
-    #[test]
-    fn test_calculate_error_metrics_error_latencies() {
-        let throughput = ThroughputMetrics {
-            total_requests: 1000,
-            requests_per_sec: 100.0,
-            bytes_per_sec: 10000.0,
-            failed_requests: 100,
-            success_rate: 0.9,
-        };
-
-        let latency = LatencyMetrics {
-            mean_ms: 10.0,
-            p50_ms: 8.0,
-            p90_ms: 15.0,
-            p95_ms: 20.0,
-            p99_ms: 30.0,
-            p999_ms: 50.0,
-            max_ms: 100.0,
-            min_ms: 1.0,
-            stddev_ms: 5.0,
-        };
-
-        let metrics = calculate_error_metrics(&throughput, &latency);
-
-        assert!(metrics.validation_error_p99_ms < latency.p99_ms);
-        assert!(metrics.not_found_p99_ms < latency.p99_ms);
-        assert!(metrics.server_error_p99_ms <= latency.p99_ms);
-    }
-
-    #[test]
-    fn test_calculate_serialization_metrics_no_latency() {
-        let throughput = ThroughputMetrics {
-            total_requests: 1000,
-            requests_per_sec: 100.0,
-            bytes_per_sec: 10000.0,
-            failed_requests: 0,
-            success_rate: 1.0,
-        };
-
-        let latency = LatencyMetrics {
-            mean_ms: 0.0,
-            p50_ms: 0.0,
-            p90_ms: 0.0,
-            p95_ms: 0.0,
-            p99_ms: 0.0,
-            p999_ms: 0.0,
-            max_ms: 0.0,
-            min_ms: 0.0,
-            stddev_ms: 0.0,
-        };
-
-        let metrics = calculate_serialization_metrics(&throughput, &latency);
-
-        assert!(metrics.json_parse_overhead_ms > 0.0);
-        assert!(metrics.json_serialize_overhead_ms > 0.0);
-        assert!(metrics.validation_overhead_ms > 0.0);
-        assert_eq!(metrics.sample_count, 1000);
-    }
-
-    #[test]
-    fn test_calculate_serialization_metrics_with_latency() {
-        let throughput = ThroughputMetrics {
-            total_requests: 1000,
-            requests_per_sec: 100.0,
-            bytes_per_sec: 10000.0,
-            failed_requests: 0,
-            success_rate: 1.0,
-        };
-
-        let latency = LatencyMetrics {
-            mean_ms: 100.0,
-            p50_ms: 80.0,
-            p90_ms: 150.0,
-            p95_ms: 200.0,
-            p99_ms: 300.0,
-            p999_ms: 500.0,
-            max_ms: 1000.0,
-            min_ms: 10.0,
-            stddev_ms: 50.0,
-        };
-
-        let metrics = calculate_serialization_metrics(&throughput, &latency);
-
-        assert!(metrics.json_parse_overhead_ms > 0.0);
-        assert!(metrics.json_serialize_overhead_ms > 0.0);
-        assert!(metrics.validation_overhead_ms > 0.0);
-
-        assert!(metrics.total_overhead_pct > 10.0);
-        assert!(metrics.total_overhead_pct < 50.0);
-        assert_eq!(metrics.sample_count, 1000);
-    }
-
-    #[test]
-    fn test_calculate_serialization_metrics_overhead_components() {
-        let throughput = ThroughputMetrics {
-            total_requests: 100,
-            requests_per_sec: 50.0,
-            bytes_per_sec: 5000.0,
-            failed_requests: 0,
-            success_rate: 1.0,
-        };
-
-        let latency = LatencyMetrics {
-            mean_ms: 50.0,
-            p50_ms: 40.0,
-            p90_ms: 70.0,
-            p95_ms: 80.0,
-            p99_ms: 100.0,
-            p999_ms: 150.0,
-            max_ms: 200.0,
-            min_ms: 5.0,
-            stddev_ms: 20.0,
-        };
-
-        let metrics = calculate_serialization_metrics(&throughput, &latency);
-
-        assert!(metrics.json_parse_overhead_ms > metrics.json_serialize_overhead_ms);
-        assert!(metrics.json_serialize_overhead_ms > metrics.validation_overhead_ms);
-
-        let sum = metrics.json_parse_overhead_ms + metrics.json_serialize_overhead_ms + metrics.validation_overhead_ms;
-        let expected_pct = (sum / latency.mean_ms) * 100.0;
-        assert!((metrics.total_overhead_pct - expected_pct).abs() < 0.01);
     }
 }

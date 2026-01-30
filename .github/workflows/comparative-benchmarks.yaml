@@ -40,7 +40,7 @@ env:
 jobs:
   build-harness:
     name: Build Benchmark Tools
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -66,7 +66,7 @@ jobs:
           chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha
 
       - name: Upload benchmark tools
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: benchmark-tools
           path: artifacts/bin/
@@ -77,8 +77,8 @@ jobs:
   spikard-core:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     strategy:
@@ -100,8 +100,8 @@ jobs:
   python:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     strategy:
@@ -126,8 +126,8 @@ jobs:
   bun:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     strategy:
@@ -150,15 +150,14 @@ jobs:
   nodejs:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
         framework:
-          - spikard-node
           - fastify
           - hono
           - morojs
@@ -177,15 +176,14 @@ jobs:
   ruby:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
         framework:
-          - spikard-ruby
           - hanami-api
           - roda
     steps:
@@ -202,15 +200,14 @@ jobs:
   php:
     name: "Benchmark: ${{ matrix.framework }}"
     needs: build-harness
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
     permissions:
       contents: read
     strategy:
       fail-fast: false
       matrix:
         framework:
-          - spikard-php
           - phalcon
           - trongate
     steps:
@@ -231,7 +228,7 @@ jobs:
 
   aggregate-results:
     name: Aggregate Benchmark Results
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: always()
     needs:
       - build-harness
@@ -247,7 +244,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Download all benchmark artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           pattern: benchmark-results-*
           path: benchmark-results/artifacts
@@ -268,7 +265,7 @@ jobs:
           mkdir -p benchmark-results
 
           # Create aggregated JSON structure
-          cat > benchmark-results/aggregated.json <<'EOF'
+          cat > benchmark-results/aggregated.json <<EOF
           {
             "metadata": {
               "run_id": "${{ github.run_id }}",
@@ -311,7 +308,7 @@ jobs:
           fi
 
       - name: Upload aggregated results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: benchmark-aggregated-results
           path: benchmark-results/aggregated.json

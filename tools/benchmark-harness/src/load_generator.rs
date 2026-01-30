@@ -190,7 +190,6 @@ async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
 #[derive(Debug, Clone, Copy)]
 pub enum LoadGeneratorType {
     Oha,
-    Bombardier,
 }
 
 /// Load test configuration
@@ -208,7 +207,6 @@ pub async fn run_load_test(
 ) -> Result<(OhaOutput, ThroughputMetrics)> {
     match generator {
         LoadGeneratorType::Oha => run_oha(config).await,
-        LoadGeneratorType::Bombardier => run_bombardier(config).await,
     }
 }
 
@@ -224,7 +222,13 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
                 .request
                 .query_params
                 .iter()
-                .map(|(k, v)| format!("{k}={v}"))
+                .map(|(k, v)| {
+                    let v_str = match v {
+                        serde_json::Value::String(s) => s.clone(),
+                        other => other.to_string(),
+                    };
+                    format!("{}={}", urlencoding::encode(k), urlencoding::encode(&v_str))
+                })
                 .collect();
             url.push_str(&query.join("&"));
         }
@@ -348,9 +352,32 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
 
     cmd.arg(&url);
 
-    let output = cmd
-        .output()
-        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to run oha: {e}")))?;
+    // Spawn oha as a child process with a timeout to prevent indefinite hangs.
+    // We use tokio::process::Command so the child can be killed on timeout.
+    let timeout_secs = config.duration_secs + 120; // generous buffer over test duration
+
+    let mut tokio_cmd = tokio::process::Command::from(cmd);
+    tokio_cmd
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .kill_on_drop(true);
+    let child = tokio_cmd
+        .spawn()
+        .map_err(|e| Error::LoadGeneratorFailed(format!("Failed to spawn oha: {e}")))?;
+
+    let output = match tokio::time::timeout(Duration::from_secs(timeout_secs), child.wait_with_output()).await {
+        Ok(Ok(output)) => output,
+        Ok(Err(e)) => {
+            return Err(Error::LoadGeneratorFailed(format!("oha process error: {e}")));
+        }
+        Err(_) => {
+            // Timeout — child is killed on drop via kill_on_drop(true).
+            return Err(Error::LoadGeneratorFailed(format!(
+                "oha timed out after {timeout_secs}s (duration was {}s)",
+                config.duration_secs
+            )));
+        }
+    };
 
     // Best-effort cleanup (multipart temp files).
     for path in temp_paths_to_cleanup {
@@ -371,8 +398,13 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
     let success_rate = oha_output.summary.success_rate.unwrap_or(1.0);
     let size_per_sec = oha_output.summary.size_per_sec.unwrap_or(0.0);
 
-    let total_requests = (requests_per_sec * total_duration) as u64;
-    let failed = total_requests - (total_requests as f64 * success_rate) as u64;
+    // Calculate total_requests from rps and duration (oha doesn't provide a direct total_requests field).
+    // This is an approximation since oha may send slightly more/fewer requests than rps * duration.
+    let total_requests = (requests_per_sec * total_duration).round() as u64;
+
+    // Calculate failed requests directly from success_rate to maintain consistency.
+    // failed = total * (1 - success_rate)
+    let failed = (total_requests as f64 * (1.0 - success_rate)).round() as u64;
 
     let throughput = ThroughputMetrics {
         total_requests,
@@ -385,23 +417,11 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
     Ok((oha_output, throughput))
 }
 
-/// Run bombardier load generator (fallback)
-#[allow(clippy::unused_async)]
-async fn run_bombardier(_config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics)> {
-    which::which("bombardier").map_err(|_| Error::LoadGeneratorNotFound("bombardier".to_string()))?;
-
-    Err(Error::LoadGeneratorFailed(
-        "Bombardier support not yet implemented".to_string(),
-    ))
-}
-
 /// Find the best available load generator
 #[must_use]
 pub fn find_load_generator() -> Option<LoadGeneratorType> {
     if which::which("oha").is_ok() {
         Some(LoadGeneratorType::Oha)
-    } else if which::which("bombardier").is_ok() {
-        Some(LoadGeneratorType::Bombardier)
     } else {
         None
     }
@@ -412,7 +432,6 @@ pub fn find_load_generator() -> Option<LoadGeneratorType> {
 pub fn check_load_generator(generator: LoadGeneratorType) -> bool {
     let binary = match generator {
         LoadGeneratorType::Oha => "oha",
-        LoadGeneratorType::Bombardier => "bombardier",
     };
 
     which::which(binary).is_ok()

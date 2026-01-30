@@ -19,7 +19,7 @@ from pathlib import Path as PathLib
 from typing import Any, Callable, Coroutine, ParamSpec, TypeVar
 from uuid import UUID
 
-from spikard import Path, Query, Spikard, get, post
+from spikard import Path, Query, Response, Spikard, get, post
 from spikard.config import ServerConfig
 
 _profile_dir_env = os.environ.get("SPIKARD_PYTHON_PROFILE_DIR") or None
@@ -83,9 +83,9 @@ def _coerce_bool(value: Any) -> Any:
         return value
     if isinstance(value, str):
         lowered = value.lower()
-        if lowered == "true":
+        if lowered in ("true", "1", "yes", "on"):
             return True
-        if lowered == "false":
+        if lowered in ("false", "0", "no", "off"):
             return False
     return value
 
@@ -312,19 +312,46 @@ async def post_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
 @post("/multipart/small")
 async def post_multipart_small(body: dict[str, Any]) -> dict[str, Any]:
     """Small multipart form (~1KB) - raw."""
-    return {"files_received": 1, "total_bytes": 1024}
+    files = body.get("files", {})
+    files_received = 0
+    total_bytes = 0
+
+    for key, file_data in files.items():
+        if key.startswith("file") and isinstance(file_data, dict):
+            files_received += 1
+            total_bytes += file_data.get("size", 0)
+
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/multipart/medium")
 async def post_multipart_medium(body: dict[str, Any]) -> dict[str, Any]:
     """Medium multipart form (~10KB) - raw."""
-    return {"files_received": 2, "total_bytes": 10240}
+    files = body.get("files", {})
+    files_received = 0
+    total_bytes = 0
+
+    for key, file_data in files.items():
+        if key.startswith("file") and isinstance(file_data, dict):
+            files_received += 1
+            total_bytes += file_data.get("size", 0)
+
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/multipart/large")
 async def post_multipart_large(body: dict[str, Any]) -> dict[str, Any]:
     """Large multipart form (~100KB) - raw."""
-    return {"files_received": 5, "total_bytes": 102400}
+    files = body.get("files", {})
+    files_received = 0
+    total_bytes = 0
+
+    for key, file_data in files.items():
+        if key.startswith("file") and isinstance(file_data, dict):
+            files_received += 1
+            total_bytes += file_data.get("size", 0)
+
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/urlencoded/simple")
@@ -394,71 +421,99 @@ async def get_query_few(
     limit: int | None = Query(default=None),
 ) -> dict[str, Any]:
     """Few query parameters (1-3) - raw."""
-    return {"q": q, "page": page, "limit": limit}
+    result = {}
+    if q is not None:
+        result["q"] = q
+    if page is not None:
+        result["page"] = page
+    if limit is not None:
+        result["limit"] = limit
+    return result
 
 
 @get("/query/medium")
 async def get_query_medium(
+    search: str | None = Query(default=None),
     category: str | None = Query(default=None),
-    tags: str | None = Query(default=None),
-    min_price: float | None = Query(default=None),
-    max_price: float | None = Query(default=None),
     sort: str | None = Query(default=None),
     order: str | None = Query(default=None),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
+    filter: str | None = Query(default=None),
 ) -> dict[str, Any]:
     """Medium number of query parameters (5-10) - raw."""
-    return {
-        "category": category,
-        "tags": tags,
-        "min_price": min_price,
-        "max_price": max_price,
-        "sort": sort,
-        "order": order,
-        "page": page,
-        "limit": limit,
-    }
+    result = {}
+    if search is not None:
+        result["search"] = search
+    if category is not None:
+        result["category"] = category
+    if sort is not None:
+        result["sort"] = sort
+    if order is not None:
+        result["order"] = order
+    if page is not None:
+        result["page"] = page
+    if limit is not None:
+        result["limit"] = limit
+    if filter is not None:
+        result["filter"] = filter
+    return result
 
 
 @get("/query/many")
 async def get_query_many(
     q: str | None = Query(default=None),
-    page: int | None = Query(default=None),
-    limit: int | None = Query(default=None),
-    sort: str | None = Query(default=None),
-    order: str | None = Query(default=None),
-    filter: str | None = Query(default=None),
     category: str | None = Query(default=None),
     subcategory: str | None = Query(default=None),
     brand: str | None = Query(default=None),
     min_price: float | None = Query(default=None),
     max_price: float | None = Query(default=None),
-    rating: int | None = Query(default=None),
-    verified: bool | None = Query(default=None),
-    in_stock: bool | None = Query(default=None),
-    shipping: str | None = Query(default=None),
     color: str | None = Query(default=None),
+    size: str | None = Query(default=None),
+    material: str | None = Query(default=None),
+    rating: int | None = Query(default=None),
+    sort: str | None = Query(default=None),
+    order: str | None = Query(default=None),
+    page: int | None = Query(default=None),
+    limit: int | None = Query(default=None),
+    in_stock: bool | None = Query(default=None),
+    on_sale: bool | None = Query(default=None),
 ) -> dict[str, Any]:
     """Many query parameters (15+) - raw."""
-    return {
-        "q": q,
-        "page": page,
-        "limit": limit,
-        "sort": sort,
-        "order": order,
-        "filter": filter,
-        "category": category,
-        "subcategory": subcategory,
-        "brand": brand,
-        "min_price": min_price,
-        "max_price": max_price,
-        "rating": rating,
-        "verified": verified,
-        "in_stock": in_stock,
-        "shipping": shipping,
-        "color": color,
-    }
+    result = {}
+    if q is not None:
+        result["q"] = q
+    if category is not None:
+        result["category"] = category
+    if subcategory is not None:
+        result["subcategory"] = subcategory
+    if brand is not None:
+        result["brand"] = brand
+    if min_price is not None:
+        result["min_price"] = min_price
+    if max_price is not None:
+        result["max_price"] = max_price
+    if color is not None:
+        result["color"] = color
+    if size is not None:
+        result["size"] = size
+    if material is not None:
+        result["material"] = material
+    if rating is not None:
+        result["rating"] = rating
+    if sort is not None:
+        result["sort"] = sort
+    if order is not None:
+        result["order"] = order
+    if page is not None:
+        result["page"] = page
+    if limit is not None:
+        result["limit"] = limit
+    if in_stock is not None:
+        result["in_stock"] = in_stock
+    if on_sale is not None:
+        result["on_sale"] = on_sale
+    return result
 
 
 # ===== VALIDATED ENDPOINTS =====
@@ -504,9 +559,21 @@ async def post_validated_json_very_large(body: dict[str, Any]) -> dict[str, Any]
     response_schema=response_schema("multipart/small"),
 )
 @profile_once("validated-multipart-small")
-async def post_validated_multipart_small(_body: dict[str, Any]) -> dict[str, int]:
+async def post_validated_multipart_small(body: dict[str, Any]) -> dict[str, int] | Response:
     """Small multipart form (~1KB) - validated."""
-    return {"files_received": 1, "total_bytes": 1024}
+    files = body.get("files", {})
+    files_received = 0
+    total_bytes = 0
+
+    for key, file_data in files.items():
+        if key.startswith("file") and isinstance(file_data, dict):
+            files_received += 1
+            total_bytes += file_data.get("size", 0)
+
+    if files_received == 0:
+        return Response(content={"error": "No files received"}, status_code=400)
+
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post(
@@ -515,9 +582,21 @@ async def post_validated_multipart_small(_body: dict[str, Any]) -> dict[str, int
     response_schema=response_schema("multipart/medium"),
 )
 @profile_once("validated-multipart-medium")
-async def post_validated_multipart_medium(_body: dict[str, Any]) -> dict[str, int]:
+async def post_validated_multipart_medium(body: dict[str, Any]) -> dict[str, int] | Response:
     """Medium multipart form (~10KB) - validated."""
-    return {"files_received": 2, "total_bytes": 10240}
+    files = body.get("files", {})
+    files_received = 0
+    total_bytes = 0
+
+    for key, file_data in files.items():
+        if key.startswith("file") and isinstance(file_data, dict):
+            files_received += 1
+            total_bytes += file_data.get("size", 0)
+
+    if files_received == 0:
+        return Response(content={"error": "No files received"}, status_code=400)
+
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post(
@@ -526,9 +605,21 @@ async def post_validated_multipart_medium(_body: dict[str, Any]) -> dict[str, in
     response_schema=response_schema("multipart/large"),
 )
 @profile_once("validated-multipart-large")
-async def post_validated_multipart_large(_body: dict[str, Any]) -> dict[str, int]:
+async def post_validated_multipart_large(body: dict[str, Any]) -> dict[str, int] | Response:
     """Large multipart form (~100KB) - validated."""
-    return {"files_received": 5, "total_bytes": 102400}
+    files = body.get("files", {})
+    files_received = 0
+    total_bytes = 0
+
+    for key, file_data in files.items():
+        if key.startswith("file") and isinstance(file_data, dict):
+            files_received += 1
+            total_bytes += file_data.get("size", 0)
+
+    if files_received == 0:
+        return Response(content={"error": "No files received"}, status_code=400)
+
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post(
@@ -636,12 +727,17 @@ async def get_validated_path_date(date: DateType = Path()) -> dict[str, JsonScal
 )
 @profile_once("validated-query-few")
 async def get_validated_query_few(
-    q: str | None = Query(default=None),
+    q: str = Query(),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
 ) -> dict[str, JsonScalar]:
     """Few query parameters (1-3) - validated."""
-    return {"q": q, "page": page, "limit": limit}
+    result: dict[str, JsonScalar] = {"q": q}
+    if page is not None:
+        result["page"] = page
+    if limit is not None:
+        result["limit"] = limit
+    return result
 
 
 @get(
@@ -651,26 +747,29 @@ async def get_validated_query_few(
 )
 @profile_once("validated-query-medium")
 async def get_validated_query_medium(
+    search: str = Query(),
     category: str | None = Query(default=None),
-    tags: str | None = Query(default=None),
-    min_price: float | None = Query(default=None),
-    max_price: float | None = Query(default=None),
     sort: str | None = Query(default=None),
     order: str | None = Query(default=None),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
+    filter: str | None = Query(default=None),
 ) -> dict[str, JsonScalar]:
     """Medium number of query parameters (5-10) - validated."""
-    return {
-        "category": category,
-        "tags": tags,
-        "min_price": min_price,
-        "max_price": max_price,
-        "sort": sort,
-        "order": order,
-        "page": page,
-        "limit": limit,
-    }
+    result: dict[str, JsonScalar] = {"search": search}
+    if category is not None:
+        result["category"] = category
+    if sort is not None:
+        result["sort"] = sort
+    if order is not None:
+        result["order"] = order
+    if page is not None:
+        result["page"] = page
+    if limit is not None:
+        result["limit"] = limit
+    if filter is not None:
+        result["filter"] = filter
+    return result
 
 
 @get(
@@ -680,42 +779,56 @@ async def get_validated_query_medium(
 )
 @profile_once("validated-query-many")
 async def get_validated_query_many(
-    q: str | None = Query(default=None),
-    page: int | None = Query(default=None),
-    limit: int | None = Query(default=None),
-    sort: str | None = Query(default=None),
-    order: str | None = Query(default=None),
-    filter: str | None = Query(default=None),
+    q: str = Query(),
     category: str | None = Query(default=None),
     subcategory: str | None = Query(default=None),
     brand: str | None = Query(default=None),
     min_price: float | None = Query(default=None),
     max_price: float | None = Query(default=None),
-    rating: int | None = Query(default=None),
-    verified: bool | None = Query(default=None),
-    in_stock: bool | None = Query(default=None),
-    shipping: str | None = Query(default=None),
     color: str | None = Query(default=None),
+    size: str | None = Query(default=None),
+    material: str | None = Query(default=None),
+    rating: int | None = Query(default=None),
+    sort: str | None = Query(default=None),
+    order: str | None = Query(default=None),
+    page: int | None = Query(default=None),
+    limit: int | None = Query(default=None),
+    in_stock: bool | None = Query(default=None),
+    on_sale: bool | None = Query(default=None),
 ) -> dict[str, JsonScalar]:
     """Many query parameters (15+) - validated."""
-    return {
-        "q": q,
-        "page": page,
-        "limit": limit,
-        "sort": sort,
-        "order": order,
-        "filter": filter,
-        "category": category,
-        "subcategory": subcategory,
-        "brand": brand,
-        "min_price": min_price,
-        "max_price": max_price,
-        "rating": rating,
-        "verified": verified,
-        "in_stock": in_stock,
-        "shipping": shipping,
-        "color": color,
-    }
+    result: dict[str, JsonScalar] = {"q": q}
+    if category is not None:
+        result["category"] = category
+    if subcategory is not None:
+        result["subcategory"] = subcategory
+    if brand is not None:
+        result["brand"] = brand
+    if min_price is not None:
+        result["min_price"] = min_price
+    if max_price is not None:
+        result["max_price"] = max_price
+    if color is not None:
+        result["color"] = color
+    if size is not None:
+        result["size"] = size
+    if material is not None:
+        result["material"] = material
+    if rating is not None:
+        result["rating"] = rating
+    if sort is not None:
+        result["sort"] = sort
+    if order is not None:
+        result["order"] = order
+    if page is not None:
+        result["page"] = page
+    if limit is not None:
+        result["limit"] = limit
+    if in_stock is not None:
+        result["in_stock"] = in_stock
+    if on_sale is not None:
+        result["on_sale"] = on_sale
+    return result
 
 
 if __name__ == "__main__":

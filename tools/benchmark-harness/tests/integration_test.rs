@@ -96,13 +96,12 @@ async fn test_full_benchmark_flow() {
         Ok((oha_output, throughput)) => {
             verify_benchmark_results(oha_output, throughput, resources);
             server_handle.abort();
-            return;
         }
         Err(e) => {
-            eprintln!("Load test failed: {e}");
-            eprintln!("This might happen if the server isn't fully ready or if there's a connection issue");
             server_handle.abort();
-            return;
+            panic!(
+                "Load test failed: {e}\nThis might happen if the server isn't fully ready or if there's a connection issue"
+            );
         }
     }
 }
@@ -142,7 +141,7 @@ fn verify_benchmark_results(
         resources,
         route_types: vec![],
         error_metrics: None,
-        serialization: None,
+
         patterns: vec![],
         success: true,
         error: None,
@@ -196,14 +195,8 @@ async fn test_benchmark_with_fixture() {
 
     server_handle.abort();
 
-    match result {
-        Ok((_, throughput)) => {
-            assert!(throughput.total_requests > 0, "Should have some requests");
-        }
-        Err(e) => {
-            eprintln!("Load test with fixture failed (expected in some environments): {e}");
-        }
-    }
+    let (_, throughput) = result.expect("Load test with fixture should succeed");
+    assert!(throughput.total_requests > 0, "Should have some requests");
 }
 
 #[tokio::test]
@@ -234,7 +227,7 @@ async fn test_monitor_during_load() {
 }
 
 #[tokio::test]
-async fn test_concurrent_benchmarks() {
+async fn test_sequential_benchmarks() {
     if find_load_generator().is_none() {
         eprintln!("Skipping test: No load generator available");
         return;
@@ -254,21 +247,14 @@ async fn test_concurrent_benchmarks() {
             fixture: None,
         };
 
-        let result = benchmark_harness::load_generator::run_load_test(load_config, generator).await;
-        if result.is_ok() {
-            successes += 1;
-        } else if let Err(e) = result {
-            eprintln!("Benchmark {i} encountered error (may be expected): {e}");
+        match benchmark_harness::load_generator::run_load_test(load_config, generator).await {
+            Ok(_) => successes += 1,
+            Err(e) => panic!("Benchmark {i} failed: {e}"),
         }
     }
 
     server_handle.abort();
-
-    if successes == 0 {
-        eprintln!("Warning: No benchmarks succeeded (this can happen in constrained test environments)");
-    } else {
-        println!("Successfully completed {successes} out of 2 benchmarks");
-    }
+    assert_eq!(successes, 2, "All benchmarks should succeed");
 }
 
 #[tokio::test]
@@ -346,7 +332,7 @@ fn test_benchmark_result_output_format() {
         },
         route_types: vec![],
         error_metrics: None,
-        serialization: None,
+
         patterns: vec![],
         success: true,
         error: None,
@@ -385,7 +371,13 @@ async fn test_error_handling_in_benchmark() {
     let generator = find_load_generator().unwrap();
     let result = benchmark_harness::load_generator::run_load_test(load_config, generator).await;
 
-    if let Ok((_, throughput)) = result {
-        assert!(throughput.success_rate < 0.5);
+    match result {
+        Ok((_, throughput)) => {
+            assert!(
+                throughput.success_rate < 0.5,
+                "Error handling should show low success rate"
+            );
+        }
+        Err(e) => panic!("Error handling test should produce results, got error: {e}"),
     }
 }

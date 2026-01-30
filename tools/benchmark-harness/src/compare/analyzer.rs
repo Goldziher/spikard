@@ -69,11 +69,17 @@ impl CompareAnalyzer {
         Self { significance_threshold }
     }
 
-    /// Compare two frameworks using statistical tests and effect sizes
+    /// Compare two frameworks using per-workload ratio-based comparison
     ///
-    /// Performs Welch's t-test and calculates Cohen's d for key performance metrics:
-    /// - Requests per second (RPS)
-    /// - Latency percentiles (p50, p95, p99)
+    /// For each workload that both frameworks ran, computes the RPS ratio
+    /// (comparison / baseline). The geometric mean of these ratios gives the
+    /// overall performance comparison. Per-workload breakdowns are reported
+    /// as individual effect sizes.
+    ///
+    /// If multiple independent runs of the SAME workload exist (i.e. repeated
+    /// iterations), those replicate samples ARE valid for a Welch's t-test.
+    /// When only a single run per workload exists, the t-test is not applicable
+    /// and the comparison relies on ratio-based analysis instead.
     ///
     /// # Arguments
     ///
@@ -82,57 +88,155 @@ impl CompareAnalyzer {
     ///
     /// # Returns
     ///
-    /// Complete statistical analysis with test results, effect sizes, and overall verdict
+    /// Complete statistical analysis with per-workload comparisons and overall verdict
     #[must_use]
     pub fn compare_frameworks(&self, baseline: &ProfileResult, comparison: &ProfileResult) -> ComparisonAnalysis {
         let mut statistical_tests = Vec::new();
         let mut effect_sizes = Vec::new();
 
-        let baseline_rps = Self::extract_rps_samples(baseline);
-        let comparison_rps = Self::extract_rps_samples(comparison);
+        // Build a map of workload name -> metrics for each framework
+        let baseline_workloads = Self::build_workload_map(baseline);
+        let comparison_workloads = Self::build_workload_map(comparison);
 
-        if !baseline_rps.is_empty() && !comparison_rps.is_empty() {
-            statistical_tests.push(self.welch_t_test(&baseline_rps, &comparison_rps, "requests_per_sec"));
-            effect_sizes.push(self.cohens_d(&baseline_rps, &comparison_rps, "requests_per_sec"));
-        }
+        // Collect per-workload RPS ratios for matching workloads
+        let mut rps_ratios: Vec<f64> = Vec::new();
+        let mut latency_p50_ratios: Vec<f64> = Vec::new();
+        let mut latency_p95_ratios: Vec<f64> = Vec::new();
+        let mut latency_p99_ratios: Vec<f64> = Vec::new();
 
-        let baseline_p50 = Self::extract_latency_samples(baseline, |l| l.median_ms);
-        let comparison_p50 = Self::extract_latency_samples(comparison, |l| l.median_ms);
+        for (workload_name, baseline_metrics) in &baseline_workloads {
+            if let Some(comparison_metrics) = comparison_workloads.get(workload_name.as_str()) {
+                // Per-workload RPS comparison (ratio > 1.0 means comparison is faster)
+                let baseline_rps = baseline_metrics.0;
+                let comparison_rps = comparison_metrics.0;
 
-        let baseline_p95 = Self::extract_latency_samples(baseline, |l| l.p95_ms);
-        let comparison_p95 = Self::extract_latency_samples(comparison, |l| l.p95_ms);
+                if baseline_rps > 0.0 {
+                    let ratio = comparison_rps / baseline_rps;
+                    rps_ratios.push(ratio);
 
-        let baseline_p99 = Self::extract_latency_samples(baseline, |l| l.p99_ms);
-        let comparison_p99 = Self::extract_latency_samples(comparison, |l| l.p99_ms);
-
-        if !baseline_p50.is_empty() && !comparison_p50.is_empty() {
-            statistical_tests.push(self.welch_t_test(&baseline_p50, &comparison_p50, "latency_p50_ms"));
-            effect_sizes.push(self.cohens_d(&baseline_p50, &comparison_p50, "latency_p50_ms"));
-        }
-
-        if !baseline_p95.is_empty() && !comparison_p95.is_empty() {
-            statistical_tests.push(self.welch_t_test(&baseline_p95, &comparison_p95, "latency_p95_ms"));
-            effect_sizes.push(self.cohens_d(&baseline_p95, &comparison_p95, "latency_p95_ms"));
-        }
-
-        if !baseline_p99.is_empty() && !comparison_p99.is_empty() {
-            statistical_tests.push(self.welch_t_test(&baseline_p99, &comparison_p99, "latency_p99_ms"));
-            effect_sizes.push(self.cohens_d(&baseline_p99, &comparison_p99, "latency_p99_ms"));
-        }
-
-        let overall_verdict = if let Some(rps_test) = statistical_tests.iter().find(|t| t.metric == "requests_per_sec")
-        {
-            if rps_test.is_significant {
-                if rps_test.statistic < 0.0 {
-                    "significantly_better".to_string()
-                } else {
-                    "significantly_worse".to_string()
+                    // Report per-workload ratio as an effect size entry
+                    effect_sizes.push(EffectSize {
+                        metric: format!("rps_ratio:{workload_name}"),
+                        cohens_d: ratio, // Using cohens_d field to store the ratio
+                        magnitude: format!("{:+.1}%", (ratio - 1.0) * 100.0),
+                    });
                 }
-            } else {
-                "similar".to_string()
+
+                // Per-workload latency comparisons (ratio < 1.0 means comparison is faster)
+                let (b_p50, b_p95, b_p99) = baseline_metrics.1;
+                let (c_p50, c_p95, c_p99) = comparison_metrics.1;
+
+                if b_p50 > 0.0 {
+                    latency_p50_ratios.push(c_p50 / b_p50);
+                }
+                if b_p95 > 0.0 {
+                    latency_p95_ratios.push(c_p95 / b_p95);
+                }
+                if b_p99 > 0.0 {
+                    latency_p99_ratios.push(c_p99 / b_p99);
+                }
             }
+        }
+
+        // Also check if we have multiple independent runs of the same workload
+        // (replicate iterations). Only then is a t-test statistically valid.
+        let baseline_replicates = Self::extract_replicate_samples(baseline);
+        let comparison_replicates = Self::extract_replicate_samples(comparison);
+
+        for (workload_name, baseline_samples) in &baseline_replicates {
+            if let Some(comparison_samples) = comparison_replicates.get(workload_name.as_str()) {
+                // Only run t-test if we have >= 2 replicate runs per workload
+                if baseline_samples.len() >= 2 && comparison_samples.len() >= 2 {
+                    statistical_tests.push(self.welch_t_test(
+                        baseline_samples,
+                        comparison_samples,
+                        &format!("rps:{workload_name}"),
+                    ));
+                }
+            }
+        }
+
+        // Compute geometric mean of RPS ratios as the overall comparison metric.
+        // Geometric mean is appropriate for ratios because it is symmetric:
+        // geo_mean(a/b) = 1 / geo_mean(b/a).
+        let geo_mean_rps = if rps_ratios.is_empty() {
+            1.0
         } else {
+            let log_sum: f64 = rps_ratios.iter().map(|r| r.ln()).sum();
+            (log_sum / rps_ratios.len() as f64).exp()
+        };
+
+        // Report overall geometric mean ratios as statistical test entries
+        if !rps_ratios.is_empty() {
+            statistical_tests.push(StatisticalTest {
+                test_name: "geometric_mean_ratio".to_string(),
+                metric: "requests_per_sec".to_string(),
+                statistic: geo_mean_rps,
+                p_value: f64::NAN, // Not applicable for ratio-based comparison
+                is_significant: (geo_mean_rps - 1.0).abs() > 0.05, // >5% difference
+                confidence_interval: (
+                    *rps_ratios
+                        .iter()
+                        .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                        .unwrap_or(&1.0),
+                    *rps_ratios
+                        .iter()
+                        .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                        .unwrap_or(&1.0),
+                ),
+            });
+        }
+
+        if !latency_p50_ratios.is_empty() {
+            let geo_mean = Self::geometric_mean(&latency_p50_ratios);
+            statistical_tests.push(StatisticalTest {
+                test_name: "geometric_mean_ratio".to_string(),
+                metric: "latency_p50_ms".to_string(),
+                statistic: geo_mean,
+                p_value: f64::NAN,
+                is_significant: (geo_mean - 1.0).abs() > 0.05,
+                confidence_interval: (0.0, 0.0),
+            });
+        }
+
+        if !latency_p95_ratios.is_empty() {
+            let geo_mean = Self::geometric_mean(&latency_p95_ratios);
+            statistical_tests.push(StatisticalTest {
+                test_name: "geometric_mean_ratio".to_string(),
+                metric: "latency_p95_ms".to_string(),
+                statistic: geo_mean,
+                p_value: f64::NAN,
+                is_significant: (geo_mean - 1.0).abs() > 0.05,
+                confidence_interval: (0.0, 0.0),
+            });
+        }
+
+        if !latency_p99_ratios.is_empty() {
+            let geo_mean = Self::geometric_mean(&latency_p99_ratios);
+            statistical_tests.push(StatisticalTest {
+                test_name: "geometric_mean_ratio".to_string(),
+                metric: "latency_p99_ms".to_string(),
+                statistic: geo_mean,
+                p_value: f64::NAN,
+                is_significant: (geo_mean - 1.0).abs() > 0.05,
+                confidence_interval: (0.0, 0.0),
+            });
+        }
+
+        // Determine overall verdict based on geometric mean RPS ratio.
+        // Convention: baseline is sample1 (the reference), comparison is sample2.
+        // geo_mean_rps > 1.0 means comparison is FASTER than baseline.
+        // geo_mean_rps < 1.0 means comparison is SLOWER than baseline.
+        let overall_verdict = if rps_ratios.is_empty() {
             "insufficient_data".to_string()
+        } else if geo_mean_rps > 1.05 {
+            // Comparison framework is >5% faster than baseline
+            "significantly_better".to_string()
+        } else if geo_mean_rps < 0.95 {
+            // Comparison framework is >5% slower than baseline
+            "significantly_worse".to_string()
+        } else {
+            "similar".to_string()
         };
 
         ComparisonAnalysis {
@@ -143,30 +247,46 @@ impl CompareAnalyzer {
         }
     }
 
-    /// Perform Welch's t-test for two independent samples
+    /// Perform Welch's t-test for two independent samples of the SAME measurement.
+    ///
+    /// **IMPORTANT**: Both samples must be replicate observations of the same workload.
+    /// Mixing values from different workloads (e.g., JSON body RPS vs query params RPS)
+    /// violates the independence assumption and produces invalid results.
     ///
     /// Welch's t-test is a robust alternative to Student's t-test that does not
     /// assume equal variances. It uses the Welch-Satterthwaite equation for
     /// degrees of freedom calculation.
     ///
+    /// # Convention (IMPORTANT -- do not change without updating verdict logic)
+    ///
+    /// * `sample1` is the **baseline** framework's replicate measurements.
+    /// * `sample2` is the **comparison** framework's replicate measurements.
+    /// * `t_stat = (mean1 - mean2) / se`, so:
+    ///   - `t_stat > 0` means the **baseline** has a higher mean.
+    ///   - `t_stat < 0` means the **comparison** has a higher mean.
+    /// * For RPS metrics, `t_stat < 0` means comparison is faster (better).
+    /// * For latency metrics, `t_stat < 0` means comparison is slower (worse).
+    ///
     /// # Algorithm
     ///
     /// 1. Calculate sample means and variances
     /// 2. Compute Welch-Satterthwaite degrees of freedom
-    /// 3. Calculate t-statistic
+    /// 3. Calculate t-statistic: `(mean1 - mean2) / se`
     /// 4. Compute two-tailed p-value from Student's t-distribution
-    /// 5. Calculate 95% confidence interval for mean difference
+    /// 5. Calculate 95% CI using the t-distribution critical value (not z=1.96)
     ///
     /// # Arguments
     ///
-    /// * `sample1` - Baseline sample data
-    /// * `sample2` - Comparison sample data
+    /// * `sample1` - Baseline replicate samples (must be >= 2 for valid test)
+    /// * `sample2` - Comparison replicate samples (must be >= 2 for valid test)
     /// * `metric_name` - Name of metric being tested
     ///
     /// # Returns
     ///
-    /// Statistical test result with t-statistic, p-value, and confidence interval
-    fn welch_t_test(&self, sample1: &[f64], sample2: &[f64], metric_name: &str) -> StatisticalTest {
+    /// Statistical test result with t-statistic, p-value, and confidence interval.
+    /// Returns a non-significant placeholder if either sample has < 2 observations.
+    #[must_use] 
+    pub fn welch_t_test(&self, sample1: &[f64], sample2: &[f64], metric_name: &str) -> StatisticalTest {
         if sample1.is_empty() || sample2.is_empty() {
             return StatisticalTest {
                 test_name: "welch_t_test".to_string(),
@@ -233,7 +353,9 @@ impl CompareAnalyzer {
         let t_dist = StudentsT::new(0.0, 1.0, df).unwrap_or_else(|_| StudentsT::new(0.0, 1.0, 1.0).unwrap());
         let p_value = 2.0 * (1.0 - t_dist.cdf(t_stat.abs()));
 
-        let t_critical = 1.96;
+        // Use the t-distribution inverse CDF for the 95% CI critical value
+        // at the Welch-Satterthwaite degrees of freedom, NOT the z=1.96 approximation.
+        let t_critical = t_dist.inverse_cdf(0.975); // two-tailed 95% CI
         let margin_of_error = t_critical * se_diff;
         let mean_diff = mean1 - mean2;
         let ci_lower = mean_diff - margin_of_error;
@@ -269,7 +391,8 @@ impl CompareAnalyzer {
     /// # Returns
     ///
     /// Effect size with Cohen's d value and magnitude classification
-    fn cohens_d(&self, sample1: &[f64], sample2: &[f64], metric_name: &str) -> EffectSize {
+    #[must_use] 
+    pub fn cohens_d(&self, sample1: &[f64], sample2: &[f64], metric_name: &str) -> EffectSize {
         if sample1.is_empty() || sample2.is_empty() {
             return EffectSize {
                 metric: metric_name.to_string(),
@@ -321,47 +444,64 @@ impl CompareAnalyzer {
         }
     }
 
-    /// Classify effect size magnitude based on Cohen's guidelines
+    /// Classify effect size magnitude based on Cohen's guidelines (Cohen, 1988)
     ///
-    /// # Guidelines (Cohen, 1988)
+    /// # Guidelines
     ///
-    /// - |d| < 0.2: Small effect
-    /// - 0.2 ≤ |d| < 0.5: Medium effect
-    /// - 0.5 ≤ |d| < 0.8: Large effect
-    /// - |d| ≥ 0.8: Very large effect
+    /// - |d| < 0.2: Negligible effect (below Cohen's "small" threshold)
+    /// - 0.2 <= |d| < 0.5: Small effect
+    /// - 0.5 <= |d| < 0.8: Medium effect
+    /// - |d| >= 0.8: Large effect
     fn classify_effect_size(d_abs: f64) -> String {
         if d_abs < 0.2 {
-            "small".to_string()
+            "negligible".to_string()
         } else if d_abs < 0.5 {
-            "medium".to_string()
+            "small".to_string()
         } else if d_abs < 0.8 {
-            "large".to_string()
+            "medium".to_string()
         } else {
-            "very_large".to_string()
+            "large".to_string()
         }
     }
 
-    /// Extract RPS samples from all workloads in a `ProfileResult`
-    fn extract_rps_samples(profile: &ProfileResult) -> Vec<f64> {
-        profile
-            .suites
-            .iter()
-            .flat_map(|suite| &suite.workloads)
-            .map(|workload| workload.results.throughput.requests_per_sec)
-            .collect()
+    /// Build a map of workload name -> (rps, (p50, p95, p99)) for per-workload comparison
+    fn build_workload_map(profile: &ProfileResult) -> std::collections::HashMap<String, (f64, (f64, f64, f64))> {
+        let mut map = std::collections::HashMap::new();
+        for suite in &profile.suites {
+            for workload in &suite.workloads {
+                let rps = workload.results.throughput.requests_per_sec;
+                let p50 = workload.results.latency.median_ms;
+                let p95 = workload.results.latency.p95_ms;
+                let p99 = workload.results.latency.p99_ms;
+                map.insert(workload.name.clone(), (rps, (p50, p95, p99)));
+            }
+        }
+        map
     }
 
-    /// Extract latency samples from all workloads using a selector function
-    fn extract_latency_samples<F>(profile: &ProfileResult, selector: F) -> Vec<f64>
-    where
-        F: Fn(&crate::schema::Latency) -> f64,
-    {
-        profile
-            .suites
-            .iter()
-            .flat_map(|suite| &suite.workloads)
-            .map(|workload| selector(&workload.results.latency))
-            .collect()
+    /// Extract replicate samples grouped by workload name.
+    ///
+    /// If a workload name appears more than once (i.e. multiple iterations were run),
+    /// we have valid replicate samples suitable for a t-test.
+    fn extract_replicate_samples(profile: &ProfileResult) -> std::collections::HashMap<String, Vec<f64>> {
+        let mut map: std::collections::HashMap<String, Vec<f64>> = std::collections::HashMap::new();
+        for suite in &profile.suites {
+            for workload in &suite.workloads {
+                map.entry(workload.name.clone())
+                    .or_default()
+                    .push(workload.results.throughput.requests_per_sec);
+            }
+        }
+        map
+    }
+
+    /// Compute geometric mean of a slice of positive values
+    fn geometric_mean(values: &[f64]) -> f64 {
+        if values.is_empty() {
+            return 1.0;
+        }
+        let log_sum: f64 = values.iter().map(|r| r.ln()).sum();
+        (log_sum / values.len() as f64).exp()
     }
 }
 
@@ -435,7 +575,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cohens_d_classification_small() {
+    fn test_cohens_d_classification_negligible() {
         let analyzer = CompareAnalyzer::new(0.05);
 
         let sample1 = vec![10.0, 10.0, 10.0, 10.0, 10.0];
@@ -445,14 +585,14 @@ mod tests {
 
         assert!(
             result.cohens_d.abs() < 0.2,
-            "Effect size should be small, got d={}",
+            "Effect size should be negligible, got d={}",
             result.cohens_d
         );
-        assert_eq!(result.magnitude, "small");
+        assert_eq!(result.magnitude, "negligible");
     }
 
     #[test]
-    fn test_cohens_d_classification_medium() {
+    fn test_cohens_d_classification_small() {
         let analyzer = CompareAnalyzer::new(0.05);
 
         let sample1 = vec![10.5, 11.0, 11.5, 12.0, 12.5];
@@ -462,14 +602,14 @@ mod tests {
 
         assert!(
             result.cohens_d.abs() >= 0.2,
-            "Effect size should be at least medium, got d={}",
+            "Effect size should be at least small, got d={}",
             result.cohens_d
         );
-        assert!(result.magnitude == "medium" || result.magnitude == "large");
+        assert!(result.magnitude == "small" || result.magnitude == "medium");
     }
 
     #[test]
-    fn test_cohens_d_classification_large() {
+    fn test_cohens_d_classification_medium() {
         let analyzer = CompareAnalyzer::new(0.05);
 
         let sample1 = vec![15.0, 16.0, 17.0, 18.0, 19.0];
@@ -478,11 +618,11 @@ mod tests {
         let result = analyzer.cohens_d(&sample1, &sample2, "test_metric");
 
         assert!(result.cohens_d.abs() >= 0.5);
-        assert!(result.magnitude == "large" || result.magnitude == "very_large");
+        assert!(result.magnitude == "medium" || result.magnitude == "large");
     }
 
     #[test]
-    fn test_cohens_d_classification_very_large() {
+    fn test_cohens_d_classification_large() {
         let analyzer = CompareAnalyzer::new(0.05);
 
         let sample1 = vec![20.0, 22.0, 24.0, 26.0, 28.0];
@@ -491,7 +631,7 @@ mod tests {
         let result = analyzer.cohens_d(&sample1, &sample2, "test_metric");
 
         assert!(result.cohens_d.abs() >= 0.8);
-        assert_eq!(result.magnitude, "very_large");
+        assert_eq!(result.magnitude, "large");
     }
 
     #[test]
@@ -503,12 +643,15 @@ mod tests {
         let result = analyzer.cohens_d(&sample1, &sample2, "test_metric");
 
         assert!(result.cohens_d.abs() < 1e-10);
-        assert_eq!(result.magnitude, "small");
+        assert_eq!(result.magnitude, "negligible");
     }
 
     #[test]
     fn test_cohens_d_negative_values() {
         let analyzer = CompareAnalyzer::new(0.05);
+        // Convention: sample1 = baseline, sample2 = comparison.
+        // When baseline mean < comparison mean, Cohen's d is negative,
+        // meaning the comparison framework has higher values.
         let sample1 = vec![10.0, 11.0, 12.0, 13.0, 14.0];
         let sample2 = vec![20.0, 21.0, 22.0, 23.0, 24.0];
 
@@ -516,23 +659,38 @@ mod tests {
 
         assert!(
             result.cohens_d < 0.0,
-            "Cohen's d should be negative when baseline is lower"
+            "Cohen's d should be negative when baseline (sample1) mean is lower than comparison (sample2) mean"
         );
     }
 
     #[test]
     fn test_effect_size_classification_boundaries() {
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.0), "small");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.1), "small");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.19), "small");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.2), "medium");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.4), "medium");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.49), "medium");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.5), "large");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.7), "large");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.79), "large");
-        assert_eq!(CompareAnalyzer::classify_effect_size(0.8), "very_large");
-        assert_eq!(CompareAnalyzer::classify_effect_size(1.0), "very_large");
-        assert_eq!(CompareAnalyzer::classify_effect_size(2.0), "very_large");
+        // Cohen's d classification (Cohen, 1988):
+        // < 0.2: negligible, 0.2-0.5: small, 0.5-0.8: medium, >= 0.8: large
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.0), "negligible");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.1), "negligible");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.19), "negligible");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.2), "small");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.4), "small");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.49), "small");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.5), "medium");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.7), "medium");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.79), "medium");
+        assert_eq!(CompareAnalyzer::classify_effect_size(0.8), "large");
+        assert_eq!(CompareAnalyzer::classify_effect_size(1.0), "large");
+        assert_eq!(CompareAnalyzer::classify_effect_size(2.0), "large");
+    }
+
+    #[test]
+    fn test_geometric_mean() {
+        // geometric mean of [2, 8] = sqrt(16) = 4
+        let result = CompareAnalyzer::geometric_mean(&[2.0, 8.0]);
+        assert!((result - 4.0).abs() < 1e-10, "Expected 4.0, got {result}");
+
+        // geometric mean of empty = 1.0
+        assert!((CompareAnalyzer::geometric_mean(&[]) - 1.0).abs() < 1e-10);
+
+        // geometric mean of [1.0] = 1.0
+        assert!((CompareAnalyzer::geometric_mean(&[1.0]) - 1.0).abs() < 1e-10);
     }
 }

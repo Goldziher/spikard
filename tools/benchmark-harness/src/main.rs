@@ -215,9 +215,9 @@ enum Commands {
         #[arg(short, long, default_value = "100")]
         concurrency: usize,
 
-        /// Number of warmup requests per framework
-        #[arg(short, long, default_value = "100")]
-        warmup: usize,
+        /// Warmup duration in seconds per framework
+        #[arg(short, long, default_value = "10")]
+        warmup: u64,
     },
 
     /// Consolidate multiple profile results into a single aggregated report
@@ -311,18 +311,12 @@ fn handle_check_tools() {
     println!("Checking for load generators...\n");
 
     let oha = which::which("oha").is_ok();
-    let bombardier = which::which("bombardier").is_ok();
 
-    println!("  oha:        {}", if oha { "✓ installed" } else { "✗ not found" });
-    println!(
-        "  bombardier: {}",
-        if bombardier { "✓ installed" } else { "✗ not found" }
-    );
+    println!("  oha: {}", if oha { "✓ installed" } else { "✗ not found" });
 
-    if !oha && !bombardier {
+    if !oha {
         println!("\n⚠ No load generators found!");
         println!("Install oha: cargo install oha");
-        println!("Install bombardier: go install github.com/codesenberg/bombardier@latest");
         std::process::exit(1);
     }
 
@@ -346,6 +340,14 @@ async fn handle_stream(
     } else {
         println!("🔍 Auto-detecting framework in {}...", app_dir.display());
         let detected = detect_framework(&app_dir)?;
+
+        if detected.skip {
+            let reason = detected.skip_reason.as_deref().unwrap_or("No reason provided");
+            println!("⏭️  Skipping framework: {}", detected.name);
+            println!("   Reason: {reason}");
+            return Ok(());
+        }
+
         println!("✓ Detected framework: {}", detected.name);
         detected.name
     };
@@ -420,6 +422,14 @@ async fn handle_profile(
     } else {
         println!("🔍 Auto-detecting framework in {}...", app_dir.display());
         let detected = detect_framework(&app_dir)?;
+
+        if detected.skip {
+            let reason = detected.skip_reason.as_deref().unwrap_or("No reason provided");
+            println!("⏭️  Skipping framework: {}", detected.name);
+            println!("   Reason: {reason}");
+            return Ok(());
+        }
+
         println!("✓ Detected framework: {}", detected.name);
         detected.name
     };
@@ -504,6 +514,14 @@ async fn handle_run(
     } else {
         println!("🔍 Auto-detecting framework in {}...", app_dir.display());
         let detected = detect_framework(&app_dir)?;
+
+        if detected.skip {
+            let reason = detected.skip_reason.as_deref().unwrap_or("No reason provided");
+            println!("⏭️  Skipping framework: {}", detected.name);
+            println!("   Reason: {reason}");
+            return Ok(());
+        }
+
         println!("✓ Detected framework: {}", detected.name);
         detected.name
     };
@@ -710,7 +728,7 @@ async fn main() -> Result<()> {
                 frameworks,
                 workload_suite: suite.clone(),
                 port,
-                warmup_requests: warmup,
+                warmup_secs: warmup,
                 output_dir: output.clone(),
                 significance_threshold: significance,
                 duration_secs: duration,

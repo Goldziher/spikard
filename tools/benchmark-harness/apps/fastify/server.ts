@@ -67,45 +67,87 @@ interface DateResponse {
 }
 
 fastify.post("/json/small", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.body;
 });
 
 fastify.post("/json/medium", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.body;
 });
 
 fastify.post("/json/large", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.body;
 });
 
 fastify.post("/json/very-large", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.body;
 });
 
-fastify.post("/multipart/small", async (_request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
-	return { files_received: 1, total_bytes: 1024 };
+fastify.post("/multipart/small", async (request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
+	const parts = request.parts();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for await (const part of parts) {
+		if (part.type === "file" && part.fieldname.startsWith("file")) {
+			files_received++;
+			const chunks: Buffer[] = [];
+			for await (const chunk of part.file) {
+				chunks.push(chunk);
+			}
+			const buffer = Buffer.concat(chunks);
+			total_bytes += buffer.length;
+		}
+	}
+
+	return { files_received, total_bytes };
 });
 
-fastify.post("/multipart/medium", async (_request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
-	return { files_received: 2, total_bytes: 10240 };
+fastify.post("/multipart/medium", async (request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
+	const parts = request.parts();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for await (const part of parts) {
+		if (part.type === "file" && part.fieldname.startsWith("file")) {
+			files_received++;
+			const chunks: Buffer[] = [];
+			for await (const chunk of part.file) {
+				chunks.push(chunk);
+			}
+			const buffer = Buffer.concat(chunks);
+			total_bytes += buffer.length;
+		}
+	}
+
+	return { files_received, total_bytes };
 });
 
-fastify.post("/multipart/large", async (_request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
-	return { files_received: 5, total_bytes: 102400 };
+fastify.post("/multipart/large", async (request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
+	const parts = request.parts();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for await (const part of parts) {
+		if (part.type === "file" && part.fieldname.startsWith("file")) {
+			files_received++;
+			const chunks: Buffer[] = [];
+			for await (const chunk of part.file) {
+				chunks.push(chunk);
+			}
+			const buffer = Buffer.concat(chunks);
+			total_bytes += buffer.length;
+		}
+	}
+
+	return { files_received, total_bytes };
 });
 
 fastify.post("/urlencoded/simple", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.body;
 });
 
 fastify.post("/urlencoded/complex", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.body;
 });
 
 fastify.get(
@@ -157,18 +199,15 @@ fastify.get(
 );
 
 fastify.get("/query/few", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.query;
 });
 
 fastify.get("/query/medium", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.query;
 });
 
 fastify.get("/query/many", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	void request;
-	return { ok: true };
+	return request.query;
 });
 
 fastify.get("/health", async (_request: FastifyRequest, _reply: FastifyReply): Promise<StatusResponse> => {
@@ -268,23 +307,66 @@ const veryLargePayloadSchema = {
 
 const urlencodedSimpleSchema = {
 	type: "object",
+	required: ["name", "email", "age", "subscribe"],
 	properties: {
-		username: { type: "string" },
-		password: { type: "string" },
+		name: { type: "string" },
+		email: { type: "string" },
+		age: { type: "string" },
+		subscribe: { type: "string" },
 	},
+	additionalProperties: false,
 } as const;
 
 const urlencodedComplexSchema = {
 	type: "object",
-	additionalProperties: true,
+	required: [
+		"username",
+		"password",
+		"email",
+		"first_name",
+		"last_name",
+		"age",
+		"country",
+		"state",
+		"city",
+		"zip",
+		"phone",
+		"company",
+		"job_title",
+		"subscribe",
+		"newsletter",
+		"terms_accepted",
+		"privacy_accepted",
+		"marketing_consent",
+		"two_factor_enabled",
+	],
+	properties: {
+		username: { type: "string" },
+		password: { type: "string" },
+		email: { type: "string" },
+		first_name: { type: "string" },
+		last_name: { type: "string" },
+		age: { type: "string" },
+		country: { type: "string" },
+		state: { type: "string" },
+		city: { type: "string" },
+		zip: { type: "string" },
+		phone: { type: "string" },
+		company: { type: "string" },
+		job_title: { type: "string" },
+		subscribe: { type: "string" },
+		newsletter: { type: "string" },
+		terms_accepted: { type: "string" },
+		privacy_accepted: { type: "string" },
+		marketing_consent: { type: "string" },
+		two_factor_enabled: { type: "string" },
+	},
+	additionalProperties: false,
 } as const;
 
 fastify.post("/validated/json/small", {
 	schema: {
 		body: smallPayloadSchema,
-		response: {
-			200: smallPayloadSchema,
-		},
 	},
 	handler: async (request, _reply) => {
 		return request.body;
@@ -294,9 +376,6 @@ fastify.post("/validated/json/small", {
 fastify.post("/validated/json/medium", {
 	schema: {
 		body: mediumPayloadSchema,
-		response: {
-			200: mediumPayloadSchema,
-		},
 	},
 	handler: async (request, _reply) => {
 		return request.body;
@@ -306,9 +385,6 @@ fastify.post("/validated/json/medium", {
 fastify.post("/validated/json/large", {
 	schema: {
 		body: largePayloadSchema,
-		response: {
-			200: largePayloadSchema,
-		},
 	},
 	handler: async (request, _reply) => {
 		return request.body;
@@ -318,33 +394,90 @@ fastify.post("/validated/json/large", {
 fastify.post("/validated/json/very-large", {
 	schema: {
 		body: veryLargePayloadSchema,
-		response: {
-			200: veryLargePayloadSchema,
-		},
 	},
 	handler: async (request, _reply) => {
 		return request.body;
 	},
 });
 
-fastify.post("/validated/multipart/small", async (_request, _reply) => {
-	return { files_received: 1, total_bytes: 1024 };
+fastify.post("/validated/multipart/small", async (request, reply) => {
+	const parts = request.parts();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for await (const part of parts) {
+		if (part.type === "file" && part.fieldname.startsWith("file")) {
+			files_received++;
+			const chunks: Buffer[] = [];
+			for await (const chunk of part.file) {
+				chunks.push(chunk);
+			}
+			const buffer = Buffer.concat(chunks);
+			total_bytes += buffer.length;
+		}
+	}
+
+	if (files_received === 0) {
+		reply.code(400);
+		return { error: "No files received" };
+	}
+
+	return { files_received, total_bytes };
 });
 
-fastify.post("/validated/multipart/medium", async (_request, _reply) => {
-	return { files_received: 2, total_bytes: 10240 };
+fastify.post("/validated/multipart/medium", async (request, reply) => {
+	const parts = request.parts();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for await (const part of parts) {
+		if (part.type === "file" && part.fieldname.startsWith("file")) {
+			files_received++;
+			const chunks: Buffer[] = [];
+			for await (const chunk of part.file) {
+				chunks.push(chunk);
+			}
+			const buffer = Buffer.concat(chunks);
+			total_bytes += buffer.length;
+		}
+	}
+
+	if (files_received === 0) {
+		reply.code(400);
+		return { error: "No files received" };
+	}
+
+	return { files_received, total_bytes };
 });
 
-fastify.post("/validated/multipart/large", async (_request, _reply) => {
-	return { files_received: 5, total_bytes: 102400 };
+fastify.post("/validated/multipart/large", async (request, reply) => {
+	const parts = request.parts();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for await (const part of parts) {
+		if (part.type === "file" && part.fieldname.startsWith("file")) {
+			files_received++;
+			const chunks: Buffer[] = [];
+			for await (const chunk of part.file) {
+				chunks.push(chunk);
+			}
+			const buffer = Buffer.concat(chunks);
+			total_bytes += buffer.length;
+		}
+	}
+
+	if (files_received === 0) {
+		reply.code(400);
+		return { error: "No files received" };
+	}
+
+	return { files_received, total_bytes };
 });
 
 fastify.post("/validated/urlencoded/simple", {
 	schema: {
 		body: urlencodedSimpleSchema,
-		response: {
-			200: urlencodedSimpleSchema,
-		},
 	},
 	handler: async (request, _reply) => {
 		return request.body;
@@ -354,37 +487,72 @@ fastify.post("/validated/urlencoded/simple", {
 fastify.post("/validated/urlencoded/complex", {
 	schema: {
 		body: urlencodedComplexSchema,
-		response: {
-			200: urlencodedComplexSchema,
-		},
 	},
 	handler: async (request, _reply) => {
 		return request.body;
 	},
 });
 
-fastify.get("/validated/path/simple/:id", async (request, _reply) => {
-	const { id } = request.params as { id: string };
-	return { id };
+fastify.get("/validated/path/simple/:id", {
+	schema: {
+		params: {
+			type: "object",
+			properties: {
+				id: { type: "string", minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" },
+			},
+			required: ["id"],
+		},
+	},
+	handler: async (request, _reply) => {
+		const { id } = request.params as { id: string };
+		return { id };
+	},
 });
 
-fastify.get("/validated/path/multiple/:user_id/:post_id", async (request, _reply) => {
-	const { user_id, post_id } = request.params as {
-		user_id: string;
-		post_id: string;
-	};
-	return { user_id, post_id };
+fastify.get("/validated/path/multiple/:user_id/:post_id", {
+	schema: {
+		params: {
+			type: "object",
+			properties: {
+				user_id: { type: "string", minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" },
+				post_id: { type: "string", minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" },
+			},
+			required: ["user_id", "post_id"],
+		},
+	},
+	handler: async (request, _reply) => {
+		const { user_id, post_id } = request.params as {
+			user_id: string;
+			post_id: string;
+		};
+		return { user_id, post_id };
+	},
 });
 
-fastify.get("/validated/path/deep/:org/:team/:project/:resource/:id", async (request, _reply) => {
-	const { org, team, project, resource, id } = request.params as {
-		org: string;
-		team: string;
-		project: string;
-		resource: string;
-		id: string;
-	};
-	return { org, team, project, resource, id };
+fastify.get("/validated/path/deep/:org/:team/:project/:resource/:id", {
+	schema: {
+		params: {
+			type: "object",
+			properties: {
+				org: { type: "string", minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" },
+				team: { type: "string", minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" },
+				project: { type: "string", minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" },
+				resource: { type: "string", minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" },
+				id: { type: "string", minLength: 1, maxLength: 255, pattern: "^[a-zA-Z0-9_-]+$" },
+			},
+			required: ["org", "team", "project", "resource", "id"],
+		},
+	},
+	handler: async (request, _reply) => {
+		const { org, team, project, resource, id } = request.params as {
+			org: string;
+			team: string;
+			project: string;
+			resource: string;
+			id: string;
+		};
+		return { org, team, project, resource, id };
+	},
 });
 
 fastify.get("/validated/path/int/:id", {
@@ -435,19 +603,72 @@ fastify.get("/validated/path/date/:date", {
 	},
 });
 
-fastify.get("/validated/query/few", async (request, _reply) => {
-	void request;
-	return { ok: true };
+fastify.get("/validated/query/few", {
+	schema: {
+		querystring: {
+			type: "object",
+			required: ["q"],
+			properties: {
+				q: { type: "string" },
+				page: { type: "integer" },
+				limit: { type: "integer" },
+			},
+		},
+	},
+	handler: async (request, _reply) => {
+		return request.query;
+	},
 });
 
-fastify.get("/validated/query/medium", async (request, _reply) => {
-	void request;
-	return { ok: true };
+fastify.get("/validated/query/medium", {
+	schema: {
+		querystring: {
+			type: "object",
+			required: ["search"],
+			properties: {
+				search: { type: "string" },
+				category: { type: "string" },
+				sort: { type: "string" },
+				order: { type: "string" },
+				page: { type: "integer" },
+				limit: { type: "integer" },
+				filter: { type: "string" },
+			},
+		},
+	},
+	handler: async (request, _reply) => {
+		return request.query;
+	},
 });
 
-fastify.get("/validated/query/many", async (request, _reply) => {
-	void request;
-	return { ok: true };
+fastify.get("/validated/query/many", {
+	schema: {
+		querystring: {
+			type: "object",
+			required: ["q"],
+			properties: {
+				q: { type: "string" },
+				category: { type: "string" },
+				subcategory: { type: "string" },
+				brand: { type: "string" },
+				min_price: { type: "number" },
+				max_price: { type: "number" },
+				color: { type: "string" },
+				size: { type: "string" },
+				material: { type: "string" },
+				rating: { type: "integer" },
+				sort: { type: "string" },
+				order: { type: "string" },
+				page: { type: "integer" },
+				limit: { type: "integer" },
+				in_stock: { type: "boolean" },
+				on_sale: { type: "boolean" },
+			},
+		},
+	},
+	handler: async (request, _reply) => {
+		return request.query;
+	},
 });
 
 // ============================================================================

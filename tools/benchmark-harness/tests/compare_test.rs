@@ -21,7 +21,7 @@ async fn test_error_min_frameworks() {
         port: 8100,
         duration_secs: 5,
         concurrency: 10,
-        warmup_requests: 10,
+        warmup_secs: 10,
         output_dir: PathBuf::from("./test-output/error-min"),
         significance_threshold: 0.05,
     };
@@ -52,7 +52,7 @@ async fn test_error_invalid_workload_suite() {
         port: 8100,
         duration_secs: 5,
         concurrency: 10,
-        warmup_requests: 10,
+        warmup_secs: 10,
         output_dir: PathBuf::from("./test-output/error-suite"),
         significance_threshold: 0.05,
     };
@@ -79,7 +79,7 @@ async fn test_config_defaults() {
 
     assert_eq!(config.workload_suite, "all");
     assert_eq!(config.port, 8100);
-    assert_eq!(config.warmup_requests, 100);
+    assert_eq!(config.warmup_secs, 10);
     assert!((config.significance_threshold - 0.05).abs() < 1e-10);
     assert_eq!(config.duration_secs, 30);
     assert_eq!(config.concurrency, 100);
@@ -97,7 +97,7 @@ async fn test_port_allocation_strategy() {
         port: 8100,
         duration_secs: 5,
         concurrency: 10,
-        warmup_requests: 10,
+        warmup_secs: 10,
         output_dir: PathBuf::from("./test-output/port-test"),
         significance_threshold: 0.05,
     };
@@ -237,7 +237,7 @@ async fn test_error_invalid_framework() {
         port: 8100,
         duration_secs: 5,
         concurrency: 10,
-        warmup_requests: 10,
+        warmup_secs: 10,
         output_dir: PathBuf::from("./test-output/error-framework"),
         significance_threshold: 0.05,
     };

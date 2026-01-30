@@ -62,6 +62,7 @@ fn test_server_handle_pid() {
         port: 8000,
         base_url: "http://localhost:8000".to_string(),
         stop_signal: libc::SIGTERM,
+        killed: false,
     };
 
     assert_eq!(handle.pid(), pid);
@@ -87,6 +88,7 @@ fn test_server_handle_kill() {
         port: 8000,
         base_url: "http://localhost:8000".to_string(),
         stop_signal: libc::SIGTERM,
+        killed: false,
     };
 
     let result = handle.kill();
@@ -119,6 +121,7 @@ fn test_server_handle_drop() {
             port: 8000,
             base_url: "http://localhost:8000".to_string(),
             stop_signal: libc::SIGTERM,
+            killed: false,
         };
     }
 

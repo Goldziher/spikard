@@ -98,6 +98,42 @@ UrlencodedComplexSchema = Dry::Schema.Params do
   required(:two_factor_enabled).filled(:bool)
 end
 
+# Query parameter schemas
+QueryFewSchema = Dry::Schema.Params do
+  required(:q).filled(:string)
+  optional(:page).filled(:integer)
+  optional(:limit).filled(:integer)
+end
+
+QueryMediumSchema = Dry::Schema.Params do
+  required(:search).filled(:string)
+  optional(:category).filled(:string)
+  optional(:sort).filled(:string)
+  optional(:order).filled(:string)
+  optional(:page).filled(:integer)
+  optional(:limit).filled(:integer)
+  optional(:filter).filled(:string)
+end
+
+QueryManySchema = Dry::Schema.Params do
+  required(:q).filled(:string)
+  optional(:category).filled(:string)
+  optional(:subcategory).filled(:string)
+  optional(:brand).filled(:string)
+  optional(:min_price).filled(:float)
+  optional(:max_price).filled(:float)
+  optional(:color).filled(:string)
+  optional(:size).filled(:string)
+  optional(:material).filled(:string)
+  optional(:rating).filled(:integer)
+  optional(:sort).filled(:string)
+  optional(:order).filled(:string)
+  optional(:page).filled(:integer)
+  optional(:limit).filled(:integer)
+  optional(:in_stock).filled(:bool)
+  optional(:on_sale).filled(:bool)
+end
+
 # ============================================================================
 # Hanami API Application (Raw + Validated)
 # ============================================================================
@@ -107,36 +143,73 @@ class BenchmarkApp < Hanami::API
 
   # JSON body endpoints - parse and echo without validation
   post '/json/small' do
+    env['rack.input'].rewind
     body = JSON.parse(env['rack.input'].read)
     json(body)
   end
 
   post '/json/medium' do
+    env['rack.input'].rewind
     body = JSON.parse(env['rack.input'].read)
     json(body)
   end
 
   post '/json/large' do
+    env['rack.input'].rewind
     body = JSON.parse(env['rack.input'].read)
     json(body)
   end
 
   post '/json/very-large' do
+    env['rack.input'].rewind
     body = JSON.parse(env['rack.input'].read)
     json(body)
   end
 
-  # Multipart form endpoints (stub implementations - same as validated version)
+  # Multipart form endpoints - parse actual uploaded files
   post '/multipart/small' do
-    json({ files_received: 1, total_bytes: 1024 })
+    request = Rack::Request.new(env)
+    files_received = 0
+    total_bytes = 0
+
+    request.params.each do |key, value|
+      if value.is_a?(Hash) && value[:tempfile]
+        files_received += 1
+        total_bytes += value[:tempfile].size
+      end
+    end
+
+    json({ files_received: files_received, total_bytes: total_bytes })
   end
 
   post '/multipart/medium' do
-    json({ files_received: 2, total_bytes: 10240 })
+    request = Rack::Request.new(env)
+    files_received = 0
+    total_bytes = 0
+
+    request.params.each do |key, value|
+      if value.is_a?(Hash) && value[:tempfile]
+        files_received += 1
+        total_bytes += value[:tempfile].size
+      end
+    end
+
+    json({ files_received: files_received, total_bytes: total_bytes })
   end
 
   post '/multipart/large' do
-    json({ files_received: 5, total_bytes: 102400 })
+    request = Rack::Request.new(env)
+    files_received = 0
+    total_bytes = 0
+
+    request.params.each do |key, value|
+      if value.is_a?(Hash) && value[:tempfile]
+        files_received += 1
+        total_bytes += value[:tempfile].size
+      end
+    end
+
+    json({ files_received: files_received, total_bytes: total_bytes })
   end
 
   # URL-encoded form endpoints - accept params without validation
@@ -211,6 +284,7 @@ class BenchmarkApp < Hanami::API
 
   # JSON body endpoints - validate and echo back
   post '/validated/json/small' do
+    env['rack.input'].rewind
     body = JSON.parse(env['rack.input'].read)
     result = SmallPayloadSchema.call(body)
 
@@ -222,6 +296,7 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/medium' do
+    env['rack.input'].rewind
     body = JSON.parse(env['rack.input'].read)
     result = MediumPayloadSchema.call(body)
 
@@ -233,6 +308,7 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/large' do
+    env['rack.input'].rewind
     body = JSON.parse(env['rack.input'].read)
     result = LargePayloadSchema.call(body)
 
@@ -244,6 +320,7 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/very-large' do
+    env['rack.input'].rewind
     body = JSON.parse(env['rack.input'].read)
     result = VeryLargePayloadSchema.call(body)
 
@@ -254,17 +331,62 @@ class BenchmarkApp < Hanami::API
     end
   end
 
-  # Multipart form endpoints (stub implementations - return expected format)
+  # Multipart form endpoints - parse and validate actual uploaded files
   post '/validated/multipart/small' do
-    json({ files_received: 1, total_bytes: 1024 })
+    request = Rack::Request.new(env)
+    files_received = 0
+    total_bytes = 0
+
+    request.params.each do |key, value|
+      if value.is_a?(Hash) && value[:tempfile]
+        files_received += 1
+        total_bytes += value[:tempfile].size
+      end
+    end
+
+    if files_received == 0
+      halt 400, json({ error: 'No files uploaded' })
+    end
+
+    json({ files_received: files_received, total_bytes: total_bytes })
   end
 
   post '/validated/multipart/medium' do
-    json({ files_received: 2, total_bytes: 10240 })
+    request = Rack::Request.new(env)
+    files_received = 0
+    total_bytes = 0
+
+    request.params.each do |key, value|
+      if value.is_a?(Hash) && value[:tempfile]
+        files_received += 1
+        total_bytes += value[:tempfile].size
+      end
+    end
+
+    if files_received == 0
+      halt 400, json({ error: 'No files uploaded' })
+    end
+
+    json({ files_received: files_received, total_bytes: total_bytes })
   end
 
   post '/validated/multipart/large' do
-    json({ files_received: 5, total_bytes: 102400 })
+    request = Rack::Request.new(env)
+    files_received = 0
+    total_bytes = 0
+
+    request.params.each do |key, value|
+      if value.is_a?(Hash) && value[:tempfile]
+        files_received += 1
+        total_bytes += value[:tempfile].size
+      end
+    end
+
+    if files_received == 0
+      halt 400, json({ error: 'No files uploaded' })
+    end
+
+    json({ files_received: files_received, total_bytes: total_bytes })
   end
 
   # URL-encoded form endpoints
@@ -288,25 +410,47 @@ class BenchmarkApp < Hanami::API
     end
   end
 
-  # Path parameter endpoints - extract and return params
+  # Path parameter endpoints - validate string params
   get '/validated/path/simple/:id' do
-    json({ id: params[:id] })
+    id = params[:id]
+    unless id =~ /\A[a-zA-Z0-9_-]+\z/ && !id.empty? && id.length <= 255
+      halt 400, json({ error: 'Invalid path parameter format' })
+    end
+    json({ id: id })
   end
 
   get '/validated/path/multiple/:user_id/:post_id' do
+    user_id = params[:user_id]
+    post_id = params[:post_id]
+    unless user_id =~ /\A[a-zA-Z0-9_-]+\z/ && !user_id.empty? && user_id.length <= 255
+      halt 400, json({ error: 'Invalid path parameter format' })
+    end
+    unless post_id =~ /\A[a-zA-Z0-9_-]+\z/ && !post_id.empty? && post_id.length <= 255
+      halt 400, json({ error: 'Invalid path parameter format' })
+    end
     json({
-      user_id: params[:user_id],
-      post_id: params[:post_id]
+      user_id: user_id,
+      post_id: post_id
     })
   end
 
   get '/validated/path/deep/:org/:team/:project/:resource/:id' do
+    org = params[:org]
+    team = params[:team]
+    project = params[:project]
+    resource = params[:resource]
+    id = params[:id]
+    [org, team, project, resource, id].each do |param|
+      unless param =~ /\A[a-zA-Z0-9_-]+\z/ && !param.empty? && param.length <= 255
+        halt 400, json({ error: 'Invalid path parameter format' })
+      end
+    end
     json({
-      org: params[:org],
-      team: params[:team],
-      project: params[:project],
-      resource: params[:resource],
-      id: params[:id]
+      org: org,
+      team: team,
+      project: project,
+      resource: resource,
+      id: id
     })
   end
 
@@ -336,35 +480,35 @@ class BenchmarkApp < Hanami::API
     end
   end
 
-  # Query parameter endpoints - return query params as JSON
+  # Query parameter endpoints - validate and return query params as JSON
   get '/validated/query/few' do
-    result = {}
-    result[:q] = params[:q] if params[:q]
-    result[:page] = params[:page].to_i if params[:page]
-    result[:limit] = params[:limit].to_i if params[:limit]
-    json(result)
+    result = QueryFewSchema.call(params)
+
+    if result.success?
+      json(result.to_h)
+    else
+      halt 400, json({ errors: result.errors.to_h })
+    end
   end
 
   get '/validated/query/medium' do
-    # Return all query params from request
-    query_string = env['QUERY_STRING'] || ''
-    result = {}
-    query_string.split('&').each do |pair|
-      key, value = pair.split('=', 2)
-      result[key] = value if key && value
+    result = QueryMediumSchema.call(params)
+
+    if result.success?
+      json(result.to_h)
+    else
+      halt 400, json({ errors: result.errors.to_h })
     end
-    json(result)
   end
 
   get '/validated/query/many' do
-    # Return all query params from request
-    query_string = env['QUERY_STRING'] || ''
-    result = {}
-    query_string.split('&').each do |pair|
-      key, value = pair.split('=', 2)
-      result[key] = value if key && value
+    result = QueryManySchema.call(params)
+
+    if result.success?
+      json(result.to_h)
+    else
+      halt 400, json({ errors: result.errors.to_h })
     end
-    json(result)
   end
 
   # Health check endpoints

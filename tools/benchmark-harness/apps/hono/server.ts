@@ -37,16 +37,49 @@ app.post("/json/very-large", async (c) => {
 	return c.json(body);
 });
 
-app.post("/multipart/small", (c) => {
-	return c.json({ files_received: 1, total_bytes: 1024 });
+app.post("/multipart/small", async (c) => {
+	const formData = await c.req.formData();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of formData.entries()) {
+		if (key.startsWith("file") && value instanceof File) {
+			files_received++;
+			total_bytes += value.size;
+		}
+	}
+
+	return c.json({ files_received, total_bytes });
 });
 
-app.post("/multipart/medium", (c) => {
-	return c.json({ files_received: 2, total_bytes: 10240 });
+app.post("/multipart/medium", async (c) => {
+	const formData = await c.req.formData();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of formData.entries()) {
+		if (key.startsWith("file") && value instanceof File) {
+			files_received++;
+			total_bytes += value.size;
+		}
+	}
+
+	return c.json({ files_received, total_bytes });
 });
 
-app.post("/multipart/large", (c) => {
-	return c.json({ files_received: 5, total_bytes: 102400 });
+app.post("/multipart/large", async (c) => {
+	const formData = await c.req.formData();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of formData.entries()) {
+		if (key.startsWith("file") && value instanceof File) {
+			files_received++;
+			total_bytes += value.size;
+		}
+	}
+
+	return c.json({ files_received, total_bytes });
 });
 
 app.post("/urlencoded/simple", async (c) => {
@@ -187,6 +220,87 @@ const DateParamSchema = z.object({
 	date: z.string().date(),
 });
 
+const StringParamSimpleSchema = z.object({
+	id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+});
+
+const StringParamMultipleSchema = z.object({
+	user_id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	post_id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+});
+
+const StringParamDeepSchema = z.object({
+	org: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	team: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	project: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	resource: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+});
+
+const UrlencodedSimpleSchema = z.object({
+	name: z.string(),
+	email: z.string(),
+	age: z.union([z.string(), z.coerce.number().int()]),
+	subscribe: z.union([z.string(), z.coerce.boolean()]),
+});
+
+const UrlencodedComplexSchema = z.object({
+	username: z.string(),
+	password: z.string(),
+	email: z.string(),
+	first_name: z.string(),
+	last_name: z.string(),
+	age: z.union([z.string(), z.coerce.number().int()]),
+	country: z.string(),
+	state: z.string(),
+	city: z.string(),
+	zip: z.string(),
+	phone: z.string(),
+	company: z.string(),
+	job_title: z.string(),
+	subscribe: z.union([z.string(), z.coerce.boolean()]),
+	newsletter: z.union([z.string(), z.coerce.boolean()]),
+	terms_accepted: z.union([z.string(), z.coerce.boolean()]),
+	privacy_accepted: z.union([z.string(), z.coerce.boolean()]),
+	marketing_consent: z.union([z.string(), z.coerce.boolean()]),
+	two_factor_enabled: z.union([z.string(), z.coerce.boolean()]),
+});
+
+const QueryFewSchema = z.object({
+	q: z.string(),
+	page: z.coerce.number().int().optional(),
+	limit: z.coerce.number().int().optional(),
+});
+
+const QueryMediumSchema = z.object({
+	search: z.string(),
+	category: z.string().optional(),
+	sort: z.string().optional(),
+	order: z.string().optional(),
+	page: z.coerce.number().int().optional(),
+	limit: z.coerce.number().int().optional(),
+	filter: z.string().optional(),
+});
+
+const QueryManySchema = z.object({
+	q: z.string(),
+	category: z.string().optional(),
+	subcategory: z.string().optional(),
+	brand: z.string().optional(),
+	min_price: z.coerce.number().optional(),
+	max_price: z.coerce.number().optional(),
+	color: z.string().optional(),
+	size: z.string().optional(),
+	material: z.string().optional(),
+	rating: z.coerce.number().int().optional(),
+	sort: z.string().optional(),
+	order: z.string().optional(),
+	page: z.coerce.number().int().optional(),
+	limit: z.coerce.number().int().optional(),
+	in_stock: z.coerce.boolean().optional(),
+	on_sale: z.coerce.boolean().optional(),
+});
+
 app.post("/validated/json/small", zValidator("json", SmallPayloadSchema), (c) => {
 	const validated: SmallPayload = c.req.valid("json");
 	return c.json(validated);
@@ -212,37 +326,82 @@ interface MultipartResponse {
 	total_bytes: number;
 }
 
-app.post("/validated/multipart/small", (c) => {
-	const response: MultipartResponse = { files_received: 1, total_bytes: 1024 };
+app.post("/validated/multipart/small", async (c) => {
+	const formData = await c.req.formData();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of formData.entries()) {
+		if (key.startsWith("file") && value instanceof File) {
+			files_received++;
+			total_bytes += value.size;
+		}
+	}
+
+	if (files_received === 0) {
+		return c.json({ error: "No files received" }, 400);
+	}
+
+	const response: MultipartResponse = { files_received, total_bytes };
 	return c.json(response);
 });
 
-app.post("/validated/multipart/medium", (c) => {
-	const response: MultipartResponse = { files_received: 2, total_bytes: 10240 };
+app.post("/validated/multipart/medium", async (c) => {
+	const formData = await c.req.formData();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of formData.entries()) {
+		if (key.startsWith("file") && value instanceof File) {
+			files_received++;
+			total_bytes += value.size;
+		}
+	}
+
+	if (files_received === 0) {
+		return c.json({ error: "No files received" }, 400);
+	}
+
+	const response: MultipartResponse = { files_received, total_bytes };
 	return c.json(response);
 });
 
-app.post("/validated/multipart/large", (c) => {
-	const response: MultipartResponse = { files_received: 5, total_bytes: 102400 };
+app.post("/validated/multipart/large", async (c) => {
+	const formData = await c.req.formData();
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of formData.entries()) {
+		if (key.startsWith("file") && value instanceof File) {
+			files_received++;
+			total_bytes += value.size;
+		}
+	}
+
+	if (files_received === 0) {
+		return c.json({ error: "No files received" }, 400);
+	}
+
+	const response: MultipartResponse = { files_received, total_bytes };
 	return c.json(response);
 });
 
-app.post("/validated/urlencoded/simple", async (c) => {
-	const body: Record<string, string | File> = await c.req.parseBody();
-	return c.json(body);
+app.post("/validated/urlencoded/simple", zValidator("form", UrlencodedSimpleSchema), (c) => {
+	const validated = c.req.valid("form");
+	return c.json(validated);
 });
 
-app.post("/validated/urlencoded/complex", async (c) => {
-	const body: Record<string, string | File> = await c.req.parseBody();
-	return c.json(body);
+app.post("/validated/urlencoded/complex", zValidator("form", UrlencodedComplexSchema), (c) => {
+	const validated = c.req.valid("form");
+	return c.json(validated);
 });
 
 interface SimpleIdResponse {
 	id: string;
 }
 
-app.get("/validated/path/simple/:id", (c) => {
-	const id: string = c.req.param("id");
+app.get("/validated/path/simple/:id", zValidator("param", StringParamSimpleSchema), (c) => {
+	const { id } = c.req.valid("param");
 	const response: SimpleIdResponse = { id };
 	return c.json(response);
 });
@@ -252,9 +411,8 @@ interface MultipleParamsResponse {
 	post_id: string;
 }
 
-app.get("/validated/path/multiple/:user_id/:post_id", (c) => {
-	const user_id: string = c.req.param("user_id");
-	const post_id: string = c.req.param("post_id");
+app.get("/validated/path/multiple/:user_id/:post_id", zValidator("param", StringParamMultipleSchema), (c) => {
+	const { user_id, post_id } = c.req.valid("param");
 	const response: MultipleParamsResponse = { user_id, post_id };
 	return c.json(response);
 });
@@ -267,12 +425,8 @@ interface DeepPathResponse {
 	id: string;
 }
 
-app.get("/validated/path/deep/:org/:team/:project/:resource/:id", (c) => {
-	const org: string = c.req.param("org");
-	const team: string = c.req.param("team");
-	const project: string = c.req.param("project");
-	const resource: string = c.req.param("resource");
-	const id: string = c.req.param("id");
+app.get("/validated/path/deep/:org/:team/:project/:resource/:id", zValidator("param", StringParamDeepSchema), (c) => {
+	const { org, team, project, resource, id } = c.req.valid("param");
 	const response: DeepPathResponse = { org, team, project, resource, id };
 	return c.json(response);
 });
@@ -307,19 +461,19 @@ app.get("/validated/path/date/:date", zValidator("param", DateParamSchema), (c) 
 	return c.json(response);
 });
 
-app.get("/validated/query/few", (c) => {
-	const query: Record<string, string> = c.req.query();
-	return c.json(query);
+app.get("/validated/query/few", zValidator("query", QueryFewSchema), (c) => {
+	const validated = c.req.valid("query");
+	return c.json(validated);
 });
 
-app.get("/validated/query/medium", (c) => {
-	const query: Record<string, string> = c.req.query();
-	return c.json(query);
+app.get("/validated/query/medium", zValidator("query", QueryMediumSchema), (c) => {
+	const validated = c.req.valid("query");
+	return c.json(validated);
 });
 
-app.get("/validated/query/many", (c) => {
-	const query: Record<string, string> = c.req.query();
-	return c.json(query);
+app.get("/validated/query/many", zValidator("query", QueryManySchema), (c) => {
+	const validated = c.req.valid("query");
+	return c.json(validated);
 });
 
 // ============================================================================
@@ -344,7 +498,7 @@ function resolvePort(defaultPort = 8000): number {
 
 const port = resolvePort();
 
-console.log(`Starting Hono server on http://localhost:${port}`);
+console.error(`Starting Hono server on http://localhost:${port}`);
 
 serve({
 	fetch: app.fetch,

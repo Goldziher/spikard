@@ -34,9 +34,50 @@ app.post("/json/medium").handler((req, res) => res.json(req.body));
 app.post("/json/large").handler((req, res) => res.json(req.body));
 app.post("/json/very-large").handler((req, res) => res.json(req.body));
 
-app.post("/multipart/small").handler((_req, res) => res.json({ files_received: 1, total_bytes: 1024 }));
-app.post("/multipart/medium").handler((_req, res) => res.json({ files_received: 2, total_bytes: 10240 }));
-app.post("/multipart/large").handler((_req, res) => res.json({ files_received: 5, total_bytes: 102400 }));
+app.post("/multipart/small").handler(async (req, res) => {
+	const formData = req.body as Record<string, unknown>;
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of Object.entries(formData)) {
+		if (key.startsWith("file") && value && typeof value === "object" && "size" in value) {
+			files_received++;
+			total_bytes += (value as { size: number }).size;
+		}
+	}
+
+	return res.json({ files_received, total_bytes });
+});
+
+app.post("/multipart/medium").handler(async (req, res) => {
+	const formData = req.body as Record<string, unknown>;
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of Object.entries(formData)) {
+		if (key.startsWith("file") && value && typeof value === "object" && "size" in value) {
+			files_received++;
+			total_bytes += (value as { size: number }).size;
+		}
+	}
+
+	return res.json({ files_received, total_bytes });
+});
+
+app.post("/multipart/large").handler(async (req, res) => {
+	const formData = req.body as Record<string, unknown>;
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of Object.entries(formData)) {
+		if (key.startsWith("file") && value && typeof value === "object" && "size" in value) {
+			files_received++;
+			total_bytes += (value as { size: number }).size;
+		}
+	}
+
+	return res.json({ files_received, total_bytes });
+});
 
 app.post("/urlencoded/simple").handler((req, res) => res.json(req.body));
 app.post("/urlencoded/complex").handler((req, res) => res.json(req.body));
@@ -126,6 +167,87 @@ const DateParamSchema = z.object({
 	date: z.string().date(),
 });
 
+const StringParamSimpleSchema = z.object({
+	id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+});
+
+const StringParamMultipleSchema = z.object({
+	user_id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	post_id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+});
+
+const StringParamDeepSchema = z.object({
+	org: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	team: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	project: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	resource: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+	id: z.string().min(1).max(255).regex(/^[a-zA-Z0-9_-]+$/),
+});
+
+const UrlencodedSimpleSchema = z.object({
+	name: z.string(),
+	email: z.string(),
+	age: z.string(),
+	subscribe: z.string(),
+});
+
+const UrlencodedComplexSchema = z.object({
+	username: z.string(),
+	password: z.string(),
+	email: z.string(),
+	first_name: z.string(),
+	last_name: z.string(),
+	age: z.string(),
+	country: z.string(),
+	state: z.string(),
+	city: z.string(),
+	zip: z.string(),
+	phone: z.string(),
+	company: z.string(),
+	job_title: z.string(),
+	subscribe: z.string(),
+	newsletter: z.string(),
+	terms_accepted: z.string(),
+	privacy_accepted: z.string(),
+	marketing_consent: z.string(),
+	two_factor_enabled: z.string(),
+});
+
+const QueryFewSchema = z.object({
+	q: z.string(),
+	page: z.coerce.number().int().optional(),
+	limit: z.coerce.number().int().optional(),
+});
+
+const QueryMediumSchema = z.object({
+	search: z.string(),
+	category: z.string().optional(),
+	sort: z.string().optional(),
+	order: z.string().optional(),
+	page: z.coerce.number().int().optional(),
+	limit: z.coerce.number().int().optional(),
+	filter: z.string().optional(),
+});
+
+const QueryManySchema = z.object({
+	q: z.string(),
+	category: z.string().optional(),
+	subcategory: z.string().optional(),
+	brand: z.string().optional(),
+	min_price: z.coerce.number().optional(),
+	max_price: z.coerce.number().optional(),
+	color: z.string().optional(),
+	size: z.string().optional(),
+	material: z.string().optional(),
+	rating: z.coerce.number().int().optional(),
+	sort: z.string().optional(),
+	order: z.string().optional(),
+	page: z.coerce.number().int().optional(),
+	limit: z.coerce.number().int().optional(),
+	in_stock: z.coerce.boolean().optional(),
+	on_sale: z.coerce.boolean().optional(),
+});
+
 app
 	.post("/validated/json/small")
 	.body(SmallPayloadSchema)
@@ -146,27 +268,82 @@ app
 	.body(VeryLargePayloadSchema)
 	.handler((req, res) => res.json(req.body));
 
-app.post("/validated/multipart/small").handler((_req, res) => res.json({ files_received: 1, total_bytes: 1024 }));
-app.post("/validated/multipart/medium").handler((_req, res) => res.json({ files_received: 2, total_bytes: 10240 }));
-app.post("/validated/multipart/large").handler((_req, res) => res.json({ files_received: 5, total_bytes: 102400 }));
+app.post("/validated/multipart/small").handler(async (req, res) => {
+	const formData = req.body as Record<string, unknown>;
+	let files_received = 0;
+	let total_bytes = 0;
 
-app.post("/validated/urlencoded/simple").handler((req, res) => res.json(req.body));
-app.post("/validated/urlencoded/complex").handler((req, res) => res.json(req.body));
+	for (const [key, value] of Object.entries(formData)) {
+		if (key.startsWith("file") && value && typeof value === "object" && "size" in value) {
+			files_received++;
+			total_bytes += (value as { size: number }).size;
+		}
+	}
 
-app.get("/validated/path/simple/:id").handler((req, res) => res.json({ id: req.params.id }));
+	if (files_received === 0) {
+		return res.status(400).json({ error: "No files received" });
+	}
+
+	return res.json({ files_received, total_bytes });
+});
+
+app.post("/validated/multipart/medium").handler(async (req, res) => {
+	const formData = req.body as Record<string, unknown>;
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of Object.entries(formData)) {
+		if (key.startsWith("file") && value && typeof value === "object" && "size" in value) {
+			files_received++;
+			total_bytes += (value as { size: number }).size;
+		}
+	}
+
+	if (files_received === 0) {
+		return res.status(400).json({ error: "No files received" });
+	}
+
+	return res.json({ files_received, total_bytes });
+});
+
+app.post("/validated/multipart/large").handler(async (req, res) => {
+	const formData = req.body as Record<string, unknown>;
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const [key, value] of Object.entries(formData)) {
+		if (key.startsWith("file") && value && typeof value === "object" && "size" in value) {
+			files_received++;
+			total_bytes += (value as { size: number }).size;
+		}
+	}
+
+	if (files_received === 0) {
+		return res.status(400).json({ error: "No files received" });
+	}
+
+	return res.json({ files_received, total_bytes });
+});
+
+app.post("/validated/urlencoded/simple").body(UrlencodedSimpleSchema).handler((req, res) => res.json(req.body));
+app.post("/validated/urlencoded/complex").body(UrlencodedComplexSchema).handler((req, res) => res.json(req.body));
+
+app.get("/validated/path/simple/:id").handler(params(StringParamSimpleSchema)((req, res) => res.json({ id: req.params.id })));
 
 app
 	.get("/validated/path/multiple/:user_id/:post_id")
-	.handler((req, res) => res.json({ user_id: req.params.user_id, post_id: req.params.post_id }));
+	.handler(params(StringParamMultipleSchema)((req, res) => res.json({ user_id: req.params.user_id, post_id: req.params.post_id })));
 
-app.get("/validated/path/deep/:org/:team/:project/:resource/:id").handler((req, res) =>
-	res.json({
-		org: req.params.org,
-		team: req.params.team,
-		project: req.params.project,
-		resource: req.params.resource,
-		id: req.params.id,
-	}),
+app.get("/validated/path/deep/:org/:team/:project/:resource/:id").handler(
+	params(StringParamDeepSchema)((req, res) =>
+		res.json({
+			org: req.params.org,
+			team: req.params.team,
+			project: req.params.project,
+			resource: req.params.resource,
+			id: req.params.id,
+		}),
+	),
 );
 
 app.get("/validated/path/int/:id").handler(params(IntParamSchema)((req, res) => res.json({ id: req.params.id })));
@@ -177,9 +354,9 @@ app
 	.get("/validated/path/date/:date")
 	.handler(params(DateParamSchema)((req, res) => res.json({ date: req.params.date })));
 
-app.get("/validated/query/few").handler((req, res) => res.json(req.query));
-app.get("/validated/query/medium").handler((req, res) => res.json(req.query));
-app.get("/validated/query/many").handler((req, res) => res.json(req.query));
+app.get("/validated/query/few").query(QueryFewSchema).handler((req, res) => res.json(req.query));
+app.get("/validated/query/medium").query(QueryMediumSchema).handler((req, res) => res.json(req.query));
+app.get("/validated/query/many").query(QueryManySchema).handler((req, res) => res.json(req.query));
 
 // ============================================================================
 // Server Startup

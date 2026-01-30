@@ -9,5 +9,8 @@
 	},
 	"dependencies": {
 		"@spikard/node": "workspace:*"
+	},
+	"devDependencies": {
+		"tsx": "^4.19.0"
 	}
 }

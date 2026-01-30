@@ -88,6 +88,11 @@ function validateSmallPayload(array $data): array
         return ['valid' => false, 'errors' => $errors];
     }
 
+    // Validate optional tax field (optional float)
+    if (isset($data['tax']) && $data['tax'] !== null && !is_numeric($data['tax'])) {
+        return ['valid' => false, 'errors' => ['tax must be numeric']];
+    }
+
     return ['valid' => true, 'data' => $data];
 }
 
@@ -336,6 +341,382 @@ $app->post('/validated/json/very-large', function () use ($app): Response {
 });
 
 // ============================================================================
+// Validated URL-encoded form endpoints
+// ============================================================================
+
+$app->post('/validated/urlencoded/simple', function () use ($app): Response {
+    $data = $_POST ?? [];
+
+    $validation = new Validation();
+    $validation->add('name', new PresenceOf(['message' => 'name is required']));
+    $validation->add('email', new PresenceOf(['message' => 'email is required']));
+    $validation->add('age', new PresenceOf(['message' => 'age is required']));
+    $validation->add('age', new Numericality(['message' => 'age must be numeric']));
+
+    $messages = $validation->validate($data);
+    if (count($messages)) {
+        $errors = [];
+        foreach ($messages as $message) {
+            $errors[] = (string) $message;
+        }
+        return jsonResponse($app->response, ['errors' => $errors], 400);
+    }
+
+    // Validate boolean fields
+    if (!isset($data['subscribe']) || !in_array($data['subscribe'], ['true', 'false', '1', '0', 1, 0, true, false], true)) {
+        return jsonResponse($app->response, ['errors' => ['subscribe must be a boolean']], 400);
+    }
+
+    return jsonResponse($app->response, $data);
+});
+
+$app->post('/validated/urlencoded/complex', function () use ($app): Response {
+    $data = $_POST ?? [];
+
+    $validation = new Validation();
+    $validation->add('username', new PresenceOf(['message' => 'username is required']));
+    $validation->add('password', new PresenceOf(['message' => 'password is required']));
+    $validation->add('email', new PresenceOf(['message' => 'email is required']));
+    $validation->add('first_name', new PresenceOf(['message' => 'first_name is required']));
+    $validation->add('last_name', new PresenceOf(['message' => 'last_name is required']));
+    $validation->add('age', new PresenceOf(['message' => 'age is required']));
+    $validation->add('age', new Numericality(['message' => 'age must be numeric']));
+    $validation->add('country', new PresenceOf(['message' => 'country is required']));
+    $validation->add('state', new PresenceOf(['message' => 'state is required']));
+    $validation->add('city', new PresenceOf(['message' => 'city is required']));
+    $validation->add('zip', new PresenceOf(['message' => 'zip is required']));
+    $validation->add('phone', new PresenceOf(['message' => 'phone is required']));
+    $validation->add('company', new PresenceOf(['message' => 'company is required']));
+    $validation->add('job_title', new PresenceOf(['message' => 'job_title is required']));
+
+    $messages = $validation->validate($data);
+    if (count($messages)) {
+        $errors = [];
+        foreach ($messages as $message) {
+            $errors[] = (string) $message;
+        }
+        return jsonResponse($app->response, ['errors' => $errors], 400);
+    }
+
+    // Validate boolean fields
+    $boolFields = ['subscribe', 'newsletter', 'terms_accepted', 'privacy_accepted', 'marketing_consent', 'two_factor_enabled'];
+    foreach ($boolFields as $field) {
+        if (!isset($data[$field]) || !in_array($data[$field], ['true', 'false', '1', '0', 1, 0, true, false], true)) {
+            return jsonResponse($app->response, ['errors' => [$field . ' must be a boolean']], 400);
+        }
+    }
+
+    return jsonResponse($app->response, $data);
+});
+
+// ============================================================================
+// Validated query parameter endpoints
+// ============================================================================
+
+$app->get('/validated/query/few', function () use ($app): Response {
+    $params = $_GET ?? [];
+
+    // Validate q is required string
+    if (!isset($params['q']) || !is_string($params['q']) || $params['q'] === '') {
+        return jsonResponse($app->response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['q' => 'q is required and must be a non-empty string'],
+        ], 400);
+    }
+
+    // Validate page and limit are optional integers
+    if (isset($params['page']) && filter_var($params['page'], FILTER_VALIDATE_INT) === false) {
+        return jsonResponse($app->response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['page' => 'page must be a valid integer'],
+        ], 400);
+    }
+
+    if (isset($params['limit']) && filter_var($params['limit'], FILTER_VALIDATE_INT) === false) {
+        return jsonResponse($app->response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['limit' => 'limit must be a valid integer'],
+        ], 400);
+    }
+
+    return jsonResponse($app->response, $params);
+});
+
+$app->get('/validated/query/medium', function () use ($app): Response {
+    $params = $_GET ?? [];
+
+    // Validate required field 'search'
+    if (!isset($params['search']) || !is_string($params['search']) || $params['search'] === '') {
+        return jsonResponse($app->response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['search' => 'search is required and must be a non-empty string'],
+        ], 400);
+    }
+
+    // Validate optional string fields
+    $optionalStringFields = ['category', 'sort', 'order', 'filter'];
+    foreach ($optionalStringFields as $field) {
+        if (isset($params[$field]) && (!is_string($params[$field]) || $params[$field] === '')) {
+            return jsonResponse($app->response, [
+                'error' => 'Validation failed',
+                'code' => 'VALIDATION_ERROR',
+                'details' => [$field => $field . ' must be a non-empty string'],
+            ], 400);
+        }
+    }
+
+    // Validate optional integer fields
+    if (isset($params['page']) && filter_var($params['page'], FILTER_VALIDATE_INT) === false) {
+        return jsonResponse($app->response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['page' => 'page must be a valid integer'],
+        ], 400);
+    }
+
+    if (isset($params['limit']) && filter_var($params['limit'], FILTER_VALIDATE_INT) === false) {
+        return jsonResponse($app->response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['limit' => 'limit must be a valid integer'],
+        ], 400);
+    }
+
+    return jsonResponse($app->response, $params);
+});
+
+$app->get('/validated/query/many', function () use ($app): Response {
+    $params = $_GET ?? [];
+
+    // Validate required field 'q'
+    if (!isset($params['q']) || !is_string($params['q']) || $params['q'] === '') {
+        return jsonResponse($app->response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['q' => 'q is required and must be a non-empty string'],
+        ], 400);
+    }
+
+    // Validate optional string fields
+    $optionalStringFields = ['category', 'subcategory', 'brand', 'color', 'size', 'material', 'sort', 'order'];
+    foreach ($optionalStringFields as $field) {
+        if (isset($params[$field]) && (!is_string($params[$field]) || $params[$field] === '')) {
+            return jsonResponse($app->response, [
+                'error' => 'Validation failed',
+                'code' => 'VALIDATION_ERROR',
+                'details' => [$field => $field . ' must be a non-empty string'],
+            ], 400);
+        }
+    }
+
+    // Validate optional numeric fields (number type)
+    $optionalNumericFields = ['min_price', 'max_price'];
+    foreach ($optionalNumericFields as $field) {
+        if (isset($params[$field]) && !is_numeric($params[$field])) {
+            return jsonResponse($app->response, [
+                'error' => 'Validation failed',
+                'code' => 'VALIDATION_ERROR',
+                'details' => [$field => $field . ' must be numeric'],
+            ], 400);
+        }
+    }
+
+    // Validate rating as integer (not just numeric)
+    if (isset($params['rating']) && filter_var($params['rating'], FILTER_VALIDATE_INT) === false) {
+        return jsonResponse($app->response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['rating' => 'rating must be a valid integer'],
+        ], 400);
+    }
+
+    // Validate optional integer fields
+    $optionalIntegerFields = ['page', 'limit'];
+    foreach ($optionalIntegerFields as $field) {
+        if (isset($params[$field]) && filter_var($params[$field], FILTER_VALIDATE_INT) === false) {
+            return jsonResponse($app->response, [
+                'error' => 'Validation failed',
+                'code' => 'VALIDATION_ERROR',
+                'details' => [$field => $field . ' must be a valid integer'],
+            ], 400);
+        }
+    }
+
+    // Validate optional boolean fields
+    $optionalBooleanFields = ['in_stock', 'on_sale'];
+    foreach ($optionalBooleanFields as $field) {
+        if (isset($params[$field]) && !in_array($params[$field], ['true', 'false', '1', '0', 1, 0, true, false], true)) {
+            return jsonResponse($app->response, [
+                'error' => 'Validation failed',
+                'code' => 'VALIDATION_ERROR',
+                'details' => [$field => $field . ' must be a boolean'],
+            ], 400);
+        }
+    }
+
+    return jsonResponse($app->response, $params);
+});
+
+// ============================================================================
+// Validated multipart form endpoints
+// ============================================================================
+
+$app->post('/validated/multipart/small', function (): Response {
+    $response = new Response();
+    $result = summarizeFiles($_FILES);
+
+    if ($result['files_received'] === 0) {
+        return jsonResponse($response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['files' => 'At least one file is required'],
+        ], 400);
+    }
+
+    return jsonResponse($response, $result);
+});
+
+$app->post('/validated/multipart/medium', function (): Response {
+    $response = new Response();
+    $result = summarizeFiles($_FILES);
+
+    if ($result['files_received'] === 0) {
+        return jsonResponse($response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['files' => 'At least one file is required'],
+        ], 400);
+    }
+
+    return jsonResponse($response, $result);
+});
+
+$app->post('/validated/multipart/large', function (): Response {
+    $response = new Response();
+    $result = summarizeFiles($_FILES);
+
+    if ($result['files_received'] === 0) {
+        return jsonResponse($response, [
+            'error' => 'Validation failed',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['files' => 'At least one file is required'],
+        ], 400);
+    }
+
+    return jsonResponse($response, $result);
+});
+
+// ============================================================================
+// Validated path parameter endpoints
+// ============================================================================
+
+$app->get('/validated/path/simple/{id}', function (string $id): Response {
+    $response = new Response();
+    // Validate: non-empty, alphanumeric with _ or -, max 255 chars
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $id) || empty($id) || strlen($id) > 255) {
+        return jsonResponse($response, [
+            'error' => 'Invalid path parameter',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['id' => 'must be alphanumeric with _ or -, non-empty, max 255 chars'],
+        ], 400);
+    }
+    return jsonResponse($response, ['id' => $id]);
+});
+
+$app->get('/validated/path/multiple/{user_id}/{post_id}', function (string $user_id, string $post_id): Response {
+    $response = new Response();
+    // Validate user_id
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $user_id) || empty($user_id) || strlen($user_id) > 255) {
+        return jsonResponse($response, [
+            'error' => 'Invalid path parameter',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['user_id' => 'must be alphanumeric with _ or -, non-empty, max 255 chars'],
+        ], 400);
+    }
+    // Validate post_id
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $post_id) || empty($post_id) || strlen($post_id) > 255) {
+        return jsonResponse($response, [
+            'error' => 'Invalid path parameter',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['post_id' => 'must be alphanumeric with _ or -, non-empty, max 255 chars'],
+        ], 400);
+    }
+    return jsonResponse($response, ['user_id' => $user_id, 'post_id' => $post_id]);
+});
+
+$app->get('/validated/path/deep/{org}/{team}/{project}/{resource}/{id}', function (
+    string $org,
+    string $team,
+    string $project,
+    string $resource,
+    string $id
+): Response {
+    $response = new Response();
+    // Validate all parameters
+    $params = ['org' => $org, 'team' => $team, 'project' => $project, 'resource' => $resource, 'id' => $id];
+    foreach ($params as $name => $value) {
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $value) || empty($value) || strlen($value) > 255) {
+            return jsonResponse($response, [
+                'error' => 'Invalid path parameter',
+                'code' => 'VALIDATION_ERROR',
+                'details' => [$name => 'must be alphanumeric with _ or -, non-empty, max 255 chars'],
+            ], 400);
+        }
+    }
+    return jsonResponse($response, [
+        'org' => $org,
+        'team' => $team,
+        'project' => $project,
+        'resource' => $resource,
+        'id' => $id,
+    ]);
+});
+
+$app->get('/validated/path/int/{id}', function (string $id): Response {
+    $response = new Response();
+    // Validate and convert integer
+    if (filter_var($id, FILTER_VALIDATE_INT) === false) {
+        return jsonResponse($response, [
+            'error' => 'Invalid integer',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['id' => 'must be a valid integer'],
+        ], 400);
+    }
+    return jsonResponse($response, ['id' => (int) $id]);
+});
+
+$app->get('/validated/path/uuid/{uuid}', function (string $uuid): Response {
+    $response = new Response();
+    // Validate UUID (RFC 4122)
+    if (!preg_match('/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i', $uuid)) {
+        return jsonResponse($response, [
+            'error' => 'Invalid UUID',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['uuid' => 'must be a valid RFC 4122 UUID'],
+        ], 400);
+    }
+    return jsonResponse($response, ['uuid' => $uuid]);
+});
+
+$app->get('/validated/path/date/{date}', function (string $date): Response {
+    $response = new Response();
+    // Validate date (Y-m-d format)
+    $parsed = DateTimeImmutable::createFromFormat('Y-m-d', $date);
+    if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
+        return jsonResponse($response, [
+            'error' => 'Invalid date',
+            'code' => 'VALIDATION_ERROR',
+            'details' => ['date' => 'must be in Y-m-d format'],
+        ], 400);
+    }
+    return jsonResponse($response, ['date' => $date]);
+});
+
+// ============================================================================
 // Multipart form endpoints
 // ============================================================================
 
@@ -401,41 +782,19 @@ $app->get('/path/deep/{org}/{team}/{project}/{resource}/{id}', function (
 
 $app->get('/path/int/{id}', function (string $id): Response {
     $response = new Response();
-    // Validate and convert integer
-    if (filter_var($id, FILTER_VALIDATE_INT) === false) {
-        return jsonResponse($response, [
-            'error' => 'Invalid integer',
-            'code' => 'VALIDATION_ERROR',
-            'details' => ['id' => 'must be a valid integer'],
-        ], 400);
-    }
-    return jsonResponse($response, ['id' => (int) $id]);
+    // Raw endpoint - no validation
+    return jsonResponse($response, ['id' => $id]);
 });
 
 $app->get('/path/uuid/{uuid}', function (string $uuid): Response {
     $response = new Response();
-    // Validate UUID (RFC 4122)
-    if (!preg_match('/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i', $uuid)) {
-        return jsonResponse($response, [
-            'error' => 'Invalid UUID',
-            'code' => 'VALIDATION_ERROR',
-            'details' => ['uuid' => 'must be a valid RFC 4122 UUID'],
-        ], 400);
-    }
+    // Raw endpoint - no validation
     return jsonResponse($response, ['uuid' => $uuid]);
 });
 
 $app->get('/path/date/{date}', function (string $date): Response {
     $response = new Response();
-    // Validate date (Y-m-d format)
-    $parsed = DateTimeImmutable::createFromFormat('Y-m-d', $date);
-    if ($parsed === false || $parsed->format('Y-m-d') !== $date) {
-        return jsonResponse($response, [
-            'error' => 'Invalid date',
-            'code' => 'VALIDATION_ERROR',
-            'details' => ['date' => 'must be in Y-m-d format'],
-        ], 400);
-    }
+    // Raw endpoint - no validation
     return jsonResponse($response, ['date' => $date]);
 });
 
@@ -498,7 +857,18 @@ if (class_exists(\OpenSwoole\Http\Server::class)) {
     fwrite(STDERR, "[phalcon] Starting Swoole server on 0.0.0.0:$port\n");
     $server->start();
 } else {
-    // Fallback to built-in server (single-threaded, for local dev only)
+    // Fallback to built-in PHP server (single-threaded, for local dev only)
     fwrite(STDERR, "[phalcon] Swoole not available, falling back to php -S (single-threaded)\n");
+
+    // When run directly from CLI, spawn php -S pointing back to this script as a router
+    if (php_sapi_name() === 'cli') {
+        $cmd = sprintf('php -S 0.0.0.0:%d %s', $port, escapeshellarg(__FILE__));
+        fwrite(STDERR, "[phalcon] Launching: $cmd\n");
+        $exitCode = null;
+        passthru($cmd, $exitCode);
+        exit($exitCode ?? 1);
+    }
+
+    // When invoked as built-in server router, handle the request
     $app->handle($_SERVER['REQUEST_URI'] ?? '/');
 }

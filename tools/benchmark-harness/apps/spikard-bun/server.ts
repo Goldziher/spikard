@@ -195,16 +195,64 @@ async function post_json_very_large(request: HandlerInput): Promise<HandlerOutpu
 	return ok(request.body);
 }
 
-async function post_multipart_small(_request: HandlerInput): Promise<HandlerOutput> {
-	return ok({ files_received: 1, total_bytes: 1024 });
+async function post_multipart_small(request: HandlerInput): Promise<HandlerOutput> {
+	const body = request.body;
+	if (!body || typeof body !== "object" || !("files" in body)) {
+		return ok({ files_received: 0, total_bytes: 0 });
+	}
+
+	const files = body.files as Record<string, { size: number }>;
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const key in files) {
+		if (key.startsWith("file")) {
+			files_received++;
+			total_bytes += files[key].size || 0;
+		}
+	}
+
+	return ok({ files_received, total_bytes });
 }
 
-async function post_multipart_medium(_request: HandlerInput): Promise<HandlerOutput> {
-	return ok({ files_received: 2, total_bytes: 10240 });
+async function post_multipart_medium(request: HandlerInput): Promise<HandlerOutput> {
+	const body = request.body;
+	if (!body || typeof body !== "object" || !("files" in body)) {
+		return ok({ files_received: 0, total_bytes: 0 });
+	}
+
+	const files = body.files as Record<string, { size: number }>;
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const key in files) {
+		if (key.startsWith("file")) {
+			files_received++;
+			total_bytes += files[key].size || 0;
+		}
+	}
+
+	return ok({ files_received, total_bytes });
 }
 
-async function post_multipart_large(_request: HandlerInput): Promise<HandlerOutput> {
-	return ok({ files_received: 5, total_bytes: 102400 });
+async function post_multipart_large(request: HandlerInput): Promise<HandlerOutput> {
+	const body = request.body;
+	if (!body || typeof body !== "object" || !("files" in body)) {
+		return ok({ files_received: 0, total_bytes: 0 });
+	}
+
+	const files = body.files as Record<string, { size: number }>;
+	let files_received = 0;
+	let total_bytes = 0;
+
+	for (const key in files) {
+		if (key.startsWith("file")) {
+			files_received++;
+			total_bytes += files[key].size || 0;
+		}
+	}
+
+	return ok({ files_received, total_bytes });
 }
 
 async function post_urlencoded_simple(request: HandlerInput): Promise<HandlerOutput> {

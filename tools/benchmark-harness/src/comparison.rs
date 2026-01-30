@@ -489,7 +489,6 @@ mod tests {
             },
             route_types: vec![],
             error_metrics: None,
-            serialization: None,
             patterns: vec![],
             success: true,
             error: None,

@@ -29,6 +29,13 @@ pub struct FrameworkConfig {
     /// Optional subdirectory hint for where to run the framework from
     /// (e.g., "." for root, "crates/spikard-rust" for workspace crates)
     pub working_dir_hint: Option<String>,
+
+    /// Whether this framework should be skipped for benchmarking
+    /// Set to true if `SKIP_BENCHMARK` file exists in the app directory
+    pub skip: bool,
+
+    /// Reason for skipping (from `SKIP_BENCHMARK` file content)
+    pub skip_reason: Option<String>,
 }
 
 impl FrameworkConfig {
@@ -46,12 +53,23 @@ impl FrameworkConfig {
             build_cmd,
             start_cmd: start_cmd.into(),
             working_dir_hint,
+            skip: false,
+            skip_reason: None,
         }
     }
 
     /// Checks if all `detect_files` exist in the given directory
     fn matches(&self, app_dir: &Path) -> bool {
         self.detect_files.iter().all(|file| app_dir.join(file).exists())
+    }
+
+    /// Checks for `SKIP_BENCHMARK` file and updates skip status
+    fn check_skip_marker(&mut self, app_dir: &Path) {
+        let skip_file = app_dir.join("SKIP_BENCHMARK");
+        if skip_file.exists() {
+            self.skip = true;
+            self.skip_reason = std::fs::read_to_string(&skip_file).ok();
+        }
     }
 }
 
@@ -259,12 +277,16 @@ pub fn detect_framework(app_dir: &Path) -> Result<FrameworkConfig> {
         && let Some(dir_name) = app_dir.file_name().and_then(|name| name.to_str())
         && let Some(index) = matches.iter().position(|fw| fw.name == dir_name)
     {
-        return Ok(matches.swap_remove(index));
+        let mut config = matches.swap_remove(index);
+        config.check_skip_marker(app_dir);
+        return Ok(config);
     }
 
     matches.sort_by(|a, b| b.detect_files.len().cmp(&a.detect_files.len()));
 
-    Ok(matches.into_iter().next().unwrap())
+    let mut config = matches.into_iter().next().unwrap();
+    config.check_skip_marker(app_dir);
+    Ok(config)
 }
 
 /// Returns all available frameworks in the registry
@@ -503,5 +525,36 @@ mod tests {
         assert!(result.is_ok());
         let name = result.unwrap().name;
         assert_eq!(name, "fastify");
+    }
+
+    #[test]
+    fn test_detect_framework_with_skip_marker() {
+        let temp_dir = TempDir::new().unwrap();
+        let app_dir = temp_dir.path().join("spikard-python");
+        fs::create_dir_all(&app_dir).unwrap();
+        fs::write(app_dir.join("server.py"), "# python server").unwrap();
+        fs::write(app_dir.join("SKIP_BENCHMARK"), "Not ready for benchmarking").unwrap();
+
+        let result = detect_framework(&app_dir);
+        assert!(result.is_ok());
+        let config = result.unwrap();
+        assert_eq!(config.name, "spikard-python");
+        assert!(config.skip);
+        assert_eq!(config.skip_reason.as_deref(), Some("Not ready for benchmarking"));
+    }
+
+    #[test]
+    fn test_detect_framework_without_skip_marker() {
+        let temp_dir = TempDir::new().unwrap();
+        let app_dir = temp_dir.path().join("spikard-python");
+        fs::create_dir_all(&app_dir).unwrap();
+        fs::write(app_dir.join("server.py"), "# python server").unwrap();
+
+        let result = detect_framework(&app_dir);
+        assert!(result.is_ok());
+        let config = result.unwrap();
+        assert_eq!(config.name, "spikard-python");
+        assert!(!config.skip);
+        assert!(config.skip_reason.is_none());
     }
 }

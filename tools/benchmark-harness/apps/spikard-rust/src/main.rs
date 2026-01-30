@@ -115,6 +115,15 @@ fn schema_value(map: &HashMap<String, Value>, key: &str) -> Value {
 // RAW HANDLERS (no validation)
 // ============================================================================
 
+async fn root(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    let result = serde_json::json!({ "status": "ok" });
+    Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/json")
+        .body(Body::from(result.to_string()))
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+}
+
 async fn post_json_small(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: SmallPayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -155,10 +164,23 @@ async fn post_json_very_large(ctx: RequestContext) -> Result<Response<Body>, (St
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-async fn post_multipart_small(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+async fn post_multipart_small(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    // Spikard middleware already parses multipart to JSON
+    let body = ctx.body_value();
+
+    let mut files_received = 0;
+    let mut total_bytes = 0;
+
+    if let Some(file_obj) = body.get("file") {
+        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
+            files_received = 1;
+            total_bytes = size;
+        }
+    }
+
     let result = serde_json::json!({
-        "files_received": 1,
-        "total_bytes": 1024
+        "files_received": files_received,
+        "total_bytes": total_bytes
     });
     Response::builder()
         .status(StatusCode::OK)
@@ -167,10 +189,23 @@ async fn post_multipart_small(_ctx: RequestContext) -> Result<Response<Body>, (S
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-async fn post_multipart_medium(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+async fn post_multipart_medium(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    // Spikard middleware already parses multipart to JSON
+    let body = ctx.body_value();
+
+    let mut files_received = 0;
+    let mut total_bytes = 0;
+
+    if let Some(file_obj) = body.get("file") {
+        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
+            files_received = 1;
+            total_bytes = size;
+        }
+    }
+
     let result = serde_json::json!({
-        "files_received": 2,
-        "total_bytes": 10240
+        "files_received": files_received,
+        "total_bytes": total_bytes
     });
     Response::builder()
         .status(StatusCode::OK)
@@ -179,10 +214,23 @@ async fn post_multipart_medium(_ctx: RequestContext) -> Result<Response<Body>, (
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-async fn post_multipart_large(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+async fn post_multipart_large(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    // Spikard middleware already parses multipart to JSON
+    let body = ctx.body_value();
+
+    let mut files_received = 0;
+    let mut total_bytes = 0;
+
+    if let Some(file_obj) = body.get("file") {
+        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
+            files_received = 1;
+            total_bytes = size;
+        }
+    }
+
     let result = serde_json::json!({
-        "files_received": 5,
-        "total_bytes": 102400
+        "files_received": files_received,
+        "total_bytes": total_bytes
     });
     Response::builder()
         .status(StatusCode::OK)
@@ -192,7 +240,8 @@ async fn post_multipart_large(_ctx: RequestContext) -> Result<Response<Body>, (S
 }
 
 async fn post_urlencoded_simple(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    // Spikard middleware already parses urlencoded to JSON
+    let body = ctx.body_value();
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -202,7 +251,8 @@ async fn post_urlencoded_simple(ctx: RequestContext) -> Result<Response<Body>, (
 }
 
 async fn post_urlencoded_complex(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let body: Value = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    // Spikard middleware already parses urlencoded to JSON
+    let body = ctx.body_value();
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -291,29 +341,44 @@ async fn get_path_date(ctx: RequestContext) -> Result<Response<Body>, (StatusCod
 
 #[derive(Debug, Serialize, Deserialize)]
 struct QueryFew {
-    q: Option<String>,
+    q: String,
     page: Option<i32>,
     limit: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct QueryMedium {
+    search: String,
     category: Option<String>,
-    tags: Option<String>,
-    min_price: Option<f64>,
-    max_price: Option<f64>,
     sort: Option<String>,
     order: Option<String>,
     page: Option<i32>,
     limit: Option<i32>,
+    filter: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct QueryMany {
+    q: String,
+    category: Option<String>,
+    subcategory: Option<String>,
+    brand: Option<String>,
+    min_price: Option<f64>,
+    max_price: Option<f64>,
+    color: Option<String>,
+    size: Option<String>,
+    material: Option<String>,
+    rating: Option<i32>,
+    sort: Option<String>,
+    order: Option<String>,
+    page: Option<i32>,
+    limit: Option<i32>,
+    in_stock: Option<bool>,
+    on_sale: Option<bool>,
 }
 
 async fn get_query_few(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let params: QueryFew = ctx.query().unwrap_or(QueryFew {
-        q: None,
-        page: None,
-        limit: None,
-    });
+    let params: QueryFew = ctx.query().map_err(|e| (StatusCode::BAD_REQUEST, format!("Missing required parameter: {e}")))?;
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -323,16 +388,7 @@ async fn get_query_few(ctx: RequestContext) -> Result<Response<Body>, (StatusCod
 }
 
 async fn get_query_medium(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let params: QueryMedium = ctx.query().unwrap_or(QueryMedium {
-        category: None,
-        tags: None,
-        min_price: None,
-        max_price: None,
-        sort: None,
-        order: None,
-        page: None,
-        limit: None,
-    });
+    let params: QueryMedium = ctx.query().map_err(|e| (StatusCode::BAD_REQUEST, format!("Missing required parameter: {e}")))?;
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -342,7 +398,7 @@ async fn get_query_medium(ctx: RequestContext) -> Result<Response<Body>, (Status
 }
 
 async fn get_query_many(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let params: HashMap<String, String> = ctx.query().unwrap_or_default();
+    let params: QueryMany = ctx.query().map_err(|e| (StatusCode::BAD_REQUEST, format!("Missing required parameter: {e}")))?;
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -445,13 +501,40 @@ async fn benchmark_profile_stop(_ctx: RequestContext) -> Result<Response<Body>, 
 // VALIDATED HANDLERS (with schema validation)
 // ============================================================================
 
+fn validate_string_param(value: &str, param_name: &str) -> Result<(), (StatusCode, String)> {
+    if value.is_empty() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Parameter '{}' cannot be empty", param_name),
+        ));
+    }
+    if value.len() > 255 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Parameter '{}' exceeds maximum length of 255 characters", param_name),
+        ));
+    }
+    // Check alphanumeric with - and _
+    if !value.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            format!("Parameter '{}' contains invalid characters (only alphanumeric, '-', and '_' allowed)", param_name),
+        ));
+    }
+    Ok(())
+}
+
 fn coerce_bool(value: Value) -> Value {
     match value {
         Value::Bool(_) => value,
-        Value::String(value) => match value.as_str() {
-            "true" => Value::Bool(true),
-            "false" => Value::Bool(false),
-            _ => Value::String(value),
+        Value::String(ref s) => {
+            if s.eq_ignore_ascii_case("true") {
+                Value::Bool(true)
+            } else if s.eq_ignore_ascii_case("false") {
+                Value::Bool(false)
+            } else {
+                value
+            }
         },
         _ => value,
     }
@@ -542,10 +625,27 @@ async fn post_json_very_large_validated(ctx: RequestContext) -> Result<Response<
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-async fn post_multipart_small_validated(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+async fn post_multipart_small_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    // Spikard middleware already parses multipart to JSON
+    let body = ctx.body_value();
+
+    let mut files_received = 0;
+    let mut total_bytes = 0;
+
+    if let Some(file_obj) = body.get("file") {
+        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
+            files_received = 1;
+            total_bytes = size;
+        }
+    }
+
+    if files_received == 0 {
+        return Err((StatusCode::BAD_REQUEST, "No files received".to_string()));
+    }
+
     let result = serde_json::json!({
-        "files_received": 1,
-        "total_bytes": 1024
+        "files_received": files_received,
+        "total_bytes": total_bytes
     });
     Response::builder()
         .status(StatusCode::OK)
@@ -554,10 +654,27 @@ async fn post_multipart_small_validated(_ctx: RequestContext) -> Result<Response
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-async fn post_multipart_medium_validated(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+async fn post_multipart_medium_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    // Spikard middleware already parses multipart to JSON
+    let body = ctx.body_value();
+
+    let mut files_received = 0;
+    let mut total_bytes = 0;
+
+    if let Some(file_obj) = body.get("file") {
+        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
+            files_received = 1;
+            total_bytes = size;
+        }
+    }
+
+    if files_received == 0 {
+        return Err((StatusCode::BAD_REQUEST, "No files received".to_string()));
+    }
+
     let result = serde_json::json!({
-        "files_received": 2,
-        "total_bytes": 10240
+        "files_received": files_received,
+        "total_bytes": total_bytes
     });
     Response::builder()
         .status(StatusCode::OK)
@@ -566,10 +683,27 @@ async fn post_multipart_medium_validated(_ctx: RequestContext) -> Result<Respons
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
-async fn post_multipart_large_validated(_ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+async fn post_multipart_large_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    // Spikard middleware already parses multipart to JSON
+    let body = ctx.body_value();
+
+    let mut files_received = 0;
+    let mut total_bytes = 0;
+
+    if let Some(file_obj) = body.get("file") {
+        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
+            files_received = 1;
+            total_bytes = size;
+        }
+    }
+
+    if files_received == 0 {
+        return Err((StatusCode::BAD_REQUEST, "No files received".to_string()));
+    }
+
     let result = serde_json::json!({
-        "files_received": 5,
-        "total_bytes": 102400
+        "files_received": files_received,
+        "total_bytes": total_bytes
     });
     Response::builder()
         .status(StatusCode::OK)
@@ -579,6 +713,7 @@ async fn post_multipart_large_validated(_ctx: RequestContext) -> Result<Response
 }
 
 async fn post_urlencoded_simple_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    // Spikard middleware already parses urlencoded to JSON
     let body = coerce_urlencoded_simple(ctx.body_value().clone());
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
@@ -589,6 +724,7 @@ async fn post_urlencoded_simple_validated(ctx: RequestContext) -> Result<Respons
 }
 
 async fn post_urlencoded_complex_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
+    // Spikard middleware already parses urlencoded to JSON
     let body = coerce_urlencoded_complex(ctx.body_value().clone());
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
@@ -599,7 +735,11 @@ async fn post_urlencoded_complex_validated(ctx: RequestContext) -> Result<Respon
 }
 
 async fn get_path_simple_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let id = ctx.path_param("id").unwrap_or("unknown");
+    let id = ctx
+        .path_param("id")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: id".to_string()))?;
+    validate_string_param(id, "id")?;
+
     let result = serde_json::json!({ "id": id });
     Response::builder()
         .status(StatusCode::OK)
@@ -609,8 +749,16 @@ async fn get_path_simple_validated(ctx: RequestContext) -> Result<Response<Body>
 }
 
 async fn get_path_multiple_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let user_id = ctx.path_param("user_id").unwrap_or("unknown");
-    let post_id = ctx.path_param("post_id").unwrap_or("unknown");
+    let user_id = ctx
+        .path_param("user_id")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: user_id".to_string()))?;
+    let post_id = ctx
+        .path_param("post_id")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: post_id".to_string()))?;
+
+    validate_string_param(user_id, "user_id")?;
+    validate_string_param(post_id, "post_id")?;
+
     let result = serde_json::json!({
         "user_id": user_id,
         "post_id": post_id
@@ -623,11 +771,28 @@ async fn get_path_multiple_validated(ctx: RequestContext) -> Result<Response<Bod
 }
 
 async fn get_path_deep_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let org = ctx.path_param("org").unwrap_or("unknown");
-    let team = ctx.path_param("team").unwrap_or("unknown");
-    let project = ctx.path_param("project").unwrap_or("unknown");
-    let resource = ctx.path_param("resource").unwrap_or("unknown");
-    let id = ctx.path_param("id").unwrap_or("unknown");
+    let org = ctx
+        .path_param("org")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: org".to_string()))?;
+    let team = ctx
+        .path_param("team")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: team".to_string()))?;
+    let project = ctx
+        .path_param("project")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: project".to_string()))?;
+    let resource = ctx
+        .path_param("resource")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: resource".to_string()))?;
+    let id = ctx
+        .path_param("id")
+        .ok_or_else(|| (StatusCode::BAD_REQUEST, "Missing path param: id".to_string()))?;
+
+    validate_string_param(org, "org")?;
+    validate_string_param(team, "team")?;
+    validate_string_param(project, "project")?;
+    validate_string_param(resource, "resource")?;
+    validate_string_param(id, "id")?;
+
     let result = serde_json::json!({
         "org": org,
         "team": team,
@@ -677,11 +842,7 @@ async fn get_path_date_validated(ctx: RequestContext) -> Result<Response<Body>, 
 }
 
 async fn get_query_few_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let params: QueryFew = ctx.query().unwrap_or(QueryFew {
-        q: None,
-        page: None,
-        limit: None,
-    });
+    let params: QueryFew = ctx.query().map_err(|e| (StatusCode::BAD_REQUEST, format!("Missing required parameter: {e}")))?;
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -691,16 +852,7 @@ async fn get_query_few_validated(ctx: RequestContext) -> Result<Response<Body>, 
 }
 
 async fn get_query_medium_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let params: QueryMedium = ctx.query().unwrap_or(QueryMedium {
-        category: None,
-        tags: None,
-        min_price: None,
-        max_price: None,
-        sort: None,
-        order: None,
-        page: None,
-        limit: None,
-    });
+    let params: QueryMedium = ctx.query().map_err(|e| (StatusCode::BAD_REQUEST, format!("Missing required parameter: {e}")))?;
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -710,7 +862,7 @@ async fn get_query_medium_validated(ctx: RequestContext) -> Result<Response<Body
 }
 
 async fn get_query_many_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    let params: HashMap<String, String> = ctx.query().unwrap_or_default();
+    let params: QueryMany = ctx.query().map_err(|e| (StatusCode::BAD_REQUEST, format!("Missing required parameter: {e}")))?;
     let json = serde_json::to_string(&params).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -740,6 +892,7 @@ async fn main() {
     // RAW ENDPOINTS (no validation)
     // ============================================================================
 
+    app.route(get("/"), root).unwrap();
     app.route(get("/health"), health).unwrap();
     if std::env::var("SPIKARD_PROFILE_ENABLED").ok().as_deref() == Some("1") {
         app.route(get("/__benchmark__/profile/start"), benchmark_profile_start)

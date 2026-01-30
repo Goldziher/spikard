@@ -2,26 +2,26 @@
 	"path/simple": {
 		"type": "object",
 		"properties": {
-			"id": { "type": "string", "source": "path" }
+			"id": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" }
 		},
 		"required": ["id"]
 	},
 	"path/multiple": {
 		"type": "object",
 		"properties": {
-			"user_id": { "type": "string", "source": "path" },
-			"post_id": { "type": "string", "source": "path" }
+			"user_id": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
+			"post_id": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" }
 		},
 		"required": ["user_id", "post_id"]
 	},
 	"path/deep": {
 		"type": "object",
 		"properties": {
-			"org": { "type": "string", "source": "path" },
-			"team": { "type": "string", "source": "path" },
-			"project": { "type": "string", "source": "path" },
-			"resource": { "type": "string", "source": "path" },
-			"id": { "type": "string", "source": "path" }
+			"org": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
+			"team": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
+			"project": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
+			"resource": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" },
+			"id": { "type": "string", "source": "path", "minLength": 1, "maxLength": 255, "pattern": "^[a-zA-Z0-9_-]+$" }
 		},
 		"required": ["org", "team", "project", "resource", "id"]
 	},
@@ -53,59 +53,41 @@
 			"page": { "type": "integer", "source": "query" },
 			"limit": { "type": "integer", "source": "query" }
 		},
-		"required": ["q", "page", "limit"]
+		"required": ["q"]
 	},
 	"query/medium": {
 		"type": "object",
 		"properties": {
+			"search": { "type": "string", "source": "query" },
 			"category": { "type": "string", "source": "query" },
-			"tags": { "type": "string", "source": "query" },
-			"min_price": { "type": "number", "source": "query" },
-			"max_price": { "type": "number", "source": "query" },
 			"sort": { "type": "string", "source": "query" },
 			"order": { "type": "string", "source": "query" },
 			"page": { "type": "integer", "source": "query" },
-			"limit": { "type": "integer", "source": "query" }
+			"limit": { "type": "integer", "source": "query" },
+			"filter": { "type": "string", "source": "query" }
 		},
-		"required": ["category", "tags", "min_price", "max_price", "sort", "order", "page", "limit"]
+		"required": ["search"]
 	},
 	"query/many": {
 		"type": "object",
 		"properties": {
 			"q": { "type": "string", "source": "query" },
-			"page": { "type": "integer", "source": "query" },
-			"limit": { "type": "integer", "source": "query" },
-			"sort": { "type": "string", "source": "query" },
-			"order": { "type": "string", "source": "query" },
-			"filter": { "type": "string", "source": "query" },
 			"category": { "type": "string", "source": "query" },
 			"subcategory": { "type": "string", "source": "query" },
 			"brand": { "type": "string", "source": "query" },
 			"min_price": { "type": "number", "source": "query" },
 			"max_price": { "type": "number", "source": "query" },
+			"color": { "type": "string", "source": "query" },
+			"size": { "type": "string", "source": "query" },
+			"material": { "type": "string", "source": "query" },
 			"rating": { "type": "integer", "source": "query" },
-			"verified": { "type": "boolean", "source": "query" },
+			"sort": { "type": "string", "source": "query" },
+			"order": { "type": "string", "source": "query" },
+			"page": { "type": "integer", "source": "query" },
+			"limit": { "type": "integer", "source": "query" },
 			"in_stock": { "type": "boolean", "source": "query" },
-			"shipping": { "type": "string", "source": "query" },
-			"color": { "type": "string", "source": "query" }
+			"on_sale": { "type": "boolean", "source": "query" }
 		},
-		"required": [
-			"q",
-			"page",
-			"limit",
-			"sort",
-			"order",
-			"filter",
-			"category",
-			"subcategory",
-			"brand",
-			"min_price",
-			"max_price",
-			"rating",
-			"verified",
-			"in_stock",
-			"shipping",
-			"color"
-		]
+		"required": ["q"]
 	}
 }

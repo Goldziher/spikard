@@ -95,6 +95,42 @@ UrlencodedComplexSchema = Dry::Schema.Params do
   required(:two_factor_enabled).filled(:bool)
 end
 
+# Query parameter schemas
+QueryFewSchema = Dry::Schema.Params do
+  required(:q).filled(:string)
+  optional(:page).filled(:integer)
+  optional(:limit).filled(:integer)
+end
+
+QueryMediumSchema = Dry::Schema.Params do
+  required(:search).filled(:string)
+  optional(:category).filled(:string)
+  optional(:sort).filled(:string)
+  optional(:order).filled(:string)
+  optional(:page).filled(:integer)
+  optional(:limit).filled(:integer)
+  optional(:filter).filled(:string)
+end
+
+QueryManySchema = Dry::Schema.Params do
+  required(:q).filled(:string)
+  optional(:category).filled(:string)
+  optional(:subcategory).filled(:string)
+  optional(:brand).filled(:string)
+  optional(:min_price).filled(:float)
+  optional(:max_price).filled(:float)
+  optional(:color).filled(:string)
+  optional(:size).filled(:string)
+  optional(:material).filled(:string)
+  optional(:rating).filled(:integer)
+  optional(:sort).filled(:string)
+  optional(:order).filled(:string)
+  optional(:page).filled(:integer)
+  optional(:limit).filled(:integer)
+  optional(:in_stock).filled(:bool)
+  optional(:on_sale).filled(:bool)
+end
+
 # ============================================================================
 # Roda Application - Raw + Validated
 # ============================================================================
@@ -139,18 +175,48 @@ class BenchmarkApp < Roda
       end
     end
 
-    # Multipart form endpoints - static responses
+    # Multipart form endpoints - parse actual uploaded files
     r.on 'multipart' do
       r.post 'small' do
-        { files_received: 1, total_bytes: 1024 }
+        files_received = 0
+        total_bytes = 0
+
+        r.params.each do |key, value|
+          if value.is_a?(Hash) && value[:tempfile]
+            files_received += 1
+            total_bytes += value[:tempfile].size
+          end
+        end
+
+        { files_received: files_received, total_bytes: total_bytes }
       end
 
       r.post 'medium' do
-        { files_received: 2, total_bytes: 10240 }
+        files_received = 0
+        total_bytes = 0
+
+        r.params.each do |key, value|
+          if value.is_a?(Hash) && value[:tempfile]
+            files_received += 1
+            total_bytes += value[:tempfile].size
+          end
+        end
+
+        { files_received: files_received, total_bytes: total_bytes }
       end
 
       r.post 'large' do
-        { files_received: 5, total_bytes: 102400 }
+        files_received = 0
+        total_bytes = 0
+
+        r.params.each do |key, value|
+          if value.is_a?(Hash) && value[:tempfile]
+            files_received += 1
+            total_bytes += value[:tempfile].size
+          end
+        end
+
+        { files_received: files_received, total_bytes: total_bytes }
       end
     end
 
@@ -257,14 +323,33 @@ class BenchmarkApp < Roda
       # Path parameter endpoints (6 endpoints)
       r.on 'path' do
         r.get 'simple', String do |id|
+          unless id =~ /\A[a-zA-Z0-9_-]+\z/ && !id.empty? && id.length <= 255
+            response.status = 400
+            next { error: 'Invalid path parameter format' }
+          end
           { id: id }
         end
 
         r.get 'multiple', String, String do |user_id, post_id|
+          unless user_id =~ /\A[a-zA-Z0-9_-]+\z/ && !user_id.empty? && user_id.length <= 255
+            response.status = 400
+            next { error: 'Invalid path parameter format' }
+          end
+          unless post_id =~ /\A[a-zA-Z0-9_-]+\z/ && !post_id.empty? && post_id.length <= 255
+            response.status = 400
+            next { error: 'Invalid path parameter format' }
+          end
           { user_id: user_id, post_id: post_id }
         end
 
         r.get 'deep', String, String, String, String, String do |org, team, project, resource, id|
+          params_hash = { org: org, team: team, project: project, resource: resource, id: id }
+          invalid = params_hash.find { |_, v| v.nil? || v.empty? || v.length > 255 || v !~ /\A[a-zA-Z0-9_-]+\z/ }
+          if invalid
+            response.status = 400
+            response.write(JSON.generate({ error: "Invalid path parameter: #{invalid[0]}" }))
+            request.halt
+          end
           {
             org: org,
             team: team,
@@ -300,35 +385,15 @@ class BenchmarkApp < Roda
       # Query parameter endpoints (3 endpoints)
       r.on 'query' do
         r.get 'few' do
-          {
-            page: r.params['page'],
-            limit: r.params['limit']
-          }
+          validate_and_respond(QueryFewSchema, r.params)
         end
 
         r.get 'medium' do
-          {
-            page: r.params['page'],
-            limit: r.params['limit'],
-            sort: r.params['sort'],
-            order: r.params['order'],
-            filter: r.params['filter']
-          }
+          validate_and_respond(QueryMediumSchema, r.params)
         end
 
         r.get 'many' do
-          {
-            page: r.params['page'],
-            limit: r.params['limit'],
-            sort: r.params['sort'],
-            order: r.params['order'],
-            filter: r.params['filter'],
-            search: r.params['search'],
-            category: r.params['category'],
-            tag: r.params['tag'],
-            status: r.params['status'],
-            priority: r.params['priority']
-          }
+          validate_and_respond(QueryManySchema, r.params)
         end
       end
 
@@ -343,64 +408,63 @@ class BenchmarkApp < Roda
         end
       end
 
-      # Multipart form endpoints (3 endpoints)
+      # Multipart form endpoints (3 endpoints) - parse and validate
       r.on 'multipart' do
         r.post 'small' do
-          file = r.params['file']
-          name = r.params['name']
+          files_received = 0
+          total_bytes = 0
 
-          unless file && file.is_a?(Hash) && file[:tempfile]
-            response.status = 400
-            next { error: 'File upload required' }
-          end
-
-          {
-            status: 'ok',
-            name: name,
-            filename: file[:filename],
-            size: file[:tempfile].size
-          }
-        end
-
-        r.post 'medium' do
-          file = r.params['file']
-          description = r.params['description']
-          tags = r.params['tags']
-
-          unless file && file.is_a?(Hash) && file[:tempfile]
-            response.status = 400
-            next { error: 'File upload required' }
-          end
-
-          {
-            status: 'ok',
-            filename: file[:filename],
-            size: file[:tempfile].size,
-            description: description,
-            tags: tags
-          }
-        end
-
-        r.post 'large' do
-          files = []
-          metadata = r.params['metadata']
-
-          # Handle multiple files
-          if r.params['files']
-            files_param = r.params['files']
-            if files_param.is_a?(Array)
-              files = files_param.select { |f| f.is_a?(Hash) && f[:tempfile] }
-            elsif files_param.is_a?(Hash) && files_param[:tempfile]
-              files = [files_param]
+          r.params.each do |key, value|
+            if value.is_a?(Hash) && value[:tempfile]
+              files_received += 1
+              total_bytes += value[:tempfile].size
             end
           end
 
-          {
-            status: 'ok',
-            file_count: files.length,
-            total_size: files.sum { |f| f[:tempfile].size },
-            metadata: metadata
-          }
+          if files_received == 0
+            response.status = 400
+            next { error: 'No files uploaded' }
+          end
+
+          { files_received: files_received, total_bytes: total_bytes }
+        end
+
+        r.post 'medium' do
+          files_received = 0
+          total_bytes = 0
+
+          r.params.each do |key, value|
+            if value.is_a?(Hash) && value[:tempfile]
+              files_received += 1
+              total_bytes += value[:tempfile].size
+            end
+          end
+
+          if files_received == 0
+            response.status = 400
+            next { error: 'No files uploaded' }
+          end
+
+          { files_received: files_received, total_bytes: total_bytes }
+        end
+
+        r.post 'large' do
+          files_received = 0
+          total_bytes = 0
+
+          r.params.each do |key, value|
+            if value.is_a?(Hash) && value[:tempfile]
+              files_received += 1
+              total_bytes += value[:tempfile].size
+            end
+          end
+
+          if files_received == 0
+            response.status = 400
+            next { error: 'No files uploaded' }
+          end
+
+          { files_received: files_received, total_bytes: total_bytes }
         end
       end
     end

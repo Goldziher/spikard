@@ -18,9 +18,9 @@ inputs:
     required: false
     default: '100'
   warmup:
-    description: 'Warmup requests'
+    description: 'Warmup duration in seconds'
     required: false
-    default: '1000'
+    default: '10'
 
 runs:
   using: composite
@@ -123,7 +123,7 @@ runs:
       run: pnpm install --frozen-lockfile
 
     - name: Install Bun benchmark app dependencies
-      if: steps.detect.outputs.language == 'node' && inputs.framework == 'elysia'
+      if: steps.detect.outputs.language == 'node' && (inputs.framework == 'elysia' || inputs.framework == 'spikard-bun')
       shell: bash
       working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
       run: |
@@ -140,7 +140,17 @@ runs:
       shell: bash
       run: |
         mkdir -p $GITHUB_WORKSPACE/packages/ruby/lib/spikard
-        cp -v $GITHUB_WORKSPACE/packages/ruby/lib/spikard_rb.* $GITHUB_WORKSPACE/packages/ruby/lib/spikard/ || true
+        # Find the compiled .so in target/release and copy it
+        SO_FILE=$(find $GITHUB_WORKSPACE/target/release -maxdepth 1 -name "libspikard_rb.so" -o -name "spikard_rb.so" -o -name "libspikard_rb.dylib" | head -1)
+        if [ -n "$SO_FILE" ]; then
+          cp -v "$SO_FILE" $GITHUB_WORKSPACE/packages/ruby/lib/spikard/
+        else
+          echo "WARNING: Could not find compiled Ruby binding in target/release" >&2
+          ls -la $GITHUB_WORKSPACE/target/release/libspikard_rb* $GITHUB_WORKSPACE/target/release/spikard_rb* 2>/dev/null || true
+          # Also check packages/ruby/lib for existing bindings
+          ls -la $GITHUB_WORKSPACE/packages/ruby/lib/spikard_rb* 2>/dev/null || true
+        fi
+        cp -v $GITHUB_WORKSPACE/packages/ruby/lib/spikard_rb.* $GITHUB_WORKSPACE/packages/ruby/lib/spikard/ 2>/dev/null || true
 
     - name: Setup Ruby environment for non-spikard apps
       if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'
@@ -195,12 +205,20 @@ runs:
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'
       shell: bash
       run: |
-        EXT_FILE=$(find target/release -name "libspikard_php.*" -o -name "spikard_php.*" | head -1)
+        echo "Searching for compiled PHP extension..."
+        find target/release -name "libspikard_php*" -o -name "spikard_php*" 2>/dev/null || true
+        EXT_FILE=$(find target/release -name "libspikard_php.so" -o -name "libspikard_php.dylib" -o -name "spikard_php.so" -o -name "spikard_php.dll" | head -1)
         if [ -n "$EXT_FILE" ]; then
+          echo "Found extension: $EXT_FILE"
           EXT_DIR=$(php-config --extension-dir)
           sudo cp "$EXT_FILE" "$EXT_DIR/spikard_php.so"
-          echo "extension=spikard_php.so" | sudo tee /etc/php/8.4/cli/conf.d/99-spikard.ini
-          php -m | grep spikard
+          PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
+          echo "extension=spikard_php.so" | sudo tee "/etc/php/${PHP_VERSION}/cli/conf.d/99-spikard.ini"
+          php -m | grep spikard || echo "WARNING: spikard extension not loaded after install"
+        else
+          echo "ERROR: No compiled PHP extension found in target/release" >&2
+          ls -la target/release/ | head -30
+          exit 1
         fi
 
     - name: Cache Composer downloads
@@ -241,13 +259,23 @@ runs:
 
     - name: Run benchmark
       shell: bash
+      timeout-minutes: 30
       run: |
+        # Check if framework should be skipped
+        APP_DIR="tools/benchmark-harness/apps/${{ inputs.framework }}"
+        if [ -f "$APP_DIR/SKIP_BENCHMARK" ]; then
+          echo "⏭️  Skipping benchmark for ${{ inputs.framework }}"
+          echo "   Reason: $(cat $APP_DIR/SKIP_BENCHMARK)"
+          echo "skipped=true" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
         # Ensure bun is in PATH for elysia frameworks
         export PATH="$HOME/.bun/bin:$PATH"
 
         benchmark-harness profile \
           --framework "${{ inputs.framework }}" \
-          --app-dir "tools/benchmark-harness/apps/${{ inputs.framework }}" \
+          --app-dir "$APP_DIR" \
           --suite "${{ inputs.suite }}" \
           --duration "${{ inputs.duration }}" \
           --concurrency "${{ inputs.concurrency }}" \
@@ -255,7 +283,7 @@ runs:
           --output "results/${{ inputs.framework }}/profile.json"
 
     - name: Upload benchmark results
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: benchmark-results-${{ inputs.framework }}

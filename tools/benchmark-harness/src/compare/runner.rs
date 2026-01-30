@@ -27,8 +27,8 @@ pub struct CompareConfig {
     /// Base port for server (will increment for each framework to avoid conflicts)
     pub port: u16,
 
-    /// Number of warmup requests before actual benchmark
-    pub warmup_requests: usize,
+    /// Warmup duration in seconds before actual benchmark
+    pub warmup_secs: u64,
 
     /// Output directory for results
     pub output_dir: PathBuf,
@@ -49,7 +49,7 @@ impl Default for CompareConfig {
             frameworks: Vec::new(),
             workload_suite: "all".to_string(),
             port: 8100,
-            warmup_requests: 100,
+            warmup_secs: 10,
             output_dir: PathBuf::from("benchmark-results"),
             significance_threshold: 0.05,
             duration_secs: 30,
@@ -148,11 +148,32 @@ impl CompareRunner {
                     });
                 }
             }
+
+            // CRITICAL-5: Add cooldown between frameworks to allow OS to stabilize
+            if idx < self.config.frameworks.len() - 1 {
+                println!("⏳ Cooling down for 5 seconds to stabilize system...");
+                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                println!();
+            }
         }
 
         println!("🧮 Running statistical analysis...");
         let compare_result = self.create_basic_result(&profile_results)?;
         println!("✓ Analysis complete\n");
+
+        // MEDIUM-3: Save individual profile results to disk
+        println!("💾 Saving individual profile results...");
+        std::fs::create_dir_all(&self.config.output_dir)?;
+        for (framework, result) in &profile_results {
+            let profile_path = self.config.output_dir.join(format!("{framework}_profile.json"));
+            let profile_json = serde_json::to_string_pretty(result)
+                .map_err(|e| Error::InvalidInput(format!("Failed to serialize profile: {e}")))?;
+            std::fs::write(&profile_path, profile_json).map_err(|e| {
+                Error::InvalidInput(format!("Failed to write profile to {}: {e}", profile_path.display()))
+            })?;
+            println!("  Saved {framework} profile to {}", profile_path.display());
+        }
+        println!("✓ All profile results saved\n");
 
         println!("\n{}", "═".repeat(60));
         println!("✓ Comparison complete!");
@@ -175,7 +196,21 @@ impl CompareRunner {
     async fn run_single_framework(&self, framework: &str, index: usize) -> Result<ProfileResult> {
         let app_dir = self.detect_app_dir(framework)?;
 
-        let port = self.config.port + (index as u16 * 10);
+        // HIGH-1: Check port availability before assigning
+        let mut port = self.config.port + (index as u16 * 10);
+
+        // Verify port is available, try up to 10 alternate ports
+        let available_port = (0..10)
+            .find_map(|offset| {
+                let candidate = port + offset;
+                // Try to bind to verify availability
+                std::net::TcpListener::bind(("127.0.0.1", candidate))
+                    .ok()
+                    .map(|_| candidate)
+            })
+            .ok_or_else(|| Error::InvalidInput(format!("No available ports found starting from {port}")))?;
+
+        port = available_port;
 
         println!("App directory: {}", app_dir.display());
         println!("Port: {port}");
@@ -186,7 +221,7 @@ impl CompareRunner {
             suite_name: self.config.workload_suite.clone(),
             duration_secs: self.config.duration_secs,
             concurrency: self.config.concurrency,
-            warmup_secs: (self.config.warmup_requests / self.config.concurrency).max(5) as u64,
+            warmup_secs: self.config.warmup_secs,
             profiler: None,
             baseline_path: None,
             variant: None,
@@ -275,7 +310,8 @@ impl CompareRunner {
             statistical_comparisons.push((framework.clone(), analysis));
         }
 
-        let suites = Vec::new();
+        // MEDIUM-4: Populate suites field with per-suite breakdown data
+        let suites = self.build_suite_comparisons(profile_results, &analyzer);
 
         let overall_winner = if let Some((fw, _analysis)) = statistical_comparisons
             .iter()
@@ -334,11 +370,14 @@ impl CompareRunner {
             }
         }
 
+        // MEDIUM-5: Populate workloads_won and category_winners
+        let (workloads_won, category_winners) = self.calculate_winners(profile_results);
+
         let summary = CompareSummary {
             overall_winner,
             avg_performance_gain,
-            workloads_won: std::collections::HashMap::new(),
-            category_winners: std::collections::HashMap::new(),
+            workloads_won,
+            category_winners,
         };
 
         Ok(CompareResult {
@@ -348,6 +387,207 @@ impl CompareRunner {
             suites,
             summary,
         })
+    }
+
+    /// Build suite comparisons with per-workload breakdown
+    ///
+    /// MEDIUM-4: Creates `CompareSuiteResult` entries from profile results
+    fn build_suite_comparisons(
+        &self,
+        profile_results: &[(String, ProfileResult)],
+        analyzer: &CompareAnalyzer,
+    ) -> Vec<crate::schema::compare::CompareSuiteResult> {
+        use crate::schema::compare::{
+            CompareSuiteResult, CompareWorkloadResult, FrameworkResult, WorkloadComparisonAnalysis,
+        };
+        use std::collections::HashMap;
+
+        if profile_results.is_empty() {
+            return Vec::new();
+        }
+
+        let baseline = &profile_results[0].1;
+
+        // Iterate through each suite in the baseline
+        baseline
+            .suites
+            .iter()
+            .map(|baseline_suite| {
+                let workload_comparisons: Vec<CompareWorkloadResult> = baseline_suite
+                    .workloads
+                    .iter()
+                    .map(|baseline_workload| {
+                        // Collect results from all frameworks for this workload
+                        let mut framework_results = Vec::new();
+
+                        for (idx, (fw_name, fw_profile)) in profile_results.iter().enumerate() {
+                            // Find matching workload in this framework's results
+                            if let Some(fw_suite) = fw_profile.suites.iter().find(|s| s.name == baseline_suite.name)
+                                && let Some(fw_workload) =
+                                    fw_suite.workloads.iter().find(|w| w.name == baseline_workload.name)
+                                {
+                                    // For baseline (idx == 0), no statistical tests
+                                    let (statistical_tests, effect_sizes, verdict) = if idx == 0 {
+                                        (None, None, Some("baseline".to_string()))
+                                    } else {
+                                        // Perform statistical comparison for this workload
+                                        let baseline_rps = vec![baseline_workload.results.throughput.requests_per_sec];
+                                        let fw_rps = vec![fw_workload.results.throughput.requests_per_sec];
+
+                                        let rps_test =
+                                            analyzer.welch_t_test(&baseline_rps, &fw_rps, "requests_per_sec");
+                                        let rps_effect = analyzer.cohens_d(&baseline_rps, &fw_rps, "requests_per_sec");
+
+                                        let verdict_str = if rps_test.is_significant {
+                                            if rps_test.statistic < 0.0 {
+                                                "significantly_better"
+                                            } else {
+                                                "significantly_worse"
+                                            }
+                                        } else {
+                                            "similar"
+                                        };
+
+                                        (
+                                            Some(vec![rps_test]),
+                                            Some(vec![rps_effect]),
+                                            Some(verdict_str.to_string()),
+                                        )
+                                    };
+
+                                    framework_results.push(FrameworkResult {
+                                        framework: fw_name.clone(),
+                                        throughput: fw_workload.results.throughput.clone(),
+                                        latency: fw_workload.results.latency.clone(),
+                                        resources: fw_workload.results.resources.clone(),
+                                        statistical_tests,
+                                        effect_sizes,
+                                        verdict,
+                                    });
+                                }
+                        }
+
+                        // Determine workload winner (highest RPS)
+                        let winner = framework_results
+                            .iter()
+                            .max_by(|a, b| {
+                                a.throughput
+                                    .requests_per_sec
+                                    .partial_cmp(&b.throughput.requests_per_sec)
+                                    .unwrap_or(std::cmp::Ordering::Equal)
+                            })
+                            .map_or_else(|| profile_results[0].0.clone(), |result| result.framework.clone());
+
+                        // Calculate performance ratios
+                        let performance_ratios: HashMap<String, f64> = framework_results
+                            .iter()
+                            .map(|fr| {
+                                let ratio = if baseline_workload.results.throughput.requests_per_sec > 0.0 {
+                                    fr.throughput.requests_per_sec
+                                        / baseline_workload.results.throughput.requests_per_sec
+                                } else {
+                                    1.0
+                                };
+                                (fr.framework.clone(), ratio)
+                            })
+                            .collect();
+
+                        CompareWorkloadResult {
+                            name: baseline_workload.name.clone(),
+                            description: baseline_workload.description.clone(),
+                            category: baseline_workload.category.clone(),
+                            payload_size_bytes: baseline_workload.payload_size_bytes,
+                            endpoint: baseline_workload.endpoint.clone(),
+                            results: framework_results,
+                            comparison: WorkloadComparisonAnalysis {
+                                winner,
+                                performance_ratios,
+                                statistical_significance: None, // Can be extended later
+                            },
+                        }
+                    })
+                    .collect();
+
+                CompareSuiteResult {
+                    name: baseline_suite.name.clone(),
+                    description: baseline_suite.description.clone(),
+                    workloads: workload_comparisons,
+                }
+            })
+            .collect()
+    }
+
+    /// Calculate workloads won per framework and category winners
+    ///
+    /// MEDIUM-5: Populates `workloads_won` and `category_winners` fields
+    fn calculate_winners(
+        &self,
+        profile_results: &[(String, ProfileResult)],
+    ) -> (
+        std::collections::HashMap<String, usize>,
+        std::collections::HashMap<String, String>,
+    ) {
+        use std::collections::HashMap;
+
+        let mut workloads_won: HashMap<String, usize> = HashMap::new();
+        let mut category_workload_counts: HashMap<String, HashMap<String, usize>> = HashMap::new();
+
+        // Initialize counters for all frameworks
+        for (fw_name, _) in profile_results {
+            workloads_won.insert(fw_name.clone(), 0);
+        }
+
+        if profile_results.is_empty() {
+            return (workloads_won, HashMap::new());
+        }
+
+        // Iterate through all workloads and determine winners
+        let baseline = &profile_results[0].1;
+        for suite in &baseline.suites {
+            for workload in &suite.workloads {
+                let category = &workload.category;
+
+                // Find the framework with highest RPS for this workload
+                let mut best_rps = workload.results.throughput.requests_per_sec;
+                let mut winner = profile_results[0].0.clone();
+
+                for (fw_name, fw_profile) in profile_results.iter().skip(1) {
+                    if let Some(fw_suite) = fw_profile.suites.iter().find(|s| s.name == suite.name)
+                        && let Some(fw_workload) = fw_suite.workloads.iter().find(|w| w.name == workload.name) {
+                            let fw_rps = fw_workload.results.throughput.requests_per_sec;
+                            if fw_rps > best_rps {
+                                best_rps = fw_rps;
+                                winner.clone_from(fw_name);
+                            }
+                        }
+                }
+
+                // Increment win count
+                *workloads_won.entry(winner.clone()).or_insert(0) += 1;
+
+                // Track wins per category
+                category_workload_counts
+                    .entry(category.clone())
+                    .or_default()
+                    .entry(winner)
+                    .and_modify(|count| *count += 1)
+                    .or_insert(1);
+            }
+        }
+
+        // Determine category winners (framework with most wins in each category)
+        let category_winners: HashMap<String, String> = category_workload_counts
+            .into_iter()
+            .map(|(category, fw_counts)| {
+                let winner = fw_counts
+                    .into_iter()
+                    .max_by_key(|(_, count)| *count)
+                    .map_or_else(|| profile_results[0].0.clone(), |(fw_name, _)| fw_name);
+                (category, winner)
+            })
+            .collect();
+
+        (workloads_won, category_winners)
     }
 
     /// Generate markdown comparison report

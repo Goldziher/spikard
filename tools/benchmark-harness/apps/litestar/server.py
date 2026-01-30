@@ -64,6 +64,80 @@ class VeryLargePayload(Struct):
     images: list[Image]
 
 
+class UrlencodedSimple(Struct):
+    """Simple URL-encoded form validation schema."""
+
+    name: str
+    email: str
+    age: int
+    subscribe: bool
+
+
+class UrlencodedComplex(Struct):
+    """Complex URL-encoded form validation schema."""
+
+    username: str
+    password: str
+    email: str
+    first_name: str
+    last_name: str
+    age: int
+    country: str
+    state: str
+    city: str
+    zip: str
+    phone: str
+    company: str
+    job_title: str
+    subscribe: bool
+    newsletter: bool
+    terms_accepted: bool
+    privacy_accepted: bool
+    marketing_consent: bool
+    two_factor_enabled: bool
+
+
+class QueryFew(Struct):
+    """Query parameters validation schema for few params."""
+
+    q: str
+    page: int | None = None
+    limit: int | None = None
+
+
+class QueryMedium(Struct):
+    """Query parameters validation schema for medium params."""
+
+    search: str
+    category: str | None = None
+    sort: str | None = None
+    order: str | None = None
+    page: int | None = None
+    limit: int | None = None
+    filter: str | None = None
+
+
+class QueryMany(Struct):
+    """Query parameters validation schema for many params."""
+
+    q: str
+    category: str | None = None
+    subcategory: str | None = None
+    brand: str | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    color: str | None = None
+    size: str | None = None
+    material: str | None = None
+    rating: int | None = None
+    sort: str | None = None
+    order: str | None = None
+    page: int | None = None
+    limit: int | None = None
+    in_stock: bool | None = None
+    on_sale: bool | None = None
+
+
 # Raw endpoints (no validation)
 @post("/json/small", status_code=200)
 async def post_json_small(request: Request) -> dict[str, Any]:
@@ -86,18 +160,42 @@ async def post_json_very_large(request: Request) -> dict[str, Any]:
 
 
 @post("/multipart/small", status_code=200)
-async def post_multipart_small() -> dict[str, int]:
-    return {"files_received": 1, "total_bytes": 1024}
+async def post_multipart_small(request: Request) -> dict[str, int]:
+    form = await request.form()
+    files_received = 0
+    total_bytes = 0
+    for key, value in form.items():
+        if hasattr(value, "file"):
+            files_received += 1
+            content = await value.read()
+            total_bytes += len(content)
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/multipart/medium", status_code=200)
-async def post_multipart_medium() -> dict[str, int]:
-    return {"files_received": 2, "total_bytes": 10240}
+async def post_multipart_medium(request: Request) -> dict[str, int]:
+    form = await request.form()
+    files_received = 0
+    total_bytes = 0
+    for key, value in form.items():
+        if hasattr(value, "file"):
+            files_received += 1
+            content = await value.read()
+            total_bytes += len(content)
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/multipart/large", status_code=200)
-async def post_multipart_large() -> dict[str, int]:
-    return {"files_received": 5, "total_bytes": 102400}
+async def post_multipart_large(request: Request) -> dict[str, int]:
+    form = await request.form()
+    files_received = 0
+    total_bytes = 0
+    for key, value in form.items():
+        if hasattr(value, "file"):
+            files_received += 1
+            content = await value.read()
+            total_bytes += len(content)
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/urlencoded/simple", status_code=200)
@@ -187,42 +285,104 @@ async def post_json_very_large_validated(data: VeryLargePayload) -> VeryLargePay
 
 
 @post("/validated/multipart/small", status_code=200)
-async def post_multipart_small_validated() -> dict[str, int]:
-    return {"files_received": 1, "total_bytes": 1024}
+async def post_multipart_small_validated(request: Request) -> Any:
+    form = await request.form()
+    files_received = 0
+    total_bytes = 0
+    for key, value in form.items():
+        if hasattr(value, "file"):
+            files_received += 1
+            content = await value.read()
+            total_bytes += len(content)
+    if files_received == 0:
+        from litestar.exceptions import ValidationException
+        raise ValidationException("No files received")
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/validated/multipart/medium", status_code=200)
-async def post_multipart_medium_validated() -> dict[str, int]:
-    return {"files_received": 2, "total_bytes": 10240}
+async def post_multipart_medium_validated(request: Request) -> Any:
+    form = await request.form()
+    files_received = 0
+    total_bytes = 0
+    for key, value in form.items():
+        if hasattr(value, "file"):
+            files_received += 1
+            content = await value.read()
+            total_bytes += len(content)
+    if files_received == 0:
+        from litestar.exceptions import ValidationException
+        raise ValidationException("No files received")
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/validated/multipart/large", status_code=200)
-async def post_multipart_large_validated() -> dict[str, int]:
-    return {"files_received": 5, "total_bytes": 102400}
+async def post_multipart_large_validated(request: Request) -> Any:
+    form = await request.form()
+    files_received = 0
+    total_bytes = 0
+    for key, value in form.items():
+        if hasattr(value, "file"):
+            files_received += 1
+            content = await value.read()
+            total_bytes += len(content)
+    if files_received == 0:
+        from litestar.exceptions import ValidationException
+        raise ValidationException("No files received")
+    return {"files_received": files_received, "total_bytes": total_bytes}
 
 
 @post("/validated/urlencoded/simple", status_code=200)
-async def post_urlencoded_simple_validated(request: Request) -> dict[str, Any]:
-    return await _parse_urlencoded(request)
+async def post_urlencoded_simple_validated(request: Request) -> Any:
+    raw_data = await _parse_urlencoded(request)
+    try:
+        import msgspec
+
+        validated = msgspec.convert(raw_data, UrlencodedSimple)
+        return msgspec.structs.asdict(validated)
+    except Exception as e:
+        from litestar.exceptions import ValidationException
+        raise ValidationException(str(e))
 
 
 @post("/validated/urlencoded/complex", status_code=200)
-async def post_urlencoded_complex_validated(request: Request) -> dict[str, Any]:
-    return await _parse_urlencoded(request)
+async def post_urlencoded_complex_validated(request: Request) -> Any:
+    raw_data = await _parse_urlencoded(request)
+    try:
+        import msgspec
+
+        validated = msgspec.convert(raw_data, UrlencodedComplex)
+        return msgspec.structs.asdict(validated)
+    except Exception as e:
+        from litestar.exceptions import ValidationException
+        raise ValidationException(str(e))
 
 
 @get("/validated/path/simple/{id:str}")
-async def get_path_simple_validated(id: str) -> dict[str, str]:
+async def get_path_simple_validated(id: str) -> Any:
+    if not id or len(id) > 255 or not id.replace("-", "").replace("_", "").isalnum():
+        from litestar.exceptions import ValidationException
+        raise ValidationException("Path parameter 'id' must be non-empty, alphanumeric (with - or _), and max 255 characters")
     return {"id": id}
 
 
 @get("/validated/path/multiple/{user_id:str}/{post_id:str}")
-async def get_path_multiple_validated(user_id: str, post_id: str) -> dict[str, str]:
+async def get_path_multiple_validated(user_id: str, post_id: str) -> Any:
+    if not user_id or len(user_id) > 255 or not user_id.replace("-", "").replace("_", "").isalnum():
+        from litestar.exceptions import ValidationException
+        raise ValidationException("Path parameter 'user_id' must be non-empty, alphanumeric (with - or _), and max 255 characters")
+    if not post_id or len(post_id) > 255 or not post_id.replace("-", "").replace("_", "").isalnum():
+        from litestar.exceptions import ValidationException
+        raise ValidationException("Path parameter 'post_id' must be non-empty, alphanumeric (with - or _), and max 255 characters")
     return {"user_id": user_id, "post_id": post_id}
 
 
 @get("/validated/path/deep/{org:str}/{team:str}/{project:str}/{resource:str}/{id:str}")
-async def get_path_deep_validated(org: str, team: str, project: str, resource: str, id: str) -> dict[str, str]:
+async def get_path_deep_validated(org: str, team: str, project: str, resource: str, id: str) -> Any:
+    from litestar.exceptions import ValidationException
+    for param_name, param_value in [("org", org), ("team", team), ("project", project), ("resource", resource), ("id", id)]:
+        if not param_value or len(param_value) > 255 or not param_value.replace("-", "").replace("_", "").isalnum():
+            raise ValidationException(f"Path parameter '{param_name}' must be non-empty, alphanumeric (with - or _), and max 255 characters")
     return {"org": org, "team": team, "project": project, "resource": resource, "id": id}
 
 
@@ -242,18 +402,45 @@ async def get_path_date_validated(date: DateType) -> dict[str, str]:
 
 
 @get("/validated/query/few")
-async def get_query_few_validated(request: Request) -> dict[str, Any]:
-    return dict(request.query_params)
+async def get_query_few_validated(request: Request) -> Any:
+    params = dict(request.query_params)
+    try:
+        import msgspec
+
+        validated = msgspec.convert(params, QueryFew)
+        result = msgspec.structs.asdict(validated)
+        return {k: v for k, v in result.items() if v is not None}
+    except Exception as e:
+        from litestar.exceptions import ValidationException
+        raise ValidationException(str(e))
 
 
 @get("/validated/query/medium")
-async def get_query_medium_validated(request: Request) -> dict[str, Any]:
-    return dict(request.query_params)
+async def get_query_medium_validated(request: Request) -> Any:
+    params = dict(request.query_params)
+    try:
+        import msgspec
+
+        validated = msgspec.convert(params, QueryMedium)
+        result = msgspec.structs.asdict(validated)
+        return {k: v for k, v in result.items() if v is not None}
+    except Exception as e:
+        from litestar.exceptions import ValidationException
+        raise ValidationException(str(e))
 
 
 @get("/validated/query/many")
-async def get_query_many_validated(request: Request) -> dict[str, Any]:
-    return dict(request.query_params)
+async def get_query_many_validated(request: Request) -> Any:
+    params = dict(request.query_params)
+    try:
+        import msgspec
+
+        validated = msgspec.convert(params, QueryMany)
+        result = msgspec.structs.asdict(validated)
+        return {k: v for k, v in result.items() if v is not None}
+    except Exception as e:
+        from litestar.exceptions import ValidationException
+        raise ValidationException(str(e))
 
 
 app = Litestar(
@@ -319,5 +506,4 @@ if __name__ == "__main__":
         interface=Interfaces.ASGI,
         workers=1,
         log_level="error",
-        http1_buffer_size=16 * 1024 * 1024,
     ).serve()

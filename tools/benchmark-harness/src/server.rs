@@ -18,6 +18,8 @@ pub struct ServerHandle {
     pub base_url: String,
     #[cfg(unix)]
     pub stop_signal: i32,
+    /// Flag to track if process has been explicitly killed to avoid double-killing in Drop
+    pub killed: bool,
 }
 
 impl ServerHandle {
@@ -46,18 +48,25 @@ impl ServerHandle {
             let max_wait_iters = 150;
             for _ in 0..max_wait_iters {
                 match self.process.try_wait() {
-                    Ok(Some(_)) => return Ok(()),
+                    Ok(Some(_)) => {
+                        // Mark process as killed before returning to prevent Drop from sending SIGKILL
+                        self.killed = true;
+                        return Ok(());
+                    }
                     Ok(None) => std::thread::sleep(Duration::from_millis(100)),
                     Err(e) => return Err(e.into()),
                 }
             }
 
             self.process.kill()?;
+            // Mark process as killed before returning to prevent Drop from sending SIGKILL
+            self.killed = true;
         }
 
         #[cfg(not(unix))]
         {
             self.process.kill()?;
+            self.killed = true;
         }
 
         Ok(())
@@ -66,6 +75,11 @@ impl ServerHandle {
 
 impl Drop for ServerHandle {
     fn drop(&mut self) {
+        // Only send SIGKILL if the process has not already been explicitly killed
+        if self.killed {
+            return;
+        }
+
         #[cfg(unix)]
         {
             let pid = self.process.id() as i32;
@@ -79,6 +93,8 @@ impl Drop for ServerHandle {
             }
         }
         let _ = self.process.kill();
+        // Reap the child process to prevent zombies
+        let _ = self.process.wait();
     }
 }
 
@@ -249,6 +265,7 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
         base_url: base_url.clone(),
         #[cfg(unix)]
         stop_signal,
+        killed: false,
     };
 
     let stderr_snapshot = || -> String {

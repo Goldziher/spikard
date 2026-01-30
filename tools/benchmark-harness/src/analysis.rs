@@ -4,8 +4,9 @@
 //! calculate statistics, detect outliers, and compute confidence intervals.
 
 use crate::Result;
-use crate::types::{BenchmarkResult, ErrorMetrics, SerializationMetrics, StartupMetrics};
+use crate::types::{BenchmarkResult, ErrorMetrics, StartupMetrics};
 use serde::{Deserialize, Serialize};
+use statrs::distribution::{ContinuousCDF, StudentsT};
 
 /// Aggregated benchmark result with statistical measures
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,10 +37,6 @@ pub struct AggregatedResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_metrics: Option<AggregatedErrorMetrics>,
 
-    /// Aggregated serialization metrics
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub serialization: Option<AggregatedSerializationMetrics>,
-
     /// Indices of runs identified as outliers
     pub outlier_runs: Vec<usize>,
 }
@@ -61,8 +58,6 @@ pub struct MetricStats {
 /// Aggregated startup metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AggregatedStartupMetrics {
-    pub process_spawn_ms: MetricStats,
-    pub time_to_first_response_ms: MetricStats,
     pub initialization_memory_mb: MetricStats,
     pub total_startup_ms: MetricStats,
 }
@@ -106,23 +101,9 @@ pub struct AggregatedResourceMetrics {
 /// Aggregated error metrics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AggregatedErrorMetrics {
-    pub validation_error_p99_ms: MetricStats,
-    pub not_found_p99_ms: MetricStats,
-    pub server_error_p99_ms: MetricStats,
-    pub error_throughput_rps: MetricStats,
-    pub error_memory_impact_mb: MetricStats,
     pub total_errors: MetricStats,
     pub error_rate: MetricStats,
-}
-
-/// Aggregated serialization metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AggregatedSerializationMetrics {
-    pub json_parse_overhead_ms: MetricStats,
-    pub json_serialize_overhead_ms: MetricStats,
-    pub validation_overhead_ms: MetricStats,
-    pub total_overhead_pct: MetricStats,
-    pub sample_count: MetricStats,
+    pub error_throughput_rps: MetricStats,
 }
 
 /// Aggregate multiple benchmark runs into a single result with statistics
@@ -173,12 +154,6 @@ pub fn aggregate_runs(runs: &[BenchmarkResult]) -> Result<AggregatedResult> {
         None
     };
 
-    let serialization = if runs.iter().any(|r| r.serialization.is_some()) {
-        Some(aggregate_serialization_metrics(runs))
-    } else {
-        None
-    };
-
     Ok(AggregatedResult {
         framework: framework.clone(),
         workload: workload.clone(),
@@ -188,7 +163,6 @@ pub fn aggregate_runs(runs: &[BenchmarkResult]) -> Result<AggregatedResult> {
         latency,
         resources,
         error_metrics,
-        serialization,
         outlier_runs,
     })
 }
@@ -228,21 +202,15 @@ fn aggregate_startup_metrics(runs: &[BenchmarkResult]) -> AggregatedStartupMetri
             cv: 0.0,
         };
         return AggregatedStartupMetrics {
-            process_spawn_ms: zero_stats.clone(),
-            time_to_first_response_ms: zero_stats.clone(),
             initialization_memory_mb: zero_stats.clone(),
             total_startup_ms: zero_stats,
         };
     }
 
-    let process_spawn_ms: Vec<f64> = values.iter().map(|v| v.process_spawn_ms).collect();
-    let time_to_first_response_ms: Vec<f64> = values.iter().map(|v| v.time_to_first_response_ms).collect();
     let initialization_memory_mb: Vec<f64> = values.iter().map(|v| v.initialization_memory_mb).collect();
     let total_startup_ms: Vec<f64> = values.iter().map(|v| v.total_startup_ms).collect();
 
     AggregatedStartupMetrics {
-        process_spawn_ms: calculate_stats(&process_spawn_ms),
-        time_to_first_response_ms: calculate_stats(&time_to_first_response_ms),
         initialization_memory_mb: calculate_stats(&initialization_memory_mb),
         total_startup_ms: calculate_stats(&total_startup_ms),
     }
@@ -322,69 +290,20 @@ fn aggregate_error_metrics(runs: &[BenchmarkResult]) -> AggregatedErrorMetrics {
             cv: 0.0,
         };
         return AggregatedErrorMetrics {
-            validation_error_p99_ms: zero_stats.clone(),
-            not_found_p99_ms: zero_stats.clone(),
-            server_error_p99_ms: zero_stats.clone(),
-            error_throughput_rps: zero_stats.clone(),
-            error_memory_impact_mb: zero_stats.clone(),
             total_errors: zero_stats.clone(),
-            error_rate: zero_stats,
+            error_rate: zero_stats.clone(),
+            error_throughput_rps: zero_stats,
         };
     }
 
-    let validation_error_p99_ms: Vec<f64> = values.iter().map(|v| v.validation_error_p99_ms).collect();
-    let not_found_p99_ms: Vec<f64> = values.iter().map(|v| v.not_found_p99_ms).collect();
-    let server_error_p99_ms: Vec<f64> = values.iter().map(|v| v.server_error_p99_ms).collect();
-    let error_throughput_rps: Vec<f64> = values.iter().map(|v| v.error_throughput_rps).collect();
-    let error_memory_impact_mb: Vec<f64> = values.iter().map(|v| v.error_memory_impact_mb).collect();
     let total_errors: Vec<f64> = values.iter().map(|v| v.total_errors as f64).collect();
     let error_rate: Vec<f64> = values.iter().map(|v| v.error_rate).collect();
+    let error_throughput_rps: Vec<f64> = values.iter().map(|v| v.error_throughput_rps).collect();
 
     AggregatedErrorMetrics {
-        validation_error_p99_ms: calculate_stats(&validation_error_p99_ms),
-        not_found_p99_ms: calculate_stats(&not_found_p99_ms),
-        server_error_p99_ms: calculate_stats(&server_error_p99_ms),
-        error_throughput_rps: calculate_stats(&error_throughput_rps),
-        error_memory_impact_mb: calculate_stats(&error_memory_impact_mb),
         total_errors: calculate_stats(&total_errors),
         error_rate: calculate_stats(&error_rate),
-    }
-}
-
-fn aggregate_serialization_metrics(runs: &[BenchmarkResult]) -> AggregatedSerializationMetrics {
-    let values: Vec<&SerializationMetrics> = runs.iter().filter_map(|r| r.serialization.as_ref()).collect();
-
-    if values.is_empty() {
-        let zero_stats = MetricStats {
-            mean: 0.0,
-            median: 0.0,
-            stddev: 0.0,
-            min: 0.0,
-            max: 0.0,
-            ci_95: (0.0, 0.0),
-            cv: 0.0,
-        };
-        return AggregatedSerializationMetrics {
-            json_parse_overhead_ms: zero_stats.clone(),
-            json_serialize_overhead_ms: zero_stats.clone(),
-            validation_overhead_ms: zero_stats.clone(),
-            total_overhead_pct: zero_stats.clone(),
-            sample_count: zero_stats,
-        };
-    }
-
-    let json_parse_overhead_ms: Vec<f64> = values.iter().map(|v| v.json_parse_overhead_ms).collect();
-    let json_serialize_overhead_ms: Vec<f64> = values.iter().map(|v| v.json_serialize_overhead_ms).collect();
-    let validation_overhead_ms: Vec<f64> = values.iter().map(|v| v.validation_overhead_ms).collect();
-    let total_overhead_pct: Vec<f64> = values.iter().map(|v| v.total_overhead_pct).collect();
-    let sample_count: Vec<f64> = values.iter().map(|v| v.sample_count as f64).collect();
-
-    AggregatedSerializationMetrics {
-        json_parse_overhead_ms: calculate_stats(&json_parse_overhead_ms),
-        json_serialize_overhead_ms: calculate_stats(&json_serialize_overhead_ms),
-        validation_overhead_ms: calculate_stats(&validation_overhead_ms),
-        total_overhead_pct: calculate_stats(&total_overhead_pct),
-        sample_count: calculate_stats(&sample_count),
+        error_throughput_rps: calculate_stats(&error_throughput_rps),
     }
 }
 
@@ -451,18 +370,12 @@ pub fn calculate_confidence_interval(values: &[f64], confidence: f64) -> (f64, f
 
     let se = std / n.sqrt();
 
-    let t_critical = if values.len() < 30 {
-        match values.len() {
-            2 => 12.706,
-            3 => 4.303,
-            4 => 3.182,
-            5 => 2.776,
-            6 => 2.571,
-            7..=10 => 2.447,
-            11..=20 => 2.228,
-            _ => 2.093,
-        }
+    let alpha = 1.0 - confidence;
+    let df = (values.len() - 1) as f64;
+    let t_critical = if let Ok(t_dist) = StudentsT::new(0.0, 1.0, df) {
+        t_dist.inverse_cdf(1.0 - alpha / 2.0)
     } else {
+        // Fallback for edge cases
         match confidence {
             x if x >= 0.99 => 2.576,
             x if x >= 0.95 => 1.96,
