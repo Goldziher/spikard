@@ -259,7 +259,6 @@ runs:
 
     - name: Run benchmark
       shell: bash
-      timeout-minutes: 30
       run: |
         # Check if framework should be skipped
         APP_DIR="tools/benchmark-harness/apps/${{ inputs.framework }}"
