@@ -9,7 +9,7 @@ gem 'hanami-api', '~> 0.3'
 gem 'dry-schema', '~> 1.14'
 
 # Puma - High-performance Ruby web server
-gem 'falcon', '~> 0.48'
+gem 'puma', '~> 6.5'
 
 # Rack - Ruby web server interface
 gem 'rack', '~> 3.2'

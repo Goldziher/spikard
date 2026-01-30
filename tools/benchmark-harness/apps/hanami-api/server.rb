@@ -143,26 +143,26 @@ class BenchmarkApp < Hanami::API
 
   # JSON body endpoints - parse and echo without validation
   post '/json/small' do
-    request = Rack::Request.new(env)
-    body = JSON.parse(request.body.read)
+    env['rack.input'].rewind
+    body = JSON.parse(env['rack.input'].read)
     json(body)
   end
 
   post '/json/medium' do
-    request = Rack::Request.new(env)
-    body = JSON.parse(request.body.read)
+    env['rack.input'].rewind
+    body = JSON.parse(env['rack.input'].read)
     json(body)
   end
 
   post '/json/large' do
-    request = Rack::Request.new(env)
-    body = JSON.parse(request.body.read)
+    env['rack.input'].rewind
+    body = JSON.parse(env['rack.input'].read)
     json(body)
   end
 
   post '/json/very-large' do
-    request = Rack::Request.new(env)
-    body = JSON.parse(request.body.read)
+    env['rack.input'].rewind
+    body = JSON.parse(env['rack.input'].read)
     json(body)
   end
 
@@ -284,8 +284,8 @@ class BenchmarkApp < Hanami::API
 
   # JSON body endpoints - validate and echo back
   post '/validated/json/small' do
-    request = Rack::Request.new(env)
-    body = JSON.parse(request.body.read)
+    env['rack.input'].rewind
+    body = JSON.parse(env['rack.input'].read)
     result = SmallPayloadSchema.call(body)
 
     if result.success?
@@ -296,8 +296,8 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/medium' do
-    request = Rack::Request.new(env)
-    body = JSON.parse(request.body.read)
+    env['rack.input'].rewind
+    body = JSON.parse(env['rack.input'].read)
     result = MediumPayloadSchema.call(body)
 
     if result.success?
@@ -308,8 +308,8 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/large' do
-    request = Rack::Request.new(env)
-    body = JSON.parse(request.body.read)
+    env['rack.input'].rewind
+    body = JSON.parse(env['rack.input'].read)
     result = LargePayloadSchema.call(body)
 
     if result.success?
@@ -320,8 +320,8 @@ class BenchmarkApp < Hanami::API
   end
 
   post '/validated/json/very-large' do
-    request = Rack::Request.new(env)
-    body = JSON.parse(request.body.read)
+    env['rack.input'].rewind
+    body = JSON.parse(env['rack.input'].read)
     result = VeryLargePayloadSchema.call(body)
 
     if result.success?
@@ -531,10 +531,12 @@ if __FILE__ == $PROGRAM_NAME
   port = (ARGV[0] || 8000).to_i
   $stderr.puts "[hanami-api] Starting server on port #{port}"
 
-  handler = Rackup::Handler.get('falcon')
+  handler = Rackup::Handler.get('puma')
   handler.run(
     BenchmarkApp.new,
     Port: port,
-    Host: '0.0.0.0'
+    Host: '0.0.0.0',
+    Threads: '4:16',
+    Silent: true
   )
 end
