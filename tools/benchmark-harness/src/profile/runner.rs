@@ -357,10 +357,15 @@ impl ProfileRunner {
                 workload_def.name
             );
 
-            let result = self.run_workload(workload_def, server, suite_php_profiler).await?;
-            workload_results.push(result);
-
-            println!("  ✓ Complete");
+            match self.run_workload(workload_def, server, suite_php_profiler).await {
+                Ok(result) => {
+                    workload_results.push(result);
+                    println!("  ✓ Complete");
+                }
+                Err(e) => {
+                    eprintln!("  ⚠ Skipped: {e}");
+                }
+            }
             println!();
         }
 

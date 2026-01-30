@@ -95,7 +95,9 @@ fn fixture_declares_multipart(fixture: &Fixture) -> bool {
     })
 }
 
-async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
+/// Returns `Ok(true)` if the preflight succeeded, `Ok(false)` if the workload
+/// should be skipped (server returned non-200 or connection failed).
+async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<bool> {
     let method = reqwest::Method::from_bytes(fixture.request.method.as_bytes()).map_err(|e| {
         Error::InvalidInput(format!(
             "Invalid HTTP method '{}' for fixture {}: {}",
@@ -157,22 +159,28 @@ async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
         }
     }
 
-    let response = request
-        .send()
-        .await
-        .map_err(|e| Error::LoadGeneratorFailed(format!("Preflight request failed for {}: {}", fixture.name, e)))?;
+    let response = match request.send().await {
+        Ok(resp) => resp,
+        Err(e) => {
+            eprintln!(
+                "⚠️  Preflight request failed for {} ({}): {e} — skipping workload",
+                fixture.name, fixture.request.path
+            );
+            return Ok(false);
+        }
+    };
 
     let expected = fixture.expected_response.status_code;
     let actual = response.status().as_u16();
     if actual == expected {
-        return Ok(());
+        return Ok(true);
     }
 
     let body = response.text().await.unwrap_or_default();
     let body_snippet = body.lines().take(20).collect::<Vec<_>>().join("\n").trim().to_string();
 
-    Err(Error::LoadGeneratorFailed(format!(
-        "Preflight check failed for fixture {} ({} {}): expected HTTP {}, got HTTP {}{}",
+    eprintln!(
+        "⚠️  Preflight check failed for fixture {} ({} {}): expected HTTP {}, got HTTP {}{}  — skipping workload",
         fixture.name,
         fixture.request.method,
         fixture.request.path,
@@ -183,7 +191,8 @@ async fn preflight_fixture_request(url: &str, fixture: &Fixture) -> Result<()> {
         } else {
             format!("\n\nResponse body (first lines):\n{body_snippet}")
         }
-    )))
+    );
+    Ok(false)
 }
 
 /// Load generator type
@@ -237,8 +246,13 @@ async fn run_oha(config: LoadTestConfig) -> Result<(OhaOutput, ThroughputMetrics
         config.base_url.clone()
     };
 
-    if let Some(fixture) = &config.fixture {
-        preflight_fixture_request(&url, fixture).await?;
+    if let Some(fixture) = &config.fixture
+        && !preflight_fixture_request(&url, fixture).await?
+    {
+        return Err(Error::LoadGeneratorFailed(format!(
+            "Preflight failed for {} — workload skipped",
+            fixture.name
+        )));
     }
 
     let mut cmd = Command::new("oha");

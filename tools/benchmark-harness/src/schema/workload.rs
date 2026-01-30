@@ -297,7 +297,7 @@ impl WorkloadSuite {
             category: "query-params".to_string(),
             endpoint: Endpoint {
                 method: "GET".to_string(),
-                path: "/query/medium?category=electronics&tags=phone,smart&min_price=100&max_price=1000&sort=price&order=asc&page=1&limit=20".to_string(),
+                path: "/query/medium?search=electronics&category=phones&sort=price&order=asc&page=1&limit=20&filter=active".to_string(),
             },
             payload_size_bytes: None,
             body_file: None,
@@ -312,7 +312,7 @@ impl WorkloadSuite {
             category: "query-params".to_string(),
             endpoint: Endpoint {
                 method: "GET".to_string(),
-                path: "/query/many?q=search&page=1&limit=20&sort=date&order=desc&filter=active&category=tech&subcategory=mobile&brand=test&min_price=0&max_price=999&rating=4&verified=true&in_stock=true&shipping=fast&color=blue".to_string(),
+                path: "/query/many?q=search&page=1&limit=20&sort=date&order=desc&category=tech&subcategory=mobile&brand=test&min_price=0&max_price=999&rating=4&in_stock=true&on_sale=false&color=blue&size=medium&material=metal".to_string(),
             },
             payload_size_bytes: None,
             body_file: None,

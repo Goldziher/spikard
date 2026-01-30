@@ -53,48 +53,60 @@ app.post("/json/very-large", ({ req, res }) => {
 });
 
 app.post("/multipart/small", async ({ req, res }) => {
-	const formData = await req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
+	try {
+		const formData = await req.formData();
+		let files_received = 0;
+		let total_bytes = 0;
 
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
+		for (const [key, value] of formData.entries()) {
+			if (key.startsWith("file") && value instanceof File) {
+				files_received++;
+				total_bytes += value.size;
+			}
 		}
-	}
 
-	res.json({ files_received, total_bytes });
+		res.json({ files_received, total_bytes });
+	} catch {
+		res.status(500).json({ error: "Multipart parsing not supported" });
+	}
 });
 
 app.post("/multipart/medium", async ({ req, res }) => {
-	const formData = await req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
+	try {
+		const formData = await req.formData();
+		let files_received = 0;
+		let total_bytes = 0;
 
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
+		for (const [key, value] of formData.entries()) {
+			if (key.startsWith("file") && value instanceof File) {
+				files_received++;
+				total_bytes += value.size;
+			}
 		}
-	}
 
-	res.json({ files_received, total_bytes });
+		res.json({ files_received, total_bytes });
+	} catch {
+		res.status(500).json({ error: "Multipart parsing not supported" });
+	}
 });
 
 app.post("/multipart/large", async ({ req, res }) => {
-	const formData = await req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
+	try {
+		const formData = await req.formData();
+		let files_received = 0;
+		let total_bytes = 0;
 
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
+		for (const [key, value] of formData.entries()) {
+			if (key.startsWith("file") && value instanceof File) {
+				files_received++;
+				total_bytes += value.size;
+			}
 		}
-	}
 
-	res.json({ files_received, total_bytes });
+		res.json({ files_received, total_bytes });
+	} catch {
+		res.status(500).json({ error: "Multipart parsing not supported" });
+	}
 });
 
 app.post("/urlencoded/simple", ({ req, res }) => {
@@ -359,63 +371,75 @@ app.post(
 );
 
 app.post("/validated/multipart/small", async ({ req, res }) => {
-	const formData = await req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
+	try {
+		const formData = await req.formData();
+		let files_received = 0;
+		let total_bytes = 0;
 
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
+		for (const [key, value] of formData.entries()) {
+			if (key.startsWith("file") && value instanceof File) {
+				files_received++;
+				total_bytes += value.size;
+			}
 		}
-	}
 
-	if (files_received === 0) {
-		res.status(400).json({ error: "No files received" });
-		return;
-	}
+		if (files_received === 0) {
+			res.status(400).json({ error: "No files received" });
+			return;
+		}
 
-	res.json({ files_received, total_bytes });
+		res.json({ files_received, total_bytes });
+	} catch {
+		res.status(500).json({ error: "Multipart parsing not supported" });
+	}
 });
 
 app.post("/validated/multipart/medium", async ({ req, res }) => {
-	const formData = await req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
+	try {
+		const formData = await req.formData();
+		let files_received = 0;
+		let total_bytes = 0;
 
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
+		for (const [key, value] of formData.entries()) {
+			if (key.startsWith("file") && value instanceof File) {
+				files_received++;
+				total_bytes += value.size;
+			}
 		}
-	}
 
-	if (files_received === 0) {
-		res.status(400).json({ error: "No files received" });
-		return;
-	}
+		if (files_received === 0) {
+			res.status(400).json({ error: "No files received" });
+			return;
+		}
 
-	res.json({ files_received, total_bytes });
+		res.json({ files_received, total_bytes });
+	} catch {
+		res.status(500).json({ error: "Multipart parsing not supported" });
+	}
 });
 
 app.post("/validated/multipart/large", async ({ req, res }) => {
-	const formData = await req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
+	try {
+		const formData = await req.formData();
+		let files_received = 0;
+		let total_bytes = 0;
 
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
+		for (const [key, value] of formData.entries()) {
+			if (key.startsWith("file") && value instanceof File) {
+				files_received++;
+				total_bytes += value.size;
+			}
 		}
-	}
 
-	if (files_received === 0) {
-		res.status(400).json({ error: "No files received" });
-		return;
-	}
+		if (files_received === 0) {
+			res.status(400).json({ error: "No files received" });
+			return;
+		}
 
-	res.json({ files_received, total_bytes });
+		res.json({ files_received, total_bytes });
+	} catch {
+		res.status(500).json({ error: "Multipart parsing not supported" });
+	}
 });
 
 app.post(
