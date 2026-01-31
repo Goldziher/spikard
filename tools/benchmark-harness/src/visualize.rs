@@ -9,15 +9,12 @@ use crate::schema::aggregate::AggregatedBenchmarkResults;
 #[derive(Debug, Clone)]
 pub enum ChartType {
     ThroughputLeaderboard,
-    ThroughputByCategory,
+    LatencyDistribution,
+    CategoryHeatmap,
     RawVsValidated,
-    LatencyByLanguage,
-    LatencyP99Leaderboard,
-    PayloadScalingAll,
-    PayloadScalingBest,
+    PayloadScaling,
     ResourceEfficiency,
     ResourceUsage,
-    ThroughputHeatmap,
     All,
 }
 
@@ -26,15 +23,12 @@ impl ChartType {
     pub const fn as_str(&self) -> &str {
         match self {
             Self::ThroughputLeaderboard => "throughput-leaderboard",
-            Self::ThroughputByCategory => "throughput-by-category",
+            Self::LatencyDistribution => "latency-distribution",
+            Self::CategoryHeatmap => "category-heatmap",
             Self::RawVsValidated => "raw-vs-validated",
-            Self::LatencyByLanguage => "latency-by-language",
-            Self::LatencyP99Leaderboard => "latency-p99-leaderboard",
-            Self::PayloadScalingAll => "payload-scaling-all",
-            Self::PayloadScalingBest => "payload-scaling-best",
+            Self::PayloadScaling => "payload-scaling",
             Self::ResourceEfficiency => "resource-efficiency",
             Self::ResourceUsage => "resource-usage",
-            Self::ThroughputHeatmap => "throughput-heatmap",
             Self::All => "all",
         }
     }
@@ -46,15 +40,12 @@ impl FromStr for ChartType {
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "throughput-leaderboard" => Ok(Self::ThroughputLeaderboard),
-            "throughput-by-category" => Ok(Self::ThroughputByCategory),
+            "latency-distribution" => Ok(Self::LatencyDistribution),
+            "category-heatmap" => Ok(Self::CategoryHeatmap),
             "raw-vs-validated" => Ok(Self::RawVsValidated),
-            "latency-by-language" => Ok(Self::LatencyByLanguage),
-            "latency-p99-leaderboard" => Ok(Self::LatencyP99Leaderboard),
-            "payload-scaling-all" => Ok(Self::PayloadScalingAll),
-            "payload-scaling-best" => Ok(Self::PayloadScalingBest),
+            "payload-scaling" => Ok(Self::PayloadScaling),
             "resource-efficiency" => Ok(Self::ResourceEfficiency),
             "resource-usage" => Ok(Self::ResourceUsage),
-            "throughput-heatmap" => Ok(Self::ThroughputHeatmap),
             "all" => Ok(Self::All),
             _ => Err(format!("Unknown chart type: '{s}'")),
         }
@@ -209,9 +200,9 @@ pub fn parse_chart_types(charts_str: &str) -> Result<Vec<ChartType>> {
             Ok(chart_type) => types.push(chart_type),
             Err(_) => {
                 return Err(Error::BenchmarkFailed(format!(
-                    "Unknown chart type: '{name}'. Valid types: throughput-leaderboard, throughput-by-category, \
-                     raw-vs-validated, latency-by-language, latency-p99-leaderboard, payload-scaling-all, \
-                     payload-scaling-best, resource-efficiency, resource-usage, throughput-heatmap, all"
+                    "Unknown chart type: '{name}'. Valid types: throughput-leaderboard, \
+                     latency-distribution, category-heatmap, raw-vs-validated, \
+                     payload-scaling, resource-efficiency, resource-usage, all"
                 )));
             }
         }
