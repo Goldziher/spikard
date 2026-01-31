@@ -64,6 +64,7 @@ coverage/
 !scripts/coverage/**
 crates/spikard-node/index.d.ts
 crates/spikard-node/index.js
+crates/spikard-node/npm/
 crates/extensions/
 dist/
 site/

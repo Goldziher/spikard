@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd -P)"
+# NPM_TOKEN authentication for scoped packages
+if [[ -z "${NODE_AUTH_TOKEN:-}" ]]; then
+	echo "ERROR: NODE_AUTH_TOKEN is not set. Required for publishing scoped @spikard/* packages."
+	exit 1
+fi
 
-cd "${REPO_ROOT}/crates/spikard-node"
-publish_log="$(mktemp)"
+# Configure npm authentication
+cat >~/.npmrc <<'EOF'
+//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+@spikard:registry=https://registry.npmjs.org/
+EOF
+
+publish_log=$(mktemp)
 set +e
-pnpm publish --access public --no-git-checks 2>&1 | tee "${publish_log}"
+npm publish --access public 2>&1 | tee "${publish_log}"
 status=${PIPESTATUS[0]}
 set -e
-if [ "${status}" -ne 0 ]; then
+if [[ "${status}" -ne 0 ]]; then
 	if grep -q "previously published versions" "${publish_log}"; then
 		echo "::notice::@spikard/node-native already published; skipping."
-		echo "@spikard/node-native already published; skipping." >>"${GITHUB_STEP_SUMMARY}"
 	else
 		exit "${status}"
 	fi

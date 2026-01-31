@@ -1145,6 +1145,7 @@ jobs:
       }}
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: read
     steps:
       - name: Checkout
@@ -1194,16 +1195,6 @@ jobs:
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         run: pnpm install -r
 
-      - name: Publish main Node package
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: bash scripts/publish/node/publish-main-package.sh
-
-      - name: Wait for npm indexing
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: sleep 30
-
       - name: Pack platform packages
         run: bash scripts/publish/node/pack-platform-packages.sh
 
@@ -1213,7 +1204,19 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: bash scripts/publish/node/publish-native-packages.sh
 
-      - name: Wait for native packages npm indexing
+      - name: Wait for npm indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        run: sleep 30
+
+      - name: Publish main Node package
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: crates/spikard-node
+        run: bash ../../scripts/publish/node/publish-main-package.sh
+
+      - name: Wait for main package npm indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         run: sleep 30
 
