@@ -108,6 +108,9 @@ importers:
 
   packages/node:
     dependencies:
+      '@spikard/node-native':
+        specifier: workspace:*
+        version: link:../../crates/spikard-node
       zod:
         specifier: ^4.3.6
         version: 4.3.6

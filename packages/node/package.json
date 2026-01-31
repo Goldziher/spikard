@@ -82,7 +82,7 @@
 		"node": ">=20"
 	},
 	"dependencies": {
-		"@spikard/node-native": "0.10.0",
+		"@spikard/node-native": "workspace:*",
 		"zod": "^4.3.6"
 	}
 }
