@@ -5,13 +5,53 @@
 
 use axum::{
     body::Body,
-    http::{Request, Response, StatusCode},
+    http::{Request, Response, StatusCode, header::HeaderName, HeaderValue},
 };
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::future::Future;
 use std::pin::Pin;
+
+/// Pre-built response for routes that always return the same content.
+///
+/// When a route is registered with a `StaticResponse`, the server bypasses
+/// handler execution, validation, lifecycle hooks, and request extraction —
+/// returning the cached response directly. This is ideal for health-check
+/// endpoints or any route whose output never changes at runtime.
+#[derive(Clone, Debug)]
+pub struct StaticResponse {
+    pub status: u16,
+    pub headers: Vec<(HeaderName, HeaderValue)>,
+    pub body: Bytes,
+    pub content_type: HeaderValue,
+}
+
+impl StaticResponse {
+    /// Build an `axum::response::Response` from this static response.
+    ///
+    /// This is the single canonical path for constructing HTTP responses from
+    /// static data — used by the FastRouter middleware, the Axum fallback
+    /// handler, and the `StaticResponseHandler::call` fallback.
+    pub fn to_response(&self) -> Response<Body> {
+        let status = StatusCode::from_u16(self.status).unwrap_or(StatusCode::OK);
+        let mut builder = Response::builder()
+            .status(status)
+            .header(axum::http::header::CONTENT_TYPE, self.content_type.clone());
+        for (name, value) in &self.headers {
+            builder = builder.header(name.clone(), value.clone());
+        }
+        builder
+            .body(Body::from(self.body.clone()))
+            .unwrap_or_else(|_| {
+                Response::builder()
+                    .status(StatusCode::INTERNAL_SERVER_ERROR)
+                    .body(Body::from("Failed to build static response"))
+                    .expect("fallback response must build")
+            })
+    }
+}
 
 /// Request data extracted from HTTP request
 /// This is the language-agnostic representation passed to handlers
@@ -268,6 +308,69 @@ pub trait Handler: Send + Sync {
     /// skip cloning in hot paths.
     fn wants_request_extensions(&self) -> bool {
         false
+    }
+
+    /// Return a pre-built static response if this handler always produces the
+    /// same output. When `Some`, the server bypasses the full middleware
+    /// pipeline and serves the pre-built response directly.
+    fn static_response(&self) -> Option<StaticResponse> {
+        None
+    }
+}
+
+/// A no-op handler that declares a static response.
+///
+/// Language bindings create this handler when a route is registered with
+/// `static_response` configuration. The handler's `call()` method is never
+/// invoked — the server uses the `static_response()` return value instead.
+pub struct StaticResponseHandler {
+    response: StaticResponse,
+}
+
+impl StaticResponseHandler {
+    /// Create a new static response handler.
+    pub fn new(response: StaticResponse) -> Self {
+        Self { response }
+    }
+
+    /// Build a `StaticResponse` from common parameters.
+    ///
+    /// Convenience constructor for language bindings that pass status, body,
+    /// content-type, and optional extra headers.
+    pub fn from_parts(
+        status: u16,
+        body: impl Into<Bytes>,
+        content_type: Option<&str>,
+        extra_headers: Vec<(HeaderName, HeaderValue)>,
+    ) -> Self {
+        let ct = content_type
+            .and_then(|s| HeaderValue::from_str(s).ok())
+            .unwrap_or_else(|| HeaderValue::from_static("text/plain; charset=utf-8"));
+        Self {
+            response: StaticResponse {
+                status,
+                headers: extra_headers,
+                body: body.into(),
+                content_type: ct,
+            },
+        }
+    }
+}
+
+impl Handler for StaticResponseHandler {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        _request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        // This should never be called — the server fast-path intercepts first.
+        // Provide a working fallback just in case.
+        let resp = self.response.to_response();
+        Box::pin(async move { Ok(resp) })
+    }
+
+    fn static_response(&self) -> Option<StaticResponse> {
+        Some(self.response.clone())
     }
 }
 
@@ -834,5 +937,92 @@ mod tests {
 
         assert_eq!(validated.params.get("id").unwrap(), &Value::String("123".to_string()));
         assert_eq!(validated.params.get("active").unwrap(), &Value::Bool(true));
+    }
+
+    #[test]
+    fn test_static_response_handler_new() {
+        let sr = StaticResponse {
+            status: 200,
+            headers: vec![],
+            body: Bytes::from("OK"),
+            content_type: HeaderValue::from_static("text/plain"),
+        };
+        let handler = StaticResponseHandler::new(sr);
+        let resp = handler.static_response();
+        assert!(resp.is_some());
+        let resp = resp.unwrap();
+        assert_eq!(resp.status, 200);
+        assert_eq!(resp.body.as_ref(), b"OK");
+    }
+
+    #[test]
+    fn test_static_response_handler_from_parts_defaults() {
+        let handler = StaticResponseHandler::from_parts(204, "No Content", None, vec![]);
+        let resp = handler.static_response().unwrap();
+        assert_eq!(resp.status, 204);
+        assert_eq!(resp.body.as_ref(), b"No Content");
+        assert_eq!(resp.content_type, "text/plain; charset=utf-8");
+    }
+
+    #[test]
+    fn test_static_response_handler_from_parts_custom_content_type() {
+        let handler = StaticResponseHandler::from_parts(
+            200,
+            r#"{"ok":true}"#,
+            Some("application/json"),
+            vec![],
+        );
+        let resp = handler.static_response().unwrap();
+        assert_eq!(resp.content_type, "application/json");
+    }
+
+    #[test]
+    fn test_static_response_handler_from_parts_extra_headers() {
+        let handler = StaticResponseHandler::from_parts(
+            200,
+            "OK",
+            None,
+            vec![(
+                HeaderName::from_static("x-custom"),
+                HeaderValue::from_static("value"),
+            )],
+        );
+        let resp = handler.static_response().unwrap();
+        assert_eq!(resp.headers.len(), 1);
+        assert_eq!(resp.headers[0].0, "x-custom");
+        assert_eq!(resp.headers[0].1, "value");
+    }
+
+    #[tokio::test]
+    async fn test_static_response_handler_call_fallback() {
+        use http_body_util::BodyExt;
+
+        let handler = StaticResponseHandler::from_parts(201, "created", Some("text/plain"), vec![]);
+        let request = Request::builder().body(Body::empty()).unwrap();
+        let result = handler.call(request, minimal_request_data()).await;
+        assert!(result.is_ok());
+        let response = result.unwrap();
+        assert_eq!(response.status(), StatusCode::CREATED);
+        assert_eq!(
+            response.headers().get("content-type").unwrap(),
+            "text/plain"
+        );
+        let body = response.into_body().collect().await.unwrap().to_bytes();
+        assert_eq!(body.as_ref(), b"created");
+    }
+
+    #[test]
+    fn test_default_handler_static_response_is_none() {
+        struct DummyHandler;
+        impl Handler for DummyHandler {
+            fn call(
+                &self,
+                _: Request<Body>,
+                _: RequestData,
+            ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+                Box::pin(async { Err((StatusCode::OK, String::new())) })
+            }
+        }
+        assert!(DummyHandler.static_response().is_none());
     }
 }

@@ -188,6 +188,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: None,
             jsonrpc_method: None,
+            static_response: None,
         }
     }
 
@@ -654,6 +655,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: None,
             jsonrpc_method: None,
+            static_response: None,
         };
 
         let result = route_to_operation(&route);

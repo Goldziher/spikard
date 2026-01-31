@@ -79,7 +79,7 @@ pub mod websocket;
 
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
-use spikard_http::RouteMetadata;
+use spikard_http::{Handler as _, RouteMetadata};
 use spikard_http::server::Server;
 
 pub use handler::{PythonHandler, init_python_event_loop};
@@ -88,6 +88,8 @@ pub use handler::{PythonHandler, init_python_event_loop};
 pub struct RouteWithHandler {
     pub metadata: RouteMetadata,
     pub handler: Py<PyAny>,
+    /// If set, this route uses a pre-built static response instead of calling the handler.
+    pub static_response: Option<spikard_http::StaticResponse>,
 }
 
 /// Extract routes from a Python Spikard application instance (internal function)
@@ -104,7 +106,43 @@ pub fn extract_routes_from_app(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResu
 
         let handler: Py<PyAny> = route_obj.getattr("handler")?.into();
 
-        routes.push(RouteWithHandler { metadata, handler });
+        // Check for optional static_response dict: {"status": 200, "body": "OK", "content_type": "..."}
+        let static_response = match route_obj.getattr("static_response") {
+            Ok(val) if !val.is_none() => {
+                // Ensure the value is a dict before trying to extract fields
+                if val.cast::<PyDict>().is_err() {
+                    eprintln!("[WARNING] static_response is not a dict, skipping");
+                    None
+                } else {
+                    let status: u16 = match val.get_item("status") {
+                        Ok(v) if !v.is_none() => v.extract()?,
+                        _ => 200,
+                    };
+                    let body: String = match val.get_item("body") {
+                        Ok(v) if !v.is_none() => v.extract()?,
+                        _ => String::new(),
+                    };
+                    let content_type: Option<String> = match val.get_item("content_type") {
+                        Ok(v) if !v.is_none() => v.extract().ok(),
+                        _ => None,
+                    };
+                    let handler = spikard_http::StaticResponseHandler::from_parts(
+                        status,
+                        body,
+                        content_type.as_deref(),
+                        vec![],
+                    );
+                    handler.static_response()
+                }
+            }
+            _ => None,
+        };
+
+        routes.push(RouteWithHandler {
+            metadata,
+            handler,
+            static_response,
+        });
     }
 
     Ok(routes)
@@ -162,6 +200,7 @@ fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<
         body_param_name: body_param_name_value,
         handler_dependencies,
         jsonrpc_method: jsonrpc_method_value,
+        static_response: None,
     })
 }
 
@@ -304,7 +343,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
             let metadata_clone = r.metadata.clone();
 
             match spikard_http::Route::from_metadata(r.metadata, &schema_registry) {
-                Ok(route) => Some((route, metadata_clone, r.handler)),
+                Ok(route) => Some((route, metadata_clone, r.handler, r.static_response)),
                 Err(e) => {
                     eprintln!("[UNCONDITIONAL DEBUG] Failed to create route: {e}");
                     None
@@ -352,20 +391,27 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
     );
 
     let route_metadata: Vec<spikard_http::RouteMetadata> =
-        routes.iter().map(|(_, metadata, _)| metadata.clone()).collect();
+        routes.iter().map(|(_, metadata, _, _)| metadata.clone()).collect();
 
     let handler_routes: Vec<(spikard_http::Route, std::sync::Arc<dyn spikard_http::Handler>)> = routes
         .into_iter()
-        .map(|(route, metadata, py_handler)| {
-            let python_handler = PythonHandler::new(
-                py_handler,
-                route.is_async,
-                route.response_validator.clone(),
-                route.parameter_validator.clone(),
-                metadata.body_param_name.clone(),
-            );
-            let arc_handler: std::sync::Arc<dyn spikard_http::Handler> = std::sync::Arc::new(python_handler);
-            (route, arc_handler)
+        .map(|(route, metadata, py_handler, static_resp)| {
+            if let Some(sr) = static_resp {
+                let arc_handler: std::sync::Arc<dyn spikard_http::Handler> =
+                    std::sync::Arc::new(spikard_http::StaticResponseHandler::new(sr));
+                (route, arc_handler)
+            } else {
+                let python_handler = PythonHandler::new(
+                    py_handler,
+                    route.is_async,
+                    route.response_validator.clone(),
+                    route.parameter_validator.clone(),
+                    metadata.body_param_name.clone(),
+                );
+                let arc_handler: std::sync::Arc<dyn spikard_http::Handler> =
+                    std::sync::Arc::new(python_handler);
+                (route, arc_handler)
+            }
         })
         .collect();
 
@@ -733,15 +779,21 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
             let path = rwh.metadata.path.clone();
             Route::from_metadata(rwh.metadata.clone(), &schema_registry)
                 .map(|route| {
-                    let python_handler = PythonHandler::new(
-                        rwh.handler,
-                        rwh.metadata.is_async,
-                        route.response_validator.clone(),
-                        route.parameter_validator.clone(),
-                        rwh.metadata.body_param_name.clone(),
-                    );
-                    let arc_handler: Arc<dyn spikard_http::Handler> = Arc::new(python_handler);
-                    (route, arc_handler)
+                    if let Some(sr) = rwh.static_response {
+                        let arc_handler: Arc<dyn spikard_http::Handler> =
+                            Arc::new(spikard_http::StaticResponseHandler::new(sr));
+                        (route, arc_handler)
+                    } else {
+                        let python_handler = PythonHandler::new(
+                            rwh.handler,
+                            rwh.metadata.is_async,
+                            route.response_validator.clone(),
+                            route.parameter_validator.clone(),
+                            rwh.metadata.body_param_name.clone(),
+                        );
+                        let arc_handler: Arc<dyn spikard_http::Handler> = Arc::new(python_handler);
+                        (route, arc_handler)
+                    }
                 })
                 .map_err(|e| {
                     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(

@@ -1674,7 +1674,7 @@ fn build_ruby_request(
     request_data: RequestData,
     validated_params: Option<JsonValue>,
 ) -> Result<Value, Error> {
-    let native_request = NativeRequest::from_request_data(request_data, validated_params);
+    let native_request = NativeRequest::from_request_data(request_data, validated_params, None);
 
     Ok(ruby.obj_wrap(native_request).as_value())
 }

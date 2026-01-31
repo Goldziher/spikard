@@ -483,6 +483,8 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
     let routes_length = routes_array.get_array_length()?;
     let mut routes = Vec::new();
+    let mut static_responses: std::collections::HashMap<String, spikard_http::StaticResponse> =
+        std::collections::HashMap::new();
 
     for i in 0..routes_length {
         let route_obj: Object = routes_array.get_element(i)?;
@@ -518,7 +520,30 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
             handler_dependencies,
             jsonrpc_method: extract_jsonrpc_method(&route_obj),
+            static_response: None,
         };
+
+        // Check for optional staticResponse: { status: 200, body: "OK", contentType: "..." }
+        if route_obj.has_named_property("staticResponse").unwrap_or(false) {
+            if let Ok(sr_obj) = route_obj.get_named_property::<Object>("staticResponse") {
+                let status: u16 = sr_obj.get_named_property("status").unwrap_or(200);
+                let body: String = sr_obj.get_named_property("body").unwrap_or_default();
+                let content_type: Option<String> = sr_obj.get_named_property("contentType").ok();
+                let key = format!("{}:{}", route_meta.method, route_meta.path);
+
+                // Construct StaticResponse directly without going through from_parts
+                let ct = content_type
+                    .and_then(|s| axum::http::HeaderValue::from_str(&s).ok())
+                    .unwrap_or_else(|| axum::http::HeaderValue::from_static("text/plain; charset=utf-8"));
+                let static_resp = spikard_http::StaticResponse {
+                    status,
+                    headers: vec![],
+                    body: bytes::Bytes::from(body),
+                    content_type: ct,
+                };
+                static_responses.insert(key, static_resp);
+            }
+        }
 
         routes.push(route_meta);
     }
@@ -566,6 +591,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
                         handler_dependencies,
                         jsonrpc_method: extract_jsonrpc_method(&route_obj),
+                        static_response: None,
                     });
                 }
             }
@@ -688,12 +714,17 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             let route = spikard_http::Route::from_metadata(metadata.clone(), &schema_registry)
                 .map_err(|e| Error::from_reason(format!("Failed to create route: {}", e)))?;
 
-            let handler = handler_map
-                .get(&metadata.handler_name)
-                .ok_or_else(|| Error::from_reason(format!("Handler not found: {}", metadata.handler_name)))?
-                .clone();
+            let key = format!("{}:{}", metadata.method, metadata.path);
+            let handler: Arc<dyn spikard_http::Handler> = if let Some(sr) = static_responses.remove(&key) {
+                Arc::new(spikard_http::StaticResponseHandler::new(sr))
+            } else {
+                handler_map
+                    .get(&metadata.handler_name)
+                    .ok_or_else(|| Error::from_reason(format!("Handler not found: {}", metadata.handler_name)))?
+                    .clone()
+            };
 
-            Ok::<_, Error>((route, handler as Arc<dyn spikard_http::Handler>))
+            Ok::<_, Error>((route, handler))
         })
         .collect::<Result<Vec<_>>>()?;
 

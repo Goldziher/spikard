@@ -93,6 +93,11 @@ pub struct RouteMetadata {
     /// JSON-RPC method metadata (if this route is exposed as a JSON-RPC method)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub jsonrpc_method: Option<Value>,
+    /// Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}`
+    /// When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full
+    /// middleware pipeline for maximum throughput.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub static_response: Option<Value>,
 }
 
 /// Compression configuration shared across runtimes
@@ -408,6 +413,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: None,
             jsonrpc_method: None,
+            static_response: None,
         };
         assert_eq!(metadata.method, "GET");
         assert_eq!(metadata.path, "/api/users");

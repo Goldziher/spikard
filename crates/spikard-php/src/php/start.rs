@@ -589,6 +589,7 @@ pub fn spikard_start_server_impl(
             body_param_name: None,
             handler_dependencies: Some(Vec::new()),
             jsonrpc_method,
+            static_response: None,
         });
 
         route_pairs.push((route, Arc::new(handler) as Arc<dyn spikard_http::Handler>));

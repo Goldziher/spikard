@@ -278,6 +278,7 @@ mod tests {
             cors: None,
             body_param_name: None,
             jsonrpc_method: None,
+            static_response: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -312,6 +313,7 @@ mod tests {
             cors: None,
             body_param_name: None,
             jsonrpc_method: None,
+            static_response: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -344,6 +346,7 @@ mod tests {
             cors: None,
             body_param_name: None,
             jsonrpc_method: None,
+            static_response: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -360,6 +363,7 @@ mod tests {
             cors: None,
             body_param_name: None,
             jsonrpc_method: None,
+            static_response: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -438,6 +442,7 @@ mod tests {
             cors: None,
             body_param_name: None,
             jsonrpc_method: None,
+            static_response: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -511,6 +516,7 @@ mod tests {
             cors: None,
             body_param_name: None,
             jsonrpc_method: None,
+            static_response: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };

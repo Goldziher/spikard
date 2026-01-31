@@ -3,6 +3,7 @@
 //! This module provides the main server builder and routing infrastructure, with
 //! focused submodules for handler validation, request extraction, and lifecycle execution.
 
+pub mod fast_router;
 pub mod grpc_routing;
 pub mod handler;
 pub mod lifecycle_execution;
@@ -483,6 +484,7 @@ fn build_router_with_handlers_inner(
     enable_http_trace: bool,
 ) -> Result<AxumRouter, String> {
     let mut app = AxumRouter::new();
+    let mut fast_router = fast_router::FastRouter::new();
 
     let mut routes_by_path: HashMap<String, Vec<RouteHandlerPair>> = HashMap::new();
     for (route, handler) in routes {
@@ -500,7 +502,8 @@ fn build_router_with_handlers_inner(
             .remove(&path)
             .ok_or_else(|| format!("Missing handlers for path '{}'", path))?;
 
-        let mut handlers_by_method: HashMap<crate::Method, (crate::Route, Arc<dyn Handler>)> = HashMap::new();
+        type RouteEntry = (crate::Route, Arc<dyn Handler>, Option<crate::StaticResponse>);
+        let mut handlers_by_method: HashMap<crate::Method, RouteEntry> = HashMap::new();
         for (route, handler) in route_handlers {
             #[cfg(feature = "di")]
             let handler = if let Some(ref container) = di_container {
@@ -522,13 +525,16 @@ fn build_router_with_handlers_inner(
                 handler
             };
 
+            // Check for static_response before wrapping in ValidatingHandler,
+            // since ValidatingHandler doesn't delegate static_response().
+            let static_resp = handler.static_response();
             let validating_handler = Arc::new(handler::ValidatingHandler::new(handler, &route));
-            handlers_by_method.insert(route.method.clone(), (route, validating_handler));
+            handlers_by_method.insert(route.method.clone(), (route, validating_handler, static_resp));
         }
 
         let cors_config: Option<CorsConfig> = handlers_by_method
             .values()
-            .find_map(|(route, _)| route.cors.as_ref())
+            .find_map(|(route, _, _)| route.cors.as_ref())
             .cloned();
 
         let has_options_handler = handlers_by_method.keys().any(|m| m.as_str() == "OPTIONS");
@@ -536,8 +542,63 @@ fn build_router_with_handlers_inner(
         let mut combined_router: Option<MethodRouter> = None;
         let has_path_params = path.contains('{');
 
-        for (_method, (route, handler)) in handlers_by_method {
+        for (_method, (route, handler, static_resp_opt)) in handlers_by_method {
             let method = route.method.clone();
+
+            // Fast-path: if the handler declares a static response, bypass the
+            // entire middleware pipeline (validation, hooks, request extraction).
+            //
+            // NOTE: static routes also bypass CORS handling, content-type
+            // validation, and HTTP tracing. If CORS headers are needed they
+            // must be included in `StaticResponse.headers` explicitly.
+            //
+            // Non-parameterized paths are also inserted into the FastRouter for
+            // O(1) HashMap-based lookup as the outermost middleware. The Axum
+            // route below serves as fallback — it handles the same request if
+            // the FastRouter layer is somehow bypassed and also covers
+            // parameterized static routes that cannot go into the FastRouter.
+            if let Some(static_resp) = static_resp_opt {
+                let resp_status = static_resp.status;
+
+                if !has_path_params {
+                    let axum_path_for_fast = spikard_core::type_hints::strip_type_hints(&path);
+                    let http_method: axum::http::Method = route.method.as_str().parse()
+                        .map_err(|_| format!("Invalid HTTP method '{}' for static route {}", route.method.as_str(), path))?;
+                    fast_router.insert(http_method, &axum_path_for_fast, &static_resp);
+                }
+
+                // Axum fallback handler — uses the same `to_response()` as the
+                // FastRouter and `StaticResponseHandler::call`.
+                let static_handler = move || {
+                    let resp = static_resp.to_response();
+                    async move { resp }
+                };
+
+                let method_router: MethodRouter = match method {
+                    crate::Method::Get => axum::routing::get(static_handler),
+                    crate::Method::Post => axum::routing::post(static_handler),
+                    crate::Method::Put => axum::routing::put(static_handler),
+                    crate::Method::Patch => axum::routing::patch(static_handler),
+                    crate::Method::Delete => axum::routing::delete(static_handler),
+                    crate::Method::Head => axum::routing::head(static_handler),
+                    crate::Method::Options => axum::routing::options(static_handler),
+                    crate::Method::Trace => axum::routing::trace(static_handler),
+                };
+
+                combined_router = Some(match combined_router {
+                    None => method_router,
+                    Some(existing) => existing.merge(method_router),
+                });
+
+                tracing::info!(
+                    "Registered static route: {} {} (status {})",
+                    route.method.as_str(),
+                    path,
+                    resp_status,
+                );
+                continue;
+            }
+
             let method_router: MethodRouter = match method {
                 crate::Method::Options => {
                     if let Some(ref cors_cfg) = route.cors {
@@ -614,6 +675,21 @@ fn build_router_with_handlers_inner(
 
     if enable_http_trace {
         app = app.layer(TraceLayer::new_for_http());
+    }
+
+    // Install the fast-router as the outermost middleware so that static-response
+    // routes are served without entering the Axum routing tree at all.
+    if fast_router.has_routes() {
+        let fast_router = Arc::new(fast_router);
+        app = app.layer(axum::middleware::from_fn(move |req: axum::extract::Request, next: axum::middleware::Next| {
+            let fast_router = Arc::clone(&fast_router);
+            async move {
+                if let Some(resp) = fast_router.lookup(req.method(), req.uri().path()) {
+                    return resp;
+                }
+                next.run(req).await
+            }
+        }));
     }
 
     Ok(app)
@@ -932,6 +1008,7 @@ impl Server {
                             .jsonrpc_method
                             .as_ref()
                             .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
+                        static_response: None,
                     }
                 }
                 #[cfg(not(feature = "di"))]
@@ -951,6 +1028,7 @@ impl Server {
                             .jsonrpc_method
                             .as_ref()
                             .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
+                        static_response: None,
                     }
                 }
             })

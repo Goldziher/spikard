@@ -19,7 +19,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::conversion::{map_to_ruby_hash, multimap_to_ruby_hash};
+use crate::conversion::{json_to_ruby_with_uploads, map_to_ruby_hash, multimap_to_ruby_hash};
 use crate::metadata::json_to_ruby;
 
 #[derive(Default)]
@@ -49,6 +49,9 @@ pub struct NativeRequest {
     headers: Arc<HashMap<String, String>>,
     cookies: Arc<HashMap<String, String>>,
     validated_params: Option<JsonValue>,
+    /// Upload file class for wrapping file upload objects in the body.
+    /// When present, `json_to_ruby_with_uploads` is used instead of `json_to_ruby`.
+    upload_file_class: Option<Opaque<Value>>,
     cache: RefCell<RequestCache>,
 }
 
@@ -104,7 +107,11 @@ impl NativeRequest {
     /// - Typical: 5-10% faster (eliminates clone for ~95% of requests)
     /// - Worst case: Same as clone (if Arc is shared, which rarely happens)
     /// - Best case: Pure move, zero copy (Arc has unique reference)
-    pub(crate) fn from_request_data(request_data: RequestData, validated_params: Option<JsonValue>) -> Self {
+    pub(crate) fn from_request_data(
+        request_data: RequestData,
+        validated_params: Option<JsonValue>,
+        upload_file_class: Option<Opaque<Value>>,
+    ) -> Self {
         let RequestData {
             path_params,
             query_params,
@@ -131,6 +138,7 @@ impl NativeRequest {
             headers,
             cookies,
             validated_params,
+            upload_file_class,
             cache: RefCell::new(RequestCache::default()),
         }
     }
@@ -274,7 +282,8 @@ impl NativeRequest {
         } {
             return Ok(cached);
         }
-        let value = json_to_ruby(ruby, &this.body)?;
+        let upload_cls = this.upload_file_class.as_ref().map(|o| o.get_inner_with(ruby));
+        let value = json_to_ruby_with_uploads(ruby, &this.body, upload_cls.as_ref())?;
         let mut cache = this.cache.borrow_mut();
         Ok(Self::cache_set(&mut cache.body, value))
     }
@@ -377,6 +386,9 @@ impl NativeRequest {
         }
 
         if let Ok(text) = RString::try_convert(key) {
+            // SAFETY: We only borrow the slice for the duration of this match
+            // block and never mutate the RString. The GVL is held, so no other
+            // Ruby thread can modify or move the string's backing memory.
             let slice = unsafe { text.as_slice() };
             return match slice {
                 b"method" => Self::method(ruby, this),
@@ -417,6 +429,10 @@ impl NativeRequest {
             .filter_map(|value| value.as_ref())
             {
                 marker.mark(handle.get_inner_with(&ruby));
+            }
+
+            if let Some(ref cls) = self.upload_file_class {
+                marker.mark(cls.get_inner_with(&ruby));
             }
         }
     }

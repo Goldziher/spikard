@@ -90,6 +90,7 @@ pub fn build_route_metadata(
         body_param_name,
         handler_dependencies: handler_deps_option,
         jsonrpc_method,
+        static_response: None,
     };
 
     #[cfg(not(feature = "di"))]
@@ -105,6 +106,7 @@ pub fn build_route_metadata(
         cors,
         body_param_name,
         jsonrpc_method,
+        static_response: None,
     };
 
     let registry = SchemaRegistry::new();

@@ -34,6 +34,7 @@ struct RegisteredRoute {
     response_schema: Option<serde_json::Value>,
     parameter_schema: Option<serde_json::Value>,
     cors: Option<spikard_core::CorsConfig>,
+    static_response: Option<serde_json::Value>,
 }
 
 /// PHP-visible HTTP server class.
@@ -83,6 +84,7 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
             cors: self.global_cors.clone(),
+            static_response: None,
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -100,6 +102,7 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
             cors: self.global_cors.clone(),
+            static_response: None,
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -117,6 +120,7 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
             cors: self.global_cors.clone(),
+            static_response: None,
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -134,6 +138,7 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
             cors: self.global_cors.clone(),
+            static_response: None,
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -151,6 +156,7 @@ impl PhpServer {
             response_schema: None,
             parameter_schema: None,
             cors: self.global_cors.clone(),
+            static_response: None,
         });
         self.handlers.push(handler.shallow_clone());
     }
@@ -184,6 +190,7 @@ impl PhpServer {
             response_schema,
             parameter_schema,
             cors: self.global_cors.clone(),
+            static_response: None,
         });
         Ok(())
     }
@@ -520,7 +527,17 @@ impl PhpServer {
                 jsonrpc_method: None,
             };
 
-            routes_with_handlers.push((metadata, Arc::new(handler) as Arc<dyn Handler>));
+            // Check if this route has a static_response configuration
+            if let Some(ref sr_value) = route.static_response {
+                let status = sr_value.get("status").and_then(|v| v.as_u64()).unwrap_or(200) as u16;
+                let body = sr_value.get("body").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let content_type = sr_value.get("content_type").and_then(|v| v.as_str());
+                let static_handler =
+                    spikard_http::StaticResponseHandler::from_parts(status, body, content_type, vec![]);
+                routes_with_handlers.push((metadata, Arc::new(static_handler) as Arc<dyn Handler>));
+            } else {
+                routes_with_handlers.push((metadata, Arc::new(handler) as Arc<dyn Handler>));
+            }
         }
 
         Ok(routes_with_handlers)
@@ -546,6 +563,7 @@ impl PhpServer {
                 body_param_name: None,
                 handler_dependencies: Some(Vec::new()),
                 jsonrpc_method: None,
+                static_response: None,
             })
             .collect();
 

@@ -12,7 +12,7 @@ use magnus::prelude::*;
 use magnus::value::LazyId;
 use magnus::value::{InnerValue, Opaque};
 use magnus::{Error, RHash, RString, Ruby, TryConvert, Value, gc::Marker};
-use serde_json::{Map as JsonMap, Value as JsonValue};
+use serde_json::Value as JsonValue;
 use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::problem::ProblemDetails;
 use spikard_http::SchemaValidator;
@@ -22,21 +22,13 @@ use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use crate::conversion::{
-    json_to_ruby, json_to_ruby_with_uploads, map_to_ruby_hash, multimap_to_ruby_hash, ruby_value_to_json,
-};
+use crate::conversion::ruby_value_to_json;
+use crate::request::NativeRequest;
 use crate::gvl::with_gvl;
 
-static KEY_METHOD: LazyId = LazyId::new("method");
-static KEY_PATH: LazyId = LazyId::new("path");
 static KEY_PATH_PARAMS: LazyId = LazyId::new("path_params");
 static KEY_QUERY: LazyId = LazyId::new("query");
-static KEY_RAW_QUERY: LazyId = LazyId::new("raw_query");
-static KEY_HEADERS: LazyId = LazyId::new("headers");
-static KEY_COOKIES: LazyId = LazyId::new("cookies");
 static KEY_BODY: LazyId = LazyId::new("body");
-static KEY_RAW_BODY: LazyId = LazyId::new("raw_body");
-static KEY_PARAMS: LazyId = LazyId::new("params");
 
 /// Response payload with status, headers, and body data.
 pub struct HandlerResponsePayload {
@@ -261,20 +253,19 @@ impl RubyHandler {
         })?;
 
         // Extract validated_params with Arc::try_unwrap to eliminate clone if possible.
-        // Arc::try_unwrap succeeds when Arc has unique ref (no other clones):
-        // - On success: returns Value without copy (pure move)
-        // - On failure (rare): returns Err(Arc), fallback to clone
-        // This optimizes the common case where validated_params isn't shared.
-        //
-        // PERFORMANCE: We take ownership of the Option<Arc> here (not as_ref) so that
-        // try_unwrap can potentially succeed. Using as_ref + Arc::clone would increment
-        // the refcount, causing try_unwrap to always fail.
         let validated_params = request_data
             .validated_params
             .take()
             .map(|arc| Arc::try_unwrap(arc).unwrap_or_else(|a| (*a).clone()));
-        let request_value = build_ruby_request(&ruby, &self.inner, &request_data, validated_params.as_ref())
-            .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()))?;
+
+        // Use NativeRequest for lazy field conversion — fields are only converted
+        // to Ruby objects when accessed, avoiding work for unused fields.
+        let native_request = NativeRequest::from_request_data(
+            request_data,
+            validated_params,
+            self.inner.upload_file_class,
+        );
+        let request_value = ruby.obj_wrap(native_request).as_value();
 
         let handler_proc = self.inner.handler_proc.get_inner_with(&ruby);
         let response_value = match call_handler_proc(&ruby, handler_proc, request_value) {
@@ -443,15 +434,22 @@ fn call_handler_proc(ruby: &Ruby, handler_proc: Value, request_value: Value) -> 
         return handler_proc.funcall("call", (request_value,));
     }
 
-    let (params_value, query_value, body_value) = if let Some(hash) = RHash::from_value(request_value) {
-        (
-            hash.get(*KEY_PATH_PARAMS).unwrap_or_else(|| ruby.qnil().as_value()),
-            hash.get(*KEY_QUERY).unwrap_or_else(|| ruby.qnil().as_value()),
-            hash.get(*KEY_BODY).unwrap_or_else(|| ruby.qnil().as_value()),
-        )
-    } else {
-        (ruby.qnil().as_value(), ruby.qnil().as_value(), ruby.qnil().as_value())
-    };
+    let (params_value, query_value, body_value) =
+        if let Ok(request) = <&NativeRequest>::try_convert(request_value) {
+            (
+                NativeRequest::path_params(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
+                NativeRequest::query(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
+                NativeRequest::body(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
+            )
+        } else if let Some(hash) = RHash::from_value(request_value) {
+            (
+                hash.get(*KEY_PATH_PARAMS).unwrap_or_else(|| ruby.qnil().as_value()),
+                hash.get(*KEY_QUERY).unwrap_or_else(|| ruby.qnil().as_value()),
+                hash.get(*KEY_BODY).unwrap_or_else(|| ruby.qnil().as_value()),
+            )
+        } else {
+            (ruby.qnil().as_value(), ruby.qnil().as_value(), ruby.qnil().as_value())
+        };
 
     if arity == 2 {
         return handler_proc.funcall("call", (params_value, query_value));
@@ -587,121 +585,6 @@ fn sanitize_error_detail(detail: &str) -> String {
     sanitized = sanitized.replace("FROM users", "[redacted]");
     sanitized = sanitized.replace("from users", "[redacted]");
     sanitized
-}
-
-/// Build a Ruby Hash request object from request data.
-fn build_ruby_request(
-    ruby: &Ruby,
-    handler: &RubyHandlerInner,
-    request_data: &RequestData,
-    validated_params: Option<&JsonValue>,
-) -> Result<Value, Error> {
-    let hash = ruby.hash_new_capa(9);
-
-    hash.aset(*KEY_METHOD, handler.method_value.get_inner_with(ruby))?;
-    hash.aset(*KEY_PATH, handler.path_value.get_inner_with(ruby))?;
-
-    let path_params = if let Some(validated) = validated_params {
-        if let Some(subset) = validated_subset(validated, request_data.path_params.keys()) {
-            json_to_ruby(ruby, &subset)?
-        } else {
-            map_to_ruby_hash(ruby, request_data.path_params.as_ref())?
-        }
-    } else {
-        map_to_ruby_hash(ruby, request_data.path_params.as_ref())?
-    };
-    hash.aset(*KEY_PATH_PARAMS, path_params)?;
-
-    let query_value = if let Some(validated) = validated_params {
-        let subset = if !request_data.raw_query_params.is_empty() {
-            validated_subset(validated, request_data.raw_query_params.keys())
-        } else if let Some(query_map) = request_data.query_params.as_object() {
-            validated_subset(validated, query_map.keys())
-        } else {
-            None
-        };
-
-        if let Some(subset) = subset {
-            json_to_ruby(ruby, &subset)?
-        } else {
-            json_to_ruby(ruby, &request_data.query_params)?
-        }
-    } else {
-        json_to_ruby(ruby, &request_data.query_params)?
-    };
-    hash.aset(*KEY_QUERY, query_value)?;
-
-    let raw_query = multimap_to_ruby_hash(ruby, request_data.raw_query_params.as_ref())?;
-    hash.aset(*KEY_RAW_QUERY, raw_query)?;
-
-    let headers = map_to_ruby_hash(ruby, request_data.headers.as_ref())?;
-    hash.aset(*KEY_HEADERS, headers)?;
-
-    let cookies = map_to_ruby_hash(ruby, request_data.cookies.as_ref())?;
-    hash.aset(*KEY_COOKIES, cookies)?;
-
-    let upload_class_value = handler.upload_file_class.as_ref().map(|cls| cls.get_inner_with(ruby));
-    let body_value = json_to_ruby_with_uploads(ruby, &request_data.body, upload_class_value.as_ref())?;
-    hash.aset(*KEY_BODY, body_value)?;
-    if let Some(raw) = &request_data.raw_body {
-        let raw_str = ruby.str_from_slice(raw);
-        hash.aset(*KEY_RAW_BODY, raw_str)?;
-    } else {
-        hash.aset(*KEY_RAW_BODY, ruby.qnil())?;
-    }
-
-    let params_value = if let Some(validated) = validated_params {
-        json_to_ruby(ruby, validated)?
-    } else {
-        build_default_params_from_converted(ruby, path_params, query_value, headers, cookies)?
-    };
-    hash.aset(*KEY_PARAMS, params_value)?;
-
-    Ok(hash.as_value())
-}
-
-fn validated_subset<'a, I>(validated: &JsonValue, keys: I) -> Option<JsonValue>
-where
-    I: Iterator<Item = &'a String>,
-{
-    let validated_map = validated.as_object()?;
-    let mut subset = JsonMap::new();
-    for key in keys {
-        if let Some(value) = validated_map.get(key) {
-            subset.insert(key.clone(), value.clone());
-        }
-    }
-    if subset.is_empty() {
-        None
-    } else {
-        Some(JsonValue::Object(subset))
-    }
-}
-
-/// Build default params from already converted Ruby values, avoiding double conversion.
-fn build_default_params_from_converted(
-    ruby: &Ruby,
-    path_params: Value,
-    query: Value,
-    headers: Value,
-    cookies: Value,
-) -> Result<Value, Error> {
-    let params = ruby.hash_new();
-
-    if let Some(hash) = RHash::from_value(path_params) {
-        let _: Value = params.funcall("merge!", (hash,))?;
-    }
-    if let Some(hash) = RHash::from_value(query) {
-        let _: Value = params.funcall("merge!", (hash,))?;
-    }
-    if let Some(hash) = RHash::from_value(headers) {
-        let _: Value = params.funcall("merge!", (hash,))?;
-    }
-    if let Some(hash) = RHash::from_value(cookies) {
-        let _: Value = params.funcall("merge!", (hash,))?;
-    }
-
-    Ok(params.as_value())
 }
 
 /// Interpret a Ruby handler response into our response types.

@@ -269,6 +269,7 @@ impl PhpNativeTestClient {
                 body_param_name: None,
                 handler_dependencies: Some(Vec::new()),
                 jsonrpc_method,
+                static_response: None,
             });
 
             route_pairs.push((route_def, Arc::new(handler) as Arc<dyn Handler>));
