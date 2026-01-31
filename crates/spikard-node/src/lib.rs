@@ -524,25 +524,25 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         };
 
         // Check for optional staticResponse: { status: 200, body: "OK", contentType: "..." }
-        if route_obj.has_named_property("staticResponse").unwrap_or(false) {
-            if let Ok(sr_obj) = route_obj.get_named_property::<Object>("staticResponse") {
-                let status: u16 = sr_obj.get_named_property("status").unwrap_or(200);
-                let body: String = sr_obj.get_named_property("body").unwrap_or_default();
-                let content_type: Option<String> = sr_obj.get_named_property("contentType").ok();
-                let key = format!("{}:{}", route_meta.method, route_meta.path);
+        if route_obj.has_named_property("staticResponse").unwrap_or(false)
+            && let Ok(sr_obj) = route_obj.get_named_property::<Object>("staticResponse")
+        {
+            let status: u16 = sr_obj.get_named_property("status").unwrap_or(200);
+            let body: String = sr_obj.get_named_property("body").unwrap_or_default();
+            let content_type: Option<String> = sr_obj.get_named_property("contentType").ok();
+            let key = format!("{}:{}", route_meta.method, route_meta.path);
 
-                // Construct StaticResponse directly without going through from_parts
-                let ct = content_type
-                    .and_then(|s| axum::http::HeaderValue::from_str(&s).ok())
-                    .unwrap_or_else(|| axum::http::HeaderValue::from_static("text/plain; charset=utf-8"));
-                let static_resp = spikard_http::StaticResponse {
-                    status,
-                    headers: vec![],
-                    body: bytes::Bytes::from(body),
-                    content_type: ct,
-                };
-                static_responses.insert(key, static_resp);
-            }
+            // Construct StaticResponse directly without going through from_parts
+            let ct = content_type
+                .and_then(|s| axum::http::HeaderValue::from_str(&s).ok())
+                .unwrap_or_else(|| axum::http::HeaderValue::from_static("text/plain; charset=utf-8"));
+            let static_resp = spikard_http::StaticResponse {
+                status,
+                headers: vec![],
+                body: bytes::Bytes::from(body),
+                content_type: ct,
+            };
+            static_responses.insert(key, static_resp);
         }
 
         routes.push(route_meta);

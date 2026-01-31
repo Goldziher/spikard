@@ -56,15 +56,16 @@ fn is_method_allowed(method: &str, allowed_methods: &[String]) -> bool {
 ///
 /// # Returns
 /// `true` if all requested headers are allowed, `false` if any header is not allowed
-fn are_headers_allowed(requested: &[&str], allowed: &[String]) -> bool {
+fn are_headers_allowed(requested: impl IntoIterator<Item = impl AsRef<str>>, allowed: &[String]) -> bool {
     if allowed.iter().any(|h| h == "*") {
         return true;
     }
 
-    requested.iter().all(|req_header| {
+    requested.into_iter().all(|req_header| {
+        let req_str = req_header.as_ref();
         allowed
             .iter()
-            .any(|allowed_header| allowed_header.eq_ignore_ascii_case(req_header))
+            .any(|allowed_header| allowed_header.eq_ignore_ascii_case(req_str))
     })
 }
 
@@ -133,9 +134,8 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
         .and_then(|v| v.to_str().ok());
 
     if let Some(req_headers) = requested_headers_str {
-        let requested_headers: Vec<&str> = req_headers.split(',').map(|h| h.trim()).collect();
-
-        if !are_headers_allowed(&requested_headers, &cors_config.allowed_headers) {
+        // Pass iterator directly without collecting into Vec
+        if !are_headers_allowed(req_headers.split(',').map(|h| h.trim()), &cors_config.allowed_headers) {
             return Err(Box::new((StatusCode::FORBIDDEN).into_response()));
         }
     }
@@ -162,16 +162,16 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
         HeaderValue::from_str(origin).unwrap_or_else(|_| HeaderValue::from_static("*")),
     );
 
-    let methods = cors_config.allowed_methods.join(", ");
+    let methods = cors_config.allowed_methods_joined();
     headers_mut.insert(
         "access-control-allow-methods",
-        HeaderValue::from_str(&methods).unwrap_or_else(|_| HeaderValue::from_static("*")),
+        HeaderValue::from_str(methods).unwrap_or_else(|_| HeaderValue::from_static("*")),
     );
 
-    let allowed_headers = cors_config.allowed_headers.join(", ");
+    let allowed_headers = cors_config.allowed_headers_joined();
     headers_mut.insert(
         "access-control-allow-headers",
-        HeaderValue::from_str(&allowed_headers).unwrap_or_else(|_| HeaderValue::from_static("*")),
+        HeaderValue::from_str(allowed_headers).unwrap_or_else(|_| HeaderValue::from_static("*")),
     );
 
     if let Some(max_age) = cors_config.max_age
@@ -291,6 +291,7 @@ mod tests {
             expose_headers: Some(vec!["x-custom-header".to_string()]),
             max_age: Some(3600),
             allow_credentials: Some(true),
+            ..Default::default()
         }
     }
 
@@ -500,7 +501,8 @@ mod tests {
             allowed_headers: vec![],
             expose_headers: None,
             max_age: None,
-            allow_credentials: Some(true), // SECURITY BUG: This should not be allowed with wildcard
+            allow_credentials: Some(true), // SECURITY BUG: This should not be allowed with wildcard,
+            ..Default::default()
         };
 
         let mut headers = HeaderMap::new();
@@ -538,6 +540,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         assert!(!is_origin_allowed("https://api.example.com", &config.allowed_origins));
@@ -561,6 +564,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         assert!(!is_origin_allowed("http://localhost:3001", &config.allowed_origins));
@@ -581,6 +585,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         assert!(!is_origin_allowed("http://example.com", &config.allowed_origins));
@@ -601,6 +606,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         assert!(!is_origin_allowed("https://example.com", &config.allowed_origins));
@@ -620,6 +626,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         assert!(!is_origin_allowed("https://example.com/", &config.allowed_origins));
@@ -640,6 +647,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         // SECURITY NOTE: "null" origin is allowed by wildcard in current implementation
@@ -652,6 +660,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
         assert!(is_origin_allowed("null", &with_explicit_null.allowed_origins));
     }
@@ -666,6 +675,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
         assert!(!is_origin_allowed("", &config_with_wildcard.allowed_origins));
 
@@ -676,6 +686,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
         assert!(!is_origin_allowed("", &config_with_explicit.allowed_origins));
     }
@@ -705,6 +716,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         assert!(is_origin_allowed("https://trusted1.com", &config.allowed_origins));
@@ -728,6 +740,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         assert!(is_origin_allowed("https://example.com", &config.allowed_origins));
@@ -747,6 +760,7 @@ mod tests {
             expose_headers: None,
             max_age: Some(3600),
             allow_credentials: Some(false),
+            ..Default::default()
         };
 
         let mut headers = HeaderMap::new();
@@ -798,6 +812,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         let test_cases = vec![
@@ -836,6 +851,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         let test_cases = vec![
@@ -883,6 +899,7 @@ mod tests {
             expose_headers: Some(vec!["x-custom".to_string()]),
             max_age: None,
             allow_credentials: Some(true),
+            ..Default::default()
         };
 
         let mut response = Response::new(Body::empty());
@@ -908,6 +925,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         let mut headers = HeaderMap::new();
@@ -943,6 +961,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         let test_cases = vec!["GET", "get", "Get", "POST", "post"];
@@ -971,6 +990,7 @@ mod tests {
             expose_headers: None,
             max_age: Some(7200),
             allow_credentials: None,
+            ..Default::default()
         };
 
         let mut headers = HeaderMap::new();
@@ -995,6 +1015,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
 
         assert!(!is_origin_allowed("https://api.example.com", &config.allowed_origins));

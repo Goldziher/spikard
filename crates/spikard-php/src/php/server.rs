@@ -336,6 +336,7 @@ impl PhpServer {
             },
             max_age: max_age_seconds.map(|s| s as u32),
             allow_credentials: Some(allow_credentials),
+            ..Default::default()
         });
     }
 

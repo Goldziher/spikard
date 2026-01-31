@@ -79,8 +79,8 @@ pub mod websocket;
 
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
-use spikard_http::{Handler as _, RouteMetadata};
 use spikard_http::server::Server;
+use spikard_http::{Handler as _, RouteMetadata};
 
 pub use handler::{PythonHandler, init_python_event_loop};
 
@@ -126,12 +126,8 @@ pub fn extract_routes_from_app(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResu
                         Ok(v) if !v.is_none() => v.extract().ok(),
                         _ => None,
                     };
-                    let handler = spikard_http::StaticResponseHandler::from_parts(
-                        status,
-                        body,
-                        content_type.as_deref(),
-                        vec![],
-                    );
+                    let handler =
+                        spikard_http::StaticResponseHandler::from_parts(status, body, content_type.as_deref(), vec![]);
                     handler.static_response()
                 }
             }
@@ -408,8 +404,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
                     route.parameter_validator.clone(),
                     metadata.body_param_name.clone(),
                 );
-                let arc_handler: std::sync::Arc<dyn spikard_http::Handler> =
-                    std::sync::Arc::new(python_handler);
+                let arc_handler: std::sync::Arc<dyn spikard_http::Handler> = std::sync::Arc::new(python_handler);
                 (route, arc_handler)
             }
         })

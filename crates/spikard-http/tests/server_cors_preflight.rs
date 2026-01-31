@@ -32,6 +32,7 @@ async fn router_generates_cors_preflight_when_missing_options_handler() {
         expose_headers: None,
         max_age: Some(600),
         allow_credentials: Some(true),
+        ..Default::default()
     };
 
     let route = Route {

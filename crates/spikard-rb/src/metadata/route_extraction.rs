@@ -357,6 +357,7 @@ pub fn parse_cors_config(ruby: &Ruby, value: Value) -> Result<Option<spikard_htt
         expose_headers,
         max_age,
         allow_credentials,
+        ..Default::default()
     }))
 }
 

@@ -335,9 +335,7 @@ def chart_latency_distribution(df: pd.DataFrame, output_dir: Path, fmt: str) -> 
                 y=summary[col],
                 name=label,
                 marker_color=color,
-                marker_line_color=[
-                    "white" if _is_spikard(fw) else "rgba(0,0,0,0)" for fw in fws
-                ],
+                marker_line_color=["white" if _is_spikard(fw) else "rgba(0,0,0,0)" for fw in fws],
                 marker_line_width=[1 if _is_spikard(fw) else 0 for fw in fws],
                 text=[f"{v:.1f}" for v in summary[col]],
                 textposition="outside",
@@ -371,7 +369,10 @@ def chart_category_heatmap(df: pd.DataFrame, output_dir: Path, fmt: str) -> list
         return []
 
     pivot = raw.pivot_table(
-        index="framework", columns="category", values="requests_per_sec", aggfunc="mean",
+        index="framework",
+        columns="category",
+        values="requests_per_sec",
+        aggfunc="mean",
     )
     cats = [c for c in CATEGORY_ORDER if c in pivot.columns]
     if not cats:
@@ -397,9 +398,7 @@ def chart_category_heatmap(df: pd.DataFrame, output_dir: Path, fmt: str) -> list
         text_values.append(text_row)
 
     # Replace NaN with 0 for color but mark missing
-    z_clean = []
-    for row in z_values:
-        z_clean.append([0 if pd.isna(v) else v for v in row])
+    z_clean = [[0 if pd.isna(v) else v for v in row] for row in z_values]
 
     labels = [_fw_label(fw) for fw in fws]
 
@@ -441,9 +440,7 @@ def chart_raw_vs_validated(df: pd.DataFrame, output_dir: Path, fmt: str) -> list
         return []
 
     merged["overhead_pct"] = (
-        (merged["requests_per_sec_raw"] - merged["requests_per_sec_val"])
-        / merged["requests_per_sec_raw"]
-        * 100
+        (merged["requests_per_sec_raw"] - merged["requests_per_sec_val"]) / merged["requests_per_sec_raw"] * 100
     )
 
     # Sort by raw RPS ascending (plotly renders bottom-up, so highest ends at top)
@@ -625,17 +622,17 @@ def chart_payload_scaling(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[
 
         for i, (rps, label, color, _is_sp) in enumerate(endpoint_data):
             annotations.append(
-                dict(
-                    x=x_labels[-1],
-                    y=adjusted_y[i],
-                    xref=xref,
-                    yref=yref,
-                    text=f"  {label}  {rps:,.0f}",
-                    showarrow=False,
-                    font=dict(size=10, color=color),
-                    xanchor="left",
-                    yanchor="middle",
-                )
+                {
+                    "x": x_labels[-1],
+                    "y": adjusted_y[i],
+                    "xref": xref,
+                    "yref": yref,
+                    "text": f"  {label}  {rps:,.0f}",
+                    "showarrow": False,
+                    "font": {"size": 10, "color": color},
+                    "xanchor": "left",
+                    "yanchor": "middle",
+                }
             )
 
     # Unified y-axis range
@@ -704,7 +701,7 @@ def chart_resource_efficiency(df: pd.DataFrame, output_dir: Path, fmt: str) -> l
                 },
                 name=f"{label} · CPU {row['avg_cpu']:.0f}%",
                 hovertext=f"{label}<br>{row['mean_rps']:,.0f} RPS<br>"
-                          f"{row['peak_mem']:.0f} MB<br>CPU {row['avg_cpu']:.0f}%",
+                f"{row['peak_mem']:.0f} MB<br>CPU {row['avg_cpu']:.0f}%",
                 hoverinfo="text",
                 showlegend=True,
             )
@@ -718,7 +715,10 @@ def chart_resource_efficiency(df: pd.DataFrame, output_dir: Path, fmt: str) -> l
 
     # "Efficient zone" label
     fig.add_annotation(
-        x=0.02, y=0.98, xref="paper", yref="paper",
+        x=0.02,
+        y=0.98,
+        xref="paper",
+        yref="paper",
         text="← High throughput / Low memory",
         showarrow=False,
         font={"size": 10, "color": "#555"},
@@ -840,8 +840,10 @@ def chart_resource_usage(df: pd.DataFrame, output_dir: Path, fmt: str) -> list[P
     # Add annotation explaining cores
     fig.add_annotation(
         text="1 core = 100% CPU · values >1 indicate multi-core parallelism",
-        xref="paper", yref="paper",
-        x=0.98, y=-0.06,
+        xref="paper",
+        yref="paper",
+        x=0.98,
+        y=-0.06,
         showarrow=False,
         font={"size": 10, "color": "#666"},
         xanchor="right",

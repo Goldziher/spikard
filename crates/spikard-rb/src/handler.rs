@@ -23,8 +23,8 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use crate::conversion::ruby_value_to_json;
-use crate::request::NativeRequest;
 use crate::gvl::with_gvl;
+use crate::request::NativeRequest;
 
 static KEY_PATH_PARAMS: LazyId = LazyId::new("path_params");
 static KEY_QUERY: LazyId = LazyId::new("query");
@@ -260,11 +260,8 @@ impl RubyHandler {
 
         // Use NativeRequest for lazy field conversion — fields are only converted
         // to Ruby objects when accessed, avoiding work for unused fields.
-        let native_request = NativeRequest::from_request_data(
-            request_data,
-            validated_params,
-            self.inner.upload_file_class,
-        );
+        let native_request =
+            NativeRequest::from_request_data(request_data, validated_params, self.inner.upload_file_class);
         let request_value = ruby.obj_wrap(native_request).as_value();
 
         let handler_proc = self.inner.handler_proc.get_inner_with(&ruby);
@@ -434,22 +431,21 @@ fn call_handler_proc(ruby: &Ruby, handler_proc: Value, request_value: Value) -> 
         return handler_proc.funcall("call", (request_value,));
     }
 
-    let (params_value, query_value, body_value) =
-        if let Ok(request) = <&NativeRequest>::try_convert(request_value) {
-            (
-                NativeRequest::path_params(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
-                NativeRequest::query(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
-                NativeRequest::body(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
-            )
-        } else if let Some(hash) = RHash::from_value(request_value) {
-            (
-                hash.get(*KEY_PATH_PARAMS).unwrap_or_else(|| ruby.qnil().as_value()),
-                hash.get(*KEY_QUERY).unwrap_or_else(|| ruby.qnil().as_value()),
-                hash.get(*KEY_BODY).unwrap_or_else(|| ruby.qnil().as_value()),
-            )
-        } else {
-            (ruby.qnil().as_value(), ruby.qnil().as_value(), ruby.qnil().as_value())
-        };
+    let (params_value, query_value, body_value) = if let Ok(request) = <&NativeRequest>::try_convert(request_value) {
+        (
+            NativeRequest::path_params(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
+            NativeRequest::query(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
+            NativeRequest::body(ruby, request).unwrap_or_else(|_| ruby.qnil().as_value()),
+        )
+    } else if let Some(hash) = RHash::from_value(request_value) {
+        (
+            hash.get(*KEY_PATH_PARAMS).unwrap_or_else(|| ruby.qnil().as_value()),
+            hash.get(*KEY_QUERY).unwrap_or_else(|| ruby.qnil().as_value()),
+            hash.get(*KEY_BODY).unwrap_or_else(|| ruby.qnil().as_value()),
+        )
+    } else {
+        (ruby.qnil().as_value(), ruby.qnil().as_value(), ruby.qnil().as_value())
+    };
 
     if arity == 2 {
         return handler_proc.funcall("call", (params_value, query_value));

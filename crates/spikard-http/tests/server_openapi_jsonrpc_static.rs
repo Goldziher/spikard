@@ -286,8 +286,8 @@ fn router_returns_error_for_invalid_cache_control_header_value() {
 /// pre-built response and that the handler's `call()` is never invoked.
 #[tokio::test]
 async fn static_response_route_serves_pre_built_response() {
+    use spikard_http::{StaticResponse, StaticResponseHandler};
     use std::sync::atomic::{AtomicBool, Ordering};
-    use spikard_http::{StaticResponseHandler, StaticResponse};
 
     // A handler that tracks whether call() was invoked.
     static HANDLER_CALLED: AtomicBool = AtomicBool::new(false);
@@ -311,12 +311,7 @@ async fn static_response_route_serves_pre_built_response() {
     HANDLER_CALLED.store(false, Ordering::SeqCst);
 
     let handler = SpyHandler {
-        inner: StaticResponseHandler::from_parts(
-            200,
-            r#"{"status":"healthy"}"#,
-            Some("application/json"),
-            vec![],
-        ),
+        inner: StaticResponseHandler::from_parts(200, r#"{"status":"healthy"}"#, Some("application/json"), vec![]),
     };
 
     let route_meta = RouteMetadata {
@@ -336,27 +331,19 @@ async fn static_response_route_serves_pre_built_response() {
         static_response: None,
     };
 
-    let route = spikard_http::Route::from_metadata(
-        route_meta.clone(),
-        &spikard_http::SchemaRegistry::new(),
-    )
-    .expect("route creation");
+    let route = spikard_http::Route::from_metadata(route_meta.clone(), &spikard_http::SchemaRegistry::new())
+        .expect("route creation");
 
-    let routes: Vec<(spikard_http::Route, Arc<dyn Handler>)> =
-        vec![(route, Arc::new(handler) as Arc<dyn Handler>)];
+    let routes: Vec<(spikard_http::Route, Arc<dyn Handler>)> = vec![(route, Arc::new(handler) as Arc<dyn Handler>)];
 
     let config = ServerConfig::default();
-    let app =
-        build_router_with_handlers_and_config(routes, config, vec![route_meta]).expect("router");
+    let app = build_router_with_handlers_and_config(routes, config, vec![route_meta]).expect("router");
     let server = axum_test::TestServer::new(app).expect("test server");
 
     let resp = server.get("/health").await;
     assert_eq!(resp.status_code(), StatusCode::OK);
     assert_eq!(resp.text(), r#"{"status":"healthy"}"#);
-    assert_eq!(
-        resp.header("content-type").to_str().unwrap(),
-        "application/json"
-    );
+    assert_eq!(resp.header("content-type").to_str().unwrap(), "application/json");
     // The static fast-path should have served the response without calling the handler.
     assert!(
         !HANDLER_CALLED.load(Ordering::SeqCst),
@@ -409,10 +396,8 @@ async fn static_and_dynamic_routes_coexist() {
     };
 
     let registry = spikard_http::SchemaRegistry::new();
-    let static_route =
-        spikard_http::Route::from_metadata(static_meta.clone(), &registry).expect("static route");
-    let dynamic_route =
-        spikard_http::Route::from_metadata(dynamic_meta.clone(), &registry).expect("dynamic route");
+    let static_route = spikard_http::Route::from_metadata(static_meta.clone(), &registry).expect("static route");
+    let dynamic_route = spikard_http::Route::from_metadata(dynamic_meta.clone(), &registry).expect("dynamic route");
 
     let routes: Vec<(spikard_http::Route, Arc<dyn Handler>)> = vec![
         (static_route, Arc::new(static_handler) as Arc<dyn Handler>),
@@ -420,12 +405,7 @@ async fn static_and_dynamic_routes_coexist() {
     ];
 
     let config = ServerConfig::default();
-    let app = build_router_with_handlers_and_config(
-        routes,
-        config,
-        vec![static_meta, dynamic_meta],
-    )
-    .expect("router");
+    let app = build_router_with_handlers_and_config(routes, config, vec![static_meta, dynamic_meta]).expect("router");
     let server = axum_test::TestServer::new(app).expect("test server");
 
     // Static route
@@ -434,13 +414,8 @@ async fn static_and_dynamic_routes_coexist() {
     assert_eq!(resp.text(), "OK");
 
     // Dynamic route still works
-    let resp = server
-        .get("/api/items/550e8400-e29b-41d4-a716-446655440000")
-        .await;
+    let resp = server.get("/api/items/550e8400-e29b-41d4-a716-446655440000").await;
     assert_eq!(resp.status_code(), StatusCode::OK);
     let json: serde_json::Value = serde_json::from_str(&resp.text()).expect("json");
-    assert_eq!(
-        json["path_params"]["id"],
-        "550e8400-e29b-41d4-a716-446655440000"
-    );
+    assert_eq!(json["path_params"]["id"], "550e8400-e29b-41d4-a716-446655440000");
 }

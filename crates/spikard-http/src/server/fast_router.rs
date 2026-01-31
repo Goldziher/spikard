@@ -139,10 +139,7 @@ mod tests {
 
         let resp = StaticResponse {
             status: 200,
-            headers: vec![(
-                HeaderName::from_static("x-custom"),
-                HeaderValue::from_static("value"),
-            )],
+            headers: vec![(HeaderName::from_static("x-custom"), HeaderValue::from_static("value"))],
             body: Bytes::from_static(b"OK"),
             content_type: HeaderValue::from_static("application/json"),
         };
@@ -151,14 +148,8 @@ mod tests {
         router.insert(Method::GET, "/test", &resp);
 
         let response = router.lookup(&Method::GET, "/test").unwrap();
-        assert_eq!(
-            response.headers().get("x-custom").unwrap(),
-            "value"
-        );
-        assert_eq!(
-            response.headers().get("content-type").unwrap(),
-            "application/json"
-        );
+        assert_eq!(response.headers().get("x-custom").unwrap(), "value");
+        assert_eq!(response.headers().get("content-type").unwrap(), "application/json");
     }
 
     #[tokio::test]

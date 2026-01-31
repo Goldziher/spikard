@@ -122,18 +122,9 @@ pub fn run_server(
         // Fast-path: if the route metadata declares a static_response, use StaticResponseHandler
         if let Some(ref sr_value) = route_meta.static_response {
             let status = sr_value.get("status").and_then(|v| v.as_u64()).unwrap_or(200) as u16;
-            let body = sr_value
-                .get("body")
-                .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string();
+            let body = sr_value.get("body").and_then(|v| v.as_str()).unwrap_or("").to_string();
             let content_type = sr_value.get("content_type").and_then(|v| v.as_str());
-            let static_handler = spikard_http::StaticResponseHandler::from_parts(
-                status,
-                body,
-                content_type,
-                vec![],
-            );
+            let static_handler = spikard_http::StaticResponseHandler::from_parts(status, body, content_type, vec![]);
             routes_with_handlers.push((route, Arc::new(static_handler) as Arc<dyn Handler>));
         } else {
             let ruby_handler = RubyHandler::new_for_server(

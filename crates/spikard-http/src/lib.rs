@@ -45,9 +45,7 @@ pub use grpc::{
     StreamingRequest, StreamingResponse,
 };
 pub use handler_response::HandlerResponse;
-pub use handler_trait::{
-    Handler, HandlerResult, RequestData, StaticResponse, StaticResponseHandler, ValidatedParams,
-};
+pub use handler_trait::{Handler, HandlerResult, RequestData, StaticResponse, StaticResponseHandler, ValidatedParams};
 pub use jsonrpc::JsonRpcConfig;
 pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
 pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};

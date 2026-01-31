@@ -562,8 +562,13 @@ fn build_router_with_handlers_inner(
 
                 if !has_path_params {
                     let axum_path_for_fast = spikard_core::type_hints::strip_type_hints(&path);
-                    let http_method: axum::http::Method = route.method.as_str().parse()
-                        .map_err(|_| format!("Invalid HTTP method '{}' for static route {}", route.method.as_str(), path))?;
+                    let http_method: axum::http::Method = route.method.as_str().parse().map_err(|_| {
+                        format!(
+                            "Invalid HTTP method '{}' for static route {}",
+                            route.method.as_str(),
+                            path
+                        )
+                    })?;
                     fast_router.insert(http_method, &axum_path_for_fast, &static_resp);
                 }
 
@@ -681,15 +686,17 @@ fn build_router_with_handlers_inner(
     // routes are served without entering the Axum routing tree at all.
     if fast_router.has_routes() {
         let fast_router = Arc::new(fast_router);
-        app = app.layer(axum::middleware::from_fn(move |req: axum::extract::Request, next: axum::middleware::Next| {
-            let fast_router = Arc::clone(&fast_router);
-            async move {
-                if let Some(resp) = fast_router.lookup(req.method(), req.uri().path()) {
-                    return resp;
+        app = app.layer(axum::middleware::from_fn(
+            move |req: axum::extract::Request, next: axum::middleware::Next| {
+                let fast_router = Arc::clone(&fast_router);
+                async move {
+                    if let Some(resp) = fast_router.lookup(req.method(), req.uri().path()) {
+                        return resp;
+                    }
+                    next.run(req).await
                 }
-                next.run(req).await
-            }
-        }));
+            },
+        ));
     }
 
     Ok(app)
@@ -1526,6 +1533,7 @@ mod tests {
             expose_headers: None,
             max_age: Some(3600),
             allow_credentials: Some(true),
+            ..Default::default()
         };
 
         let route = build_test_route_with_cors("/users", "GET", "list_users", false, cors_config);
@@ -1546,6 +1554,7 @@ mod tests {
             expose_headers: None,
             max_age: Some(3600),
             allow_credentials: Some(true),
+            ..Default::default()
         };
 
         let get_route = build_test_route_with_cors("/users", "GET", "list_users", false, cors_config.clone());

@@ -5,7 +5,7 @@
 
 use axum::{
     body::Body,
-    http::{Request, Response, StatusCode, header::HeaderName, HeaderValue},
+    http::{HeaderValue, Request, Response, StatusCode, header::HeaderName},
 };
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
@@ -42,14 +42,12 @@ impl StaticResponse {
         for (name, value) in &self.headers {
             builder = builder.header(name.clone(), value.clone());
         }
-        builder
-            .body(Body::from(self.body.clone()))
-            .unwrap_or_else(|_| {
-                Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body(Body::from("Failed to build static response"))
-                    .expect("fallback response must build")
-            })
+        builder.body(Body::from(self.body.clone())).unwrap_or_else(|_| {
+            Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::from("Failed to build static response"))
+                .expect("fallback response must build")
+        })
     }
 }
 
@@ -966,12 +964,7 @@ mod tests {
 
     #[test]
     fn test_static_response_handler_from_parts_custom_content_type() {
-        let handler = StaticResponseHandler::from_parts(
-            200,
-            r#"{"ok":true}"#,
-            Some("application/json"),
-            vec![],
-        );
+        let handler = StaticResponseHandler::from_parts(200, r#"{"ok":true}"#, Some("application/json"), vec![]);
         let resp = handler.static_response().unwrap();
         assert_eq!(resp.content_type, "application/json");
     }
@@ -982,10 +975,7 @@ mod tests {
             200,
             "OK",
             None,
-            vec![(
-                HeaderName::from_static("x-custom"),
-                HeaderValue::from_static("value"),
-            )],
+            vec![(HeaderName::from_static("x-custom"), HeaderValue::from_static("value"))],
         );
         let resp = handler.static_response().unwrap();
         assert_eq!(resp.headers.len(), 1);
@@ -1003,10 +993,7 @@ mod tests {
         assert!(result.is_ok());
         let response = result.unwrap();
         assert_eq!(response.status(), StatusCode::CREATED);
-        assert_eq!(
-            response.headers().get("content-type").unwrap(),
-            "text/plain"
-        );
+        assert_eq!(response.headers().get("content-type").unwrap(), "text/plain");
         let body = response.into_body().collect().await.unwrap().to_bytes();
         assert_eq!(body.as_ref(), b"created");
     }

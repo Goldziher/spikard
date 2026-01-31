@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::sync::OnceLock;
 
 /// HTTP method
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -67,6 +68,73 @@ pub struct CorsConfig {
     pub max_age: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_credentials: Option<bool>,
+
+    // Optimized caches (lazy-initialized on first use)
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub methods_joined_cache: OnceLock<String>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub headers_joined_cache: OnceLock<String>,
+}
+
+impl CorsConfig {
+    /// Get the cached joined methods string for preflight responses
+    pub fn allowed_methods_joined(&self) -> &str {
+        self.methods_joined_cache
+            .get_or_init(|| self.allowed_methods.join(", "))
+    }
+
+    /// Get the cached joined headers string for preflight responses
+    pub fn allowed_headers_joined(&self) -> &str {
+        self.headers_joined_cache
+            .get_or_init(|| self.allowed_headers.join(", "))
+    }
+
+    /// Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
+    pub fn is_origin_allowed(&self, origin: &str) -> bool {
+        if origin.is_empty() {
+            return false;
+        }
+        self.allowed_origins.iter().any(|o| o == "*" || o == origin)
+    }
+
+    /// Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
+    pub fn is_method_allowed(&self, method: &str) -> bool {
+        self.allowed_methods
+            .iter()
+            .any(|m| m == "*" || m.eq_ignore_ascii_case(method))
+    }
+
+    /// Check if all requested headers are allowed (O(n) where n = num requested headers)
+    pub fn are_headers_allowed(&self, requested: &[&str]) -> bool {
+        // Check if wildcard is set
+        if self.allowed_headers.iter().any(|h| h == "*") {
+            return true;
+        }
+
+        // Check each requested header
+        requested.iter().all(|req_header| {
+            self.allowed_headers
+                .iter()
+                .any(|h| h.to_lowercase() == req_header.to_lowercase())
+        })
+    }
+}
+
+impl Default for CorsConfig {
+    fn default() -> Self {
+        Self {
+            allowed_origins: vec!["*".to_string()],
+            allowed_methods: vec!["*".to_string()],
+            allowed_headers: vec![],
+            expose_headers: None,
+            max_age: None,
+            allow_credentials: None,
+            methods_joined_cache: OnceLock::new(),
+            headers_joined_cache: OnceLock::new(),
+        }
+    }
 }
 
 /// Route metadata extracted from bindings
@@ -391,6 +459,7 @@ mod tests {
             expose_headers: None,
             max_age: None,
             allow_credentials: None,
+            ..Default::default()
         };
         assert_eq!(cors.allowed_origins.len(), 1);
         assert_eq!(cors.allowed_methods.len(), 2);
