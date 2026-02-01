@@ -16,7 +16,7 @@ import threading
 from datetime import date as DateType
 from functools import wraps
 from pathlib import Path as PathLib
-from typing import Any, Callable, Coroutine, ParamSpec, TypeVar
+from typing import Any, Callable, ParamSpec, TypeVar
 from uuid import UUID
 
 from spikard import Path, Query, Response, Spikard, get, post
@@ -286,31 +286,31 @@ def profile_once(
 
 
 @post("/json/small")
-async def post_json_small(body: dict[str, Any]) -> dict[str, Any]:
+def post_json_small(body: dict[str, Any]) -> dict[str, Any]:
     """Small JSON payload (~100-500 bytes) - raw."""
     return body
 
 
 @post("/json/medium")
-async def post_json_medium(body: dict[str, Any]) -> dict[str, Any]:
+def post_json_medium(body: dict[str, Any]) -> dict[str, Any]:
     """Medium JSON payload (~1-10KB) - raw."""
     return body
 
 
 @post("/json/large")
-async def post_json_large(body: dict[str, Any]) -> dict[str, Any]:
+def post_json_large(body: dict[str, Any]) -> dict[str, Any]:
     """Large JSON payload (~10-100KB) - raw."""
     return body
 
 
 @post("/json/very-large")
-async def post_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
+def post_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
     """Very large JSON payload (~100KB-1MB) - raw."""
     return body
 
 
 @post("/multipart/small")
-async def post_multipart_small(body: dict[str, Any]) -> dict[str, Any]:
+def post_multipart_small(body: dict[str, Any]) -> dict[str, Any]:
     """Small multipart form (~1KB) - raw."""
     files = body.get("files", {})
     files_received = 0
@@ -325,7 +325,7 @@ async def post_multipart_small(body: dict[str, Any]) -> dict[str, Any]:
 
 
 @post("/multipart/medium")
-async def post_multipart_medium(body: dict[str, Any]) -> dict[str, Any]:
+def post_multipart_medium(body: dict[str, Any]) -> dict[str, Any]:
     """Medium multipart form (~10KB) - raw."""
     files = body.get("files", {})
     files_received = 0
@@ -340,7 +340,7 @@ async def post_multipart_medium(body: dict[str, Any]) -> dict[str, Any]:
 
 
 @post("/multipart/large")
-async def post_multipart_large(body: dict[str, Any]) -> dict[str, Any]:
+def post_multipart_large(body: dict[str, Any]) -> dict[str, Any]:
     """Large multipart form (~100KB) - raw."""
     files = body.get("files", {})
     files_received = 0
@@ -355,31 +355,31 @@ async def post_multipart_large(body: dict[str, Any]) -> dict[str, Any]:
 
 
 @post("/urlencoded/simple")
-async def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
+def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
     """Simple URL-encoded form (3-5 fields) - raw."""
     return body
 
 
 @post("/urlencoded/complex")
-async def post_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
+def post_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
     """Complex URL-encoded form (10-20 fields) - raw."""
     return body
 
 
 @get("/path/simple/{id}")
-async def get_path_simple(id: str = Path()) -> dict[str, Any]:
+def get_path_simple(id: str = Path()) -> dict[str, Any]:
     """Single path parameter - raw."""
     return {"id": id}
 
 
 @get("/path/multiple/{user_id}/{post_id}")
-async def get_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, Any]:
+def get_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, Any]:
     """Multiple path parameters - raw."""
     return {"user_id": user_id, "post_id": post_id}
 
 
 @get("/path/deep/{org}/{team}/{project}/{resource}/{id}")
-async def get_path_deep(
+def get_path_deep(
     org: str = Path(),
     team: str = Path(),
     project: str = Path(),
@@ -397,25 +397,25 @@ async def get_path_deep(
 
 
 @get("/path/int/{id}")
-async def get_path_int(id: int = Path()) -> dict[str, Any]:
+def get_path_int(id: int = Path()) -> dict[str, Any]:
     """Integer path parameter - raw."""
     return {"id": id}
 
 
 @get("/path/uuid/{uuid}")
-async def get_path_uuid(uuid: UUID = Path()) -> dict[str, Any]:
+def get_path_uuid(uuid: UUID = Path()) -> dict[str, Any]:
     """UUID path parameter - raw."""
     return {"uuid": str(uuid)}
 
 
 @get("/path/date/{date}")
-async def get_path_date(date: DateType = Path()) -> dict[str, Any]:
+def get_path_date(date: DateType = Path()) -> dict[str, Any]:
     """Date path parameter - raw."""
     return {"date": date.isoformat()}
 
 
 @get("/query/few")
-async def get_query_few(
+def get_query_few(
     q: str | None = Query(default=None),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
@@ -432,7 +432,7 @@ async def get_query_few(
 
 
 @get("/query/medium")
-async def get_query_medium(
+def get_query_medium(
     search: str | None = Query(default=None),
     category: str | None = Query(default=None),
     sort: str | None = Query(default=None),
@@ -461,7 +461,7 @@ async def get_query_medium(
 
 
 @get("/query/many")
-async def get_query_many(
+def get_query_many(
     q: str | None = Query(default=None),
     category: str | None = Query(default=None),
     subcategory: str | None = Query(default=None),
@@ -521,7 +521,7 @@ async def get_query_many(
 
 @post("/validated/json/small", body_schema=request_schema("json/small"), response_schema=response_schema("json/small"))
 @profile_once("validated-json-small")
-async def post_validated_json_small(body: dict[str, Any]) -> dict[str, Any]:
+def post_validated_json_small(body: dict[str, Any]) -> dict[str, Any]:
     """Small JSON payload (~100-500 bytes) - validated."""
     return body
 
@@ -530,14 +530,14 @@ async def post_validated_json_small(body: dict[str, Any]) -> dict[str, Any]:
     "/validated/json/medium", body_schema=request_schema("json/medium"), response_schema=response_schema("json/medium")
 )
 @profile_once("validated-json-medium")
-async def post_validated_json_medium(body: dict[str, Any]) -> dict[str, Any]:
+def post_validated_json_medium(body: dict[str, Any]) -> dict[str, Any]:
     """Medium JSON payload (nested object) - validated."""
     return body
 
 
 @post("/validated/json/large", body_schema=request_schema("json/large"), response_schema=response_schema("json/large"))
 @profile_once("validated-json-large")
-async def post_validated_json_large(body: dict[str, Any]) -> dict[str, Any]:
+def post_validated_json_large(body: dict[str, Any]) -> dict[str, Any]:
     """Large JSON payload (~10-100KB) - validated."""
     return body
 
@@ -548,7 +548,7 @@ async def post_validated_json_large(body: dict[str, Any]) -> dict[str, Any]:
     response_schema=response_schema("json/very-large"),
 )
 @profile_once("validated-json-very-large")
-async def post_validated_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
+def post_validated_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
     """Very large JSON payload (arrays of values and objects) - validated."""
     return body
 
@@ -559,7 +559,7 @@ async def post_validated_json_very_large(body: dict[str, Any]) -> dict[str, Any]
     response_schema=response_schema("multipart/small"),
 )
 @profile_once("validated-multipart-small")
-async def post_validated_multipart_small(body: dict[str, Any]) -> dict[str, int]:
+def post_validated_multipart_small(body: dict[str, Any]) -> dict[str, int]:
     """Small multipart form (~1KB) - validated."""
     files = body.get("files", {})
     files_received = 0
@@ -582,7 +582,7 @@ async def post_validated_multipart_small(body: dict[str, Any]) -> dict[str, int]
     response_schema=response_schema("multipart/medium"),
 )
 @profile_once("validated-multipart-medium")
-async def post_validated_multipart_medium(body: dict[str, Any]) -> dict[str, int]:
+def post_validated_multipart_medium(body: dict[str, Any]) -> dict[str, int]:
     """Medium multipart form (~10KB) - validated."""
     files = body.get("files", {})
     files_received = 0
@@ -605,7 +605,7 @@ async def post_validated_multipart_medium(body: dict[str, Any]) -> dict[str, int
     response_schema=response_schema("multipart/large"),
 )
 @profile_once("validated-multipart-large")
-async def post_validated_multipart_large(body: dict[str, Any]) -> dict[str, int]:
+def post_validated_multipart_large(body: dict[str, Any]) -> dict[str, int]:
     """Large multipart form (~100KB) - validated."""
     files = body.get("files", {})
     files_received = 0
@@ -628,7 +628,7 @@ async def post_validated_multipart_large(body: dict[str, Any]) -> dict[str, int]
     response_schema=response_schema("urlencoded/simple"),
 )
 @profile_once("validated-urlencoded-simple")
-async def post_validated_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
+def post_validated_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
     """Simple URL-encoded form (3-5 fields) - validated."""
     return _coerce_urlencoded_simple(body)
 
@@ -639,7 +639,7 @@ async def post_validated_urlencoded_simple(body: dict[str, Any]) -> dict[str, An
     response_schema=response_schema("urlencoded/complex"),
 )
 @profile_once("validated-urlencoded-complex")
-async def post_validated_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
+def post_validated_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
     """Complex URL-encoded form (10-20 fields) - validated."""
     return _coerce_urlencoded_complex(body)
 
@@ -650,7 +650,7 @@ async def post_validated_urlencoded_complex(body: dict[str, Any]) -> dict[str, A
     parameter_schema=parameter_schema("path/simple"),
 )
 @profile_once("validated-path-simple")
-async def get_validated_path_simple(id: str = Path()) -> dict[str, JsonScalar]:
+def get_validated_path_simple(id: str = Path()) -> dict[str, JsonScalar]:
     """Single path parameter - validated."""
     return {"id": id}
 
@@ -661,7 +661,7 @@ async def get_validated_path_simple(id: str = Path()) -> dict[str, JsonScalar]:
     parameter_schema=parameter_schema("path/multiple"),
 )
 @profile_once("validated-path-multiple")
-async def get_validated_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, JsonScalar]:
+def get_validated_path_multiple(user_id: str = Path(), post_id: str = Path()) -> dict[str, JsonScalar]:
     """Multiple path parameters - validated."""
     return {"user_id": user_id, "post_id": post_id}
 
@@ -672,7 +672,7 @@ async def get_validated_path_multiple(user_id: str = Path(), post_id: str = Path
     parameter_schema=parameter_schema("path/deep"),
 )
 @profile_once("validated-path-deep")
-async def get_validated_path_deep(
+def get_validated_path_deep(
     org: str = Path(),
     team: str = Path(),
     project: str = Path(),
@@ -695,7 +695,7 @@ async def get_validated_path_deep(
     parameter_schema=parameter_schema("path/int"),
 )
 @profile_once("validated-path-int")
-async def get_validated_path_int(id: int = Path()) -> dict[str, JsonScalar]:
+def get_validated_path_int(id: int = Path()) -> dict[str, JsonScalar]:
     """Integer path parameter - validated."""
     return {"id": id}
 
@@ -706,7 +706,7 @@ async def get_validated_path_int(id: int = Path()) -> dict[str, JsonScalar]:
     parameter_schema=parameter_schema("path/uuid"),
 )
 @profile_once("validated-path-uuid")
-async def get_validated_path_uuid(uuid: UUID = Path()) -> dict[str, JsonScalar]:
+def get_validated_path_uuid(uuid: UUID = Path()) -> dict[str, JsonScalar]:
     """UUID path parameter - validated."""
     return {"uuid": str(uuid)}
 
@@ -717,7 +717,7 @@ async def get_validated_path_uuid(uuid: UUID = Path()) -> dict[str, JsonScalar]:
     parameter_schema=parameter_schema("path/date"),
 )
 @profile_once("validated-path-date")
-async def get_validated_path_date(date: DateType = Path()) -> dict[str, JsonScalar]:
+def get_validated_path_date(date: DateType = Path()) -> dict[str, JsonScalar]:
     """Date path parameter - validated."""
     return {"date": date.isoformat()}
 
@@ -726,7 +726,7 @@ async def get_validated_path_date(date: DateType = Path()) -> dict[str, JsonScal
     "/validated/query/few", response_schema=response_schema("query/few"), parameter_schema=parameter_schema("query/few")
 )
 @profile_once("validated-query-few")
-async def get_validated_query_few(
+def get_validated_query_few(
     q: str = Query(),
     page: int | None = Query(default=None),
     limit: int | None = Query(default=None),
@@ -746,7 +746,7 @@ async def get_validated_query_few(
     parameter_schema=parameter_schema("query/medium"),
 )
 @profile_once("validated-query-medium")
-async def get_validated_query_medium(
+def get_validated_query_medium(
     search: str = Query(),
     category: str | None = Query(default=None),
     sort: str | None = Query(default=None),
@@ -778,7 +778,7 @@ async def get_validated_query_medium(
     parameter_schema=parameter_schema("query/many"),
 )
 @profile_once("validated-query-many")
-async def get_validated_query_many(
+def get_validated_query_many(
     q: str = Query(),
     category: str | None = Query(default=None),
     subcategory: str | None = Query(default=None),

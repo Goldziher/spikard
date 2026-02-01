@@ -48,7 +48,7 @@ type HandlerOutput = {
 	body?: unknown;
 };
 
-type HandlerFunction = (input: HandlerInput) => Promise<HandlerOutput>;
+type HandlerFunction = (input: HandlerInput) => HandlerOutput;
 
 const routes: RouteMetadata[] = [];
 const handlers: Record<string, HandlerFunction> = {};
@@ -132,28 +132,13 @@ function registerRoute(
 		method: method.toUpperCase(),
 		path,
 		handler_name: handler.name,
-		is_async: true,
+		is_async: false,
 		request_schema: requestSchemaValue,
 		response_schema: responseSchemaValue,
 		parameter_schema: parameterSchemaValue,
 	};
 	routes.push(metadata);
-	handlers[handler.name] = async (input: HandlerInput) => {
-		try {
-			return await handler(input);
-		} catch (error) {
-			return {
-				status: 500,
-				body: {
-					error: "handler_exception",
-					code: "handler_exception",
-					details: {
-						message: error instanceof Error ? error.message : String(error),
-					},
-				},
-			};
-		}
-	};
+	handlers[handler.name] = handler;
 }
 
 function get(
@@ -179,23 +164,23 @@ function ok(body: unknown): HandlerOutput {
 	return { status: 200, body };
 }
 
-async function post_json_small(request: HandlerInput): Promise<HandlerOutput> {
+function post_json_small(request: HandlerInput): HandlerOutput {
 	return ok(request.body);
 }
 
-async function post_json_medium(request: HandlerInput): Promise<HandlerOutput> {
+function post_json_medium(request: HandlerInput): HandlerOutput {
 	return ok(request.body);
 }
 
-async function post_json_large(request: HandlerInput): Promise<HandlerOutput> {
+function post_json_large(request: HandlerInput): HandlerOutput {
 	return ok(request.body);
 }
 
-async function post_json_very_large(request: HandlerInput): Promise<HandlerOutput> {
+function post_json_very_large(request: HandlerInput): HandlerOutput {
 	return ok(request.body);
 }
 
-async function post_multipart_small(request: HandlerInput): Promise<HandlerOutput> {
+function post_multipart_small(request: HandlerInput): HandlerOutput {
 	const body = request.body;
 	if (!body || typeof body !== "object" || !("files" in body)) {
 		return ok({ files_received: 0, total_bytes: 0 });
@@ -215,7 +200,7 @@ async function post_multipart_small(request: HandlerInput): Promise<HandlerOutpu
 	return ok({ files_received, total_bytes });
 }
 
-async function post_multipart_medium(request: HandlerInput): Promise<HandlerOutput> {
+function post_multipart_medium(request: HandlerInput): HandlerOutput {
 	const body = request.body;
 	if (!body || typeof body !== "object" || !("files" in body)) {
 		return ok({ files_received: 0, total_bytes: 0 });
@@ -235,7 +220,7 @@ async function post_multipart_medium(request: HandlerInput): Promise<HandlerOutp
 	return ok({ files_received, total_bytes });
 }
 
-async function post_multipart_large(request: HandlerInput): Promise<HandlerOutput> {
+function post_multipart_large(request: HandlerInput): HandlerOutput {
 	const body = request.body;
 	if (!body || typeof body !== "object" || !("files" in body)) {
 		return ok({ files_received: 0, total_bytes: 0 });
@@ -255,26 +240,26 @@ async function post_multipart_large(request: HandlerInput): Promise<HandlerOutpu
 	return ok({ files_received, total_bytes });
 }
 
-async function post_urlencoded_simple(request: HandlerInput): Promise<HandlerOutput> {
+function post_urlencoded_simple(request: HandlerInput): HandlerOutput {
 	return ok(request.body ?? {});
 }
 
-async function post_urlencoded_complex(request: HandlerInput): Promise<HandlerOutput> {
+function post_urlencoded_complex(request: HandlerInput): HandlerOutput {
 	return ok(request.body ?? {});
 }
 
-async function get_path_simple(request: HandlerInput): Promise<HandlerOutput> {
+function get_path_simple(request: HandlerInput): HandlerOutput {
 	return ok({ id: request.pathParams.id });
 }
 
-async function get_path_multiple(request: HandlerInput): Promise<HandlerOutput> {
+function get_path_multiple(request: HandlerInput): HandlerOutput {
 	return ok({
 		user_id: request.pathParams.user_id,
 		post_id: request.pathParams.post_id,
 	});
 }
 
-async function get_path_deep(request: HandlerInput): Promise<HandlerOutput> {
+function get_path_deep(request: HandlerInput): HandlerOutput {
 	return ok({
 		org: request.pathParams.org,
 		team: request.pathParams.team,
@@ -284,35 +269,35 @@ async function get_path_deep(request: HandlerInput): Promise<HandlerOutput> {
 	});
 }
 
-async function get_path_int(request: HandlerInput): Promise<HandlerOutput> {
+function get_path_int(request: HandlerInput): HandlerOutput {
 	return ok({ id: parseInt(request.pathParams.id, 10) });
 }
 
-async function get_path_uuid(request: HandlerInput): Promise<HandlerOutput> {
+function get_path_uuid(request: HandlerInput): HandlerOutput {
 	return ok({ uuid: request.pathParams.uuid });
 }
 
-async function get_path_date(request: HandlerInput): Promise<HandlerOutput> {
+function get_path_date(request: HandlerInput): HandlerOutput {
 	return ok({ date: request.pathParams.date });
 }
 
-async function get_query_few(request: HandlerInput): Promise<HandlerOutput> {
+function get_query_few(request: HandlerInput): HandlerOutput {
 	return ok(request.queryParams ?? {});
 }
 
-async function get_query_medium(request: HandlerInput): Promise<HandlerOutput> {
+function get_query_medium(request: HandlerInput): HandlerOutput {
 	return ok(request.queryParams ?? {});
 }
 
-async function get_query_many(request: HandlerInput): Promise<HandlerOutput> {
+function get_query_many(request: HandlerInput): HandlerOutput {
 	return ok(request.queryParams ?? {});
 }
 
-async function get_health(_request: HandlerInput): Promise<HandlerOutput> {
+function get_health(_request: HandlerInput): HandlerOutput {
 	return ok({ status: "ok" });
 }
 
-async function get_root(_request: HandlerInput): Promise<HandlerOutput> {
+function get_root(_request: HandlerInput): HandlerOutput {
 	return ok({ status: "ok" });
 }
 

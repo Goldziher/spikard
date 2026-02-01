@@ -66,20 +66,20 @@ interface DateResponse {
 	date: string;
 }
 
-fastify.post("/json/small", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+fastify.post("/json/small", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.body);
 });
 
-fastify.post("/json/medium", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+fastify.post("/json/medium", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.body);
 });
 
-fastify.post("/json/large", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+fastify.post("/json/large", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.body);
 });
 
-fastify.post("/json/very-large", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+fastify.post("/json/very-large", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.body);
 });
 
 fastify.post("/multipart/small", async (request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
@@ -142,80 +142,80 @@ fastify.post("/multipart/large", async (request: FastifyRequest, _reply: Fastify
 	return { files_received, total_bytes };
 });
 
-fastify.post("/urlencoded/simple", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+fastify.post("/urlencoded/simple", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.body);
 });
 
-fastify.post("/urlencoded/complex", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.body;
+fastify.post("/urlencoded/complex", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.body);
 });
 
 fastify.get(
 	"/path/simple/:id",
-	async (request: FastifyRequest<{ Params: SimpleParams }>, _reply: FastifyReply): Promise<IdResponse> => {
+	(request: FastifyRequest<{ Params: SimpleParams }>, reply: FastifyReply) => {
 		const { id } = request.params;
-		return { id };
+		reply.send({ id });
 	},
 );
 
 fastify.get(
 	"/path/multiple/:user_id/:post_id",
-	async (request: FastifyRequest<{ Params: MultipleParams }>, _reply: FastifyReply): Promise<MultipleParams> => {
+	(request: FastifyRequest<{ Params: MultipleParams }>, reply: FastifyReply) => {
 		const { user_id, post_id } = request.params;
-		return { user_id, post_id };
+		reply.send({ user_id, post_id });
 	},
 );
 
 fastify.get(
 	"/path/deep/:org/:team/:project/:resource/:id",
-	async (request: FastifyRequest<{ Params: DeepParams }>, _reply: FastifyReply): Promise<DeepParams> => {
+	(request: FastifyRequest<{ Params: DeepParams }>, reply: FastifyReply) => {
 		const { org, team, project, resource, id } = request.params;
-		return { org, team, project, resource, id };
+		reply.send({ org, team, project, resource, id });
 	},
 );
 
 fastify.get(
 	"/path/int/:id",
-	async (request: FastifyRequest<{ Params: SimpleParams }>, _reply: FastifyReply): Promise<IdResponse> => {
+	(request: FastifyRequest<{ Params: SimpleParams }>, reply: FastifyReply) => {
 		const { id } = request.params;
-		return { id: Number.parseInt(id, 10) };
+		reply.send({ id: Number.parseInt(id, 10) });
 	},
 );
 
 fastify.get(
 	"/path/uuid/:uuid",
-	async (request: FastifyRequest<{ Params: UuidParams }>, _reply: FastifyReply): Promise<UuidResponse> => {
+	(request: FastifyRequest<{ Params: UuidParams }>, reply: FastifyReply) => {
 		const { uuid } = request.params;
-		return { uuid };
+		reply.send({ uuid });
 	},
 );
 
 fastify.get(
 	"/path/date/:date",
-	async (request: FastifyRequest<{ Params: DateParams }>, _reply: FastifyReply): Promise<DateResponse> => {
+	(request: FastifyRequest<{ Params: DateParams }>, reply: FastifyReply) => {
 		const { date } = request.params;
-		return { date };
+		reply.send({ date });
 	},
 );
 
-fastify.get("/query/few", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.query;
+fastify.get("/query/few", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.query);
 });
 
-fastify.get("/query/medium", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.query;
+fastify.get("/query/medium", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.query);
 });
 
-fastify.get("/query/many", async (request: FastifyRequest, _reply: FastifyReply): Promise<unknown> => {
-	return request.query;
+fastify.get("/query/many", (request: FastifyRequest, reply: FastifyReply) => {
+	reply.send(request.query);
 });
 
-fastify.get("/health", async (_request: FastifyRequest, _reply: FastifyReply): Promise<StatusResponse> => {
-	return { status: "ok" };
+fastify.get("/health", (_request: FastifyRequest, reply: FastifyReply) => {
+	reply.send({ status: "ok" });
 });
 
-fastify.get("/", async (_request: FastifyRequest, _reply: FastifyReply): Promise<StatusResponse> => {
-	return { status: "ok" };
+fastify.get("/", (_request: FastifyRequest, reply: FastifyReply) => {
+	reply.send({ status: "ok" });
 });
 
 // ============================================================================
@@ -368,8 +368,8 @@ fastify.post("/validated/json/small", {
 	schema: {
 		body: smallPayloadSchema,
 	},
-	handler: async (request, _reply) => {
-		return request.body;
+	handler: (request, reply) => {
+		reply.send(request.body);
 	},
 });
 
@@ -377,8 +377,8 @@ fastify.post("/validated/json/medium", {
 	schema: {
 		body: mediumPayloadSchema,
 	},
-	handler: async (request, _reply) => {
-		return request.body;
+	handler: (request, reply) => {
+		reply.send(request.body);
 	},
 });
 
@@ -386,8 +386,8 @@ fastify.post("/validated/json/large", {
 	schema: {
 		body: largePayloadSchema,
 	},
-	handler: async (request, _reply) => {
-		return request.body;
+	handler: (request, reply) => {
+		reply.send(request.body);
 	},
 });
 
@@ -395,8 +395,8 @@ fastify.post("/validated/json/very-large", {
 	schema: {
 		body: veryLargePayloadSchema,
 	},
-	handler: async (request, _reply) => {
-		return request.body;
+	handler: (request, reply) => {
+		reply.send(request.body);
 	},
 });
 
@@ -479,8 +479,8 @@ fastify.post("/validated/urlencoded/simple", {
 	schema: {
 		body: urlencodedSimpleSchema,
 	},
-	handler: async (request, _reply) => {
-		return request.body;
+	handler: (request, reply) => {
+		reply.send(request.body);
 	},
 });
 
@@ -488,8 +488,8 @@ fastify.post("/validated/urlencoded/complex", {
 	schema: {
 		body: urlencodedComplexSchema,
 	},
-	handler: async (request, _reply) => {
-		return request.body;
+	handler: (request, reply) => {
+		reply.send(request.body);
 	},
 });
 
@@ -503,9 +503,9 @@ fastify.get("/validated/path/simple/:id", {
 			required: ["id"],
 		},
 	},
-	handler: async (request, _reply) => {
+	handler: (request, reply) => {
 		const { id } = request.params as { id: string };
-		return { id };
+		reply.send({ id });
 	},
 });
 
@@ -520,12 +520,12 @@ fastify.get("/validated/path/multiple/:user_id/:post_id", {
 			required: ["user_id", "post_id"],
 		},
 	},
-	handler: async (request, _reply) => {
+	handler: (request, reply) => {
 		const { user_id, post_id } = request.params as {
 			user_id: string;
 			post_id: string;
 		};
-		return { user_id, post_id };
+		reply.send({ user_id, post_id });
 	},
 });
 
@@ -543,7 +543,7 @@ fastify.get("/validated/path/deep/:org/:team/:project/:resource/:id", {
 			required: ["org", "team", "project", "resource", "id"],
 		},
 	},
-	handler: async (request, _reply) => {
+	handler: (request, reply) => {
 		const { org, team, project, resource, id } = request.params as {
 			org: string;
 			team: string;
@@ -551,7 +551,7 @@ fastify.get("/validated/path/deep/:org/:team/:project/:resource/:id", {
 			resource: string;
 			id: string;
 		};
-		return { org, team, project, resource, id };
+		reply.send({ org, team, project, resource, id });
 	},
 });
 
@@ -565,9 +565,9 @@ fastify.get("/validated/path/int/:id", {
 			required: ["id"],
 		},
 	},
-	handler: async (request, _reply) => {
+	handler: (request, reply) => {
 		const { id } = request.params as { id: number };
-		return { id };
+		reply.send({ id });
 	},
 });
 
@@ -581,9 +581,9 @@ fastify.get("/validated/path/uuid/:uuid", {
 			required: ["uuid"],
 		},
 	},
-	handler: async (request, _reply) => {
+	handler: (request, reply) => {
 		const { uuid } = request.params as { uuid: string };
-		return { uuid };
+		reply.send({ uuid });
 	},
 });
 
@@ -597,9 +597,9 @@ fastify.get("/validated/path/date/:date", {
 			required: ["date"],
 		},
 	},
-	handler: async (request, _reply) => {
+	handler: (request, reply) => {
 		const { date } = request.params as { date: string };
-		return { date };
+		reply.send({ date });
 	},
 });
 
@@ -615,8 +615,8 @@ fastify.get("/validated/query/few", {
 			},
 		},
 	},
-	handler: async (request, _reply) => {
-		return request.query;
+	handler: (request, reply) => {
+		reply.send(request.query);
 	},
 });
 
@@ -636,8 +636,8 @@ fastify.get("/validated/query/medium", {
 			},
 		},
 	},
-	handler: async (request, _reply) => {
-		return request.query;
+	handler: (request, reply) => {
+		reply.send(request.query);
 	},
 });
 
@@ -666,8 +666,8 @@ fastify.get("/validated/query/many", {
 			},
 		},
 	},
-	handler: async (request, _reply) => {
-		return request.query;
+	handler: (request, reply) => {
+		reply.send(request.query);
 	},
 });
 
