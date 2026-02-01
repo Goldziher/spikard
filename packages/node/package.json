@@ -70,7 +70,7 @@
 		"@grpc/grpc-js": "^1.14.3",
 		"@grpc/proto-loader": "^0.8.0",
 		"@napi-rs/cli": "^3.5.1",
-		"@types/node": "^25.1.0",
+		"@types/node": "^25.2.0",
 		"@types/ws": "^8.18.1",
 		"@vitest/coverage-v8": "^4.0.18",
 		"tsup": "^8.5.1",

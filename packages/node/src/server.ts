@@ -68,12 +68,15 @@ export interface ServerOptions {
  * ```
  */
 export function runServer(app: SpikardApp, config: ServerConfig | ServerOptions = {}): void {
-	const handlers: Record<string, NativeHandlerFunction> = Object.fromEntries(
-		Object.entries(app.handlers || {}).map(([name, handler]) => {
-			const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
-			return [name, nativeHandler];
-		}),
-	);
+	const handlers: Record<string, NativeHandlerFunction> = {};
+	const routes = (app.routes || []).map((route) => {
+		const handler = app.handlers?.[route.handler_name];
+		if (!handler) return route;
+		const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
+		handlers[route.handler_name] = nativeHandler;
+		const isAsync = nativeHandler.constructor.name === 'AsyncFunction';
+		return { ...route, is_async: isAsync };
+	});
 
-	nativeBinding.runServer({ ...app, handlers }, config);
+	nativeBinding.runServer({ ...app, handlers, routes }, config);
 }

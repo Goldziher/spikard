@@ -55,20 +55,24 @@ class TestResponse:
     @property
     def status_code(self) -> int:
         """Get the HTTP status code."""
-        return self._response.status_code
+        result: int = self._response.status_code
+        return result
 
     @property
     def headers(self) -> dict[str, str]:
         """Get the response headers."""
-        return self._response.headers
+        result: dict[str, str] = self._response.headers
+        return result
 
     def bytes(self) -> bytes:
         """Get the response body as bytes."""
-        return self._response.bytes()
+        result: bytes = self._response.bytes()
+        return result
 
     def text(self) -> str:
         """Get the response body as text."""
-        return self._response.text()
+        result: str = self._response.text()
+        return result
 
     def json(self) -> Any:
         """Parse the response body as JSON."""
@@ -125,7 +129,8 @@ class WebSocketConnection:
         Returns:
             The received message
         """
-        return await self._conn.recv()
+        result: str = await self._conn.recv()
+        return result
 
     async def close(self) -> None:
         """Close the WebSocket connection."""
@@ -143,7 +148,7 @@ class SseStream:
         """
         self._stream = rust_stream
 
-    async def __aiter__(self) -> SseStream:
+    def __aiter__(self) -> SseStream:
         """Return the async iterator."""
         return self
 
@@ -153,7 +158,8 @@ class SseStream:
         Returns:
             ServerSentEvent with event, data, id, and retry attributes
         """
-        return await self._stream.__anext__()
+        result: ServerSentEvent = await self._stream.__anext__()
+        return result
 
 
 class TestClient:
@@ -199,7 +205,7 @@ class TestClient:
         except ImportError as e:
             raise RuntimeError("Failed to import _spikard. Ensure the Rust extension is built: maturin develop") from e
 
-        self._client = _spikard.create_test_client(self._app)
+        self._client = _spikard.create_test_client(self._app)  # type: ignore[attr-defined]
         return self
 
     async def __aexit__(
@@ -367,7 +373,7 @@ class TestClient:
             await connection.close()
 
     @asynccontextmanager
-    async def sse(self, path: str) -> AsyncIterator[AsyncIterator[ServerSentEvent]]:
+    async def sse(self, path: str) -> AsyncIterator[SseStream]:
         """Connect to a Server-Sent Events endpoint.
 
         Args:

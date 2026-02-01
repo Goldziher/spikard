@@ -117,21 +117,18 @@ class SseEventProducer:
             return None
 
         try:
-            result = self._async_next_event()
-            if inspect.iscoroutine(result):
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # Event loop is already running; use a temporary loop
-                    temp_loop = asyncio.new_event_loop()
-                    try:
-                        asyncio.set_event_loop(temp_loop)
-                        return temp_loop.run_until_complete(result)
-                    finally:
-                        temp_loop.close()
-                        asyncio.set_event_loop(loop)
-                else:
-                    return loop.run_until_complete(result)
-            return result
+            coro = self._async_next_event()
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                temp_loop = asyncio.new_event_loop()
+                try:
+                    asyncio.set_event_loop(temp_loop)
+                    return temp_loop.run_until_complete(coro)
+                finally:
+                    temp_loop.close()
+                    asyncio.set_event_loop(loop)
+            else:
+                return loop.run_until_complete(coro)
         except Exception:
             return None
 

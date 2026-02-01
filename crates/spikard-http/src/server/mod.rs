@@ -638,12 +638,24 @@ fn build_router_with_handlers_inner(
                 }
             };
 
-            let method_router = method_router.layer(axum::middleware::from_fn_with_state(
-                crate::middleware::RouteInfo {
-                    expects_json_body: route.expects_json_body,
-                },
-                crate::middleware::validate_content_type_middleware,
-            ));
+            // Only apply content-type validation middleware for methods that
+            // carry a request body. GET/DELETE/HEAD/OPTIONS/TRACE never have
+            // meaningful content-type headers, so the middleware just adds
+            // into_parts/from_parts overhead for those methods.
+            let method_router = if matches!(
+                route.method,
+                crate::Method::Post | crate::Method::Put | crate::Method::Patch
+            ) && (route.expects_json_body || route.file_params.is_some())
+            {
+                method_router.layer(axum::middleware::from_fn_with_state(
+                    crate::middleware::RouteInfo {
+                        expects_json_body: route.expects_json_body,
+                    },
+                    crate::middleware::validate_content_type_middleware,
+                ))
+            } else {
+                method_router
+            };
 
             combined_router = Some(match combined_router {
                 None => method_router,
@@ -781,10 +793,15 @@ pub fn build_router_with_handlers_and_config(
     #[cfg(not(feature = "di"))]
     let mut app = build_router_with_handlers_inner(routes, hooks, None, config.enable_http_trace)?;
 
-    app = app.layer(SetSensitiveRequestHeadersLayer::new([
-        axum::http::header::AUTHORIZATION,
-        axum::http::header::COOKIE,
-    ]));
+    // Only add the sensitive-header redaction layer when auth middleware is
+    // configured — without auth there is nothing to redact, and the layer
+    // otherwise adds per-request overhead.
+    if config.jwt_auth.is_some() || config.api_key_auth.is_some() {
+        app = app.layer(SetSensitiveRequestHeadersLayer::new([
+            axum::http::header::AUTHORIZATION,
+            axum::http::header::COOKIE,
+        ]));
+    }
 
     if let Some(ref compression) = config.compression {
         let mut compression_layer = CompressionLayer::new();
@@ -855,10 +872,11 @@ pub fn build_router_with_handlers_and_config(
             .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid));
     }
 
+    // Only add the body-limit layer when a limit is explicitly configured.
+    // Omitting the layer entirely (instead of `disable()`) avoids a no-op
+    // middleware dispatch on every request.
     if let Some(max_size) = config.max_body_size {
         app = app.layer(DefaultBodyLimit::max(max_size));
-    } else {
-        app = app.layer(DefaultBodyLimit::disable());
     }
 
     for static_config in &config.static_files {

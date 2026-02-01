@@ -98,7 +98,7 @@ nursery = { level = "deny", priority = 0 }
 exclude = ["spikard-node"]
 
 [profile.release]
-lto = "thin"
+lto = "fat"
 codegen-units = 1
 opt-level = 3
 strip = true

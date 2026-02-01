@@ -192,6 +192,7 @@ fn test_handler_output_basic_response() {
         status: 200,
         headers: None,
         body: Some(json!({"message": "OK"})),
+        raw_body: None,
     };
 
     let response = output.into_response().expect("response should build");
@@ -210,6 +211,7 @@ fn test_handler_output_with_headers() {
         status: 201,
         headers: Some(headers),
         body: Some(json!({"id": 123})),
+        raw_body: None,
     };
 
     let response = output.into_response().expect("response should build");
@@ -224,6 +226,7 @@ fn test_handler_output_null_body() {
         status: 204,
         headers: None,
         body: None,
+        raw_body: None,
     };
 
     let response = output.into_response().expect("response should build");
@@ -254,6 +257,7 @@ fn test_handler_output_complex_body() {
         status: 200,
         headers: None,
         body: Some(complex_body),
+        raw_body: None,
     };
 
     let response = output.into_response().expect("response should build");
@@ -269,6 +273,7 @@ fn test_handler_output_edge_case_statuses() {
             status: *status_code,
             headers: None,
             body: Some(json!({"status": status_code})),
+            raw_body: None,
         };
 
         let response = output
@@ -440,6 +445,7 @@ fn test_handler_output_minimal() {
         status: 200,
         headers: None,
         body: None,
+        raw_body: None,
     };
 
     let response = output.into_response().expect("response should build");
