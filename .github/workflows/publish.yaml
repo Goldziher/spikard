@@ -543,7 +543,7 @@ jobs:
         run: Remove-Item -Recurse -Force crates/spikard-node\npm -ErrorAction SilentlyContinue
 
       - name: Create npm package structure
-        run: pnpm --filter @spikard/node exec napi create-npm-dirs
+        run: pnpm --filter @spikard/node-native exec napi create-npm-dirs
 
       - name: Build native module
         if: runner.os != 'Windows'
@@ -1146,7 +1146,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
