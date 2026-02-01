@@ -1,6 +1,7 @@
 ```python
 from msgspec import Struct, ValidationError
 from typing import Annotated
+from spikard import Body
 
 class CreateUserRequest(Struct):
     email: Annotated[str, "Email address"]
@@ -8,7 +9,7 @@ class CreateUserRequest(Struct):
     username: Annotated[str, "Alphanumeric username"]
 
 @app.post("/users")
-async def create_user(request: CreateUserRequest) -> dict:
+async def create_user(request: Body[CreateUserRequest]) -> dict:
     # Validation happens automatically before this handler runs
     # If validation fails, returns 400 with error details
     return {

@@ -1,8 +1,8 @@
 """Testing utilities for Spikard applications.
 
-This module provides a test client for making requests to Spikard applications.
-The TestClient starts a real server in a subprocess for reliable WebSocket
-and SSE testing.
+This module provides test clients for making requests to Spikard applications.
+The TestClient uses in-process Rust testing for fast, reliable testing.
+The LiveTestClient starts a real server in a subprocess for specialized testing needs.
 """
 
 import asyncio
@@ -37,7 +37,414 @@ if TYPE_CHECKING:
 
 __all__ = [
     "TestClient",
+    "LiveTestClient",
 ]
+
+
+class TestResponse:
+    """Wrapper around Rust TestResponse to provide convenient access methods."""
+
+    def __init__(self, rust_response: Any) -> None:
+        """Initialize TestResponse wrapper.
+
+        Args:
+            rust_response: The Rust TestResponse object
+        """
+        self._response = rust_response
+
+    @property
+    def status_code(self) -> int:
+        """Get the HTTP status code."""
+        return self._response.status_code
+
+    @property
+    def headers(self) -> dict[str, str]:
+        """Get the response headers."""
+        return self._response.headers
+
+    def bytes(self) -> bytes:
+        """Get the response body as bytes."""
+        return self._response.bytes()
+
+    def text(self) -> str:
+        """Get the response body as text."""
+        return self._response.text()
+
+    def json(self) -> Any:
+        """Parse the response body as JSON."""
+        return self._response.json()
+
+    def assert_status(self, code: int) -> "TestResponse":
+        """Assert that the response status code matches the expected code.
+
+        Args:
+            code: Expected status code
+
+        Returns:
+            Self for chaining
+
+        Raises:
+            AssertionError: If status code doesn't match
+        """
+        assert (
+            self.status_code == code
+        ), f"Expected status code {code}, got {self.status_code}"
+        return self
+
+    def assert_status_ok(self) -> "TestResponse":
+        """Assert that the response status code is 200 OK.
+
+        Returns:
+            Self for chaining
+        """
+        return self.assert_status(200)
+
+
+class WebSocketConnection:
+    """Wrapper around Rust WebSocket connection."""
+
+    def __init__(self, rust_conn: Any) -> None:
+        """Initialize WebSocket connection wrapper.
+
+        Args:
+            rust_conn: The Rust WebSocket connection
+        """
+        self._conn = rust_conn
+
+    async def send(self, data: str) -> None:
+        """Send a message over the WebSocket.
+
+        Args:
+            data: The message to send
+        """
+        await self._conn.send(data)
+
+    async def recv(self) -> str:
+        """Receive a message from the WebSocket.
+
+        Returns:
+            The received message
+        """
+        return await self._conn.recv()
+
+    async def close(self) -> None:
+        """Close the WebSocket connection."""
+        await self._conn.close()
+
+
+class SseStream:
+    """Wrapper around Rust SSE stream."""
+
+    def __init__(self, rust_stream: Any) -> None:
+        """Initialize SSE stream wrapper.
+
+        Args:
+            rust_stream: The Rust SSE stream
+        """
+        self._stream = rust_stream
+
+    async def __aiter__(self) -> "SseStream":
+        """Return the async iterator."""
+        return self
+
+    async def __anext__(self) -> ServerSentEvent:
+        """Get the next SSE event.
+
+        Returns:
+            ServerSentEvent with event, data, id, and retry attributes
+        """
+        return await self._stream.__anext__()
+
+
+class TestClient:
+    """Test client for making requests to a Spikard application.
+
+    This client uses in-process testing with the Rust test client for fast,
+    reliable testing of HTTP endpoints. For WebSocket and SSE testing that
+    requires a real server process, use LiveTestClient instead.
+
+    Example:
+        >>> from spikard import Spikard, get
+        >>> from spikard.testing import TestClient
+        >>>
+        >>> app = Spikard()
+        >>>
+        >>> @get("/hello")
+        >>> async def hello():
+        >>>     return {"message": "Hello, World!"}
+        >>>
+        >>> async def test_hello():
+        >>>     async with TestClient(app) as client:
+        >>>         response = await client.get("/hello")
+        >>>         assert response.status_code == 200
+        >>>         assert response.json() == {"message": "Hello, World!"}
+    """
+
+    __test__ = False
+
+    def __init__(self, app: "Spikard") -> None:
+        """Create a new test client.
+
+        Args:
+            app: A Spikard application instance
+        """
+        self._app = app
+        self._client: Any = None
+
+    async def __aenter__(self) -> Self:
+        """Start the test client and return self."""
+        # Lazy import of _spikard to avoid circular dependencies
+        try:
+            import _spikard
+        except ImportError as e:
+            raise RuntimeError(
+                "Failed to import _spikard. Ensure the Rust extension is built: "
+                "maturin develop"
+            ) from e
+
+        self._client = _spikard.create_test_client(self._app)
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
+        """Clean up the test client."""
+        self._client = None
+
+    def _check_client(self) -> None:
+        """Ensure the client is initialized."""
+        if self._client is None:
+            raise RuntimeError("TestClient not initialized. Use 'async with TestClient(app)' context manager.")
+
+    async def get(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a GET request.
+
+        Args:
+            path: The path to request
+            params: Optional query parameters
+            headers: Optional request headers
+            cookies: Optional cookies to send
+
+        Returns:
+            TestResponse: The response from the server
+        """
+        self._check_client()
+        response = await self._client.get(path, query_params=params, headers=headers, cookies=cookies)
+        return TestResponse(response)
+
+    async def post(
+        self,
+        path: str,
+        json: Any | None = None,
+        data: Any | None = None,
+        files: Any | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a POST request.
+
+        Args:
+            path: The path to request
+            json: Optional JSON body
+            data: Optional form data
+            files: Optional files for multipart upload
+            params: Optional query parameters
+            headers: Optional request headers
+            cookies: Optional cookies to send
+
+        Returns:
+            TestResponse: The response from the server
+        """
+        self._check_client()
+        response = await self._client.post(
+            path, json=json, data=data, files=files, query_params=params, headers=headers, cookies=cookies
+        )
+        return TestResponse(response)
+
+    async def put(
+        self,
+        path: str,
+        json: Any | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a PUT request."""
+        self._check_client()
+        response = await self._client.put(path, json=json, query_params=params, headers=headers, cookies=cookies)
+        return TestResponse(response)
+
+    async def patch(
+        self,
+        path: str,
+        json: Any | None = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a PATCH request."""
+        self._check_client()
+        response = await self._client.patch(path, json=json, query_params=params, headers=headers, cookies=cookies)
+        return TestResponse(response)
+
+    async def delete(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a DELETE request."""
+        self._check_client()
+        response = await self._client.delete(path, query_params=params, headers=headers, cookies=cookies)
+        return TestResponse(response)
+
+    async def options(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make an OPTIONS request."""
+        self._check_client()
+        response = await self._client.options(path, query_params=params, headers=headers, cookies=cookies)
+        return TestResponse(response)
+
+    async def head(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a HEAD request."""
+        self._check_client()
+        response = await self._client.head(path, query_params=params, headers=headers, cookies=cookies)
+        return TestResponse(response)
+
+    async def trace(
+        self,
+        path: str,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Make a TRACE request."""
+        self._check_client()
+        response = await self._client.trace(path, query_params=params, headers=headers, cookies=cookies)
+        return TestResponse(response)
+
+    @asynccontextmanager
+    async def websocket(self, path: str) -> AsyncIterator[WebSocketConnection]:
+        """Connect to a WebSocket endpoint.
+
+        Args:
+            path: The WebSocket endpoint path (e.g., "/ws/chat")
+
+        Yields:
+            WebSocketConnection: An async WebSocket connection
+
+        Example:
+            >>> async with client.websocket("/ws/chat") as ws:
+            >>>     await ws.send("Hello")
+            >>>     message = await ws.recv()
+            >>>     assert message == "Hello, World!"
+        """
+        self._check_client()
+        rust_conn = await self._client.websocket(path)
+        connection = WebSocketConnection(rust_conn)
+        try:
+            yield connection
+        finally:
+            await connection.close()
+
+    @asynccontextmanager
+    async def sse(self, path: str) -> AsyncIterator[AsyncIterator[ServerSentEvent]]:
+        """Connect to a Server-Sent Events endpoint.
+
+        Args:
+            path: The SSE endpoint path (e.g., "/sse/notifications")
+
+        Yields:
+            AsyncIterator[ServerSentEvent]: An async stream of SSE events
+
+        Example:
+            >>> async with client.sse("/sse/notifications") as event_stream:
+            >>>     async for event in event_stream:
+            >>>         print(f"Event: {event.event}, Data: {event.data}")
+            >>>         if event.event == "done":
+            >>>             break
+        """
+        self._check_client()
+        rust_stream = await self._client.sse(path)
+        stream = SseStream(rust_stream)
+        yield stream
+
+    async def graphql(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+        operation_name: str | None = None,
+        path: str = "/graphql",
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> TestResponse:
+        """Send a GraphQL query or mutation.
+
+        Args:
+            query: GraphQL query string
+            variables: Optional GraphQL variables dict
+            operation_name: Optional operation name string
+            path: Path to the GraphQL endpoint (default: "/graphql")
+            headers: Optional request headers
+            cookies: Optional cookies to send
+
+        Returns:
+            TestResponse: The response from the server
+        """
+        body: dict[str, Any] = {"query": query}
+        if variables is not None:
+            body["variables"] = variables
+        if operation_name is not None:
+            body["operationName"] = operation_name
+
+        return await self.post(path, json=body, headers=headers, cookies=cookies)
+
+    async def graphql_with_status(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+        operation_name: str | None = None,
+        path: str = "/graphql",
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+    ) -> tuple[int, TestResponse]:
+        """Send a GraphQL query and return status code and response.
+
+        Args:
+            query: GraphQL query string
+            variables: Optional GraphQL variables dict
+            operation_name: Optional operation name string
+            path: Path to the GraphQL endpoint (default: "/graphql")
+            headers: Optional request headers
+            cookies: Optional cookies to send
+
+        Returns:
+            Tuple of (status_code, TestResponse)
+        """
+        response = await self.graphql(query, variables, operation_name, path, headers, cookies)
+        return response.status_code, response
 
 
 class PortAllocator:
@@ -69,16 +476,19 @@ class PortAllocator:
 _port_allocator = PortAllocator()
 
 
-class TestClient:
-    """Test client for making requests to a Spikard application.
+class LiveTestClient:
+    """Test client that starts a real Spikard server in a subprocess.
 
     This client provides reliable testing for HTTP, WebSocket, and SSE endpoints by
     starting an actual server process. All operations are fully async using
     httpx, websockets, and httpx-sse libraries.
 
+    This is slower than TestClient but useful when you need to test against
+    a real server process.
+
     Example:
         >>> from spikard import Spikard, get
-        >>> from spikard.testing import TestClient
+        >>> from spikard.testing import LiveTestClient
         >>>
         >>> app = Spikard()
         >>>
@@ -87,7 +497,7 @@ class TestClient:
         >>>     return {"message": "Hello, World!"}
         >>>
         >>> async def test_hello():
-        >>>     async with TestClient(app) as client:
+        >>>     async with LiveTestClient(app) as client:
         >>>         response = await client.get("/hello")
         >>>         assert response.status_code == 200
         >>>         assert response.json() == {"message": "Hello, World!"}
@@ -95,8 +505,8 @@ class TestClient:
 
     __test__ = False
 
-    def __init__(self, app: Spikard, port: int = 0) -> None:
-        """Create a new test client.
+    def __init__(self, app: "Spikard", port: int = 0) -> None:
+        """Create a new live test client.
 
         Args:
             app: A Spikard application instance
@@ -113,21 +523,21 @@ class TestClient:
     def base_url(self) -> str:
         """Get the base URL for HTTP requests."""
         if self._port is None:
-            raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
+            raise RuntimeError("Server not started. Use 'async with LiveTestClient(app)' context manager.")
         return f"http://127.0.0.1:{self._port}"
 
     @property
     def ws_url(self) -> str:
         """Get the base URL for WebSocket connections."""
         if self._port is None:
-            raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
+            raise RuntimeError("Server not started. Use 'async with LiveTestClient(app)' context manager.")
         return f"ws://127.0.0.1:{self._port}"
 
     @property
     def port(self) -> int:
         """Return the port the subprocess server is bound to."""
         if self._port is None:
-            raise RuntimeError("Server not started. Use 'async with TestClient(app)' context manager.")
+            raise RuntimeError("Server not started. Use 'async with LiveTestClient(app)' context manager.")
         return self._port
 
     async def __aenter__(self) -> Self:

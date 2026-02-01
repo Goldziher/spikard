@@ -37,83 +37,75 @@ async def create_user(body: dict[str, Any]) -> dict[str, Any]:
 @pytest.mark.asyncio
 async def test_root_endpoint() -> None:
     """Test the root endpoint."""
-    client = TestClient(app)
-    response = await client.get("/")
-
-    assert response.status_code == 200
-    response.assert_status_ok()
-
-    data = response.json()
-    assert data == {"message": "Hello, World!"}
+    async with TestClient(app) as client:
+        response = await client.get("/")
+        assert response.status_code == 200
+        response.assert_status_ok()
+        data = response.json()
+        assert data == {"message": "Hello, World!"}
 
 
 @pytest.mark.asyncio
 async def test_path_parameters() -> None:
     """Test path parameters."""
-    client = TestClient(app)
-    response = await client.get("/users/42")
-
-    response.assert_status_ok()
-    data = response.json()
-    assert data["user_id"] == 42
-    assert data["name"] == "User 42"
+    async with TestClient(app) as client:
+        response = await client.get("/users/42")
+        response.assert_status_ok()
+        data = response.json()
+        assert data["user_id"] == 42
+        assert data["name"] == "User 42"
 
 
 @pytest.mark.asyncio
 async def test_query_parameters() -> None:
     """Test query parameters."""
-    client = TestClient(app)
-    response = await client.get("/search", query_params={"query": "rust", "limit": "3"})
-
-    response.assert_status_ok()
-    data = response.json()
-    assert data["query"] == "rust"
-    assert data["limit"] == 3
-    assert len(data["results"]) == 3
+    async with TestClient(app) as client:
+        response = await client.get("/search", params={"query": "rust", "limit": "3"})
+        response.assert_status_ok()
+        data = response.json()
+        assert data["query"] == "rust"
+        assert data["limit"] == 3
+        assert len(data["results"]) == 3
 
 
 @pytest.mark.asyncio
 async def test_post_with_json() -> None:
     """Test POST request with JSON body."""
-    client = TestClient(app)
-    response = await client.post("/users", json={"name": "Alice", "email": "alice@example.com"})
-
-    response.assert_status_ok()
-    data = response.json()
-    assert data["id"] == 123
-    assert data["name"] == "Alice"
-    assert data["email"] == "alice@example.com"
+    async with TestClient(app) as client:
+        response = await client.post("/users", json={"name": "Alice", "email": "alice@example.com"})
+        response.assert_status_ok()
+        data = response.json()
+        assert data["id"] == 123
+        assert data["name"] == "Alice"
+        assert data["email"] == "alice@example.com"
 
 
 @pytest.mark.asyncio
 async def test_response_headers() -> None:
     """Test response headers."""
-    client = TestClient(app)
-    response = await client.get("/")
-
-    assert "content-type" in response.headers
-    assert "application/json" in response.headers["content-type"]
+    async with TestClient(app) as client:
+        response = await client.get("/")
+        assert "content-type" in response.headers
+        assert "application/json" in response.headers["content-type"]
 
 
 @pytest.mark.asyncio
 async def test_response_text() -> None:
     """Test response text method."""
-    client = TestClient(app)
-    response = await client.get("/")
-
-    text = response.text()
-    assert "Hello, World!" in text
+    async with TestClient(app) as client:
+        response = await client.get("/")
+        text = response.text()
+        assert "Hello, World!" in text
 
 
 @pytest.mark.asyncio
 async def test_response_bytes() -> None:
     """Test response bytes method."""
-    client = TestClient(app)
-    response = await client.get("/")
-
-    body_bytes = response.bytes()
-    assert isinstance(body_bytes, bytes)
-    assert b"Hello, World!" in body_bytes
+    async with TestClient(app) as client:
+        response = await client.get("/")
+        body_bytes = response.bytes()
+        assert isinstance(body_bytes, bytes)
+        assert b"Hello, World!" in body_bytes
 
 
 if __name__ == "__main__":

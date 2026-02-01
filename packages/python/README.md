@@ -93,11 +93,14 @@ async def create_user(user: User):
 ```python
 from spikard.di import Provide
 
-app.provide("db", Provide(create_pool, singleton=True))
+class DatabasePool:
+    async def fetch(self, sql: str) -> list: ...
+
+app.provide(DatabasePool, Provide(create_pool, singleton=True))
 
 @app.get("/data")
-async def get_data(db):  # Injected automatically
-    return {"data": await db.fetch("SELECT * FROM items")}
+async def get_data(pool: DatabasePool) -> dict:
+    return {"data": await pool.fetch("SELECT * FROM items")}
 ```
 
 **WebSockets:**
@@ -162,17 +165,19 @@ Key optimizations:
 - GIL-friendly async design with `pyo3_async_runtimes`
 
 ## Testing
-
 ```python
-from spikard import TestClient
+from spikard.testing import TestClient
 
-client = TestClient(app)
-response = client.get("/users/123")
-assert response.status_code == 200
+async def test_users():
+    async with TestClient(app) as client:
+        response = await client.get("/users/123")
+        assert response.status_code == 200
+        assert response.json()["user_id"] == 123
 ```
 
-See [Testing Guide](../../docs/python-testing.md) for WebSocket and SSE testing.
+`TestClient` uses in-process Rust testing for speed. `LiveTestClient` starts a real subprocess server for WebSocket/SSE tests.
 
+See [Testing Guide](../../docs/python-testing.md) for WebSocket and SSE testing.
 ## Examples
 
 Runnable examples with dependency injection and database integration:

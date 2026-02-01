@@ -35,38 +35,37 @@ async def create_user(body: dict[str, Any]) -> dict[str, Any]:
 
 async def main() -> None:
     """Run all tests."""
-    client = TestClient(app)
+    async with TestClient(app) as client:
+        response = await client.get("/")
+        assert response.status_code == 200
+        data = response.json()
+        assert data == {"message": "Hello, World!"}
 
-    response = await client.get("/")
-    assert response.status_code == 200
-    data = response.json()
-    assert data == {"message": "Hello, World!"}
+        response = await client.get("/users/42")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["user_id"] == 42
+        assert data["name"] == "User 42"
 
-    response = await client.get("/users/42")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["user_id"] == 42
-    assert data["name"] == "User 42"
+        response = await client.get("/search", params={"query": "rust", "limit": "3"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["query"] == "rust"
+        assert data["limit"] == 3
+        assert len(data["results"]) == 3
 
-    response = await client.get("/search", query_params={"query": "rust", "limit": "3"})
-    assert response.status_code == 200
-    data = response.json()
-    assert data["query"] == "rust"
-    assert data["limit"] == 3
-    assert len(data["results"]) == 3
+        response = await client.post("/users", json={"name": "Alice", "email": "alice@example.com"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Alice"
+        assert data["email"] == "alice@example.com"
 
-    response = await client.post("/users", json={"name": "Alice", "email": "alice@example.com"})
-    assert response.status_code == 200
-    data = response.json()
-    assert data["name"] == "Alice"
-    assert data["email"] == "alice@example.com"
-
-    response = await client.get("/")
-    text = response.text()
-    assert "Hello, World!" in text
-    body_bytes = response.bytes()
-    assert b"Hello, World!" in body_bytes
-    assert "content-type" in response.headers
+        response = await client.get("/")
+        text = response.text()
+        assert "Hello, World!" in text
+        body_bytes = response.bytes()
+        assert b"Hello, World!" in body_bytes
+        assert "content-type" in response.headers
 
 
 if __name__ == "__main__":

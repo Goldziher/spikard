@@ -3,30 +3,21 @@
 WebSocket handlers follow the same decorator pattern as HTTP handlers.
 Use the @websocket() decorator to define async WebSocket message handlers.
 
-Example:
-    ```python
+Example::
+
     from spikard import Spikard, websocket
 
     app = Spikard()
 
-
-    @websocket("/chat")
-    async def chat_handler(message: dict) -> dict | None:
-        '''Handle incoming WebSocket messages.'''
-        # Process message
-        message["echo"] = True
-        # Return response (or None to not respond)
-        return message
-
+    @app.websocket("/chat")
+    def chat_endpoint():
+        return ChatHandler()
 
     app.run()
-    ```
 
 The handler function receives the parsed JSON message and can return:
 - A dict to send as JSON response
 - None to not send a response
-
-WebSocket handlers are always async to maintain consistency with HTTP handlers.
 """
 
 import asyncio
@@ -34,9 +25,89 @@ import inspect
 from collections.abc import Callable
 from typing import Any, TypeVar, get_type_hints
 
-__all__ = ["websocket"]
+__all__ = ["WebSocketHandlerWrapper", "websocket"]
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+# Module-level registry for standalone @websocket decorators.
+# These are merged into the app via app.include_websocket_routes() or
+# by calling get_standalone_websocket_handlers().
+_standalone_websocket_handlers: dict[str, Callable[[], Any]] = {}
+
+
+def get_standalone_websocket_handlers() -> dict[str, Callable[[], Any]]:
+    """Return handlers registered via the standalone @websocket decorator."""
+    return _standalone_websocket_handlers.copy()
+
+
+class WebSocketHandlerWrapper:
+    """Wrapper class that provides the interface Rust expects."""
+
+    def __init__(
+        self,
+        func: Callable[..., Any],
+        *,
+        message_schema: dict[str, Any] | None = None,
+        response_schema: dict[str, Any] | None = None,
+        path: str = "",
+    ) -> None:
+        self._message_schema = message_schema
+        self._response_schema = response_schema
+        self._websocket_path = path
+        self._is_websocket_handler = True
+        self._websocket_func = func
+
+    def handle_message(self, message: dict[str, Any]) -> Any:
+        """Handle incoming WebSocket message."""
+        result = self._websocket_func(message)
+        if inspect.isawaitable(result):
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                temp_loop = asyncio.new_event_loop()
+                try:
+                    asyncio.set_event_loop(temp_loop)
+                    return temp_loop.run_until_complete(result)
+                finally:
+                    temp_loop.close()
+                    asyncio.set_event_loop(loop)
+            return loop.run_until_complete(result)
+        return result
+
+    def on_connect(self) -> None:
+        """Called when WebSocket connection is established."""
+        hook = getattr(self._websocket_func, "on_connect", None)
+        if hook:
+            result = hook()
+            if inspect.isawaitable(result):
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    temp_loop = asyncio.new_event_loop()
+                    try:
+                        asyncio.set_event_loop(temp_loop)
+                        temp_loop.run_until_complete(result)
+                    finally:
+                        temp_loop.close()
+                        asyncio.set_event_loop(loop)
+                else:
+                    loop.run_until_complete(result)
+
+    def on_disconnect(self) -> None:
+        """Called when WebSocket connection is closed."""
+        hook = getattr(self._websocket_func, "on_disconnect", None)
+        if hook:
+            result = hook()
+            if inspect.isawaitable(result):
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    temp_loop = asyncio.new_event_loop()
+                    try:
+                        asyncio.set_event_loop(temp_loop)
+                        temp_loop.run_until_complete(result)
+                    finally:
+                        temp_loop.close()
+                        asyncio.set_event_loop(loop)
+                else:
+                    loop.run_until_complete(result)
 
 
 def websocket(  # noqa: C901
@@ -45,55 +116,29 @@ def websocket(  # noqa: C901
     message_schema: dict[str, Any] | None = None,
     response_schema: dict[str, Any] | None = None,
 ) -> Callable[[F], F]:
-    """Decorator to define a WebSocket endpoint.
+    """Standalone decorator to define a WebSocket endpoint.
+
+    Routes registered via this decorator are collected in a module-level
+    registry. They are automatically picked up when passed to an app or
+    can be retrieved via ``get_standalone_websocket_handlers()``.
 
     Args:
-        path: The WebSocket endpoint path (e.g., "/chat")
+        path: The WebSocket endpoint path
         message_schema: Optional JSON Schema for incoming message validation.
-                       If not provided, will be extracted from the message parameter's type hint.
         response_schema: Optional JSON Schema for outgoing response validation.
-                        If not provided, will be extracted from the return type hint.
 
     Returns:
-        Decorated async function that handles WebSocket messages
-
-    Example:
-        ```python
-        from spikard import websocket
-        from typing import TypedDict
-
-
-        class ChatMessage(TypedDict):
-            text: str
-            user: str
-
-
-        @websocket("/chat")
-        async def chat_handler(message: ChatMessage) -> dict:
-            return {"echo": message["text"], "from": message["user"]}
-        ```
-
-    Note:
-        The handler function must be async and accept a message parameter.
-        It can return a dict (sent as JSON) or None (no response).
-        JSON Schema validation will be performed on incoming messages if a schema is provided.
+        Decorated async function
     """
 
-    def decorator(func: F) -> F:  # noqa: C901
-        from spikard.app import Spikard  # noqa: PLC0415
-        from spikard.schema import extract_json_schema  # noqa: PLC0415
-
-        app = Spikard.current_instance
-        if app is None:
-            raise RuntimeError(
-                "No Spikard app instance found. Create a Spikard() instance before using @websocket decorator."
-            )
-
+    def decorator(func: F) -> F:
         extracted_message_schema = message_schema
         extracted_response_schema = response_schema
 
         if extracted_message_schema is None or extracted_response_schema is None:
             try:
+                from spikard.schema import extract_json_schema  # noqa: PLC0415
+
                 type_hints = get_type_hints(func)
                 sig = inspect.signature(func)
                 params = list(sig.parameters.values())
@@ -114,68 +159,12 @@ def websocket(  # noqa: C901
             except (AttributeError, NameError, TypeError, ValueError):
                 pass
 
-        class WebSocketHandlerWrapper:
-            """Wrapper class that provides the interface Rust expects."""
-
-            _message_schema = extracted_message_schema
-            _response_schema = extracted_response_schema
-            _websocket_path = path
-            _is_websocket_handler = True
-            _websocket_func = func
-
-            def handle_message(self, message: dict[str, Any]) -> Any:
-                """Handle incoming WebSocket message."""
-                result = func(message)
-                if inspect.isawaitable(result):
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        temp_loop = asyncio.new_event_loop()
-                        try:
-                            asyncio.set_event_loop(temp_loop)
-                            return temp_loop.run_until_complete(result)
-                        finally:
-                            temp_loop.close()
-                            asyncio.set_event_loop(loop)
-                    return loop.run_until_complete(result)
-                return result
-
-            def on_connect(self) -> None:
-                """Called when WebSocket connection is established."""
-                hook = getattr(func, "on_connect", None)
-                if hook:
-                    result = hook()
-                    if inspect.isawaitable(result):
-                        loop = asyncio.get_event_loop()
-                        if loop.is_running():
-                            temp_loop = asyncio.new_event_loop()
-                            try:
-                                asyncio.set_event_loop(temp_loop)
-                                temp_loop.run_until_complete(result)
-                            finally:
-                                temp_loop.close()
-                                asyncio.set_event_loop(loop)
-                        else:
-                            loop.run_until_complete(result)
-
-            def on_disconnect(self) -> None:
-                """Called when WebSocket connection is closed."""
-                hook = getattr(func, "on_disconnect", None)
-                if hook:
-                    result = hook()
-                    if inspect.isawaitable(result):
-                        loop = asyncio.get_event_loop()
-                        if loop.is_running():
-                            temp_loop = asyncio.new_event_loop()
-                            try:
-                                asyncio.set_event_loop(temp_loop)
-                                temp_loop.run_until_complete(result)
-                            finally:
-                                temp_loop.close()
-                                asyncio.set_event_loop(loop)
-                        else:
-                            loop.run_until_complete(result)
-
-        app._websocket_handlers[path] = lambda: WebSocketHandlerWrapper()  # noqa: SLF001
+        _standalone_websocket_handlers[path] = lambda: WebSocketHandlerWrapper(
+            func,
+            message_schema=extracted_message_schema,
+            response_schema=extracted_response_schema,
+            path=path,
+        )
 
         return func
 

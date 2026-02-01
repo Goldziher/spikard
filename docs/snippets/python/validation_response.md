@@ -12,7 +12,7 @@ class UserListResponse(Struct):
     total: int
     page: int
 
-@app.get("/users", response_model=UserListResponse)
+@app.get("/users", response_schema=UserListResponse)
 async def list_users() -> UserListResponse:
     # Response will be validated against UserListResponse schema
     # Any field mismatch or type error returns 500 with details
@@ -31,7 +31,7 @@ async def list_users() -> UserListResponse:
     return response
 
 # Example error: missing required field
-@app.get("/invalid", response_model=User)
+@app.get("/invalid", response_schema=User)
 async def invalid_response() -> dict:
     # This will fail validation - missing 'age' field
     # Returns 500: {"error": "Response validation failed: missing field 'age'"}

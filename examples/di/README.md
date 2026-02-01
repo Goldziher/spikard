@@ -38,8 +38,7 @@ node --loader ts-node/esm node_basic.ts
 
 ### python_basic.py / python_database.py
 
-Demonstrates Python dependency injection patterns with async support.
-
+Demonstrates Python dependency injection with **type-based dependencies** (recommended pattern). Dependencies are keyed by type and auto-injected via type annotations. The database example shows async generator cleanup and singleton/per-request caching.
 ## Key Concepts
 
 ### Value Dependencies

@@ -4,7 +4,6 @@ These types are used to extract values from request headers, cookies, etc.
 and to specify default values and factories for query/body/path parameters.
 """
 
-import re
 from typing import TYPE_CHECKING, Any, TypeVar
 
 if TYPE_CHECKING:
@@ -17,9 +16,6 @@ class ParamBase:
     """Base class for all parameter wrappers.
 
     Provides common functionality for default values and default factories.
-
-    When used as a default parameter value, Python will invoke __call__
-    when the parameter is not provided, allowing us to lazily generate defaults.
     """
 
     __slots__ = ("default", "default_factory", "schema")
@@ -37,14 +33,6 @@ class ParamBase:
         self.default = default
         self.default_factory = default_factory
         self.schema = schema
-
-    def __call__(self) -> Any:
-        """Make the wrapper callable so Python can invoke it as a default.
-
-        When a parameter with this wrapper is not provided, Python will
-        call this method to get the actual default value.
-        """
-        return self.get_default()
 
     def get_default(self) -> Any:
         """Get the default value, invoking factory if needed."""
@@ -203,28 +191,8 @@ class Cookie(ParamBase):
     Args:
         default: Default value if cookie is not present (use ... for required)
         default_factory: Callable that generates default value when invoked
-        min_length: Minimum string length for validation (DEPRECATED: use schema instead)
-        max_length: Maximum string length for validation (DEPRECATED: use schema instead)
-        pattern: Regex pattern for validation (DEPRECATED: use schema instead)
         schema: Optional JSON schema dict for custom validation (passed to Rust)
     """
-
-    __slots__ = ("max_length", "min_length", "pattern")
-
-    def __init__(
-        self,
-        default: Any = ...,
-        *,
-        default_factory: Callable[[], Any] | None = None,
-        min_length: int | None = None,
-        max_length: int | None = None,
-        pattern: str | None = None,
-        schema: dict[str, Any] | None = None,
-    ) -> None:
-        super().__init__(default=default, default_factory=default_factory, schema=schema)
-        self.min_length = min_length
-        self.max_length = max_length
-        self.pattern = re.compile(pattern) if pattern else None
 
 
 class _Required:

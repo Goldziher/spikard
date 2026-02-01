@@ -22,16 +22,24 @@ Each dict is sent as a Server-Sent Event with JSON data.
 """
 
 import asyncio
-import threading
-import time
+import inspect
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
-from functools import wraps
 from typing import Any, TypeVar, get_args, get_origin, get_type_hints
 
-__all__ = ["SseEvent", "SseEventProducer", "sse"]
+__all__ = ["SseEvent", "SseEventProducer", "sse", "get_standalone_sse_producers"]
 
 F = TypeVar("F", bound=Callable[..., AsyncIterator[dict[str, Any]]])
+
+# Module-level registry for standalone @sse decorators.
+# These are merged into the app via app.include_sse_routes() or
+# by calling get_standalone_sse_producers().
+_standalone_sse_producers: dict[str, Callable[[], "SseEventProducer"]] = {}
+
+
+def get_standalone_sse_producers() -> dict[str, Callable[[], "SseEventProducer"]]:
+    """Return producers registered via the standalone @sse decorator."""
+    return _standalone_sse_producers.copy()
 
 
 @dataclass
@@ -59,7 +67,7 @@ class SseEventProducer:
     """Wraps an async generator function to provide the SseEventProducer interface expected by Rust.
 
     This class bridges the gap between Python async generators and the Rust SseEventProducer trait.
-    Uses a persistent event loop to maintain generator state across calls.
+    The generator is created on-demand in on_connect() and managed across next_event() calls.
     """
 
     def __init__(
@@ -74,38 +82,32 @@ class SseEventProducer:
         self._generator_func = generator_func
         self._generator: AsyncIterator[dict[str, Any]] | None = None
         self._event_schema = event_schema
-        self._loop: asyncio.AbstractEventLoop | None = None
-        self._loop_thread: threading.Thread | None = None
 
     def on_connect(self) -> None:
-        """Called when a client connects. Initializes the generator and event loop."""
-
-        def run_loop() -> None:
-            self._loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(self._loop)
-            self._loop.run_forever()
-
-        self._loop_thread = threading.Thread(target=run_loop, daemon=True)
-        self._loop_thread.start()
-
-        while self._loop is None:
-            time.sleep(0.001)
-
-        future = asyncio.run_coroutine_threadsafe(self._create_generator(), self._loop)
-        future.result()
-
-    async def _create_generator(self) -> None:
-        """Create the generator (must run in the event loop)."""
+        """Called when a client connects. Initializes the generator."""
         self._generator = self._generator_func()
 
     def on_disconnect(self) -> None:
-        """Called when a client disconnects. Cleans up the generator and event loop."""
-        if self._loop is not None:
-            self._loop.call_soon_threadsafe(self._loop.stop)
-            if self._loop_thread is not None:
-                self._loop_thread.join(timeout=1.0)
+        """Called when a client disconnects. Cleans up the generator."""
+        if self._generator is not None:
+            # Attempt async cleanup if available
+            if hasattr(self._generator, "aclose"):
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # Event loop is running; use a temporary loop to close
+                        temp_loop = asyncio.new_event_loop()
+                        try:
+                            asyncio.set_event_loop(temp_loop)
+                            temp_loop.run_until_complete(self._generator.aclose())
+                        finally:
+                            temp_loop.close()
+                            asyncio.set_event_loop(loop)
+                    else:
+                        loop.run_until_complete(self._generator.aclose())
+                except Exception:
+                    pass
         self._generator = None
-        self._loop = None
 
     def next_event(self) -> SseEvent | None:
         """Get the next event from the generator (SYNCHRONOUS).
@@ -113,17 +115,30 @@ class SseEventProducer:
         Returns:
             SseEvent or None when the stream ends.
         """
-        if self._generator is None or self._loop is None:
+        if self._generator is None:
             return None
 
         try:
-            future = asyncio.run_coroutine_threadsafe(self._get_next_event(), self._loop)
-            return future.result(timeout=30.0)
-        except (TimeoutError, asyncio.CancelledError, RuntimeError):
+            result = self._async_next_event()
+            if inspect.iscoroutine(result):
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Event loop is already running; use a temporary loop
+                    temp_loop = asyncio.new_event_loop()
+                    try:
+                        asyncio.set_event_loop(temp_loop)
+                        return temp_loop.run_until_complete(result)
+                    finally:
+                        temp_loop.close()
+                        asyncio.set_event_loop(loop)
+                else:
+                    return loop.run_until_complete(result)
+            return result
+        except Exception:
             return None
 
-    async def _get_next_event(self) -> SseEvent | None:
-        """Get the next event (must run in the event loop)."""
+    async def _async_next_event(self) -> SseEvent | None:
+        """Get the next event asynchronously."""
         if self._generator is None:
             return None
         try:
@@ -138,7 +153,11 @@ def sse(
     *,
     event_schema: dict[str, Any] | None = None,
 ) -> Callable[[F], F]:
-    """Decorator to define a Server-Sent Events endpoint.
+    """Standalone decorator to define a Server-Sent Events endpoint.
+
+    Routes registered via this decorator are collected in a module-level
+    registry. They are automatically picked up when passed to an app or
+    can be retrieved via ``get_standalone_sse_producers()``.
 
     Args:
         path: The SSE endpoint path (e.g., "/notifications")
@@ -175,14 +194,7 @@ def sse(
     """
 
     def decorator(func: F) -> F:
-        from spikard.app import Spikard  # noqa: PLC0415
         from spikard.schema import extract_json_schema  # noqa: PLC0415
-
-        app = Spikard.current_instance
-        if app is None:
-            raise RuntimeError(
-                "No Spikard app instance found. Create a Spikard() instance before using @sse decorator."
-            )
 
         extracted_event_schema = event_schema
 
@@ -201,24 +213,12 @@ def sse(
             except (AttributeError, NameError, TypeError, ValueError):
                 pass
 
-        @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
-            async for event in func(*args, **kwargs):
-                yield event
-
-        wrapper._sse_path = path  # type: ignore[attr-defined]  # noqa: SLF001
-        wrapper._is_sse_handler = True  # type: ignore[attr-defined]  # noqa: SLF001
-        wrapper._sse_func = func  # type: ignore[attr-defined]  # noqa: SLF001
-        wrapper._event_schema = extracted_event_schema  # type: ignore[attr-defined]  # noqa: SLF001
-
         def producer_factory() -> SseEventProducer:
             """Factory that creates an SseEventProducer instance."""
-            producer = SseEventProducer(lambda: wrapper(), event_schema=extracted_event_schema)
-            producer._event_schema = extracted_event_schema  # noqa: SLF001
-            return producer
+            return SseEventProducer(func, event_schema=extracted_event_schema)
 
-        app._sse_producers[path] = producer_factory  # noqa: SLF001
+        _standalone_sse_producers[path] = producer_factory
 
-        return wrapper  # type: ignore[return-value]
+        return func
 
     return decorator

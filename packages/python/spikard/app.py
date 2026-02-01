@@ -1,37 +1,46 @@
 """Spikard application class."""
 
-import functools
-import inspect
-from typing import TYPE_CHECKING, Any, Literal
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from spikard.config import ServerConfig
-from spikard.introspection import extract_parameter_schema
-from spikard.params import ParamBase
-from spikard.schema import extract_schemas
-from spikard.types import Route
+from spikard.routing import HttpMethod, Router
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from spikard.jsonrpc import JsonRpcMethodInfo
+    from spikard.di import Provide
     from spikard.sse import SseEventProducer
-
-HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "TRACE"]
+    from spikard.types import Route
 
 
 class Spikard:
-    """Main application class for Spikard framework."""
+    """Main application class for Spikard framework.
 
-    current_instance: Spikard | None = None
+    Example::
+
+        from spikard import Spikard, Body
+        import msgspec
+
+        class CreateUser(msgspec.Struct):
+            name: str
+            email: str
+
+        app = Spikard()
+
+        @app.post("/users")
+        async def create_user(user: Body[CreateUser]) -> dict:
+            return {"name": user.name}
+    """
 
     def __init__(self, config: ServerConfig | None = None) -> None:
         """Initialize Spikard application.
 
         Args:
             config: Optional server configuration. If not provided, defaults will be used.
-                   You can also pass configuration to the run() method.
         """
-        self._routes: list[Route] = []
+        self._router = Router()
         self._websocket_handlers: dict[str, Callable[[], Any]] = {}
         self._sse_producers: dict[str, Callable[[], SseEventProducer]] = {}
         self._config = config
@@ -43,144 +52,105 @@ class Spikard:
             "on_error": [],
         }
         self._dependencies: dict[str, Any] = {}
-        Spikard.current_instance = self
 
-    def register_route(  # noqa: C901, PLR0915
+    # -- Route registration (delegates to internal Router) -------------------------
+
+    def register_route(
         self,
         method: HttpMethod,
         path: str,
         handler: Callable[..., Any] | None = None,
-        *,
-        body_schema: dict[str, Any] | None = None,
-        response_schema: dict[str, Any] | None = None,
-        parameter_schema: dict[str, Any] | None = None,
-        file_params: dict[str, Any] | None = None,
-        jsonrpc_method: JsonRpcMethodInfo | None = None,
+        **kwargs: Any,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]] | Callable[..., Any]:
-        """Internal method to register a route.
+        """Register a route on the application.
+
+        Schemas are automatically derived from handler type annotations
+        (e.g. ``Body[MyStruct]``, return type hints). Explicit schema kwargs
+        are forwarded to the router for advanced/legacy use.
 
         Args:
-            method: HTTP method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE)
+            method: HTTP method
             path: URL path pattern
-            handler: Optional handler to register immediately instead of using decorator style
-            body_schema: Optional explicit body schema (takes precedence over type hint extraction)
-            response_schema: Optional explicit response schema (takes precedence over type hint extraction)
-            parameter_schema: Optional explicit parameter schema (takes precedence over type hint extraction)
-            file_params: Optional file parameter schema for multipart file validation
-            jsonrpc_method: Optional JsonRpcMethodInfo for exposing as JSON-RPC method
+            handler: Optional handler to register immediately
+            **kwargs: Additional arguments forwarded to Router.register_route
 
         Returns:
-            Decorator function
+            Decorator function or decorated handler
         """
+        # Sync dependencies so the router's route-registration logic can see them
+        self._router._dependencies.update(self._dependencies)  # noqa: SLF001
+        return self._router.register_route(method, path, handler, **kwargs)
 
-        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:  # noqa: C901, PLR0915, PLR0912
-            methods_without_body = {"GET", "DELETE", "HEAD", "OPTIONS"}
-            response_schema_override = response_schema
-            if method.upper() in methods_without_body:
-                request_schema = None
-                _, inferred_response_schema = extract_schemas(func)
-            else:
-                request_schema, inferred_response_schema = extract_schemas(func)
-                if body_schema is not None:
-                    request_schema = body_schema
+    def include_router(self, router: Router) -> None:
+        """Merge routes from an external Router into this application.
 
-            response_schema_value: dict[str, Any] | None
-            if response_schema_override is not None:
-                response_schema_value = response_schema_override
-            else:
-                response_schema_value = inferred_response_schema
+        Args:
+            router: A Router instance whose collected routes will be added.
 
-            extracted_parameter_schema = extract_parameter_schema(func, path)
+        Example::
 
-            if parameter_schema is not None:
-                extracted_parameter_schema = parameter_schema
+            from spikard.routing import Router
 
-            sig = inspect.signature(func)
-            wrapped_func = func
+            api = Router(prefix="/api")
 
-            standard_params = {"self", "cls", "request", "req", "path_params", "query_params", "headers", "cookies"}
-            potential_dependencies = [param_name for param_name in sig.parameters if param_name not in standard_params]
+            @api.get("/health")
+            async def health():
+                return {"ok": True}
 
-            request_bound_params = set()
-            provided_parameter_schema = parameter_schema is not None
-            if extracted_parameter_schema:
-                props = extracted_parameter_schema.get("properties", {}) or {}
-                for param_name, schema in props.items():
-                    source = schema.get("source")
-                    if provided_parameter_schema or source in {"path", "header", "cookie"}:
-                        request_bound_params.add(param_name)
+            app = Spikard()
+            app.include_router(api)
+        """
+        self._router._routes.extend(router.get_routes())  # noqa: SLF001
 
-            if file_params:
-                request_bound_params.update(file_params.keys())
+    def get_routes(self) -> list[Route]:
+        """Get all registered routes.
 
-            for param_name, param in sig.parameters.items():
-                if isinstance(param.default, ParamBase):
-                    request_bound_params.add(param_name)
+        Returns:
+            List of routes
+        """
+        return self._router.get_routes()
 
-            request_bound_params.difference_update(self._dependencies.keys())
+    # -- Convenience HTTP method decorators ----------------------------------------
 
-            handler_dependencies = []
-            body_param_name = None
-            if method.upper() not in {"GET", "DELETE", "HEAD", "OPTIONS"}:
-                for param_name in potential_dependencies:
-                    if param_name in request_bound_params:
-                        continue
-                    if param_name in self._dependencies:
-                        handler_dependencies.append(param_name)
-                        continue
-                    if body_param_name is None:
-                        body_param_name = param_name
-                    else:
-                        handler_dependencies.append(param_name)
-            handler_dependencies.extend(
-                [p for p in potential_dependencies if p != body_param_name and p not in request_bound_params]
-            )
+    def get(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a GET route."""
+        return self.register_route("GET", path, **kwargs)
 
-            has_param_defaults = any(isinstance(param.default, ParamBase) for param in sig.parameters.values())
+    def post(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a POST route."""
+        return self.register_route("POST", path, **kwargs)
 
-            if has_param_defaults:
-                if inspect.iscoroutinefunction(func):
+    def put(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a PUT route."""
+        return self.register_route("PUT", path, **kwargs)
 
-                    @functools.wraps(func)
-                    async def async_wrapper(**kwargs: Any) -> Any:
-                        for param_name, param in sig.parameters.items():
-                            if isinstance(param.default, ParamBase) and param_name not in kwargs:
-                                kwargs[param_name] = param.default.get_default()
-                        return await func(**kwargs)
+    def patch(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a PATCH route."""
+        return self.register_route("PATCH", path, **kwargs)
 
-                    wrapped_func = async_wrapper
-                else:
+    def delete(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a DELETE route."""
+        return self.register_route("DELETE", path, **kwargs)
 
-                    @functools.wraps(func)
-                    def sync_wrapper(**kwargs: Any) -> Any:
-                        for param_name, param in sig.parameters.items():
-                            if isinstance(param.default, ParamBase) and param_name not in kwargs:
-                                kwargs[param_name] = param.default.get_default()
-                        return func(**kwargs)
+    def head(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a HEAD route."""
+        return self.register_route("HEAD", path, **kwargs)
 
-                    wrapped_func = sync_wrapper
+    def options(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register an OPTIONS route."""
+        return self.register_route("OPTIONS", path, **kwargs)
 
-            route = Route(
-                method=method,
-                path=path,
-                handler=wrapped_func,
-                handler_name=func.__name__,
-                request_schema=request_schema,
-                response_schema=response_schema_value,
-                parameter_schema=extracted_parameter_schema,
-                file_params=file_params,
-                is_async=inspect.iscoroutinefunction(func),
-                body_param_name=body_param_name,
-                handler_dependencies=handler_dependencies if handler_dependencies else None,
-                jsonrpc_method=jsonrpc_method,
-            )
+    def trace(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a TRACE route."""
+        return self.register_route("TRACE", path, **kwargs)
 
-            self._routes.append(route)
-            return func
+    def route(
+        self, path: str, method: HttpMethod = "GET", **kwargs: Any
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+        """Register a route with explicit method."""
+        return self.register_route(method, path, **kwargs)
 
-        if handler is not None:
-            return decorator(handler)
-        return decorator
+    # -- Server --------------------------------------------------------------------
 
     def run(
         self,
@@ -193,40 +163,17 @@ class Spikard:
     ) -> None:
         """Run the application server.
 
-        This starts the Spikard server where Python manages the event loop
-        and calls into the Rust extension for HTTP handling. This enables
-        natural async/await support with uvloop integration.
-
         Args:
-            config: Complete server configuration. Takes precedence over individual parameters.
-            host: Host to bind to (deprecated: use config instead)
-            port: Port to bind to (deprecated: use config instead)
-            workers: Number of worker processes (deprecated: use config instead)
-            reload: Enable auto-reload on code changes (not yet implemented)
+            config: Complete server configuration.
+            host: Host to bind to
+            port: Port to bind to
+            workers: Number of worker processes
+            reload: Enable auto-reload (not yet implemented)
 
         Raises:
             RuntimeError: If _spikard extension module not available
-
-        Example:
-            Using ServerConfig (recommended):
-            ```python
-            from spikard import Spikard, ServerConfig, CompressionConfig
-
-            config = ServerConfig(host="0.0.0.0", port=8080, compression=CompressionConfig(quality=9))
-
-            app = Spikard(config=config)
-            # or
-            app = Spikard()
-            app.run(config=config)
-            ```
-
-            Using individual parameters (backwards compatible):
-            ```python
-            app = Spikard()
-            app.run(host="0.0.0.0", port=8080)
-            ```
         """
-        if reload:  # pragma: no cover - feature not yet implemented
+        if reload:  # pragma: no cover
             pass
 
         try:
@@ -249,334 +196,128 @@ class Spikard:
 
         run_server(self, config=final_config)
 
-    def get_routes(self) -> list[Route]:
-        """Get all registered routes.
+    async def serve(
+        self,
+        *,
+        config: ServerConfig | None = None,
+        host: str | None = None,
+        port: int | None = None,
+    ) -> None:
+        """Run the application server asynchronously.
 
-        Returns:
-            List of routes
-        """
-        return self._routes.copy()
-
-    def get(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a GET route.
-
-        Args:
-            path: URL path pattern
-            **kwargs: Additional arguments passed to register_route
-
-        Returns:
-            Decorator function
-        """
-        return self.register_route("GET", path, **kwargs)
-
-    def post(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a POST route.
+        Use this to integrate Spikard into an existing async application.
 
         Args:
-            path: URL path pattern
-            **kwargs: Additional arguments passed to register_route
+            config: Complete server configuration.
+            host: Host to bind to
+            port: Port to bind to
 
-        Returns:
-            Decorator function
+        Raises:
+            RuntimeError: If _spikard extension module not available
+
+        Example::
+
+            async def main():
+                await app.serve(host="0.0.0.0", port=8080)
         """
-        return self.register_route("POST", path, **kwargs)
+        try:
+            from _spikard import run_server_async  # type: ignore[attr-defined] # noqa: PLC0415
+        except ImportError as e:
+            raise RuntimeError(
+                "Failed to import _spikard extension module.\n"
+                "Build the extension with: task build:py\n"
+                "Or: cd packages/python && maturin develop"
+            ) from e
 
-    def put(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a PUT route.
+        final_config = config or self._config or ServerConfig()
 
-        Args:
-            path: URL path pattern
-            **kwargs: Additional arguments passed to register_route
+        if host is not None:
+            final_config = final_config.copy(host=host)
+        if port is not None:
+            final_config = final_config.copy(port=port)
 
-        Returns:
-            Decorator function
-        """
-        return self.register_route("PUT", path, **kwargs)
+        await run_server_async(self, config=final_config)
 
-    def patch(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a PATCH route.
-
-        Args:
-            path: URL path pattern
-            **kwargs: Additional arguments passed to register_route
-
-        Returns:
-            Decorator function
-        """
-        return self.register_route("PATCH", path, **kwargs)
-
-    def delete(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a DELETE route.
-
-        Args:
-            path: URL path pattern
-            **kwargs: Additional arguments passed to register_route
-
-        Returns:
-            Decorator function
-        """
-        return self.register_route("DELETE", path, **kwargs)
-
-    def head(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a HEAD route.
-
-        Args:
-            path: URL path pattern
-            **kwargs: Additional arguments passed to register_route
-
-        Returns:
-            Decorator function
-        """
-        return self.register_route("HEAD", path, **kwargs)
-
-    def options(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register an OPTIONS route.
-
-        Args:
-            path: URL path pattern
-            **kwargs: Additional arguments passed to register_route
-
-        Returns:
-            Decorator function
-        """
-        return self.register_route("OPTIONS", path, **kwargs)
-
-    def trace(self, path: str, **kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a TRACE route.
-
-        Args:
-            path: URL path pattern
-            **kwargs: Additional arguments passed to register_route
-
-        Returns:
-            Decorator function
-        """
-        return self.register_route("TRACE", path, **kwargs)
-
-    def route(
-        self, path: str, method: HttpMethod = "GET", **kwargs: Any
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-        """Register a route with explicit method.
-
-        Args:
-            path: URL path pattern
-            method: HTTP method
-            **kwargs: Additional arguments passed to register_route
-
-        Returns:
-            Decorator function
-        """
-        return self.register_route(method, path, **kwargs)
+    # -- Lifecycle hooks -----------------------------------------------------------
 
     def on_request(self, hook: Callable[..., Any]) -> Callable[..., Any]:
-        """Register an onRequest lifecycle hook.
-
-        Runs before routing. Can inspect/modify the request or short-circuit with a response.
-
-        Args:
-            hook: Async function that receives a request and returns either:
-                  - The (possibly modified) request to continue processing
-                  - A Response object to short-circuit the request pipeline
-
-        Returns:
-            The hook function (for decorator usage)
-
-        Example:
-            ```python
-            @app.on_request
-            async def log_request(request):
-                print(f"Request: {request.method} {request.path}")
-                return request
-            ```
-        """
+        """Register an onRequest lifecycle hook."""
         self._lifecycle_hooks["on_request"].append(hook)
         return hook
 
     def pre_validation(self, hook: Callable[..., Any]) -> Callable[..., Any]:
-        """Register a preValidation lifecycle hook.
-
-        Runs after routing but before validation. Useful for rate limiting.
-
-        Args:
-            hook: Async function that receives a request and returns either:
-                  - The (possibly modified) request to continue processing
-                  - A Response object to short-circuit the request pipeline
-
-        Returns:
-            The hook function (for decorator usage)
-
-        Example:
-            ```python
-            @app.pre_validation
-            async def rate_limit(request):
-                if too_many_requests():
-                    return Response({"error": "Rate limit exceeded"}, status_code=429)
-                return request
-            ```
-        """
+        """Register a preValidation lifecycle hook."""
         self._lifecycle_hooks["pre_validation"].append(hook)
         return hook
 
     def pre_handler(self, hook: Callable[..., Any]) -> Callable[..., Any]:
-        """Register a preHandler lifecycle hook.
-
-        Runs after validation but before the handler. Ideal for authentication/authorization.
-
-        Args:
-            hook: Async function that receives a request and returns either:
-                  - The (possibly modified) request to continue processing
-                  - A Response object to short-circuit the request pipeline
-
-        Returns:
-            The hook function (for decorator usage)
-
-        Example:
-            ```python
-            @app.pre_handler
-            async def authenticate(request):
-                if not valid_token(request.headers.get("Authorization")):
-                    return Response({"error": "Unauthorized"}, status_code=401)
-                return request
-            ```
-        """
+        """Register a preHandler lifecycle hook."""
         self._lifecycle_hooks["pre_handler"].append(hook)
         return hook
 
     def on_response(self, hook: Callable[..., Any]) -> Callable[..., Any]:
-        """Register an onResponse lifecycle hook.
-
-        Runs after the handler executes. Can modify the response.
-
-        Args:
-            hook: Async function that receives a response and returns the (possibly modified) response
-
-        Returns:
-            The hook function (for decorator usage)
-
-        Example:
-            ```python
-            @app.on_response
-            async def add_security_headers(response):
-                response.headers["X-Frame-Options"] = "DENY"
-                return response
-            ```
-        """
+        """Register an onResponse lifecycle hook."""
         self._lifecycle_hooks["on_response"].append(hook)
         return hook
 
     def on_error(self, hook: Callable[..., Any]) -> Callable[..., Any]:
-        """Register an onError lifecycle hook.
-
-        Runs when an error occurs. Can customize error responses.
-
-        Args:
-            hook: Async function that receives an error response and returns a (possibly modified) response
-
-        Returns:
-            The hook function (for decorator usage)
-
-        Example:
-            ```python
-            @app.on_error
-            async def format_error(response):
-                response.headers["Content-Type"] = "application/json"
-                return response
-            ```
-        """
+        """Register an onError lifecycle hook."""
         self._lifecycle_hooks["on_error"].append(hook)
         return hook
 
     def get_lifecycle_hooks(self) -> dict[str, list[Callable[..., Any]]]:
-        """Get all registered lifecycle hooks.
-
-        Returns:
-            Dictionary of hook lists by type
-        """
+        """Get all registered lifecycle hooks."""
         return {hook_type: hooks.copy() for hook_type, hooks in self._lifecycle_hooks.items()}
 
-    def provide(self, key: str, dependency: Any) -> Spikard:
+    # -- Dependency injection ------------------------------------------------------
+
+    def provide(self, key: type | str, dependency: Any) -> Spikard:
         """Register a dependency for injection into handlers.
 
-        Dependencies can be static values or factory functions wrapped in `Provide`.
-        Handler parameters matching the dependency key will be automatically injected.
+        Dependencies can be keyed by type (recommended) or string.
 
         Args:
-            key: Dependency key used for injection (matches handler parameter names)
-            dependency: Either a static value or a Provide wrapper for factory functions
+            key: Type or string key used for injection.
+                 When a type is used, handler parameters with matching type
+                 annotations are automatically injected.
+            dependency: Either a static value or a Provide wrapper for factory functions.
 
         Returns:
             Self for method chaining
 
         Examples:
-            Static value dependency::
+            Type-based injection (recommended)::
 
-                app.provide("app_name", "MyApp")
-                app.provide("max_connections", 100)
+                class DatabasePool: ...
 
-
-                @app.get("/config")
-                async def handler(app_name: str, max_connections: int):
-                    return {"app": app_name, "max": max_connections}
-
-            Factory dependency::
-
-                from spikard.di import Provide
-
-
-                async def create_db_pool(config: dict):
-                    return await connect_to_db(config["db_url"])
-
-
-                app.provide("config", {"db_url": "postgresql://localhost/mydb"})
-                app.provide("db", Provide(create_db_pool, depends_on=["config"], singleton=True))
-
+                app.provide(DatabasePool, Provide(create_pool, singleton=True))
 
                 @app.get("/users")
-                async def handler(db):
+                async def handler(db: DatabasePool):
                     return await db.fetch_all("SELECT * FROM users")
 
-            Generator pattern for cleanup::
+            String-based injection::
 
-                async def create_session(db):
-                    session = await db.create_session()
-                    yield session
-                    await session.close()
+                app.provide("app_name", "MyApp")
 
-
-                app.provide("session", Provide(create_session, depends_on=["db"]))
+                @app.get("/config")
+                async def handler(app_name: str):
+                    return {"app": app_name}
         """
+        if isinstance(key, type):
+            # Store under the qualified type name for matching
+            key = f"__type__{key.__module__}.{key.__qualname__}"
         self._dependencies[key] = dependency
         return self
 
     def get_dependencies(self) -> dict[str, Any]:
-        """Get all registered dependencies.
-
-        Returns:
-            Dictionary mapping dependency keys to their values or Provide wrappers
-        """
+        """Get all registered dependencies."""
         return self._dependencies.copy()
 
+    # -- WebSocket / SSE -----------------------------------------------------------
+
     def websocket(self, path: str) -> Callable[[Callable[[], Any]], Callable[[], Any]]:
-        """Register a WebSocket endpoint.
-
-        Args:
-            path: URL path for the WebSocket endpoint
-
-        Returns:
-            Decorator function
-
-        Example:
-            ```python
-            from spikard import Spikard
-
-            app = Spikard()
-
-
-            @app.websocket("/chat")
-            def chat_endpoint():
-                return ChatHandler()
-            ```
-        """
+        """Register a WebSocket endpoint."""
 
         def decorator(factory: Callable[[], Any]) -> Callable[[], Any]:
             self._websocket_handlers[path] = factory
@@ -585,27 +326,7 @@ class Spikard:
         return decorator
 
     def sse(self, path: str) -> Callable[[Callable[[], SseEventProducer]], Callable[[], SseEventProducer]]:
-        """Register a Server-Sent Events endpoint.
-
-        Args:
-            path: URL path for the SSE endpoint
-
-        Returns:
-            Decorator function
-
-        Example:
-            ```python
-            from spikard import Spikard
-            from spikard.sse import SseEventProducer, SseEvent
-
-            app = Spikard()
-
-
-            @app.sse("/notifications")
-            def notifications_endpoint():
-                return NotificationProducer()
-            ```
-        """
+        """Register a Server-Sent Events endpoint."""
 
         def decorator(factory: Callable[[], SseEventProducer]) -> Callable[[], SseEventProducer]:
             self._sse_producers[path] = factory
@@ -614,17 +335,9 @@ class Spikard:
         return decorator
 
     def get_websocket_handlers(self) -> dict[str, Callable[[], Any]]:
-        """Get all registered WebSocket handlers.
-
-        Returns:
-            Dictionary mapping paths to handler factory functions
-        """
+        """Get all registered WebSocket handlers."""
         return self._websocket_handlers.copy()
 
     def get_sse_producers(self) -> dict[str, Callable[[], SseEventProducer]]:
-        """Get all registered SSE producers.
-
-        Returns:
-            Dictionary mapping paths to producer factory functions
-        """
+        """Get all registered SSE producers."""
         return self._sse_producers.copy()

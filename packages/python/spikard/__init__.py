@@ -16,8 +16,11 @@ if TYPE_CHECKING:
     from spikard import background as background
     from spikard import grpc as grpc
     from spikard._internal.converters import register_decoder as register_decoder
-    from spikard.app import HttpMethod as HttpMethod
     from spikard.app import Spikard as Spikard
+    from spikard.routing import HttpMethod as HttpMethod
+    from spikard.routing import Router as Router
+    from spikard.routing import get_default_router as get_default_router
+    from spikard.routing import reset_default_router as reset_default_router
     from spikard.config import ApiKeyConfig as ApiKeyConfig
     from spikard.config import CompressionConfig as CompressionConfig
     from spikard.config import JwtConfig as JwtConfig
@@ -47,7 +50,10 @@ if TYPE_CHECKING:
     from spikard.routing import trace as trace
     from spikard.sse import SseEvent as SseEvent
     from spikard.sse import sse as sse
+    from spikard.testing import LiveTestClient as LiveTestClient
     from spikard.testing import TestClient as TestClient
+    from spikard.types import HandlerReturn as HandlerReturn
+    from spikard.types import SameSite as SameSite
     from spikard.websocket import websocket as websocket
 
 __all__ = [
@@ -59,10 +65,12 @@ __all__ = [
     "GrpcRequest",
     "GrpcResponse",
     "GrpcService",
+    "HandlerReturn",
     "Header",
     "HttpMethod",
     "JsonRpcMethodInfo",
     "JwtConfig",
+    "LiveTestClient",
     "OpenApiConfig",
     "Path",
     "Provide",
@@ -70,6 +78,8 @@ __all__ = [
     "RateLimitConfig",
     "Request",
     "Response",
+    "Router",
+    "SameSite",
     "ServerConfig",
     "Spikard",
     "SseEvent",
@@ -80,6 +90,7 @@ __all__ = [
     "background",
     "delete",
     "get",
+    "get_default_router",
     "grpc",
     "head",
     "options",
@@ -87,6 +98,7 @@ __all__ = [
     "post",
     "put",
     "register_decoder",
+    "reset_default_router",
     "route",
     "sse",
     "trace",
@@ -100,8 +112,9 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     "Cookie": ("spikard.params", "Cookie"),
     "GrpcHandler": ("spikard.grpc", "GrpcHandler"),
     "GrpcService": ("spikard.grpc", "GrpcService"),
+    "HandlerReturn": ("spikard.types", "HandlerReturn"),
     "Header": ("spikard.params", "Header"),
-    "HttpMethod": ("spikard.app", "HttpMethod"),
+    "HttpMethod": ("spikard.routing", "HttpMethod"),
     "JsonRpcMethodInfo": ("spikard.jsonrpc", "JsonRpcMethodInfo"),
     "JwtConfig": ("spikard.config", "JwtConfig"),
     "OpenApiConfig": ("spikard.config", "OpenApiConfig"),
@@ -109,7 +122,10 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     "Provide": ("spikard.di", "Provide"),
     "Query": ("spikard.params", "Query"),
     "RateLimitConfig": ("spikard.config", "RateLimitConfig"),
+    "LiveTestClient": ("spikard.testing", "LiveTestClient"),
     "Request": ("spikard.request", "Request"),
+    "Router": ("spikard.routing", "Router"),
+    "SameSite": ("spikard.types", "SameSite"),
     "ServerConfig": ("spikard.config", "ServerConfig"),
     "Spikard": ("spikard.app", "Spikard"),
     "SseEvent": ("spikard.sse", "SseEvent"),
@@ -119,6 +135,7 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     "background": ("spikard.background", "__module__"),
     "delete": ("spikard.routing", "delete"),
     "get": ("spikard.routing", "get"),
+    "get_default_router": ("spikard.routing", "get_default_router"),
     "grpc": ("spikard.grpc", "__module__"),
     "head": ("spikard.routing", "head"),
     "options": ("spikard.routing", "options"),
@@ -126,6 +143,7 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     "post": ("spikard.routing", "post"),
     "put": ("spikard.routing", "put"),
     "register_decoder": ("spikard._internal.converters", "register_decoder"),
+    "reset_default_router": ("spikard.routing", "reset_default_router"),
     "route": ("spikard.routing", "route"),
     "sse": ("spikard.sse", "sse"),
     "trace": ("spikard.routing", "trace"),

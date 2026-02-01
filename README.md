@@ -11,7 +11,7 @@ A Rust-centric multi-language toolkit for building and validating typed web serv
 ## Features
 
 - **Multi-Language Code Generation**: Generate type-safe handlers from OpenAPI 3.0.x, GraphQL SDL, gRPC/Protobuf, AsyncAPI 2.x, or OpenRPC 1.x specifications
-- **Project Scaffolding**: `spikard init` bootstraps production-ready projects with language-specific tooling
+- **Project Scaffolding**: `spikard init` bootstraps starter projects with language-specific tooling
 - **Automatic Quality Validation**: Syntax, type checking, and linting automatically applied to generated code
 - **Zero-Copy Bindings**: Performance-optimized FFI layers (PyO3, napi-rs, magnus, ext-php-rs)
 - **Tower-HTTP Runtime**: Complete HTTP/gRPC server with compression, rate limiting, authentication, and CORS
@@ -65,40 +65,59 @@ Generated handler patterns vary by language. See [examples/](examples/) for comp
 
 **Python:**
 ```python
-from spikard import Handler, Request, Response
+from spikard import Spikard
 
-@Handler("/users/{id}")
-async def get_user(request: Request) -> Response:
-    user_id = request.path_params["id"]
-    return Response({"id": user_id, "name": "Alice"})
+app = Spikard()
+
+@app.get("/users/{user_id}")
+async def get_user(user_id: int) -> dict:
+    return {"id": user_id, "name": "Alice"}
+
+if __name__ == "__main__":
+    app.run(port=8000)
 ```
 
 **TypeScript:**
 ```typescript
-import { Handler, Request, Response } from "spikard";
+import { Spikard } from "@spikard/node";
 
-export const getUser: Handler = async (request) => {
-    const user = { id: request.params.id, name: "Alice" };
-    return new Response(user);
-};
+const app = new Spikard();
+
+app.get("/users/:userId", async (ctx) => {
+    return { id: ctx.params.userId, name: "Alice" };
+});
+
+app.run({ port: 8000 });
 ```
 
 **Ruby:**
 ```ruby
-class GetUserHandler
-  def call(request)
-    { id: request.path_params["id"], name: "Alice" }
-  end
+require "spikard"
+
+app = Spikard::App.new
+
+app.get "/users/:user_id" do |user_id:|
+  { id: user_id, name: "Alice" }
 end
+
+app.run(port: 8000)
 ```
 
 **PHP:**
 ```php
-class Handlers {
-    public function getUser(Request $request): Response {
-        return new Response(["id" => $request->pathParams["id"], "name" => "Alice"]);
+use Spikard\App;
+use Spikard\Attributes\Get;
+
+class UserController {
+    #[Get('/users/{userId}')]
+    public function getUser(int $userId): array {
+        return ['id' => $userId, 'name' => 'Alice'];
     }
 }
+
+$app = new App();
+$app->registerController(new UserController());
+$app->run();
 ```
 
 ## Code Generation Support

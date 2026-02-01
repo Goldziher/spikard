@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-import spikard.app as app_module
+import spikard.routing as routing_module
 from spikard import Spikard
 from spikard.params import ParamBase, Query
 from spikard.sse import SseEventProducer
@@ -27,9 +27,9 @@ def test_register_route_dependency_and_defaults(monkeypatch: pytest.MonkeyPatch)
     """Routes should infer body params, handler deps, and inject ParamBase defaults."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"request": True}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"request": True}, {"response": True}))
     monkeypatch.setattr(
-        app_module,
+        routing_module,
         "extract_parameter_schema",
         lambda _func, _path: {"properties": {"query_value": {"source": "query"}}},
     )
@@ -56,8 +56,8 @@ def test_register_route_respects_parameter_override(monkeypatch: pytest.MonkeyPa
     """Explicit parameter schemas should override extracted values for GET routes."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"ignored": True}, {"resp": "ok"}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"id": {}}})
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"ignored": True}, {"resp": "ok"}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"id": {}}})
 
     @app.get("/status", parameter_schema={"properties": {"forced": {"source": "header"}}})
     def status() -> dict[str, str]:
