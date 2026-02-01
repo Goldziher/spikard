@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from _spikard import Response, StreamingResponse  # type: ignore[attr-defined]
     from spikard.jsonrpc import JsonRpcMethodInfo
 
 
-HandlerReturn: TypeAlias = "dict[str, Any] | list[Any] | str | bytes | Response | StreamingResponse | None"
+type HandlerReturn = dict[str, Any] | list[Any] | str | bytes | Response | StreamingResponse | None
 
 
 class SameSite(enum.Enum):

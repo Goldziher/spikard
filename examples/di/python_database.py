@@ -37,7 +37,7 @@ class DatabasePool:
         self.connection_count = 0
         logger.info("[DB Pool] Created pool for %s (max: %s)", self.db_url, self.max_connections)
 
-    async def create_session(self) -> "DatabaseSession":
+    async def create_session(self) -> DatabaseSession:
         self.connection_count += 1
         logger.info("[DB Pool] Creating session #%s", self.connection_count)
         return DatabaseSession(self, self.connection_count)
@@ -69,7 +69,7 @@ async def create_db_pool(config: AppConfig) -> DatabasePool:
     return DatabasePool(config)
 
 
-async def create_db_session(db_pool: DatabasePool) -> "AsyncGenerator[DatabaseSession]":
+async def create_db_session(db_pool: DatabasePool) -> AsyncGenerator[DatabaseSession]:
     """Factory for database session with cleanup (per-request)."""
     logger.info("[Factory] Creating database session...")
     session = await db_pool.create_session()

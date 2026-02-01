@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import spikard.app as app_module
+import spikard.routing as routing_module
 from spikard import Spikard
 from spikard.config import ServerConfig
 from spikard.params import Query
@@ -46,8 +47,8 @@ def test_body_schema_explicit_overrides_extraction(monkeypatch: pytest.MonkeyPat
     app = Spikard()
     explicit_schema: Schema = {"type": "object", "properties": {"custom": {"type": "string"}}}
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "ignored"}, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"type": "ignored"}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.post("/test", body_schema=explicit_schema)
     def handler(data: Schema) -> Schema:
@@ -65,8 +66,8 @@ def test_body_schema_file_params_included_in_route(monkeypatch: pytest.MonkeyPat
     app = Spikard()
     file_schema: Schema = {"upload": {"type": "file"}}
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.post("/upload", file_params=file_schema)
     def handler() -> Schema:
@@ -81,8 +82,8 @@ def test_body_schema_multiple_non_body_params_fallback_to_dependencies(monkeypat
     """Multiple non-body parameters are treated as handler dependencies."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.post("/test")
     def handler(body: Schema, dep1: str, dep2: int) -> Schema:
@@ -100,8 +101,8 @@ def test_body_schema_none_for_no_body_methods(monkeypatch: pytest.MonkeyPatch) -
     """GET, DELETE, HEAD, OPTIONS should have no body schema."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "ignored"}, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"type": "ignored"}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.get("/test")
     def get_handler() -> Schema:
@@ -130,7 +131,7 @@ def test_async_handler_with_query_default_injection(monkeypatch: pytest.MonkeyPa
     """Async handler with Query default gets injected via wrapper."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
     monkeypatch.setattr(
         app_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"q": {"source": "query"}}}
     )
@@ -149,7 +150,7 @@ def test_async_handler_sync_handler_with_param_defaults(monkeypatch: pytest.Monk
     """Sync handler with ParamBase defaults gets wrapped."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
     monkeypatch.setattr(
         app_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"page": {"source": "query"}}}
     )
@@ -168,7 +169,7 @@ def test_async_handler_mixed_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     """Async handler with mixed ParamBase and regular defaults."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
     monkeypatch.setattr(
         app_module,
         "extract_parameter_schema",
@@ -190,8 +191,8 @@ def test_async_handler_without_param_defaults_not_wrapped(monkeypatch: pytest.Mo
     """Handler without ParamBase defaults should not be wrapped."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.get("/test")
     async def handler() -> Schema:
@@ -304,8 +305,8 @@ def test_http_method_put_decorator(monkeypatch: pytest.MonkeyPatch) -> None:
     """PUT decorator registers route with PUT method."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.put("/resource")
     def handler() -> Schema:
@@ -321,8 +322,8 @@ def test_http_method_patch_decorator(monkeypatch: pytest.MonkeyPatch) -> None:
     """PATCH decorator registers route with PATCH method."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.patch("/resource")
     def handler() -> Schema:
@@ -338,8 +339,8 @@ def test_http_method_delete_decorator(monkeypatch: pytest.MonkeyPatch) -> None:
     """DELETE decorator registers route with DELETE method."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.delete("/resource")
     def handler() -> Schema:
@@ -355,8 +356,8 @@ def test_http_method_head_decorator(monkeypatch: pytest.MonkeyPatch) -> None:
     """HEAD decorator registers route with HEAD method."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.head("/resource")
     def handler() -> Schema:
@@ -372,8 +373,8 @@ def test_http_method_options_decorator(monkeypatch: pytest.MonkeyPatch) -> None:
     """OPTIONS decorator registers route with OPTIONS method."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.options("/resource")
     def handler() -> Schema:
@@ -389,8 +390,8 @@ def test_http_method_trace_decorator(monkeypatch: pytest.MonkeyPatch) -> None:
     """TRACE decorator registers route with TRACE method."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.trace("/resource")
     def handler() -> Schema:
@@ -406,8 +407,8 @@ def test_http_method_generic_route_decorator_with_method(monkeypatch: pytest.Mon
     """route() decorator accepts explicit method parameter."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.route("/resource", method="PUT")
     def handler() -> Schema:
@@ -424,8 +425,8 @@ def test_http_method_all_http_methods_with_kwargs(monkeypatch: pytest.MonkeyPatc
     app = Spikard()
     body_schema: Schema = {"type": "object", "properties": {"id": {"type": "string"}}}
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: (None, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.put("/test", body_schema=body_schema)
     def handler() -> Schema:
@@ -441,8 +442,8 @@ def test_http_method_multiple_routes_different_methods(monkeypatch: pytest.Monke
     """Multiple routes with different methods on same path."""
     app = Spikard()
 
-    monkeypatch.setattr(app_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
-    monkeypatch.setattr(app_module, "extract_parameter_schema", lambda _func, _path: None)
+    monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: ({"type": "object"}, {"response": True}))
+    monkeypatch.setattr(routing_module, "extract_parameter_schema", lambda _func, _path: None)
 
     @app.get("/items")
     def get_items() -> Schema:

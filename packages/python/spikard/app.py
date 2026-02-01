@@ -10,7 +10,6 @@ from spikard.routing import HttpMethod, Router
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from spikard.di import Provide
     from spikard.sse import SseEventProducer
     from spikard.types import Route
 
@@ -23,11 +22,14 @@ class Spikard:
         from spikard import Spikard, Body
         import msgspec
 
+
         class CreateUser(msgspec.Struct):
             name: str
             email: str
 
+
         app = Spikard()
+
 
         @app.post("/users")
         async def create_user(user: Body[CreateUser]) -> dict:
@@ -93,9 +95,11 @@ class Spikard:
 
             api = Router(prefix="/api")
 
+
             @api.get("/health")
             async def health():
                 return {"ok": True}
+
 
             app = Spikard()
             app.include_router(api)
@@ -290,7 +294,9 @@ class Spikard:
 
                 class DatabasePool: ...
 
+
                 app.provide(DatabasePool, Provide(create_pool, singleton=True))
+
 
                 @app.get("/users")
                 async def handler(db: DatabasePool):
@@ -299,6 +305,7 @@ class Spikard:
             String-based injection::
 
                 app.provide("app_name", "MyApp")
+
 
                 @app.get("/config")
                 async def handler(app_name: str):

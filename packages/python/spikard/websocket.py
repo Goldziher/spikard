@@ -9,9 +9,11 @@ Example::
 
     app = Spikard()
 
+
     @app.websocket("/chat")
     def chat_endpoint():
         return ChatHandler()
+
 
     app.run()
 
@@ -110,7 +112,7 @@ class WebSocketHandlerWrapper:
                     loop.run_until_complete(result)
 
 
-def websocket(  # noqa: C901
+def websocket(
     path: str,
     *,
     message_schema: dict[str, Any] | None = None,

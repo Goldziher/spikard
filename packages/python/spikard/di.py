@@ -20,17 +20,21 @@ Type-based dependency (recommended)::
 
     app = Spikard()
 
+
     class DatabasePool:
         async def connect(self, url: str) -> None: ...
         async def close(self) -> None: ...
+
 
     async def create_db_pool(config: dict) -> DatabasePool:
         pool = DatabasePool()
         await pool.connect(config["db_url"])
         return pool
 
+
     app.provide("config", {"db_url": "postgresql://localhost/mydb"})
     app.provide(DatabasePool, Provide(create_db_pool, depends_on=["config"], singleton=True))
+
 
     @app.get("/data")
     async def get_data(pool: DatabasePool):
@@ -44,9 +48,11 @@ String-based dependency (legacy, still supported)::
 
     app = Spikard()
 
+
     async def create_db_pool(config: dict):
         pool = await connect_to_db(config["db_url"])
         return pool
+
 
     app.provide("config", {"db_url": "postgresql://localhost/mydb"})
     app.provide("db", Provide(create_db_pool, depends_on=["config"], singleton=True))
@@ -56,15 +62,18 @@ Async generator cleanup::
     from spikard import Spikard
     from spikard.di import Provide
 
+
     class SessionManager:
         async def create(self) -> None: ...
         async def close(self) -> None: ...
+
 
     async def create_session(db: DatabasePool):
         session = SessionManager()
         await session.create()
         yield session
         await session.close()
+
 
     app = Spikard()
     app.provide(SessionManager, Provide(create_session, depends_on=[DatabasePool]))
@@ -91,7 +100,7 @@ def _normalize_key(key: type | str) -> str:
     key : type | str
         The type or string to normalize
 
-    Returns
+    Returns:
     -------
     str
         The normalized key in "__type__module.qualname" format or the original string
@@ -137,7 +146,7 @@ class Provide[T]:
     singleton : bool
         Cache globally across all requests. Takes precedence over use_cache.
 
-    Attributes
+    Attributes:
     ----------
     dependency : Callable
         The factory function
@@ -154,15 +163,17 @@ class Provide[T]:
     is_async_generator : bool
         Whether the factory is an async generator
 
-    Examples
+    Examples:
     --------
     Type-based dependency (recommended)::
 
         class DatabasePool:
             pass
 
+
         async def create_pool() -> DatabasePool:
             return DatabasePool()
+
 
         app.provide(DatabasePool, Provide(create_pool, singleton=True))
 
@@ -171,6 +182,7 @@ class Provide[T]:
         async def create_pool() -> dict:
             return {}
 
+
         app.provide("db", Provide(create_pool, singleton=True))
 
     Explicit type dependencies::
@@ -178,11 +190,14 @@ class Provide[T]:
         class Config:
             pass
 
+
         class DatabasePool:
             pass
 
+
         async def create_pool(config: Config) -> DatabasePool:
             return DatabasePool()
+
 
         # Explicit: app.provide(DatabasePool, Provide(create_pool, depends_on=[Config]))
         # Or auto-detected from signature: app.provide(DatabasePool, Provide(create_pool))

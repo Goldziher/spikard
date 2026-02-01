@@ -88,11 +88,12 @@ impl TestClient {
     ///     files: Optional files for multipart/form-data upload
     ///     query_params: Optional query parameters
     ///     headers: Optional headers as a dict
+    ///     cookies: Optional cookies as a dict
     ///
     /// Returns:
     ///     Test`Response`: The response from the server
     #[allow(clippy::too_many_arguments)]
-    #[pyo3(signature = (path, json=None, data=None, files=None, query_params=None, headers=None))]
+    #[pyo3(signature = (path, json=None, data=None, files=None, query_params=None, headers=None, cookies=None))]
     fn post<'py>(
         &self,
         py: Python<'py>,
@@ -102,12 +103,22 @@ impl TestClient {
         files: Option<&Bound<'py, PyDict>>,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
+        cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let json_value = python_to_json_opt(py, json)?;
         let query_params_vec = extract_dict_to_vec(query_params)?;
-        let headers_vec = extract_dict_to_vec(headers)?;
+        let mut headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
+
+        if let Some(cookies_dict) = cookies {
+            let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
+            if !cookies_vec.is_empty() {
+                let cookie_header_value: Vec<String> =
+                    cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
+            }
+        }
 
         let mut form_data = Vec::new();
         let mut raw_body: Option<Vec<u8>> = None;
@@ -159,7 +170,7 @@ impl TestClient {
     }
 
     /// Make a PUT request
-    #[pyo3(signature = (path, json=None, query_params=None, headers=None))]
+    #[pyo3(signature = (path, json=None, query_params=None, headers=None, cookies=None))]
     fn put<'py>(
         &self,
         py: Python<'py>,
@@ -167,12 +178,22 @@ impl TestClient {
         json: Option<&Bound<'py, PyAny>>,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
+        cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let json_value = python_to_json_opt(py, json)?;
         let query_params_vec = extract_dict_to_vec(query_params)?;
-        let headers_vec = extract_dict_to_vec(headers)?;
+        let mut headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
+
+        if let Some(cookies_dict) = cookies {
+            let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
+            if !cookies_vec.is_empty() {
+                let cookie_header_value: Vec<String> =
+                    cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
+            }
+        }
 
         let fut = async move {
             client
@@ -191,7 +212,7 @@ impl TestClient {
     }
 
     /// Make a PATCH request
-    #[pyo3(signature = (path, json=None, query_params=None, headers=None))]
+    #[pyo3(signature = (path, json=None, query_params=None, headers=None, cookies=None))]
     fn patch<'py>(
         &self,
         py: Python<'py>,
@@ -199,12 +220,22 @@ impl TestClient {
         json: Option<&Bound<'py, PyAny>>,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
+        cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let json_value = python_to_json_opt(py, json)?;
         let query_params_vec = extract_dict_to_vec(query_params)?;
-        let headers_vec = extract_dict_to_vec(headers)?;
+        let mut headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
+
+        if let Some(cookies_dict) = cookies {
+            let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
+            if !cookies_vec.is_empty() {
+                let cookie_header_value: Vec<String> =
+                    cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
+            }
+        }
 
         let fut = async move {
             client
@@ -223,18 +254,28 @@ impl TestClient {
     }
 
     /// Make a DELETE request
-    #[pyo3(signature = (path, query_params=None, headers=None))]
+    #[pyo3(signature = (path, query_params=None, headers=None, cookies=None))]
     fn delete<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
+        cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
-        let headers_vec = extract_dict_to_vec(headers)?;
+        let mut headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
+
+        if let Some(cookies_dict) = cookies {
+            let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
+            if !cookies_vec.is_empty() {
+                let cookie_header_value: Vec<String> =
+                    cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
+            }
+        }
 
         let fut = async move {
             client
@@ -248,18 +289,28 @@ impl TestClient {
     }
 
     /// Make an OPTIONS request
-    #[pyo3(signature = (path, query_params=None, headers=None))]
+    #[pyo3(signature = (path, query_params=None, headers=None, cookies=None))]
     fn options<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
+        cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
-        let headers_vec = extract_dict_to_vec(headers)?;
+        let mut headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
+
+        if let Some(cookies_dict) = cookies {
+            let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
+            if !cookies_vec.is_empty() {
+                let cookie_header_value: Vec<String> =
+                    cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
+            }
+        }
 
         let fut = async move {
             client
@@ -273,18 +324,28 @@ impl TestClient {
     }
 
     /// Make a HEAD request
-    #[pyo3(signature = (path, query_params=None, headers=None))]
+    #[pyo3(signature = (path, query_params=None, headers=None, cookies=None))]
     fn head<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
+        cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
-        let headers_vec = extract_dict_to_vec(headers)?;
+        let mut headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
+
+        if let Some(cookies_dict) = cookies {
+            let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
+            if !cookies_vec.is_empty() {
+                let cookie_header_value: Vec<String> =
+                    cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
+            }
+        }
 
         let fut = async move {
             client
@@ -298,18 +359,28 @@ impl TestClient {
     }
 
     /// Make a TRACE request
-    #[pyo3(signature = (path, query_params=None, headers=None))]
+    #[pyo3(signature = (path, query_params=None, headers=None, cookies=None))]
     fn trace<'py>(
         &self,
         py: Python<'py>,
         path: &str,
         query_params: Option<&Bound<'py, PyDict>>,
         headers: Option<&Bound<'py, PyDict>>,
+        cookies: Option<&Bound<'py, PyDict>>,
     ) -> PyResult<Bound<'py, PyAny>> {
         let path = path.to_string();
         let query_params_vec = extract_dict_to_vec(query_params)?;
-        let headers_vec = extract_dict_to_vec(headers)?;
+        let mut headers_vec = extract_dict_to_vec(headers)?;
         let client = Arc::clone(&self.client);
+
+        if let Some(cookies_dict) = cookies {
+            let cookies_vec = extract_dict_to_vec(Some(cookies_dict))?;
+            if !cookies_vec.is_empty() {
+                let cookie_header_value: Vec<String> =
+                    cookies_vec.iter().map(|(k, v)| format!("{}={}", k, v)).collect();
+                headers_vec.push(("cookie".to_string(), cookie_header_value.join("; ")));
+            }
+        }
 
         let fut = async move {
             client

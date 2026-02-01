@@ -36,8 +36,8 @@ if TYPE_CHECKING:
     from spikard.app import Spikard
 
 __all__ = [
-    "TestClient",
     "LiveTestClient",
+    "TestClient",
 ]
 
 
@@ -74,7 +74,7 @@ class TestResponse:
         """Parse the response body as JSON."""
         return self._response.json()
 
-    def assert_status(self, code: int) -> "TestResponse":
+    def assert_status(self, code: int) -> TestResponse:
         """Assert that the response status code matches the expected code.
 
         Args:
@@ -86,12 +86,12 @@ class TestResponse:
         Raises:
             AssertionError: If status code doesn't match
         """
-        assert (
+        assert (  # noqa: S101
             self.status_code == code
         ), f"Expected status code {code}, got {self.status_code}"
         return self
 
-    def assert_status_ok(self) -> "TestResponse":
+    def assert_status_ok(self) -> TestResponse:
         """Assert that the response status code is 200 OK.
 
         Returns:
@@ -143,7 +143,7 @@ class SseStream:
         """
         self._stream = rust_stream
 
-    async def __aiter__(self) -> "SseStream":
+    async def __aiter__(self) -> SseStream:
         """Return the async iterator."""
         return self
 
@@ -182,7 +182,7 @@ class TestClient:
 
     __test__ = False
 
-    def __init__(self, app: "Spikard") -> None:
+    def __init__(self, app: Spikard) -> None:
         """Create a new test client.
 
         Args:
@@ -195,12 +195,9 @@ class TestClient:
         """Start the test client and return self."""
         # Lazy import of _spikard to avoid circular dependencies
         try:
-            import _spikard
+            import _spikard  # noqa: PLC0415
         except ImportError as e:
-            raise RuntimeError(
-                "Failed to import _spikard. Ensure the Rust extension is built: "
-                "maturin develop"
-            ) from e
+            raise RuntimeError("Failed to import _spikard. Ensure the Rust extension is built: maturin develop") from e
 
         self._client = _spikard.create_test_client(self._app)
         return self
@@ -505,7 +502,7 @@ class LiveTestClient:
 
     __test__ = False
 
-    def __init__(self, app: "Spikard", port: int = 0) -> None:
+    def __init__(self, app: Spikard, port: int = 0) -> None:
         """Create a new live test client.
 
         Args:

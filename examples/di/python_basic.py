@@ -8,7 +8,6 @@ This example demonstrates:
 """
 
 from spikard import Spikard
-from spikard.di import Provide
 
 
 class AppConfig:

@@ -32,9 +32,11 @@ class Router:
 
         users = Router(prefix="/users")
 
+
         @users.get("/{user_id}")
         async def get_user(user_id: int):
             return {"id": user_id}
+
 
         # In the main app module:
         app.include_router(users)
@@ -116,6 +118,7 @@ class Router:
             ann = param.annotation
             if ann is not inspect.Parameter.empty and isinstance(ann, type):
                 from spikard.di import _normalize_key  # noqa: PLC0415
+
                 nkey = _normalize_key(ann)
                 if nkey in self._dependencies:
                     _type_key_map[pname] = nkey
@@ -152,7 +155,13 @@ class Router:
                 else:
                     handler_dependencies.append(_type_key_map.get(name, name))
         dep_set = set(handler_dependencies)
-        handler_dependencies.extend([_type_key_map.get(p, p) for p in potential_deps if p != body_param_name and p not in request_bound and _type_key_map.get(p, p) not in dep_set])
+        handler_dependencies.extend(
+            [
+                _type_key_map.get(p, p)
+                for p in potential_deps
+                if p != body_param_name and p not in request_bound and _type_key_map.get(p, p) not in dep_set
+            ]
+        )
 
         return body_param_name, handler_dependencies if handler_dependencies else None
 

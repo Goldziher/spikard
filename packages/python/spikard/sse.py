@@ -27,17 +27,17 @@ from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from typing import Any, TypeVar, get_args, get_origin, get_type_hints
 
-__all__ = ["SseEvent", "SseEventProducer", "sse", "get_standalone_sse_producers"]
+__all__ = ["SseEvent", "SseEventProducer", "get_standalone_sse_producers", "sse"]
 
 F = TypeVar("F", bound=Callable[..., AsyncIterator[dict[str, Any]]])
 
 # Module-level registry for standalone @sse decorators.
 # These are merged into the app via app.include_sse_routes() or
 # by calling get_standalone_sse_producers().
-_standalone_sse_producers: dict[str, Callable[[], "SseEventProducer"]] = {}
+_standalone_sse_producers: dict[str, Callable[[], SseEventProducer]] = {}
 
 
-def get_standalone_sse_producers() -> dict[str, Callable[[], "SseEventProducer"]]:
+def get_standalone_sse_producers() -> dict[str, Callable[[], SseEventProducer]]:
     """Return producers registered via the standalone @sse decorator."""
     return _standalone_sse_producers.copy()
 
@@ -89,24 +89,22 @@ class SseEventProducer:
 
     def on_disconnect(self) -> None:
         """Called when a client disconnects. Cleans up the generator."""
-        if self._generator is not None:
-            # Attempt async cleanup if available
-            if hasattr(self._generator, "aclose"):
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        # Event loop is running; use a temporary loop to close
-                        temp_loop = asyncio.new_event_loop()
-                        try:
-                            asyncio.set_event_loop(temp_loop)
-                            temp_loop.run_until_complete(self._generator.aclose())
-                        finally:
-                            temp_loop.close()
-                            asyncio.set_event_loop(loop)
-                    else:
-                        loop.run_until_complete(self._generator.aclose())
-                except Exception:
-                    pass
+        if self._generator is not None and hasattr(self._generator, "aclose"):
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Event loop is running; use a temporary loop to close
+                    temp_loop = asyncio.new_event_loop()
+                    try:
+                        asyncio.set_event_loop(temp_loop)
+                        temp_loop.run_until_complete(self._generator.aclose())
+                    finally:
+                        temp_loop.close()
+                        asyncio.set_event_loop(loop)
+                else:
+                    loop.run_until_complete(self._generator.aclose())
+            except Exception:
+                pass
         self._generator = None
 
     def next_event(self) -> SseEvent | None:

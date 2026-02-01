@@ -17,10 +17,6 @@ if TYPE_CHECKING:
     from spikard import grpc as grpc
     from spikard._internal.converters import register_decoder as register_decoder
     from spikard.app import Spikard as Spikard
-    from spikard.routing import HttpMethod as HttpMethod
-    from spikard.routing import Router as Router
-    from spikard.routing import get_default_router as get_default_router
-    from spikard.routing import reset_default_router as reset_default_router
     from spikard.config import ApiKeyConfig as ApiKeyConfig
     from spikard.config import CompressionConfig as CompressionConfig
     from spikard.config import JwtConfig as JwtConfig
@@ -39,13 +35,17 @@ if TYPE_CHECKING:
     from spikard.params import Path as Path
     from spikard.params import Query as Query
     from spikard.request import Request as Request
+    from spikard.routing import HttpMethod as HttpMethod
+    from spikard.routing import Router as Router
     from spikard.routing import delete as delete
     from spikard.routing import get as get
+    from spikard.routing import get_default_router as get_default_router
     from spikard.routing import head as head
     from spikard.routing import options as options
     from spikard.routing import patch as patch
     from spikard.routing import post as post
     from spikard.routing import put as put
+    from spikard.routing import reset_default_router as reset_default_router
     from spikard.routing import route as route
     from spikard.routing import trace as trace
     from spikard.sse import SseEvent as SseEvent
