@@ -74,7 +74,7 @@ export function runServer(app: SpikardApp, config: ServerConfig | ServerOptions 
 		if (!handler) return route;
 		const nativeHandler = isNativeHandler(handler) ? handler : wrapHandler(handler as HandlerFunction);
 		handlers[route.handler_name] = nativeHandler;
-		const isAsync = nativeHandler.constructor.name === 'AsyncFunction';
+		const isAsync = nativeHandler.constructor.name === "AsyncFunction";
 		return { ...route, is_async: isAsync };
 	});
 

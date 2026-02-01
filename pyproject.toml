@@ -72,6 +72,9 @@ cache-keys = [
   { file = "crates/**/Cargo.toml" },
 ]
 
+[tool.uv.sources]
+uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
+
 [tool.uv.workspace]
 members = [
   "packages/python",
@@ -81,9 +84,6 @@ members = [
   "tools/benchmark-harness/apps/robyn",
   "tools/benchmark-harness/apps/spikard-python",
 ]
-
-[tool.uv.sources]
-uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
 
 [tool.ruff]
 target-version = "py314"
@@ -187,25 +187,11 @@ norecursedirs = [ "dist", "build", "*.egg" ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
-[tool.coverage.run]
-branch = true
-omit = [
-  "packages/python/tests/*",
-  "packages/python/spikard/tests/*",
-  "packages/python/spikard/_internal/*",
-  "packages/python/spikard/_internal.py",
-  "packages/python/spikard/background.py",
-  "packages/python/spikard/routing.py",
-  "packages/python/spikard/schema.py",
-  "packages/python/spikard/sse.py",
-  "packages/python/spikard/testing.py",
-  "packages/python/spikard/websocket.py",
-  "scripts/*",
-  "*/__pycache__/*",
-  "*/site-packages/*",
-]
-source = [ "packages/python/spikard" ]
-relative_files = true
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.lcov]
+output = "coverage.lcov"
 
 [tool.coverage.report]
 exclude_lines = [
@@ -225,11 +211,25 @@ exclude_lines = [
 skip_covered = false
 precision = 2
 
-[tool.coverage.html]
-directory = "htmlcov"
-
-[tool.coverage.lcov]
-output = "coverage.lcov"
+[tool.coverage.run]
+branch = true
+omit = [
+  "packages/python/tests/*",
+  "packages/python/spikard/tests/*",
+  "packages/python/spikard/_internal/*",
+  "packages/python/spikard/_internal.py",
+  "packages/python/spikard/background.py",
+  "packages/python/spikard/routing.py",
+  "packages/python/spikard/schema.py",
+  "packages/python/spikard/sse.py",
+  "packages/python/spikard/testing.py",
+  "packages/python/spikard/websocket.py",
+  "scripts/*",
+  "*/__pycache__/*",
+  "*/site-packages/*",
+]
+source = [ "packages/python/spikard" ]
+relative_files = true
 
 [tool.mypy]
 mypy_path = "packages/python"

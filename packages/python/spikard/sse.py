@@ -22,7 +22,6 @@ Each dict is sent as a Server-Sent Event with JSON data.
 """
 
 import asyncio
-import inspect
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from typing import Any, TypeVar, get_args, get_origin, get_type_hints

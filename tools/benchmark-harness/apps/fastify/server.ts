@@ -150,13 +150,10 @@ fastify.post("/urlencoded/complex", (request: FastifyRequest, reply: FastifyRepl
 	reply.send(request.body);
 });
 
-fastify.get(
-	"/path/simple/:id",
-	(request: FastifyRequest<{ Params: SimpleParams }>, reply: FastifyReply) => {
-		const { id } = request.params;
-		reply.send({ id });
-	},
-);
+fastify.get("/path/simple/:id", (request: FastifyRequest<{ Params: SimpleParams }>, reply: FastifyReply) => {
+	const { id } = request.params;
+	reply.send({ id });
+});
 
 fastify.get(
 	"/path/multiple/:user_id/:post_id",
@@ -174,29 +171,20 @@ fastify.get(
 	},
 );
 
-fastify.get(
-	"/path/int/:id",
-	(request: FastifyRequest<{ Params: SimpleParams }>, reply: FastifyReply) => {
-		const { id } = request.params;
-		reply.send({ id: Number.parseInt(id, 10) });
-	},
-);
+fastify.get("/path/int/:id", (request: FastifyRequest<{ Params: SimpleParams }>, reply: FastifyReply) => {
+	const { id } = request.params;
+	reply.send({ id: Number.parseInt(id, 10) });
+});
 
-fastify.get(
-	"/path/uuid/:uuid",
-	(request: FastifyRequest<{ Params: UuidParams }>, reply: FastifyReply) => {
-		const { uuid } = request.params;
-		reply.send({ uuid });
-	},
-);
+fastify.get("/path/uuid/:uuid", (request: FastifyRequest<{ Params: UuidParams }>, reply: FastifyReply) => {
+	const { uuid } = request.params;
+	reply.send({ uuid });
+});
 
-fastify.get(
-	"/path/date/:date",
-	(request: FastifyRequest<{ Params: DateParams }>, reply: FastifyReply) => {
-		const { date } = request.params;
-		reply.send({ date });
-	},
-);
+fastify.get("/path/date/:date", (request: FastifyRequest<{ Params: DateParams }>, reply: FastifyReply) => {
+	const { date } = request.params;
+	reply.send({ date });
+});
 
 fastify.get("/query/few", (request: FastifyRequest, reply: FastifyReply) => {
 	reply.send(request.query);
