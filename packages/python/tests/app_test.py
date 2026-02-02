@@ -14,7 +14,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import spikard.app as app_module
 import spikard.routing as routing_module
 from spikard import Spikard
 from spikard.config import ServerConfig

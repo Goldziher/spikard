@@ -5,7 +5,7 @@ import json
 import pytest
 
 from spikard import Spikard
-from spikard.request import Request
+from spikard.request import Request  # noqa: TC001 - needed at runtime for type resolution
 from spikard.testing import TestClient
 
 
