@@ -56,7 +56,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'rb_sys', '~> 0.9'
   spec.add_dependency 'websocket-client-simple', '~> 0.8'
 
-  # gRPC support for RPC services
-  spec.add_dependency 'grpc', '~> 1.60'
+  # gRPC runtime is handled by the Rust native extension; the grpc gem is only needed for testing
 end
 # rubocop:enable Metrics/BlockLength

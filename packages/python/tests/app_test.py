@@ -133,7 +133,7 @@ def test_async_handler_with_query_default_injection(monkeypatch: pytest.MonkeyPa
 
     monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
     monkeypatch.setattr(
-        app_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"q": {"source": "query"}}}
+        routing_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"q": {"source": "query"}}}
     )
 
     @app.get("/test")
@@ -152,7 +152,7 @@ def test_async_handler_sync_handler_with_param_defaults(monkeypatch: pytest.Monk
 
     monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
     monkeypatch.setattr(
-        app_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"page": {"source": "query"}}}
+        routing_module, "extract_parameter_schema", lambda _func, _path: {"properties": {"page": {"source": "query"}}}
     )
 
     @app.get("/items")
@@ -171,7 +171,7 @@ def test_async_handler_mixed_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(routing_module, "extract_schemas", lambda _func: (None, {"response": True}))
     monkeypatch.setattr(
-        app_module,
+        routing_module,
         "extract_parameter_schema",
         lambda _func, _path: {
             "properties": {"q": {"source": "query"}, "name": {"source": "query"}},

@@ -308,6 +308,9 @@ fn process() -> PyResult<()> {
 ///     TestClient: A test client for making requests to the app
 #[pyfunction]
 fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testing::client::TestClient> {
+    // Initialize async event loop for async handlers (same as run_server)
+    init_python_event_loop()?;
+
     let write_debug_log = |name: &str, contents: &str| {
         let path = std::env::temp_dir().join(name);
         let _ = std::fs::write(path, contents);

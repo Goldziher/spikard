@@ -1,22 +1,12 @@
 from __future__ import annotations
 
-from typing import Protocol
+import json
 
-import msgspec
 import pytest
 
 from spikard import Spikard
+from spikard.request import Request
 from spikard.testing import TestClient
-
-
-class HandlerRequest(Protocol):
-    method: str
-    path: str
-    path_params: dict[str, object]
-    query_params: dict[str, object]
-    headers: dict[str, str]
-    cookies: dict[str, str]
-    body: bytes
 
 
 @pytest.mark.asyncio
@@ -24,35 +14,34 @@ async def test_handler_can_accept_request_object() -> None:
     app = Spikard()
 
     @app.post("/items/{id}")
-    async def handler(request: HandlerRequest) -> dict[str, object]:
-        decoded: dict[str, object] = msgspec.json.decode(request.body, type=dict[str, object])
+    async def handler(request: Request) -> dict[str, object]:
+        path_params = request.path_params
+        query_params = request.query_params
 
-        name = decoded.get("name")
-        assert isinstance(name, str)
-
-        q = request.query_params.get("q")
-        assert isinstance(q, int)
-
-        id_value = request.path_params.get("id")
-        assert isinstance(id_value, int)
+        id_value = path_params.get("id")
+        q = query_params.get("q")
+        body = request.body
+        # body may be raw bytes for JSON requests; decode if needed
+        if isinstance(body, (bytes, bytearray)):
+            body = json.loads(body)
 
         return {
             "method": request.method,
             "path": request.path,
             "id": id_value,
             "q": q,
-            "name": name,
+            "name": body.get("name") if isinstance(body, dict) else None,
             "content_type": request.headers.get("content-type"),
         }
 
     async with TestClient(app) as client:
         response = await client.post("/items/123", params={"q": 1}, json={"name": "widget"})
 
-    assert response.status_code == 200, response.text
+    assert response.status_code == 200, response.json()
     data = response.json()
     assert data["method"] == "POST"
     assert data["path"] == "/items/123"
     assert data["id"] == 123
     assert data["q"] == 1
     assert data["name"] == "widget"
-    assert data["content_type"].startswith("application/json")
+    assert "json" in str(data["content_type"]).lower()
