@@ -1,4 +1,6 @@
 ```ruby
+require "spikard"
+
 app = Spikard::App.new
 
 app.pre_handler do |request|

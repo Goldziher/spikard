@@ -146,31 +146,31 @@ The init command validates project names according to language conventions:
 - Must be a valid Python identifier: `user_service`, `api_v2`
 - Conventionally snake_case
 - Converted to snake_case if mixed case provided
-- Examples: ✅ `user_service`, ✅ `my_api`, ❌ `User-Service`
+- Examples: `user_service`, `my_api`, `User-Service`
 
 ### TypeScript/JavaScript
 - Must be a valid npm package name
 - Conventionally lowercase with hyphens: `user-service`, `api-v2`
 - Converted to kebab-case if snake_case provided
-- Examples: ✅ `user-service`, ✅ `my-api`, ✅ `api`
+- Examples: `user-service`, `my-api`, `api`
 
 ### Ruby
 - Must be a valid constant: `UserService`, `ApiV2`
 - Conventionally PascalCase
 - Converted to PascalCase if snake_case provided
-- Examples: ✅ `UserService`, ✅ `MyApi`, ❌ `user-service`
+- Examples: `UserService`, `MyApi`, `user-service`
 
 ### PHP
 - Must be a valid class name: `UserService`, `ApiV2`
 - Conventionally PascalCase (PSR-4 compliance)
 - Converted to PascalCase if snake_case provided
-- Examples: ✅ `UserService`, ✅ `MyApi`, ❌ `user_service` (converted to UserService)
+- Examples: `UserService`, `MyApi`, `user_service` (converted to UserService)
 
 ### Rust
 - Must be a valid crate name: `user_service`, `api_v2`
 - Conventionally snake_case
 - Converted to snake_case if mixed case provided
-- Examples: ✅ `user_service`, ✅ `my_api`, ❌ `UserService` (converted to user_service)
+- Examples: `user_service`, `my_api`, `UserService` (converted to user_service)
 
 ## Project Structure Documentation
 
@@ -351,13 +351,13 @@ The init command validates project names:
 ```bash
 # Creates: ./my_api/
 spikard init --name my_api --language python
-# ✅ OK if ./my_api/ doesn't exist
+# OK if ./my_api/ doesn't exist
 
-# ❌ Fails if ./my_api/ already exists
+# Fails if ./my_api/ already exists
 spikard init --name my_api --language python
 # DirectoryAlreadyExists: Directory './my_api' already exists
 
-# ✅ OK with different directory
+# OK with different directory
 spikard init --name my_api --language python --project-dir ./projects
 # Creates: ./projects/my_api/
 ```
@@ -365,10 +365,10 @@ spikard init --name my_api --language python --project-dir ./projects
 ### Schema Path Validation
 
 ```bash
-# ✅ OK if file exists
+# OK if file exists
 spikard init --name my_api --language python --schema ./openapi.json
 
-# ❌ Fails if file doesn't exist
+# Fails if file doesn't exist
 spikard init --name my_api --language python --schema ./missing.json
 # SchemaPathNotFound: Schema file not found: ./missing.json
 ```
@@ -399,7 +399,7 @@ After initialization, the command provides language-specific guidance:
 
 ### Python
 ```
-✅ Project created: user_service
+Project created: user_service
 
 Next steps:
   1. cd user_service
@@ -412,12 +412,12 @@ Documentation:
   - Type checking: mypy src/
   - Code quality: ruff check src/
 
-For more info: https://docs.spikard.dev
+For more info: https://spikard.dev
 ```
 
 ### TypeScript
 ```
-✅ Project created: user-service
+Project created: user-service
 
 Next steps:
   1. cd user-service
@@ -430,12 +430,12 @@ Documentation:
   - Build: pnpm build
   - Type checking: pnpm run type-check
 
-For more info: https://docs.spikard.dev
+For more info: https://spikard.dev
 ```
 
 ### Ruby
 ```
-✅ Project created: UserService
+Project created: UserService
 
 Next steps:
   1. cd UserService
@@ -448,12 +448,12 @@ Documentation:
   - Type checking: bundle exec steep check
   - Code quality: bundle exec rubocop lib/
 
-For more info: https://docs.spikard.dev
+For more info: https://spikard.dev
 ```
 
 ### PHP
 ```
-✅ Project created: UserService
+Project created: UserService
 
 Next steps:
   1. cd UserService
@@ -466,12 +466,12 @@ Documentation:
   - Type checking: vendor/bin/phpstan analyze
   - Code quality: vendor/bin/php-cs-fixer fix src/
 
-For more info: https://docs.spikard.dev
+For more info: https://spikard.dev
 ```
 
 ### Rust
 ```
-✅ Project created: user_service
+Project created: user_service
 
 Next steps:
   1. cd user_service
@@ -484,7 +484,7 @@ Documentation:
   - Documentation: cargo doc --open
   - Code quality: cargo clippy
 
-For more info: https://docs.spikard.dev
+For more info: https://spikard.dev
 ```
 
 ## Development Workflow
@@ -666,7 +666,7 @@ jobs:
 
 - [Code Generation Guide](../guides/code-generation.md)
 - [ADR-0004: Code Generation](../adr/0004-code-generation.md)
-- [API Documentation](../reference/api.md)
+- [Types Reference](../reference/types.md)
 
 ## FAQ
 

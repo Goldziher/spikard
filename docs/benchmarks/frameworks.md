@@ -390,7 +390,7 @@ Framework pairs showing validation cost:
 - Maximum Node.js ecosystem performance
 - Bun runtime advantages
 - End-to-end type safety
-- Cutting-edge features
+- Latest features
 
 ## Adding New Frameworks
 

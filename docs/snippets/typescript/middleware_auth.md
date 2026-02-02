@@ -2,6 +2,13 @@
 import { Spikard, type Request, HTTPError } from "spikard";
 import * as jwt from "jsonwebtoken";
 
+interface JWTPayload {
+  sub: string;
+  iat: number;
+  exp: number;
+  roles?: string[];
+}
+
 const app = new Spikard();
 
 app.onRequest(async (request: Request): Promise<Request> => {
@@ -15,7 +22,7 @@ app.onRequest(async (request: Request): Promise<Request> => {
 
   try {
     // Verify and decode JWT
-    const payload = jwt.verify(token, "your-secret-key") as any;
+    const payload = jwt.verify(token, "your-secret-key") as JWTPayload;
 
     // Enrich context with authenticated user
     request.context = request.context || {};

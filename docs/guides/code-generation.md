@@ -1,6 +1,6 @@
 # Code Generation Guide
 
-Spikard's code generator transforms API schemas into type-safe, production-ready handlers and DTOs for Python, TypeScript, Ruby, PHP, and Rust. Generated code integrates seamlessly with Spikard's runtime and passes strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy).
+Spikard's code generator transforms API schemas into type-safe, production-ready handlers and DTOs for Python, TypeScript, Ruby, PHP, and Rust. Generated code integrates with Spikard's runtime and passes strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy).
 
 This guide covers the complete workflow: schema to generated code to integration and validation.
 
@@ -1595,9 +1595,9 @@ Error: Permission denied: ./generated/handlers.py
 
 ### Getting Help
 
-- **Documentation**: https://github.com/spikard/spikard/docs
+- **Documentation**: https://github.com/Goldziher/spikard/docs
 - **Examples**: See `examples/schemas/` directory
-- **Issues**: https://github.com/spikard/spikard/issues
+- **Issues**: https://github.com/Goldziher/spikard/issues
 - **ADRs**: `docs/adr/0004-code-generation.md`, `docs/adr/0010-protobuf-grpc-code-generation.md`
 
 ## Best Practices
@@ -1665,14 +1665,14 @@ git commit -m "feat: add user endpoints"
 Spikard's code generator transforms schemas into production-ready, type-safe code across five languages. Generated code:
 
 - Passes strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy)
-- Integrates seamlessly with Spikard runtime
+- Integrates with Spikard runtime
 - Follows language-specific conventions
 - Provides clear extension points for custom logic
 
 Start with simple schemas, validate early, and use quality tools to catch issues before production.
 
 For more details, see:
-- [ADR 0004: Code Generation Architecture](/docs/adr/0004-code-generation.md)
-- [ADR 0010: Protobuf/gRPC Code Generation](/docs/adr/0010-protobuf-grpc-code-generation.md)
-- [Configuration Guide](/docs/guides/configuration.md)
-- [Testing Guide](/docs/guides/testing.md)
+- [ADR 0004: Code Generation Architecture](../adr/0004-code-generation.md)
+- [ADR 0010: Protobuf/gRPC Code Generation](../adr/0010-protobuf-grpc-code-generation.md)
+- [Configuration Guide](configuration.md)
+- [Testing Guide](testing.md)

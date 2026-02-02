@@ -181,7 +181,7 @@ Generated OpenRPC documentation can be accessed at `/openrpc.json` when OpenAPI 
 ## See Also
 
 - [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
-- [Spikard Documentation](https://github.com/spikard/spikard)
+- [Spikard Documentation](https://github.com/Goldziher/spikard)
 - [Python Example](../jsonrpc-python/)
 - [Node.js Example](../jsonrpc-node/)
 - [PHP Example](../jsonrpc-php/)

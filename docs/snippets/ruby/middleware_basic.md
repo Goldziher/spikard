@@ -1,4 +1,6 @@
 ```ruby
+require "spikard"
+
 app = Spikard::App.new
 
 app.on_request do |request|

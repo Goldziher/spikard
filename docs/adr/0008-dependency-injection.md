@@ -1,6 +1,6 @@
 # ADR 0008: Dependency Injection System
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2025-11-23
 **Authors:** Spikard Team
 **Deciders:** Core maintainers
@@ -17,7 +17,7 @@ Spikard currently lacks a dependency injection (DI) system, requiring developers
 
 We need a DI system that is:
 - **Simple** - Minimal API surface (like Fastify's decoration pattern)
-- **Powerful** - Type-driven resolution with nested dependencies (like Litestar)
+- **Flexible** - Type-driven resolution with nested dependencies (like Litestar)
 - **Cross-language** - Same semantics across Python, TypeScript, Ruby, PHP, WASM
 - **Zero-cost** - No overhead when not used
 - **Rust-first** - Resolution logic in Rust core, not bindings
@@ -39,54 +39,54 @@ We need a DI system that is:
 **Description:** Use [shaku](https://github.com/AzureMarker/shaku), a compile-time DI library with Axum integration.
 
 **Pros:**
-- ✅ Battle-tested (559 GitHub stars, 123K downloads)
-- ✅ Compile-time resolution (zero runtime overhead)
-- ✅ Direct Axum integration via `shaku_axum`
-- ✅ Module system for organization
-- ✅ MIT/Apache-2.0 dual license
+-Battle-tested (559 GitHub stars, 123K downloads)
+-Compile-time resolution (zero runtime overhead)
+-Direct Axum integration via `shaku_axum`
+-Module system for organization
+-MIT/Apache-2.0 dual license
 
 **Cons:**
-- ❌ Macro-heavy API doesn't translate well to other languages
-- ❌ Module-based registration differs from Fastify/Litestar patterns
-- ❌ Limited async support (no async factories)
-- ❌ External dependency to maintain
-- ❌ Opinionated design (components vs providers)
+-Macro-heavy API doesn't translate well to other languages
+-Module-based registration differs from Fastify/Litestar patterns
+-Limited async support (no async factories)
+-External dependency to maintain
+-Opinionated design (components vs providers)
 
-**Verdict:** ❌ Rejected - Doesn't align with cross-language goals
+**Verdict:** Rejected - Doesn't align with cross-language goals
 
 ### Option 2: Custom DI on Axum State (CHOSEN)
 
 **Description:** Build lightweight DI system on Axum's `State<T>` pattern, inspired by Fastify (simplicity) + Litestar (power).
 
 **Pros:**
-- ✅ No external dependencies
-- ✅ Full control over API design
-- ✅ Can match Fastify/Litestar patterns exactly
-- ✅ Zero-cost when not used (`Option<Arc<Container>>`)
-- ✅ Already using Axum State
-- ✅ Cross-language bindings can share Container type
-- ✅ Incremental complexity (start simple, add features)
+-No external dependencies
+-Full control over API design
+-Can match Fastify/Litestar patterns exactly
+-Zero-cost when not used (`Option<Arc<Container>>`)
+-Already using Axum State
+-Cross-language bindings can share Container type
+-Incremental complexity (start simple, add features)
 
 **Cons:**
-- ⚠️ Must implement ourselves (initial development time)
-- ⚠️ Need to maintain (but we control API)
+-Must implement ourselves (initial development time)
+-Need to maintain (but we control API)
 
-**Verdict:** ✅ **CHOSEN** - Best fit for requirements
+**Verdict:** **CHOSEN** - Best fit for requirements
 
 ### Option 3: Axum State + Shaku Hybrid
 
 **Description:** Use Axum State for simple dependencies, Shaku for complex DI scenarios.
 
 **Pros:**
-- ✅ Best of both worlds
-- ✅ Proven framework for advanced use cases
+-Best of both worlds
+-Proven framework for advanced use cases
 
 **Cons:**
-- ❌ Two different DI patterns to learn
-- ❌ Confusing for users ("when to use which?")
-- ❌ External dependency still required
+-Two different DI patterns to learn
+-Confusing for users ("when to use which?")
+-External dependency still required
 
-**Verdict:** ❌ Rejected - Adds complexity without sufficient benefit
+**Verdict:** Rejected - Adds complexity without sufficient benefit
 
 ## Decision Outcome
 
@@ -504,27 +504,27 @@ Each fixture includes:
 
 ### Positive
 
-✅ **Simple API** - Two methods to learn (`provide_value`, `provide_factory`)
-✅ **Type-safe** - Rust's type system enforces correctness
-✅ **Cross-language consistency** - Same semantics across all bindings
-✅ **Zero-cost** - No overhead when not used
-✅ **Testable** - Easy to mock dependencies in tests
-✅ **Resource management** - First-class cleanup support
-✅ **No external dependencies** - Built on Axum State (already in stack)
-✅ **Incremental adoption** - Can add DI to existing apps gradually
-✅ **Performance** - Batched parallel resolution, caching
+-**Simple API** - Two methods to learn (`provide_value`, `provide_factory`)
+-**Type-safe** - Rust's type system enforces correctness
+-**Cross-language consistency** - Same semantics across all bindings
+-**Zero-cost** - No overhead when not used
+-**Testable** - Easy to mock dependencies in tests
+-**Resource management** - First-class cleanup support
+-**No external dependencies** - Built on Axum State (already in stack)
+-**Incremental adoption** - Can add DI to existing apps gradually
+-**Performance** - Batched parallel resolution, caching
 
 ### Negative
 
-⚠️ **Custom implementation** - We maintain it (not a third-party crate)
-⚠️ **Initial development time** - ~2 months for full cross-language support
-⚠️ **Learning curve** - Users must learn DI patterns
-⚠️ **Complexity** - Adds conceptual overhead to framework
+-**Custom implementation** - We maintain it (not a third-party crate)
+-**Initial development time** - ~2 months for full cross-language support
+-**Learning curve** - Users must learn DI patterns
+-**Complexity** - Adds conceptual overhead to framework
 
 ### Neutral
 
-🔷 **Not as feature-rich** as enterprise DI frameworks (NestJS, Spring)
-🔷 **Simpler** than those frameworks (intentional trade-off)
+- **Not as feature-rich** as enterprise DI frameworks (NestJS, Spring)
+- **Simpler** than those frameworks (intentional trade-off)
 
 ## Migration Path
 

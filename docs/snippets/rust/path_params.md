@@ -1,10 +1,18 @@
 ```rust
 app.route(get("/orders/:order_id"), |ctx: Context| async move {
-    let id = ctx.path_param("order_id").unwrap_or("0");
-    let details: serde_json::Value = ctx.query().unwrap_or_default();
+    let order_id: i64 = ctx.path_param::<String>("order_id")?
+        .parse()
+        .map_err(|_| Error::BadRequest("order_id must be a valid number"))?;
+
+    #[derive(serde::Deserialize, Default)]
+    struct DetailsQuery {
+        details: Option<bool>,
+    }
+    let query: DetailsQuery = ctx.query().unwrap_or_default();
+
     Ok(Json(json!({
-        "id": id.parse::<i64>().unwrap_or_default(),
-        "details": details.get("details").and_then(|d| d.as_bool()).unwrap_or(false)
+        "id": order_id,
+        "details": query.details.unwrap_or(false)
     })))
 })?;
 ```

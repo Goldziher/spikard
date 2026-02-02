@@ -476,7 +476,7 @@ See `/examples/rust/` for more Rust examples.
 ## Performance
 
 Built on industry-proven foundations:
-- **Axum** for blazing-fast routing (600k+ req/s)
+- **Axum** for high-throughput routing (600k+ req/s)
 - **Tower-HTTP** for zero-overhead middleware
 - **Tokio** for high-performance async runtime
 - **jsonschema** for efficient validation

@@ -25,7 +25,7 @@ Spikard's gRPC runtime provides automatic error handling and status code mapping
 
 ## gRPC Status Codes
 
-gRPC defines 17 standard status codes. Understanding when to use each code is essential for building robust services:
+gRPC defines 17 standard status codes. Understanding when to use each code is essential for building services:
 
 | Code | Value | Use Case |
 |------|-------|----------|
@@ -738,19 +738,19 @@ async def test_grpc_error_propagation():
 Select status codes that accurately describe the error condition:
 
 ```python
-# ✅ GOOD: Use NOT_FOUND for missing resources
+# Good:Use NOT_FOUND for missing resources
 user = db.get(user_id)
 if user is None:
     raise FileNotFoundError(f"User {user_id} not found")
 
-# ❌ BAD: Using generic error
+# Bad:Using generic error
 user = db.get(user_id)
 if user is None:
     raise RuntimeError(f"User {user_id} not found")  # Maps to INTERNAL
 ```
 
 ```typescript
-// ✅ GOOD: Use ALREADY_EXISTS for duplicate resources
+// Good:Use ALREADY_EXISTS for duplicate resources
 const existing = await db.findByEmail(email);
 if (existing) {
   throw new GrpcError(
@@ -759,7 +759,7 @@ if (existing) {
   );
 }
 
-// ❌ BAD: Using wrong status code
+// Bad:Using wrong status code
 if (existing) {
   throw new GrpcError(
     GrpcStatusCode.INVALID_ARGUMENT,  // Wrong code
@@ -773,14 +773,14 @@ if (existing) {
 Include enough context for clients to understand and fix the issue:
 
 ```python
-# ✅ GOOD: Detailed, actionable error message
+# Good:Detailed, actionable error message
 raise ValueError(
     f"Validation failed for field 'age': "
     f"Value must be between 0 and 120, got {age}. "
     f"Please provide a valid age."
 )
 
-# ❌ BAD: Vague error message
+# Bad:Vague error message
 raise ValueError("Invalid age")
 ```
 
@@ -789,7 +789,7 @@ raise ValueError("Invalid age")
 Leverage language-specific error handling patterns:
 
 ```python
-# ✅ GOOD: Pythonic exception handling
+# Good:Pythonic exception handling
 def get_user(user_id: int) -> User:
     if user_id <= 0:
         raise ValueError("User ID must be positive")
@@ -802,7 +802,7 @@ def get_user(user_id: int) -> User:
 ```
 
 ```typescript
-// ✅ GOOD: TypeScript with explicit types
+// Good:TypeScript with explicit types
 function getUser(userId: number): User {
   if (userId <= 0) {
     throw new GrpcError(
@@ -964,11 +964,11 @@ class UserServiceHandler implements GrpcHandler {
 Don't leak sensitive information in error messages:
 
 ```python
-# ✅ GOOD: Generic error for authentication failures
+# Good:Generic error for authentication failures
 if not self.verify_password(user, password):
     raise PermissionError("Invalid credentials")
 
-# ❌ BAD: Reveals which part failed
+# Bad:Reveals which part failed
 if not user:
     raise FileNotFoundError("User not found")
 if not self.verify_password(user, password):
@@ -976,13 +976,13 @@ if not self.verify_password(user, password):
 ```
 
 ```typescript
-// ✅ GOOD: Don't expose internal paths
+// Good:Don't expose internal paths
 throw new GrpcError(
   GrpcStatusCode.INTERNAL,
   'Database error occurred'
 );
 
-// ❌ BAD: Exposes internal details
+// Bad:Exposes internal details
 throw new GrpcError(
   GrpcStatusCode.INTERNAL,
   `Database connection failed: host=db.internal.company.com:5432`
@@ -999,10 +999,10 @@ Spikard's gRPC error handling provides:
 4. **Consistent behavior** - Same error handling patterns across all languages
 5. **Easy testing** - Straightforward unit and integration testing
 
-By following these patterns and best practices, you can build robust gRPC services with comprehensive error handling that provides clear, actionable feedback to clients.
+By following these patterns and best practices, you can build gRPC services with clear, actionable error handling.
 
 ## Related Documentation
 
-- [ADR 0011: gRPC FFI Bindings Strategy](/docs/adr/0011-grpc-ffi-bindings-strategy.md)
+- [ADR 0011: gRPC FFI Bindings Strategy](../adr/0011-grpc-ffi-bindings-strategy.md)
 - [gRPC Status Codes Reference](https://grpc.io/docs/guides/status-codes/)
-- [Testing Guide](/docs/guides/testing.md)
+- [Testing Guide](testing.md)

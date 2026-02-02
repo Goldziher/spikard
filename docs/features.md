@@ -11,8 +11,9 @@ Spikard delivers the same runtime and developer experience across languages whil
 
 ## Polyglot Bindings
 - **Python** via PyO3 with async event-loop orchestration and msgspec validation
-- **TypeScript/Node** via NAPI-RS with Zod-powered schemas and WASM option
+- **TypeScript/Node** via NAPI-RS with Zod-powered schemas
 - **Ruby** via magnus with Ruby-friendly routing and middleware hooks
+- **PHP** via ext-php-rs with native OOP API and async support
 - **Rust** native API mirroring the binding ergonomics
 
 ## Developer Experience

@@ -891,4 +891,4 @@ class FilterStreamHandlerTest extends TestCase
 - Return types must be `Response` or `BidiStreamResponse`
 - Use `declare(strict_types=1)` in all files
 
-See the [gRPC documentation](../../../grpc-php-example.md) for more examples.
+See the gRPC documentation for more examples.

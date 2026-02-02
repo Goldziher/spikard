@@ -1,6 +1,6 @@
 # Installation
 
-Spikard ships a Rust core plus bindings for Python, TypeScript/Node, and Ruby. Install only what you need; every binding shares the same runtime behavior.
+Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, and PHP. Install only what you need; every binding shares the same runtime behavior.
 
 ## Install by binding
 
@@ -22,6 +22,12 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, and Ruby. I
 
     ```bash
     gem install spikard
+    ```
+
+=== "PHP"
+
+    ```bash
+    composer require spikard/spikard
     ```
 
 === "Rust"

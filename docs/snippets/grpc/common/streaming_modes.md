@@ -11,15 +11,11 @@
 
 | Mode | Python | TypeScript | Ruby | PHP | Rust |
 |------|--------|------------|------|-----|------|
-| Unary | ✅ Supported | ✅ Supported | ✅ Supported | ✅ Supported | ✅ Supported |
-| Server Streaming | ✅ Supported | ✅ Supported | ✅ Supported | ✅ Supported | ✅ Supported |
-| Client Streaming | ✅ Supported | ✅ Supported | ✅ Supported | ✅ Supported | ✅ Supported |
-| Bidirectional | ✅ Supported | ✅ Supported | ✅ Supported | ✅ Supported | ✅ Supported |
+| Unary | Supported | Supported | Supported | Supported | Supported |
+| Server Streaming | Supported | Supported | Supported | Supported | Supported |
+| Client Streaming | Supported | Supported | Supported | Supported | Supported |
+| Bidirectional | Supported | Supported | Supported | Supported | Supported |
 
 ### Documentation
 
-Streaming handler examples available for each language:
-- [Python Streaming Handlers](../python/handler_streaming.md)
-- [TypeScript Streaming Handlers](../typescript/handler_streaming.md)
-- [Ruby Streaming Handlers](../ruby/handler_streaming.md)
-- [PHP Streaming Handlers](../php/handler_streaming.md)
+Streaming handler examples are available in the tabbed section above showing client streaming and bidirectional streaming patterns for Python, TypeScript, Ruby, and PHP.

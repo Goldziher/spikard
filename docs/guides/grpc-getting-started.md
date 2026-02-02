@@ -111,6 +111,27 @@ Create `user_service.proto`:
 
 ---
 
+## Complete Handler Examples
+
+Full-featured handler implementations showing routing, validation, business logic, and metadata:
+
+=== "Python"
+    --8<-- "grpc/python/handler_complete.md"
+
+=== "TypeScript"
+    --8<-- "grpc/typescript/handler_complete_with_helpers.md"
+
+=== "Ruby"
+    --8<-- "grpc/ruby/handler_complete.md"
+
+=== "PHP"
+    --8<-- "grpc/php/handler_complete.md"
+
+=== "Rust"
+    --8<-- "grpc/rust/handler_complete.md"
+
+---
+
 ## Common Patterns
 
 ### Key Patterns by Language
@@ -155,7 +176,7 @@ Create `user_service.proto`:
 
 ## Next Steps
 
-1. **Streaming RPCs**: Server, client, and bidirectional streaming (coming soon)
+1. **Streaming RPCs**: Server, client, and bidirectional streaming
 2. **Authentication**: Implement auth using metadata headers
 3. **Observability**: Add request tracing and logging
 

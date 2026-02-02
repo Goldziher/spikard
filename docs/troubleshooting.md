@@ -1492,10 +1492,10 @@ spikard validate-config
 
 If you encounter an issue not covered in this guide:
 
-1. Check the [Spikard documentation](https://docs.spikard.dev)
-2. Search [GitHub issues](https://github.com/spikard/spikard/issues)
-3. Review [examples directory](https://github.com/spikard/spikard/tree/main/examples)
-4. Ask in the [community Discord](https://discord.gg/spikard)
+1. Check the [Spikard documentation](https://spikard.dev)
+2. Search [GitHub issues](https://github.com/Goldziher/spikard/issues)
+3. Review [examples directory](https://github.com/Goldziher/spikard/tree/main/examples)
+4. Ask in the [community Discord](https://discord.gg/pXxagNK2zN)
 5. Report bugs with minimal reproduction case
 
 When reporting issues, include:

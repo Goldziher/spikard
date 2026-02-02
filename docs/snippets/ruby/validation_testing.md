@@ -1,4 +1,5 @@
 ```ruby
+require "spikard"
 require "rspec"
 require "rack/test"
 

@@ -2,10 +2,13 @@
 
 High-performance Python web framework backed by a Rust core. Build REST APIs, WebSockets, and SSE services with FastAPI/Litestar-style decorators powered by Tokio, Hyper, and Tower middleware.
 
-[![PyPI](https://img.shields.io/pypi/v/spikard.svg?logo=python&logoColor=white)](https://pypi.org/project/spikard/)
-[![Docs](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
-[![Python](https://img.shields.io/pypi/pyversions/spikard.svg?logo=python&logoColor=white)](https://pypi.org/project/spikard/)
-[![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=blue)](https://pypi.org/project/spikard/)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
+[![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 ## Installation
 
@@ -74,6 +77,7 @@ async def get_user(user_id: int):
 @post("/users")  # Standalone decorator style
 async def create_user(user: User):
     return user
+# Note: standalone decorators require app.include_router(get_default_router()) before app.run()
 ```
 
 **Validation with msgspec (recommended):**
@@ -96,6 +100,9 @@ from spikard.di import Provide
 class DatabasePool:
     async def fetch(self, sql: str) -> list: ...
 
+def create_pool() -> DatabasePool:
+    return DatabasePool()
+
 app.provide(DatabasePool, Provide(create_pool, singleton=True))
 
 @app.get("/data")
@@ -107,9 +114,11 @@ async def get_data(pool: DatabasePool) -> dict:
 ```python
 from spikard import websocket
 
-@websocket("/ws")
-async def chat(message: dict) -> dict | None:
-    return {"echo": message}
+@app.websocket("/ws")
+def chat_endpoint():
+    async def handler(message: dict) -> dict | None:
+        return {"echo": message}
+    return handler
 ```
 
 **Server-Sent Events:**
@@ -148,7 +157,7 @@ config = ServerConfig(
 app = Spikard(config=config)
 ```
 
-See the [Configuration Guide](../../docs/python-configuration.md) for all options.
+See the documentation for all options.
 
 ## Performance
 
@@ -161,7 +170,7 @@ Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/ben
 | fastapi | 6,418 | 16.43 | 21.72 |
 | robyn | 6,012 | 16.85 | 24.18 |
 
-Spikard is **1.6x faster** than Litestar, **2.0x faster** than FastAPI, and **2.1x faster** than Robyn (also Rust-backed).
+Spikard is **1.6x faster** than Litestar (throughput-based; see full results for latency breakdown), **2.0x faster** than FastAPI, and **2.1x faster** than Robyn (also Rust-backed).
 
 Key optimizations:
 - Zero-copy PyO3 type conversion (no JSON round-trips)
@@ -176,12 +185,12 @@ async def test_users():
     async with TestClient(app) as client:
         response = await client.get("/users/123")
         assert response.status_code == 200
-        assert response.json()["user_id"] == 123
+        assert response.json()["id"] == 123
 ```
 
 `TestClient` uses in-process Rust testing for speed. `LiveTestClient` starts a real subprocess server for WebSocket/SSE tests.
 
-See [Testing Guide](../../docs/python-testing.md) for WebSocket and SSE testing.
+See the main documentation for WebSocket and SSE testing.
 ## Examples
 
 Runnable examples with dependency injection and database integration:
@@ -193,9 +202,7 @@ See [examples/README.md](../../examples/README.md) for all languages and code ge
 
 ## Documentation
 
-- [Main README](../../README.md)
-- [Contributing Guide](../../CONTRIBUTING.md)
-- [Architecture Decision Records](../../docs/adr/)
+Full documentation at [spikard.dev](https://spikard.dev). See also [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Other Languages
 

@@ -32,7 +32,7 @@ async fn test_user_workflow() {
                 move |Json(payload): Json<serde_json::Value>| {
                     let db = db.clone();
                     async move {
-                        let mut users = db.lock().unwrap();
+                        let mut users = db.lock().expect("lock poisoned");
                         let id = (users.len() + 1) as i64;
                         let user = User {
                             id,
@@ -51,7 +51,7 @@ async fn test_user_workflow() {
                 move |Path(user_id): Path<i64>| {
                     let db = db.clone();
                     async move {
-                        let users = db.lock().unwrap();
+                        let users = db.lock().expect("lock poisoned");
                         match users.get(&user_id) {
                             Some(user) => Json(json!(user)),
                             None => Json(json!({"error": "Not found"})),
@@ -61,7 +61,7 @@ async fn test_user_workflow() {
             }),
         );
 
-    let server = TestServer::new(app).unwrap();
+    let server = TestServer::new(app).expect("failed to create test server");
 
     // Create user
     let create_response = server

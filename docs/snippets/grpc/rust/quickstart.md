@@ -26,7 +26,8 @@ impl GrpcHandler for UserServiceHandler {
 
             // Serialize and return
             let mut buf = Vec::new();
-            user.encode(&mut buf).unwrap();
+            user.encode(&mut buf)
+                .map_err(|e| Status::internal(e.to_string()))?;
             Ok(GrpcResponseData::new(buf.into()))
         } else {
             Err(Status::unimplemented("Method not found"))

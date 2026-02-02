@@ -227,7 +227,7 @@ async function handleTransformStream(
   };
 }
 
-async function transformDocument(doc: any): Promise<any> {
+async function transformDocument(doc: unknown): Promise<unknown> {
   // Simulate document transformation
   return {
     content: doc.content.toUpperCase(),
@@ -251,7 +251,7 @@ async function handleFilterStream(
   const minValue = parseInt(metadata['x-min-value'] || '0', 10);
 
   // Step 1: Deserialize and filter
-  const filteredItems: any[] = [];
+  const filteredItems: unknown[] = [];
 
   for (const msg of messages) {
     const item = recordservice.Record.decode(msg);
@@ -405,4 +405,4 @@ describe('Bidirectional Streaming Handler', () => {
 | Message order | Important | Important | N/A |
 | Atomicity | Full batch atomic | Per-message or batch | Single atomic |
 
-See the [gRPC documentation](../../../grpc-typescript-example.md) for more examples.
+See the gRPC documentation for more examples.

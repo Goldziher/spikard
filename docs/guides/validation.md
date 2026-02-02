@@ -2,6 +2,30 @@
 
 Validation keeps handlers simple by enforcing contracts at the edge.
 
+## Basic validation
+
+Define schemas to validate incoming data with strongly-typed structures. Let the framework validate before your handler runs.
+
+=== "Python"
+
+    --8<-- "snippets/python/validation_basic.md"
+
+=== "TypeScript"
+
+    --8<-- "snippets/typescript/validation_basic.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/validation_basic.md"
+
+=== "PHP"
+
+    --8<-- "snippets/php/validation_basic.md"
+
+=== "Rust"
+
+    --8<-- "snippets/rust/validation_basic.md"
+
 ## Request body validation
 
 Define schemas to automatically validate incoming JSON payloads. Invalid requests are rejected before reaching your handler.

@@ -77,10 +77,10 @@ For comprehensive documentation including:
 - Customizing templates
 - CI/CD integration
 
-See the [Init Command Reference](/reference/init-advanced.md).
+See the [Init Command Reference](../reference/init-advanced.md).
 
 ## Support
 
-- [Documentation](https://docs.spikard.dev)
-- [GitHub Issues](https://github.com/spikard/spikard/issues)
-- [Discussions](https://github.com/spikard/spikard/discussions)
+- [Documentation](https://spikard.dev)
+- [GitHub Issues](https://github.com/Goldziher/spikard/issues)
+- [Discussions](https://github.com/Goldziher/spikard/discussions)

@@ -2,11 +2,13 @@
 
 A Rust-centric multi-language toolkit for building and validating typed web services. Generate type-safe API handlers from OpenAPI, GraphQL, gRPC/Protobuf, AsyncAPI, or JSON-RPC specifications and deploy to Python, TypeScript, Ruby, PHP, or WebAssembly.
 
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange?logo=rust)](https://www.rust-lang.org/)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue?logo=python)](https://www.python.org/)
-[![TypeScript](https://img.shields.io/badge/typescript-5.x-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Ruby](https://img.shields.io/badge/ruby-3.2%2B-red?logo=ruby)](https://www.ruby-lang.org/)
-[![PHP](https://img.shields.io/badge/php-8.2%2B-purple?logo=php)](https://www.php.net/)
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=blue)](https://pypi.org/project/spikard/)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
+[![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Features
 
@@ -57,7 +59,7 @@ spikard codegen --spec schema.graphql --language typescript --output ./src/gener
 spikard codegen --spec user_service.proto --language python --output ./generated
 ```
 
-See [Init Command Guide](docs/init-command.md) for detailed options.
+See [Init Command Guide](docs/getting-started/init-command.md) for detailed options.
 
 ## Code Examples
 
@@ -79,13 +81,18 @@ if __name__ == "__main__":
 
 **TypeScript:**
 ```typescript
-import { Spikard } from "@spikard/node";
+import { Spikard, type Request } from "@spikard/node";
 
 const app = new Spikard();
 
-app.get("/users/:userId", async (ctx) => {
-    return { id: ctx.params.userId, name: "Alice" };
-});
+const getUser = async (req: Request) => {
+    return { id: req.params["userId"], name: "Alice" };
+};
+
+app.addRoute(
+    { method: "GET", path: "/users/:userId", handler_name: "getUser", is_async: true },
+    getUser
+);
 
 app.run({ port: 8000 });
 ```
@@ -191,12 +198,8 @@ task test:js         # Run TypeScript tests
 
 ## Documentation
 
-- [Getting Started](docs/getting-started/init-command.md) - Project bootstrapping and quick start
-- [gRPC/Protobuf Guide](docs/guides/grpc-getting-started.md) - Complete gRPC implementation guide
-- [Code Generation Guide](docs/guides/code-generation.md) - OpenAPI, GraphQL, Protobuf code generation
-- [Testing Guide](docs/guides/testing.md) - Testing patterns across all languages
-- [Architecture Decision Records](docs/adr/) - Design decisions and trade-offs
-- [Language-Specific Guides](docs/guides/) - Implementation patterns and best practices
+Visit [spikard.dev](https://spikard.dev) for full documentation, guides, and API reference.
+
 - See [examples/](examples/) for runnable sample projects in all languages
 
 ## Architecture Highlights
@@ -209,14 +212,7 @@ task test:js         # Run TypeScript tests
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Code quality standards:
-
-- **Rust:** `clippy -D warnings`, 95%+ coverage
-- **Python:** `mypy --strict`, 95%+ coverage
-- **TypeScript:** Strict mode, 80%+ coverage
-- **Ruby/PHP:** 80%+ coverage
-
-Pull request workflow: fork, create feature branch, run `task lint` and `task test`, update CHANGELOG.md, submit PR.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, development workflow, and code quality standards.
 
 ## License
 

@@ -1,16 +1,14 @@
 ```python
 from msgspec import ValidationError
-from fastapi import Request, status
-from fastapi.responses import JSONResponse
+from spikard import Response
 
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(
-    request: Request,
+    request,
     exc: ValidationError
-) -> JSONResponse:
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={
+) -> Response:
+    return Response.json(
+        {
             "error": "validation_failed",
             "message": "Request validation failed",
             "details": [
@@ -21,6 +19,7 @@ async def validation_exception_handler(
                 }
                 for err in exc.errors()
             ]
-        }
+        },
+        status_code=422
     )
 ```

@@ -1,9 +1,9 @@
 ```ruby
 it "rejects invalid input" do
   app = Spikard::App.new
-  app.post('/users') do |req|
-    name = req.params['name']
-    age = req.params['age']
+  app.post('/users') do |params, _query, body|
+    name = body['name']
+    age = body['age']
 
     raise ArgumentError, 'Invalid age' unless age.is_a?(Integer)
 

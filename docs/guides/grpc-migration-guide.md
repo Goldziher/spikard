@@ -37,7 +37,7 @@ gRPC uses HTTP/2 as its transport protocol. Spikard's routing layer automaticall
 - **REST requests**: `Content-Type: application/json`
 - **gRPC requests**: `Content-Type: application/grpc` or `application/grpc+proto`
 
-The server examines incoming requests and routes them to the appropriate handler based on this header, enabling seamless protocol multiplexing.
+The server examines incoming requests and routes them to the appropriate handler based on this header, enabling transparent protocol multiplexing.
 
 ### Key Benefits
 
@@ -351,11 +351,11 @@ grpc_app.run
 ```
 
 **Trade-offs**:
-- ✅ Easier network policy management
-- ✅ Clearer separation in load balancer configs
-- ❌ Double resource usage (2x processes)
-- ❌ More complex deployment
-- ❌ Shared middleware requires duplication
+- Pro: Easier network policy management
+- Pro: Clearer separation in load balancer configs
+- Con: Double resource usage (2x processes)
+- Con: More complex deployment
+- Con: Shared middleware requires duplication
 
 ### Option 3: External Proxy (Enterprise)
 
@@ -845,7 +845,7 @@ v3: Breaking changes (when v1 clients deprecated)
 Don't duplicate logic between REST and gRPC handlers:
 
 ```ruby
-# ❌ Bad: Duplicate logic
+# Bad: Duplicate logic
 app.get("/users/:id") do
   user = User.find(params[:id])
   # ... formatting logic
@@ -858,7 +858,7 @@ class UserServiceHandler
   end
 end
 
-# ✅ Good: Shared service layer
+# Good: Shared service layer
 class UserService
   def self.find_user(id)
     user = UserRepository.find(id)
@@ -940,10 +940,10 @@ Maintain a migration tracker in your README:
 
 | Endpoint | REST | gRPC | Notes |
 |----------|------|------|-------|
-| Get User | ✅ | ✅ | Both supported |
-| Create User | ✅ | ✅ | Both supported |
-| List Users | ✅ | 🚧 | gRPC in progress |
-| Delete User | ✅ | ❌ | REST only (deprecated in gRPC v2) |
+| Get User | Yes | Yes | Both supported |
+| Create User | Yes | Yes | Both supported |
+| List Users | Yes | WIP | gRPC in progress |
+| Delete User | Yes | No | REST only (deprecated in gRPC v2) |
 ```
 
 This helps teams coordinate client upgrades.

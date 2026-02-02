@@ -1,4 +1,6 @@
 ```ruby
+require "spikard"
+
 app = Spikard::App.new
 
 app.get("/orders/:order_id") do |params, query, _body|

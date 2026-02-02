@@ -955,9 +955,7 @@ task test
 ## Related Documentation
 
 - **ADR 0003**: [Validation and Fixtures](../adr/0003-validation-and-fixtures.md) - Fixtures as source of truth
-- **ADR 0012**: [Testing Strategy](../adr/0012-testing-strategy.md) - 5-layer testing pyramid
-- **gRPC Handler Architecture**: [Handler Trait Abstraction](./handler-traits.md)
-- **Test Patterns**: [Python Fixture Patterns](./python-fixtures.md)
+- **ADR 0012**: [gRPC Testing Infrastructure](../adr/0012-grpc-testing-infrastructure.md) - gRPC testing architecture
 
 ---
 

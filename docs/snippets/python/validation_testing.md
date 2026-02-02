@@ -1,9 +1,9 @@
 ```python
 import pytest
-from httpx import AsyncClient
+from spikard.testing import TestClient
 
 @pytest.mark.asyncio
-async def test_user_creation_validation(client: AsyncClient):
+async def test_user_creation_validation(client: TestClient):
     # Valid request succeeds
     response = await client.post("/users", json={
         "email": "test@example.com",

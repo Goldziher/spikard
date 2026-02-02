@@ -10,7 +10,7 @@
 
 ## Context
 
-Spikard provides a powerful, multi-language toolkit for building typed web services. GraphQL is a popular query language and runtime for APIs that complements REST and JSON-RPC. The spikard-graphql crate already provides a high-level GraphQL implementation with async-graphql integration, but it was not formally integrated with the spikard-http HTTP server.
+Spikard provides a multi-language toolkit for building typed web services. GraphQL is a popular query language and runtime for APIs that complements REST and JSON-RPC. The spikard-graphql crate already provides a high-level GraphQL implementation with async-graphql integration, but it was not formally integrated with the spikard-http HTTP server.
 
 This ADR documents how GraphQL support is integrated into Spikard's HTTP runtime while maintaining:
 - Zero circular dependencies in the crate dependency graph

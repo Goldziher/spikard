@@ -28,10 +28,10 @@ mod tests {
                     .uri("/")
                     .header("Authorization", format!("Bearer {}", valid_token))
                     .body(Body::empty())
-                    .unwrap(),
+                    .expect("failed to build request"),
             )
             .await
-            .unwrap();
+            .expect("request failed");
 
         assert_eq!(response.status(), StatusCode::OK);
     }
@@ -47,10 +47,10 @@ mod tests {
                 Request::builder()
                     .uri("/")
                     .body(Body::empty())
-                    .unwrap(),
+                    .expect("failed to build request"),
             )
             .await
-            .unwrap();
+            .expect("request failed");
 
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
@@ -67,10 +67,10 @@ mod tests {
                     .uri("/")
                     .header("Authorization", "Bearer invalid-token")
                     .body(Body::empty())
-                    .unwrap(),
+                    .expect("failed to build request"),
             )
             .await
-            .unwrap();
+            .expect("request failed");
 
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
@@ -89,7 +89,7 @@ mod tests {
             &claims,
             &EncodingKey::from_secret(b"your-secret-key"),
         )
-        .unwrap()
+        .expect("failed to encode JWT")
     }
 }
 ```

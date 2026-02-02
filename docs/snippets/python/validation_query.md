@@ -1,12 +1,11 @@
 ```python
 from msgspec import Struct
-from typing import Optional
 
 class ListUsersQuery(Struct):
     page: int = 1  # Default value
     limit: int = 10
-    sort_by: Optional[str] = None
-    min_age: Optional[int] = None
+    sort_by: str | None = None
+    min_age: int | None = None
 
 @app.get("/users")
 async def list_users(query: ListUsersQuery) -> dict:

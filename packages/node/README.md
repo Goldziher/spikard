@@ -1,9 +1,12 @@
 # Spikard for Node.js
 
-[![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
-[![npm downloads](https://img.shields.io/npm/dm/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=blue)](https://pypi.org/project/spikard/)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
+[![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 High-performance HTTP framework for Node.js powered by a Rust core. Provides type-safe routing, validation, middleware, and testing via **napi-rs** bindings with zero-copy JSON conversion.
 
@@ -71,9 +74,7 @@ app.addRoute(
   createUser,
 );
 
-if (require.main === module) {
-  app.run({ port: 8000 });
-}
+app.run({ port: 8000 });
 ```
 
 ## Routing & Schemas
@@ -81,21 +82,32 @@ if (require.main === module) {
 Routes support Zod validation (recommended) or raw JSON Schema:
 
 ```typescript
-import { post } from "@spikard/node";
+import { Spikard, type Request } from "@spikard/node";
 import { z } from "zod";
+
+const app = new Spikard();
 
 const UserSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
 });
 
-post("/users", {
-  bodySchema: UserSchema,
-  responseSchema: UserSchema,
-})(async (req) => {
+const createUser = async (req: Request) => {
   const user = req.json();
   return { id: 1, ...user };
-});
+};
+
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    request_schema: UserSchema,
+    response_schema: UserSchema,
+    is_async: true,
+  },
+  createUser,
+);
 ```
 
 Supported HTTP methods: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE.
@@ -238,7 +250,7 @@ Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/ben
 | morojs | 14,196 | 6.44 | 12.61 |
 | hono | 10,928 | 10.91 | 18.62 |
 
-Spikard Node is **1.3x faster** than Kito and **2.4x faster** than Fastify.
+Spikard Node is **1.2x faster** than Kito and **2.4x faster** than Fastify.
 
 Key optimizations:
 - **napi-rs** zero-copy FFI bindings
@@ -252,10 +264,7 @@ See [examples/](../../examples/) for runnable projects. Code generation is suppo
 
 ## Documentation
 
-- [Main README](../../README.md) - Project overview and multi-language support
-- [Architecture Decision Records](../../docs/adr/) - Design decisions (especially 0002-runtime-and-middleware.md)
-- [Contributing Guide](../../CONTRIBUTING.md) - Development guidelines
-- [API Reference](../../docs/guides/) - Full type definitions and JSDoc annotations
+Full documentation at [spikard.dev](https://spikard.dev). See also [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Ecosystem
 
@@ -271,4 +280,4 @@ Spikard is available across multiple languages:
 
 ## License
 
-MIT - See [LICENSE](LICENSE) for details
+MIT - See [LICENSE](../../LICENSE) for details

@@ -1,7 +1,7 @@
 ```python
-from pydantic import BaseModel
+from msgspec import Struct
 
-class UserCreate(BaseModel):
+class UserCreate(Struct):
     name: str
     age: int
 

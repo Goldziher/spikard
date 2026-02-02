@@ -35,6 +35,18 @@ Standardize errors so clients can rely on status codes and payload shape.
     end
     ```
 
+=== "PHP"
+
+    ```php
+    use Spikard\Http\Response;
+
+    #[Get("/fail")]
+    public function fail(): Response
+    {
+        return Response::json(['error' => 'bad'], 400);
+    }
+    ```
+
 === "Rust"
 
     ```rust

@@ -49,7 +49,9 @@ impl UserServiceHandler {
 
         // 6. Add metadata
         let mut metadata = tonic::metadata::MetadataMap::new();
-        metadata.insert("x-user-found", "true".parse().unwrap());
+        metadata.insert("x-user-found", "true".parse()
+            .map_err(|e| Status::internal(format!("Invalid metadata value: {}", e)))?
+        );
 
         Ok(GrpcResponseData {
             payload: Bytes::from(buf),
@@ -96,8 +98,12 @@ impl UserServiceHandler {
 
         // 7. Add metadata
         let mut metadata = tonic::metadata::MetadataMap::new();
-        metadata.insert("x-user-id", user.id.to_string().parse().unwrap());
-        metadata.insert("x-created", "true".parse().unwrap());
+        metadata.insert("x-user-id", user.id.to_string().parse()
+            .map_err(|e| Status::internal(format!("Invalid metadata value: {}", e)))?
+        );
+        metadata.insert("x-created", "true".parse()
+            .map_err(|e| Status::internal(format!("Invalid metadata value: {}", e)))?
+        );
 
         Ok(GrpcResponseData {
             payload: Bytes::from(buf),

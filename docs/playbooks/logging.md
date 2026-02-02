@@ -41,17 +41,37 @@ Standardize request IDs, structured logs, and tracing across bindings.
     end
     ```
 
+=== "PHP"
+
+    ```php
+    use Spikard\Lifecycle\Request;
+    use Spikard\Lifecycle\LifecycleResult;
+
+    $app->onRequest(function (Request $request): LifecycleResult {
+        $requestId = $request->headers['x-request-id'] ?? \Ramsey\Uuid\Uuid::uuid4()->toString();
+        $request->headers['x-request-id'] = $requestId;
+        error_log("Request received: {$requestId}");
+        return LifecycleResult::continue($request);
+    });
+    ```
+
 === "Rust"
 
     ```rust
-    use axum::response::Json;
-    use spikard::{get, App, RequestContext};
+    use spikard::prelude::*;
+    use uuid::Uuid;
 
     let mut app = App::new();
-    app.route(get("/health"), |_ctx: RequestContext| async move {
-        let body = serde_json::json!({ "status": "ok" });
-        Ok(Json(body).into())
-    })?;
+    app.on_request(|mut request: Request| {
+        let request_id = request
+            .headers
+            .get("x-request-id")
+            .and_then(|h| h.to_str().ok())
+            .unwrap_or_else(|| &Uuid::new_v4().to_string());
+        request.headers.insert("x-request-id", request_id.parse()?);
+        tracing::info!(request_id = %request_id, "request received");
+        Ok(request)
+    });
     ```
 
 ## Tips

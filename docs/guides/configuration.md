@@ -181,4 +181,4 @@ Spikard listens on plain HTTP. Use a reverse proxy for TLS termination:
     # Expected: 429 Too Many Requests after burst limit
     ```
 
-A detailed option matrix lives in [Reference: Configuration](../reference/configuration.md). Use the Taskfile (`task docs:serve`) to iterate on examples locally.
+Use the Taskfile (`task docs:serve`) to iterate on examples locally.

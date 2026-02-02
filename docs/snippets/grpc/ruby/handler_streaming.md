@@ -623,4 +623,4 @@ rescue StandardError => e
 end
 ```
 
-See the [gRPC documentation](../../../grpc-ruby-example.md) for more examples.
+See the gRPC documentation for more examples.

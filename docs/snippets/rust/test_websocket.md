@@ -25,19 +25,19 @@ async fn handle_socket(mut socket: WebSocket) {
 #[tokio::test]
 async fn test_websocket_echo() {
     let app = Router::new().route("/echo", get(echo_handler));
-    let server = TestServer::new(app).unwrap();
+    let server = TestServer::new(app).expect("failed to create test server");
 
     let mut ws = server.into_websocket("/echo").await;
 
     // Send text message
-    ws.send(Message::Text("Hello".into())).await.unwrap();
-    let response = ws.next().await.unwrap().unwrap();
+    ws.send(Message::Text("Hello".into())).await.expect("failed to send message");
+    let response = ws.next().await.expect("failed to receive message").expect("received empty message");
     assert_eq!(response, Message::Text("Hello".into()));
 
     // Send JSON message
     let json_msg = serde_json::json!({"type": "ping"}).to_string();
-    ws.send(Message::Text(json_msg.clone())).await.unwrap();
-    let response = ws.next().await.unwrap().unwrap();
+    ws.send(Message::Text(json_msg.clone())).await.expect("failed to send message");
+    let response = ws.next().await.expect("failed to receive message").expect("received empty message");
     assert_eq!(response, Message::Text(json_msg));
 }
 ```

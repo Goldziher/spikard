@@ -1,11 +1,11 @@
 site_name: Spikard
-site_description: A polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, PHP, and WebAssembly
+site_description: A polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, PHP, and Rust
 site_url: https://spikard.dev
 site_author: Spikard Contributors
 repo_name: Goldziher/spikard
 repo_url: https://github.com/Goldziher/spikard
 edit_uri: edit/main/docs/
-copyright: Copyright &copy; 2023-2025 Spikard Contributors
+copyright: Copyright &copy; 2023-2026 Spikard Contributors
 
 theme:
   name: material
@@ -200,11 +200,13 @@ nav:
   - Getting Started:
       - Installation: getting-started/installation.md
       - Quick Start: getting-started/quickstart.md
+      - Init Command: getting-started/init-command.md
 
   # Core Concepts & Features
   - Features: features.md
   - Concepts:
       - Architecture: concepts/architecture.md
+      - Architecture Diagram: concepts/architecture-diagram.md
       - Runtime Model: concepts/runtime.md
       - Validation Engine: concepts/validation.md
       - Middleware & Extensions: concepts/middleware.md
@@ -220,6 +222,13 @@ nav:
       - Validation Flows: guides/validation.md
       - Dependency Injection: guides/dependency-injection.md
       - Deployment: guides/deployment.md
+      - Code Generation: guides/code-generation.md
+      - Testing: guides/testing.md
+      - GraphQL: guides/graphql.md
+      - gRPC Getting Started: guides/grpc-getting-started.md
+      - gRPC Error Handling: guides/grpc-error-handling.md
+      - gRPC Migration Guide: guides/grpc-migration-guide.md
+      - Protobuf & gRPC: guides/protobuf-grpc.md
 
   # Command Line
   - CLI: cli/usage.md
@@ -231,7 +240,6 @@ nav:
       - Ruby: bindings/ruby.md
       - PHP: bindings/php.md
       - Rust: bindings/rust.md
-      - WASM & Edge: bindings/wasm.md
 
   # Practical Patterns
   - Playbooks:
@@ -244,14 +252,14 @@ nav:
 
   # API Documentation
   - API Reference:
-      - Python: reference/api-python.md
-      - TypeScript: reference/api-typescript.md
-      - Ruby: reference/api-ruby.md
-      - PHP: reference/api-php.md
-      - Rust: reference/api-rust.md
-      - Configuration: reference/configuration.md
       - Types: reference/types.md
       - Errors: reference/errors.md
+      - Init Command Reference: reference/init-advanced.md
+      - gRPC Status Codes: reference/grpc-status-codes.md
+
+  # Testing
+  - Testing:
+      - gRPC Fixtures: testing/grpc-fixtures.md
 
   # Architecture Decisions
   - Architecture Decisions:
@@ -265,6 +273,10 @@ nav:
       - ADR 0007 - Observability and OTEL: adr/0007-observability-and-otel.md
       - ADR 0008 - Dependency Injection System: adr/0008-dependency-injection.md
       - ADR 0009 - Panic Shielding: adr/0009-panic-shielding.md
+      - ADR 0010 - Protobuf/gRPC Code Generation: adr/0010-protobuf-grpc-code-generation.md
+      - ADR 0011 - gRPC FFI Bindings Strategy: adr/0011-grpc-ffi-bindings-strategy.md
+      - ADR 0012 - gRPC Testing Infrastructure: adr/0012-grpc-testing-infrastructure.md
+      - ADR 0013 - GraphQL HTTP Integration: adr/0013-graphql-http-integration.md
 
   # Performance Analysis
   - Benchmarks:
@@ -274,6 +286,9 @@ nav:
       - Frameworks: benchmarks/frameworks.md
       - Running Benchmarks: benchmarks/running.md
       - Harness Design: benchmarks/harness-design.md
+
+  # Support
+  - Troubleshooting: troubleshooting.md
 
   # Community
   - Contributing: contributing.md

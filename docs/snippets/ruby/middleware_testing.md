@@ -1,4 +1,5 @@
 ```ruby
+require 'spikard'
 require 'rspec'
 
 RSpec.describe 'auth_guard' do

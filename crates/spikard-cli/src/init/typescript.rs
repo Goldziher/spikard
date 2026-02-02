@@ -277,7 +277,7 @@ pnpm format
 
 ## Documentation
 
-- [Spikard Documentation](https://github.com/spikard/spikard)
+- [Spikard Documentation](https://github.com/Goldziher/spikard)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Node.js API](https://nodejs.org/api/)
 "

@@ -140,6 +140,25 @@ cargo install spikard-cli
 
 --8<-- "grpc/common/streaming_modes.md"
 
+### Streaming Handler Implementations
+
+Complete examples of client streaming and bidirectional streaming handlers:
+
+=== "Python"
+    --8<-- "grpc/python/handler_streaming.md"
+
+=== "TypeScript"
+    --8<-- "grpc/typescript/handler_streaming.md"
+
+=== "Ruby"
+    --8<-- "grpc/ruby/handler_streaming.md"
+
+=== "PHP"
+    --8<-- "grpc/php/handler_streaming.md"
+
+=== "Rust"
+    --8<-- "grpc/rust/handler_streaming.md"
+
 ## Part 8: Best Practices
 
 ### Project Structure
@@ -168,7 +187,7 @@ project/
 ## Next Steps
 
 - [Getting Started with gRPC](./grpc-getting-started.md) - Step-by-step tutorial
-- [ADR 0010](/docs/adr/0010-protobuf-grpc-code-generation.md) - Implementation details
+- [ADR 0010](../adr/0010-protobuf-grpc-code-generation.md) - Implementation details
 - [Proto3 Language Guide](https://protobuf.dev/programming-guides/proto3/)
 - [gRPC Core Concepts](https://grpc.io/docs/what-is-grpc/core-concepts/)
 

@@ -13,6 +13,7 @@ app.addRoute({
   path: "/users",
   handler_name: "createUser",
   request_schema: CreateUserSchema,
+  is_async: true
 }, async (req) => {
   const user = CreateUserSchema.parse(req.json());
   return {

@@ -1,4 +1,5 @@
 ```ruby
+require 'spikard'
 require 'sidekiq/api'
 
 # Health check endpoint
@@ -23,8 +24,8 @@ app.get '/health/jobs' do
 end
 
 # Check specific job status
-app.get '/jobs/:jid/status' do |req|
-  jid = req.params['jid']
+app.get '/jobs/:jid/status' do |params, _query, _body|
+  jid = params['jid']
 
   # Check if job is still queued or processing
   status = if Sidekiq::Queue.new.find_job(jid)

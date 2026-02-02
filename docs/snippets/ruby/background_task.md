@@ -60,17 +60,17 @@ require 'spikard'
 require_relative 'jobs/process_upload_job'
 require_relative 'jobs/send_email_job'
 
-app = Spikard::Application.new
+app = Spikard::App.new
 
-app.post '/upload' do |req|
-  file_id = req.params['file_id']
+app.post '/upload' do |params, _query, body|
+  file_id = body['file_id']
   job = ProcessUploadJob.perform_async(file_id)
 
   { status: 'processing', job_id: job }
 end
 
-app.post '/signup' do |req|
-  user = User.create!(req.json)
+app.post '/signup' do |params, _query, body|
+  user = User.create!(body)
   SendEmailJob.perform_async(user.id, 'welcome', { name: user.name })
 
   { id: user.id, email: user.email }

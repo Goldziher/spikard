@@ -9,7 +9,8 @@ const PathParams = z.object({
 app.addRoute({
   method: "GET",
   path: "/users/:user_id/posts/:post_id",
-  handler_name: "getUserPost"
+  handler_name: "getUserPost",
+  is_async: true
 }, async (req) => {
   const params = PathParams.parse(req.params);
 

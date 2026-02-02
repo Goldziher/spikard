@@ -677,4 +677,4 @@ async def handle_batch_create(request: GrpcClientStreamRequest) -> GrpcResponse:
     return response
 ```
 
-See the [gRPC documentation](../../../grpc-python-example.md) for more examples.
+See the gRPC documentation for more examples.

@@ -1,6 +1,5 @@
 ```python
 from msgspec import Struct
-from typing import List
 
 class User(Struct):
     id: str
@@ -8,7 +7,7 @@ class User(Struct):
     age: int
 
 class UserListResponse(Struct):
-    users: List[User]
+    users: list[User]
     total: int
     page: int
 

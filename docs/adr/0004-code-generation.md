@@ -4,7 +4,7 @@
 
 ## Context
 
-Spikard generates type-safe, idiomatic code from schemas (OpenAPI, AsyncAPI, OpenRPC, GraphQL) for five languages (Python, TypeScript, Ruby, PHP, Rust). Generated code must pass strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy) and integrate seamlessly with Spikard's runtime.
+Spikard generates type-safe, idiomatic code from schemas (OpenAPI, AsyncAPI, OpenRPC, GraphQL) for five languages (Python, TypeScript, Ruby, PHP, Rust). Generated code must pass strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy) and integrate with Spikard's runtime.
 
 ## Decision
 

@@ -1,9 +1,12 @@
 # Spikard PHP
 
-[![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
-[![Packagist Version](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D%208.2-blue.svg)](https://www.php.net/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=blue)](https://pypi.org/project/spikard/)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
+[![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 High-performance PHP bindings for Spikard. Build REST APIs, WebSockets, and SSE services with modern PHP 8.2+ patterns backed by a Rust core via ext-php-rs.
 
@@ -21,6 +24,9 @@ composer require spikard/spikard
 cd packages/php
 composer install
 cargo build --release --manifest-path ../../crates/spikard-php/Cargo.toml
+
+# Load the extension in your php.ini:
+# extension=/path/to/target/release/libspikard_php.so
 ```
 
 ### Requirements
@@ -225,16 +231,11 @@ See [examples/php/](../../examples/php/) for runnable PHP examples and [examples
 
 ## Documentation
 
-- [Main README](../../README.md) - Spikard overview and quick start
-- [Rust Core](../../crates/spikard/) - Core library documentation and API reference
-- [Architecture Decision Records](../../docs/adr/) - Design decisions
-- [Contributing Guide](../../CONTRIBUTING.md) - Development workflow
-
-See [README.md](../../README.md) for documentation on code generation from OpenAPI and GraphQL schemas.
+Full documentation at [spikard.dev](https://spikard.dev). See also [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## License
 
-MIT - See [LICENSE](LICENSE) for details
+MIT - See [LICENSE](../../LICENSE) for details
 
 ## Ecosystem
 

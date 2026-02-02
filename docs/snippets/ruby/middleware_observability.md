@@ -1,4 +1,5 @@
 ```ruby
+require 'spikard'
 require 'securerandom'
 require 'logger'
 

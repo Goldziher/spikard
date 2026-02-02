@@ -1,8 +1,8 @@
 ```ruby
 it "creates user" do
   app = Spikard::App.new
-  app.post('/users') do |req|
-    { id: 1, name: req.params['name'], email: req.params['email'] }
+  app.post('/users') do |params, _query, body|
+    { id: 1, name: body['name'], email: body['email'] }
   end
 
   client = Spikard::Testing::TestClient.new(app)

@@ -1,4 +1,5 @@
 ```ruby
+require 'spikard'
 require 'zlib'
 
 app = Spikard::App.new

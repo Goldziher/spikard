@@ -1,4 +1,5 @@
 ```ruby
+require 'spikard'
 require 'jwt'
 
 app = Spikard::App.new

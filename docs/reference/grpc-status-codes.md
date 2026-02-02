@@ -245,4 +245,4 @@ async fn get_user(&self, request: Request<GetUserRequest>) -> Result<Response<Us
 ## See Also
 
 - [gRPC Error Handling Guide](https://grpc.io/docs/guides/error/)
-- [ADR 0010: gRPC Status Code Guidelines](/docs/adr/0010-grpc-status-codes.md)
+- [ADR 0010: gRPC Status Code Guidelines](/docs/adr/0010-protobuf-grpc-code-generation.md)

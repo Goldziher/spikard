@@ -16,16 +16,51 @@ Build the same minimal service in each binding. Choose a tab, copy the snippet, 
 
     --8<-- "snippets/ruby/quickstart_routes.md"
 
+=== "PHP"
+
+    --8<-- "snippets/php/quickstart_routes.md"
+
 === "Rust"
 
     --8<-- "snippets/rust/quickstart_routes.md"
 
 ## Run it
 
-- Python: `python app.py`
-- TypeScript: `pnpm ts-node app.ts` (or your runtime of choice), then hit `http://localhost:8000/users/1`
-- Ruby: `ruby app.rb`
-- Rust: `cargo run` inside your crate/binary
+=== "Python"
+
+    ```bash
+    python app.py
+    ```
+
+    Then hit `http://localhost:8000/users/1`
+
+=== "TypeScript"
+
+    ```bash
+    pnpm ts-node app.ts
+    ```
+
+    Then hit `http://localhost:8000/users/1`
+
+=== "Ruby"
+
+    ```bash
+    ruby app.rb
+    ```
+
+    Then hit `http://localhost:8000/users/1`
+
+=== "PHP"
+
+    --8<-- "snippets/php/run_app.md"
+
+=== "Rust"
+
+    ```bash
+    cargo run
+    ```
+
+    inside your crate/binary, then hit `http://localhost:8000/users/1`
 
 ## Next steps
 - Add middleware (logging, auth, tracing) with the same signature in every binding.

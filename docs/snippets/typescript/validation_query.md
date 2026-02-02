@@ -11,7 +11,8 @@ const ListUsersQuery = z.object({
 app.addRoute({
   method: "GET",
   path: "/users",
-  handler_name: "listUsers"
+  handler_name: "listUsers",
+  is_async: true
 }, async (req) => {
   const query = ListUsersQuery.parse(
     Object.fromEntries(new URL(req.url).searchParams)

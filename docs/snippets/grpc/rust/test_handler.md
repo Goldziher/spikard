@@ -45,12 +45,12 @@ impl MockUserRepository {
 #[async_trait::async_trait]
 impl UserRepository for MockUserRepository {
     async fn find_by_id(&self, id: i32) -> Result<Option<userservice::User>, String> {
-        let users = self.users.read().unwrap();
+        let users = self.users.read().expect("lock poisoned");
         Ok(users.iter().find(|u| u.id == id).cloned())
     }
 
     async fn create(&self, name: &str, email: &str) -> Result<userservice::User, String> {
-        let mut users = self.users.write().unwrap();
+        let mut users = self.users.write().expect("lock poisoned");
         let new_id = users.len() as i32 + 1;
         let user = userservice::User {
             id: new_id,
@@ -77,7 +77,7 @@ async fn test_get_user_success() {
     // Create request
     let req = userservice::GetUserRequest { id: 1 };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     let grpc_request = GrpcRequestData {
         service_name: "userservice.v1.UserService".to_string(),
@@ -87,17 +87,17 @@ async fn test_get_user_success() {
     };
 
     // Call handler
-    let response = handler.call(grpc_request).await.unwrap();
+    let response = handler.call(grpc_request).await.expect("handler call failed");
 
     // Deserialize response
-    let user_response = userservice::User::decode(response.payload).unwrap();
+    let user_response = userservice::User::decode(response.payload).expect("failed to decode response payload");
 
     // Assertions
     assert_eq!(user_response.id, 1);
     assert_eq!(user_response.name, "Alice");
     assert_eq!(user_response.email, "alice@example.com");
     assert_eq!(
-        response.metadata.get("x-user-found").unwrap().to_str().unwrap(),
+        response.metadata.get("x-user-found").expect("x-user-found header missing").to_str().expect("invalid metadata value"),
         "true"
     );
 }
@@ -111,7 +111,7 @@ async fn test_get_user_not_found() {
     // Create request for non-existent user
     let req = userservice::GetUserRequest { id: 999 };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     let grpc_request = GrpcRequestData {
         service_name: "userservice.v1.UserService".to_string(),
@@ -138,7 +138,7 @@ async fn test_get_user_invalid_id() {
     // Create request with invalid ID
     let req = userservice::GetUserRequest { id: 0 };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     let grpc_request = GrpcRequestData {
         service_name: "userservice.v1.UserService".to_string(),
@@ -167,11 +167,11 @@ async fn test_create_user_success() {
         email: "charlie@example.com".to_string(),
     };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     // Add authorization metadata
     let mut metadata = MetadataMap::new();
-    metadata.insert("authorization", "Bearer valid-token".parse().unwrap());
+    metadata.insert("authorization", "Bearer valid-token".parse().expect("failed to parse authorization header"));
 
     let grpc_request = GrpcRequestData {
         service_name: "userservice.v1.UserService".to_string(),
@@ -181,21 +181,21 @@ async fn test_create_user_success() {
     };
 
     // Call handler
-    let response = handler.call(grpc_request).await.unwrap();
+    let response = handler.call(grpc_request).await.expect("handler call failed");
 
     // Deserialize response
-    let user_response = userservice::User::decode(response.payload).unwrap();
+    let user_response = userservice::User::decode(response.payload).expect("failed to decode response payload");
 
     // Assertions
     assert_eq!(user_response.id, 3); // Next available ID
     assert_eq!(user_response.name, "Charlie");
     assert_eq!(user_response.email, "charlie@example.com");
     assert_eq!(
-        response.metadata.get("x-user-id").unwrap().to_str().unwrap(),
+        response.metadata.get("x-user-id").expect("x-user-id header missing").to_str().expect("invalid metadata value"),
         "3"
     );
     assert_eq!(
-        response.metadata.get("x-created").unwrap().to_str().unwrap(),
+        response.metadata.get("x-created").expect("x-created header missing").to_str().expect("invalid metadata value"),
         "true"
     );
 }
@@ -212,10 +212,10 @@ async fn test_create_user_validation_error() {
         email: "".to_string(),
     };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     let mut metadata = MetadataMap::new();
-    metadata.insert("authorization", "Bearer token".parse().unwrap());
+    metadata.insert("authorization", "Bearer token".parse().expect("failed to parse authorization header"));
 
     let grpc_request = GrpcRequestData {
         service_name: "userservice.v1.UserService".to_string(),
@@ -243,7 +243,7 @@ async fn test_create_user_requires_authentication() {
         email: "test@example.com".to_string(),
     };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     // Request without authorization header
     let grpc_request = GrpcRequestData {
@@ -299,7 +299,7 @@ async fn test_with_shared_handler() {
 
     let req = userservice::GetUserRequest { id: 1 };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     let grpc_request = GrpcRequestData {
         service_name: "userservice.v1.UserService".to_string(),
@@ -308,8 +308,8 @@ async fn test_with_shared_handler() {
         metadata: MetadataMap::new(),
     };
 
-    let response = TEST_HANDLER.call(grpc_request).await.unwrap();
-    let user = userservice::User::decode(response.payload).unwrap();
+    let response = TEST_HANDLER.call(grpc_request).await.expect("handler call failed");
+    let user = userservice::User::decode(response.payload).expect("failed to decode response payload");
 
     assert_eq!(user.name, "Alice");
 }
@@ -345,7 +345,7 @@ fn create_get_user_request(user_id: i32) -> GrpcRequestData {
 
     let req = userservice::GetUserRequest { id: user_id };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     GrpcRequestData {
         service_name: "userservice.v1.UserService".to_string(),
@@ -363,11 +363,11 @@ fn create_create_user_request(name: &str, email: &str, auth_token: Option<&str>)
         email: email.to_string(),
     };
     let mut buf = Vec::new();
-    req.encode(&mut buf).unwrap();
+    req.encode(&mut buf).expect("failed to encode protobuf request");
 
     let mut metadata = MetadataMap::new();
     if let Some(token) = auth_token {
-        metadata.insert("authorization", token.parse().unwrap());
+        metadata.insert("authorization", token.parse().expect("failed to parse authorization header"));
     }
 
     GrpcRequestData {
@@ -383,9 +383,9 @@ async fn test_with_helpers() {
     let handler = create_handler();
 
     let request = create_get_user_request(1);
-    let response = handler.call(request).await.unwrap();
+    let response = handler.call(request).await.expect("handler call failed");
 
-    let user = userservice::User::decode(response.payload).unwrap();
+    let user = userservice::User::decode(response.payload).expect("failed to decode response payload");
     assert_eq!(user.id, 1);
 }
 ```

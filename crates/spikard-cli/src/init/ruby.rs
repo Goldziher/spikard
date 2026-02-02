@@ -229,7 +229,7 @@ This project uses RBS (Ruby Signature) files for type safety. Steep provides sta
 
 ## Documentation
 
-- [Spikard Documentation](https://github.com/spikard/spikard)
+- [Spikard Documentation](https://github.com/Goldziher/spikard)
 - [Ruby Documentation](https://ruby-doc.org)
 - [RBS Guide](https://github.com/ruby/rbs)
 - [Steep Documentation](https://github.com/soutaro/steep)

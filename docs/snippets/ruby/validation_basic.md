@@ -1,4 +1,6 @@
 ```ruby
+require "spikard"
+
 PaymentSchema = Dry::Schema.Params do
   required(:id).filled(:string)
   required(:amount).filled(:float)

@@ -1,11 +1,12 @@
 # Spikard Ruby
 
-[![Documentation](https://img.shields.io/badge/docs-spikard.dev-58FBDA)](https://spikard.dev)
-[![Gem Version](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
-[![Gem Downloads](https://img.shields.io/gem/dt/spikard.svg)](https://rubygems.org/gems/spikard)
-[![Ruby Version](https://img.shields.io/badge/ruby-3.2--4.x-red.svg)](https://www.ruby-lang.org/)
-[![codecov](https://codecov.io/gh/Goldziher/spikard/graph/badge.svg?token=H4ZXDZ4A69)](https://codecov.io/gh/Goldziher/spikard)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=blue)](https://pypi.org/project/spikard/)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
+[![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 Ruby bindings for Spikard: a Rust-centric web framework with type-safe code generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage Sinatra-style routing with zero-copy FFI performance.
 
@@ -249,9 +250,9 @@ Spikard is **1.4x faster** than Roda with significantly lower tail latency.
 - [Code Generation Guide](../../examples/README.md) - Generate from OpenAPI, GraphQL, AsyncAPI, OpenRPC
 
 **Documentation:**
+- Full documentation at [spikard.dev](https://spikard.dev)
 - [Type Definitions (RBS)](sig/spikard.rbs) - Full Steep type signatures
-- [Main README](../../README.md) - Multi-language ecosystem and feature overview
-- [Architecture Decisions](../../docs/adr/) - Design choices and patterns
+- [CONTRIBUTING.md](../../CONTRIBUTING.md) - Development workflow
 
 **Other Languages:**
 - [Python (PyPI)](https://pypi.org/project/spikard/)

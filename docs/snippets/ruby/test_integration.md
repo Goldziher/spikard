@@ -3,15 +3,15 @@ it "completes user workflow" do
   users_db = {}
   app = Spikard::App.new
 
-  app.post('/users') do |req|
+  app.post('/users') do |params, _query, body|
     id = users_db.size + 1
-    user = { id: id, name: req.params['name'] }
+    user = { id: id, name: body['name'] }
     users_db[id] = user
     user
   end
 
-  app.get('/users/:id') do |req|
-    users_db[req.params['id'].to_i] || { error: 'Not found' }
+  app.get('/users/:id') do |params, _query, _body|
+    users_db[params['id'].to_i] || { error: 'Not found' }
   end
 
   client = Spikard::Testing::TestClient.new(app)

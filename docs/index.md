@@ -1,6 +1,6 @@
 # Spikard Documentation
 
-Spikard is a polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript/Node, Ruby, and Rust. It keeps routing, middleware, validation, and streaming semantics identical across languages so teams can mix runtimes without relearning frameworks.
+Spikard is a polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript/Node, Ruby, PHP, and Rust. It keeps routing, middleware, validation, and streaming semantics identical across languages so teams can mix runtimes without relearning frameworks.
 
 ## Hello Route (pick a binding)
 
@@ -16,6 +16,10 @@ Spikard is a polyglot API toolkit with a Rust core and first-class bindings for 
 
     --8<-- "snippets/ruby/hello_route.md"
 
+=== "PHP"
+
+    --8<-- "snippets/php/hello_route.md"
+
 === "Rust"
 
     --8<-- "snippets/rust/hello_route.md"
@@ -26,7 +30,7 @@ Spikard is a polyglot API toolkit with a Rust core and first-class bindings for 
 - **[Installation](getting-started/installation.md)** – Binding install commands and repo setup.
 - **[Guides](guides/routing.md)** – Routing, requests/responses, middleware, validation, dependency injection, deployment.
 - **[Concepts](concepts/architecture.md)** – Architecture, runtime model, validation, middleware, streaming internals.
-- **[Reference](reference/api-python.md)** – Language APIs, configuration surface, types, and error semantics.
+- **[Reference](reference/types.md)** – Types, error semantics, and configuration surface.
 - **[CLI](cli/usage.md)** – Running the HTTP server and invoking generators from `spikard-cli`.
 - **[ADRs](adr/README.md)** – Design history and rationale behind the runtime.
 
