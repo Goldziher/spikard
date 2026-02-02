@@ -88,7 +88,7 @@ runs:
       shell: bash
       run: |
         cd $GITHUB_WORKSPACE/packages/node
-        pnpm build:native
+        pnpm build
 
     - name: Setup Bun runtime
       if: steps.detect.outputs.language == 'node' && (inputs.framework == 'elysia' || inputs.framework == 'spikard-bun')

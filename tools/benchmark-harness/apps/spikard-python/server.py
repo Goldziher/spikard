@@ -21,6 +21,7 @@ from uuid import UUID
 
 from spikard import Path, Query, Response, Spikard, get, post
 from spikard.config import ServerConfig
+from spikard.routing import get_default_router
 
 _profile_dir_env = os.environ.get("SPIKARD_PYTHON_PROFILE_DIR") or None
 _pyinstrument_output = os.environ.get("SPIKARD_PYINSTRUMENT_OUTPUT") or None
@@ -845,4 +846,5 @@ if __name__ == "__main__":
         workers=1,
     )
 
+    app.include_router(get_default_router())
     app.run(config=config)
