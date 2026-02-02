@@ -161,7 +161,7 @@ Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/ben
 | fastapi | 6,418 | 16.43 | 21.72 |
 | robyn | 6,012 | 16.85 | 24.18 |
 
-Spikard is **1.6x faster** than Litestar and **2.0x faster** than FastAPI.
+Spikard is **1.6x faster** than Litestar, **2.0x faster** than FastAPI, and **2.1x faster** than Robyn (also Rust-backed).
 
 Key optimizations:
 - Zero-copy PyO3 type conversion (no JSON round-trips)
