@@ -3,4 +3,4 @@ Set-StrictMode -Version Latest
 
 $workspace = ridk exec bash -lc "cygpath -au '$env:GITHUB_WORKSPACE'"
 $gemdir = "$workspace/packages/ruby"
-ridk exec bash -lc "cd $gemdir && export RUSTUP_TOOLCHAIN=stable-gnu CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ && bundle install --jobs 4 --retry 3 --without test"
+ridk exec bash -lc "cd $gemdir && export RUSTUP_TOOLCHAIN=stable-gnu CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ && bundle config set without 'test' && bundle install --jobs 4 --retry 3"

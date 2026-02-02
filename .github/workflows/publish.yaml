@@ -825,7 +825,9 @@ jobs:
       - name: Install Ruby dependencies (Unix)
         if: runner.os != 'Windows'
         working-directory: packages/ruby
-        run: bundle install --jobs 4 --retry 3 --without test
+        run: |
+          bundle config set without 'test'
+          bundle install --jobs 4 --retry 3
 
       - name: Install Ruby dependencies (Windows)
         if: runner.os == 'Windows'
