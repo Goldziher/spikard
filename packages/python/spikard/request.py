@@ -19,6 +19,8 @@ class Request:
         query_string: Query string
         headers: Request headers
         body: Request body (if any)
+        path_params: Parsed path parameters
+        query_params: Parsed query parameters
     """
 
     method: str
@@ -26,6 +28,8 @@ class Request:
     query_string: str
     headers: dict[str, str]
     body: bytes | None
+    path_params: dict[str, Any]
+    query_params: dict[str, Any]
 
     def __init__(self) -> None:
         """Initialize a Request stub.
