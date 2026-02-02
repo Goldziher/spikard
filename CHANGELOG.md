@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-02-02
+
+### Performance
+
+- **Static response fast-path with HashMap router**: Added optimized routing path for all bindings, reducing dispatch overhead for static routes.
+- **Reduced per-request allocations across HTTP pipeline**: Minimized allocations in the core HTTP pipeline and all language bindings.
+- **Sync benchmark handlers**: Converted benchmark handlers from async to sync where unnecessary, improving benchmark accuracy.
+
+### Fixed
+
+- **Python API**: Critical fixes to align Python bindings with new API surface; resolved mypy errors in SSE and testing modules.
+- **Python TestClient**: Added cookies support to TestClient.
+- **Node.js bindings**: Fixed build configuration and tsx dependency for benchmark app.
+- **Ruby bindings**: Stabilized lockfile for CI.
+- **Linting**: Applied ruff and biome auto-fixes across Python and TypeScript.
+
+### Documentation
+
+- **Comprehensive docs audit**: Deleted orphaned files, consolidated duplicates, expanded all binding docs (Python, TypeScript, Ruby, PHP) with full API coverage.
+- **New GraphQL guide**: Added complete user guide with multi-language examples.
+- **Navigation cleanup**: Added 10 missing pages to mkdocs nav, fixed 15+ broken internal links.
+- **Removed WASM references**: Cleaned all user-facing docs of stale WASM mentions.
+- **Benchmark results**: Updated benchmark results and added performance comparison tables to all README files.
+
 ## [0.10.0] - 2026-01-30
 
 ### Removed

@@ -53,7 +53,7 @@ tests/test_apps/
 4. **Commit updated pins**:
    ```bash
    git add tests/test_apps/
-   git commit -m "Update test apps to v0.10.0"
+   git commit -m "Update test apps to v0.10.1"
    ```
 
 ### Manual Testing (Individual App)
@@ -142,7 +142,7 @@ jobs:
 - Check PyPI status: https://status.python.org/
 
 ### npm Package Not Found
-- Verify publication: `npm view @spikard/node@0.10.0`
+- Verify publication: `npm view @spikard/node@0.10.1`
 - Wait for npm registry sync
 - Check npm status: https://status.npmjs.org/
 
