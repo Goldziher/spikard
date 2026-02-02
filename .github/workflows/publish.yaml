@@ -810,6 +810,8 @@ jobs:
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
+        env:
+          BUNDLE_WITHOUT: test
         with:
           ruby-version: "3.4"
           bundler: "4.0.0"
@@ -821,19 +823,6 @@ jobs:
         shell: pwsh
         working-directory: packages/ruby
         run: ../../scripts/publish/ruby/configure-bindgen-windows.ps1
-
-      - name: Install Ruby dependencies (Unix)
-        if: runner.os != 'Windows'
-        working-directory: packages/ruby
-        run: |
-          bundle config set without 'test'
-          bundle install --jobs 4 --retry 3
-
-      - name: Install Ruby dependencies (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        working-directory: packages/ruby
-        run: ../../scripts/publish/ruby/install-deps-windows.ps1
 
       - name: Vendor Rust crates
         if: runner.os != 'Windows'
