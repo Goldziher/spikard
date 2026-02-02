@@ -810,13 +810,18 @@ jobs:
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
-        env:
-          BUNDLE_WITHOUT: test
         with:
           ruby-version: "3.4"
           bundler: "4.0.0"
-          bundler-cache: true
+          bundler-cache: false
           working-directory: packages/ruby
+
+      - name: Install Ruby dependencies
+        working-directory: packages/ruby
+        shell: bash
+        run: |
+          bundle config set without 'test'
+          bundle install --jobs 4 --retry 3
 
       - name: Configure bindgen sysroot (Windows)
         if: runner.os == 'Windows'
