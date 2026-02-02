@@ -226,12 +226,25 @@ const sse = await client.get("/events");
 
 ## Performance
 
+Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/benchmarks/methodology.md)):
+
+| Framework | Avg RPS | P50 (ms) | P99 (ms) |
+|-----------|--------:|----------:|----------:|
+| **spikard (Bun)** | 49,460 | 2.18 | 4.21 |
+| **spikard (Node)** | 46,160 | 2.18 | 3.35 |
+| elysia | 44,326 | 2.41 | 4.68 |
+| kito | 36,958 | 4.94 | 12.86 |
+| fastify | 19,167 | 6.74 | 14.76 |
+| morojs | 14,196 | 6.44 | 12.61 |
+| hono | 10,928 | 10.91 | 18.62 |
+
+Spikard Node is **1.3x faster** than Kito and **2.4x faster** than Fastify.
+
+Key optimizations:
 - **napi-rs** zero-copy FFI bindings
 - **Dedicated Tokio runtime** without blocking Node event loop
 - **Zero-copy JSON** conversion (30-40% faster than JSON.parse)
 - **ThreadsafeFunction** for async JavaScript callbacks
-
-For benchmarks, see [CI reports](https://github.com/Goldziher/spikard/actions).
 
 ## Examples
 

@@ -9,63 +9,108 @@ This dashboard displays the latest benchmark results from our continuous perform
     **Frameworks:** <span id="benchmark-frameworks">Loading...</span><br>
     **Status:** <span id="benchmark-status">Loading...</span>
 
-## Throughput Comparison
+## Throughput Leaderboard
 
-Requests per second across frameworks for different payload sizes.
+Requests per second across all frameworks, sorted by average throughput.
 
 <div class="benchmark-dashboard">
   <iframe
-    src="../assets/benchmarks/throughput-by-framework.html"
+    src="../assets/benchmarks/01-throughput-leaderboard.html"
     width="100%"
     height="600"
     frameborder="0"
     loading="lazy"
-    title="Throughput by Framework">
+    title="Throughput Leaderboard">
   </iframe>
 </div>
 
-## Latency Percentiles
+## Latency Distribution
 
-Response time distribution (P50, P90, P95, P99) across frameworks.
+Response time percentiles (P50, P90, P95, P99) across frameworks.
 
 <div class="benchmark-dashboard">
   <iframe
-    src="../assets/benchmarks/latency-percentiles.html"
+    src="../assets/benchmarks/02-latency-distribution.html"
     width="100%"
     height="800"
     frameborder="0"
     loading="lazy"
-    title="Latency Percentiles">
+    title="Latency Distribution">
   </iframe>
 </div>
 
-## Validation Overhead
+## Category Heatmap
 
-Performance impact of request validation (validation vs raw comparison).
+Throughput breakdown by workload category (JSON, path params, query params, etc.).
 
 <div class="benchmark-dashboard">
   <iframe
-    src="../assets/benchmarks/validation-overhead.html"
+    src="../assets/benchmarks/03-category-heatmap.html"
     width="100%"
     height="600"
     frameborder="0"
     loading="lazy"
-    title="Validation Overhead">
+    title="Category Heatmap">
   </iframe>
 </div>
 
-## Resource Utilization
+## Raw vs Validated
 
-Memory and CPU usage across frameworks.
+Performance impact of request/response validation across frameworks.
 
 <div class="benchmark-dashboard">
   <iframe
-    src="../assets/benchmarks/resources.html"
+    src="../assets/benchmarks/04-raw-vs-validated.html"
     width="100%"
     height="600"
     frameborder="0"
     loading="lazy"
-    title="Resource Utilization">
+    title="Raw vs Validated">
+  </iframe>
+</div>
+
+## Payload Scaling
+
+Throughput vs JSON payload size (small to very-large).
+
+<div class="benchmark-dashboard">
+  <iframe
+    src="../assets/benchmarks/05-payload-scaling.html"
+    width="100%"
+    height="600"
+    frameborder="0"
+    loading="lazy"
+    title="Payload Scaling">
+  </iframe>
+</div>
+
+## Resource Efficiency
+
+Throughput vs memory usage with CPU as bubble size.
+
+<div class="benchmark-dashboard">
+  <iframe
+    src="../assets/benchmarks/06-resource-efficiency.html"
+    width="100%"
+    height="600"
+    frameborder="0"
+    loading="lazy"
+    title="Resource Efficiency">
+  </iframe>
+</div>
+
+## Resource Usage
+
+CPU and memory consumption across frameworks.
+
+<div class="benchmark-dashboard">
+  <iframe
+    src="../assets/benchmarks/07-resource-usage.html"
+    width="100%"
+    height="600"
+    frameborder="0"
+    loading="lazy"
+    title="Resource Usage">
   </iframe>
 </div>
 
@@ -89,7 +134,7 @@ fetch('../assets/benchmarks/metadata.json')
     // Commit info
     const commit = data.git_commit?.substring(0, 7) || 'unknown';
     const commitUrl = data.git_commit
-      ? `https://github.com/anthropics/spikard/commit/${data.git_commit}`
+      ? `https://github.com/Goldziher/spikard/commit/${data.git_commit}`
       : '#';
     document.getElementById('benchmark-commit').innerHTML =
       `<a href="${commitUrl}" target="_blank">${commit}</a>`;

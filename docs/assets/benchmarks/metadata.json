@@ -1,20 +1,21 @@
 {
-	"generated_at": "2026-01-28T18:49:58.417287+00:00",
-	"workflow_run_id": "21427617788",
-	"workflow_run_url": "https://github.com/Goldziher/spikard/actions/runs/21427617788",
-	"git_commit": "d5d38104b706d9183e698865925633ba57b8a2e8",
-	"git_branch": "main",
-	"frameworks": {
-		"total": 41,
-		"completed": 41,
-		"failed": 0
-	},
-	"charts": [
-		"throughput-by-framework.html",
-		"latency-percentiles.html",
-		"validation-overhead.html",
-		"resources.html",
-		"throughput-summary.html",
-		"latency-summary.html"
-	]
+  "generated_at": "2026-02-02T08:17:47.708445+00:00",
+  "workflow_run_id": "21579772875",
+  "workflow_run_url": "https://github.com/Goldziher/spikard/actions/runs/21579772875",
+  "git_commit": "a8a704b63309e4d3f693a8cd2ae41c8c585e026e",
+  "git_branch": "main",
+  "frameworks": {
+    "total": 18,
+    "completed": 18,
+    "failed": 0
+  },
+  "charts": [
+    "throughput-leaderboard",
+    "latency-distribution",
+    "category-heatmap",
+    "raw-vs-validated",
+    "payload-scaling",
+    "resource-efficiency",
+    "resource-usage"
+  ]
 }

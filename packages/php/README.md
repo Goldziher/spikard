@@ -147,6 +147,18 @@ Configuration options: `host`, `port`, `workers`, `maxBodySize`, `requestTimeout
 
 See [Rust core docs](../../crates/spikard/) for complete ServerConfig options.
 
+## Performance
+
+Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/benchmarks/methodology.md)):
+
+| Framework | Avg RPS | P50 (ms) | P99 (ms) |
+|-----------|--------:|----------:|----------:|
+| trongate | 45,339 | 3.81 | 7.10 |
+| **spikard** | 16,942 | 5.82 | 9.10 |
+| phalcon | 12,367 | 10.17 | 17.20 |
+
+Spikard is **1.4x faster** than Phalcon with lower latency across all percentiles.
+
 ## Advanced Features
 
 **Lifecycle Hooks:** Register `onRequest`, `preValidation`, `preHandler`, `onResponse`, and `onError` callbacks via `ServerConfig`.

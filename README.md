@@ -120,6 +120,37 @@ $app->registerController(new UserController());
 $app->run();
 ```
 
+## Benchmarks
+
+Average throughput across 34 workloads (JSON bodies, path/query params, multipart, urlencoded) at 100 concurrency. [Full results](docs/benchmarks/results.md) | [Methodology](docs/benchmarks/methodology.md)
+
+| Rank | Framework | Language | Avg RPS | P50 (ms) | P99 (ms) |
+|------|-----------|----------|--------:|----------:|----------:|
+| 1 | **spikard-rust** | Rust | 64,516 | 1.43 | 3.93 |
+| 2 | **spikard-bun** | Node | 49,460 | 2.18 | 4.21 |
+| 3 | **spikard-node** | Node | 46,160 | 2.18 | 3.35 |
+| 4 | trongate | PHP | 45,339 | 3.81 | 7.10 |
+| 5 | elysia | Node | 44,326 | 2.41 | 4.68 |
+| 6 | kito | Node | 36,958 | 4.94 | 12.86 |
+| 7 | fastify | Node | 19,167 | 6.74 | 14.76 |
+| 8 | **spikard-php** | PHP | 16,942 | 5.82 | 9.10 |
+| 9 | morojs | Node | 14,196 | 6.44 | 12.61 |
+| 10 | **spikard-python** | Python | 12,623 | 5.55 | 38.39 |
+| 11 | phalcon | PHP | 12,367 | 10.17 | 17.20 |
+| 12 | hono | Node | 10,928 | 10.91 | 18.62 |
+| 13 | litestar | Python | 8,032 | 14.62 | 19.18 |
+| 14 | **spikard-ruby** | Ruby | 7,151 | 14.62 | 18.98 |
+| 15 | fastapi | Python | 6,418 | 16.43 | 21.72 |
+| 16 | robyn | Python | 6,012 | 16.85 | 24.18 |
+| 17 | roda | Ruby | 5,038 | 26.89 | 35.61 |
+| 18 | hanami-api | Ruby | 5,032 | 76.10 | 414.35 |
+
+<details>
+<summary>Throughput leaderboard chart</summary>
+
+![Throughput Leaderboard](docs/assets/benchmarks/01-throughput-leaderboard.svg)
+</details>
+
 ## Code Generation Support
 
 Spikard generates type-safe handlers from multiple API specifications:

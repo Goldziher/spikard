@@ -232,7 +232,15 @@ bundle exec steep check
 
 ## Performance
 
-Built with zero-overhead FFI via Magnus and rb-sys. Benchmark results: ~8,000 RPS, ~6.5ms latency at 50 concurrency. See [benchmarks](../../snapshots/benchmarks/) for full results.
+Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/benchmarks/methodology.md)):
+
+| Framework | Avg RPS | P50 (ms) | P99 (ms) |
+|-----------|--------:|----------:|----------:|
+| **spikard** | 7,151 | 14.62 | 18.98 |
+| roda | 5,038 | 26.89 | 35.61 |
+| hanami-api | 5,032 | 76.10 | 414.35 |
+
+Spikard is **1.4x faster** than Roda with significantly lower tail latency.
 
 ## Learn More
 

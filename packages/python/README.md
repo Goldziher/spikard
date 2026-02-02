@@ -152,12 +152,16 @@ See the [Configuration Guide](../../docs/python-configuration.md) for all option
 
 ## Performance
 
-Spikard is **2.8x faster than FastAPI** on real-world workloads:
+Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/benchmarks/methodology.md)):
 
-| Metric | Spikard | FastAPI |
-|--------|---------|---------|
-| Throughput | 35,779 req/s | 12,776 req/s |
-| Latency | 7.44ms | 7.90ms |
+| Framework | Avg RPS | P50 (ms) | P99 (ms) |
+|-----------|--------:|----------:|----------:|
+| **spikard** | 12,623 | 5.55 | 38.39 |
+| litestar | 8,032 | 14.62 | 19.18 |
+| fastapi | 6,418 | 16.43 | 21.72 |
+| robyn | 6,012 | 16.85 | 24.18 |
+
+Spikard is **1.6x faster** than Litestar and **2.0x faster** than FastAPI.
 
 Key optimizations:
 - Zero-copy PyO3 type conversion (no JSON round-trips)
