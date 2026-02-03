@@ -7,7 +7,7 @@ runs:
     - name: Setup Node
       uses: ./.github/actions/setup-node-workspace
       with:
-        node-version: "20"
+        node-version: "24"
 
     - name: Setup Rust
       uses: ./.github/actions/setup-rust

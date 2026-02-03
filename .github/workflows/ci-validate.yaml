@@ -115,7 +115,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.14"
+          python-version: "3.13"
           cache-prefix: lint-python
 
       - name: Check Ruff linting
@@ -139,7 +139,7 @@ jobs:
       - name: Setup Node
         uses: ./.github/actions/setup-node-workspace
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Run Biome check
         run: pnpm biome check packages/node/src crates/spikard-node/src e2e/node --log-level=warn
@@ -193,7 +193,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.4"
           tools: composer
           coverage: none
 
@@ -203,9 +203,9 @@ jobs:
           path: |
             ~/.composer/cache
             packages/php/vendor
-          key: ${{ runner.os }}-composer-8.3-${{ hashFiles('**/composer.lock') }}
+          key: ${{ runner.os }}-composer-8.4-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ${{ runner.os }}-composer-8.3-
+            ${{ runner.os }}-composer-8.4-
 
       - name: Install PHP dependencies
         working-directory: packages/php

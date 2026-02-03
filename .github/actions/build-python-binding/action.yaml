@@ -5,7 +5,7 @@ inputs:
   python-version:
     description: Python version to build against
     required: false
-    default: "3.14"
+    default: "3.13"
   cache-prefix:
     description: Cache prefix for setup-python-env
     required: false

@@ -72,7 +72,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
+          php-version: "8.4"
           tools: composer
           coverage: none
           extensions: fileinfo
@@ -87,20 +87,20 @@ jobs:
       - name: Verify PHP configuration matches expected version
         shell: bash
         run: |
-          echo "=== Verifying PHP 8.2 configuration ==="
+          echo "=== Verifying PHP 8.4 configuration ==="
           php -v
           php-config --version
           php-config --phpapi
           PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')
           echo "Active PHP version: ${PHP_VERSION}"
-          if [[ "${PHP_VERSION}" != "8.2" ]]; then
-            echo "ERROR: Expected PHP 8.2 but found ${PHP_VERSION}"
+          if [[ "${PHP_VERSION}" != "8.4" ]]; then
+            echo "ERROR: Expected PHP 8.4 but found ${PHP_VERSION}"
             exit 1
           fi
 
       - name: Build PHP extension
         env:
-          PHP_CONFIG: /usr/bin/php-config8.2
+          PHP_CONFIG: /usr/bin/php-config8.4
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Upload PHP extension artifact
@@ -136,7 +136,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
+          php-version: "8.4"
           tools: composer
           coverage: xdebug
           ini-values: xdebug.mode=coverage
@@ -145,7 +145,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.14"
+          python-version: "3.13"
           cache-prefix: grpc-server
 
       - name: Setup Composer Cache
@@ -154,9 +154,9 @@ jobs:
           path: |
             ~/.composer/cache
             packages/php/vendor
-          key: ubuntu-composer-8.2-${{ hashFiles('**/composer.lock') }}
+          key: ubuntu-composer-8.4-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            ubuntu-composer-8.2-
+            ubuntu-composer-8.4-
 
       - name: Download PHP extension artifact
         uses: actions/download-artifact@v7
@@ -172,7 +172,7 @@ jobs:
             echo "PHP extension artifact missing; building locally"
             bash scripts/ci/php/install-dev-headers-linux.sh
             bash scripts/ci/php/detect-php-config.sh
-            PHP_CONFIG=/usr/bin/php-config8.2 cargo build --release -p spikard-php --features extension-module
+            PHP_CONFIG=/usr/bin/php-config8.4 cargo build --release -p spikard-php --features extension-module
             EXT_FILE=$(find target/release -type f \( -name 'libspikard_php*.so' -o -name 'spikard_php*.so' \) | head -1)
           fi
           if [ -z "$EXT_FILE" ]; then
@@ -186,8 +186,8 @@ jobs:
           sudo cp "$EXT_FILE" "$PHP_EXTENSIONS_DIR/spikard.so"
           echo "Copied extension to $PHP_EXTENSIONS_DIR/spikard.so"
           # Enable the extension
-          echo "extension=spikard.so" | sudo tee /etc/php/8.2/cli/conf.d/20-spikard.ini > /dev/null
-          echo "Added extension to /etc/php/8.2/cli/conf.d/20-spikard.ini"
+          echo "extension=spikard.so" | sudo tee /etc/php/8.4/cli/conf.d/20-spikard.ini > /dev/null
+          echo "Added extension to /etc/php/8.4/cli/conf.d/20-spikard.ini"
           # Verify extension is loaded
           php -r "if (extension_loaded('spikard')) { echo 'Extension loaded successfully'; } else { echo 'Failed to load extension'; exit(1); }"
 
@@ -247,7 +247,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
+          php-version: "8.4"
           extensions: pcov, grpc
           coverage: pcov
           tools: composer
@@ -264,7 +264,7 @@ jobs:
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.14"
+          python-version: "3.13"
           cache-prefix: grpc-server
 
       - name: Install LLVM/Clang (for ext-php-rs bindgen)
@@ -280,20 +280,20 @@ jobs:
       - name: Verify PHP configuration matches expected version
         shell: bash
         run: |
-          echo "=== Verifying PHP 8.2 configuration ==="
+          echo "=== Verifying PHP 8.4 configuration ==="
           php -v
           php-config --version
           php-config --phpapi
           PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')
           echo "Active PHP version: ${PHP_VERSION}"
-          if [[ "${PHP_VERSION}" != "8.2" ]]; then
-            echo "ERROR: Expected PHP 8.2 but found ${PHP_VERSION}"
+          if [[ "${PHP_VERSION}" != "8.4" ]]; then
+            echo "ERROR: Expected PHP 8.4 but found ${PHP_VERSION}"
             exit 1
           fi
 
       - name: Build PHP extension
         env:
-          PHP_CONFIG: /usr/bin/php-config8.2
+          PHP_CONFIG: /usr/bin/php-config8.4
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Install PHP extension
