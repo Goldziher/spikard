@@ -2,6 +2,9 @@
 
 source "https://rubygems.org"
 
+# Required in Ruby 3.4+ (no longer in default gems)
+gem "base64"
+
 # The spikard-ruby benchmark app loads the Ruby binding directly from
 # packages/ruby/lib via $LOAD_PATH manipulation in server.rb, so no
 # gem dependency is needed here. This Gemfile exists only so that

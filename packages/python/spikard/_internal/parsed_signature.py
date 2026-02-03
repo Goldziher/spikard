@@ -40,7 +40,7 @@ class ParsedSignature:
     """The raw signature as returned by :func:`inspect.signature`"""
 
     @classmethod
-    def from_fn(cls, fn: Callable[..., Any]) -> ParsedSignature:
+    def from_fn(cls, fn: "Callable[..., Any]") -> "ParsedSignature":
         """Parse a function signature.
 
         Args:
@@ -88,7 +88,7 @@ class ParsedSignature:
         )
 
 
-def parse_fn_signature(fn: Callable[..., Any]) -> ParsedSignature:
+def parse_fn_signature(fn: "Callable[..., Any]") -> "ParsedSignature":
     """Parse a function's signature into a ParsedSignature.
 
     This is the main entry point for signature parsing.
