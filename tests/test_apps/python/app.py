@@ -1,21 +1,21 @@
 """Minimal Spikard server for E2E testing of published package.
 
-Tests the PUBLISHED spikard package from PyPI (0.7.2).
+Tests the PUBLISHED spikard package from PyPI (0.10.1).
 """
 
-from spikard import Path, Query, Spikard, get, post
+from spikard import Cookie, Header, Path, Query, Spikard, delete, get, patch, post, put
 from spikard.config import ServerConfig
 
 app = Spikard()
 
 
-@get("/health")
+@app.get("/health")
 def health() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok"}
 
 
-@get("/query")
+@app.get("/query")
 def query_params(
     name: str = Query(),
     age: int = Query(),
@@ -24,16 +24,52 @@ def query_params(
     return {"name": name, "age": age}
 
 
-@post("/echo")
+@app.post("/echo")
 async def echo(body: dict) -> dict:
     """Echo endpoint - tests JSON body parsing."""
     return {"received": body, "method": "POST"}
 
 
-@get("/users/{user_id}")
-def user(user_id: str = Path("id")) -> dict[str, str]:
+@app.get("/users/{user_id}")
+def user(user_id: str = Path()) -> dict[str, str]:
     """Path parameter endpoint - tests path extraction."""
     return {"userId": user_id, "type": "string"}
+
+
+@app.put("/items/{item_id}")
+def update_item(item_id: str = Path(), body: dict = None) -> dict:
+    """PUT endpoint - tests PUT method and path parameters."""
+    return {"itemId": item_id, "updated": body, "method": "PUT"}
+
+
+@app.delete("/items/{item_id}")
+def delete_item(item_id: str = Path()) -> dict:
+    """DELETE endpoint - tests DELETE method and path parameters."""
+    return {"itemId": item_id, "deleted": True, "method": "DELETE"}
+
+
+@app.patch("/items/{item_id}")
+def patch_item(item_id: str = Path(), body: dict = None) -> dict:
+    """PATCH endpoint - tests PATCH method and path parameters."""
+    return {"itemId": item_id, "patched": body, "method": "PATCH"}
+
+
+@app.get("/headers")
+def extract_headers(x_custom_header: str = Header(alias="X-Custom-Header")) -> dict[str, str]:
+    """Header extraction endpoint - tests custom header extraction."""
+    return {"x-custom-header": x_custom_header}
+
+
+@app.get("/cookies")
+def extract_cookies(session: str = Cookie()) -> dict[str, str]:
+    """Cookie extraction endpoint - tests session cookie extraction."""
+    return {"session": session}
+
+
+@app.get("/error")
+def trigger_error() -> dict:
+    """Error endpoint - tests 500 error handling."""
+    raise RuntimeError("Intentional error")
 
 
 def create_app() -> Spikard:

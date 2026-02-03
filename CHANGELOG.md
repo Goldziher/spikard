@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-02-03
+
+### Fixed
+
+- **Ruby gem packaging**: Fixed `vendor-crates.sh` to patch `ext/spikard_rb/Cargo.toml` path from workspace-relative (`../../../../crates/spikard-rb`) to vendored (`../../vendor/crates/spikard-rb`). This was causing the published gem to fail installation with "failed to load manifest for dependency `spikard-rb`".
+
 ## [0.10.1] - 2026-02-02
 
 ### Performance

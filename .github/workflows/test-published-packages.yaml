@@ -277,7 +277,7 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
-          sed -i.bak "s/spikard = { version = \".*\" }/spikard = { version = \"$VERSION\" }/" Cargo.toml
+          sed -i.bak "s/spikard = \".*\"/spikard = \"$VERSION\"/" Cargo.toml
           rm -f Cargo.toml.bak
 
       - name: Update Cargo.lock
@@ -286,7 +286,7 @@ jobs:
 
       - name: Run tests
         working-directory: tests/test_apps/rust
-        run: cargo test --locked
+        run: cargo test
 
   report:
     name: Report test results
@@ -304,21 +304,28 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
+
+          # If registries weren't ready, all test jobs were skipped - that's not a failure
+          if [ "${{ needs.prepare.outputs.registries_ready }}" != "true" ]; then
+            echo "Registries were not ready for version $VERSION - test jobs were skipped (not a failure)"
+            exit 0
+          fi
+
           FAILED=()
 
-          if [ "${{ needs.test-python.result }}" != "success" ]; then
+          if [ "${{ needs.test-python.result }}" == "failure" ]; then
             FAILED+=("Python")
           fi
-          if [ "${{ needs.test-node.result }}" != "success" ]; then
+          if [ "${{ needs.test-node.result }}" == "failure" ]; then
             FAILED+=("Node.js")
           fi
-          if [ "${{ needs.test-ruby.result }}" != "success" ]; then
+          if [ "${{ needs.test-ruby.result }}" == "failure" ]; then
             FAILED+=("Ruby")
           fi
-          if [ "${{ needs.test-php.result }}" != "success" ]; then
+          if [ "${{ needs.test-php.result }}" == "failure" ]; then
             FAILED+=("PHP")
           fi
-          if [ "${{ needs.test-rust.result }}" != "success" ]; then
+          if [ "${{ needs.test-rust.result }}" == "failure" ]; then
             FAILED+=("Rust")
           fi
 

@@ -152,8 +152,8 @@ importers:
   tests/test_apps/node:
     dependencies:
       '@spikard/node':
-        specifier: 0.9.1
-        version: 0.9.1
+        specifier: 0.10.1
+        version: 0.10.1
     devDependencies:
       '@types/node':
         specifier: ^25.2.0
@@ -1439,33 +1439,37 @@ packages:
   '@sinclair/typebox@0.34.45':
     resolution: {integrity: sha512-qJcFVfCa5jxBFSuv7S5WYbA8XdeCPmhnaVVfX/2Y6L8WYg8sk3XY2+6W0zH+3mq1Cz+YC7Ki66HfqX6IHAwnkg==}
 
-  '@spikard/node-darwin-arm64@0.9.1':
-    resolution: {integrity: sha512-UiQmsT/OpbMmb+32dhbFNX3xr1InGTYWrAD04JhcjJ8MKjj4Yxlj0yf/0R2a2RgqlVcOWKPli949WYkFSfne6w==}
+  '@spikard/node-native-darwin-arm64@0.10.1':
+    resolution: {integrity: sha512-m2pi56NxKg9S8NPs3gm9gekdDSoZYco0KPwFXLRdoXmB9wAD5banxM36NmIwrrKpOcv7O5E3uu4jHqzuOfLPsg==}
     engines: {node: '>=20'}
     cpu: [arm64]
     os: [darwin]
 
-  '@spikard/node-darwin-x64@0.9.1':
-    resolution: {integrity: sha512-Bi+/Boo5DNY2NnMUfhx7+x1n5yJUcbE8arMuHhuv4i4rhYR7EuPBAZ1Q1T7gEuTU2GThq0wyPDCrV1oMytwEpQ==}
+  '@spikard/node-native-darwin-x64@0.10.1':
+    resolution: {integrity: sha512-s/ucLd7DuIGHFKkWcQevMG3j6EEgfZ09RfFLuPUI1Qspk5LsmdD4dwHNDKE4pzPv+jQsy2+JuYPgNmlyOvVBjA==}
     engines: {node: '>=20'}
     cpu: [x64]
     os: [darwin]
 
-  '@spikard/node-linux-x64-gnu@0.9.1':
-    resolution: {integrity: sha512-1AjdZjMGgzl/efO43hWWu96i97W2VHkrDzuIdbjPXps46U+aiJWbZdUSn5399ecKZXEndiGguhEygCMkbilmeg==}
+  '@spikard/node-native-linux-x64-gnu@0.10.1':
+    resolution: {integrity: sha512-ynufrNDcqLP5BmKW0HH7BKoX3/GWZ554Hz3cH8yrUft597Yab+gBtgKL/fJhLbkNXEkLzAY9oaDy9wE4VfpFuA==}
     engines: {node: '>=20'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@spikard/node-win32-x64-msvc@0.9.1':
-    resolution: {integrity: sha512-I4azG6zb/u+dX5iyV/Uqjbbn5fzUiybqHgWMgr7KLMZYpXl1ieDMRVuF6bVnStJLEEhxrkYMo7oaFV5jAQo6lg==}
+  '@spikard/node-native-win32-x64-msvc@0.10.1':
+    resolution: {integrity: sha512-2cqyHLvYoyVaQGm7/+vAtaSJzSaff0Cz2te1NBTYEEFdYcR4JIld2WiS3JaKk69BCO4VdNI4FNm+tMN9XclaaA==}
     engines: {node: '>=20'}
     cpu: [x64]
     os: [win32]
 
-  '@spikard/node@0.9.1':
-    resolution: {integrity: sha512-pbcxZnFKl7uQpaB2cfQTvYCLNRL0XS5Yvddijlgnv9ua0/BGoX+x/aLnb1F2kU8Dfdl4TtXw7VQGQuQzQe8I7g==}
+  '@spikard/node-native@0.10.1':
+    resolution: {integrity: sha512-Dc14nIQ5YPs7FQQZPeM6vxk6qWBxqLXZQQyITU5hbQSj14XQjobbcsa5EVduGOnsk2a2dyOXf7T7kPbvElV4fg==}
+    engines: {node: '>=20'}
+
+  '@spikard/node@0.10.1':
+    resolution: {integrity: sha512-uZH1iS56SglhxcHqIi683J87gdtOjpqhaai6uNLvk8PSRhoZvp7kd/v8Jk5OKEN/uZAvjSuQYP6C3BegXNEgZA==}
     engines: {node: '>=20'}
 
   '@standard-schema/spec@1.1.0':
@@ -3125,26 +3129,31 @@ snapshots:
 
   '@sinclair/typebox@0.34.45': {}
 
-  '@spikard/node-darwin-arm64@0.9.1':
+  '@spikard/node-native-darwin-arm64@0.10.1':
     optional: true
 
-  '@spikard/node-darwin-x64@0.9.1':
+  '@spikard/node-native-darwin-x64@0.10.1':
     optional: true
 
-  '@spikard/node-linux-x64-gnu@0.9.1':
+  '@spikard/node-native-linux-x64-gnu@0.10.1':
     optional: true
 
-  '@spikard/node-win32-x64-msvc@0.9.1':
+  '@spikard/node-native-win32-x64-msvc@0.10.1':
     optional: true
 
-  '@spikard/node@0.9.1':
+  '@spikard/node-native@0.10.1':
     dependencies:
       zod: 4.3.6
     optionalDependencies:
-      '@spikard/node-darwin-arm64': 0.9.1
-      '@spikard/node-darwin-x64': 0.9.1
-      '@spikard/node-linux-x64-gnu': 0.9.1
-      '@spikard/node-win32-x64-msvc': 0.9.1
+      '@spikard/node-native-darwin-arm64': 0.10.1
+      '@spikard/node-native-darwin-x64': 0.10.1
+      '@spikard/node-native-linux-x64-gnu': 0.10.1
+      '@spikard/node-native-win32-x64-msvc': 0.10.1
+
+  '@spikard/node@0.10.1':
+    dependencies:
+      '@spikard/node-native': 0.10.1
+      zod: 4.3.6
 
   '@standard-schema/spec@1.1.0': {}
 

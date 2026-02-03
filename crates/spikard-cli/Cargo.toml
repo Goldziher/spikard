@@ -49,7 +49,7 @@ tempfile = "3.24"  # For quality validation temporary files
 
 # Optional language-specific dependencies
 pyo3 = { workspace = true, optional = true }
-_spikard = { package = "spikard-py", version = "0.10.1", path = "../spikard-py", optional = true, default-features = false }
+_spikard = { package = "spikard-py", version = "0.10.2", path = "../spikard-py", optional = true, default-features = false }
 
 [features]
 default = []

@@ -1,7 +1,7 @@
 """E2E tests for published Spikard Python package.
 
 These tests validate that:
-1. The published package installs correctly from PyPI (0.7.5)
+1. The published package installs correctly from PyPI (0.10.1)
 2. Core functionality works as expected via HTTP requests
 3. Real server is spawned and tested via HTTP (not direct handler calls)
 """
@@ -11,13 +11,13 @@ import importlib.metadata
 import pytest
 from app import app
 
-from spikard import TestClient
+from spikard import Cookie, Header, Path, Query, Spikard, TestClient, delete, get, patch, post, put
 
 
 def test_package_version() -> None:
-    """Validate that the installed version is 0.7.5 from PyPI."""
+    """Validate that the installed version is 0.10.1 from PyPI."""
     version = importlib.metadata.version("spikard")
-    assert version == "0.7.5", f"Expected version 0.7.5, got {version}"
+    assert version == "0.10.1", f"Expected version 0.10.1, got {version}"
 
 
 @pytest.mark.asyncio
@@ -61,3 +61,108 @@ async def test_path_parameters() -> None:
         data = response.json()
         assert data["userId"] == "123"
         assert data["type"] == "string"
+
+
+@pytest.mark.asyncio
+async def test_put_method() -> None:
+    """Validate PUT method and path parameters."""
+    payload = {"name": "Widget"}
+    async with TestClient(app) as client:
+        response = await client.put("/items/1", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["itemId"] == "1"
+        assert data["updated"] == payload
+        assert data["method"] == "PUT"
+
+
+@pytest.mark.asyncio
+async def test_delete_method() -> None:
+    """Validate DELETE method and path parameters."""
+    async with TestClient(app) as client:
+        response = await client.delete("/items/1")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["itemId"] == "1"
+        assert data["deleted"] is True
+        assert data["method"] == "DELETE"
+
+
+@pytest.mark.asyncio
+async def test_patch_method() -> None:
+    """Validate PATCH method and path parameters."""
+    payload = {"name": "Updated"}
+    async with TestClient(app) as client:
+        response = await client.patch("/items/1", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["itemId"] == "1"
+        assert data["patched"] == payload
+        assert data["method"] == "PATCH"
+
+
+@pytest.mark.asyncio
+async def test_header_extraction() -> None:
+    """Validate custom header extraction."""
+    async with TestClient(app) as client:
+        response = await client.get("/headers", headers={"X-Custom-Header": "test-value"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data == {"x-custom-header": "test-value"}
+
+
+@pytest.mark.asyncio
+async def test_cookie_extraction() -> None:
+    """Validate session cookie extraction."""
+    async with TestClient(app) as client:
+        response = await client.get("/cookies", headers={"Cookie": "session=abc123"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data == {"session": "abc123"}
+
+
+@pytest.mark.asyncio
+async def test_404_not_found() -> None:
+    """Validate 404 not found response."""
+    async with TestClient(app) as client:
+        response = await client.get("/nonexistent")
+        assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_error_500() -> None:
+    """Validate 500 error handling."""
+    async with TestClient(app) as client:
+        response = await client.get("/error")
+        assert response.status_code == 500
+
+
+def test_imports() -> None:
+    """Validate that all necessary imports are available from spikard."""
+    # These imports should not raise ImportError
+    from spikard import (
+        Cookie,
+        Header,
+        Path,
+        Query,
+        Spikard,
+        TestClient,
+        delete,
+        get,
+        patch,
+        post,
+        put,
+    )
+
+    # Verify they are the correct types
+    assert callable(get)
+    assert callable(post)
+    assert callable(put)
+    assert callable(delete)
+    assert callable(patch)
+    assert callable(Header)
+    assert callable(Cookie)
+    assert callable(Query)
+    assert callable(Path)
+    assert callable(Spikard)
+    assert callable(TestClient)

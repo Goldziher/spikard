@@ -109,4 +109,12 @@ for toml in "$VENDOR_DIR"/*/Cargo.toml; do
 	fi
 done
 
+# Patch the extension wrapper Cargo.toml to use vendored crates instead of workspace paths
+EXT_CARGO="packages/ruby/ext/spikard_rb/Cargo.toml"
+if [ -f "$EXT_CARGO" ]; then
+	echo "  Patching ext/spikard_rb/Cargo.toml to use vendored crates..."
+	sed -i.bak 's|path = "../../../../crates/spikard-rb"|path = "../../vendor/crates/spikard-rb"|' "$EXT_CARGO"
+	rm -f "$EXT_CARGO.bak"
+fi
+
 echo "✓ Vendoring complete"

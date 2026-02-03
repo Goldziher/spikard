@@ -101,8 +101,8 @@ impl Drop for TestServer {
 async fn test_uses_correct_package_version() {
     let cargo_toml = include_str!("../Cargo.toml");
     assert!(
-        cargo_toml.contains(r#"spikard = "0.7.5""#),
-        "Expected spikard version 0.7.0 in Cargo.toml"
+        cargo_toml.contains(r#"spikard = "0.10.1""#),
+        "Expected spikard version 0.10.1 in Cargo.toml"
     );
 }
 
@@ -172,4 +172,115 @@ async fn test_extracts_path_parameters() {
     let data: serde_json::Value = response.json().await.expect("Failed to parse JSON");
     assert_eq!(data["userId"], "42");
     assert_eq!(data["type"], "String");
+}
+
+#[tokio::test]
+async fn test_put_method() {
+    let server = TestServer::start().await;
+    let url = format!("{}/items/1", server.url());
+    let client = reqwest::Client::new();
+    let payload = json!({ "name": "Widget" });
+
+    let response = client.put(&url).json(&payload).send().await.expect("Failed to PUT");
+    assert_eq!(response.status(), 200);
+
+    let data: serde_json::Value = response.json().await.expect("Failed to parse JSON");
+    assert_eq!(data["itemId"], "1");
+    assert_eq!(data["updated"], payload);
+    assert_eq!(data["method"], "PUT");
+}
+
+#[tokio::test]
+async fn test_delete_method() {
+    let server = TestServer::start().await;
+    let url = format!("{}/items/1", server.url());
+    let client = reqwest::Client::new();
+
+    let response = client.delete(&url).send().await.expect("Failed to DELETE");
+    assert_eq!(response.status(), 200);
+
+    let data: serde_json::Value = response.json().await.expect("Failed to parse JSON");
+    assert_eq!(data["itemId"], "1");
+    assert_eq!(data["deleted"], true);
+    assert_eq!(data["method"], "DELETE");
+}
+
+#[tokio::test]
+async fn test_patch_method() {
+    let server = TestServer::start().await;
+    let url = format!("{}/items/1", server.url());
+    let client = reqwest::Client::new();
+    let payload = json!({ "name": "Updated" });
+
+    let response = client.patch(&url).json(&payload).send().await.expect("Failed to PATCH");
+    assert_eq!(response.status(), 200);
+
+    let data: serde_json::Value = response.json().await.expect("Failed to parse JSON");
+    assert_eq!(data["itemId"], "1");
+    assert_eq!(data["patched"], payload);
+    assert_eq!(data["method"], "PATCH");
+}
+
+#[tokio::test]
+async fn test_header_extraction() {
+    let server = TestServer::start().await;
+    let url = format!("{}/headers", server.url());
+    let client = reqwest::Client::new();
+
+    let response = client.get(&url)
+        .header("X-Custom-Header", "test-value")
+        .send()
+        .await
+        .expect("Failed to fetch headers");
+
+    assert_eq!(response.status(), 200);
+
+    let data: serde_json::Value = response.json().await.expect("Failed to parse JSON");
+    assert_eq!(data["x-custom-header"], "test-value");
+}
+
+#[tokio::test]
+async fn test_cookie_extraction() {
+    let server = TestServer::start().await;
+    let url = format!("{}/cookies", server.url());
+    let client = reqwest::Client::new();
+
+    let response = client.get(&url)
+        .header("Cookie", "session=abc123")
+        .send()
+        .await
+        .expect("Failed to fetch cookies");
+
+    assert_eq!(response.status(), 200);
+
+    let data: serde_json::Value = response.json().await.expect("Failed to parse JSON");
+    assert_eq!(data["session"], "abc123");
+}
+
+#[tokio::test]
+async fn test_404_not_found() {
+    let server = TestServer::start().await;
+    let url = format!("{}/nonexistent", server.url());
+
+    let response = reqwest::get(&url).await.expect("Failed to fetch");
+    assert_eq!(response.status(), 404);
+}
+
+#[tokio::test]
+async fn test_error_500() {
+    let server = TestServer::start().await;
+    let url = format!("{}/error", server.url());
+
+    let response = reqwest::get(&url).await.expect("Failed to fetch");
+    assert_eq!(response.status(), 500);
+}
+
+#[tokio::test]
+async fn test_imports() {
+    // Verify key types are importable by using them
+    let _config = spikard::ServerConfig::builder()
+        .host("127.0.0.1")
+        .port(0)
+        .build();
+    let _app = spikard::App::new();
 }

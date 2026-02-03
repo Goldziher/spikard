@@ -2,6 +2,8 @@
 
 All configuration uses dataclasses with msgspec for high-performance serialization.
 """
+from __future__ import annotations
+
 
 from dataclasses import dataclass, field, replace
 from typing import Any, cast

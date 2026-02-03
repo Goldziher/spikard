@@ -1,5 +1,5 @@
 use serde_json::json;
-use spikard::{App, HandlerResult, RequestContext, ServerConfig, get, post};
+use spikard::{App, HandlerResult, RequestContext, ServerConfig, get, post, put, delete, patch};
 
 /// Rust test application for Spikard
 ///
@@ -60,6 +60,82 @@ async fn user_handler(ctx: RequestContext) -> HandlerResult {
         .unwrap())
 }
 
+async fn put_item_handler(ctx: RequestContext) -> HandlerResult {
+    let item_id = ctx.path_param("id").unwrap_or("").to_string();
+    let body = ctx.body_value().clone();
+    let response = json!({
+        "itemId": item_id,
+        "updated": body,
+        "method": ctx.method()
+    });
+    Ok(axum::http::Response::builder()
+        .status(200)
+        .header("content-type", "application/json")
+        .body(axum::body::Body::from(response.to_string()))
+        .unwrap())
+}
+
+async fn delete_item_handler(ctx: RequestContext) -> HandlerResult {
+    let item_id = ctx.path_param("id").unwrap_or("").to_string();
+    let response = json!({
+        "itemId": item_id,
+        "deleted": true,
+        "method": ctx.method()
+    });
+    Ok(axum::http::Response::builder()
+        .status(200)
+        .header("content-type", "application/json")
+        .body(axum::body::Body::from(response.to_string()))
+        .unwrap())
+}
+
+async fn patch_item_handler(ctx: RequestContext) -> HandlerResult {
+    let item_id = ctx.path_param("id").unwrap_or("").to_string();
+    let body = ctx.body_value().clone();
+    let response = json!({
+        "itemId": item_id,
+        "patched": body,
+        "method": ctx.method()
+    });
+    Ok(axum::http::Response::builder()
+        .status(200)
+        .header("content-type", "application/json")
+        .body(axum::body::Body::from(response.to_string()))
+        .unwrap())
+}
+
+async fn headers_handler(ctx: RequestContext) -> HandlerResult {
+    let custom_header = ctx.header("x-custom-header").unwrap_or("").to_string();
+    let response = json!({
+        "x-custom-header": custom_header
+    });
+    Ok(axum::http::Response::builder()
+        .status(200)
+        .header("content-type", "application/json")
+        .body(axum::body::Body::from(response.to_string()))
+        .unwrap())
+}
+
+async fn cookies_handler(ctx: RequestContext) -> HandlerResult {
+    let session = ctx.cookie("session").unwrap_or("").to_string();
+    let response = json!({
+        "session": session
+    });
+    Ok(axum::http::Response::builder()
+        .status(200)
+        .header("content-type", "application/json")
+        .body(axum::body::Body::from(response.to_string()))
+        .unwrap())
+}
+
+async fn error_handler(_ctx: RequestContext) -> HandlerResult {
+    Ok(axum::http::Response::builder()
+        .status(500)
+        .header("content-type", "application/json")
+        .body(axum::body::Body::from(r#"{"error":"Intentional error"}"#))
+        .unwrap())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = ServerConfig::builder()
@@ -73,6 +149,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     app.route(get("/query"), query_handler)?;
     app.route(post("/echo"), echo_handler)?;
     app.route(get("/users/{id}"), user_handler)?;
+    app.route(put("/items/{id}"), put_item_handler)?;
+    app.route(delete("/items/{id}"), delete_item_handler)?;
+    app.route(patch("/items/{id}"), patch_item_handler)?;
+    app.route(get("/headers"), headers_handler)?;
+    app.route(get("/cookies"), cookies_handler)?;
+    app.route(get("/error"), error_handler)?;
 
     // Print server address for test harness to capture
     let router = app.into_router()?;

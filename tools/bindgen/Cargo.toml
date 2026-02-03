@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.70.0"
 name = "bindgen"
-version = "0.10.1"
+version = "0.10.2"
 authors = [
     "Jyun-Yan You <jyyou.tw@gmail.com>",
     "Emilio Cobos Álvarez <emilio@crisal.io>",

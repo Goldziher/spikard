@@ -19,7 +19,7 @@ RSpec.describe 'Spikard Ruby Test App' do
 
   it 'uses the correct package version' do
     gemfile_lock = File.read(File.join(__dir__, '..', 'Gemfile.lock'))
-    expect(gemfile_lock).to include('spikard (0.7.5)')
+    expect(gemfile_lock).to include('spikard (0.10.1)')
   end
 
   it 'responds to health check' do
@@ -51,5 +51,63 @@ RSpec.describe 'Spikard Ruby Test App' do
     data = response.json
     expect(data['userId']).to eq('42')
     expect(data['type']).to eq('String')
+  end
+
+  it 'handles PUT method' do
+    payload = { name: 'Widget' }
+    response = @client.put('/items/1', json: payload)
+    expect(response.status).to eq(200)
+    data = response.json
+    expect(data['itemId']).to eq('1')
+    expect(data['updated']).to eq(payload.transform_keys(&:to_s))
+    expect(data['method']).to eq('PUT')
+  end
+
+  it 'handles DELETE method' do
+    response = @client.delete('/items/1')
+    expect(response.status).to eq(200)
+    data = response.json
+    expect(data['itemId']).to eq('1')
+    expect(data['deleted']).to eq(true)
+    expect(data['method']).to eq('DELETE')
+  end
+
+  it 'handles PATCH method' do
+    payload = { name: 'Updated' }
+    response = @client.patch('/items/1', json: payload)
+    expect(response.status).to eq(200)
+    data = response.json
+    expect(data['itemId']).to eq('1')
+    expect(data['patched']).to eq(payload.transform_keys(&:to_s))
+    expect(data['method']).to eq('PATCH')
+  end
+
+  it 'extracts custom headers' do
+    response = @client.get('/headers', headers: { 'X-Custom-Header' => 'test-value' })
+    expect(response.status).to eq(200)
+    data = response.json
+    expect(data['x-custom-header']).to eq('test-value')
+  end
+
+  it 'extracts cookies' do
+    response = @client.get('/cookies', headers: { 'Cookie' => 'session=abc123' })
+    expect(response.status).to eq(200)
+    data = response.json
+    expect(data['session']).to eq('abc123')
+  end
+
+  it 'returns 404 for unknown routes' do
+    response = @client.get('/nonexistent')
+    expect(response.status).to eq(404)
+  end
+
+  it 'returns 500 for error handler' do
+    response = @client.get('/error')
+    expect(response.status).to eq(500)
+  end
+
+  it 'has importable public API' do
+    expect(defined?(Spikard::App)).to be_truthy
+    expect(defined?(Spikard::TestClient)).to be_truthy
   end
 end

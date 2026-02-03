@@ -7,6 +7,9 @@ namespace Spikard\TestApp;
 use Spikard\App as SpikardApp;
 use Spikard\Attributes\Get;
 use Spikard\Attributes\Post;
+use Spikard\Attributes\Put;
+use Spikard\Attributes\Delete;
+use Spikard\Attributes\Patch;
 use Spikard\Config\ServerConfig;
 use Spikard\Http\Request;
 use Spikard\Http\Response;
@@ -20,6 +23,9 @@ use Spikard\Testing\TestClient;
  * - Query parameter handling
  * - JSON request/response
  * - Path parameter extraction
+ * - HTTP methods (GET, POST, PUT, DELETE, PATCH)
+ * - Header and cookie extraction
+ * - Error handling
  */
 final class App
 {
@@ -68,6 +74,65 @@ final class App
                     'userId' => $userId,
                     'type' => get_debug_type($userId),
                 ]);
+            }
+
+            #[Put('/items/:id')]
+            public function putItem(Request $request): Response
+            {
+                $itemId = $request->pathParams['id'] ?? null;
+                $body = $request->body ?? [];
+                return Response::json([
+                    'itemId' => $itemId,
+                    'updated' => $body,
+                    'method' => $request->method,
+                ]);
+            }
+
+            #[Delete('/items/:id')]
+            public function deleteItem(Request $request): Response
+            {
+                $itemId = $request->pathParams['id'] ?? null;
+                return Response::json([
+                    'itemId' => $itemId,
+                    'deleted' => true,
+                    'method' => $request->method,
+                ]);
+            }
+
+            #[Patch('/items/:id')]
+            public function patchItem(Request $request): Response
+            {
+                $itemId = $request->pathParams['id'] ?? null;
+                $body = $request->body ?? [];
+                return Response::json([
+                    'itemId' => $itemId,
+                    'patched' => $body,
+                    'method' => $request->method,
+                ]);
+            }
+
+            #[Get('/headers')]
+            public function headers(Request $request): Response
+            {
+                $customHeader = $request->headers['x-custom-header'] ?? '';
+                return Response::json([
+                    'x-custom-header' => $customHeader,
+                ]);
+            }
+
+            #[Get('/cookies')]
+            public function cookies(Request $request): Response
+            {
+                $session = $request->cookies['session'] ?? '';
+                return Response::json([
+                    'session' => $session,
+                ]);
+            }
+
+            #[Get('/error')]
+            public function error(): Response
+            {
+                throw new \RuntimeException('Intentional error');
             }
         };
 
