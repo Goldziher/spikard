@@ -1,0 +1,30 @@
+[package]
+name = "spikard-elixir"
+version.workspace = true
+edition.workspace = true
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+homepage = "https://github.com/Goldziher/spikard"
+description = "High-performance Elixir bindings for Spikard HTTP framework via Rustler"
+keywords = ["elixir", "bindings", "rustler", "http", "framework"]
+categories = ["api-bindings", "web-programming::http-server"]
+documentation = "https://docs.rs/spikard-elixir"
+readme = "README.md"
+
+[lib]
+name = "spikard_elixir"
+crate-type = ["cdylib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+rustler = "0.37"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+spikard-core = { path = "../spikard-core", features = ["di"] }
+spikard-http = { path = "../spikard-http", features = ["di"] }
+spikard-bindings-shared = { path = "../spikard-bindings-shared" }
+tokio = { workspace = true }
+tracing = "0.1"

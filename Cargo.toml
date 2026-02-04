@@ -6,6 +6,7 @@ members = [
     "crates/spikard-cli",
     "crates/spikard-codegen",
     "crates/spikard-core",
+    "crates/spikard-elixir",
     "crates/spikard-graphql",
     "crates/spikard-http",
     "crates/spikard-php",

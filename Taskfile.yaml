@@ -39,6 +39,7 @@ tasks:
       - task: python:install
       - task: js:install
       - task: ruby:install
+      - task: elixir:install
       - task: php:install
       - task: pre-commit:install
       - task: python:build
@@ -51,6 +52,7 @@ tasks:
       - task: python:update
       - task: js:update
       - task: ruby:update
+      - task: elixir:update
       - task: php:update
       - task: python:build
       - task: pre-commit:update
@@ -66,6 +68,7 @@ tasks:
       - task: python:build
       - task: js:build
       - task: ruby:build
+      - task: elixir:build
       - task: php:build
   test:
     desc: "Run test suites for all languages"
@@ -74,6 +77,7 @@ tasks:
       - task: python:test
       - task: js:test
       - task: ruby:test
+      - task: elixir:test
       - task: php:test
       - task: test:e2e
 
@@ -140,6 +144,7 @@ tasks:
       - task: python:lint
       - task: js:lint
       - task: ruby:lint
+      - task: elixir:lint
       - task: php:lint
 
   lint:check:
@@ -149,6 +154,7 @@ tasks:
       - task: python:lint:check
       - task: js:lint:check
       - task: ruby:lint:check
+      - task: elixir:lint:check
       - task: php:lint:check
 
   format:
@@ -158,6 +164,7 @@ tasks:
       - task: python:format
       - task: js:format
       - task: ruby:format
+      - task: elixir:format
       - task: php:format
 
   format:check:
@@ -167,6 +174,7 @@ tasks:
       - task: python:format:check
       - task: js:format:check
       - task: ruby:format:check
+      - task: elixir:format:check
       - task: php:format:check
 
   python:install:
@@ -428,6 +436,68 @@ tasks:
     dir: packages/ruby
     cmds:
       - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rubocop"
+
+  elixir:install:
+    desc: "Install Elixir dependencies"
+    dir: packages/elixir
+    cmds:
+      - mix deps.get
+
+  elixir:update:
+    desc: "Update Elixir dependencies"
+    dir: packages/elixir
+    cmds:
+      - mix deps.update --all
+
+  elixir:build:
+    desc: "Build Elixir with NIF"
+    deps:
+      - elixir:install
+    dir: packages/elixir
+    cmds:
+      - SPIKARD_BUILD=1 mix compile --warnings-as-errors
+
+  elixir:test:
+    desc: "Run Elixir tests"
+    deps:
+      - elixir:build
+    dir: packages/elixir
+    cmds:
+      - mix test
+
+  elixir:lint:
+    desc: "Run Credo static analysis (auto-fix suggestions)"
+    deps:
+      - elixir:install
+    dir: packages/elixir
+    cmds:
+      - mix credo suggest --all --strict
+
+  elixir:lint:check:
+    desc: "Check Elixir linting without modifications (Credo check-only)"
+    deps:
+      - elixir:install
+    dir: packages/elixir
+    cmds:
+      - mix credo suggest --all --strict
+
+  elixir:format:
+    desc: "Format Elixir code"
+    dir: packages/elixir
+    cmds:
+      - mix format
+
+  elixir:format:check:
+    desc: "Check Elixir formatting without modifications"
+    dir: packages/elixir
+    cmds:
+      - mix format --check-formatted
+
+  elixir:dialyzer:
+    desc: "Run Dialyzer type checker"
+    dir: packages/elixir
+    cmds:
+      - mix dialyzer
 
   node:format:
     desc: "Format TypeScript code with biome"

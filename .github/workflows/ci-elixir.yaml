@@ -1,0 +1,186 @@
+name: CI Elixir
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/spikard-elixir/**'
+      - 'packages/elixir/**'
+      - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.github/workflows/ci-elixir.yaml'
+      - '.github/actions/setup-llvm-clang/**'
+      - '.github/actions/setup-rust/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crates/spikard-elixir/**'
+      - 'packages/elixir/**'
+      - 'crates/spikard/**/*.rs'
+      - 'crates/spikard-http/**/*.rs'
+      - 'testing_data/**'
+      - '.github/workflows/ci-elixir.yaml'
+      - '.github/actions/setup-llvm-clang/**'
+      - '.github/actions/setup-rust/**'
+
+concurrency:
+  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  RUST_BACKTRACE: short
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  SPIKARD_BUILD: 1
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-elixir-nif:
+    name: Build Elixir NIF
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: elixir-nif
+
+      - name: Setup LLVM/Clang (for Rustler bindgen)
+        uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup Elixir and OTP
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+
+      - name: Get Elixir dependencies
+        working-directory: packages/elixir
+        run: mix deps.get
+
+      - name: Compile Elixir with NIF
+        working-directory: packages/elixir
+        env:
+          SPIKARD_BUILD: "1"
+        run: mix compile --warnings-as-errors
+
+      - name: Upload Elixir NIF artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: elixir-nif
+          path: |
+            packages/elixir/priv/**/*.so
+          retention-days: 7
+
+  test-elixir:
+    name: Test Elixir
+    needs: build-elixir-nif
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: elixir-tests
+
+      - name: Setup LLVM/Clang (for Rustler bindgen)
+        uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup Elixir and OTP
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+
+      - name: Setup Python
+        uses: ./.github/actions/setup-python-env
+        with:
+          python-version: "3.13"
+          cache-prefix: grpc-server
+
+      - name: Get Elixir dependencies
+        working-directory: packages/elixir
+        run: mix deps.get
+
+      - name: Download Elixir NIF artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: elixir-nif
+          path: packages/elixir/
+
+      - name: Start gRPC fixture server
+        shell: bash
+        run: |
+          uv run python scripts/start_grpc_test_server.py >/tmp/grpc_server.log 2>&1 &
+          echo $! > /tmp/grpc_server.pid
+          if ! python - <<'PY'
+          import socket
+          import time
+
+          deadline = time.time() + 20
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection(("127.0.0.1", 50051), timeout=1):
+                      break
+              except OSError:
+                  time.sleep(0.5)
+          else:
+              raise SystemExit("gRPC server did not start on :50051")
+          PY
+          then
+            echo "gRPC server log:"
+            cat /tmp/grpc_server.log || true
+            exit 1
+          fi
+
+      - name: Run Elixir tests
+        working-directory: packages/elixir
+        env:
+          SPIKARD_BUILD: "1"
+        run: mix test
+
+      - name: Run Credo linting
+        working-directory: packages/elixir
+        run: mix credo suggest --all --strict
+
+      - name: Stop gRPC fixture server
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/grpc_server.pid ]; then
+            kill "$(cat /tmp/grpc_server.pid)" || true
+          fi
+
+      - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
+        uses: codecov/codecov-action@v5
+        with:
+          files: packages/elixir/coverage/lcov.info
+          flags: elixir
+          name: elixir-coverage
+          fail_ci_if_error: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: elixir-coverage-report
+          path: packages/elixir/coverage/
+          retention-days: 30
