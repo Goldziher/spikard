@@ -15,16 +15,22 @@ defmodule Spikard.MixProject do
       package: package(),
       docs: docs(),
       aliases: aliases(),
-      preferred_cli_env: [
-        "test.watch": :test,
-        coveralls: :test,
-        "coveralls.html": :test,
-        "coveralls.lcov": :test
-      ],
       test_coverage: [tool: ExCoveralls],
       dialyzer: [
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
         plt_add_apps: [:mix]
+      ],
+      rustler_crates: [spikard_elixir: [mode: :release]]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        "test.watch": :test,
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.lcov": :test
       ]
     ]
   end
@@ -39,7 +45,7 @@ defmodule Spikard.MixProject do
     [
       # NIF compilation
       {:rustler, "~> 0.37", runtime: false},
-      {:rustler_precompiled, "~> 0.9"},
+      {:rustler_precompiled, "~> 0.8"},
 
       # Development and testing
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
@@ -77,4 +83,5 @@ defmodule Spikard.MixProject do
       "lint.fix": ["credo suggest --all --strict"]
     ]
   end
+
 end
