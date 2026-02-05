@@ -93,6 +93,7 @@ pub mod lifecycle;
 pub mod server;
 pub mod sse;
 pub mod testing;
+pub mod websocket;
 
 use rustler::{Env, Term};
 
@@ -113,6 +114,8 @@ rustler::init!(
         lifecycle::deliver_hook_response_nif,
         di::deliver_factory_response,
         sse::deliver_sse_event_result,
+        websocket::websocket_send,
+        websocket::websocket_close,
     ],
     load = on_load
 );

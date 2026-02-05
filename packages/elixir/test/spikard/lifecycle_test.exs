@@ -15,9 +15,9 @@ defmodule Spikard.LifecycleTest do
   Note: These tests require Rust-side lifecycle hook execution to be implemented.
   """
   use ExUnit.Case, async: true
-  @moduletag :incomplete
 
   alias Spikard.TestClient
+  alias Spikard.TestClient.Response
 
   describe "on_request hooks" do
     test "hook receives request context and can continue" do
@@ -56,7 +56,7 @@ defmodule Spikard.LifecycleTest do
       {:ok, response} = TestClient.get(client, "/protected")
 
       assert response.status_code == 403
-      assert response.json["error"] == "Forbidden"
+      assert Response.json(response)["error"] == "Forbidden"
     end
 
     test "multiple hooks execute in order" do
@@ -192,7 +192,7 @@ defmodule Spikard.LifecycleTest do
       {:ok, response} = TestClient.post(client, "/", json: %{data: "test"})
 
       assert response.status_code == 429
-      assert response.json["error"] == "Rate limit exceeded"
+      assert Response.json(response)["error"] == "Rate limit exceeded"
     end
   end
 
@@ -322,7 +322,7 @@ defmodule Spikard.LifecycleTest do
 
       # The error response comes from HandlerRunner, not from on_error hook
       assert response.status_code == 500
-      assert response.json["error"] =~ "Handler error: Something went wrong"
+      assert Response.json(response)["error"] =~ "Handler error: Something went wrong"
 
       # on_error hook was NOT called (Elixir exceptions go through HandlerRunner)
       refute_receive {:on_error_called, _}, 100
@@ -431,7 +431,7 @@ defmodule Spikard.LifecycleTest do
       {:ok, response} = TestClient.get(client, "/")
 
       assert response.status_code == 200
-      assert response.json["ok"] == true
+      assert Response.json(response)["ok"] == true
     end
   end
 end

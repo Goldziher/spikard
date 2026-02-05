@@ -134,10 +134,11 @@ defmodule Spikard do
   @spec start(keyword()) :: {:ok, server_handle()} | {:error, String.t()}
   def start(opts) when is_list(opts) do
     with :ok <- validate_start_opts(opts),
-         {:ok, port, host, routes, config} <- extract_start_params(opts),
+         {:ok, port, host, routes, config, dependencies} <- extract_start_params(opts),
+         :ok <- Spikard.DI.validate(dependencies),
          {:ok, routes_json} <- serialize_routes(routes),
          handlers <- build_handlers_map(routes),
-         {:ok, handler_runner_pid} <- Spikard.HandlerRunner.start_link(handlers),
+         {:ok, handler_runner_pid} <- Spikard.HandlerRunner.start_link(handlers, %{}, dependencies),
          {:ok, server_handle} <-
            Spikard.Native.start_server(port, host, routes_json, handler_runner_pid, config) do
       {:ok, server_handle}
@@ -231,12 +232,13 @@ defmodule Spikard do
   end
 
   @spec extract_start_params(keyword()) ::
-          {:ok, pos_integer(), String.t(), [route() | map()], map()} | {:error, String.t()}
+          {:ok, pos_integer(), String.t(), [route() | map()], map(), [Spikard.DI.dependency()]} | {:error, String.t()}
   defp extract_start_params(opts) do
     port = Keyword.get(opts, :port)
     host = Keyword.get(opts, :host, "0.0.0.0")
     routes = Keyword.get(opts, :routes, [])
     config = Keyword.get(opts, :config, %{})
+    dependencies = Keyword.get(opts, :dependencies, [])
 
     config_map =
       case config do
@@ -247,7 +249,7 @@ defmodule Spikard do
 
     # Validate port range
     if port >= 1 and port <= 65535 do
-      {:ok, port, host, routes, config_map}
+      {:ok, port, host, routes, config_map, dependencies}
     else
       {:error, "Port must be between 1 and 65535"}
     end

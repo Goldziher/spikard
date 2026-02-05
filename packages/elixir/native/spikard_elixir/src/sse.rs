@@ -9,10 +9,13 @@
 
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Response, StatusCode};
+use bytes::Bytes;
+use futures_util::stream::Stream;
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, LocalPid, NifResult, OwnedEnv, Term};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
+use std::convert::Infallible;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -161,6 +164,50 @@ pub struct ElixirSseProducer {
 /// Default timeout for SSE producer calls (30 seconds).
 const DEFAULT_SSE_TIMEOUT_MS: u64 = 30_000;
 
+/// Format an SSE event result as proper SSE protocol bytes.
+///
+/// SSE format:
+/// - event: {event_name}\n (if event is Some)
+/// - id: {id}\n (if id is Some)
+/// - data: {json_data}\n (if data is Some)
+/// - \n (blank line terminates the event)
+fn format_sse_event(event: &SseEventResult) -> Result<Bytes, String> {
+    let mut output = String::new();
+
+    // Add event field if present
+    if let Some(event_name) = &event.event {
+        output.push_str("event: ");
+        output.push_str(event_name);
+        output.push('\n');
+    }
+
+    // Add id field if present
+    if let Some(event_id) = &event.id {
+        output.push_str("id: ");
+        output.push_str(event_id);
+        output.push('\n');
+    }
+
+    // Add data field if present
+    if let Some(data) = &event.data {
+        // Serialize the JSON value and format as SSE data lines
+        // Multi-line data must have "data: " prefix on each line
+        let data_str = serde_json::to_string(data)
+            .map_err(|e| format!("Failed to serialize event data: {}", e))?;
+
+        for line in data_str.lines() {
+            output.push_str("data: ");
+            output.push_str(line);
+            output.push('\n');
+        }
+    }
+
+    // Add blank line to terminate the event
+    output.push('\n');
+
+    Ok(Bytes::from(output))
+}
+
 impl ElixirSseProducer {
     /// Create a new ElixirSseProducer.
     pub fn new(producer_server_pid: LocalPid, producer_name: String, path: String) -> Self {
@@ -186,8 +233,44 @@ impl ElixirSseProducer {
     pub async fn handle(&self, _request_data: RequestData) -> HandlerResult {
         debug!("[SSE] handle() called for path {}", self.inner.path);
 
-        // For now, return a simple SSE response with the proper headers
-        // The actual event streaming is handled at a higher level in the framework
+        let producer = self.clone();
+
+        // Create a stream that yields SSE-formatted event bytes wrapped in Result
+        let stream = async_stream::stream! {
+            loop {
+                match producer.next_event().await {
+                    Ok(Some(event_result)) => {
+                        // Format the event as SSE and yield it
+                        if let Ok(sse_bytes) = format_sse_event(&event_result) {
+                            yield Ok::<Bytes, Infallible>(sse_bytes);
+                        }
+
+                        // Stop if this was the last event
+                        if event_result.done {
+                            debug!("[SSE] Streaming complete (done=true)");
+                            break;
+                        }
+                    }
+                    Ok(None) => {
+                        // No more events available
+                        debug!("[SSE] Producer returned None");
+                        break;
+                    }
+                    Err(e) => {
+                        warn!("[SSE] Error getting next event: {}", e);
+                        // Yield an error comment to the client
+                        yield Ok::<Bytes, Infallible>(Bytes::from(format!(": error - {}\n\n", e)));
+                        break;
+                    }
+                }
+            }
+        };
+
+        // Convert the stream to a boxed stream of Result<Bytes, Infallible>
+        // that axum can use for the response body
+        let boxed_stream: Pin<Box<dyn Stream<Item = Result<Bytes, Infallible>> + Send>> = Box::pin(stream);
+
+        // Build the response with proper SSE headers
         let response = Response::builder()
             .status(StatusCode::OK)
             .header(
@@ -206,7 +289,7 @@ impl ElixirSseProducer {
                 HeaderName::from_static("access-control-allow-origin"),
                 HeaderValue::from_static("*"),
             )
-            .body(Body::empty())
+            .body(Body::from_stream(boxed_stream))
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to build response: {}", e)))?;
 
         Ok(response)
@@ -311,6 +394,7 @@ pub async fn _next_event_placeholder() -> Option<SseEventResult> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
     fn test_sse_event_result_done() {

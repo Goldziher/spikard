@@ -138,7 +138,11 @@ defmodule Spikard.TestClient do
          handlers <- build_handlers_map(Keyword.get(opts, :routes, [])),
          lifecycle <- Keyword.get(opts, :lifecycle, []),
          :ok <- validate_lifecycle(lifecycle),
-         {:ok, handler_runner_pid} <- HandlerRunner.start_link(handlers),
+         # Add API key auth hook if configured
+         lifecycle_with_auth <- maybe_add_api_key_auth_hook(lifecycle, Keyword.get(opts, :api_key_auth)),
+         lifecycle_hooks <- organize_lifecycle_hooks(lifecycle_with_auth),
+         dependencies <- Keyword.get(opts, :dependencies, []),
+         {:ok, handler_runner_pid} <- HandlerRunner.start_link(handlers, lifecycle_hooks, dependencies),
          config <- build_config(opts),
          {:ok, client} <- Native.test_client_new(routes_json, handler_runner_pid, config) do
       {:ok, client}
@@ -149,12 +153,111 @@ defmodule Spikard.TestClient do
   end
 
   # Build complete config map including lifecycle, auth, cors, etc. for the NIF
+  # Important: lifecycle must be a map (not keyword list) for Rust to parse it
   defp build_config(opts) do
+    lifecycle = Keyword.get(opts, :lifecycle, [])
+    api_key_auth = Keyword.get(opts, :api_key_auth)
+
+    # Add API key auth hook if configured (same logic as in new/1)
+    # This ensures the hook count is included in the config sent to Rust
+    lifecycle_with_auth = maybe_add_api_key_auth_hook(lifecycle, api_key_auth)
+
+    # Convert lifecycle keyword list to a map with string keys and list lengths
+    # Rust side extracts counts (number of hooks per type) from this
+    lifecycle_map = lifecycle_to_counts_map(lifecycle_with_auth)
+
     %{
-      "lifecycle" => Keyword.get(opts, :lifecycle, []),
+      "lifecycle" => lifecycle_map,
       "jwt_auth" => Keyword.get(opts, :jwt_auth),
-      "api_key_auth" => Keyword.get(opts, :api_key_auth),
+      "api_key_auth" => api_key_auth,
       "cors" => Keyword.get(opts, :cors)
+    }
+  end
+
+  # Convert lifecycle keyword list to a map with hook counts for Rust
+  # Input: [on_request: [hook1, hook2], pre_handler: [hook3], ...]
+  # Output: %{"on_request" => [nil, nil], "pre_handler" => [nil], ...}
+  # The Rust side counts list length to determine number of hooks
+  defp lifecycle_to_counts_map(lifecycle) when is_list(lifecycle) do
+    Enum.reduce(lifecycle, %{}, fn {hook_type, hooks}, acc ->
+      hook_type_str = to_string(hook_type)
+      # Create a list of nils with same length as hooks list
+      # Rust counts the list length to know how many hooks exist
+      hooks_list = if is_list(hooks), do: Enum.map(hooks, fn _ -> nil end), else: [nil]
+      Map.put(acc, hook_type_str, hooks_list)
+    end)
+  end
+
+  defp lifecycle_to_counts_map(_), do: %{}
+
+  # Add API key authentication hook if api_key_auth is configured
+  defp maybe_add_api_key_auth_hook(lifecycle, nil), do: lifecycle
+  defp maybe_add_api_key_auth_hook(lifecycle, %{} = api_key_config) do
+    valid_keys = Map.get(api_key_config, :keys, [])
+    # Keep original header name for error messages, use lowercase for lookup
+    original_header_name = Map.get(api_key_config, :header_name, "x-api-key")
+    header_name_lower = String.downcase(original_header_name)
+
+    # Create the API key validation hook
+    api_key_hook = fn ctx ->
+      # Check header first (headers are already lowercase from Rust)
+      header_key = Map.get(ctx.headers, header_name_lower, "")
+
+      # Check query parameter as fallback
+      query_key = extract_api_key_from_query(ctx.query)
+
+      # Use header if present, otherwise query param
+      provided_key = if header_key != "", do: header_key, else: query_key
+
+      cond do
+        provided_key == "" ->
+          # No API key provided - use original header name in error message
+          {:short_circuit, build_api_key_error_response(401, "missing", original_header_name)}
+
+        provided_key in valid_keys ->
+          # Valid key
+          {:continue, ctx}
+
+        true ->
+          # Invalid key
+          {:short_circuit, build_api_key_error_response(401, "invalid", original_header_name)}
+      end
+    end
+
+    # Prepend the API key hook to pre_handler hooks
+    existing_pre_handler = Keyword.get(lifecycle, :pre_handler, [])
+    Keyword.put(lifecycle, :pre_handler, [api_key_hook | existing_pre_handler])
+  end
+  defp maybe_add_api_key_auth_hook(lifecycle, _), do: lifecycle
+
+  # Extract api_key from query string
+  defp extract_api_key_from_query(query) when is_binary(query) do
+    query
+    |> URI.decode_query()
+    |> Map.get("api_key", "")
+  end
+  defp extract_api_key_from_query(_), do: ""
+
+  # Build RFC 9457 Problem Details error response
+  defp build_api_key_error_response(status, error_type, header_name) do
+    {title, detail} = case error_type do
+      "missing" ->
+        {"Unauthorized", "API key is required. Provide it via the '#{header_name}' header or 'api_key' query parameter."}
+      "invalid" ->
+        {"Unauthorized", "The provided API key is invalid."}
+      _ ->
+        {"Unauthorized", "Authentication failed."}
+    end
+
+    %{
+      status: status,
+      headers: %{"content-type" => "application/problem+json"},
+      body: %{
+        type: "about:blank",
+        title: title,
+        status: status,
+        detail: detail
+      }
     }
   end
 
@@ -212,6 +315,20 @@ defmodule Spikard.TestClient do
   defp validate_lifecycle(lifecycle) when is_list(lifecycle), do: :ok
   defp validate_lifecycle(nil), do: :ok
   defp validate_lifecycle(_), do: {:error, "lifecycle must be a list"}
+
+  # Organize lifecycle hooks from keyword list to map format for HandlerRunner
+  # Input: [on_request: [hook1, hook2], pre_handler: [hook3], ...]
+  # Output: %{"on_request" => [hook1, hook2], "pre_handler" => [hook3], ...}
+  defp organize_lifecycle_hooks(lifecycle) when is_list(lifecycle) do
+    lifecycle
+    |> Enum.reduce(%{}, fn {hook_type, hooks}, acc ->
+      hook_type_str = to_string(hook_type)
+      hooks_list = if is_list(hooks), do: hooks, else: [hooks]
+      Map.put(acc, hook_type_str, hooks_list)
+    end)
+  end
+
+  defp organize_lifecycle_hooks(_), do: %{}
 
   # Convert atom HTTP method to string
   defp atom_to_http_method(:get), do: "GET"
@@ -388,6 +505,7 @@ defmodule Spikard.TestClient do
 
   # Convert request options to a map for the NIF
   # Converts headers from list of tuples to map for Rust compatibility
+  # Also converts atom keys in json body to string keys
   defp opts_to_map(opts) do
     opts
     |> Keyword.new()
@@ -396,11 +514,59 @@ defmodule Spikard.TestClient do
       converted_value =
         case key_str do
           "headers" -> convert_headers_to_map(value)
+          "multipart" -> convert_multipart_parts(value)
+          "json" -> stringify_keys(value)
           _ -> value
         end
       Map.put(acc, key_str, converted_value)
     end)
   end
+
+  # Recursively convert atom keys to string keys for JSON serialization
+  defp stringify_keys(map) when is_map(map) do
+    Map.new(map, fn {k, v} ->
+      key = if is_atom(k), do: Atom.to_string(k), else: k
+      {key, stringify_keys(v)}
+    end)
+  end
+
+  defp stringify_keys(list) when is_list(list) do
+    Enum.map(list, &stringify_keys/1)
+  end
+
+  defp stringify_keys(other), do: other
+
+  # Convert multipart parts from various formats to a consistent structure for Rust
+  # Supports: {"name", "data"}, {"name", "data", filename: "name.txt", content_type: "text/plain"}
+  defp convert_multipart_parts(parts) when is_list(parts) do
+    Enum.map(parts, &convert_single_multipart_part/1)
+  end
+  defp convert_multipart_parts(_), do: []
+
+  defp convert_single_multipart_part({name, data}) when is_binary(name) and is_binary(data) do
+    %{
+      "name" => name,
+      "content" => data,
+      "filename" => nil,
+      "content_type" => "application/octet-stream"
+    }
+  end
+
+  defp convert_single_multipart_part({name, data, opts}) when is_binary(name) and is_binary(data) and is_list(opts) do
+    %{
+      "name" => name,
+      "content" => data,
+      "filename" => Keyword.get(opts, :filename),
+      "content_type" => Keyword.get(opts, :content_type, "application/octet-stream")
+    }
+  end
+
+  defp convert_single_multipart_part(_), do: %{
+    "name" => "",
+    "content" => "",
+    "filename" => nil,
+    "content_type" => "application/octet-stream"
+  }
 
   defp convert_headers_to_map(headers) when is_list(headers) do
     Enum.into(headers, %{}, fn {k, v} -> {to_string(k), to_string(v)} end)

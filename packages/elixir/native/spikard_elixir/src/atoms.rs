@@ -36,6 +36,17 @@ rustler::atoms! {
     headers,
     body,
 
+    // File upload response atoms
+    filename,
+    content_type,
+    size,
+    data,
+    count,
+    filenames,
+    is_binary,
+    data_length,
+    file_count,
+
     // Request field atoms
     path_params,
     query_params,

@@ -233,6 +233,16 @@ pub fn test_client_request<'a>(
             request_builder = request_builder.header("content-type", "application/json");
         }
         Body::from(serde_json::to_vec(json_body).unwrap_or_default())
+    } else if let Some(multipart_data) = &options.multipart_data {
+        // Multipart form data
+        let (body_bytes, boundary) = encode_multipart_body(multipart_data);
+        if !options.headers.contains_key("content-type") {
+            request_builder = request_builder.header(
+                "content-type",
+                format!("multipart/form-data; boundary={}", boundary),
+            );
+        }
+        Body::from(body_bytes)
     } else if let Some(form_data) = &options.form_data {
         // URL-encoded form data
         if !options.headers.contains_key("content-type") {
@@ -305,6 +315,15 @@ pub fn test_client_close<'a>(
     Ok(atoms::ok().encode(env))
 }
 
+/// Represents a single part in a multipart request.
+#[derive(Debug, Clone)]
+struct MultipartPart {
+    name: String,
+    content: Vec<u8>,
+    filename: Option<String>,
+    content_type: String,
+}
+
 /// Request options parsed from Elixir map.
 struct RequestOptions {
     headers: HashMap<String, String>,
@@ -312,6 +331,7 @@ struct RequestOptions {
     cookies: HashMap<String, String>,
     json_body: Option<JsonValue>,
     form_data: Option<Vec<(String, String)>>,
+    multipart_data: Option<Vec<MultipartPart>>,
 }
 
 impl Default for RequestOptions {
@@ -322,6 +342,7 @@ impl Default for RequestOptions {
             cookies: HashMap::new(),
             json_body: None,
             form_data: None,
+            multipart_data: None,
         }
     }
 }
@@ -353,6 +374,9 @@ fn parse_request_options(env: Env, opts: Term) -> NifResult<RequestOptions> {
             }
             "form" => {
                 options.form_data = Some(decode_tuple_list(value)?);
+            }
+            "multipart" => {
+                options.multipart_data = Some(decode_multipart_parts(env, value)?);
             }
             _ => {
                 // Ignore unknown keys
@@ -426,6 +450,214 @@ fn decode_tuple_list(term: Term) -> NifResult<Vec<(String, String)>> {
     }
 
     Ok(result)
+}
+
+/// Decode multipart parts from Elixir list of maps.
+/// Each map has: "name", "content", "filename" (optional), "content_type"
+fn decode_multipart_parts(env: Env, term: Term) -> NifResult<Vec<MultipartPart>> {
+    let mut parts = Vec::new();
+
+    if let Ok(list) = term.decode::<Vec<Term>>() {
+        for item in list {
+            if let Some(iter) = MapIterator::new(item) {
+                let mut name = String::new();
+                let mut content = Vec::new();
+                let mut filename: Option<String> = None;
+                let mut content_type = "application/octet-stream".to_string();
+
+                for (key, value) in iter {
+                    let key_str = decode_key(key)?;
+                    match key_str.as_str() {
+                        "name" => {
+                            if let Ok(n) = value.decode::<String>() {
+                                name = n;
+                            }
+                        }
+                        "content" => {
+                            // Content can be string or binary
+                            if let Ok(s) = value.decode::<String>() {
+                                content = s.into_bytes();
+                            } else if let Ok(binary) = value.decode::<rustler::Binary>() {
+                                content = binary.as_slice().to_vec();
+                            }
+                        }
+                        "filename" => {
+                            // Filename can be string or nil
+                            if let Ok(f) = value.decode::<String>() {
+                                filename = Some(f);
+                            }
+                            // If it's nil, keep filename as None
+                        }
+                        "content_type" => {
+                            if let Ok(ct) = value.decode::<String>() {
+                                content_type = ct;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+
+                parts.push(MultipartPart {
+                    name,
+                    content,
+                    filename,
+                    content_type,
+                });
+            }
+        }
+    }
+
+    Ok(parts)
+}
+
+/// Encode multipart data as a body with boundary.
+/// Returns (body_bytes, boundary_string).
+fn encode_multipart_body(parts: &[MultipartPart]) -> (Vec<u8>, String) {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    // Generate a unique boundary
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let boundary = format!("----SpikardBoundary{}", timestamp);
+
+    let mut body = Vec::new();
+
+    for part in parts {
+        // Start boundary
+        body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
+
+        // Content-Disposition header
+        if let Some(ref filename) = part.filename {
+            body.extend_from_slice(
+                format!(
+                    "Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n",
+                    part.name, filename
+                )
+                .as_bytes(),
+            );
+        } else {
+            body.extend_from_slice(
+                format!("Content-Disposition: form-data; name=\"{}\"\r\n", part.name).as_bytes(),
+            );
+        }
+
+        // Content-Type header
+        body.extend_from_slice(format!("Content-Type: {}\r\n", part.content_type).as_bytes());
+
+        // Blank line before content
+        body.extend_from_slice(b"\r\n");
+
+        // Content
+        body.extend_from_slice(&part.content);
+
+        // End with CRLF
+        body.extend_from_slice(b"\r\n");
+    }
+
+    // Closing boundary
+    body.extend_from_slice(format!("--{}--\r\n", boundary).as_bytes());
+
+    (body, boundary)
+}
+
+/// Parse multipart request body and extract files.
+/// Returns a list of file maps with: filename, content_type, size, content
+fn parse_multipart_body(body: &[u8], content_type: &str) -> Vec<HashMap<String, JsonValue>> {
+    let mut files = Vec::new();
+
+    // Extract boundary from content-type header
+    // Format: multipart/form-data; boundary=----SpikardBoundary123
+    let boundary = content_type
+        .split(';')
+        .find_map(|part| {
+            let part = part.trim();
+            if part.starts_with("boundary=") {
+                Some(part.trim_start_matches("boundary=").trim_matches('"'))
+            } else {
+                None
+            }
+        });
+
+    let boundary = match boundary {
+        Some(b) => b,
+        None => return files,
+    };
+
+    // Parse the multipart body manually
+    let body_str = String::from_utf8_lossy(body);
+    let parts: Vec<&str> = body_str.split(&format!("--{}", boundary)).collect();
+
+    for part in parts {
+        let part = part.trim();
+        if part.is_empty() || part == "--" {
+            continue;
+        }
+
+        // Find the blank line separating headers from content
+        if let Some(header_end) = part.find("\r\n\r\n") {
+            let headers_section = &part[..header_end];
+            let content = &part[header_end + 4..];
+
+            // Remove trailing CRLF from content
+            let content = content.trim_end_matches("\r\n");
+
+            // Parse headers
+            let mut filename: Option<String> = None;
+            let mut field_name: Option<String> = None;
+            let mut part_content_type = "application/octet-stream".to_string();
+
+            for line in headers_section.lines() {
+                let line = line.trim();
+                if line.to_lowercase().starts_with("content-disposition:") {
+                    // Parse Content-Disposition: form-data; name="file"; filename="test.txt"
+                    for segment in line.split(';') {
+                        let segment = segment.trim();
+                        if segment.starts_with("name=") {
+                            field_name = Some(
+                                segment
+                                    .trim_start_matches("name=")
+                                    .trim_matches('"')
+                                    .to_string(),
+                            );
+                        } else if segment.starts_with("filename=") {
+                            filename = Some(
+                                segment
+                                    .trim_start_matches("filename=")
+                                    .trim_matches('"')
+                                    .to_string(),
+                            );
+                        }
+                    }
+                } else if line.to_lowercase().starts_with("content-type:") {
+                    part_content_type = line
+                        .trim_start_matches("Content-Type:")
+                        .trim_start_matches("content-type:")
+                        .trim()
+                        .to_string();
+                }
+            }
+
+            // Only add as a file if it has a filename or looks like file content
+            // For now, add all parts as potential files
+            let mut file_map = HashMap::new();
+            file_map.insert("filename".to_string(),
+                filename.map(JsonValue::String).unwrap_or(JsonValue::Null));
+            file_map.insert("content_type".to_string(), JsonValue::String(part_content_type));
+            file_map.insert("size".to_string(), JsonValue::Number(content.len().into()));
+            file_map.insert("content".to_string(), JsonValue::String(content.to_string()));
+
+            // Add field_name for reference
+            if let Some(name) = field_name {
+                file_map.insert("field_name".to_string(), JsonValue::String(name));
+            }
+
+            files.push(file_map);
+        }
+    }
+
+    files
 }
 
 /// Build full path with query parameters.

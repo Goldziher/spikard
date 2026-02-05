@@ -13,7 +13,6 @@ defmodule Spikard.Auth.ApiKeyTest do
   """
 
   use ExUnit.Case, async: true
-  @moduletag :incomplete
 
   alias Spikard.TestClient
   alias Spikard.TestClient.Response

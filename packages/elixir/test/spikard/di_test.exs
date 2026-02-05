@@ -10,8 +10,9 @@ defmodule Spikard.DITest do
   """
 
   use ExUnit.Case
-  @moduletag :incomplete
   doctest Spikard.DI
+
+  alias Spikard.TestClient.Response
 
   describe "Spikard.DI.value/2" do
     test "creates a value dependency" do
@@ -25,7 +26,7 @@ defmodule Spikard.DITest do
 
     test "stores any type of value" do
       dep1 = Spikard.DI.value("string_key", "value")
-      assert dep1.value == "string"
+      assert dep1.value == "value"
 
       dep2 = Spikard.DI.value("list_key", [1, 2, 3])
       assert dep2.value == [1, 2, 3]
@@ -91,7 +92,7 @@ defmodule Spikard.DITest do
 
       {:ok, response} = Spikard.TestClient.get(client, "/")
       assert response.status_code == 200
-      assert response.json()["db_status"] == true
+      assert Response.json(response)["db_status"] == true
     end
 
     test "handler receives factory dependency" do
@@ -102,15 +103,16 @@ defmodule Spikard.DITest do
         %{status: 200, body: %{request_id: ctx.request_id}}
       end
 
+      # Use singleton: false to get different values per request
       {:ok, client} = Spikard.TestClient.new(
         routes: [{:get, "/", handler}],
-        dependencies: [Spikard.DI.factory("ctx", factory)]
+        dependencies: [Spikard.DI.factory("ctx", factory, singleton: false)]
       )
 
       {:ok, r1} = Spikard.TestClient.get(client, "/")
       {:ok, r2} = Spikard.TestClient.get(client, "/")
 
-      assert r1.json()["request_id"] != r2.json()["request_id"]
+      assert Response.json(r1)["request_id"] != Response.json(r2)["request_id"]
     end
 
     test "factory dependency is called per request (not singleton)" do
@@ -134,8 +136,8 @@ defmodule Spikard.DITest do
       {:ok, r2} = Spikard.TestClient.get(client, "/")
 
       # Each request should have incremented call count
-      assert r1.json()["id"] == 1
-      assert r2.json()["id"] == 2
+      assert Response.json(r1)["id"] == 1
+      assert Response.json(r2)["id"] == 2
     end
 
     test "multiple dependencies in single request" do
@@ -164,8 +166,8 @@ defmodule Spikard.DITest do
       )
 
       {:ok, response} = Spikard.TestClient.get(client, "/")
-      assert response.json()["db_name"] == "postgres"
-      assert response.json()["cache_ttl"] == 3600
+      assert Response.json(response)["db_name"] == "postgres"
+      assert Response.json(response)["cache_ttl"] == 3600
     end
 
     test "missing dependency returns nil" do
@@ -180,7 +182,7 @@ defmodule Spikard.DITest do
       )
 
       {:ok, response} = Spikard.TestClient.get(client, "/")
-      assert response.json()["missing"] == nil
+      assert Response.json(response)["missing"] == nil
     end
 
     test "dependency with complex object" do
@@ -200,7 +202,7 @@ defmodule Spikard.DITest do
       )
 
       {:ok, response} = Spikard.TestClient.get(client, "/")
-      assert response.json()["level"] == "info"
+      assert Response.json(response)["level"] == "info"
     end
   end
 

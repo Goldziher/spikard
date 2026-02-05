@@ -99,7 +99,7 @@ defmodule Spikard.Sse.Event do
     # Add event type if present
     lines =
       if event.event do
-        ["event: #{event.event}\n" | lines]
+        lines ++ ["event: #{event.event}\n"]
       else
         lines
       end
@@ -107,7 +107,7 @@ defmodule Spikard.Sse.Event do
     # Add ID if present
     lines =
       if event.id do
-        ["id: #{event.id}\n" | lines]
+        lines ++ ["id: #{event.id}\n"]
       else
         lines
       end

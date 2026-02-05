@@ -9,7 +9,6 @@ defmodule Spikard.UploadFileTest do
   parsing implementation to work.
   """
   use ExUnit.Case, async: true
-  @moduletag :incomplete
 
   alias Spikard.UploadFile
 
@@ -109,7 +108,7 @@ defmodule Spikard.UploadFileTest do
       {:ok, response} = Spikard.TestClient.post(client, "/upload", multipart: [{"file", "content", filename: "test.txt"}])
 
       assert response.status_code == 200
-      body = Spikard.Response.json(response)
+      body = Spikard.TestClient.Response.json(response)
       assert body["filename"] == "test.txt"
       assert is_integer(body["size"])
     end
@@ -132,7 +131,7 @@ defmodule Spikard.UploadFileTest do
       {:ok, response} = Spikard.TestClient.post(client, "/upload", multipart: multipart)
 
       assert response.status_code == 200
-      body = Spikard.Response.json(response)
+      body = Spikard.TestClient.Response.json(response)
       assert body["count"] == 2
       assert Enum.member?(body["filenames"], "file1.txt")
       assert Enum.member?(body["filenames"], "file2.txt")
@@ -161,7 +160,7 @@ defmodule Spikard.UploadFileTest do
       {:ok, response} = Spikard.TestClient.post(client, "/upload", multipart: [{"file", "hello", filename: "test.txt"}])
 
       assert response.status_code == 200
-      body = Spikard.Response.json(response)
+      body = Spikard.TestClient.Response.json(response)
       assert body["is_binary"] == true
       assert body["data_length"] == 5
     end
@@ -195,7 +194,7 @@ defmodule Spikard.UploadFileTest do
       {:ok, response} = Spikard.TestClient.post(client, "/upload", json: %{data: "no files"})
 
       assert response.status_code == 200
-      body = Spikard.Response.json(response)
+      body = Spikard.TestClient.Response.json(response)
       assert body["count"] == 0
     end
   end

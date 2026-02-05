@@ -226,4 +226,41 @@ defmodule Spikard.Native do
   def deliver_factory_response(_request_id, _result) do
     :erlang.nif_error(:nif_not_loaded)
   end
+
+  # WebSocket NIFs
+
+  @doc """
+  Send a message to a WebSocket client.
+
+  ## Arguments
+
+    - `ws_ref` - WebSocket reference from Rust
+    - `message` - Message to send (text string or binary data)
+
+  ## Returns
+
+    - `:ok` - Message sent successfully
+    - `{:error, reason}` - Failed to send message
+  """
+  @spec websocket_send(term(), term()) :: :ok | {:error, term()}
+  def websocket_send(_ws_ref, _message) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  @doc """
+  Close a WebSocket connection.
+
+  ## Arguments
+
+    - `ws_ref` - WebSocket reference from Rust
+
+  ## Returns
+
+    - `:ok` - Connection closed successfully
+    - `{:error, reason}` - Failed to close connection
+  """
+  @spec websocket_close(term()) :: :ok | {:error, term()}
+  def websocket_close(_ws_ref) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
 end

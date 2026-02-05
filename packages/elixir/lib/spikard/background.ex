@@ -85,10 +85,10 @@ defmodule Spikard.Background do
   """
   @spec run((-> any()), keyword()) :: :ok
   def run(fun, opts) when is_function(fun, 0) and is_list(opts) do
-    _timeout = Keyword.get(opts, :timeout, nil)
+    timeout = Keyword.get(opts, :timeout, nil)
 
     # Spawn a task wrapper that executes the function safely
-    Task.start(fn ->
+    task = Task.start(fn ->
       try do
         fun.()
       rescue
@@ -97,6 +97,22 @@ defmodule Spikard.Background do
         _kind, _reason -> :ok
       end
     end)
+
+    # Apply timeout if specified
+    case {task, timeout} do
+      {{:ok, pid}, timeout_ms} when is_integer(timeout_ms) and timeout_ms > 0 ->
+        # Spawn a monitor process to enforce timeout
+        Process.spawn(fn ->
+          Process.sleep(timeout_ms)
+          case Process.info(pid) do
+            nil -> :ok
+            _ -> Process.exit(pid, :kill)
+          end
+        end, [])
+
+      _other ->
+        :ok
+    end
 
     :ok
   end
