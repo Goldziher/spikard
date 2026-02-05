@@ -363,4 +363,29 @@ defmodule Spikard.Response do
       policy -> "SameSite=#{policy}"
     end
   end
+
+  @doc """
+  Creates a streaming response from an Enumerable/Stream.
+
+  This is a convenience function that delegates to `Spikard.Stream.stream/2`.
+  The stream should produce binary chunks that will be sent to the client.
+  Each element yielded by the stream becomes a chunk in the response body.
+
+  ## Options
+
+  - `:status` - HTTP status code (default: 200)
+  - `:content_type` - Content-Type header (default: "application/octet-stream")
+
+  ## Examples
+
+      stream = Stream.map(1..100, &Integer.to_string/1)
+      Response.stream(stream, content_type: "text/plain")
+
+      stream = Stream.map(data, &Jason.encode!/1)
+      Response.stream(stream, content_type: "application/x-ndjson", status: 200)
+  """
+  @spec stream(Enumerable.t(), keyword()) :: t()
+  def stream(enumerable, opts \\ []) do
+    Spikard.Stream.stream(enumerable, opts)
+  end
 end

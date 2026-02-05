@@ -103,4 +103,127 @@ defmodule Spikard.Native do
   def deliver_handler_response(_request_id, _response_map) do
     :erlang.nif_error(:nif_not_loaded)
   end
+
+  # SSE NIFs
+
+  @doc """
+  Deliver an SSE event result from Elixir producer back to the waiting Rust code.
+
+  This is called by the ProducerServer after getting the next event from the producer.
+
+  ## Arguments
+
+    - `request_id` - Unique identifier for the SSE request
+    - `event_term` - Event term (:done atom or event map with data, event, id fields)
+
+  ## Returns
+
+    - `:ok` - Event delivered successfully
+    - `{:error, reason}` - Failed to deliver event
+  """
+  @spec deliver_sse_event_result(non_neg_integer(), term()) :: :ok | {:error, atom()}
+  def deliver_sse_event_result(_request_id, _event_term) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  # TestClient NIFs
+
+  @doc """
+  Create a new test client from routes configuration.
+
+  ## Arguments
+
+    - `routes_json` - JSON string containing route metadata
+    - `handler_runner_pid` - PID of the HandlerRunner GenServer
+    - `config_map` - Optional server configuration
+
+  ## Returns
+
+    - `{:ok, client_ref}` - Test client created successfully
+    - `{:error, reason}` - Failed to create client
+  """
+  @spec test_client_new(String.t(), pid(), map()) :: {:ok, reference()} | {:error, term()}
+  def test_client_new(_routes_json, _handler_runner_pid, _config_map) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  @doc """
+  Make a request to the test client.
+
+  ## Arguments
+
+    - `client` - TestClient resource reference
+    - `method` - HTTP method string (GET, POST, etc.)
+    - `path` - Request path
+    - `opts` - Request options map (headers, query, json, form, cookies)
+
+  ## Returns
+
+    - `{:ok, response_map}` - Request successful
+    - `{:error, reason}` - Request failed
+  """
+  @spec test_client_request(reference(), String.t(), String.t(), map()) ::
+          {:ok, map()} | {:error, term()}
+  def test_client_request(_client, _method, _path, _opts) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  @doc """
+  Close the test client and release resources.
+
+  ## Arguments
+
+    - `client` - TestClient resource reference
+
+  ## Returns
+
+    - `:ok` - Client closed
+  """
+  @spec test_client_close(reference()) :: :ok
+  def test_client_close(_client) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  # Lifecycle hook NIFs
+
+  @doc """
+  Deliver a lifecycle hook response from Elixir back to the waiting Rust hook.
+
+  This is called by the HandlerRunner GenServer after processing a hook.
+
+  ## Arguments
+
+    - `request_id` - The unique ID of the hook request
+    - `result_type` - Atom :continue or :short_circuit
+    - `payload` - The hook result payload (context or response map)
+
+  ## Returns
+
+    - `:ok` - Response delivered successfully
+    - `{:error, reason}` - Failed to deliver response
+  """
+  @spec deliver_hook_response(non_neg_integer(), atom(), term()) :: :ok | {:error, atom()}
+  def deliver_hook_response(_request_id, _result_type, _payload) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  # DI NIFs
+
+  @doc """
+  Deliver a factory dependency response from Elixir back to waiting Rust code.
+
+  ## Arguments
+
+    - `request_id` - The unique ID of the factory request
+    - `result` - The factory result value
+
+  ## Returns
+
+    - `:ok` - Response delivered successfully
+    - `{:error, reason}` - Failed to deliver response
+  """
+  @spec deliver_factory_response(non_neg_integer(), term()) :: :ok | {:error, atom()}
+  def deliver_factory_response(_request_id, _result) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
 end

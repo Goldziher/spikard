@@ -49,7 +49,9 @@ defmodule Spikard.Request do
           raw_body: binary() | nil,
           method: String.t(),
           path: String.t(),
-          validated_params: term() | nil
+          validated_params: term() | nil,
+          dependencies: map() | nil,
+          files: [Spikard.UploadFile.t()]
         }
 
   defstruct [
@@ -62,7 +64,9 @@ defmodule Spikard.Request do
     :raw_body,
     :method,
     :path,
-    :validated_params
+    :validated_params,
+    :dependencies,
+    files: []
   ]
 
   @doc """
@@ -112,7 +116,9 @@ defmodule Spikard.Request do
       raw_body: Map.get(data, "raw_body", nil),
       method: Map.get(data, "method", ""),
       path: Map.get(data, "path", ""),
-      validated_params: Map.get(data, "validated_params", nil)
+      validated_params: Map.get(data, "validated_params", nil),
+      dependencies: Map.get(data, "dependencies", nil) |> ensure_map(),
+      files: Map.get(data, "files", []) |> ensure_list() |> parse_files()
     }
   end
 
@@ -311,9 +317,136 @@ defmodule Spikard.Request do
     raw_body
   end
 
+  @doc """
+  Retrieves a dependency from the request by key.
+
+  Dependencies are injected into requests at the server level and are available
+  to all handlers. This function retrieves a dependency by its key.
+
+  ## Parameters
+
+    * `request` - The Request struct
+    * `key` - The dependency key as a string
+
+  ## Returns
+
+    The dependency value, or `nil` if not found or dependencies are not configured
+
+  ## Examples
+
+      iex> request = %Spikard.Request{
+      ...>   dependencies: %{"db" => %{host: "localhost"}},
+      ...>   path_params: %{},
+      ...>   query_params: %{},
+      ...>   raw_query_params: %{},
+      ...>   headers: %{},
+      ...>   cookies: %{},
+      ...>   body: nil,
+      ...>   raw_body: nil,
+      ...>   method: "GET",
+      ...>   path: "/",
+      ...>   validated_params: nil
+      ...> }
+      iex> Spikard.Request.get_dependency(request, "db")
+      %{host: "localhost"}
+
+      iex> Spikard.Request.get_dependency(request, "cache")
+      nil
+  """
+  @spec get_dependency(t(), String.t()) :: term()
+  def get_dependency(%__MODULE__{dependencies: deps}, key) when is_binary(key) do
+    case deps do
+      nil -> nil
+      deps when is_map(deps) -> Map.get(deps, key)
+      _ -> nil
+    end
+  end
+
+  @doc """
+  Retrieves all uploaded files from the request.
+
+  Files are parsed from multipart/form-data requests. Each file contains
+  metadata (filename, content type, size) and the file content as binary.
+
+  ## Parameters
+
+    * `request` - The Request struct
+
+  ## Returns
+
+    A list of Spikard.UploadFile structs. Returns an empty list if no files
+    were uploaded.
+
+  ## Examples
+
+      iex> request = Spikard.Request.from_map(%{
+      ...>   "files" => [
+      ...>     %{"filename" => "test.txt", "content_type" => "text/plain", "size" => 5, "content" => "hello"}
+      ...>   ]
+      ...> })
+      iex> files = Spikard.Request.files(request)
+      iex> length(files)
+      1
+      iex> hd(files).filename
+      "test.txt"
+
+      iex> request = Spikard.Request.from_map(%{})
+      iex> Spikard.Request.files(request)
+      []
+  """
+  @spec files(t()) :: [Spikard.UploadFile.t()]
+  def files(%__MODULE__{files: files}) do
+    files
+  end
+
   # Private helper to ensure maps are returned consistently
   @spec ensure_map(term()) :: map()
   defp ensure_map(value) when is_map(value), do: value
   defp ensure_map(nil), do: %{}
   defp ensure_map(_other), do: %{}
+
+  # Private helper to ensure lists are returned consistently
+  @spec ensure_list(term()) :: list()
+  defp ensure_list(value) when is_list(value), do: value
+  defp ensure_list(_), do: []
+
+  # Private helper to parse file data from request
+  @spec parse_files(list()) :: [Spikard.UploadFile.t()]
+  defp parse_files(file_list) when is_list(file_list) do
+    Enum.map(file_list, &parse_single_file/1)
+  end
+
+  # Parse a single file object from the request data
+  @spec parse_single_file(map() | any()) :: Spikard.UploadFile.t()
+  defp parse_single_file(file_data) when is_map(file_data) do
+    filename = Map.get(file_data, "filename")
+    content_type = Map.get(file_data, "content_type", "application/octet-stream")
+    content = Map.get(file_data, "content", "")
+
+    # Handle size - could be provided or calculated from content
+    size =
+      case Map.get(file_data, "size") do
+        nil ->
+          if is_binary(content), do: byte_size(content), else: 0
+        s when is_integer(s) -> s
+        _ -> 0
+      end
+
+    # Convert content to binary if needed
+    data =
+      case content do
+        b when is_binary(b) -> b
+        l when is_list(l) ->
+          try do
+            Enum.map(l, &Integer.to_string/1) |> Enum.join("") |> String.to_charlist() |> List.to_string()
+          rescue
+            _ -> ""
+          end
+        _ -> ""
+      end
+
+    Spikard.UploadFile.new(filename, content_type, size, data)
+  end
+
+  defp parse_single_file(_), do: Spikard.UploadFile.new(nil, "application/octet-stream", 0, "")
 end

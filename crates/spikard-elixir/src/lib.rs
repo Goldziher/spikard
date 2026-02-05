@@ -13,6 +13,8 @@
 //! - `error`: Error types and translation
 //! - `handler`: ElixirHandler trait implementation
 //! - `server`: HTTP server setup and lifecycle management
+//! - `testing`: Test client for testing HTTP handlers without network overhead
+//! - `websocket`: WebSocket handler implementation
 
 #![allow(dead_code)]
 #![allow(deprecated)]
@@ -87,5 +89,7 @@ pub mod conversion;
 pub mod error;
 pub mod handler;
 pub mod server;
+pub mod testing;
+pub mod websocket;
 
 rustler::init!("Elixir.Spikard.Native");
