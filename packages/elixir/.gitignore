@@ -1,0 +1,20 @@
+# Build artifacts
+/_build/
+/deps/
+/cover/
+/priv/
+
+# Crash dumps
+erl_crash.dump
+
+# Mix archives
+/.fetch
+
+# Documentation
+/doc/
+
+# Editor/IDE files
+*.swp
+*.swo
+.idea/
+.vscode/

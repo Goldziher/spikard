@@ -1,0 +1,13 @@
+# Build artifacts
+/_build/
+/deps/
+/cover/
+
+# Crash dumps
+erl_crash.dump
+
+# Mix archives
+/.fetch
+
+# Documentation
+/doc/
