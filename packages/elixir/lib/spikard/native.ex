@@ -35,7 +35,7 @@ defmodule Spikard.Native do
     - `port` - Port number to bind to (integer, 1-65535)
     - `host` - Host address to bind to (string, e.g., "0.0.0.0" or "127.0.0.1")
     - `routes_json` - JSON string containing route metadata
-    - `handlers` - Map of handler implementations
+    - `handler_runner_pid` - PID of the HandlerRunner GenServer
     - `config_map` - Server configuration options as a map
 
   ## Returns
@@ -43,9 +43,9 @@ defmodule Spikard.Native do
     - `{:ok, server_ref}` - Server started; server_ref is `{host, port}`
     - `{:error, reason}` - Error with reason atom or string
   """
-  @spec start_server(integer(), String.t(), String.t(), map(), map()) ::
+  @spec start_server(integer(), String.t(), String.t(), pid(), map()) ::
           {:ok, {String.t(), integer()}} | {:error, atom() | String.t()}
-  def start_server(_port, _host, _routes_json, _handlers, _config_map) do
+  def start_server(_port, _host, _routes_json, _handler_runner_pid, _config_map) do
     :erlang.nif_error(:nif_not_loaded)
   end
 
@@ -62,7 +62,7 @@ defmodule Spikard.Native do
     - `{:ok, :stopped}` - Server stopped
     - `{:error, reason}` - Error with reason
   """
-  @spec stop_server(String.t(), integer()) :: {:ok, :stopped} | {:error, atom() | String.t()}
+  @spec stop_server(String.t(), integer()) :: :ok | {:error, {atom(), String.t()}}
   def stop_server(_host, _port) do
     :erlang.nif_error(:nif_not_loaded)
   end
@@ -81,6 +81,26 @@ defmodule Spikard.Native do
   """
   @spec server_info(String.t(), integer()) :: {String.t(), integer()}
   def server_info(_host, _port) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  @doc """
+  Deliver a handler response from Elixir back to the waiting Rust handler.
+
+  This is called by the HandlerRunner GenServer after processing a request.
+
+  ## Arguments
+
+    - `request_id` - Unique identifier for the request
+    - `response_map` - Response map with status, headers, body
+
+  ## Returns
+
+    - `:ok` - Response delivered successfully
+    - `{:error, reason}` - Failed to deliver response
+  """
+  @spec deliver_handler_response(non_neg_integer(), map()) :: :ok | {:error, atom()}
+  def deliver_handler_response(_request_id, _response_map) do
     :erlang.nif_error(:nif_not_loaded)
   end
 end

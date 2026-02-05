@@ -720,7 +720,7 @@ pub fn build_router_with_handlers_and_config(
     config: ServerConfig,
     route_metadata: Vec<crate::RouteMetadata>,
 ) -> Result<AxumRouter, String> {
-    #[cfg(feature = "di")]
+    #[cfg(all(feature = "di", debug_assertions))]
     if let Some(di_container) = config.di_container.as_ref() {
         eprintln!(
             "[spikard-di] build_router: di_container has keys: {:?}",
@@ -1093,14 +1093,19 @@ impl Server {
     }
 
     /// Initialize logging
+    ///
+    /// This function is idempotent - calling it multiple times is safe.
+    /// It uses `try_init()` instead of `init()` to avoid panics when the
+    /// global subscriber has already been set (e.g., by a language runtime
+    /// or a previous call).
     pub fn init_logging() {
-        tracing_subscriber::registry()
+        let _ = tracing_subscriber::registry()
             .with(
                 tracing_subscriber::EnvFilter::try_from_default_env()
                     .unwrap_or_else(|_| "spikard=info,tower_http=info".into()),
             )
             .with(tracing_subscriber::fmt::layer())
-            .init();
+            .try_init();
     }
 
     /// Start the server

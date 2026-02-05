@@ -31,3 +31,4 @@ spikard-http = { path = "../spikard-http", features = ["di"] }
 spikard-bindings-shared = { path = "../spikard-bindings-shared" }
 tokio = { workspace = true }
 tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt", "std"] }

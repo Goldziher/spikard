@@ -137,8 +137,9 @@ defmodule Spikard do
          {:ok, port, host, routes, config} <- extract_start_params(opts),
          {:ok, routes_json} <- serialize_routes(routes),
          handlers <- build_handlers_map(routes),
+         {:ok, handler_runner_pid} <- Spikard.HandlerRunner.start_link(handlers),
          {:ok, server_handle} <-
-           Spikard.Native.start_server(port, host, routes_json, handlers, config) do
+           Spikard.Native.start_server(port, host, routes_json, handler_runner_pid, config) do
       {:ok, server_handle}
     else
       {:error, reason} -> {:error, reason}
@@ -170,6 +171,7 @@ defmodule Spikard do
   def stop({host, port} = _server) when is_binary(host) and is_integer(port) do
     case Spikard.Native.stop_server(host, port) do
       {:ok, :stopped} -> :ok
+      :ok -> :ok
       {:error, reason} -> {:error, reason}
     end
   end
@@ -270,17 +272,18 @@ defmodule Spikard do
     %{
       "method" => method |> Atom.to_string() |> String.upcase(),
       "path" => path,
-      "handler" => handler_name(handler),
+      "handler_name" => handler_name(handler),
       "pipes" => []
     }
   end
 
   defp normalize_route(route) when is_map(route) do
     # Already a map from Router - convert to JSON-friendly format
+    method = Map.get(route, :method, "GET") |> to_string() |> String.upcase()
     %{
-      "method" => Map.get(route, :method, "GET") |> to_string(),
+      "method" => method,
       "path" => Map.get(route, :path, "/"),
-      "handler" => handler_name(Map.get(route, :handler, "unknown")),
+      "handler_name" => handler_name(Map.get(route, :handler, "unknown")),
       "pipes" => Map.get(route, :pipes, [])
     }
   end

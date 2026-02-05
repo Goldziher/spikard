@@ -83,5 +83,4 @@ defmodule Spikard.MixProject do
       "lint.fix": ["credo suggest --all --strict"]
     ]
   end
-
 end

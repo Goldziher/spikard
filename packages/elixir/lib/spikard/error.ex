@@ -19,6 +19,7 @@ defmodule Spikard.Error do
         }
 
   @impl true
+  @spec exception(atom()) :: t()
   def exception(reason) when is_atom(reason) do
     %__MODULE__{
       reason: reason,
@@ -26,6 +27,7 @@ defmodule Spikard.Error do
     }
   end
 
+  @spec exception({atom(), term()}) :: t()
   def exception({reason, details}) do
     %__MODULE__{
       reason: reason,

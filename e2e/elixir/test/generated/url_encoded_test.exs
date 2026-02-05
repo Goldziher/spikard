@@ -372,7 +372,7 @@ defmodule E2EElixirApp.UrlEncodedTest do
     try do
       url = @base_url <> "/form/"
       headers = [{~c"Content-Type", ~c"application/x-www-form-urlencoded"}]
-      req_body = "subscribe=true&username=johndoe"
+      req_body = "username=johndoe&subscribe=true"
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -403,7 +403,7 @@ defmodule E2EElixirApp.UrlEncodedTest do
     try do
       url = @base_url <> "/form/"
       headers = [{~c"Content-Type", ~c"application/x-www-form-urlencoded"}]
-      req_body = "description=&username=johndoe"
+      req_body = "username=johndoe&description="
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -464,7 +464,7 @@ defmodule E2EElixirApp.UrlEncodedTest do
     try do
       url = @base_url <> "/form/"
       headers = [{~c"Content-Type", ~c"application/x-www-form-urlencoded"}]
-      req_body = "age=30&username=johndoe"
+      req_body = "username=johndoe&age=30"
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -495,7 +495,7 @@ defmodule E2EElixirApp.UrlEncodedTest do
     try do
       url = @base_url <> "/token"
       headers = [{~c"Content-Type", ~c"application/x-www-form-urlencoded"}]
-      req_body = "password=secret&grant_type=password&username=johndoe&scope="
+      req_body = "scope=&grant_type=password&username=johndoe&password=secret"
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -631,7 +631,7 @@ defmodule E2EElixirApp.UrlEncodedTest do
     try do
       url = @base_url <> "/login/"
       headers = [{~c"Content-Type", ~c"application/x-www-form-urlencoded"}]
-      req_body = "username=johndoe&password=secret"
+      req_body = "password=secret&username=johndoe"
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -661,7 +661,7 @@ defmodule E2EElixirApp.UrlEncodedTest do
     try do
       url = @base_url <> "/form/"
       headers = [{~c"Content-Type", ~c"application/x-www-form-urlencoded"}]
-      req_body = "description=Test%20%26%20Development&name=John%20Doe"
+      req_body = "name=John%20Doe&description=Test%20%26%20Development"
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(

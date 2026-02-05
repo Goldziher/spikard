@@ -307,7 +307,7 @@ defmodule E2EElixirApp.CookiesTest do
 
       headers = [
         {~c"Cookie",
-         ~c"session_id=session123; googall_tracker=ga789; fatebook_tracker=tracker456"}
+         ~c"session_id=session123; fatebook_tracker=tracker456; googall_tracker=ga789"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =

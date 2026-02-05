@@ -33,7 +33,7 @@ defmodule Spikard.Router do
 
   All standard HTTP methods are supported:
 
-      get, post, put, patch, delete, head, options
+      get, post, put, patch, delete, head, options, trace
 
   ## Middleware Chains
 
@@ -103,26 +103,29 @@ defmodule Spikard.Router do
     end
   end
 
-  @type http_method :: :get | :post | :put | :patch | :delete | :head | :options
+  @type http_method :: :get | :post | :put | :patch | :delete | :head | :options | :trace
 
   @type route_t :: %{
           method: String.t(),
           path: String.t(),
           handler: (term() -> term()),
           handler_name: String.t(),
-          pipes: [atom()]
+          pipes: [atom()],
+          parameter_schema: map() | nil,
+          request_schema: map() | nil,
+          response_schema: map() | nil
         }
 
   @doc false
   @spec to_route_metadata(route_t()) :: map()
-  def to_route_metadata(%{method: method, path: path, handler_name: handler_name, pipes: _pipes}) do
+  def to_route_metadata(route) do
     %{
-      "method" => method,
-      "path" => path,
-      "handler_name" => handler_name,
-      "request_body_schema" => nil,
-      "request_params_schema" => nil,
-      "response_schema" => nil
+      "method" => route.method,
+      "path" => route.path,
+      "handler_name" => route.handler_name,
+      "request_body_schema" => Map.get(route, :request_schema),
+      "request_params_schema" => Map.get(route, :parameter_schema),
+      "response_schema" => Map.get(route, :response_schema)
     }
   end
 
@@ -133,9 +136,10 @@ defmodule Spikard.Router do
 
       get "/", &MyApp.Handler.index/1
       get "/users/:id", &MyApp.Handler.show/1
+      get "/items/:id", &MyApp.Handler.show/1, parameter_schema: %{...}
   """
-  defmacro get(path, handler) do
-    add_route(:get, path, handler)
+  defmacro get(path, handler, opts \\ []) do
+    add_route(:get, path, handler, opts)
   end
 
   @doc """
@@ -144,9 +148,10 @@ defmodule Spikard.Router do
   ## Examples
 
       post "/users", &MyApp.Handler.create/1
+      post "/items", &MyApp.Handler.create/1, request_schema: %{...}
   """
-  defmacro post(path, handler) do
-    add_route(:post, path, handler)
+  defmacro post(path, handler, opts \\ []) do
+    add_route(:post, path, handler, opts)
   end
 
   @doc """
@@ -156,8 +161,8 @@ defmodule Spikard.Router do
 
       put "/users/:id", &MyApp.Handler.update/1
   """
-  defmacro put(path, handler) do
-    add_route(:put, path, handler)
+  defmacro put(path, handler, opts \\ []) do
+    add_route(:put, path, handler, opts)
   end
 
   @doc """
@@ -167,8 +172,8 @@ defmodule Spikard.Router do
 
       patch "/users/:id", &MyApp.Handler.patch_update/1
   """
-  defmacro patch(path, handler) do
-    add_route(:patch, path, handler)
+  defmacro patch(path, handler, opts \\ []) do
+    add_route(:patch, path, handler, opts)
   end
 
   @doc """
@@ -178,8 +183,8 @@ defmodule Spikard.Router do
 
       delete "/users/:id", &MyApp.Handler.delete/1
   """
-  defmacro delete(path, handler) do
-    add_route(:delete, path, handler)
+  defmacro delete(path, handler, opts \\ []) do
+    add_route(:delete, path, handler, opts)
   end
 
   @doc """
@@ -189,8 +194,8 @@ defmodule Spikard.Router do
 
       head "/health", &MyApp.Handler.health/1
   """
-  defmacro head(path, handler) do
-    add_route(:head, path, handler)
+  defmacro head(path, handler, opts \\ []) do
+    add_route(:head, path, handler, opts)
   end
 
   @doc """
@@ -200,8 +205,19 @@ defmodule Spikard.Router do
 
       options "/users", &MyApp.Handler.options/1
   """
-  defmacro options(path, handler) do
-    add_route(:options, path, handler)
+  defmacro options(path, handler, opts \\ []) do
+    add_route(:options, path, handler, opts)
+  end
+
+  @doc """
+  Defines a TRACE route.
+
+  ## Examples
+
+      trace "/debug", &MyApp.Handler.trace/1
+  """
+  defmacro trace(path, handler, opts \\ []) do
+    add_route(:trace, path, handler, opts)
   end
 
   @doc """
@@ -243,7 +259,7 @@ defmodule Spikard.Router do
   end
 
   # Private helper to add a route
-  defp add_route(method, path, handler) do
+  defp add_route(method, path, handler, opts) do
     method_str = method |> Atom.to_string() |> String.upcase()
 
     # Generate a handler name from the handler AST
@@ -259,20 +275,26 @@ defmodule Spikard.Router do
           "#{fun}"
 
         _ ->
-          # Anonymous function or other - generate unique name
-          "handler_#{:erlang.unique_integer([:positive])}"
+          # Anonymous function or other - generate deterministic name from method and path
+          # We use the AST path at compile time since the actual path value isn't available yet
+          path_hash = path |> Macro.to_string() |> :erlang.phash2()
+          "handler_#{method}_#{path_hash}"
       end
 
     quote do
       full_path = @spikard_scope_prefix <> unquote(path)
       current_pipes = @spikard_pipes
+      route_opts = unquote(opts)
 
       @spikard_routes %{
         method: unquote(method_str),
         path: full_path,
         handler: unquote(handler),
         handler_name: unquote(handler_name),
-        pipes: current_pipes
+        pipes: current_pipes,
+        parameter_schema: Keyword.get(route_opts, :parameter_schema),
+        request_schema: Keyword.get(route_opts, :request_schema),
+        response_schema: Keyword.get(route_opts, :response_schema)
       }
     end
   end

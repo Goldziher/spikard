@@ -28,9 +28,9 @@ defmodule E2EElixirApp.CorsTest do
       url = @base_url <> "/api/data"
 
       headers = [
-        {~c"Access-Control-Request-Headers", ~c"Content-Type"},
         {~c"Origin", ~c"https://example.com"},
-        {~c"Access-Control-Request-Method", ~c"DELETE"}
+        {~c"Access-Control-Request-Method", ~c"DELETE"},
+        {~c"Access-Control-Request-Headers", ~c"Content-Type"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -53,9 +53,9 @@ defmodule E2EElixirApp.CorsTest do
       url = @base_url <> "/api/data"
 
       headers = [
+        {~c"Access-Control-Request-Headers", ~c"X-Custom-Header"},
         {~c"Origin", ~c"https://example.com"},
-        {~c"Access-Control-Request-Method", ~c"POST"},
-        {~c"Access-Control-Request-Headers", ~c"X-Custom-Header"}
+        {~c"Access-Control-Request-Method", ~c"POST"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -78,8 +78,8 @@ defmodule E2EElixirApp.CorsTest do
       url = @base_url <> "/api/data"
 
       headers = [
-        {~c"Origin", ~c"https://example.com"},
         {~c"Access-Control-Request-Headers", ~c"Content-Type"},
+        {~c"Origin", ~c"https://example.com"},
         {~c"Access-Control-Request-Method", ~c"POST"}
       ]
 
@@ -147,9 +147,9 @@ defmodule E2EElixirApp.CorsTest do
       url = @base_url <> "/api/local-resource"
 
       headers = [
+        {~c"Origin", ~c"https://public.example.com"},
         {~c"Access-Control-Request-Method", ~c"GET"},
-        {~c"Access-Control-Request-Private-Network", ~c"true"},
-        {~c"Origin", ~c"https://public.example.com"}
+        {~c"Access-Control-Request-Private-Network", ~c"true"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -170,7 +170,7 @@ defmodule E2EElixirApp.CorsTest do
 
     try do
       url = @base_url <> "/api/cached-resource"
-      headers = [{~c"Origin", ~c"https://app.example.com"}, {~c"Cache-Control", ~c"max-age=3600"}]
+      headers = [{~c"Cache-Control", ~c"max-age=3600"}, {~c"Origin", ~c"https://app.example.com"}]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(:get, {String.to_charlist(url), headers}, [], [])
@@ -264,9 +264,9 @@ defmodule E2EElixirApp.CorsTest do
       url = @base_url <> "/api/resource/123"
 
       headers = [
-        {~c"Access-Control-Request-Method", ~c"PUT"},
+        {~c"Access-Control-Request-Headers", ~c"Content-Type, X-Custom-Header"},
         {~c"Origin", ~c"https://app.example.com"},
-        {~c"Access-Control-Request-Headers", ~c"Content-Type, X-Custom-Header"}
+        {~c"Access-Control-Request-Method", ~c"PUT"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -289,9 +289,9 @@ defmodule E2EElixirApp.CorsTest do
       url = @base_url <> "/items/"
 
       headers = [
+        {~c"Access-Control-Request-Headers", ~c"Content-Type, X-Custom-Header"},
         {~c"Access-Control-Request-Method", ~c"POST"},
-        {~c"Origin", ~c"https://example.com"},
-        {~c"Access-Control-Request-Headers", ~c"Content-Type, X-Custom-Header"}
+        {~c"Origin", ~c"https://example.com"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -368,10 +368,10 @@ defmodule E2EElixirApp.CorsTest do
       url = @base_url <> "/api/form"
 
       headers = [
-        {~c"Origin", ~c"https://app.example.com"},
         {~c"Accept-Language", ~c"en-US"},
-        {~c"Accept", ~c"application/json"},
-        {~c"Content-Type", ~c"text/plain"}
+        {~c"Origin", ~c"https://app.example.com"},
+        {~c"Content-Type", ~c"text/plain"},
+        {~c"Accept", ~c"application/json"}
       ]
 
       req_body = ""

@@ -449,9 +449,16 @@ tasks:
     cmds:
       - mix deps.update --all
 
+  elixir:vendor:
+    desc: "Vendor Rust NIF source into native/spikard_elixir"
+    dir: packages/elixir
+    cmds:
+      - ./scripts/vendor_nif.sh
+
   elixir:build:
     desc: "Build Elixir with NIF"
     deps:
+      - elixir:vendor
       - elixir:install
     dir: packages/elixir
     cmds:
@@ -463,41 +470,43 @@ tasks:
       - elixir:build
     dir: packages/elixir
     cmds:
-      - mix test
+      - SPIKARD_BUILD=1 mix test
 
   elixir:lint:
     desc: "Run Credo static analysis (auto-fix suggestions)"
     deps:
-      - elixir:install
+      - elixir:build
     dir: packages/elixir
     cmds:
-      - mix credo suggest --all --strict
+      - SPIKARD_BUILD=1 mix credo suggest --all --strict
 
   elixir:lint:check:
     desc: "Check Elixir linting without modifications (Credo check-only)"
     deps:
-      - elixir:install
+      - elixir:build
     dir: packages/elixir
     cmds:
-      - mix credo suggest --all --strict
+      - SPIKARD_BUILD=1 mix credo suggest --all --strict
 
   elixir:format:
     desc: "Format Elixir code"
     dir: packages/elixir
     cmds:
-      - mix format
+      - SPIKARD_BUILD=1 mix format
 
   elixir:format:check:
     desc: "Check Elixir formatting without modifications"
     dir: packages/elixir
     cmds:
-      - mix format --check-formatted
+      - SPIKARD_BUILD=1 mix format --check-formatted
 
   elixir:dialyzer:
     desc: "Run Dialyzer type checker"
+    deps:
+      - elixir:build
     dir: packages/elixir
     cmds:
-      - mix dialyzer
+      - SPIKARD_BUILD=1 mix dialyzer
 
   node:format:
     desc: "Format TypeScript code with biome"
@@ -723,6 +732,12 @@ tasks:
       - rm -rf e2e/php
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang php --output e2e/php
 
+  generate:tests:elixir:
+    desc: "Generate Elixir e2e test suite from fixtures"
+    cmds:
+      - rm -rf e2e/elixir
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang elixir --output e2e/elixir
+
   generate:tests:
     desc: "Generate all e2e test suites from fixtures"
     cmds:
@@ -731,6 +746,7 @@ tasks:
       - task: generate:tests:node
       - task: generate:tests:ruby
       - task: generate:tests:php
+      - task: generate:tests:elixir
 
   verify:tests:rust:
     desc: "Regenerate and run Rust e2e suite, ensuring no diff"
@@ -767,6 +783,13 @@ tasks:
       - task: test:e2e:php
       - git diff --exit-code
 
+  verify:tests:elixir:
+    desc: "Regenerate and run Elixir e2e suite, ensuring no diff"
+    cmds:
+      - task: generate:tests:elixir
+      - task: test:e2e:elixir
+      - git diff --exit-code
+
   verify:tests:
     desc: "Verify all e2e suites are up to date and pass"
     cmds:
@@ -775,6 +798,7 @@ tasks:
       - task: verify:tests:node
       - task: verify:tests:ruby
       - task: verify:tests:php
+      - task: verify:tests:elixir
 
   clean:generated:
     desc: "Remove all generated e2e test infrastructure"
@@ -825,6 +849,14 @@ tasks:
     cmds:
       - php -d extension={{.PHP_EXTENSION_PATH}} ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
 
+  test:e2e:elixir:
+    desc: "Run Elixir e2e tests (fixture-driven integration tests)"
+    dir: e2e/elixir
+    deps:
+      - elixir:build
+    cmds:
+      - SPIKARD_BUILD=1 mix test
+
   test:e2e:
     desc: "Run all e2e fixture-driven integration tests"
     cmds:
@@ -833,6 +865,7 @@ tasks:
       - task: test:e2e:node
       - task: test:e2e:ruby
       - task: test:e2e:php
+      - task: test:e2e:elixir
 
   build:js:
     desc: "Build all JavaScript/TypeScript packages"

@@ -1362,7 +1362,7 @@ defmodule E2EElixirApp.QueryParamsTest do
     {:ok, server} = Spikard.start(start_opts)
 
     try do
-      url = @base_url <> "/query/multi-type" <> "?" <> "name=john&age=30&active=true&score=95.5"
+      url = @base_url <> "/query/multi-type" <> "?" <> "age=30&active=true&name=john&score=95.5"
       headers = []
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -1544,7 +1544,7 @@ defmodule E2EElixirApp.QueryParamsTest do
     {:ok, server} = Spikard.start(start_opts)
 
     try do
-      url = @base_url <> "/test" <> "?" <> "special=%26%40A.ac&email=x%40test.com"
+      url = @base_url <> "/test" <> "?" <> "email=x%40test.com&special=%26%40A.ac"
       headers = []
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
