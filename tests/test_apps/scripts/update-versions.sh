@@ -88,6 +88,13 @@ if [[ -f "$TEST_APPS_DIR/rust/tests/integration.rs" ]]; then
 	echo "✓ Updated Rust tests to $VERSION"
 fi
 
+# Elixir: mix.exs
+if [[ -f "$TEST_APPS_DIR/elixir/mix.exs" ]]; then
+	sed -i.bak "s/@version \"[0-9.]*\"/@version \"$VERSION\"/" "$TEST_APPS_DIR/elixir/mix.exs"
+	rm -f "$TEST_APPS_DIR/elixir/mix.exs.bak"
+	echo "✓ Updated Elixir app to $VERSION"
+fi
+
 # Python: test expectations
 if [[ -f "$TEST_APPS_DIR/python/test_published.py" ]]; then
 	sed -E -i.bak "s/[0-9]+\\.[0-9]+\\.[0-9]+/$VERSION/g" "$TEST_APPS_DIR/python/test_published.py"

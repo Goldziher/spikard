@@ -113,6 +113,7 @@ release_cli=false
 release_crates=false
 release_wasm=false
 release_homebrew=false
+release_elixir=false
 
 set_all_targets() {
 	release_python=true
@@ -123,6 +124,7 @@ set_all_targets() {
 	release_crates=true
 	release_wasm=true
 	release_homebrew=true
+	release_elixir=true
 }
 
 mapfile -t requested_targets < <(echo "${targets_value}" | tr ',' '\n')
@@ -147,6 +149,7 @@ for raw_target in "${requested_targets[@]}"; do
 	crates) release_crates=true ;;
 	wasm) release_wasm=true ;;
 	homebrew) release_homebrew=true ;;
+	elixir) release_elixir=true ;;
 	none)
 		release_python=false
 		release_node=false
@@ -156,9 +159,10 @@ for raw_target in "${requested_targets[@]}"; do
 		release_crates=false
 		release_wasm=false
 		release_homebrew=false
+		release_elixir=false
 		;;
 	*)
-		echo "Unknown release target '${trimmed}'. Allowed: all, python, node, ruby, php, cli, crates, wasm, homebrew." >&2
+		echo "Unknown release target '${trimmed}'. Allowed: all, python, node, ruby, php, cli, crates, wasm, homebrew, elixir." >&2
 		exit 1
 		;;
 	esac
@@ -177,8 +181,9 @@ if [[ "${release_php}" == "true" ]]; then enabled_targets+=("php"); fi
 if [[ "${release_cli}" == "true" ]]; then enabled_targets+=("cli"); fi
 if [[ "${release_crates}" == "true" ]]; then enabled_targets+=("crates"); fi
 if [[ "${release_wasm}" == "true" ]]; then enabled_targets+=("wasm"); fi
+if [[ "${release_elixir}" == "true" ]]; then enabled_targets+=("elixir"); fi
 
-if [[ ${#enabled_targets[@]} -eq 7 ]]; then
+if [[ ${#enabled_targets[@]} -eq 8 ]]; then
 	release_targets_summary="all"
 elif [[ ${#enabled_targets[@]} -eq 0 ]]; then
 	release_targets_summary="none"
@@ -213,7 +218,8 @@ cat <<JSON >release-metadata.json
   "release_php": ${release_php},
   "release_cli": ${release_cli},
   "release_crates": ${release_crates},
-  "release_wasm": ${release_wasm}
+  "release_wasm": ${release_wasm},
+  "release_elixir": ${release_elixir}
 }
 JSON
 
@@ -244,4 +250,5 @@ append_output "release_php" "${release_php}"
 append_output "release_cli" "${release_cli}"
 append_output "release_crates" "${release_crates}"
 append_output "release_wasm" "${release_wasm}"
+append_output "release_elixir" "${release_elixir}"
 append_output "release_homebrew" "${release_homebrew}"

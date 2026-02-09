@@ -73,7 +73,16 @@ defmodule Spikard.MixProject do
       main: "Spikard",
       source_url: @source_url,
       source_ref: "v#{@version}",
-      extras: ["README.md"]
+      homepage_url: "https://spikard.dev",
+      extras: ["README.md"],
+      groups_for_modules: [
+        Core: [Spikard, Spikard.Router, Spikard.Request, Spikard.Response],
+        Authentication: [Spikard.Auth, Spikard.Auth.JWT, Spikard.Auth.ApiKey],
+        "Real-Time": [Spikard.WebSocket, Spikard.Sse],
+        Testing: [Spikard.TestClient, Spikard.TestClient.Response],
+        "Dependency Injection": [Spikard.DI],
+        Advanced: [Spikard.Lifecycle, Spikard.Background, Spikard.UploadFile, Spikard.OpenAPI]
+      ]
     ]
   end
 

@@ -1,6 +1,6 @@
 # Installation
 
-Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, and PHP. Install only what you need; every binding shares the same runtime behavior.
+Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, PHP, and Elixir. Install only what you need; every binding shares the same runtime behavior.
 
 ## Install by binding
 
@@ -28,6 +28,14 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, and P
 
     ```bash
     composer require spikard/spikard
+    ```
+
+=== "Elixir"
+
+    Add to your `mix.exs` dependencies:
+
+    ```elixir
+    {:spikard, "~> 0.10"}
     ```
 
 === "Rust"

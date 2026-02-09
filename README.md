@@ -8,6 +8,7 @@ A Rust-centric multi-language toolkit for building and validating typed web serv
 [![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
 [![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Features
@@ -27,6 +28,7 @@ A Rust-centric multi-language toolkit for building and validating typed web serv
 | TypeScript | 5.x | npm / pnpm / yarn |
 | Ruby | 3.2+ | bundler |
 | PHP | 8.2+ | Composer |
+| Elixir | 1.18+ | mix / hex |
 | Rust | 2024 | cargo |
 
 ## Quick Start
@@ -127,6 +129,22 @@ $app->registerController(new UserController());
 $app->run();
 ```
 
+**Elixir:**
+```elixir
+defmodule MyApp.Router do
+  use Spikard.Router
+
+  get "/users/:user_id", &get_user/1
+
+  defp get_user(request) do
+    user_id = Spikard.Request.get_path_param(request, "user_id")
+    Spikard.Response.json(%{id: user_id, name: "Alice"})
+  end
+end
+
+{:ok, _server} = Spikard.start(MyApp.Router, port: 8000)
+```
+
 ## Benchmarks
 
 Average throughput across 34 workloads (JSON bodies, path/query params, multipart, urlencoded) at 100 concurrency. [Full results](docs/benchmarks/results.md) | [Methodology](docs/benchmarks/methodology.md)
@@ -191,6 +209,7 @@ task build:python    # Build Python bindings
 task build:node      # Build Node.js bindings
 task build:ruby      # Build Ruby bindings
 task build:php       # Build PHP bindings
+task build:elixir    # Build Elixir bindings
 task test:rust       # Run Rust tests
 task test:python     # Run Python tests
 task test:js         # Run TypeScript tests

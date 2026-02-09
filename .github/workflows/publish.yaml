@@ -19,7 +19,7 @@ on:
         required: false
         type: string
       targets:
-        description: "Comma-separated list of release targets (all, python, node, ruby, php, cli, crates, homebrew)"
+        description: "Comma-separated list of release targets (all, python, node, ruby, php, cli, crates, homebrew, elixir)"
         required: false
         type: string
       force_republish:
@@ -63,6 +63,7 @@ jobs:
       release_cli: ${{ steps.meta.outputs.release_cli }}
       release_crates: ${{ steps.meta.outputs.release_crates }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
+      release_elixir: ${{ steps.meta.outputs.release_elixir }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -259,6 +260,25 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
             echo "Homebrew formula does not contain version ${VERSION} or check failed" >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  check-hex:
+    name: Check if Elixir package exists on Hex.pm
+    needs: prepare
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Check Hex.pm for existing version
+        id: check
+        run: bash scripts/publish/check_hex.sh "${{ needs.prepare.outputs.version }}"
 
   python-wheels:
     name: Build Python wheels (${{ matrix.label }})
@@ -1371,3 +1391,77 @@ jobs:
       - name: Dry run summary
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
         run: bash scripts/publish/packagist/dry-run-summary.sh
+
+  publish-hex:
+    name: Publish Elixir package to Hex.pm
+    needs: [prepare, check-hex]
+    if: >-
+      ${{
+        needs.prepare.result == 'success' &&
+        needs.prepare.outputs.tag &&
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_elixir == 'true' &&
+        (needs.prepare.outputs.force_republish == 'true' || needs.check-hex.outputs.exists != 'true')
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Ensure target commit
+        if: ${{ needs.prepare.outputs.target_sha != '' }}
+        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
+
+      - name: Setup Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Vendor NIF source
+        working-directory: packages/elixir
+        run: bash scripts/vendor_nif.sh
+
+      - name: Install dependencies
+        working-directory: packages/elixir
+        run: mix deps.get
+
+      - name: Compile
+        working-directory: packages/elixir
+        env:
+          SPIKARD_BUILD: "1"
+        run: mix compile --warnings-as-errors
+
+      - name: Verify mix.exs version matches tag
+        run: |
+          mix_version=$(grep '@version' packages/elixir/mix.exs | head -1 | sed 's/.*@version "\([^"]*\)".*/\1/')
+          if [[ "$mix_version" != "${{ needs.prepare.outputs.version }}" ]]; then
+            echo "::error::mix.exs version ($mix_version) does not match release version (${{ needs.prepare.outputs.version }})"
+            exit 1
+          fi
+
+      - name: Publish to Hex.pm
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        working-directory: packages/elixir
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run: mix hex.publish --yes
+
+      - name: Dry run summary
+        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
+        run: |
+          echo "## Hex.pm Publish (Dry Run)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Would publish **spikard** v${{ needs.prepare.outputs.version }} to Hex.pm" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Package: [hex.pm/packages/spikard](https://hex.pm/packages/spikard)" >> "$GITHUB_STEP_SUMMARY"

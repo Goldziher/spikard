@@ -28,6 +28,11 @@ tests/test_apps/
 ├── node/                        # (Future: TypeScript/Node.js test app)
 ├── ruby/                        # (Future: Ruby test app)
 ├── php/                         # (Future: PHP test app)
+├── elixir/
+│   ├── mix.exs                  # Exact version pin ({:spikard, "== 0.10.2"})
+│   ├── lib/test_app.ex          # Minimal router
+│   ├── test/test_published_test.exs # Core functionality tests
+│   └── .gitignore               # Elixir build artifacts
 └── README.md                    # This file
 ```
 
@@ -85,6 +90,13 @@ bundle exec rspec
 cd tests/test_apps/php
 composer install
 composer test
+```
+
+**Elixir**:
+```bash
+cd tests/test_apps/elixir
+mix deps.get
+mix test
 ```
 
 ## Test App Requirements
@@ -151,11 +163,17 @@ jobs:
 - Check `git diff` for uncommitted changes
 - Clear package caches (pip cache, npm cache, etc.)
 
+### Hex.pm Package Not Found
+- Verify publication: `curl -sSf https://hex.pm/api/packages/spikard/releases/0.10.2`
+- Wait for Hex.pm CDN propagation
+- Check Hex.pm status: https://hex.pm
+
 ### Import Errors
 - Python: Check virtual environment activation
 - Node: Delete `node_modules/` and re-run `pnpm install`
 - Ruby: Run `bundle clean --force` then `bundle install`
 - PHP: Run `composer clear-cache` then `composer install`
+- Elixir: Run `mix deps.clean --all` then `mix deps.get`
 
 ## Adding New Language Support
 

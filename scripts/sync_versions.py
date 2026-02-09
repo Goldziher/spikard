@@ -45,6 +45,10 @@ COMPOSER_JSON_PATHS = [
     Path("packages/php/composer.json"),
 ]
 
+MIX_EXS_PATHS = [
+    Path("packages/elixir/mix.exs"),
+]
+
 README_PATHS = [
     Path("crates/spikard/README.md"),
     Path("crates/spikard-http/README.md"),
@@ -56,6 +60,7 @@ README_PATHS = [
     Path("tests/test_apps/php/README.md"),
     Path("tests/test_apps/node/README.md"),
     Path("tests/test_apps/ruby/README.md"),
+    Path("packages/elixir/README.md"),
 ]
 
 
@@ -108,6 +113,16 @@ def update_ruby_version(path: Path, version: str) -> bool:
     """Update Ruby VERSION constants."""
     content = path.read_text()
     new_content, count = re.subn(r"(VERSION\s*=\s*['\"])[^'\"]+(['\"])", rf"\g<1>{version}\g<2>", content, count=1)
+    if count == 0 or new_content == content:
+        return False
+    path.write_text(new_content)
+    return True
+
+
+def update_mix_exs(path: Path, version: str) -> bool:
+    """Update the @version attribute in an Elixir mix.exs file."""
+    content = path.read_text()
+    new_content, count = re.subn(r'(@version\s+")[^"]+(")', rf"\g<1>{version}\g<2>", content, count=1)
     if count == 0 or new_content == content:
         return False
     path.write_text(new_content)
@@ -225,6 +240,7 @@ def main() -> None:
     update_path_list(COMPOSER_JSON_PATHS, update_package_json, version, changed_files)
     update_path_list(PYPROJECT_PATHS, update_pyproject, version, changed_files)
     update_path_list(RUBY_VERSION_PATHS, update_ruby_version, version, changed_files)
+    update_path_list(MIX_EXS_PATHS, update_mix_exs, version, changed_files)
     update_cargo_files(version, changed_files)
 
     if update_taskfile(version):

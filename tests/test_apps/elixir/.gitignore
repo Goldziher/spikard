@@ -1,0 +1,5 @@
+/_build/
+/deps/
+/mix.lock
+*.beam
+erl_crash.dump

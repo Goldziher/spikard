@@ -1019,14 +1019,24 @@ tasks:
       - ./tools/app-generator/target/release/app-generator generate --framework spikard-php --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-php
       - task: bench:lint:php
 
+  bench:generate:elixir:
+    desc: "Generate Spikard-Elixir benchmark server from fixtures"
+    deps:
+      - bench:generator:build
+    cmds:
+      - rm -rf tools/benchmark-harness/apps/spikard-elixir
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-elixir --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-elixir
+      - task: bench:lint:elixir
+
   bench:generate:all:
-    desc: "Generate all benchmark servers (Python, Rust, Node, Ruby, PHP)"
+    desc: "Generate all benchmark servers (Python, Rust, Node, Ruby, PHP, Elixir)"
     cmds:
       - task: bench:generate:python
       - task: bench:generate:rust
       - task: bench:generate:node
       - task: bench:generate:ruby
       - task: bench:generate:php
+      - task: bench:generate:elixir
 
   bench:format:python:
     desc: "Format generated Python benchmark code"
@@ -1072,6 +1082,16 @@ tasks:
     desc: "Lint generated PHP benchmark code"
     cmds:
       - cd tools/benchmark-harness/apps/spikard-php && php -l server.php
+
+  bench:format:elixir:
+    desc: "Format generated Elixir benchmark code"
+    cmds:
+      - cd tools/benchmark-harness/apps/spikard-elixir && mix format || true
+
+  bench:lint:elixir:
+    desc: "Lint generated Elixir benchmark code"
+    cmds:
+      - cd tools/benchmark-harness/apps/spikard-elixir && mix credo --strict || true
 
   bench:build:python:
     desc: "Verify generated Python benchmark app loads"
@@ -1477,6 +1497,13 @@ tasks:
     cmds:
       - cargo test --locked
 
+  test:apps:elixir:
+    desc: "Run Elixir published package test app"
+    dir: tests/test_apps/elixir
+    cmds:
+      - mix deps.get
+      - mix test
+
   test:apps:all:
     desc: "Run all published package test apps"
     cmds:
@@ -1485,6 +1512,7 @@ tasks:
       - task: test:apps:ruby
       - task: test:apps:php
       - task: test:apps:rust
+      - task: test:apps:elixir
 
   test:apps:update-versions:
     desc: "Update all test app package versions"

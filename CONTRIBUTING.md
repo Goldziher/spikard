@@ -11,6 +11,7 @@ For full documentation, visit [spikard.dev](https://spikard.dev).
 - Python 3.10+
 - Ruby 3.2+
 - PHP 8.2+ (optional)
+- Elixir 1.18+ with OTP 27+ (optional)
 - [Task](https://taskfile.dev/) (task runner)
 
 ## Setup
@@ -34,6 +35,7 @@ task build:python       # Python bindings
 task build:node         # Node.js bindings
 task build:ruby         # Ruby bindings
 task build:php          # PHP bindings
+task build:elixir       # Elixir bindings
 ```
 
 ### Testing
@@ -43,6 +45,7 @@ task test               # Run all test suites
 task test:rust          # Rust tests
 task test:python        # Python tests
 task test:js            # TypeScript tests
+task test:elixir        # Elixir tests
 ```
 
 ### Linting & Formatting
@@ -63,6 +66,7 @@ Run these before opening a PR. The CI pipeline enforces them.
 | TypeScript | Strict mode, `biome` | 80%+ |
 | Ruby | `rubocop`, `steep` | 80%+ |
 | PHP | `phpstan` level max | 80%+ |
+| Elixir | `credo --strict`, `dialyzer` | 80%+ |
 
 ## Architecture
 
@@ -75,7 +79,7 @@ See [Architecture Decision Records](docs/adr/) for design rationale.
 ## Adding Features
 
 1. Implement the feature in the Rust core first
-2. Expose it through the binding crates (spikard-py, spikard-node, spikard-rb, spikard-php)
+2. Expose it through the binding crates (spikard-py, spikard-node, spikard-rb, spikard-php, spikard-elixir)
 3. Add fixture-driven tests under `testing_data/` and corresponding test cases
 4. Update examples if applicable
 
