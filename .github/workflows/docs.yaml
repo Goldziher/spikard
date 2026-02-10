@@ -47,7 +47,7 @@ jobs:
         run: bash scripts/docs/configure-git-for-mike.sh
 
       - name: Download benchmark results (if available)
-        uses: dawidd6/action-download-artifact@v12
+        uses: dawidd6/action-download-artifact@v14
         continue-on-error: true
         with:
           workflow: comparative-benchmarks.yaml
