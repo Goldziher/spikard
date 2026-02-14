@@ -1405,6 +1405,7 @@ jobs:
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: hex
     permissions:
       contents: read
     steps:
@@ -1432,6 +1433,12 @@ jobs:
         working-directory: packages/elixir
         run: bash scripts/vendor_nif.sh
 
+      - name: Install Hex and Rebar
+        working-directory: packages/elixir
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+
       - name: Install dependencies
         working-directory: packages/elixir
         run: mix deps.get
@@ -1450,8 +1457,25 @@ jobs:
             exit 1
           fi
 
-      - name: Publish to Hex.pm
+      - name: Re-check Hex.pm before publish
+        id: recheck_hex
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        run: |
+          set -euo pipefail
+          code=$(curl --silent --show-error --max-time 30 --connect-timeout 10 -o /dev/null -w "%{http_code}" \
+            "https://hex.pm/api/packages/spikard/releases/${{ needs.prepare.outputs.version }}" || echo "000")
+          if [[ "$code" == "200" ]]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Package spikard@${{ needs.prepare.outputs.version }} already exists on Hex.pm; skipping publish." >> "$GITHUB_STEP_SUMMARY"
+          elif [[ "$code" == "404" ]]; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Unable to check Hex.pm before publish (HTTP $code)"
+            exit 1
+          fi
+
+      - name: Publish to Hex.pm
+        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck_hex.outputs.exists != 'true' }}
         working-directory: packages/elixir
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}

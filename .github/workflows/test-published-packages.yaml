@@ -94,6 +94,15 @@ jobs:
             MISSING+=("crates.io")
           fi
 
+          # Hex.pm
+          HEX_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hex.pm/api/packages/spikard/releases/$VERSION")
+          if [ "$HEX_CODE" = "200" ]; then
+            echo "✓ Hex.pm: spikard $VERSION found"
+          else
+            echo "✗ Hex.pm: spikard $VERSION not found (HTTP $HEX_CODE)"
+            MISSING+=("Hex.pm")
+          fi
+
           if [ "${#MISSING[@]}" -eq 0 ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
             echo "All registries have version $VERSION available"
@@ -288,9 +297,44 @@ jobs:
         working-directory: tests/test_apps/rust
         run: cargo test
 
+  test-elixir:
+    name: Test Elixir package (Ubuntu, Elixir 1.18 / OTP 27)
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+
+      - name: Update mix.exs dependency version
+        working-directory: tests/test_apps/elixir
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i "s/@version \".*\"/@version \"$VERSION\"/" mix.exs
+
+      - name: Install Hex and Rebar
+        working-directory: tests/test_apps/elixir
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+
+      - name: Install dependencies
+        working-directory: tests/test_apps/elixir
+        run: mix deps.get
+
+      - name: Run tests
+        working-directory: tests/test_apps/elixir
+        run: mix test
+
   report:
     name: Report test results
-    needs: [prepare, test-python, test-node, test-ruby, test-php, test-rust]
+    needs: [prepare, test-python, test-node, test-ruby, test-php, test-rust, test-elixir]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -328,6 +372,9 @@ jobs:
           if [ "${{ needs.test-rust.result }}" == "failure" ]; then
             FAILED+=("Rust")
           fi
+          if [ "${{ needs.test-elixir.result }}" == "failure" ]; then
+            FAILED+=("Elixir")
+          fi
 
           if [ ${#FAILED[@]} -gt 0 ]; then
             echo "Tests failed for: ${FAILED[*]}"
@@ -354,6 +401,7 @@ jobs:
           - [RubyGems: spikard](https://rubygems.org/gems/spikard/versions/$VERSION)
           - [Packagist: spikard/spikard](https://packagist.org/packages/spikard/spikard#$VERSION)
           - [crates.io: spikard](https://crates.io/crates/spikard/$VERSION)
+          - [Hex.pm: spikard](https://hex.pm/packages/spikard)
           "
 
             gh issue create \

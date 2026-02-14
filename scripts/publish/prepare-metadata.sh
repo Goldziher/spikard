@@ -181,9 +181,10 @@ if [[ "${release_php}" == "true" ]]; then enabled_targets+=("php"); fi
 if [[ "${release_cli}" == "true" ]]; then enabled_targets+=("cli"); fi
 if [[ "${release_crates}" == "true" ]]; then enabled_targets+=("crates"); fi
 if [[ "${release_wasm}" == "true" ]]; then enabled_targets+=("wasm"); fi
+if [[ "${release_homebrew}" == "true" ]]; then enabled_targets+=("homebrew"); fi
 if [[ "${release_elixir}" == "true" ]]; then enabled_targets+=("elixir"); fi
 
-if [[ ${#enabled_targets[@]} -eq 8 ]]; then
+if [[ ${#enabled_targets[@]} -eq 9 ]]; then
 	release_targets_summary="all"
 elif [[ ${#enabled_targets[@]} -eq 0 ]]; then
 	release_targets_summary="none"
