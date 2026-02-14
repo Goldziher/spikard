@@ -1,3618 +1,3618 @@
 [
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "API key authentication - invalid key",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "API key authentication - missing header",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "API key authentication - valid key",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data?api_key=sk_test_123456",
-    "handler_name": "API key in query parameter",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "API key rotation - old key still valid",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "API key with custom header name",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/protected",
-    "handler_name": "Bearer token without prefix",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/protected/user",
-    "handler_name": "JWT authentication - expired token",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/protected/user",
-    "handler_name": "JWT authentication - invalid audience",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/protected/user",
-    "handler_name": "JWT authentication - invalid signature",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/protected/user",
-    "handler_name": "JWT authentication - missing Authorization header",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/protected/user",
-    "handler_name": "JWT authentication - valid token",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/protected",
-    "handler_name": "JWT invalid issuer",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/protected",
-    "handler_name": "JWT malformed token format",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/admin",
-    "handler_name": "JWT missing required custom claims",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/protected",
-    "handler_name": "JWT not before claim in future",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/protected",
-    "handler_name": "JWT with multiple audiences",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "Multiple authentication schemes - JWT precedence",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/background/events",
-    "handler_name": "Background event logging",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/background/events",
-    "handler_name": "Background event logging - second payload",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/body-limit/over",
-    "handler_name": "Body over limit returns 413",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/body-limit/under",
-    "handler_name": "Body under limit succeeds",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/compression/gzip",
-    "handler_name": "Compression - gzip applied",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/compression/skip",
-    "handler_name": "Compression - payload below min_size is not compressed",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "13_json_with_charset_utf16",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "14_content_type_case_insensitive",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/upload",
-    "handler_name": "15_multipart_boundary_required",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "16_text_plain_not_accepted",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/api/v1/resource",
-    "handler_name": "17_vendor_json_accepted",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "18_content_type_with_multiple_params",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "19_missing_content_type_default_json",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "20_content_length_mismatch",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "415 Unsupported Media Type",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/download/file.bin",
-    "handler_name": "Binary response - application/octet-stream",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/export/data.csv",
-    "handler_name": "CSV response - text/csv",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/accept-test/1",
-    "handler_name": "Content negotiation - Accept header",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/html",
-    "handler_name": "HTML response - text/html",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/images/photo.jpg",
-    "handler_name": "JPEG image response - image/jpeg",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/json",
-    "handler_name": "JSON response - application/json",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/unicode",
-    "handler_name": "JSON with UTF-8 charset",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/download/document.pdf",
-    "handler_name": "PDF response - application/pdf",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/images/logo.png",
-    "handler_name": "PNG image response - image/png",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/text",
-    "handler_name": "Plain text response - text/plain",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/xml",
-    "handler_name": "XML response - application/xml",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/secure",
-    "handler_name": "24_cookie_samesite_strict",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/data",
-    "handler_name": "25_cookie_samesite_lax",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/secure",
-    "handler_name": "26_cookie_secure_flag",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/secure",
-    "handler_name": "27_cookie_httponly_flag",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me/auth",
-    "handler_name": "APIKey cookie authentication - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "APIKey cookie authentication - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/cookies/pattern",
-    "handler_name": "Cookie regex pattern validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/cookies/pattern",
-    "handler_name": "Cookie regex pattern validation - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/cookies/validated",
-    "handler_name": "Cookie validation - max_length constraint fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/cookies/min-length",
-    "handler_name": "Cookie validation - min_length constraint success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "Cookie validation - min_length failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "Multiple cookies - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "Optional APIKey cookie - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "Optional cookie parameter - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "Optional cookie parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/cookies",
-    "handler_name": "Required cookie - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookies/delete",
-    "handler_name": "Response - delete cookie",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookies/multiple",
-    "handler_name": "Response - multiple cookies",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookies/session",
-    "handler_name": "Response - session cookie (no max_age)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookies/samesite-lax",
-    "handler_name": "Response cookie with SameSite=Lax",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookies/samesite-none",
-    "handler_name": "Response cookie with SameSite=None",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookies/samesite-strict",
-    "handler_name": "Response cookie with SameSite=Strict",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/cookie/set",
-    "handler_name": "Response cookie with attributes",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookies/set-with-domain",
-    "handler_name": "Response cookie with domain attribute",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookies/set-with-path",
-    "handler_name": "Response cookie with path attribute",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/cookie/",
-    "handler_name": "Response set cookie - basic",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "OPTIONS",
-    "path": "/api/data",
-    "handler_name": "06_cors_preflight_method_not_allowed",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "OPTIONS",
-    "path": "/api/data",
-    "handler_name": "07_cors_preflight_header_not_allowed",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "OPTIONS",
-    "path": "/api/data",
-    "handler_name": "08_cors_max_age",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "09_cors_expose_headers",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "10_cors_origin_null",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "OPTIONS",
-    "path": "/api/local-resource",
-    "handler_name": "CORS Private Network Access",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/cached-resource",
-    "handler_name": "CORS Vary header for proper caching",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "CORS multiple allowed origins",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "CORS origin case sensitivity",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "OPTIONS",
-    "path": "/api/resource/456",
-    "handler_name": "CORS preflight for DELETE method",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "OPTIONS",
-    "path": "/api/resource/123",
-    "handler_name": "CORS preflight for PUT method",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "OPTIONS",
-    "path": "/items/",
-    "handler_name": "CORS preflight request",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "CORS regex pattern matching for origins",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "CORS request blocked",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/api/form",
-    "handler_name": "CORS safelisted headers without preflight",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/public/data",
-    "handler_name": "CORS wildcard origin",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/user/profile",
-    "handler_name": "CORS with credentials",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "Simple CORS request",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/db-status",
-    "handler_name": "Async factory dependency - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/circular",
-    "handler_name": "Circular dependency detection - error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/hook-di-test",
-    "handler_name": "Dependency injection in lifecycle hooks - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/timestamp",
-    "handler_name": "Factory dependency - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/missing-dep",
-    "handler_name": "Missing dependency - error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/mixed-caching",
-    "handler_name": "Mixed singleton and per-request caching - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/multi-cleanup-test",
-    "handler_name": "Multiple dependencies with cleanup - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/auth-status",
-    "handler_name": "Nested dependencies (3 levels) - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/node-destructure",
-    "handler_name": "Node.js object destructuring injection - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/request-id",
-    "handler_name": "Per-request dependency caching - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/python-name-inject",
-    "handler_name": "Python parameter name-based injection - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/python-type-inject",
-    "handler_name": "Python type annotation-based injection - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/cleanup-test",
-    "handler_name": "Resource cleanup after request - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/override-test",
-    "handler_name": "Route-level dependency override - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/ruby-kwargs",
-    "handler_name": "Ruby keyword argument injection - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/app-counter",
-    "handler_name": "Singleton dependency caching - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/type-mismatch",
-    "handler_name": "Type mismatch in dependency resolution - error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/config",
-    "handler_name": "Value dependency injection - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/search",
-    "handler_name": "11_utf8_query_parameter",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/search?term=hi%20there",
-    "handler_name": "12_percent_encoded_special_chars",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items?filter=",
-    "handler_name": "13_empty_string_query_param_preserved",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "14_large_integer_boundary",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/calculate",
-    "handler_name": "15_float_precision_preservation",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "16_negative_zero_handling",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/text",
-    "handler_name": "17_extremely_long_string",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "18_unicode_normalization",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/messages",
-    "handler_name": "19_emoji_in_strings",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files",
-    "handler_name": "20_null_byte_in_string",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/calculate",
-    "handler_name": "21_scientific_notation_number",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/data",
-    "handler_name": "22_leading_zeros_integer",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "23_deeply_nested_json_limit",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items",
-    "handler_name": "24_array_with_holes",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/nested/",
-    "handler_name": "Deeply nested structure (10+ levels)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/nulls/",
-    "handler_name": "Empty and null value handling",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/calculations/",
-    "handler_name": "Float precision and rounding",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/numbers/",
-    "handler_name": "Large integer boundary values",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/strings/",
-    "handler_name": "Special string values and escaping",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Unicode and emoji handling",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/protected",
-    "handler_name": "30_bearer_token_format_valid",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/protected",
-    "handler_name": "31_bearer_token_format_invalid",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/protected",
-    "handler_name": "32_bearer_token_missing_prefix",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "33_api_key_header_valid",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/data",
-    "handler_name": "34_api_key_header_invalid",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/accept",
-    "handler_name": "Accept header - JSON",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/accept-encoding",
-    "handler_name": "Accept-Encoding header",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/accept-language",
-    "handler_name": "Accept-Language header",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "Authorization header - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "Authorization header - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "Authorization header - wrong scheme",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/basic-auth",
-    "handler_name": "Basic authentication - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/bearer-auth",
-    "handler_name": "Bearer token authentication - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/bearer-auth",
-    "handler_name": "Bearer token authentication - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/content-type",
-    "handler_name": "Content-Type header - application/json",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/echo",
-    "handler_name": "Header case insensitivity - access",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/pattern",
-    "handler_name": "Header regex validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/pattern",
-    "handler_name": "Header regex validation - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/max-length",
-    "handler_name": "Header validation - max_length constraint fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/validated",
-    "handler_name": "Header validation - min_length constraint",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/underscore",
-    "handler_name": "Header with underscore conversion - explicit",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/host",
-    "handler_name": "Host header",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/multiple",
-    "handler_name": "Multiple custom headers",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "Multiple header values - X-Token",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "Optional header with None default - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/origin",
-    "handler_name": "Origin header",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/headers/referer",
-    "handler_name": "Referer header",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "User-Agent header - custom value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "User-Agent header - default value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "X-API-Key optional header - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "X-API-Key optional header - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "X-API-Key required header - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "X-API-Key required header - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "DELETE",
-    "path": "/items/1",
-    "handler_name": "DELETE - Remove resource",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "DELETE",
-    "path": "/items/999",
-    "handler_name": "DELETE - Resource not found",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "DELETE",
-    "path": "/items/1",
-    "handler_name": "DELETE - With response body",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "HEAD",
-    "path": "/items/1",
-    "handler_name": "HEAD - Get metadata without body",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "OPTIONS",
-    "path": "/items/",
-    "handler_name": "OPTIONS - CORS preflight request",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "PATCH",
-    "path": "/items/1",
-    "handler_name": "PATCH - Partial update",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "PATCH",
-    "path": "/items/1",
-    "handler_name": "PATCH - Update multiple fields",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "PUT",
-    "path": "/items/1",
-    "handler_name": "PUT - Complete resource replacement",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "PUT",
-    "path": "/items/999",
-    "handler_name": "PUT - Create resource if doesn't exist",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "PUT",
-    "path": "/items/1",
-    "handler_name": "PUT - Idempotent operation",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "PUT",
-    "path": "/items/1",
-    "handler_name": "PUT - Missing required field",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "PUT",
-    "path": "/items/1",
-    "handler_name": "PUT - Validation error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "29_nested_object_validation_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "30_nested_object_missing_field",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "31_nullable_property_null_value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/products",
-    "handler_name": "32_schema_ref_definitions",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items",
-    "handler_name": "33_allof_schema_composition",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "34_additional_properties_false",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/payment",
-    "handler_name": "35_oneof_schema_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/payment",
-    "handler_name": "36_oneof_schema_multiple_match_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/payment",
-    "handler_name": "37_oneof_schema_no_match_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/contact",
-    "handler_name": "38_anyof_schema_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/contact",
-    "handler_name": "39_anyof_schema_multiple_match_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/contact",
-    "handler_name": "40_anyof_schema_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "41_not_schema_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "42_not_schema_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/api/v1/data",
-    "handler_name": "43_const_validation_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/api/v1/data",
-    "handler_name": "44_const_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/config",
-    "handler_name": "45_minproperties_validation_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/config",
-    "handler_name": "46_minproperties_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/config",
-    "handler_name": "47_maxproperties_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/billing",
-    "handler_name": "48_dependencies_validation_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/billing",
-    "handler_name": "49_dependencies_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "50_deep_nesting_4_levels",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/list",
-    "handler_name": "Array of objects - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Array of primitive values",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/?limit=10",
-    "handler_name": "Body with query parameters",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Boolean field - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/events/",
-    "handler_name": "Date field - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/events/",
-    "handler_name": "Datetime field - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/nested",
-    "handler_name": "Deeply nested objects",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/optional-all",
-    "handler_name": "Empty JSON object",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/list-validated",
-    "handler_name": "Empty array validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Enum field - invalid value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Enum field - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Extra fields ignored (no additionalProperties)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Field type validation - invalid type",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/nested",
-    "handler_name": "Nested object - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Null value for optional field",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/validated",
-    "handler_name": "Numeric ge validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/validated",
-    "handler_name": "Numeric le validation - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Optional fields - omitted",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "PATCH",
-    "path": "/items/1",
-    "handler_name": "PATCH partial update",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Required field missing - validation error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Simple JSON object - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/validated",
-    "handler_name": "String max_length validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/validated",
-    "handler_name": "String min_length validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/validated",
-    "handler_name": "String pattern validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/validated",
-    "handler_name": "String pattern validation - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "UUID field - invalid format",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "UUID field - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/test-hook-order",
-    "handler_name": "Hook Execution Order",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/api/full-lifecycle",
-    "handler_name": "Multiple Hooks - All Phases",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/test-error",
-    "handler_name": "onError - Error Logging",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/test-on-request",
-    "handler_name": "onRequest - Request Logging",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/test-timing",
-    "handler_name": "onResponse - Response Timing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/test-security-headers",
-    "handler_name": "onResponse - Security Headers",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/protected-resource-fail",
-    "handler_name": "preHandler - Authentication Failed (Short Circuit)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/protected-resource",
-    "handler_name": "preHandler - Authentication Success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/admin-only",
-    "handler_name": "preHandler - Authorization Check",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/admin-only-forbidden",
-    "handler_name": "preHandler - Authorization Forbidden (Short Circuit)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/api/test-rate-limit-exceeded",
-    "handler_name": "preValidation - Rate Limit Exceeded (Short Circuit)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/api/test-rate-limit",
-    "handler_name": "preValidation - Rate Limiting",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/upload",
-    "handler_name": "17_file_magic_number_png_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/upload",
-    "handler_name": "18_file_magic_number_jpeg_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/upload",
-    "handler_name": "19_file_mime_spoofing_png_as_jpeg",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/upload",
-    "handler_name": "20_file_mime_spoofing_jpeg_as_png",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/upload",
-    "handler_name": "21_file_pdf_magic_number_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/upload",
-    "handler_name": "22_file_empty_buffer",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/images-only",
-    "handler_name": "Content-Type validation - invalid type",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/upload",
-    "handler_name": "Empty file upload",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/list",
-    "handler_name": "File list upload (array of files)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/validated",
-    "handler_name": "File size validation - too large",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/",
-    "handler_name": "File upload with custom headers",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/",
-    "handler_name": "File upload without filename",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/",
-    "handler_name": "Form data without files",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/image",
-    "handler_name": "Image file upload",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/",
-    "handler_name": "Mixed files and form data",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/",
-    "handler_name": "Multiple file uploads",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/",
-    "handler_name": "Multiple values for same field name",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/optional",
-    "handler_name": "Optional file upload - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/optional",
-    "handler_name": "Optional file upload - provided",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/document",
-    "handler_name": "PDF file upload",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/files/required",
-    "handler_name": "Required file upload - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/",
-    "handler_name": "Simple file upload",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/e8b5a51d-11c8-3310-a6ab-367563f20686",
-    "handler_name": "20_uuid_v3_path_param_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/630eb68f-e0fa-5ecc-887a-7c7a62614681",
-    "handler_name": "21_uuid_v5_path_param_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/events/2025-10-30",
-    "handler_name": "24_date_format_path_param_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/events/2025-13-45",
-    "handler_name": "25_date_format_invalid_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/bookings/2025-10-30T14:30:00Z",
-    "handler_name": "27_datetime_format_path_param_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/delays/P1DT2H30M",
-    "handler_name": "28_duration_format_path_param_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/prices/19.99",
-    "handler_name": "29_decimal_path_param_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/alice",
-    "handler_name": "30_string_minlength_path_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/ab",
-    "handler_name": "31_string_minlength_path_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/this_username_is_way_too_long_to_be_valid",
-    "handler_name": "32_string_maxlength_path_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/repos/spikard-labs/spikard-http",
-    "handler_name": "33_string_pattern_path_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/repos/invalid@owner",
-    "handler_name": "34_string_pattern_path_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/offset/-100",
-    "handler_name": "35_negative_integer_path_param",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/bool/True",
-    "handler_name": "Boolean path parameter - True",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/bool/1",
-    "handler_name": "Boolean path parameter - numeric 1",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/date/2023-07-15",
-    "handler_name": "Date path parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/models/foo",
-    "handler_name": "Enum path parameter - invalid value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/models/alexnet",
-    "handler_name": "Enum path parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/float/42.5",
-    "handler_name": "Float path parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/int/foobar",
-    "handler_name": "Integer path parameter - invalid string",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/int/42",
-    "handler_name": "Integer path parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/param-lt-gt/2",
-    "handler_name": "Integer path parameter with combined lt and gt constraints - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/param-ge/3",
-    "handler_name": "Integer path parameter with ge constraint - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/param-gt/2",
-    "handler_name": "Integer path parameter with gt constraint - failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/param-gt/42",
-    "handler_name": "Integer path parameter with gt constraint - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/param-le/3",
-    "handler_name": "Integer path parameter with le constraint - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/param-lt/2",
-    "handler_name": "Integer path parameter with lt constraint - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716",
-    "handler_name": "Multiple path parameters - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/type-syntax/items/not-a-uuid",
-    "handler_name": "Path parameter type syntax - invalid UUID",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/type-syntax/items-count/50",
-    "handler_name": "Path parameter type syntax with override",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/type-syntax/items/550e8400-e29b-41d4-a716-446655440000",
-    "handler_name": "Path parameter with type syntax - UUID",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/type-syntax/users/42",
-    "handler_name": "Path parameter with type syntax - integer",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/files/home/johndoe/myfile.txt",
-    "handler_name": "Path type parameter - file path",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/str/foobar",
-    "handler_name": "String path parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/param-maxlength/foobar",
-    "handler_name": "String path parameter with max_length - failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/path/param-minlength/fo",
-    "handler_name": "String path parameter with min_length - failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a",
-    "handler_name": "UUID path parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/negative",
-    "handler_name": "42_negative_integer_query_param",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/stats",
-    "handler_name": "43_scientific_notation_float",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/search",
-    "handler_name": "44_string_minlength_validation_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/search",
-    "handler_name": "45_string_minlength_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/search",
-    "handler_name": "46_string_maxlength_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/subscribe",
-    "handler_name": "47_pattern_validation_email_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/subscribe",
-    "handler_name": "48_pattern_validation_email_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "49_integer_gt_constraint_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "50_integer_gt_constraint_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "51_integer_ge_constraint_boundary",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "52_integer_le_constraint_boundary",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "53_integer_le_constraint_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "54_array_minitems_constraint_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "55_array_minitems_constraint_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "56_array_maxitems_constraint_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "57_boolean_empty_string_coercion",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/subscribe",
-    "handler_name": "58_format_email_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/subscribe",
-    "handler_name": "59_format_email_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/network",
-    "handler_name": "60_format_ipv4_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/network",
-    "handler_name": "61_format_ipv4_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/network/ipv6",
-    "handler_name": "62_format_ipv6_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/redirect",
-    "handler_name": "63_format_uri_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/redirect",
-    "handler_name": "64_format_uri_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/dns",
-    "handler_name": "65_format_hostname_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "66_multipleof_constraint_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "67_multipleof_constraint_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "68_array_uniqueitems_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items",
-    "handler_name": "69_array_uniqueitems_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items?tags=python|rust|typescript",
-    "handler_name": "70_array_separator_pipe",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items?colors=red;green;blue",
-    "handler_name": "71_array_separator_semicolon",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/search?keywords=rust%20web%20framework",
-    "handler_name": "72_array_separator_space",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/list-default",
-    "handler_name": "Array query parameter - empty array",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/list-default",
-    "handler_name": "Array query parameter - single value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/bool",
-    "handler_name": "Boolean query parameter - numeric 1",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/bool",
-    "handler_name": "Boolean query parameter - true",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/date",
-    "handler_name": "Date query parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/datetime",
-    "handler_name": "Datetime query parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/enum",
-    "handler_name": "Enum query parameter - invalid value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/enum",
-    "handler_name": "Enum query parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/float-ge",
-    "handler_name": "Float query param with ge constraint - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int-ge",
-    "handler_name": "Integer query param with ge constraint - boundary",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int-gt",
-    "handler_name": "Integer query param with gt constraint - valid",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int-le",
-    "handler_name": "Integer query param with le constraint - boundary",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int-lt",
-    "handler_name": "Integer query param with lt constraint - valid",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int/default",
-    "handler_name": "Integer with default value - not provided",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int/default",
-    "handler_name": "Integer with default value - override",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/list",
-    "handler_name": "List of integers - multiple values",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "List of strings - multiple values",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/list",
-    "handler_name": "List query parameter - required but missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/list-default",
-    "handler_name": "List with default empty array - no values provided",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/multi-type",
-    "handler_name": "Multiple query parameters with different types",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int/optional",
-    "handler_name": "Optional integer query parameter - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/optional-default",
-    "handler_name": "Optional query parameter with default value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/optional",
-    "handler_name": "Optional string query parameter - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/optional",
-    "handler_name": "Optional string query parameter - provided",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/basic",
-    "handler_name": "Query parameter with URL encoded space",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/basic",
-    "handler_name": "Query parameter with URL encoded special characters",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/test",
-    "handler_name": "Query parameter with special characters - URL encoding",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int",
-    "handler_name": "Required integer query parameter - float value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int",
-    "handler_name": "Required integer query parameter - invalid type",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int",
-    "handler_name": "Required integer query parameter - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/int",
-    "handler_name": "Required integer query parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query",
-    "handler_name": "Required string query parameter - missing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query",
-    "handler_name": "Required string query parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/str-max-length",
-    "handler_name": "String query param with max_length constraint - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/str-min-length",
-    "handler_name": "String query param with min_length constraint - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/pattern",
-    "handler_name": "String query param with regex pattern - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "String validation with regex - failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "String validation with regex - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/uuid",
-    "handler_name": "UUID query parameter - invalid format",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/query/uuid",
-    "handler_name": "UUID query parameter - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/rate-limit/basic",
-    "handler_name": "Rate limit below threshold succeeds",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/rate-limit/exceeded",
-    "handler_name": "Rate limit exceeded returns 429",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/request-id/preserved",
-    "handler_name": "Request ID header is preserved",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/request-id/generated",
-    "handler_name": "Request ID is generated when not provided",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/request-id/disabled",
-    "handler_name": "Request ID middleware can be disabled",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/timeouts/fast",
-    "handler_name": "Request completes before timeout",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/timeouts/slow",
-    "handler_name": "Request exceeds timeout",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/public/hello.txt",
-    "handler_name": "Static file server returns text file",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/app/",
-    "handler_name": "Static server returns index.html for directory",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/upload",
-    "handler_name": "19_413_payload_too_large",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/status-test/200",
-    "handler_name": "200 OK - Success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "201 Created - Resource created",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/tasks/",
-    "handler_name": "202 Accepted - Request accepted for processing",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "DELETE",
-    "path": "/status-test/204",
-    "handler_name": "204 No Content - Success with no body",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/files/document.pdf",
-    "handler_name": "206 Partial Content",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/data?skip_template_expansion=true",
-    "handler_name": "20_414_uri_too_long",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/data",
-    "handler_name": "21_431_request_header_fields_too_large",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "TRACE",
-    "path": "/data",
-    "handler_name": "22_501_not_implemented",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/data",
-    "handler_name": "23_503_service_unavailable",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/old-path",
-    "handler_name": "301 Moved Permanently - Permanent redirect",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/temp-redirect",
-    "handler_name": "302 Found - Temporary redirect",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/status-test/304",
-    "handler_name": "304 Not Modified - Cached content valid",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/redirect-post",
-    "handler_name": "307 Temporary Redirect - Method preserved",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "400 Bad Request - Invalid request",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/users/me",
-    "handler_name": "401 Unauthorized - Missing authentication",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/admin/users",
-    "handler_name": "403 Forbidden - Insufficient permissions",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/status-test/404",
-    "handler_name": "404 Not Found - Resource not found",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/slow-endpoint",
-    "handler_name": "408 Request Timeout",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "422 Unprocessable Entity - Validation error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/api/resource",
-    "handler_name": "429 Too Many Requests",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/error",
-    "handler_name": "500 Internal Server Error - Server error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/health",
-    "handler_name": "503 Service Unavailable - Server overload",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/stream/logfile",
-    "handler_name": "Binary log download",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/stream/csv-report",
-    "handler_name": "Chunked CSV export",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/stream/json-lines",
-    "handler_name": "Stream JSON lines",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/register",
-    "handler_name": "13_array_field_success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/profile",
-    "handler_name": "14_nested_object_bracket_notation",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/data",
-    "handler_name": "15_special_characters_field_names",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "16_minlength_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/accounts",
-    "handler_name": "17_pattern_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/products",
-    "handler_name": "18_integer_minimum_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/tags",
-    "handler_name": "19_array_minitems_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/subscribe",
-    "handler_name": "20_format_email_validation_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/products",
-    "handler_name": "21_integer_type_coercion_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/settings",
-    "handler_name": "22_additional_properties_strict_failure",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/form/",
-    "handler_name": "Boolean field conversion",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/form/",
-    "handler_name": "Empty string value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/form/tags",
-    "handler_name": "Multiple values for same field",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/form/",
-    "handler_name": "Numeric field type conversion",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/token",
-    "handler_name": "OAuth2 password grant flow",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/register/",
-    "handler_name": "Optional field missing - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/form/validated",
-    "handler_name": "Pattern validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/login/",
-    "handler_name": "Required field missing - validation error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/login/",
-    "handler_name": "Simple form submission - success",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/form/",
-    "handler_name": "Special characters encoding",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/form/validated",
-    "handler_name": "String max_length validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/form/validated",
-    "handler_name": "String min_length validation - fail",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/users",
-    "handler_name": "09_multiple_validation_errors",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/profiles",
-    "handler_name": "10_nested_error_path",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Array item validation error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Array max_items constraint violation",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Array min_items constraint violation",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Body field type error - string for float",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/?q=test",
-    "handler_name": "Header validation error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/not-a-uuid",
-    "handler_name": "Invalid UUID format",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/?q=test&is_active=maybe",
-    "handler_name": "Invalid boolean value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Invalid datetime format",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/models/invalid_model",
-    "handler_name": "Invalid enum value",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Malformed JSON body",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Missing required body field",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/",
-    "handler_name": "Missing required query parameter",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Multiple validation errors",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "POST",
-    "path": "/items/",
-    "handler_name": "Nested object validation error",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/?q=test&price=0",
-    "handler_name": "Numeric constraint violation - gt (greater than)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/?q=test&limit=101",
-    "handler_name": "Numeric constraint violation - le (less than or equal)",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/?q=test&skip=not_a_number",
-    "handler_name": "Query param type error - string provided for int",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",
-    "handler_name": "String max_length constraint violation",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/?q=ab",
-    "handler_name": "String min_length constraint violation",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/items/?q=invalid!",
-    "handler_name": "String regex pattern mismatch",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/notifications",
-    "handler_name": "systemAlert",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/notifications",
-    "handler_name": "notificationBatch",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/notifications",
-    "handler_name": "userNotification",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/notifications",
-    "handler_name": "statusUpdate",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/systemAlert",
-    "handler_name": "systemAlert",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/chat",
-    "handler_name": "chatMessage",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/chatAck",
-    "handler_name": "chatAck",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/chat",
-    "handler_name": "userLeft",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/chat",
-    "handler_name": "userJoined",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/userNotification",
-    "handler_name": "userNotification",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  },
-  {
-    "method": "GET",
-    "path": "/statusUpdate",
-    "handler_name": "statusUpdate",
-    "request_schema": null,
-    "response_schema": null,
-    "parameter_schema": null
-  }
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "API key authentication - invalid key",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "API key authentication - missing header",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "API key authentication - valid key",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data?api_key=sk_test_123456",
+		"handler_name": "API key in query parameter",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "API key rotation - old key still valid",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "API key with custom header name",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/protected",
+		"handler_name": "Bearer token without prefix",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/protected/user",
+		"handler_name": "JWT authentication - expired token",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/protected/user",
+		"handler_name": "JWT authentication - invalid audience",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/protected/user",
+		"handler_name": "JWT authentication - invalid signature",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/protected/user",
+		"handler_name": "JWT authentication - missing Authorization header",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/protected/user",
+		"handler_name": "JWT authentication - valid token",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/protected",
+		"handler_name": "JWT invalid issuer",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/protected",
+		"handler_name": "JWT malformed token format",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/admin",
+		"handler_name": "JWT missing required custom claims",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/protected",
+		"handler_name": "JWT not before claim in future",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/protected",
+		"handler_name": "JWT with multiple audiences",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "Multiple authentication schemes - JWT precedence",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/background/events",
+		"handler_name": "Background event logging",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/background/events",
+		"handler_name": "Background event logging - second payload",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/body-limit/over",
+		"handler_name": "Body over limit returns 413",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/body-limit/under",
+		"handler_name": "Body under limit succeeds",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/compression/gzip",
+		"handler_name": "Compression - gzip applied",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/compression/skip",
+		"handler_name": "Compression - payload below min_size is not compressed",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "13_json_with_charset_utf16",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "14_content_type_case_insensitive",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/upload",
+		"handler_name": "15_multipart_boundary_required",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "16_text_plain_not_accepted",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/api/v1/resource",
+		"handler_name": "17_vendor_json_accepted",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "18_content_type_with_multiple_params",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "19_missing_content_type_default_json",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "20_content_length_mismatch",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "415 Unsupported Media Type",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/download/file.bin",
+		"handler_name": "Binary response - application/octet-stream",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/export/data.csv",
+		"handler_name": "CSV response - text/csv",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/accept-test/1",
+		"handler_name": "Content negotiation - Accept header",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/html",
+		"handler_name": "HTML response - text/html",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/images/photo.jpg",
+		"handler_name": "JPEG image response - image/jpeg",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/json",
+		"handler_name": "JSON response - application/json",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/unicode",
+		"handler_name": "JSON with UTF-8 charset",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/download/document.pdf",
+		"handler_name": "PDF response - application/pdf",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/images/logo.png",
+		"handler_name": "PNG image response - image/png",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/text",
+		"handler_name": "Plain text response - text/plain",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/xml",
+		"handler_name": "XML response - application/xml",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/secure",
+		"handler_name": "24_cookie_samesite_strict",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/data",
+		"handler_name": "25_cookie_samesite_lax",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/secure",
+		"handler_name": "26_cookie_secure_flag",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/secure",
+		"handler_name": "27_cookie_httponly_flag",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me/auth",
+		"handler_name": "APIKey cookie authentication - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "APIKey cookie authentication - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/cookies/pattern",
+		"handler_name": "Cookie regex pattern validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/cookies/pattern",
+		"handler_name": "Cookie regex pattern validation - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/cookies/validated",
+		"handler_name": "Cookie validation - max_length constraint fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/cookies/min-length",
+		"handler_name": "Cookie validation - min_length constraint success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "Cookie validation - min_length failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "Multiple cookies - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "Optional APIKey cookie - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "Optional cookie parameter - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "Optional cookie parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/cookies",
+		"handler_name": "Required cookie - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookies/delete",
+		"handler_name": "Response - delete cookie",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookies/multiple",
+		"handler_name": "Response - multiple cookies",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookies/session",
+		"handler_name": "Response - session cookie (no max_age)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookies/samesite-lax",
+		"handler_name": "Response cookie with SameSite=Lax",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookies/samesite-none",
+		"handler_name": "Response cookie with SameSite=None",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookies/samesite-strict",
+		"handler_name": "Response cookie with SameSite=Strict",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/cookie/set",
+		"handler_name": "Response cookie with attributes",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookies/set-with-domain",
+		"handler_name": "Response cookie with domain attribute",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookies/set-with-path",
+		"handler_name": "Response cookie with path attribute",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/cookie/",
+		"handler_name": "Response set cookie - basic",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "OPTIONS",
+		"path": "/api/data",
+		"handler_name": "06_cors_preflight_method_not_allowed",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "OPTIONS",
+		"path": "/api/data",
+		"handler_name": "07_cors_preflight_header_not_allowed",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "OPTIONS",
+		"path": "/api/data",
+		"handler_name": "08_cors_max_age",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "09_cors_expose_headers",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "10_cors_origin_null",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "OPTIONS",
+		"path": "/api/local-resource",
+		"handler_name": "CORS Private Network Access",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/cached-resource",
+		"handler_name": "CORS Vary header for proper caching",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "CORS multiple allowed origins",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "CORS origin case sensitivity",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "OPTIONS",
+		"path": "/api/resource/456",
+		"handler_name": "CORS preflight for DELETE method",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "OPTIONS",
+		"path": "/api/resource/123",
+		"handler_name": "CORS preflight for PUT method",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "OPTIONS",
+		"path": "/items/",
+		"handler_name": "CORS preflight request",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "CORS regex pattern matching for origins",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "CORS request blocked",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/api/form",
+		"handler_name": "CORS safelisted headers without preflight",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/public/data",
+		"handler_name": "CORS wildcard origin",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/user/profile",
+		"handler_name": "CORS with credentials",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "Simple CORS request",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/db-status",
+		"handler_name": "Async factory dependency - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/circular",
+		"handler_name": "Circular dependency detection - error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/hook-di-test",
+		"handler_name": "Dependency injection in lifecycle hooks - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/timestamp",
+		"handler_name": "Factory dependency - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/missing-dep",
+		"handler_name": "Missing dependency - error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/mixed-caching",
+		"handler_name": "Mixed singleton and per-request caching - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/multi-cleanup-test",
+		"handler_name": "Multiple dependencies with cleanup - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/auth-status",
+		"handler_name": "Nested dependencies (3 levels) - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/node-destructure",
+		"handler_name": "Node.js object destructuring injection - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/request-id",
+		"handler_name": "Per-request dependency caching - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/python-name-inject",
+		"handler_name": "Python parameter name-based injection - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/python-type-inject",
+		"handler_name": "Python type annotation-based injection - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/cleanup-test",
+		"handler_name": "Resource cleanup after request - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/override-test",
+		"handler_name": "Route-level dependency override - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/ruby-kwargs",
+		"handler_name": "Ruby keyword argument injection - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/app-counter",
+		"handler_name": "Singleton dependency caching - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/type-mismatch",
+		"handler_name": "Type mismatch in dependency resolution - error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/config",
+		"handler_name": "Value dependency injection - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/search",
+		"handler_name": "11_utf8_query_parameter",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/search?term=hi%20there",
+		"handler_name": "12_percent_encoded_special_chars",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items?filter=",
+		"handler_name": "13_empty_string_query_param_preserved",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "14_large_integer_boundary",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/calculate",
+		"handler_name": "15_float_precision_preservation",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "16_negative_zero_handling",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/text",
+		"handler_name": "17_extremely_long_string",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "18_unicode_normalization",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/messages",
+		"handler_name": "19_emoji_in_strings",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files",
+		"handler_name": "20_null_byte_in_string",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/calculate",
+		"handler_name": "21_scientific_notation_number",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/data",
+		"handler_name": "22_leading_zeros_integer",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "23_deeply_nested_json_limit",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items",
+		"handler_name": "24_array_with_holes",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/nested/",
+		"handler_name": "Deeply nested structure (10+ levels)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/nulls/",
+		"handler_name": "Empty and null value handling",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/calculations/",
+		"handler_name": "Float precision and rounding",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/numbers/",
+		"handler_name": "Large integer boundary values",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/strings/",
+		"handler_name": "Special string values and escaping",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Unicode and emoji handling",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/protected",
+		"handler_name": "30_bearer_token_format_valid",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/protected",
+		"handler_name": "31_bearer_token_format_invalid",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/protected",
+		"handler_name": "32_bearer_token_missing_prefix",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "33_api_key_header_valid",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/data",
+		"handler_name": "34_api_key_header_invalid",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/accept",
+		"handler_name": "Accept header - JSON",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/accept-encoding",
+		"handler_name": "Accept-Encoding header",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/accept-language",
+		"handler_name": "Accept-Language header",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "Authorization header - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "Authorization header - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "Authorization header - wrong scheme",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/basic-auth",
+		"handler_name": "Basic authentication - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/bearer-auth",
+		"handler_name": "Bearer token authentication - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/bearer-auth",
+		"handler_name": "Bearer token authentication - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/content-type",
+		"handler_name": "Content-Type header - application/json",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/echo",
+		"handler_name": "Header case insensitivity - access",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/pattern",
+		"handler_name": "Header regex validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/pattern",
+		"handler_name": "Header regex validation - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/max-length",
+		"handler_name": "Header validation - max_length constraint fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/validated",
+		"handler_name": "Header validation - min_length constraint",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/underscore",
+		"handler_name": "Header with underscore conversion - explicit",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/host",
+		"handler_name": "Host header",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/multiple",
+		"handler_name": "Multiple custom headers",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "Multiple header values - X-Token",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "Optional header with None default - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/origin",
+		"handler_name": "Origin header",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/headers/referer",
+		"handler_name": "Referer header",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "User-Agent header - custom value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "User-Agent header - default value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "X-API-Key optional header - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "X-API-Key optional header - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "X-API-Key required header - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "X-API-Key required header - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "DELETE",
+		"path": "/items/1",
+		"handler_name": "DELETE - Remove resource",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "DELETE",
+		"path": "/items/999",
+		"handler_name": "DELETE - Resource not found",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "DELETE",
+		"path": "/items/1",
+		"handler_name": "DELETE - With response body",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "HEAD",
+		"path": "/items/1",
+		"handler_name": "HEAD - Get metadata without body",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "OPTIONS",
+		"path": "/items/",
+		"handler_name": "OPTIONS - CORS preflight request",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "PATCH",
+		"path": "/items/1",
+		"handler_name": "PATCH - Partial update",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "PATCH",
+		"path": "/items/1",
+		"handler_name": "PATCH - Update multiple fields",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "PUT",
+		"path": "/items/1",
+		"handler_name": "PUT - Complete resource replacement",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "PUT",
+		"path": "/items/999",
+		"handler_name": "PUT - Create resource if doesn't exist",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "PUT",
+		"path": "/items/1",
+		"handler_name": "PUT - Idempotent operation",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "PUT",
+		"path": "/items/1",
+		"handler_name": "PUT - Missing required field",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "PUT",
+		"path": "/items/1",
+		"handler_name": "PUT - Validation error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "29_nested_object_validation_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "30_nested_object_missing_field",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "31_nullable_property_null_value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/products",
+		"handler_name": "32_schema_ref_definitions",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items",
+		"handler_name": "33_allof_schema_composition",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "34_additional_properties_false",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/payment",
+		"handler_name": "35_oneof_schema_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/payment",
+		"handler_name": "36_oneof_schema_multiple_match_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/payment",
+		"handler_name": "37_oneof_schema_no_match_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/contact",
+		"handler_name": "38_anyof_schema_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/contact",
+		"handler_name": "39_anyof_schema_multiple_match_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/contact",
+		"handler_name": "40_anyof_schema_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "41_not_schema_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "42_not_schema_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/api/v1/data",
+		"handler_name": "43_const_validation_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/api/v1/data",
+		"handler_name": "44_const_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/config",
+		"handler_name": "45_minproperties_validation_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/config",
+		"handler_name": "46_minproperties_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/config",
+		"handler_name": "47_maxproperties_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/billing",
+		"handler_name": "48_dependencies_validation_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/billing",
+		"handler_name": "49_dependencies_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "50_deep_nesting_4_levels",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/list",
+		"handler_name": "Array of objects - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Array of primitive values",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/?limit=10",
+		"handler_name": "Body with query parameters",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Boolean field - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/events/",
+		"handler_name": "Date field - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/events/",
+		"handler_name": "Datetime field - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/nested",
+		"handler_name": "Deeply nested objects",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/optional-all",
+		"handler_name": "Empty JSON object",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/list-validated",
+		"handler_name": "Empty array validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Enum field - invalid value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Enum field - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Extra fields ignored (no additionalProperties)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Field type validation - invalid type",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/nested",
+		"handler_name": "Nested object - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Null value for optional field",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/validated",
+		"handler_name": "Numeric ge validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/validated",
+		"handler_name": "Numeric le validation - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Optional fields - omitted",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "PATCH",
+		"path": "/items/1",
+		"handler_name": "PATCH partial update",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Required field missing - validation error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Simple JSON object - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/validated",
+		"handler_name": "String max_length validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/validated",
+		"handler_name": "String min_length validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/validated",
+		"handler_name": "String pattern validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/validated",
+		"handler_name": "String pattern validation - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "UUID field - invalid format",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "UUID field - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/test-hook-order",
+		"handler_name": "Hook Execution Order",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/api/full-lifecycle",
+		"handler_name": "Multiple Hooks - All Phases",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/test-error",
+		"handler_name": "onError - Error Logging",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/test-on-request",
+		"handler_name": "onRequest - Request Logging",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/test-timing",
+		"handler_name": "onResponse - Response Timing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/test-security-headers",
+		"handler_name": "onResponse - Security Headers",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/protected-resource-fail",
+		"handler_name": "preHandler - Authentication Failed (Short Circuit)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/protected-resource",
+		"handler_name": "preHandler - Authentication Success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/admin-only",
+		"handler_name": "preHandler - Authorization Check",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/admin-only-forbidden",
+		"handler_name": "preHandler - Authorization Forbidden (Short Circuit)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/api/test-rate-limit-exceeded",
+		"handler_name": "preValidation - Rate Limit Exceeded (Short Circuit)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/api/test-rate-limit",
+		"handler_name": "preValidation - Rate Limiting",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/upload",
+		"handler_name": "17_file_magic_number_png_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/upload",
+		"handler_name": "18_file_magic_number_jpeg_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/upload",
+		"handler_name": "19_file_mime_spoofing_png_as_jpeg",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/upload",
+		"handler_name": "20_file_mime_spoofing_jpeg_as_png",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/upload",
+		"handler_name": "21_file_pdf_magic_number_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/upload",
+		"handler_name": "22_file_empty_buffer",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/images-only",
+		"handler_name": "Content-Type validation - invalid type",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/upload",
+		"handler_name": "Empty file upload",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/list",
+		"handler_name": "File list upload (array of files)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/validated",
+		"handler_name": "File size validation - too large",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/",
+		"handler_name": "File upload with custom headers",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/",
+		"handler_name": "File upload without filename",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/",
+		"handler_name": "Form data without files",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/image",
+		"handler_name": "Image file upload",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/",
+		"handler_name": "Mixed files and form data",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/",
+		"handler_name": "Multiple file uploads",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/",
+		"handler_name": "Multiple values for same field name",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/optional",
+		"handler_name": "Optional file upload - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/optional",
+		"handler_name": "Optional file upload - provided",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/document",
+		"handler_name": "PDF file upload",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/files/required",
+		"handler_name": "Required file upload - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/",
+		"handler_name": "Simple file upload",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/e8b5a51d-11c8-3310-a6ab-367563f20686",
+		"handler_name": "20_uuid_v3_path_param_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/630eb68f-e0fa-5ecc-887a-7c7a62614681",
+		"handler_name": "21_uuid_v5_path_param_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/events/2025-10-30",
+		"handler_name": "24_date_format_path_param_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/events/2025-13-45",
+		"handler_name": "25_date_format_invalid_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/bookings/2025-10-30T14:30:00Z",
+		"handler_name": "27_datetime_format_path_param_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/delays/P1DT2H30M",
+		"handler_name": "28_duration_format_path_param_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/prices/19.99",
+		"handler_name": "29_decimal_path_param_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/alice",
+		"handler_name": "30_string_minlength_path_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/ab",
+		"handler_name": "31_string_minlength_path_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/this_username_is_way_too_long_to_be_valid",
+		"handler_name": "32_string_maxlength_path_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/repos/spikard-labs/spikard-http",
+		"handler_name": "33_string_pattern_path_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/repos/invalid@owner",
+		"handler_name": "34_string_pattern_path_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/offset/-100",
+		"handler_name": "35_negative_integer_path_param",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/bool/True",
+		"handler_name": "Boolean path parameter - True",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/bool/1",
+		"handler_name": "Boolean path parameter - numeric 1",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/date/2023-07-15",
+		"handler_name": "Date path parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/models/foo",
+		"handler_name": "Enum path parameter - invalid value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/models/alexnet",
+		"handler_name": "Enum path parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/float/42.5",
+		"handler_name": "Float path parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/int/foobar",
+		"handler_name": "Integer path parameter - invalid string",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/int/42",
+		"handler_name": "Integer path parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/param-lt-gt/2",
+		"handler_name": "Integer path parameter with combined lt and gt constraints - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/param-ge/3",
+		"handler_name": "Integer path parameter with ge constraint - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/param-gt/2",
+		"handler_name": "Integer path parameter with gt constraint - failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/param-gt/42",
+		"handler_name": "Integer path parameter with gt constraint - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/param-le/3",
+		"handler_name": "Integer path parameter with le constraint - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/param-lt/2",
+		"handler_name": "Integer path parameter with lt constraint - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716",
+		"handler_name": "Multiple path parameters - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/type-syntax/items/not-a-uuid",
+		"handler_name": "Path parameter type syntax - invalid UUID",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/type-syntax/items-count/50",
+		"handler_name": "Path parameter type syntax with override",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/type-syntax/items/550e8400-e29b-41d4-a716-446655440000",
+		"handler_name": "Path parameter with type syntax - UUID",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/type-syntax/users/42",
+		"handler_name": "Path parameter with type syntax - integer",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/files/home/johndoe/myfile.txt",
+		"handler_name": "Path type parameter - file path",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/str/foobar",
+		"handler_name": "String path parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/param-maxlength/foobar",
+		"handler_name": "String path parameter with max_length - failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/path/param-minlength/fo",
+		"handler_name": "String path parameter with min_length - failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a",
+		"handler_name": "UUID path parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/negative",
+		"handler_name": "42_negative_integer_query_param",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/stats",
+		"handler_name": "43_scientific_notation_float",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/search",
+		"handler_name": "44_string_minlength_validation_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/search",
+		"handler_name": "45_string_minlength_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/search",
+		"handler_name": "46_string_maxlength_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/subscribe",
+		"handler_name": "47_pattern_validation_email_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/subscribe",
+		"handler_name": "48_pattern_validation_email_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "49_integer_gt_constraint_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "50_integer_gt_constraint_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "51_integer_ge_constraint_boundary",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "52_integer_le_constraint_boundary",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "53_integer_le_constraint_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "54_array_minitems_constraint_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "55_array_minitems_constraint_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "56_array_maxitems_constraint_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "57_boolean_empty_string_coercion",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/subscribe",
+		"handler_name": "58_format_email_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/subscribe",
+		"handler_name": "59_format_email_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/network",
+		"handler_name": "60_format_ipv4_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/network",
+		"handler_name": "61_format_ipv4_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/network/ipv6",
+		"handler_name": "62_format_ipv6_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/redirect",
+		"handler_name": "63_format_uri_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/redirect",
+		"handler_name": "64_format_uri_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/dns",
+		"handler_name": "65_format_hostname_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "66_multipleof_constraint_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "67_multipleof_constraint_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "68_array_uniqueitems_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items",
+		"handler_name": "69_array_uniqueitems_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items?tags=python|rust|typescript",
+		"handler_name": "70_array_separator_pipe",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items?colors=red;green;blue",
+		"handler_name": "71_array_separator_semicolon",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/search?keywords=rust%20web%20framework",
+		"handler_name": "72_array_separator_space",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/list-default",
+		"handler_name": "Array query parameter - empty array",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/list-default",
+		"handler_name": "Array query parameter - single value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/bool",
+		"handler_name": "Boolean query parameter - numeric 1",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/bool",
+		"handler_name": "Boolean query parameter - true",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/date",
+		"handler_name": "Date query parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/datetime",
+		"handler_name": "Datetime query parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/enum",
+		"handler_name": "Enum query parameter - invalid value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/enum",
+		"handler_name": "Enum query parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/float-ge",
+		"handler_name": "Float query param with ge constraint - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int-ge",
+		"handler_name": "Integer query param with ge constraint - boundary",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int-gt",
+		"handler_name": "Integer query param with gt constraint - valid",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int-le",
+		"handler_name": "Integer query param with le constraint - boundary",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int-lt",
+		"handler_name": "Integer query param with lt constraint - valid",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int/default",
+		"handler_name": "Integer with default value - not provided",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int/default",
+		"handler_name": "Integer with default value - override",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/list",
+		"handler_name": "List of integers - multiple values",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "List of strings - multiple values",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/list",
+		"handler_name": "List query parameter - required but missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/list-default",
+		"handler_name": "List with default empty array - no values provided",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/multi-type",
+		"handler_name": "Multiple query parameters with different types",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int/optional",
+		"handler_name": "Optional integer query parameter - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/optional-default",
+		"handler_name": "Optional query parameter with default value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/optional",
+		"handler_name": "Optional string query parameter - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/optional",
+		"handler_name": "Optional string query parameter - provided",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/basic",
+		"handler_name": "Query parameter with URL encoded space",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/basic",
+		"handler_name": "Query parameter with URL encoded special characters",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/test",
+		"handler_name": "Query parameter with special characters - URL encoding",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int",
+		"handler_name": "Required integer query parameter - float value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int",
+		"handler_name": "Required integer query parameter - invalid type",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int",
+		"handler_name": "Required integer query parameter - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/int",
+		"handler_name": "Required integer query parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query",
+		"handler_name": "Required string query parameter - missing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query",
+		"handler_name": "Required string query parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/str-max-length",
+		"handler_name": "String query param with max_length constraint - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/str-min-length",
+		"handler_name": "String query param with min_length constraint - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/pattern",
+		"handler_name": "String query param with regex pattern - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "String validation with regex - failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "String validation with regex - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/uuid",
+		"handler_name": "UUID query parameter - invalid format",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/query/uuid",
+		"handler_name": "UUID query parameter - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/rate-limit/basic",
+		"handler_name": "Rate limit below threshold succeeds",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/rate-limit/exceeded",
+		"handler_name": "Rate limit exceeded returns 429",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/request-id/preserved",
+		"handler_name": "Request ID header is preserved",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/request-id/generated",
+		"handler_name": "Request ID is generated when not provided",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/request-id/disabled",
+		"handler_name": "Request ID middleware can be disabled",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/timeouts/fast",
+		"handler_name": "Request completes before timeout",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/timeouts/slow",
+		"handler_name": "Request exceeds timeout",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/public/hello.txt",
+		"handler_name": "Static file server returns text file",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/app/",
+		"handler_name": "Static server returns index.html for directory",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/upload",
+		"handler_name": "19_413_payload_too_large",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/status-test/200",
+		"handler_name": "200 OK - Success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "201 Created - Resource created",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/tasks/",
+		"handler_name": "202 Accepted - Request accepted for processing",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "DELETE",
+		"path": "/status-test/204",
+		"handler_name": "204 No Content - Success with no body",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/files/document.pdf",
+		"handler_name": "206 Partial Content",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/data?skip_template_expansion=true",
+		"handler_name": "20_414_uri_too_long",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/data",
+		"handler_name": "21_431_request_header_fields_too_large",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "TRACE",
+		"path": "/data",
+		"handler_name": "22_501_not_implemented",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/data",
+		"handler_name": "23_503_service_unavailable",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/old-path",
+		"handler_name": "301 Moved Permanently - Permanent redirect",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/temp-redirect",
+		"handler_name": "302 Found - Temporary redirect",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/status-test/304",
+		"handler_name": "304 Not Modified - Cached content valid",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/redirect-post",
+		"handler_name": "307 Temporary Redirect - Method preserved",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "400 Bad Request - Invalid request",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/users/me",
+		"handler_name": "401 Unauthorized - Missing authentication",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/admin/users",
+		"handler_name": "403 Forbidden - Insufficient permissions",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/status-test/404",
+		"handler_name": "404 Not Found - Resource not found",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/slow-endpoint",
+		"handler_name": "408 Request Timeout",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "422 Unprocessable Entity - Validation error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/api/resource",
+		"handler_name": "429 Too Many Requests",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/error",
+		"handler_name": "500 Internal Server Error - Server error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/health",
+		"handler_name": "503 Service Unavailable - Server overload",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/stream/logfile",
+		"handler_name": "Binary log download",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/stream/csv-report",
+		"handler_name": "Chunked CSV export",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/stream/json-lines",
+		"handler_name": "Stream JSON lines",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/register",
+		"handler_name": "13_array_field_success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/profile",
+		"handler_name": "14_nested_object_bracket_notation",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/data",
+		"handler_name": "15_special_characters_field_names",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "16_minlength_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/accounts",
+		"handler_name": "17_pattern_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/products",
+		"handler_name": "18_integer_minimum_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/tags",
+		"handler_name": "19_array_minitems_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/subscribe",
+		"handler_name": "20_format_email_validation_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/products",
+		"handler_name": "21_integer_type_coercion_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/settings",
+		"handler_name": "22_additional_properties_strict_failure",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/form/",
+		"handler_name": "Boolean field conversion",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/form/",
+		"handler_name": "Empty string value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/form/tags",
+		"handler_name": "Multiple values for same field",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/form/",
+		"handler_name": "Numeric field type conversion",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/token",
+		"handler_name": "OAuth2 password grant flow",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/register/",
+		"handler_name": "Optional field missing - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/form/validated",
+		"handler_name": "Pattern validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/login/",
+		"handler_name": "Required field missing - validation error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/login/",
+		"handler_name": "Simple form submission - success",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/form/",
+		"handler_name": "Special characters encoding",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/form/validated",
+		"handler_name": "String max_length validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/form/validated",
+		"handler_name": "String min_length validation - fail",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/users",
+		"handler_name": "09_multiple_validation_errors",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/profiles",
+		"handler_name": "10_nested_error_path",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Array item validation error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Array max_items constraint violation",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Array min_items constraint violation",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Body field type error - string for float",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/?q=test",
+		"handler_name": "Header validation error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/not-a-uuid",
+		"handler_name": "Invalid UUID format",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/?q=test&is_active=maybe",
+		"handler_name": "Invalid boolean value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Invalid datetime format",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/models/invalid_model",
+		"handler_name": "Invalid enum value",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Malformed JSON body",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Missing required body field",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/",
+		"handler_name": "Missing required query parameter",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Multiple validation errors",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "POST",
+		"path": "/items/",
+		"handler_name": "Nested object validation error",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/?q=test&price=0",
+		"handler_name": "Numeric constraint violation - gt (greater than)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/?q=test&limit=101",
+		"handler_name": "Numeric constraint violation - le (less than or equal)",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/?q=test&skip=not_a_number",
+		"handler_name": "Query param type error - string provided for int",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",
+		"handler_name": "String max_length constraint violation",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/?q=ab",
+		"handler_name": "String min_length constraint violation",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/items/?q=invalid!",
+		"handler_name": "String regex pattern mismatch",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/notifications",
+		"handler_name": "systemAlert",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/notifications",
+		"handler_name": "notificationBatch",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/notifications",
+		"handler_name": "userNotification",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/notifications",
+		"handler_name": "statusUpdate",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/systemAlert",
+		"handler_name": "systemAlert",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/chat",
+		"handler_name": "chatMessage",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/chatAck",
+		"handler_name": "chatAck",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/chat",
+		"handler_name": "userLeft",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/chat",
+		"handler_name": "userJoined",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/userNotification",
+		"handler_name": "userNotification",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	},
+	{
+		"method": "GET",
+		"path": "/statusUpdate",
+		"handler_name": "statusUpdate",
+		"request_schema": null,
+		"response_schema": null,
+		"parameter_schema": null
+	}
 ]

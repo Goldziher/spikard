@@ -1,27 +1,22 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/spikard",
-    "crates/spikard-bindings-shared",
-    "crates/spikard-cli",
-    "crates/spikard-codegen",
-    "crates/spikard-core",
-    "crates/spikard-elixir",
-    "crates/spikard-graphql",
-    "crates/spikard-http",
-    "crates/spikard-php",
-    "crates/spikard-py",
-    "crates/spikard-node",
-    "crates/spikard-rb",
-    "crates/spikard-rb-macros",
-    "tools/benchmark-harness",
+  "crates/spikard",
+  "crates/spikard-bindings-shared",
+  "crates/spikard-cli",
+  "crates/spikard-codegen",
+  "crates/spikard-core",
+  "crates/spikard-elixir",
+  "crates/spikard-graphql",
+  "crates/spikard-http",
+  "crates/spikard-php",
+  "crates/spikard-py",
+  "crates/spikard-node",
+  "crates/spikard-rb",
+  "crates/spikard-rb-macros",
+  "tools/benchmark-harness",
 ]
-exclude = [
-    "e2e/*",
-    "examples/*",
-    "tests/test_apps/*",
-    "tools/test-generator",
-]
+exclude = ["e2e/*", "examples/*", "tests/test_apps/*", "tools/test-generator"]
 
 [workspace.package]
 version = "0.10.2"
@@ -52,15 +47,15 @@ axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
 tower-http = { version = "0.6.8", features = [
-    "trace",
-    "request-id",
-    "compression-gzip",
-    "compression-br",
-    "timeout",
-    "limit",
-    "fs",
-    "set-header",
-    "sensitive-headers",
+  "trace",
+  "request-id",
+  "compression-gzip",
+  "compression-br",
+  "timeout",
+  "limit",
+  "fs",
+  "set-header",
+  "sensitive-headers",
 ] }
 
 # Middleware and auth
@@ -85,7 +80,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http = "1.4"
 jsonschema = { version = "0.41", default-features = false }
-flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }
+flate2 = { version = "=1.1.5", default-features = false, features = [
+  "rust_backend",
+] }
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "allow", check-cfg = ['cfg(tarpaulin_include)'] }

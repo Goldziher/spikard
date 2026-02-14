@@ -33,5 +33,9 @@ spikard-bindings-shared = { path = "../spikard-bindings-shared" }
 tokio = { workspace = true }
 tower = { workspace = true, features = ["util"] }
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", default-features = false, features = ["env-filter", "fmt", "std"] }
+tracing-subscriber = { version = "0.3", default-features = false, features = [
+  "env-filter",
+  "fmt",
+  "std",
+] }
 urlencoding = "2.1"

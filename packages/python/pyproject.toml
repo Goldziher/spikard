@@ -64,9 +64,7 @@ dependencies = [
   "uvloop>=0.22; sys_platform!='win32'",
   "websockets>=16",
 ]
-optional-dependencies.uvloop = [
-  "uvloop>=0.22; sys_platform!='win32'",
-]
+optional-dependencies.uvloop = [ "uvloop>=0.22; sys_platform!='win32'" ]
 urls."Bug Tracker" = "https://github.com/Goldziher/spikard/issues"
 urls.Changelog = "https://github.com/Goldziher/spikard/releases"
 urls.Discord = "https://discord.gg/pXxagNK2zN"

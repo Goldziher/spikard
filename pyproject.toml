@@ -54,11 +54,7 @@ doc = [
   "mkdocs-minify-plugin>=0.8.0",
   "mkdocstrings[python]>=1.0.3",
 ]
-visualize = [
-  "kaleido>=1.2.0",
-  "pandas>=3.0.0",
-  "plotly>=6.5.2",
-]
+visualize = [ "kaleido>=1.2.0", "pandas>=3.0.0", "plotly>=6.5.2" ]
 
 [tool.setuptools]
 packages = []
@@ -237,12 +233,18 @@ strict = true
 explicit_package_bases = true
 namespace_packages = true
 overrides = [
-  { module = [ "_spikard" ], ignore_missing_imports = true },
-  { module = [ "jsonschema" ], ignore_missing_imports = true },
+  { module = [
+    "_spikard",
+  ], ignore_missing_imports = true },
+  { module = [
+    "jsonschema",
+  ], ignore_missing_imports = true },
   { module = [
     "tests.grpc_test",
     "tests.test_grpc_fixtures",
     "tests.conftest",
   ], ignore_errors = true },
-  { module = [ "tests.*" ], disallow_any_explicit = true, disallow_any_expr = false },
+  { module = [
+    "tests.*",
+  ], disallow_any_explicit = true, disallow_any_expr = false },
 ]

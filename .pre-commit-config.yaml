@@ -1,7 +1,7 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
-exclude: ^docs/snippets/|vendor/|node_modules/|target/|v3/|invalid*|dist/|artifacts/|e2e/
+exclude: ^docs/snippets/|vendor/|node_modules/|target/|v3/|invalid*|dist/|artifacts/
 
 repos:
   - repo: https://github.com/Goldziher/gitfluff
@@ -10,49 +10,40 @@ repos:
       - id: gitfluff-lint
         args: ["--write"]
         stages: [commit-msg]
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.11.0
-    hooks:
-      - id: shellcheck
-  - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.12.0-2
-    hooks:
-      - id: shfmt
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.10
-    hooks:
-      - id: actionlint
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        exclude: uv.lock|docs/assets/benchmarks/|test_documents/
+      - id: detect-private-key
+      - id: check-json
+      - id: check-yaml
+        args: ["--allow-multiple-documents", "--unsafe"]
       - id: check-toml
       - id: check-case-conflict
-  - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.25
+
+  - repo: https://github.com/ComPWA/taplo-pre-commit
+    rev: v0.9.3
     hooks:
-      - id: validate-pyproject
+      - id: taplo-format
+        exclude: (^|/)pyproject\.toml$
+
   - repo: https://github.com/tox-dev/pyproject-fmt
     rev: v2.16.0
     hooks:
       - id: pyproject-fmt
-  - repo: https://github.com/biomejs/pre-commit
-    rev: v2.3.15
-    hooks:
-      - id: biome-format
-      - id: biome-lint
-  - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.47.0
-    hooks:
-      - id: oxlint
-        args: ["--fix"]
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.1
     hooks:
       - id: ruff
         args: ["--fix", "--unsafe-fixes"]
       - id: ruff-format
+
   - repo: https://github.com/doublify/pre-commit-rust
     rev: v1.0
     hooks:
@@ -66,48 +57,104 @@ repos:
         files: ^(crates|packages/ruby/ext/spikard_rb/native)/.*\.rs$|^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|packages/ruby/ext/spikard_rb/native/Cargo\.toml)$
         args: ["--workspace", "--all-features", "--all-targets", "--", "-D", "warnings"]
         pass_filenames: false
-  - repo: https://github.com/rubocop/rubocop
-    rev: v1.84.2
+
+  - repo: https://github.com/EmbarkStudios/cargo-deny
+    rev: 0.19.0
     hooks:
-      - id: rubocop
-        args:
-          [
-            "--autocorrect",
-            "--force-exclusion",
-            "--config",
-            "packages/ruby/.rubocop.yml",
-            "packages/ruby/lib",
-            "packages/ruby/spec",
-            "packages/ruby/spikard.gemspec",
-          ]
-        files: ^packages/ruby/
-        pass_filenames: false
+      - id: cargo-deny
+        args: ["check", "licenses"]
+        files: ^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|deny\.toml)$
+
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v2.3.15
+    hooks:
+      - id: biome-format
+      - id: biome-lint
+
+  - repo: https://github.com/oxc-project/mirrors-oxlint
+    rev: v1.47.0
+    hooks:
+      - id: oxlint
+        args: ["--fix"]
+
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.12.0-2
+    hooks:
+      - id: shfmt
+
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.10
+    hooks:
+      - id: actionlint
+
   - repo: local
     hooks:
       - id: mypy
         name: mypy
         entry: uv run mypy
-        require_serial: true
         language: system
+        require_serial: true
         types: [python]
         pass_filenames: false
-        args: ["packages/python"]
-      - id: phpstan
-        name: PHPStan
-        entry: phpstan analyse --memory-limit=2G --no-progress --configuration packages/php/phpstan.neon packages/php/src packages/php/tests
+        args: ["tools", "packages/python"]
+
+      - id: ruby-format-check
+        name: Ruby format check
+        entry: task ruby:format:check
         language: system
-        types: [php]
-        files: ^packages/php/
+        files: ^packages/ruby/.*\.(rb|rbs)$|^packages/ruby/spikard\.gemspec$
         pass_filenames: false
+        require_serial: true
+
+      - id: ruby-lint-check
+        name: Ruby lint check
+        entry: task ruby:lint:check
+        language: system
+        files: ^packages/ruby/.*\.(rb|rbs)$|^packages/ruby/spikard\.gemspec$
+        pass_filenames: false
+        require_serial: true
+
+      - id: typescript-typecheck
+        name: TypeScript typecheck
+        entry: pnpm --filter @spikard/node run typecheck
+        language: system
+        files: ^(packages/node|crates/spikard-node|e2e/node|examples/node|examples/node-simple|examples/graphql-node|tests/test_apps/node)/.*\.(ts|tsx)$
+        pass_filenames: false
+        require_serial: true
+
+      - id: php-format-check
+        name: PHP format check
+        entry: task php:format:check
+        language: system
+        files: ^packages/php/.*\.php$
+        pass_filenames: false
+        require_serial: true
+
+      - id: php-lint-check
+        name: PHP lint check
+        entry: task php:lint:check
+        language: system
+        files: ^packages/php/.*\.php$
+        pass_filenames: false
+        require_serial: true
+
       - id: elixir-format-check
         name: Elixir format check
         entry: task elixir:format:check
         language: system
         files: ^packages/elixir/.*\.(ex|exs|heex)$|^packages/elixir/mix\.exs$
         pass_filenames: false
+        require_serial: true
+
       - id: elixir-lint-check
         name: Elixir lint check
         entry: task elixir:lint:check
         language: system
         files: ^packages/elixir/.*\.(ex|exs|heex)$|^packages/elixir/mix\.exs$
         pass_filenames: false
+        require_serial: true
