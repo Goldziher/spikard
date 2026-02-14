@@ -745,7 +745,6 @@ tasks:
   generate:tests:elixir:
     desc: "Generate Elixir e2e test suite from fixtures"
     cmds:
-      - rm -rf e2e/elixir
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang elixir --output e2e/elixir
 
   generate:tests:

@@ -1,9 +1,0 @@
-/pkg
-/tmp
-*.bundle
-*.so
-*.dll
-*.dylib
-/.gems
-/vendor/bundle
-/vendor/
