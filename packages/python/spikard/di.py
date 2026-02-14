@@ -236,7 +236,7 @@ class Provide[T]:
         if not self.depends_on:
             try:
                 sig = inspect.signature(dependency)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 # Built-in callables (for example `str`) may not expose signatures.
                 self.depends_on = []
             else:

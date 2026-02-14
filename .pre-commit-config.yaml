@@ -43,7 +43,6 @@ repos:
       - id: ruff
         args: ["--fix", "--unsafe-fixes"]
       - id: ruff-format
-        args: ["--target-version=py313"]
 
   - repo: https://github.com/doublify/pre-commit-rust
     rev: v1.0

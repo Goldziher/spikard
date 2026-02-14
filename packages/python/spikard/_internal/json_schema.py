@@ -78,7 +78,7 @@ def field_definition_to_json_schema(field: FieldDefinition) -> dict[str, Any]:
         try:
             enum_class = field.annotation
             schema["enum"] = [item.value for item in enum_class]
-        except (AttributeError, TypeError, ValueError):
+        except AttributeError, TypeError, ValueError:
             schema["type"] = "string"
         return schema
 

@@ -1942,7 +1942,7 @@ async def test_grpc_status_invalid_argument_with_details():
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             try:
                 data = json.loads(request.payload.decode())
-            except (json.JSONDecodeError, UnicodeDecodeError):
+            except json.JSONDecodeError, UnicodeDecodeError:
                 response_data = {
                     "error": "INVALID_ARGUMENT",
                     "message": "Invalid JSON in request",
