@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_rpc() -> None:
     """Tests client streaming where client sends multiple messages. Covers streaming request aggregation patterns.."""

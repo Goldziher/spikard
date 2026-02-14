@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_full_authorization_context_with_role_based_access_control() -> None:
     """Tests complete authorization context including user roles, permissions, and resource-level access control.."""
@@ -6,11 +10,11 @@ async def test_grpc_full_authorization_context_with_role_based_access_control() 
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
+        "x-user-roles": "admin,editor",
         "authorization": "Bearer token123",
+        "x-user-permissions": "read,write,delete",
         "content-type": "application/grpc",
         "x-user-id": "user-admin-001",
-        "x-user-roles": "admin,editor",
-        "x-user-permissions": "read,write,delete",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

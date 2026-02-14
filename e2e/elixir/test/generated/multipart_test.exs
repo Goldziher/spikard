@@ -692,13 +692,13 @@ defmodule E2EElixirApp.MultipartTest do
 
            parts =
              parts ++
-               ["--#{boundary}\r\nContent-Disposition: form-data; name=\"age\"\r\n\r\n25\r\n"]
-
-           parts =
-             parts ++
                [
                  "--#{boundary}\r\nContent-Disposition: form-data; name=\"active\"\r\n\r\ntrue\r\n"
                ]
+
+           parts =
+             parts ++
+               ["--#{boundary}\r\nContent-Disposition: form-data; name=\"age\"\r\n\r\n25\r\n"]
 
            parts =
              parts ++

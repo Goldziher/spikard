@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_message_size_limit_exceeded() -> None:
     """Tests client streaming RPC where one message exceeds the max_message_size limit. Server rejects the oversized message and terminates the stream.."""
@@ -6,8 +10,8 @@ async def test_grpc_client_streaming_message_size_limit_exceeded() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "grpc-max-message-size": "4096",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

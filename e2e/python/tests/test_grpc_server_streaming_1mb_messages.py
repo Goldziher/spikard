@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_server_streaming_1mb_messages() -> None:
     """Tests server streaming RPC with large message payloads (approximately 1MB each). Validates that the streaming framework can handle large individual messages without truncation or memory issues.."""

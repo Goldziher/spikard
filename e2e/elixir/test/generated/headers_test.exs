@@ -613,8 +613,8 @@ defmodule E2EElixirApp.HeadersTest do
 
       headers = [
         {~c"X-Request-Id", ~c"req-12345"},
-        {~c"X-Client-Version", ~c"1.2.3"},
-        {~c"X-Trace-Id", ~c"trace-abc"}
+        {~c"X-Trace-Id", ~c"trace-abc"},
+        {~c"X-Client-Version", ~c"1.2.3"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =

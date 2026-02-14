@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_already_exists_status_6() -> None:
     """Tests ALREADY_EXISTS gRPC status code. Returned when trying to create a resource that already exists.."""

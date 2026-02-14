@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_repeated_fields_arrays() -> None:
     """Tests arrays/repeated fields for primitive types and messages. Covers repeated field serialization and deserialization.."""

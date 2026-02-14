@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_circuit_breaker_triggered_unavailable_with_metadata() -> None:
     """Tests UNAVAILABLE status code with circuit breaker metadata. Indicates service degradation and when to retry.."""

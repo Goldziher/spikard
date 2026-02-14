@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_ok_status_0_successful_response() -> None:
     """Tests successful gRPC response with OK status code. Validates basic request-response completion.."""

@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_metadata_headers() -> None:
     """Tests gRPC metadata handling for request/response headers including authorization, tracing IDs, and custom headers.."""
@@ -6,10 +10,10 @@ async def test_grpc_grpc_metadata_headers() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-        "x-trace-id": "trace-abc123def456",
-        "content-type": "application/grpc",
         "x-custom-header": "custom-value",
+        "x-trace-id": "trace-abc123def456",
+        "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

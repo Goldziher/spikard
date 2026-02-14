@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_large_batch_100_messages() -> None:
     """Tests client streaming RPC with 100 messages in the stream. Validates performance with large batch aggregation.."""

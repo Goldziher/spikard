@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_mutual_tls_metadata_simulation() -> None:
     """Tests mutual TLS authentication by validating client certificate metadata. Simulates mTLS handshake verification.."""
@@ -6,8 +10,8 @@ async def test_grpc_mutual_tls_metadata_simulation() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "x-client-cert-fingerprint": "AB:CD:EF:12:34:56:78:90",
         "content-type": "application/grpc",
+        "x-client-cert-fingerprint": "AB:CD:EF:12:34:56:78:90",
         "x-client-cert-cn": "client.example.com",
     }
     request_payload: bytes = b"{}"

@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_oauth2_bearer_token_authentication() -> None:
     """Tests OAuth2 Bearer token authentication. Validates token validation and scope checking.."""
@@ -6,8 +10,8 @@ async def test_grpc_oauth2_bearer_token_authentication() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "authorization": "Bearer ya29.a0AfH6SMBx...",
         "content-type": "application/grpc",
+        "authorization": "Bearer ya29.a0AfH6SMBx...",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

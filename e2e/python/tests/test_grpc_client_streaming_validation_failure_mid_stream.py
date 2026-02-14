@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_validation_failure_mid_stream() -> None:
     """Tests client streaming RPC where a message fails validation in the middle of the stream. Server rejects the stream and returns error.."""

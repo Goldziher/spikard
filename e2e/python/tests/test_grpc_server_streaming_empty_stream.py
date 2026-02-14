@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_server_streaming_empty_stream() -> None:
     """Tests server streaming RPC that returns an empty stream. The server opens the stream but sends no messages before completing successfully.."""

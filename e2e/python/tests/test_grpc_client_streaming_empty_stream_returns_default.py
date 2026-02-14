@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_empty_stream_returns_default() -> None:
     """Tests client streaming RPC where client sends no messages (empty stream). Server gracefully handles empty input and returns default response.."""

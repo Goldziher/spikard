@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_compression_test_gzip() -> None:
     """Tests gRPC payload compression using gzip. Validates that compressed messages are properly decompressed and that header metadata indicates compression.."""
@@ -6,8 +10,8 @@ async def test_grpc_grpc_compression_test_gzip() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "grpc-encoding": "gzip",
         "content-type": "application/grpc",
+        "grpc-encoding": "gzip",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

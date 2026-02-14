@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_nested_messages() -> None:
     """Tests nested message types with complex field hierarchies. Covers nested message definitions and serialization.."""

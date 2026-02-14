@@ -495,7 +495,7 @@ defmodule E2EElixirApp.UrlEncodedTest do
     try do
       url = @base_url <> "/token"
       headers = [{~c"Content-Type", ~c"application/x-www-form-urlencoded"}]
-      req_body = "username=johndoe&grant_type=password&password=secret&scope="
+      req_body = "username=johndoe&scope=&grant_type=password&password=secret"
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -631,7 +631,7 @@ defmodule E2EElixirApp.UrlEncodedTest do
     try do
       url = @base_url <> "/login/"
       headers = [{~c"Content-Type", ~c"application/x-www-form-urlencoded"}]
-      req_body = "password=secret&username=johndoe"
+      req_body = "username=johndoe&password=secret"
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(

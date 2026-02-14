@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_proto3_default_value_behavior() -> None:
     """Tests how proto3 handles implicit default values. When fields are omitted from the request, response should reflect appropriate defaults.."""

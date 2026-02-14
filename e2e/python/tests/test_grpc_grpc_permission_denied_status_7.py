@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_permission_denied_status_7() -> None:
     """Tests PERMISSION_DENIED gRPC status code. Returned when the caller does not have sufficient permissions.."""

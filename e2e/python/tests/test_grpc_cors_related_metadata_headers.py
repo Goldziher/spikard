@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_cors_related_metadata_headers() -> None:
     """Tests CORS-related metadata in gRPC calls. Validates origin validation and cross-origin request handling.."""

@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_custom_authentication_scheme_header() -> None:
     """Tests custom authentication header scheme. Validates that custom auth headers are properly extracted and validated.."""

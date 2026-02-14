@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_chunked_file_upload_with_client_streaming() -> None:
     """Tests client streaming RPC for chunked file uploads. Validates that multiple message chunks are properly accumulated and processed by the server.."""

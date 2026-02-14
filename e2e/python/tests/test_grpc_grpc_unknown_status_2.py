@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_unknown_status_2() -> None:
     """Tests UNKNOWN gRPC status code. Used for errors that do not fit any other status code.."""

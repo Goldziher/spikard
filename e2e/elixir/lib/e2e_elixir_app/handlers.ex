@@ -442,8 +442,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_content_types_csv_response___text_csv(_request) do
     build_response("id,name,price\n1,Item A,10.0\n2,Item B,20.0", 200, %{
-      "content-disposition" => "attachment; filename=data.csv",
-      "content-type" => "text/csv; charset=utf-8"
+      "content-type" => "text/csv; charset=utf-8",
+      "content-disposition" => "attachment; filename=data.csv"
     })
   end
 
@@ -493,8 +493,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_content_types_pdf_response___application_pdf(_request) do
     build_response("pdf_binary_data", 200, %{
-      "content-disposition" => "attachment; filename=document.pdf",
-      "content-type" => "application/pdf"
+      "content-type" => "application/pdf",
+      "content-disposition" => "attachment; filename=document.pdf"
     })
   end
 
@@ -819,8 +819,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_08_cors_max_age(_request) do
     build_response(nil, 204, %{
-      "Access-Control-Allow-Headers" => "Content-Type",
       "Access-Control-Allow-Methods" => "POST",
+      "Access-Control-Allow-Headers" => "Content-Type",
       "Access-Control-Max-Age" => "3600",
       "Access-Control-Allow-Origin" => "https://example.com"
     })
@@ -831,9 +831,9 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_09_cors_expose_headers(_request) do
     build_response(nil, 200, %{
-      "X-Total-Count" => "42",
-      "X-Request-Id" => "abc123",
       "Access-Control-Allow-Origin" => "https://example.com",
+      "X-Request-Id" => "abc123",
+      "X-Total-Count" => "42",
       "Access-Control-Expose-Headers" => "X-Total-Count, X-Request-Id"
     })
   end
@@ -851,9 +851,9 @@ defmodule E2EElixirApp.Handlers do
   def handle_cors_cors_private_network_access(_request) do
     build_response(nil, 204, %{
       "Vary" => "Origin",
+      "Access-Control-Allow-Private-Network" => "true",
       "Access-Control-Allow-Origin" => "https://public.example.com",
-      "Access-Control-Allow-Methods" => "GET, POST",
-      "Access-Control-Allow-Private-Network" => "true"
+      "Access-Control-Allow-Methods" => "GET, POST"
     })
   end
 
@@ -862,9 +862,9 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_vary_header_for_proper_caching(_request) do
     build_response(%{"data" => "cacheable resource"}, 200, %{
-      "Vary" => "Origin",
+      "Access-Control-Allow-Origin" => "https://app.example.com",
       "Cache-Control" => "public, max-age=3600",
-      "Access-Control-Allow-Origin" => "https://app.example.com"
+      "Vary" => "Origin"
     })
   end
 
@@ -873,8 +873,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_multiple_allowed_origins(_request) do
     build_response(%{"data" => "resource data"}, 200, %{
-      "Access-Control-Allow-Origin" => "https://admin.example.com",
-      "Vary" => "Origin"
+      "Vary" => "Origin",
+      "Access-Control-Allow-Origin" => "https://admin.example.com"
     })
   end
 
@@ -890,10 +890,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_preflight_for_delete_method(_request) do
     build_response(nil, 204, %{
-      "Access-Control-Allow-Origin" => "https://app.example.com",
       "Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE",
+      "Vary" => "Origin",
       "Access-Control-Max-Age" => "3600",
-      "Vary" => "Origin"
+      "Access-Control-Allow-Origin" => "https://app.example.com"
     })
   end
 
@@ -902,11 +902,11 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_preflight_for_put_method(_request) do
     build_response(nil, 204, %{
-      "Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE",
-      "Vary" => "Origin",
-      "Access-Control-Allow-Origin" => "https://app.example.com",
       "Access-Control-Max-Age" => "3600",
-      "Access-Control-Allow-Headers" => "Content-Type, X-Custom-Header"
+      "Vary" => "Origin",
+      "Access-Control-Allow-Headers" => "Content-Type, X-Custom-Header",
+      "Access-Control-Allow-Origin" => "https://app.example.com",
+      "Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE"
     })
   end
 
@@ -915,10 +915,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_preflight_request(_request) do
     build_response(nil, 200, %{
-      "Access-Control-Max-Age" => "600",
+      "Access-Control-Allow-Origin" => "https://example.com",
       "Access-Control-Allow-Methods" => "GET, POST, PUT, DELETE, OPTIONS",
       "Access-Control-Allow-Headers" => "Content-Type, X-Custom-Header",
-      "Access-Control-Allow-Origin" => "https://example.com"
+      "Access-Control-Max-Age" => "600"
     })
   end
 
@@ -1016,8 +1016,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_di_dependency_injection_in_lifecycle_hooks___success(_request) do
     build_response(%{"authenticated" => true, "logged" => true}, 200, %{
-      "X-Auth-Mode" => "strict",
-      "X-Log-Level" => "debug"
+      "X-Log-Level" => "debug",
+      "X-Auth-Mode" => "strict"
     })
   end
 
@@ -1870,9 +1870,9 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_http_methods_options___cors_preflight_request(_request) do
     build_response(nil, 200, %{
+      "Access-Control-Allow-Headers" => "Content-Type",
       "Access-Control-Allow-Origin" => "https://example.com",
       "Access-Control-Max-Age" => "86400",
-      "Access-Control-Allow-Headers" => "Content-Type",
       "Access-Control-Allow-Methods" => "GET, POST, PUT, DELETE, OPTIONS"
     })
   end
@@ -2759,10 +2759,10 @@ defmodule E2EElixirApp.Handlers do
       },
       200,
       %{
-        "X-Content-Type-Options" => "nosniff",
         "X-Frame-Options" => "DENY",
         "X-Response-Time" => ".*ms",
-        "X-Request-ID" => ".*"
+        "X-Request-ID" => ".*",
+        "X-Content-Type-Options" => "nosniff"
       }
     )
   end
@@ -2811,10 +2811,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_lifecycle_hooks_onresponse___security_headers(_request) do
     build_response(%{"message" => "Response with security headers"}, 200, %{
-      "X-Content-Type-Options" => "nosniff",
-      "Strict-Transport-Security" => "max-age=31536000; includeSubDomains",
+      "X-XSS-Protection" => "1; mode=block",
       "X-Frame-Options" => "DENY",
-      "X-XSS-Protection" => "1; mode=block"
+      "Strict-Transport-Security" => "max-age=31536000; includeSubDomains",
+      "X-Content-Type-Options" => "nosniff"
     })
   end
 
@@ -4601,8 +4601,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_static_files_static_file_server_returns_text_file(_request) do
     build_response("Hello from static storage", 200, %{
-      "content-type" => "text/plain",
-      "cache-control" => "public, max-age=60"
+      "cache-control" => "public, max-age=60",
+      "content-type" => "text/plain"
     })
   end
 
@@ -4664,9 +4664,9 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_status_codes_206_partial_content(_request) do
     build_response("binary_data_1024_bytes", 206, %{
-      "Accept-Ranges" => "bytes",
+      "Content-Type" => "application/pdf",
       "Content-Range" => "bytes 0-21/5000",
-      "Content-Type" => "application/pdf"
+      "Accept-Ranges" => "bytes"
     })
   end
 
@@ -4804,10 +4804,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_status_codes_429_too_many_requests(_request) do
     build_response(%{"detail" => "Rate limit exceeded. Try again in 60 seconds."}, 429, %{
-      "Retry-After" => "60",
-      "X-RateLimit-Limit" => "100",
       "X-RateLimit-Remaining" => "0",
-      "X-RateLimit-Reset" => "1609459200"
+      "X-RateLimit-Reset" => "1609459200",
+      "X-RateLimit-Limit" => "100",
+      "Retry-After" => "60"
     })
   end
 

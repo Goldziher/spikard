@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_aborted_status_10() -> None:
     """Tests ABORTED gRPC status code. Returned when an operation was aborted, typically due to a concurrency issue like conflict.."""

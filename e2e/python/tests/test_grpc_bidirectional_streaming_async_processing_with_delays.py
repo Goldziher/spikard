@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_bidirectional_streaming_async_processing_with_delays() -> None:
     """Tests bidirectional streaming RPC with asynchronous message processing.."""

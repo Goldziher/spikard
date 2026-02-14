@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_maximum_field_number_536870911() -> None:
     """Tests protobuf messages using the maximum allowed field number (536870911). Validates proper field number encoding in varint format.."""

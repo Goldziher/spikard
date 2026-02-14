@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_server_streaming_rpc() -> None:
     """Tests server streaming where the server sends multiple responses. Covers streaming response patterns.."""

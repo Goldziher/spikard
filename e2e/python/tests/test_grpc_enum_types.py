@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_enum_types() -> None:
     """Tests enum definitions and serialization. Covers enum fields with named constants.."""

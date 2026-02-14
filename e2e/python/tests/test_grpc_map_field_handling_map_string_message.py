@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_map_field_handling_map_string_message() -> None:
     """Tests protobuf map fields with string keys and message values. Validates proper key-value pair serialization and access patterns.."""

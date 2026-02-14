@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_rate_limiting_with_metadata_headers() -> None:
     """Tests gRPC rate limiting. Validates rate limit headers in response and proper 429 handling.."""

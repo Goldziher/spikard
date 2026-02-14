@@ -4,6 +4,8 @@ This module converts the universal FieldDefinition IR into JSON Schema format
 that can be passed to Rust for validation and caching.
 """
 
+from __future__ import annotations
+
 from datetime import date, datetime, time, timedelta
 from enum import Enum
 from pathlib import Path, PurePath

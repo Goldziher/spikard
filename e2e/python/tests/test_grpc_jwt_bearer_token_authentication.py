@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_jwt_bearer_token_authentication() -> None:
     """Tests JWT authentication via gRPC metadata. Validates that JWT tokens are properly extracted and validated from authorization header.."""
@@ -6,8 +10,8 @@ async def test_grpc_jwt_bearer_token_authentication() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

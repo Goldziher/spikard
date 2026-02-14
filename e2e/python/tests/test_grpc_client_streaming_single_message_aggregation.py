@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_single_message_aggregation() -> None:
     """Tests client streaming RPC where client sends a single message. Server acknowledges and returns aggregated result.."""

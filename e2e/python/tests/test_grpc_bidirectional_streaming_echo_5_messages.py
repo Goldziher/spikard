@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_bidirectional_streaming_echo_5_messages() -> None:
     """Tests bidirectional streaming RPC where client sends 5 messages and expects them echoed back in the same order.."""

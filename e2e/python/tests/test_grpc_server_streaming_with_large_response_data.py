@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_server_streaming_with_large_response_data() -> None:
     """Tests server streaming RPC that yields multiple large messages. Validates proper streaming protocol handling and backpressure management.."""

@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_unimplemented_status_12() -> None:
     """Tests UNIMPLEMENTED gRPC status code. Returned when the server does not implement the requested RPC method.."""

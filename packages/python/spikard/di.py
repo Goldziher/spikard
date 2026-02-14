@@ -234,12 +234,17 @@ class Provide[T]:
         self.is_async_generator = inspect.isasyncgenfunction(dependency)
 
         if not self.depends_on:
-            sig = inspect.signature(dependency)
-            self.depends_on = [
-                param_name
-                for param_name, param in sig.parameters.items()
-                if param_name not in ("self", "cls", "request", "response")
-            ]
+            try:
+                sig = inspect.signature(dependency)
+            except (TypeError, ValueError):
+                # Built-in callables (for example `str`) may not expose signatures.
+                self.depends_on = []
+            else:
+                self.depends_on = [
+                    param_name
+                    for param_name, param in sig.parameters.items()
+                    if param_name not in ("self", "cls", "request", "response")
+                ]
 
     def __repr__(self) -> str:
         """Return a string representation of the Provide instance."""

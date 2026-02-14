@@ -15,7 +15,10 @@ Usage:
     cd packages/php && vendor/bin/phpunit tests/GrpcFixturesTest.php
 """
 
+from __future__ import annotations
+
 import asyncio
+import contextlib
 import json
 import signal
 import sys
@@ -224,21 +227,23 @@ class FixtureDrivenServicer:
                 if isinstance(stream, list):
                     expected_messages = [msg for msg in stream if isinstance(msg, dict)]
 
+        # Drain the request stream up-front. If we never read from the client stream,
+        # grpc aio can return opaque INTERNAL errors (e.g., execute_batch failures).
+        received_messages: list[dict] = []
+        with contextlib.suppress(Exception):
+            received_messages.extend([msg async for msg in request_iterator if isinstance(msg, dict)])
+
         if expected_messages:
             for message in expected_messages:
                 yield message
             if should_error:
                 await context.abort(error_status, error_message)
+                return
         elif should_error:
-            message_count = 0
-            async for _ in request_iterator:
-                message_count += 1
-                if message_count >= 1:
-                    await context.abort(error_status, error_message)
-                    return
             await context.abort(error_status, error_message)
+            return
         else:
-            async for msg in request_iterator:
+            for msg in received_messages:
                 yield msg
 
 

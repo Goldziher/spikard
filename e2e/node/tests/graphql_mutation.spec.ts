@@ -12,17 +12,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "validation_directive" },
-				json: {
-					query: `mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    bio\n  }\n}`,
-					variables: { input: { name: "a", bio: null } },
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "validation_directive" },
+			json: {
+				query: `mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    bio\n  }\n}`,
+				variables: { input: { name: "a", bio: null } },
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(422);
 		const responseBody = response.json();
@@ -30,24 +27,23 @@ describe("GraphQL mutation", () => {
 		const errors = responseBody.errors;
 		expect(errors).toBeDefined();
 		expect(errors?.length).toBe(1);
-		expect(errors?.[0]?.message).toContain("Validation error on input field 'name': String length must be between 3 and 50 characters (provided: 1)");
+		expect(errors?.[0]?.message).toContain(
+			"Validation error on input field 'name': String length must be between 3 and 50 characters (provided: 1)",
+		);
 	});
 
 	test("custom_scalar_invalid", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "custom_scalar_invalid" },
-				json: {
-					query: `mutation CreateContact($input: CreateContactInput!) {\n  createContact(input: $input) {\n    id\n    name\n    email\n    website\n    phone\n    createdAt\n  }\n}`,
-					variables: { input: { name: "Invalid Contact", email: "not-an-email", website: "not a url", phone: "123" } },
-					operationName: "CreateContact",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "custom_scalar_invalid" },
+			json: {
+				query: `mutation CreateContact($input: CreateContactInput!) {\n  createContact(input: $input) {\n    id\n    name\n    email\n    website\n    phone\n    createdAt\n  }\n}`,
+				variables: { input: { name: "Invalid Contact", email: "not-an-email", website: "not a url", phone: "123" } },
+				operationName: "CreateContact",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(422);
 		const responseBody = response.json();
@@ -64,17 +60,21 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "custom_scalar_validation" },
-				json: {
-					query: `mutation CreateContact($input: CreateContactInput!) {\n  createContact(input: $input) {\n    id\n    name\n    email\n    website\n    phone\n    createdAt\n  }\n}`,
-					variables: { input: { name: "Alice Johnson", email: "alice.johnson@example.com", website: "https://example.com", phone: "+1-555-123-4567" } },
-					operationName: "CreateContact",
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "custom_scalar_validation" },
+			json: {
+				query: `mutation CreateContact($input: CreateContactInput!) {\n  createContact(input: $input) {\n    id\n    name\n    email\n    website\n    phone\n    createdAt\n  }\n}`,
+				variables: {
+					input: {
+						name: "Alice Johnson",
+						email: "alice.johnson@example.com",
+						website: "https://example.com",
+						phone: "+1-555-123-4567",
+					},
 				},
+				operationName: "CreateContact",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -101,17 +101,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "create_resource" },
-				json: {
-					query: `mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    email\n    role\n    createdAt\n  }\n}`,
-					variables: { input: { name: "John Doe", email: "john@example.com", role: "admin" } },
-					operationName: "CreateUser",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "create_resource" },
+			json: {
+				query: `mutation CreateUser($input: CreateUserInput!) {\n  createUser(input: $input) {\n    id\n    name\n    email\n    role\n    createdAt\n  }\n}`,
+				variables: { input: { name: "John Doe", email: "john@example.com", role: "admin" } },
+				operationName: "CreateUser",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -136,17 +133,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "delete_resource" },
-				json: {
-					query: `mutation DeleteUser($id: ID!) {\n  deleteUser(id: $id) {\n    success\n    message\n    deletedId\n  }\n}`,
-					variables: { id: "user-123" },
-					operationName: "DeleteUser",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "delete_resource" },
+			json: {
+				query: `mutation DeleteUser($id: ID!) {\n  deleteUser(id: $id) {\n    success\n    message\n    deletedId\n  }\n}`,
+				variables: { id: "user-123" },
+				operationName: "DeleteUser",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -167,17 +161,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "update_resource" },
-				json: {
-					query: `mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {\n  updateUser(id: $id, input: $input) {\n    id\n    name\n    email\n    role\n    updatedAt\n  }\n}`,
-					variables: { id: "user-123", input: { email: "john.doe@example.com", role: "editor" } },
-					operationName: "UpdateUser",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "update_resource" },
+			json: {
+				query: `mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {\n  updateUser(id: $id, input: $input) {\n    id\n    name\n    email\n    role\n    updatedAt\n  }\n}`,
+				variables: { id: "user-123", input: { email: "john.doe@example.com", role: "editor" } },
+				operationName: "UpdateUser",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -202,17 +193,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "validation_error" },
-				json: {
-					query: `mutation CreatePost($input: CreatePostInput!) {\n  createPost(input: $input) {\n    id\n    title\n    content\n    tags\n    createdAt\n  }\n}`,
-					variables: { input: { title: "My Post", content: "This is a post" } },
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "validation_error" },
+			json: {
+				query: `mutation CreatePost($input: CreatePostInput!) {\n  createPost(input: $input) {\n    id\n    title\n    content\n    tags\n    createdAt\n  }\n}`,
+				variables: { input: { title: "My Post", content: "This is a post" } },
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(400);
 		const responseBody = response.json();
@@ -220,24 +208,23 @@ describe("GraphQL mutation", () => {
 		const errors = responseBody.errors;
 		expect(errors).toBeDefined();
 		expect(errors?.length).toBe(1);
-		expect(errors?.[0]?.message).toContain("Field \"CreatePostInput.tags\" of required type \"[String!]!\" was not provided.");
+		expect(errors?.[0]?.message).toContain(
+			'Field "CreatePostInput.tags" of required type "[String!]!" was not provided.',
+		);
 	});
 
 	test("mutation_permission_check", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "mutation_permission_check" },
-				json: {
-					query: `mutation DeleteUser($userId: String!) {\n  deleteUser(id: $userId) {\n    success\n    message\n  }\n}`,
-					variables: { userId: "user123" },
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "mutation_permission_check" },
+			json: {
+				query: `mutation DeleteUser($userId: String!) {\n  deleteUser(id: $userId) {\n    success\n    message\n  }\n}`,
+				variables: { userId: "user123" },
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(403);
 		const responseBody = response.json();
@@ -252,17 +239,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "dynamic_authorization" },
-				json: {
-					query: `mutation ApprovePost($postId: String!) {\n  approvePost(id: $postId) {\n    success\n    postId\n    status\n  }\n}`,
-					variables: { postId: "post123" },
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "dynamic_authorization" },
+			json: {
+				query: `mutation ApprovePost($postId: String!) {\n  approvePost(id: $postId) {\n    success\n    postId\n    status\n  }\n}`,
+				variables: { postId: "post123" },
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(403);
 		const responseBody = response.json();
@@ -277,17 +261,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "required_fields" },
-				json: {
-					query: `mutation Register($input: UserRegistrationInput!) {\n  registerUser(input: $input) {\n    success\n    userId\n    message\n  }\n}`,
-					variables: { input: { username: "johndoe", email: "john@example.com" } },
-					operationName: null,
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "required_fields" },
+			json: {
+				query: `mutation Register($input: UserRegistrationInput!) {\n  registerUser(input: $input) {\n    success\n    userId\n    message\n  }\n}`,
+				variables: { input: { username: "johndoe", email: "john@example.com" } },
+				operationName: null,
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(400);
 		const responseBody = response.json();
@@ -295,24 +276,23 @@ describe("GraphQL mutation", () => {
 		const errors = responseBody.errors;
 		expect(errors).toBeDefined();
 		expect(errors?.length).toBe(1);
-		expect(errors?.[0]?.message).toContain("Field \"UserRegistrationInput.password\" of required type \"String!\" was not provided.");
+		expect(errors?.[0]?.message).toContain(
+			'Field "UserRegistrationInput.password" of required type "String!" was not provided.',
+		);
 	});
 
 	test("file_upload_validation_type", async () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "file_upload_validation_type" },
-				json: {
-					query: `mutation UploadImage($file: Upload!) {\n  uploadImage(file: $file) {\n    id\n    filename\n    mimetype\n    width\n    height\n  }\n}`,
-					variables: { file: null },
-					operationName: "UploadImage",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "file_upload_validation_type" },
+			json: {
+				query: `mutation UploadImage($file: Upload!) {\n  uploadImage(file: $file) {\n    id\n    filename\n    mimetype\n    width\n    height\n  }\n}`,
+				variables: { file: null },
+				operationName: "UploadImage",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(400);
 		const responseBody = response.json();
@@ -327,17 +307,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "multiple_files_upload" },
-				json: {
-					query: `mutation MultipleUpload($files: [Upload!]!) {\n  multipleUpload(files: $files) {\n    id\n    filename\n    mimetype\n    size\n  }\n}`,
-					variables: { files: [null, null, null] },
-					operationName: "MultipleUpload",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "multiple_files_upload" },
+			json: {
+				query: `mutation MultipleUpload($files: [Upload!]!) {\n  multipleUpload(files: $files) {\n    id\n    filename\n    mimetype\n    size\n  }\n}`,
+				variables: { files: [null, null, null] },
+				operationName: "MultipleUpload",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -377,17 +354,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "file_upload_multipart_spec" },
-				json: {
-					query: `mutation UploadDocument($title: String!, $files: [Upload!]!) {\n  uploadDocument(title: $title, files: $files) {\n    id\n    title\n    files {\n      id\n      filename\n      mimetype\n      size\n    }\n    uploadedAt\n  }\n}`,
-					variables: { title: "Important Documents", files: [null, null] },
-					operationName: "UploadDocument",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "file_upload_multipart_spec" },
+			json: {
+				query: `mutation UploadDocument($title: String!, $files: [Upload!]!) {\n  uploadDocument(title: $title, files: $files) {\n    id\n    title\n    files {\n      id\n      filename\n      mimetype\n      size\n    }\n    uploadedAt\n  }\n}`,
+				variables: { title: "Important Documents", files: [null, null] },
+				operationName: "UploadDocument",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -426,17 +400,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "file_upload_validation_size" },
-				json: {
-					query: `mutation Upload($file: Upload!) {\n  singleUpload(file: $file) {\n    id\n    filename\n    mimetype\n    size\n  }\n}`,
-					variables: { file: null },
-					operationName: "Upload",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "file_upload_validation_size" },
+			json: {
+				query: `mutation Upload($file: Upload!) {\n  singleUpload(file: $file) {\n    id\n    filename\n    mimetype\n    size\n  }\n}`,
+				variables: { file: null },
+				operationName: "Upload",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(400);
 		const responseBody = response.json();
@@ -451,17 +422,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "single_file_upload" },
-				json: {
-					query: `mutation Upload($file: Upload!) {\n  singleUpload(file: $file) {\n    id\n    filename\n    mimetype\n    size\n  }\n}`,
-					variables: { file: null },
-					operationName: "Upload",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "single_file_upload" },
+			json: {
+				query: `mutation Upload($file: Upload!) {\n  singleUpload(file: $file) {\n    id\n    filename\n    mimetype\n    size\n  }\n}`,
+				variables: { file: null },
+				operationName: "Upload",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -484,17 +452,14 @@ describe("GraphQL mutation", () => {
 		const app = createAppGraphqlMutation();
 		const client = new TestClient(app);
 
-		const response = await client.post(
-			"/graphql",
-			{
-				headers: { "x-spikard-fixture": "file_upload_with_variables" },
-				json: {
-					query: `mutation UploadProfile($userId: ID!, $file: Upload!) {\n  uploadProfilePicture(userId: $userId, file: $file) {\n    id\n    name\n    email\n    profilePicture {\n      id\n      filename\n      mimetype\n      size\n    }\n  }\n}`,
-					variables: { userId: "user-123", file: null },
-					operationName: "UploadProfile",
-				},
+		const response = await client.post("/graphql", {
+			headers: { "x-spikard-fixture": "file_upload_with_variables" },
+			json: {
+				query: `mutation UploadProfile($userId: ID!, $file: Upload!) {\n  uploadProfilePicture(userId: $userId, file: $file) {\n    id\n    name\n    email\n    profilePicture {\n      id\n      filename\n      mimetype\n      size\n    }\n  }\n}`,
+				variables: { userId: "user-123", file: null },
+				operationName: "UploadProfile",
 			},
-		);
+		});
 
 		expect(response.statusCode).toBe(200);
 		const responseBody = response.json();
@@ -519,5 +484,4 @@ describe("GraphQL mutation", () => {
 		const errors = responseBody.errors;
 		expect(errors?.length ?? 0).toBe(0);
 	});
-
 });

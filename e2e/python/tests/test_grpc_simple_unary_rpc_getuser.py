@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_simple_unary_rpc_getuser() -> None:
     """Tests basic unary gRPC call with scalar types (int32, string). Covers fundamental request-response pattern.."""

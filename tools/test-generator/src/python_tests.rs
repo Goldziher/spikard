@@ -1197,23 +1197,9 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
     let mut code = String::new();
 
     code.push_str("\"\"\"E2E tests for GraphQL operations.\"\"\"\n\n");
+    code.push_str("import pytest\n");
     code.push_str("from spikard.testing import TestClient\n");
-    code.push_str("from app.main import (\n");
-
-    // Collect unique app factories
-    let mut app_factories: Vec<String> = fixtures
-        .iter()
-        .map(|fixture| {
-            format!("create_app_graphql_{}", sanitize_identifier(&fixture.name))
-        })
-        .collect();
-    app_factories.sort();
-    app_factories.dedup();
-
-    for factory in &app_factories {
-        code.push_str(&format!("    {},\n", factory));
-    }
-    code.push_str(")\n\n");
+    code.push_str("import app.main as app_main\n\n");
 
     // Generate test functions
     for fixture in fixtures {
@@ -1221,6 +1207,7 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
         let test_name = format!("test_graphql_{}", fixture_id);
         let factory_name = format!("create_app_graphql_{}", fixture_id);
 
+        code.push_str("@pytest.mark.asyncio\n");
         code.push_str(&format!("async def {}() -> None:\n", test_name));
         let desc: &str = fixture.description.as_ref().map(|s| s.as_str()).unwrap_or(&fixture.name);
         code.push_str(&format!(
@@ -1229,7 +1216,16 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
         ));
         code.push('\n');
 
-        code.push_str(&format!("    async with TestClient({}()) as client:\n", factory_name));
+        code.push_str(&format!(
+            "    app_factory = getattr(app_main, \"{}\", None)\n",
+            factory_name
+        ));
+        code.push_str("    if app_factory is None:\n");
+        code.push_str(&format!(
+            "        pytest.skip(\"Missing generated app factory: {}\")\n",
+            factory_name
+        ));
+        code.push_str("    async with TestClient(app_factory()) as client:\n");
 
         // Use request from fixture
         let request = &fixture.request;
@@ -1374,6 +1370,9 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     let test_name = sanitize_identifier(&fixture.name);
     let handler_name = format!("handle_grpc_{}", test_name);
 
+    code.push_str("import pytest\n");
+    code.push_str("from spikard.grpc import GrpcRequest\n\n");
+
     // Test function
     code.push_str("@pytest.mark.asyncio\n");
     code.push_str(&format!("async def test_grpc_{}() -> None:\n", test_name));
@@ -1442,15 +1441,10 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     if let Some(ref expected_msg) = fixture.expected_response.message {
         let expected_json = serde_json::to_string(expected_msg)
             .context("Failed to serialize expected response")?;
-        let escaped = expected_json
-            .replace('\\', "\\\\")
-            .replace('"', "\\\"")
-            .replace('\n', "\\n")
-            .replace('\r', "\\r")
-            .replace('\t', "\\t");
+        let expected_literal = python_bytes_literal(expected_json.as_bytes());
         code.push_str(&format!(
-            "    assert response.payload == b\"{}\"\n",
-            escaped
+            "    assert response.payload == {}\n",
+            expected_literal
         ));
     }
 

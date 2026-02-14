@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_data_loss_status_15() -> None:
     """Tests DATA_LOSS gRPC status code. Returned when unrecoverable data loss or corruption occurred.."""

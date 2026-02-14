@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_failed_precondition_status_9() -> None:
     """Tests FAILED_PRECONDITION gRPC status code. Returned when the RPC failed because the system is not in the required state.."""

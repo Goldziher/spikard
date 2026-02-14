@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_unavailable_status_14_service_unavailable() -> None:
     """Tests UNAVAILABLE gRPC status code. Returned when the service is temporarily unavailable.."""

@@ -125,8 +125,8 @@ defmodule E2EElixirApp.HttpMethodsTest do
 
       headers = [
         {~c"Access-Control-Request-Headers", ~c"Content-Type"},
-        {~c"Access-Control-Request-Method", ~c"POST"},
-        {~c"Origin", ~c"https://example.com"}
+        {~c"Origin", ~c"https://example.com"},
+        {~c"Access-Control-Request-Method", ~c"POST"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =

@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_10_messages_sum() -> None:
     """Tests client streaming RPC where client sends 10 integer values. Server sums all values and returns result.."""

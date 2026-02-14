@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_request_id_for_distributed_tracing() -> None:
     """Tests request ID header propagation for distributed tracing. Validates X-Request-ID generation and propagation.."""
@@ -6,8 +10,8 @@ async def test_grpc_request_id_for_distributed_tracing() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "x-request-id": "req-12345-67890",
         "content-type": "application/grpc",
+        "x-request-id": "req-12345-67890",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

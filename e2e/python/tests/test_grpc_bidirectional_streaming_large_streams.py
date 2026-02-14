@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_bidirectional_streaming_large_streams() -> None:
     """Tests bidirectional streaming RPC with 50+ messages in both directions.."""

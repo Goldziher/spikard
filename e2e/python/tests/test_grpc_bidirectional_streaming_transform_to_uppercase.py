@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_bidirectional_streaming_transform_to_uppercase() -> None:
     """Tests bidirectional streaming RPC where server transforms incoming messages to uppercase.."""

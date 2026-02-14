@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_bidirectional_streaming_filter_valid_messages() -> None:
     """Tests bidirectional streaming RPC where server filters out invalid messages during streaming.."""

@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_not_found_status_5() -> None:
     """Tests NOT_FOUND gRPC status code. Returned when a requested resource (e.g., user, file) does not exist.."""

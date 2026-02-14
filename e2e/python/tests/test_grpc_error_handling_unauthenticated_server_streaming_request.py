@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_error_handling_unauthenticated_server_streaming_request() -> None:
     """Tests server streaming RPC without required auth metadata. Expects UNAUTHENTICATED status when authorization header is missing.."""

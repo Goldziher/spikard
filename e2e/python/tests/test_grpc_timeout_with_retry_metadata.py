@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_timeout_with_retry_metadata() -> None:
     """Tests DEADLINE_EXCEEDED status code with retry metadata in response trailers. Indicates whether client should retry.."""

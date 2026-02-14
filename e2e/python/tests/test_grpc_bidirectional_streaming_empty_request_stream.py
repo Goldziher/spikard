@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_bidirectional_streaming_empty_request_stream() -> None:
     """Tests bidirectional streaming RPC with empty request stream but server sends response.."""

@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_metadata_preserved_in_response() -> None:
     """Tests client streaming RPC where request metadata is forwarded to and preserved in the response. Validates metadata propagation through streaming pipeline.."""
@@ -6,11 +10,11 @@ async def test_grpc_client_streaming_metadata_preserved_in_response() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "x-user-id": "user-789",
         "authorization": "Bearer token-xyz123",
-        "content-type": "application/grpc",
-        "x-trace-id": "trace-abc456",
+        "x-user-id": "user-789",
         "custom-header": "custom-value",
+        "x-trace-id": "trace-abc456",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

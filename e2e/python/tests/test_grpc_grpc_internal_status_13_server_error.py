@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_internal_status_13_server_error() -> None:
     """Tests INTERNAL gRPC status code. Returned when an internal server error occurs.."""

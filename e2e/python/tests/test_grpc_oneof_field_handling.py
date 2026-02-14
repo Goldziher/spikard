@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_oneof_field_handling() -> None:
     """Tests oneof fields where only one field in the group can be set at a time. Validates proper mutual exclusivity and serialization.."""

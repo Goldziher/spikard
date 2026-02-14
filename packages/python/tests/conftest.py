@@ -10,6 +10,7 @@ This module provides:
 
 from __future__ import annotations
 
+import contextlib
 import json
 from pathlib import Path
 from typing import Protocol, TypedDict
@@ -657,6 +658,12 @@ def grpc_server() -> object:
                     if isinstance(stream, list):
                         expected_messages = [msg for msg in stream if isinstance(msg, dict)]
 
+            # Drain the request stream up-front. If we never read from the client stream,
+            # grpc aio can return opaque INTERNAL errors (e.g., execute_batch failures).
+            received_messages = []
+            with contextlib.suppress(Exception):
+                received_messages.extend([msg async for msg in request_iterator])
+
             # If we have expected messages, yield them
             if expected_messages:
                 for message in expected_messages:
@@ -664,23 +671,13 @@ def grpc_server() -> object:
                 # After yielding messages, check for error (mid-stream error)
                 if should_error:
                     await context.abort(error_status, error_message)
+                    return
             elif should_error:
-                # For error cases without expected messages, consume a few messages
-                # then abort with the proper error status code.
-                # This simulates detecting an error condition (rate limiting, etc.)
-                message_count = 0
-                async for _ in request_iterator:
-                    message_count += 1
-                    # After reading first message or a few messages, abort with the fixture error
-                    # This ensures the server initiates the error, not the client buffer
-                    if message_count >= 1:
-                        await context.abort(error_status, error_message)
-                        return
-                # If somehow we get here without messages, still abort
                 await context.abort(error_status, error_message)
+                return
             else:
                 # Fallback: echo each message
-                async for msg in request_iterator:
+                for msg in received_messages:
                     yield msg
 
     # Create handler functions

@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_bidirectional_streaming_rpc() -> None:
     """Tests bidirectional streaming where both client and server send multiple messages. Covers duplex communication patterns.."""
@@ -6,8 +10,8 @@ async def test_grpc_bidirectional_streaming_rpc() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "authorization": "Bearer user-token",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

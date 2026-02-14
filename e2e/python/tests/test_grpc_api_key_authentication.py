@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_api_key_authentication() -> None:
     """Tests API key authentication via gRPC metadata. Validates that API keys are properly validated and associated with clients.."""
@@ -6,8 +10,8 @@ async def test_grpc_api_key_authentication() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "x-api-key": "sk_live_abc123def456",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

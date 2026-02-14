@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_empty_message_request_and_response() -> None:
     """Tests handling of empty protobuf messages with no fields. Validates that the protocol correctly handles minimal payloads.."""

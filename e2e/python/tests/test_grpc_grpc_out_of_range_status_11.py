@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_grpc_out_of_range_status_11() -> None:
     """Tests OUT_OF_RANGE gRPC status code. Returned when a value is outside the acceptable range.."""

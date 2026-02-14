@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_google_protobuf_any_type_usage() -> None:
     """Tests usage of google.protobuf.Any for storing arbitrary message types. Validates type URL encoding and message packing.."""

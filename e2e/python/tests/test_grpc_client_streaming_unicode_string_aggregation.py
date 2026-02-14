@@ -1,3 +1,7 @@
+import pytest
+from spikard.grpc import GrpcRequest
+
+
 @pytest.mark.asyncio
 async def test_grpc_client_streaming_unicode_string_aggregation() -> None:
     """Tests client streaming RPC with Unicode strings that are concatenated. Validates proper UTF-8 handling across multiple messages.."""
@@ -21,5 +25,8 @@ async def test_grpc_client_streaming_unicode_string_aggregation() -> None:
 
     # Verify response
     assert response.status_code == "OK"
-    assert response.payload == b"{\"fragment_id\":\"unicode-001\",\"result\":\"Hello, 世界! Привет 🌍\",\"fragment_count\":4,\"total_length\":26,\"status\":\"CONCATENATED\"}"
+    assert (
+        response.payload
+        == b'{"fragment_id":"unicode-001","result":"Hello, \xe4\xb8\x96\xe7\x95\x8c! \xd0\x9f\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82 \xf0\x9f\x8c\x8d","fragment_count":4,"total_length":26,"status":"CONCATENATED"}'
+    )
     assert response.metadata is not None
