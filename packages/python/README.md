@@ -115,10 +115,8 @@ async def get_data(pool: DatabasePool) -> dict:
 from spikard import websocket
 
 @app.websocket("/ws")
-def chat_endpoint():
-    async def handler(message: dict) -> dict | None:
-        return {"echo": message}
-    return handler
+async def chat_endpoint(message: dict) -> dict | None:
+    return {"echo": message}
 ```
 
 **Server-Sent Events:**

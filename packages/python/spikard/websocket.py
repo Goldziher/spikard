@@ -11,8 +11,8 @@ Example::
 
 
     @app.websocket("/chat")
-    def chat_endpoint():
-        return ChatHandler()
+    async def chat_endpoint(message: dict) -> dict | None:
+        return {"echo": message}
 
 
     app.run()

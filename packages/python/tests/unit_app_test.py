@@ -107,16 +107,15 @@ def test_websocket_and_sse_registration() -> None:
     app = Spikard()
 
     @app.websocket("/ws")
-    def ws_handler() -> str:
-        return "ws"
+    def ws_handler(message: dict[str, object]) -> dict[str, object]:
+        return {"echo": message}
 
     @app.sse("/events")
-    def events_handler() -> SseEventProducer:
-        async def generator() -> AsyncIterator[dict[str, object]]:
-            yield {"data": "events"}
+    async def events_handler() -> AsyncIterator[dict[str, object]]:
+        yield {"data": "events"}
 
-        return SseEventProducer(generator)
+    ws = app.get_websocket_handlers()["/ws"]()
+    assert ws.handle_message({"hello": "world"}) == {"echo": {"hello": "world"}}
 
-    assert app.get_websocket_handlers()["/ws"]() == "ws"
     sse_producer = app.get_sse_producers()["/events"]()
     assert isinstance(sse_producer, SseEventProducer)
