@@ -61,4 +61,8 @@ rustler::atoms! {
     handler_error,
     nif_error,
     validation_error,
+
+    // Lifecycle hook result atoms
+    continue_ = "continue",
+    short_circuit = "short_circuit",
 }

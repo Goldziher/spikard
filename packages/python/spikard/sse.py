@@ -21,6 +21,8 @@ The handler function should be an async generator that yields dicts.
 Each dict is sent as a Server-Sent Event with JSON data.
 """
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
@@ -204,7 +206,7 @@ def sse(
                         if args and args[0] is not dict:
                             extracted_event_schema = extract_json_schema(args[0])
 
-            except AttributeError, NameError, TypeError, ValueError:
+            except (AttributeError, NameError, TypeError, ValueError):
                 pass
 
         def producer_factory() -> SseEventProducer:

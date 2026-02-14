@@ -15,6 +15,7 @@ use http_body_util::BodyExt;
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, LocalPid, MapIterator, NifResult, ResourceArc, Term};
 use serde_json::Value as JsonValue;
+use spikard_http::testing::{MultipartFilePart, build_multipart_body};
 use spikard_http::testing::{ResponseSnapshot, SnapshotError};
 use spikard_http::{Handler, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig};
 use std::collections::HashMap;
@@ -99,7 +100,7 @@ pub fn test_client_new<'a>(
     }
 
     // Extract server config (use defaults for testing)
-    let config = extract_test_config(config_map);
+    let config = extract_test_config(config_map, Some(handler_runner_pid));
 
     // Create schema registry
     let schema_registry = SchemaRegistry::new();
@@ -240,7 +241,11 @@ pub fn test_client_request<'a>(
     }
 
     // Build body
-    let body = if let Some(json_body) = &options.json_body {
+    let body = if let Some(files) = &options.multipart {
+        let (body, boundary) = build_multipart_body(&[], files);
+        request_builder = request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
+        Body::from(body)
+    } else if let Some(json_body) = &options.json_body {
         // Set content-type if not already set
         if !options.headers.contains_key("content-type") {
             request_builder = request_builder.header("content-type", "application/json");
@@ -304,6 +309,7 @@ struct RequestOptions {
     cookies: HashMap<String, String>,
     json_body: Option<JsonValue>,
     form_data: Option<Vec<(String, String)>>,
+    multipart: Option<Vec<MultipartFilePart>>,
 }
 
 /// Parse request options from Elixir term.
@@ -334,6 +340,9 @@ fn parse_request_options(env: Env, opts: Term) -> NifResult<RequestOptions> {
             "form" => {
                 options.form_data = Some(decode_tuple_list(value)?);
             }
+            "multipart" => {
+                options.multipart = Some(decode_multipart_parts(value)?);
+            }
             _ => {
                 // Ignore unknown keys
             }
@@ -341,6 +350,62 @@ fn parse_request_options(env: Env, opts: Term) -> NifResult<RequestOptions> {
     }
 
     Ok(options)
+}
+
+fn decode_multipart_parts(term: Term) -> NifResult<Vec<MultipartFilePart>> {
+    let mut parts = Vec::new();
+
+    let Ok(list) = term.decode::<Vec<Term>>() else {
+        return Ok(parts);
+    };
+
+    for item in list {
+        let iter = match MapIterator::new(item) {
+            Some(it) => it,
+            None => continue,
+        };
+
+        let mut name: Option<String> = None;
+        let mut content: Option<Vec<u8>> = None;
+        let mut filename: Option<String> = None;
+        let mut content_type: Option<String> = None;
+
+        for (k, v) in iter {
+            let key_str = decode_key(k)?;
+            match key_str.as_str() {
+                "name" => name = v.decode::<String>().ok(),
+                "content" => {
+                    if let Ok(s) = v.decode::<String>() {
+                        content = Some(s.into_bytes());
+                    } else if let Ok(bytes) = v.decode::<Vec<u8>>() {
+                        content = Some(bytes);
+                    }
+                }
+                "filename" => {
+                    if let Ok(s) = v.decode::<String>() {
+                        filename = Some(s);
+                    }
+                }
+                "content_type" => content_type = v.decode::<String>().ok(),
+                _ => {}
+            }
+        }
+
+        let Some(field_name) = name else { continue };
+        let file_content = content.unwrap_or_default();
+
+        // Ensure multipart parser treats parts as files by always providing a filename.
+        let filename = filename.unwrap_or_else(|| field_name.clone());
+
+        parts.push(MultipartFilePart {
+            field_name,
+            filename,
+            content_type,
+            content: file_content,
+        });
+    }
+
+    Ok(parts)
 }
 
 /// Decode a key from an Elixir term (string or atom).
@@ -496,9 +561,9 @@ fn snapshot_to_elixir<'a>(env: Env<'a>, snapshot: &ResponseSnapshot) -> NifResul
 }
 
 /// Extract test configuration from Elixir map (simplified version of server config).
-fn extract_test_config(config_term: Term) -> ServerConfig {
+fn extract_test_config(config_term: Term, handler_runner_pid: Option<LocalPid>) -> ServerConfig {
     // Use the same extraction logic as in server.rs
-    crate::server::extract_test_config(config_term)
+    crate::server::extract_test_config(config_term, handler_runner_pid)
 }
 
 #[cfg(test)]

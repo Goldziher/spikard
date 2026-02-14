@@ -6,11 +6,12 @@
 
 use crate::atoms;
 use crate::error::struct_error;
+use crate::lifecycle::{LifecycleHookCounts, build_lifecycle_hooks};
 use once_cell::sync::{Lazy, OnceCell};
-use rustler::{Encoder, Env, MapIterator, NifResult, Term};
+use rustler::{Encoder, Env, LocalPid, MapIterator, NifResult, Term};
 use spikard_http::{
-    CompressionConfig, Handler, RateLimitConfig, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig,
-    StaticFilesConfig,
+    ApiKeyConfig, CompressionConfig, Handler, JwtConfig, RateLimitConfig, Route, RouteMetadata, SchemaRegistry, Server,
+    ServerConfig, StaticFilesConfig,
 };
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -87,7 +88,12 @@ fn global_runtime() -> Result<&'static Runtime, String> {
 /// - request_timeout: int or nil
 /// - graceful_shutdown: bool
 /// - shutdown_timeout: int
-fn extract_server_config(host: String, port: u16, config_term: Term) -> ServerConfig {
+fn extract_server_config(
+    host: String,
+    port: u16,
+    handler_runner_pid: Option<LocalPid>,
+    config_term: Term,
+) -> ServerConfig {
     let mut config = ServerConfig {
         host,
         port,
@@ -157,6 +163,24 @@ fn extract_server_config(host: String, port: u16, config_term: Term) -> ServerCo
                     config.static_files = static_files;
                 }
             }
+            "jwt_auth" => {
+                if let Some(jwt) = extract_jwt_auth_config(value) {
+                    config.jwt_auth = Some(jwt);
+                }
+            }
+            "api_key_auth" => {
+                if let Some(api_key) = extract_api_key_auth_config(value) {
+                    config.api_key_auth = Some(api_key);
+                }
+            }
+            "lifecycle" => {
+                if let Some(pid) = handler_runner_pid {
+                    if let Some(counts) = extract_lifecycle_counts(value) {
+                        let hooks = build_lifecycle_hooks(pid, &counts);
+                        config.lifecycle_hooks = Some(Arc::new(hooks));
+                    }
+                }
+            }
             _ => {
                 // Ignore unknown keys
             }
@@ -167,8 +191,16 @@ fn extract_server_config(host: String, port: u16, config_term: Term) -> ServerCo
 }
 
 /// Extract test config without requiring host/port inputs.
-pub(crate) fn extract_test_config(config_term: Term) -> ServerConfig {
-    extract_server_config("127.0.0.1".to_string(), 0, config_term)
+pub(crate) fn extract_test_config(config_term: Term, handler_runner_pid: Option<LocalPid>) -> ServerConfig {
+    let mut config = extract_server_config("127.0.0.1".to_string(), 0, handler_runner_pid, config_term);
+
+    // The Elixir TestClient is intended for direct handler testing. Elixir-side lifecycle hooks
+    // (e.g. the API-key auth hook) are used for auth scenarios in tests, and JWT auth tests
+    // expect the TestClient not to enforce JWT middleware.
+    config.jwt_auth = None;
+    config.api_key_auth = None;
+
+    config
 }
 
 /// Extract CompressionConfig from an Elixir map.
@@ -216,6 +248,135 @@ fn extract_compression_config(term: Term) -> Option<CompressionConfig> {
     }
 
     if has_values { Some(config) } else { None }
+}
+
+fn extract_jwt_auth_config(term: Term) -> Option<JwtConfig> {
+    let iter = MapIterator::new(term)?;
+    let mut secret: Option<String> = None;
+    let mut algorithm: Option<String> = None;
+    let mut audience: Option<Vec<String>> = None;
+    let mut issuer: Option<String> = None;
+    let mut leeway: Option<u64> = None;
+
+    for (key, value) in iter {
+        let key_str: String = if let Ok(s) = key.decode::<String>() {
+            s
+        } else if let Ok(atom) = key.decode::<rustler::Atom>() {
+            format!("{:?}", atom).trim_start_matches(':').to_string()
+        } else {
+            continue;
+        };
+
+        match key_str.as_str() {
+            "secret" => {
+                if let Ok(v) = value.decode::<String>() {
+                    secret = Some(v);
+                }
+            }
+            "algorithm" => {
+                if let Ok(v) = value.decode::<String>() {
+                    algorithm = Some(v);
+                }
+            }
+            "audience" => {
+                if let Ok(v) = value.decode::<Vec<String>>() {
+                    audience = Some(v);
+                }
+            }
+            "issuer" => {
+                if let Ok(v) = value.decode::<String>() {
+                    issuer = Some(v);
+                }
+            }
+            "leeway" => {
+                if let Ok(v) = value.decode::<i64>() {
+                    leeway = Some(v.max(0) as u64);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    let secret = secret?;
+
+    Some(JwtConfig {
+        secret,
+        algorithm: algorithm.unwrap_or_else(|| "HS256".to_string()),
+        audience,
+        issuer,
+        leeway: leeway.unwrap_or(0),
+    })
+}
+
+fn extract_api_key_auth_config(term: Term) -> Option<ApiKeyConfig> {
+    let iter = MapIterator::new(term)?;
+    let mut keys: Option<Vec<String>> = None;
+    let mut header_name: Option<String> = None;
+
+    for (key, value) in iter {
+        let key_str: String = if let Ok(s) = key.decode::<String>() {
+            s
+        } else if let Ok(atom) = key.decode::<rustler::Atom>() {
+            format!("{:?}", atom).trim_start_matches(':').to_string()
+        } else {
+            continue;
+        };
+
+        match key_str.as_str() {
+            "keys" => {
+                if let Ok(v) = value.decode::<Vec<String>>() {
+                    keys = Some(v);
+                }
+            }
+            "header_name" => {
+                if let Ok(v) = value.decode::<String>() {
+                    header_name = Some(v);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Some(ApiKeyConfig {
+        keys: keys.unwrap_or_default(),
+        header_name: header_name.unwrap_or_else(|| "X-API-Key".to_string()),
+    })
+}
+
+fn extract_lifecycle_counts(term: Term) -> Option<LifecycleHookCounts> {
+    let iter = MapIterator::new(term)?;
+    let mut counts = LifecycleHookCounts::default();
+
+    for (key, value) in iter {
+        let key_str: String = if let Ok(s) = key.decode::<String>() {
+            s
+        } else if let Ok(atom) = key.decode::<rustler::Atom>() {
+            format!("{:?}", atom).trim_start_matches(':').to_string()
+        } else {
+            continue;
+        };
+
+        // Elixir sends a list of N nils (not an integer) so the Rust side can infer
+        // the number of hooks without serializing functions.
+        let count = if let Ok(list) = value.decode::<Vec<Term>>() {
+            list.len()
+        } else if let Ok(v) = value.decode::<i64>() {
+            v.max(0) as usize
+        } else {
+            continue;
+        };
+
+        match key_str.as_str() {
+            "on_request" => counts.on_request = count,
+            "pre_validation" => counts.pre_validation = count,
+            "pre_handler" => counts.pre_handler = count,
+            "on_response" => counts.on_response = count,
+            "on_error" => counts.on_error = count,
+            _ => {}
+        }
+    }
+
+    Some(counts)
 }
 
 /// Extract RateLimitConfig from an Elixir map.
@@ -380,7 +541,7 @@ pub fn start_server<'a>(
     };
 
     // Extract server config first to check if we have static_files or other config
-    let config = extract_server_config(host.clone(), port, config_map);
+    let config = extract_server_config(host.clone(), port, Some(handler_runner_pid), config_map);
 
     // Allow empty routes - middleware (like static_files) can serve content without routes
     // Allow empty routes if metadata is empty and no routes are defined

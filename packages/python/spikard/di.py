@@ -83,7 +83,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Callable, Generator
@@ -115,7 +115,7 @@ def _normalize_key(key: type | str) -> str:
     return f"__type__{module}.{qualname}"
 
 
-class Provide[T]:
+class Provide(Generic[T]):
     """Wrapper for dependency factories.
 
     This class wraps a factory function that will be called to create a dependency
@@ -236,7 +236,7 @@ class Provide[T]:
         if not self.depends_on:
             try:
                 sig = inspect.signature(dependency)
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 # Built-in callables (for example `str`) may not expose signatures.
                 self.depends_on = []
             else:

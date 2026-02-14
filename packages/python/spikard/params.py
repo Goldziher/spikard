@@ -4,10 +4,10 @@ These types are used to extract values from request headers, cookies, etc.
 and to specify default values and factories for query/body/path parameters.
 """
 
-from typing import TYPE_CHECKING, Any, TypeVar
+from __future__ import annotations
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
+from collections.abc import Callable
+from typing import Any, Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -45,7 +45,7 @@ class ParamBase:
         return self.default is not ... or self.default_factory is not None
 
 
-class Query[T](ParamBase):
+class Query(ParamBase, Generic[T]):
     """Query parameter with optional default or default_factory.
 
     Use this to specify defaults for query string parameters, similar to FastAPI.
@@ -81,7 +81,7 @@ class Query[T](ParamBase):
     """
 
 
-class Body[T](ParamBase):
+class Body(ParamBase, Generic[T]):
     """Request body parameter with optional default or default_factory.
 
     Use this to specify defaults for request body parameters.
@@ -105,7 +105,7 @@ class Body[T](ParamBase):
     """
 
 
-class Path[T](ParamBase):
+class Path(ParamBase, Generic[T]):
     """Path parameter metadata.
 
     Note: Path parameters are typically required and don't use defaults,

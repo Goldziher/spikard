@@ -2,12 +2,10 @@
 
 import asyncio
 import threading
-from typing import TYPE_CHECKING, Any
+from collections.abc import Coroutine
+from typing import Any
 
 from _spikard import background_run as _background_run  # type: ignore[attr-defined]
-
-if TYPE_CHECKING:
-    from collections.abc import Coroutine
 
 _PENDING_TASKS: set[asyncio.Task[object]] = set()
 

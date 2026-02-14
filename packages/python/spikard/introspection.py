@@ -6,16 +6,14 @@ and converting them to JSON Schema for validation in Rust.
 
 import inspect
 import re
-from typing import TYPE_CHECKING, Any, get_args, get_origin
+from collections.abc import Callable
+from typing import Any, get_args, get_origin
 
 from spikard._internal import (
     field_definition_to_json_schema,
     parse_fn_signature,
 )
 from spikard.datastructures import UploadFile
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 
 def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) -> dict[str, Any] | None:
@@ -139,7 +137,7 @@ def _is_structured_type(annotation: Any) -> bool:
 
         if issubclass(annotation, msgspec.Struct):
             return True
-    except ImportError, TypeError, AttributeError:
+    except (ImportError, TypeError, AttributeError):
         pass
 
     if hasattr(annotation, "__attrs_attrs__"):

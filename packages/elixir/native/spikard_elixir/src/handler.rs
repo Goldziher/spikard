@@ -8,6 +8,8 @@
 #![deny(clippy::unwrap_used)]
 
 use axum::body::Body;
+use axum::extract::FromRequest;
+use axum::extract::Multipart;
 use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, LocalPid, NifResult, OwnedEnv, Term};
@@ -198,8 +200,10 @@ impl ElixirHandler {
             self.inner.method, self.inner.path
         );
 
-        // Convert RequestData to JSON for Elixir
-        let request_json = request_data_to_elixir_map(&request_data);
+        // Convert RequestData to JSON for Elixir, with a binding-level multipart fallback.
+        // The core router only enables multipart parsing when file params are configured; the
+        // Elixir tests exercise multipart without schema metadata.
+        let request_json = request_data_to_elixir_map(&request_data).await;
 
         // Create response channel
         let (tx, rx) = oneshot::channel();
@@ -396,32 +400,55 @@ fn send_handler_request(
     handler_name: &str,
     request_json: &JsonValue,
 ) -> Result<(), String> {
-    // Create an owned environment for building terms
+    // When invoked from a Rust thread not managed by the Erlang VM, we can send directly from a
+    // process-independent OwnedEnv. When invoked from a scheduler thread (e.g. in-process tests),
+    // `Env::send` will reject process-independent envs, so we fall back to sending from a new
+    // unmanaged thread via `send_and_clear`.
     let owned_env = OwnedEnv::new();
 
-    owned_env.run(|env| {
-        // Build the request message
-        // Format: {:handle_request, request_id, handler_name, request_map}
+    let direct_send = owned_env.run(|env| {
         let request_atom =
             rustler::Atom::from_str(env, "handle_request").map_err(|_| "Failed to create request atom".to_string())?;
 
         let request_id_term = request_id.encode(env);
         let handler_name_term = handler_name.encode(env);
 
-        // Convert JSON to Elixir term
         let request_map_term =
             json_to_elixir(env, request_json).map_err(|e| format!("Failed to convert request to Elixir: {:?}", e))?;
 
-        // Build the message tuple
         let message = (request_atom, request_id_term, handler_name_term, request_map_term).encode(env);
 
-        // Send to the handler runner
-        if env.send(&handler_runner_pid, message).is_err() {
-            return Err("Failed to send message to handler runner".to_string());
-        }
+        env.send(&handler_runner_pid, message)
+            .map_err(|_| "Failed to send message to handler runner".to_string())
+    });
 
-        Ok(())
+    if direct_send.is_ok() {
+        return Ok(());
+    }
+
+    // Fall back for scheduler threads: send from a new unmanaged thread.
+    let handler_name = handler_name.to_string();
+    let request_json = request_json.clone();
+
+    std::thread::spawn(move || {
+        let owned_env = OwnedEnv::new();
+        owned_env.run(|env| {
+            let request_atom = rustler::Atom::from_str(env, "handle_request")
+                .map_err(|_| "Failed to create request atom".to_string())?;
+
+            let request_id_term = request_id.encode(env);
+            let handler_name_term = handler_name.encode(env);
+            let request_map_term = json_to_elixir(env, &request_json)
+                .map_err(|e| format!("Failed to convert request to Elixir: {:?}", e))?;
+
+            let message = (request_atom, request_id_term, handler_name_term, request_map_term).encode(env);
+
+            env.send(&handler_runner_pid, message)
+                .map_err(|_| "Failed to send message to handler runner".to_string())
+        })
     })
+    .join()
+    .map_err(|_| "Failed to send message to handler runner".to_string())?
 }
 
 // Helper functions for Elixir term conversion
@@ -437,17 +464,79 @@ fn send_handler_request(
 /// - `:raw_body` - Option<bytes::Bytes>
 /// - `:method` - String
 /// - `:path` - String
-pub fn request_data_to_elixir_map(request_data: &RequestData) -> JsonValue {
+pub async fn request_data_to_elixir_map(request_data: &RequestData) -> JsonValue {
+    let mut body = request_data.body.as_ref().clone();
+
+    if body.is_null() {
+        if let Some(parsed) = try_parse_multipart_from_request_data(request_data).await {
+            body = parsed;
+        }
+    }
+
+    let files = extract_files_from_body(&body);
+
     json!({
         "path_params": request_data.path_params.as_ref().clone(),
         "query_params": request_data.query_params.as_ref().clone(),
+        "raw_query_params": request_data.raw_query_params.as_ref().clone(),
+        "validated_params": request_data.validated_params.as_ref().map(|v| v.as_ref().clone()),
         "headers": request_data.headers.as_ref().clone(),
         "cookies": request_data.cookies.as_ref().clone(),
-        "body": request_data.body.as_ref().clone(),
+        "body": body,
         "raw_body": request_data.raw_body.as_ref().map(|b| b.to_vec()),
         "method": request_data.method.clone(),
         "path": request_data.path.clone(),
+        "files": files,
     })
+}
+
+async fn try_parse_multipart_from_request_data(request_data: &RequestData) -> Option<JsonValue> {
+    let ct = request_data.headers.get("content-type")?;
+    if !ct.to_ascii_lowercase().starts_with("multipart/form-data") {
+        return None;
+    }
+
+    let raw = request_data.raw_body.as_ref()?;
+    let mut req = Request::new(Body::from(raw.clone()));
+    if let Ok(v) = HeaderValue::from_str(ct) {
+        req.headers_mut().insert(axum::http::header::CONTENT_TYPE, v);
+    }
+
+    // Multipart extractor expects a well-formed Content-Type with boundary.
+    let multipart = Multipart::from_request(req, &()).await.ok()?;
+    spikard_http::middleware::multipart::parse_multipart_to_json(multipart)
+        .await
+        .ok()
+}
+
+fn extract_files_from_body(body: &JsonValue) -> Vec<JsonValue> {
+    let mut out = Vec::new();
+    collect_files(body, &mut out);
+    out
+}
+
+fn looks_like_file_object(obj: &serde_json::Map<String, JsonValue>) -> bool {
+    obj.contains_key("filename") && obj.contains_key("content") && obj.contains_key("size")
+}
+
+fn collect_files(value: &JsonValue, out: &mut Vec<JsonValue>) {
+    match value {
+        JsonValue::Array(items) => {
+            for item in items {
+                collect_files(item, out);
+            }
+        }
+        JsonValue::Object(map) => {
+            if looks_like_file_object(map) {
+                out.push(JsonValue::Object(map.clone()));
+                return;
+            }
+            for v in map.values() {
+                collect_files(v, out);
+            }
+        }
+        _ => {}
+    }
 }
 
 /// Interpret an Elixir handler response.
@@ -520,8 +609,8 @@ mod tests {
         assert_eq!(payload.headers.get("x-custom"), Some(&"value".to_string()));
     }
 
-    #[test]
-    fn test_request_data_to_elixir_map() {
+    #[tokio::test]
+    async fn test_request_data_to_elixir_map() {
         let request_data = RequestData {
             path_params: Arc::new(HashMap::from([("id".to_string(), "123".to_string())])),
             query_params: Arc::new(json!({"search": "test"})),
@@ -539,7 +628,7 @@ mod tests {
             dependencies: None,
         };
 
-        let result = request_data_to_elixir_map(&request_data);
+        let result = request_data_to_elixir_map(&request_data).await;
         assert!(result.is_object());
         assert_eq!(result["method"], "POST");
         assert_eq!(result["path"], "/test");

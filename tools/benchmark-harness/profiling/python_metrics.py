@@ -5,6 +5,8 @@ during benchmark runs. It's designed to be imported by benchmark applications
 and writes metrics to a JSON file that the Rust benchmark harness can read.
 """
 
+from __future__ import annotations
+
 import atexit
 import builtins
 import gc
@@ -15,15 +17,16 @@ import signal
 import sys
 import tempfile
 import time
+from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from functools import wraps
 from pathlib import Path
 from threading import Lock
-from typing import TYPE_CHECKING, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
 
-if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+P = ParamSpec("P")
+R = TypeVar("R")
 
 LOGGER = logging.getLogger(__name__)
 
@@ -230,7 +233,7 @@ def enable_profiling() -> MetricsCollector:
     return collector
 
 
-def measure_handler[**P, R](func: Callable[P, R]) -> Callable[P, R]:
+def measure_handler(func: Callable[P, R]) -> Callable[P, R]:
     """Decorator to measure handler execution time.
 
     Usage:
@@ -248,7 +251,7 @@ def measure_handler[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     return wrapper
 
 
-def measure_serialization[**P, R](func: Callable[P, R]) -> Callable[P, R]:
+def measure_serialization(func: Callable[P, R]) -> Callable[P, R]:
     """Decorator to measure serialization time.
 
     Usage:

@@ -78,7 +78,7 @@ cache-keys = [
 ]
 
 [tool.ruff]
-target-version = "py314"
+target-version = "py310"
 line-length = 120
 src = [ "packages/python" ]
 format.docstring-code-line-length = 120
@@ -100,11 +100,15 @@ lint.ignore = [
   "FIX",      # We allow todo and fixme comments
   "ISC001",   # Conflicts with formatter
   "PD011",    # Creates false positives
+  "PERF203",  # try-except in loops is common in retry/file-walking code
   "PGH003",   # Required specific mypy ignores
   "PLR2004",  # Magic value used in comparison
   "S104",     # Disallows using '0.0.0.0' as a host
   "S110",     # try-except-pass detected
   "S603",     # subprocess-without-shell-equals-true
+  "TC001",    # flake8-type-checking: often conflicts with UP035 / runtime `get_type_hints`
+  "TC003",    # flake8-type-checking: see above
+  "TC004",    # flake8-type-checking: see above
   "TD",       # We allow todo and fixme comments
   "TRY",      # Try except block, rules are too strict
 ]

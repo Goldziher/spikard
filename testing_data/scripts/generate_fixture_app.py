@@ -32,7 +32,7 @@ def load_fixtures_by_category() -> dict[str, list[dict[str, Any]]]:
             try:
                 with fixture_file.open() as f:
                     fixture = json.load(f)
-            except OSError, json.JSONDecodeError:
+            except (OSError, json.JSONDecodeError):
                 continue
 
             if not isinstance(fixture, dict):

@@ -88,8 +88,13 @@ pub mod atoms;
 pub mod conversion;
 pub mod error;
 pub mod handler;
+pub mod lifecycle;
 pub mod server;
 pub mod testing;
 pub mod websocket;
 
-rustler::init!("Elixir.Spikard.Native");
+fn on_load(env: rustler::Env, _load_info: rustler::Term) -> bool {
+    testing::on_load(env)
+}
+
+rustler::init!("Elixir.Spikard.Native", load = on_load);

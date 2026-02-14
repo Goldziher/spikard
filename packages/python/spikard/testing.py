@@ -5,6 +5,8 @@ The TestClient uses in-process Rust testing for fast, reliable testing.
 The LiveTestClient starts a real server in a subprocess for specialized testing needs.
 """
 
+from __future__ import annotations
+
 import asyncio
 import base64
 import os
@@ -15,6 +17,7 @@ import sys
 import tempfile
 import threading
 import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -22,7 +25,7 @@ from typing import TYPE_CHECKING, Any
 try:
     from typing import Self
 except ImportError:  # pragma: no cover - py310 fallback
-    from typing import Self
+    from typing_extensions import Self
 
 
 import cloudpickle
@@ -32,8 +35,6 @@ from websockets.asyncio.client import ClientConnection
 from websockets.asyncio.client import connect as ws_connect
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
-
     from spikard.app import Spikard
 
 __all__ = [
@@ -638,7 +639,7 @@ app.run(host="127.0.0.1", port={self._port})
                         os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
                     else:
                         self._process.kill()
-            except ProcessLookupError, AttributeError:
+            except (ProcessLookupError, AttributeError):
                 pass
             finally:
                 self._process = None
@@ -663,7 +664,7 @@ app.run(host="127.0.0.1", port={self._port})
                 sock.close()
                 await asyncio.sleep(0.5)
                 return
-            except ConnectionRefusedError, OSError:
+            except (ConnectionRefusedError, OSError):
                 await asyncio.sleep(0.1)
 
             if self._process is not None and self._process.poll() is not None:
@@ -678,7 +679,7 @@ app.run(host="127.0.0.1", port={self._port})
                     os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
                 else:
                     self._process.kill()
-            except ProcessLookupError, AttributeError:
+            except (ProcessLookupError, AttributeError):
                 pass
 
         raise TimeoutError(f"Server did not start within {timeout} seconds")
