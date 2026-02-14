@@ -4,18 +4,20 @@
 //! including route registration, middleware configuration, and lifecycle hooks.
 //! It provides NIF functions for Elixir to control the server lifecycle.
 
+use crate::atoms;
+use crate::error::struct_error;
 use once_cell::sync::{Lazy, OnceCell};
-use rustler::{Env, NifResult, Term, Encoder, MapIterator};
-use spikard_http::{Handler, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig,
-    CompressionConfig, RateLimitConfig, StaticFilesConfig};
+use rustler::{Encoder, Env, MapIterator, NifResult, Term};
+use spikard_http::{
+    CompressionConfig, Handler, RateLimitConfig, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig,
+    StaticFilesConfig,
+};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use tokio::runtime::{Builder, Runtime};
 use tokio::sync::oneshot;
 use tracing::{info, warn};
-use crate::atoms;
-use crate::error::struct_error;
 
 /// Global flag to track if logging has been initialized.
 static LOGGING_INITIALIZED: OnceCell<()> = OnceCell::new();
@@ -36,8 +38,7 @@ struct RunningServer {
 }
 
 /// Global registry of running servers keyed by (host, port).
-static SERVER_REGISTRY: Lazy<Mutex<HashMap<(String, u16), RunningServer>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));
+static SERVER_REGISTRY: Lazy<Mutex<HashMap<(String, u16), RunningServer>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Server handle resource for Elixir.
 ///
@@ -163,6 +164,11 @@ fn extract_server_config(host: String, port: u16, config_term: Term) -> ServerCo
     }
 
     config
+}
+
+/// Extract test config without requiring host/port inputs.
+pub(crate) fn extract_test_config(config_term: Term) -> ServerConfig {
+    extract_server_config("127.0.0.1".to_string(), 0, config_term)
 }
 
 /// Extract CompressionConfig from an Elixir map.
@@ -361,7 +367,11 @@ pub fn start_server<'a>(
 ) -> NifResult<Term<'a>> {
     // Validate port
     if !(1..=65535).contains(&port) {
-        return Ok(struct_error(env, atoms::invalid_port(), "Port must be between 1 and 65535"));
+        return Ok(struct_error(
+            env,
+            atoms::invalid_port(),
+            "Port must be between 1 and 65535",
+        ));
     }
 
     let port = port as u16;
@@ -437,10 +447,7 @@ pub fn start_server<'a>(
     };
 
     // Create runtime for this server
-    let runtime = match tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-    {
+    let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
         Ok(rt) => rt,
         Err(e) => {
             let error_msg = format!("Failed to create Tokio runtime: {}", e);
@@ -468,8 +475,7 @@ pub fn start_server<'a>(
 
             info!("Server listening on {}", socket_addr);
 
-            let background_runtime =
-                spikard_http::BackgroundRuntime::start(background_config.clone()).await;
+            let background_runtime = spikard_http::BackgroundRuntime::start(background_config.clone()).await;
 
             // Use graceful shutdown with the shutdown receiver
             let serve_result = axum::serve(listener, app_router)
@@ -498,13 +504,16 @@ pub fn start_server<'a>(
 
     // Register the running server
     {
-        let mut registry = SERVER_REGISTRY.lock().map_err(|e| {
-            rustler::Error::Term(Box::new(format!("Failed to lock server registry: {}", e)))
-        })?;
-        registry.insert(registry_key, RunningServer {
-            shutdown_tx,
-            thread_handle: server_thread,
-        });
+        let mut registry = SERVER_REGISTRY
+            .lock()
+            .map_err(|e| rustler::Error::Term(Box::new(format!("Failed to lock server registry: {}", e))))?;
+        registry.insert(
+            registry_key,
+            RunningServer {
+                shutdown_tx,
+                thread_handle: server_thread,
+            },
+        );
     }
 
     // Create server handle and return it encoded
@@ -533,11 +542,7 @@ pub fn start_server<'a>(
 /// :ok = Spikard.Native.stop_server(host, port)
 /// ```
 #[rustler::nif(schedule = "DirtyCpu")]
-pub fn stop_server<'a>(
-    env: Env<'a>,
-    host: String,
-    port: i32,
-) -> NifResult<Term<'a>> {
+pub fn stop_server<'a>(env: Env<'a>, host: String, port: i32) -> NifResult<Term<'a>> {
     let port = port as u16;
     let registry_key = (host.clone(), port);
 
@@ -598,11 +603,7 @@ pub fn stop_server<'a>(
 ///
 /// A map with server information including running status
 #[rustler::nif]
-pub fn server_info<'a>(
-    env: Env<'a>,
-    host: String,
-    port: i32,
-) -> NifResult<Term<'a>> {
+pub fn server_info<'a>(env: Env<'a>, host: String, port: i32) -> NifResult<Term<'a>> {
     let port_u16 = port as u16;
     let registry_key = (host.clone(), port_u16);
 
@@ -610,7 +611,17 @@ pub fn server_info<'a>(
     let is_running = {
         let registry = match SERVER_REGISTRY.lock() {
             Ok(r) => r,
-            Err(_) => return Ok((atoms::host(), host, atoms::port(), port as i64, atoms::error(), "registry_locked").encode(env)),
+            Err(_) => {
+                return Ok((
+                    atoms::host(),
+                    host,
+                    atoms::port(),
+                    port as i64,
+                    atoms::error(),
+                    "registry_locked",
+                )
+                    .encode(env));
+            }
         };
         registry.contains_key(&registry_key)
     };
@@ -620,7 +631,10 @@ pub fn server_info<'a>(
     let info = (
         (atoms::host(), host),
         (atoms::port(), port as i64),
-        (rustler::Atom::from_str(env, "running").map_err(|e| rustler::Error::Term(Box::new(format!("{:?}", e))))?, is_running),
+        (
+            rustler::Atom::from_str(env, "running").map_err(|e| rustler::Error::Term(Box::new(format!("{:?}", e))))?,
+            is_running,
+        ),
     );
     Ok((atoms::ok(), info).encode(env))
 }

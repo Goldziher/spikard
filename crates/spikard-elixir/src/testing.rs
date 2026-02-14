@@ -8,9 +8,9 @@
 //! rather than spawning a test server, which is simpler and sufficient for
 //! Elixir's use case.
 
+use axum::Router;
 use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Method, Request, Uri};
-use axum::Router;
 use http_body_util::BodyExt;
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, LocalPid, MapIterator, NifResult, ResourceArc, Term};
@@ -188,7 +188,11 @@ pub fn test_client_request<'a>(
         "OPTIONS" => Method::OPTIONS,
         "TRACE" => Method::TRACE,
         _ => {
-            return Ok(struct_error(env, atoms::error(), &format!("Invalid HTTP method: {}", method)));
+            return Ok(struct_error(
+                env,
+                atoms::error(),
+                &format!("Invalid HTTP method: {}", method),
+            ));
         }
     };
 
@@ -208,13 +212,21 @@ pub fn test_client_request<'a>(
         let header_name = match HeaderName::from_bytes(key.as_bytes()) {
             Ok(n) => n,
             Err(e) => {
-                return Ok(struct_error(env, atoms::error(), &format!("Invalid header name '{}': {}", key, e)));
+                return Ok(struct_error(
+                    env,
+                    atoms::error(),
+                    &format!("Invalid header name '{}': {}", key, e),
+                ));
             }
         };
         let header_value = match HeaderValue::from_str(value) {
             Ok(v) => v,
             Err(e) => {
-                return Ok(struct_error(env, atoms::error(), &format!("Invalid header value for '{}': {}", key, e)));
+                return Ok(struct_error(
+                    env,
+                    atoms::error(),
+                    &format!("Invalid header value for '{}': {}", key, e),
+                ));
             }
         };
         request_builder = request_builder.header(header_name, header_value);
@@ -249,7 +261,11 @@ pub fn test_client_request<'a>(
     let request = match request_builder.body(body) {
         Ok(r) => r,
         Err(e) => {
-            return Ok(struct_error(env, atoms::error(), &format!("Failed to build request: {}", e)));
+            return Ok(struct_error(
+                env,
+                atoms::error(),
+                &format!("Failed to build request: {}", e),
+            ));
         }
     };
 
@@ -268,18 +284,13 @@ pub fn test_client_request<'a>(
             let response_map = snapshot_to_elixir(env, &snapshot)?;
             Ok((atoms::ok(), response_map).encode(env))
         }
-        Err(e) => {
-            Ok(struct_error(env, atoms::error(), &format!("Request error: {}", e)))
-        }
+        Err(e) => Ok(struct_error(env, atoms::error(), &format!("Request error: {}", e))),
     }
 }
 
 /// Close the test client and release resources.
 #[rustler::nif]
-pub fn test_client_close<'a>(
-    env: Env<'a>,
-    client: ResourceArc<TestClientResource>,
-) -> NifResult<Term<'a>> {
+pub fn test_client_close<'a>(env: Env<'a>, client: ResourceArc<TestClientResource>) -> NifResult<Term<'a>> {
     let mut inner = client.inner.lock().map_err(|_| rustler::Error::BadArg)?;
     *inner = None;
     Ok(atoms::ok().encode(env))

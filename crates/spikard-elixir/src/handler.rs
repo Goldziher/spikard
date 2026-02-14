@@ -11,7 +11,7 @@ use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, LocalPid, NifResult, OwnedEnv, Term};
-use serde_json::{json, Value as JsonValue};
+use serde_json::{Value as JsonValue, json};
 use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::problem::ProblemDetails;
 use spikard_http::SchemaValidator;
@@ -21,7 +21,7 @@ use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::sync::oneshot;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 use crate::atoms;
 use crate::conversion::json_to_elixir;
@@ -58,9 +58,7 @@ pub fn deliver_response(request_id: u64, response: JsonValue) -> bool {
     };
 
     match sender {
-        Some(tx) => {
-            tx.send(response).is_ok()
-        }
+        Some(tx) => tx.send(response).is_ok(),
         None => {
             warn!("No pending request found for ID {}", request_id);
             false
@@ -72,11 +70,7 @@ pub fn deliver_response(request_id: u64, response: JsonValue) -> bool {
 ///
 /// Called by the HandlerRunner GenServer after processing a request.
 #[rustler::nif]
-pub fn deliver_handler_response<'a>(
-    env: Env<'a>,
-    request_id: u64,
-    response_map: Term<'a>,
-) -> NifResult<Term<'a>> {
+pub fn deliver_handler_response<'a>(env: Env<'a>, request_id: u64, response_map: Term<'a>) -> NifResult<Term<'a>> {
     // Convert Elixir term to JSON
     let response_json = crate::conversion::elixir_to_json(env, response_map)?;
 
@@ -166,10 +160,7 @@ impl ElixirHandler {
     /// # Returns
     ///
     /// A new ElixirHandler ready to process requests.
-    pub fn new(
-        route: &spikard_http::Route,
-        handler_runner_pid: LocalPid,
-    ) -> Result<Self, String> {
+    pub fn new(route: &spikard_http::Route, handler_runner_pid: LocalPid) -> Result<Self, String> {
         let method = route.method.as_str().to_string();
         let path = route.path.clone();
 
@@ -203,7 +194,10 @@ impl ElixirHandler {
     /// 5. Interprets the response and validates it if needed
     /// 6. Returns an HTTP response
     pub async fn handle(&self, request_data: RequestData) -> HandlerResult {
-        debug!("[HANDLER] handle() called for {} {}", self.inner.method, self.inner.path);
+        debug!(
+            "[HANDLER] handle() called for {} {}",
+            self.inner.method, self.inner.path
+        );
 
         // Convert RequestData to JSON for Elixir
         let request_json = request_data_to_elixir_map(&request_data);
@@ -233,12 +227,18 @@ impl ElixirHandler {
 
         // Wait for response with timeout
         let timeout = Duration::from_millis(self.inner.timeout_ms);
-        debug!("[DEBUG] Waiting for response with timeout {:?} for request {}", timeout, request_id);
+        debug!(
+            "[DEBUG] Waiting for response with timeout {:?} for request {}",
+            timeout, request_id
+        );
 
         let response_json = match tokio::time::timeout(timeout, rx).await {
             Ok(Ok(json)) => json,
             Ok(Err(_)) => {
-                warn!("Handler response channel closed unexpectedly for request {}", request_id);
+                warn!(
+                    "Handler response channel closed unexpectedly for request {}",
+                    request_id
+                );
                 return Err(ErrorResponseBuilder::structured_error(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "handler_channel_error",
@@ -293,9 +293,14 @@ impl ElixirHandler {
             raw_body,
         } = payload;
 
-        debug!("[DEBUG] payload_to_response: status={}, headers_count={}", status, headers.len());
+        debug!(
+            "[DEBUG] payload_to_response: status={}, headers_count={}",
+            status,
+            headers.len()
+        );
 
-        let mut response_builder = axum::http::Response::builder().status(StatusCode::from_u16(status).unwrap_or(StatusCode::OK));
+        let mut response_builder =
+            axum::http::Response::builder().status(StatusCode::from_u16(status).unwrap_or(StatusCode::OK));
         let mut has_content_type = false;
 
         for (name, value) in headers.iter() {
@@ -398,15 +403,15 @@ fn send_handler_request(
     owned_env.run(|env| {
         // Build the request message
         // Format: {:handle_request, request_id, handler_name, request_map}
-        let request_atom = rustler::Atom::from_str(env, "handle_request")
-            .map_err(|_| "Failed to create request atom".to_string())?;
+        let request_atom =
+            rustler::Atom::from_str(env, "handle_request").map_err(|_| "Failed to create request atom".to_string())?;
 
         let request_id_term = request_id.encode(env);
         let handler_name_term = handler_name.encode(env);
 
         // Convert JSON to Elixir term
-        let request_map_term = json_to_elixir(env, request_json)
-            .map_err(|e| format!("Failed to convert request to Elixir: {:?}", e))?;
+        let request_map_term =
+            json_to_elixir(env, request_json).map_err(|e| format!("Failed to convert request to Elixir: {:?}", e))?;
 
         // Build the message tuple
         let message = (request_atom, request_id_term, handler_name_term, request_map_term).encode(env);
@@ -453,10 +458,7 @@ pub fn request_data_to_elixir_map(request_data: &RequestData) -> JsonValue {
 /// - `:headers` - HashMap<String, String> (default: {})
 /// - `:body` - serde_json::Value or raw bytes (default: null)
 pub fn interpret_elixir_response(response_map: &JsonValue) -> Result<HandlerResponsePayload, String> {
-    let status = response_map
-        .get("status")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(200) as u16;
+    let status = response_map.get("status").and_then(|v| v.as_u64()).unwrap_or(200) as u16;
 
     let headers = response_map
         .get("headers")
@@ -464,15 +466,12 @@ pub fn interpret_elixir_response(response_map: &JsonValue) -> Result<HandlerResp
         .unwrap_or_default();
 
     let body = response_map.get("body").cloned();
-    let raw_body = response_map
-        .get("raw_body")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_u64())
-                .map(|v| v as u8)
-                .collect::<Vec<u8>>()
-        });
+    let raw_body = response_map.get("raw_body").and_then(|v| v.as_array()).map(|arr| {
+        arr.iter()
+            .filter_map(|v| v.as_u64())
+            .map(|v| v as u8)
+            .collect::<Vec<u8>>()
+    });
 
     Ok(HandlerResponsePayload {
         status,
@@ -518,8 +517,7 @@ mod tests {
 
     #[test]
     fn test_handler_response_payload_with_header() {
-        let payload = HandlerResponsePayload::ok()
-            .with_header("x-custom".to_string(), "value".to_string());
+        let payload = HandlerResponsePayload::ok().with_header("x-custom".to_string(), "value".to_string());
         assert_eq!(payload.headers.get("x-custom"), Some(&"value".to_string()));
     }
 
@@ -532,7 +530,10 @@ mod tests {
             raw_query_params: Arc::new(HashMap::new()),
             body: Arc::new(json!({"name": "Alice"})),
             raw_body: None,
-            headers: Arc::new(HashMap::from([("content-type".to_string(), "application/json".to_string())])),
+            headers: Arc::new(HashMap::from([(
+                "content-type".to_string(),
+                "application/json".to_string(),
+            )])),
             cookies: Arc::new(HashMap::new()),
             method: "POST".to_string(),
             path: "/test".to_string(),

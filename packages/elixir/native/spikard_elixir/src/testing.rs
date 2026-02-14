@@ -454,7 +454,7 @@ fn decode_tuple_list(term: Term) -> NifResult<Vec<(String, String)>> {
 
 /// Decode multipart parts from Elixir list of maps.
 /// Each map has: "name", "content", "filename" (optional), "content_type"
-fn decode_multipart_parts(env: Env, term: Term) -> NifResult<Vec<MultipartPart>> {
+fn decode_multipart_parts(_env: Env, term: Term) -> NifResult<Vec<MultipartPart>> {
     let mut parts = Vec::new();
 
     if let Ok(list) = term.decode::<Vec<Term>>() {

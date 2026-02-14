@@ -47,8 +47,7 @@ pub fn json_to_elixir<'a>(env: Env<'a>, value: &JsonValue) -> NifResult<Term<'a>
         }
         JsonValue::String(s) => Ok(s.as_str().encode(env)),
         JsonValue::Array(arr) => {
-            let terms: Result<Vec<Term>, _> =
-                arr.iter().map(|v| json_to_elixir(env, v)).collect();
+            let terms: Result<Vec<Term>, _> = arr.iter().map(|v| json_to_elixir(env, v)).collect();
             Ok(terms?.encode(env))
         }
         JsonValue::Object(obj) => {
@@ -60,8 +59,7 @@ pub fn json_to_elixir<'a>(env: Env<'a>, value: &JsonValue) -> NifResult<Term<'a>
                     Ok((key_term, val_term))
                 })
                 .collect();
-            Term::map_from_pairs(env, &pairs?)
-                .map_err(|_| rustler::Error::BadArg)
+            Term::map_from_pairs(env, &pairs?).map_err(|_| rustler::Error::BadArg)
         }
     }
 }
@@ -111,8 +109,7 @@ pub fn elixir_to_json(env: Env, term: Term) -> NifResult<JsonValue> {
 
     // Try list
     if let Ok(list) = term.decode::<Vec<Term>>() {
-        let arr: Result<Vec<JsonValue>, _> =
-            list.into_iter().map(|t| elixir_to_json(env, t)).collect();
+        let arr: Result<Vec<JsonValue>, _> = list.into_iter().map(|t| elixir_to_json(env, t)).collect();
         return Ok(JsonValue::Array(arr?));
     }
 
@@ -144,10 +141,7 @@ pub fn elixir_to_json(env: Env, term: Term) -> NifResult<JsonValue> {
 }
 
 /// Convert a HashMap<String, String> to an Elixir map.
-pub fn map_to_elixir_map<'a>(
-    env: Env<'a>,
-    map: &HashMap<String, String>,
-) -> NifResult<Term<'a>> {
+pub fn map_to_elixir_map<'a>(env: Env<'a>, map: &HashMap<String, String>) -> NifResult<Term<'a>> {
     let pairs: Vec<(Term<'a>, Term<'a>)> = map
         .iter()
         .map(|(k, v)| (k.as_str().encode(env), v.as_str().encode(env)))
@@ -156,10 +150,7 @@ pub fn map_to_elixir_map<'a>(
 }
 
 /// Convert a HashMap<String, Vec<String>> to an Elixir map with list values.
-pub fn multimap_to_elixir_map<'a>(
-    env: Env<'a>,
-    map: &HashMap<String, Vec<String>>,
-) -> NifResult<Term<'a>> {
+pub fn multimap_to_elixir_map<'a>(env: Env<'a>, map: &HashMap<String, Vec<String>>) -> NifResult<Term<'a>> {
     let pairs: Vec<(Term<'a>, Term<'a>)> = map
         .iter()
         .map(|(k, values)| {

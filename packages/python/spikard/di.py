@@ -79,6 +79,8 @@ Async generator cleanup::
     app.provide(SessionManager, Provide(create_session, depends_on=[DatabasePool]))
 """
 
+from __future__ import annotations
+
 import asyncio
 import inspect
 from typing import TYPE_CHECKING, TypeVar

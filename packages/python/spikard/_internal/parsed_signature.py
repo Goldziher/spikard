@@ -10,6 +10,8 @@ Modifications for Spikard:
 - Focused on parameter extraction for JSON Schema generation
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from inspect import Signature
 from typing import TYPE_CHECKING, Any, get_type_hints
@@ -40,7 +42,7 @@ class ParsedSignature:
     """The raw signature as returned by :func:`inspect.signature`"""
 
     @classmethod
-    def from_fn(cls, fn: "Callable[..., Any]") -> "ParsedSignature":
+    def from_fn(cls, fn: Callable[..., Any]) -> ParsedSignature:
         """Parse a function signature.
 
         Args:
@@ -88,7 +90,7 @@ class ParsedSignature:
         )
 
 
-def parse_fn_signature(fn: "Callable[..., Any]") -> "ParsedSignature":
+def parse_fn_signature(fn: Callable[..., Any]) -> ParsedSignature:
     """Parse a function's signature into a ParsedSignature.
 
     This is the main entry point for signature parsing.

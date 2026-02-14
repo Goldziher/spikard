@@ -21,13 +21,11 @@
 #![deny(clippy::unwrap_used)]
 
 use once_cell::sync::Lazy;
-use rustler::{LocalPid, OwnedEnv};
-use serde_json::{json, Value as JsonValue};
+use rustler::{Encoder, LocalPid, OwnedEnv};
+use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tracing::debug;
-
-use crate::atoms;
 
 /// Global map of pending WebSocket response channels.
 /// Used to deliver WebSocket responses from Elixir back to waiting Rust handlers.
@@ -39,21 +37,15 @@ static WEBSOCKET_MESSAGE_ID_COUNTER: Lazy<Mutex<u64>> = Lazy::new(|| Mutex::new(
 
 /// Generate a unique WebSocket message ID.
 fn next_websocket_message_id() -> u64 {
-    let mut counter = WEBSOCKET_MESSAGE_ID_COUNTER
-        .lock()
-        .unwrap_or_else(|e| e.into_inner());
+    let mut counter = WEBSOCKET_MESSAGE_ID_COUNTER.lock().unwrap_or_else(|e| e.into_inner());
     *counter = counter.wrapping_add(1);
     *counter
 }
 
 /// Register a pending WebSocket message and return its ID.
-fn register_pending_websocket_message(
-    sender: tokio::sync::oneshot::Sender<JsonValue>,
-) -> u64 {
+fn register_pending_websocket_message(sender: tokio::sync::oneshot::Sender<JsonValue>) -> u64 {
     let id = next_websocket_message_id();
-    let mut pending = PENDING_WEBSOCKET_MESSAGES
-        .lock()
-        .unwrap_or_else(|e| e.into_inner());
+    let mut pending = PENDING_WEBSOCKET_MESSAGES.lock().unwrap_or_else(|e| e.into_inner());
     pending.insert(id, sender);
     id
 }
@@ -61,9 +53,7 @@ fn register_pending_websocket_message(
 /// Deliver a WebSocket message response.
 pub fn deliver_websocket_message(message_id: u64, response: JsonValue) -> bool {
     let sender = {
-        let mut pending = PENDING_WEBSOCKET_MESSAGES
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
+        let mut pending = PENDING_WEBSOCKET_MESSAGES.lock().unwrap_or_else(|e| e.into_inner());
         pending.remove(&message_id)
     };
 
@@ -109,11 +99,7 @@ impl ElixirWebSocketHandler {
     }
 
     /// Send a WebSocket connect message to the handler.
-    pub fn send_connect_message(
-        &self,
-        ws_ref: u64,
-        opts: JsonValue,
-    ) -> Result<(), String> {
+    pub fn send_connect_message(&self, ws_ref: u64, opts: JsonValue) -> Result<(), String> {
         debug!("Sending WebSocket connect message for ws_ref {}", ws_ref);
 
         let owned_env = OwnedEnv::new();
