@@ -500,7 +500,12 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
         #[cfg(feature = "di")]
         let handler_dependencies = if route_obj.has_named_property("handler_dependencies").unwrap_or(false) {
-            Some(Vec::new())
+            // Preserve the explicit dependency list from JS.
+            Some(
+                route_obj
+                    .get_named_property::<Vec<String>>("handler_dependencies")
+                    .unwrap_or_default(),
+            )
         } else {
             Some(vec![NO_DI_DEP_KEY.to_string()])
         };
@@ -571,7 +576,12 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                     #[cfg(feature = "di")]
                     let handler_dependencies = if route_obj.has_named_property("handler_dependencies").unwrap_or(false)
                     {
-                        Some(Vec::new())
+                        // Preserve the explicit dependency list from JS.
+                        Some(
+                            route_obj
+                                .get_named_property::<Vec<String>>("handler_dependencies")
+                                .unwrap_or_default(),
+                        )
                     } else {
                         Some(vec![NO_DI_DEP_KEY.to_string()])
                     };

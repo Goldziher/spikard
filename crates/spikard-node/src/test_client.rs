@@ -552,9 +552,9 @@ impl TestClient {
         #[cfg(feature = "di")]
         if server_config.di_container.is_some() {
             for route in &mut routes_data {
-                if route.handler_dependencies.is_some() {
-                    route.handler_dependencies = Some(Vec::new());
-                } else {
+                // Preserve any explicitly declared dependency list; only mark routes that
+                // did not declare dependencies with the sentinel noop key.
+                if route.handler_dependencies.is_none() {
                     route.handler_dependencies = Some(vec![NO_DI_DEP_KEY.to_string()]);
                 }
             }
