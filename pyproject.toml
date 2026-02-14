@@ -1,14 +1,14 @@
 [dependency-groups]
 dev = [
   "annotated-types>=0.7.0",
-  "fastapi>=0.128.0",
+  "fastapi>=0.129.0",
   "httpx-sse>=0.4.3",
   "jsonschema>=4.26.0",
-  "maturin>=1.11.5",
+  "maturin>=1.12.0",
   "msgspec>=0.19.0",
   "mypy>=1.19.1",
-  "orjson>=3.11.6",
-  "prek>=0.3.1",
+  "orjson>=3.11.7",
+  "prek>=0.3.2",
   "pydantic>=2.12.5",
   "pyjwt>=2.11.0",
   "pytest>=9.0.2",
@@ -16,7 +16,7 @@ dev = [
   "pytest-cov>=7.0.0",
   "pytest-mock>=3.15.1",
   "pytest-timeout>=2.4.0",
-  "ruff>=0.14.14",
+  "ruff>=0.15.1",
   "uv-bump",
   "uvicorn>=0.40.0",
   "websockets>=16.0",
@@ -26,8 +26,23 @@ docs = [
   "mkdocs-git-revision-date-localized-plugin>=1.5.1",
   "mkdocs-material>=9.7.1",
   "mkdocs-minify-plugin>=0.8.0",
-  "mkdocstrings>=1.0.2",
-  "mkdocstrings-python>=2.0.1",
+  "mkdocstrings>=1.0.3",
+  "mkdocstrings-python>=2.0.2",
+]
+benchmarks = [
+  # FastAPI + servers
+  "fastapi>=0.129.0",
+  "granian",
+  # Litestar + dependencies
+  "litestar[standard]",
+  "msgspec>=0.19.0",
+  "orjson>=3.11.7",
+  # Shared dependencies
+  "pydantic>=2.12.5",
+  # Robyn
+  "robyn",
+  "sniffio>=1.3.1",
+  "uvicorn[standard]>=0.40.0",
 ]
 doc = [
   "mike>=2.1.3",
@@ -37,22 +52,7 @@ doc = [
   "mkdocs-literate-nav>=0.6.2",
   "mkdocs-material[imaging]>=9.7.1",
   "mkdocs-minify-plugin>=0.8.0",
-  "mkdocstrings[python]>=1.0.2",
-]
-benchmarks = [
-  # FastAPI + servers
-  "fastapi>=0.128.0",
-  "granian",
-  # Litestar + dependencies
-  "litestar[standard]",
-  "msgspec>=0.19.0",
-  "orjson>=3.11.6",
-  # Shared dependencies
-  "pydantic>=2.12.5",
-  # Robyn
-  "robyn",
-  "sniffio>=1.3.1",
-  "uvicorn[standard]>=0.40.0",
+  "mkdocstrings[python]>=1.0.3",
 ]
 visualize = [
   "kaleido>=1.2.0",
@@ -61,9 +61,18 @@ visualize = [
 ]
 
 [tool.setuptools]
-packages = [  ]
+packages = []
 
 [tool.uv]
+sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
+workspace.members = [
+  "packages/python",
+  # Python benchmark apps (workspace-managed)
+  "tools/benchmark-harness/apps/fastapi",
+  "tools/benchmark-harness/apps/litestar",
+  "tools/benchmark-harness/apps/robyn",
+  "tools/benchmark-harness/apps/spikard-python",
+]
 cache-keys = [
   { file = "pyproject.toml" },
   { file = "Cargo.toml" },
@@ -72,26 +81,12 @@ cache-keys = [
   { file = "crates/**/Cargo.toml" },
 ]
 
-[tool.uv.sources]
-uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
-
-[tool.uv.workspace]
-members = [
-  "packages/python",
-  # Python benchmark apps (workspace-managed)
-  "tools/benchmark-harness/apps/fastapi",
-  "tools/benchmark-harness/apps/litestar",
-  "tools/benchmark-harness/apps/robyn",
-  "tools/benchmark-harness/apps/spikard-python",
-]
-
 [tool.ruff]
 target-version = "py314"
 line-length = 120
 src = [ "packages/python" ]
 format.docstring-code-line-length = 120
 format.docstring-code-format = true
-
 lint.select = [ "ALL" ]
 lint.ignore = [
   "ANN401",   # Dynamically typed ANY for kwargs
@@ -179,57 +174,51 @@ lint.pylint.max-returns = 10
 keep_full_version = true
 max_supported_python = "3.14"
 
-[tool.pytest.ini_options]
-timeout = 300
-testpaths = [ "packages/python/tests" ]
-python_files = [ "test_*.py", "*_test.py" ]
-norecursedirs = [ "dist", "build", "*.egg" ]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+[tool.pytest]
+ini_options.timeout = 300
+ini_options.testpaths = [ "packages/python/tests" ]
+ini_options.python_files = [ "test_*.py", "*_test.py" ]
+ini_options.norecursedirs = [ "dist", "build", "*.egg" ]
+ini_options.asyncio_mode = "auto"
+ini_options.asyncio_default_fixture_loop_scope = "function"
 
-[tool.coverage.html]
-directory = "htmlcov"
-
-[tool.coverage.lcov]
-output = "coverage.lcov"
-
-[tool.coverage.report]
-exclude_lines = [
-  "if TYPE_CHECKING:",
-  "except ImportError:",
-  "pragma: no cover",
-  "if sys.version_info",
-  "raise NotImplementedError",
-  "if __name__ == .__main__.:",
-  "def __repr__",
-  "class .*\\bProtocol\\):",
-  "@(abc\\.)?abstractmethod",
-  "def __str__",
-  "raise AssertionError",
-  "raise NotImplementedError",
-]
-skip_covered = false
-precision = 2
-
-[tool.coverage.run]
-branch = true
-omit = [
-  "packages/python/tests/*",
-  "packages/python/spikard/tests/*",
-  "packages/python/spikard/_internal/*",
+[tool.coverage]
+run.branch = true
+run.omit = [
+  "*/__pycache__/*",
+  "*/site-packages/*",
   "packages/python/spikard/_internal.py",
+  "packages/python/spikard/_internal/*",
   "packages/python/spikard/background.py",
   "packages/python/spikard/routing.py",
   "packages/python/spikard/schema.py",
   "packages/python/spikard/sse.py",
   "packages/python/spikard/testing.py",
+  "packages/python/spikard/tests/*",
   "packages/python/spikard/websocket.py",
+  "packages/python/tests/*",
   "scripts/*",
-  "*/__pycache__/*",
-  "*/site-packages/*",
 ]
-source = [ "packages/python/spikard" ]
-relative_files = true
+run.relative_files = true
+run.source = [ "packages/python/spikard" ]
+report.exclude_lines = [
+  "@(abc\\.)?abstractmethod",
+  "class .*\\bProtocol\\):",
+  "def __repr__",
+  "def __str__",
+  "except ImportError:",
+  "if __name__ == .__main__.:",
+  "if sys.version_info",
+  "if TYPE_CHECKING:",
+  "pragma: no cover",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "raise NotImplementedError",
+]
+report.precision = 2
+report.skip_covered = false
+html.directory = "htmlcov"
+lcov.output = "coverage.lcov"
 
 [tool.mypy]
 mypy_path = "packages/python"
@@ -241,30 +230,19 @@ exclude = [
   "tools/app-generator",
 ]
 python_version = "3.14"
-disable_error_code = 'import-untyped'
+disable_error_code = "import-untyped"
 implicit_reexport = false
 show_error_codes = true
 strict = true
 explicit_package_bases = true
 namespace_packages = true
-
-[[tool.mypy.overrides]]
-module = [ "_spikard" ]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = [ "jsonschema" ]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = [
-  "tests.grpc_test",
-  "tests.test_grpc_fixtures",
-  "tests.conftest",
+overrides = [
+  { module = [ "_spikard" ], ignore_missing_imports = true },
+  { module = [ "jsonschema" ], ignore_missing_imports = true },
+  { module = [
+    "tests.grpc_test",
+    "tests.test_grpc_fixtures",
+    "tests.conftest",
+  ], ignore_errors = true },
+  { module = [ "tests.*" ], disallow_any_explicit = true, disallow_any_expr = false },
 ]
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = [ "tests.*" ]
-disallow_any_explicit = true
-disallow_any_expr = false

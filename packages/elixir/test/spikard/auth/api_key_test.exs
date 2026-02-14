@@ -21,10 +21,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "accepts request with valid API key in header" do
       handler = fn _req -> %{status: 200, body: %{message: "OK"}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid-key-123"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid-key-123"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api", headers: [{"X-API-Key", "valid-key-123"}])
 
@@ -35,10 +36,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "rejects request with invalid API key in header" do
       handler = fn _req -> %{status: 200, body: %{message: "OK"}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid-key-123"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid-key-123"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api", headers: [{"X-API-Key", "invalid-key"}])
 
@@ -51,10 +53,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "rejects request with missing API key header" do
       handler = fn _req -> %{status: 200, body: %{message: "OK"}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid-key-123"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid-key-123"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api")
 
@@ -66,10 +69,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "supports custom header name" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["secret"], header_name: "Authorization-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["secret"], header_name: "Authorization-Key"}
+        )
 
       # Should fail with standard header
       {:ok, response1} = TestClient.get(client, "/api", headers: [{"X-API-Key", "secret"}])
@@ -83,10 +87,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "supports multiple valid keys" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["key1", "key2", "key3"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["key1", "key2", "key3"], header_name: "X-API-Key"}
+        )
 
       # All keys should work
       for key <- ["key1", "key2", "key3"] do
@@ -98,10 +103,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "case-sensitive header name matching" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["secret"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["secret"], header_name: "X-API-Key"}
+        )
 
       # HTTP headers are case-insensitive, should work with different casing
       {:ok, response} = TestClient.get(client, "/api", headers: [{"x-api-key", "secret"}])
@@ -115,10 +121,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "accepts request with valid API key in query parameter" do
       handler = fn _req -> %{status: 200, body: %{message: "OK"}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api?api_key=valid-key")
 
@@ -129,10 +136,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "rejects request with invalid API key in query parameter" do
       handler = fn _req -> %{status: 200, body: %{message: "OK"}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api?api_key=wrong-key")
 
@@ -142,10 +150,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "prefers header over query parameter" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["header-key", "query-key"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["header-key", "query-key"], header_name: "X-API-Key"}
+        )
 
       # Header takes precedence - should use header-key and reject
       {:ok, response} = TestClient.get(client, "/api?api_key=query-key", headers: [{"X-API-Key", "invalid"}])
@@ -156,10 +165,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "falls back to query parameter when header is missing" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["query-key"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["query-key"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api?api_key=query-key")
 
@@ -171,10 +181,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "returns RFC 9457 Problem Details format" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api")
 
@@ -191,10 +202,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "includes helpful error message for missing key" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api")
 
@@ -206,10 +218,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "includes helpful error message for invalid key" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid-key"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api", headers: [{"X-API-Key", "wrong"}])
 
@@ -223,10 +236,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "applies to GET requests" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.get(client, "/api", headers: [{"X-API-Key", "valid"}])
       assert response.status_code == 200
@@ -235,10 +249,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "applies to POST requests" do
       handler = fn _req -> %{status: 201, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:post, "/api", handler}],
-        api_key_auth: %{keys: ["valid"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:post, "/api", handler}],
+          api_key_auth: %{keys: ["valid"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.post(client, "/api", json: %{}, headers: [{"X-API-Key", "valid"}])
       assert response.status_code == 201
@@ -247,10 +262,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "applies to PUT requests" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:put, "/api/resource", handler}],
-        api_key_auth: %{keys: ["valid"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:put, "/api/resource", handler}],
+          api_key_auth: %{keys: ["valid"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.put(client, "/api/resource", json: %{}, headers: [{"X-API-Key", "valid"}])
       assert response.status_code == 200
@@ -259,10 +275,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "applies to DELETE requests" do
       handler = fn _req -> %{status: 204, body: ""} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:delete, "/api/resource", handler}],
-        api_key_auth: %{keys: ["valid"], header_name: "X-API-Key"}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:delete, "/api/resource", handler}],
+          api_key_auth: %{keys: ["valid"], header_name: "X-API-Key"}
+        )
 
       {:ok, response} = TestClient.delete(client, "/api/resource", headers: [{"X-API-Key", "valid"}])
       assert response.status_code == 204
@@ -273,10 +290,11 @@ defmodule Spikard.Auth.ApiKeyTest do
     test "accepts default header name when not specified" do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
-      {:ok, client} = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: ["valid"]}
-      )
+      {:ok, client} =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: ["valid"]}
+        )
 
       # Should use default header name "x-api-key"
       {:ok, response} = TestClient.get(client, "/api", headers: [{"x-api-key", "valid"}])
@@ -287,15 +305,18 @@ defmodule Spikard.Auth.ApiKeyTest do
       handler = fn _req -> %{status: 200, body: %{ok: true}} end
 
       # Empty keys list should be invalid
-      result = TestClient.new(
-        routes: [{:get, "/api", handler}],
-        api_key_auth: %{keys: [], header_name: "X-API-Key"}
-      )
+      result =
+        TestClient.new(
+          routes: [{:get, "/api", handler}],
+          api_key_auth: %{keys: [], header_name: "X-API-Key"}
+        )
 
       # Either rejects the config or accepts but requires no auth
       case result do
-        {:ok, _client} -> :ok  # Some implementations allow empty keys (permissive)
-        {:error, _reason} -> :ok  # Others reject it
+        # Some implementations allow empty keys (permissive)
+        {:ok, _client} -> :ok
+        # Others reject it
+        {:error, _reason} -> :ok
       end
     end
   end

@@ -1460,8 +1460,10 @@ jobs:
       - name: Dry run summary
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}
         run: |
-          echo "## Hex.pm Publish (Dry Run)" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Would publish **spikard** v${{ needs.prepare.outputs.version }} to Hex.pm" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "Package: [hex.pm/packages/spikard](https://hex.pm/packages/spikard)" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## Hex.pm Publish (Dry Run)"
+            echo ""
+            echo "Would publish **spikard** v${{ needs.prepare.outputs.version }} to Hex.pm"
+            echo ""
+            echo "Package: [hex.pm/packages/spikard](https://hex.pm/packages/spikard)"
+          } >> "$GITHUB_STEP_SUMMARY"

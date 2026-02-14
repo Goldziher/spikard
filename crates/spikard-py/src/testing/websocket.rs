@@ -110,7 +110,7 @@ impl WebSocketTestConnection {
 }
 
 /// Python wrapper for WebSocket messages
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Clone)]
 pub struct WebSocketMessage {
     inner: RustWebSocketMessage,

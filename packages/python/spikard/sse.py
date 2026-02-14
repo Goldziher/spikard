@@ -204,7 +204,7 @@ def sse(
                         if args and args[0] is not dict:
                             extracted_event_schema = extract_json_schema(args[0])
 
-            except (AttributeError, NameError, TypeError, ValueError):
+            except AttributeError, NameError, TypeError, ValueError:
                 pass
 
         def producer_factory() -> SseEventProducer:

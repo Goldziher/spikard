@@ -36,10 +36,11 @@ defmodule Spikard.Auth.JwtTest do
     end
 
     test "creates JWT config with required claims" do
-      config = Jwt.new(
-        secret: "test-secret",
-        required_claims: ["sub", "exp"]
-      )
+      config =
+        Jwt.new(
+          secret: "test-secret",
+          required_claims: ["sub", "exp"]
+        )
 
       assert config.required_claims == ["sub", "exp"]
     end
@@ -137,9 +138,7 @@ defmodule Spikard.Auth.JwtTest do
 
       # Verify that TestClient works correctly with JWT config
       {:ok, response} =
-        Spikard.TestClient.get(client, "/test",
-          headers: [{"authorization", "Bearer test-token"}]
-        )
+        Spikard.TestClient.get(client, "/test", headers: [{"authorization", "Bearer test-token"}])
 
       assert response.status_code == 200
       assert Spikard.TestClient.Response.json(response)["ok"] == true

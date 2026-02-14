@@ -282,6 +282,7 @@ defmodule Spikard do
   defp normalize_route(route) when is_map(route) do
     # Already a map from Router - convert to JSON-friendly format
     method = Map.get(route, :method, "GET") |> to_string() |> String.upcase()
+
     %{
       "method" => method,
       "path" => Map.get(route, :path, "/"),

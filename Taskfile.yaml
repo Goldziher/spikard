@@ -48,15 +48,25 @@ tasks:
   update:
     desc: "Update all dependencies to latest versions"
     cmds:
+      - echo "Updating Rust dependencies..."
       - task: rust:update
+      - echo "Updating Python dependencies..."
       - task: python:update
+      - echo "Updating TypeScript dependencies..."
       - task: js:update
+      - echo "Updating Ruby dependencies..."
       - task: ruby:update
+      - echo "Updating Elixir dependencies..."
       - task: elixir:update
+      - echo "Updating PHP dependencies..."
       - task: php:update
+      - echo "Updating prek dependencies..."
+      - prek autoupdate
+      - echo "Rebuilding Python bindings..."
       - task: python:build
-      - task: pre-commit:update
+      - echo "Updating benchmark dependencies..."
       - task: bench:update
+      - echo "All dependencies updated"
   version:sync:
     desc: "Sync all package versions to the workspace version"
     cmds:

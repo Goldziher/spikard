@@ -192,6 +192,7 @@ defmodule Spikard.TestClient do
 
   # Add API key authentication hook if api_key_auth is configured
   defp maybe_add_api_key_auth_hook(lifecycle, nil), do: lifecycle
+
   defp maybe_add_api_key_auth_hook(lifecycle, %{} = api_key_config) do
     valid_keys = Map.get(api_key_config, :keys, [])
     # Keep original header name for error messages, use lowercase for lookup
@@ -228,6 +229,7 @@ defmodule Spikard.TestClient do
     existing_pre_handler = Keyword.get(lifecycle, :pre_handler, [])
     Keyword.put(lifecycle, :pre_handler, [api_key_hook | existing_pre_handler])
   end
+
   defp maybe_add_api_key_auth_hook(lifecycle, _), do: lifecycle
 
   # Extract api_key from query string
@@ -236,18 +238,23 @@ defmodule Spikard.TestClient do
     |> URI.decode_query()
     |> Map.get("api_key", "")
   end
+
   defp extract_api_key_from_query(_), do: ""
 
   # Build RFC 9457 Problem Details error response
   defp build_api_key_error_response(status, error_type, header_name) do
-    {title, detail} = case error_type do
-      "missing" ->
-        {"Unauthorized", "API key is required. Provide it via the '#{header_name}' header or 'api_key' query parameter."}
-      "invalid" ->
-        {"Unauthorized", "The provided API key is invalid."}
-      _ ->
-        {"Unauthorized", "Authentication failed."}
-    end
+    {title, detail} =
+      case error_type do
+        "missing" ->
+          {"Unauthorized",
+           "API key is required. Provide it via the '#{header_name}' header or 'api_key' query parameter."}
+
+        "invalid" ->
+          {"Unauthorized", "The provided API key is invalid."}
+
+        _ ->
+          {"Unauthorized", "Authentication failed."}
+      end
 
     %{
       status: status,
@@ -511,6 +518,7 @@ defmodule Spikard.TestClient do
     |> Keyword.new()
     |> Enum.reduce(%{}, fn {key, value}, acc ->
       key_str = to_string(key)
+
       converted_value =
         case key_str do
           "headers" -> convert_headers_to_map(value)
@@ -518,6 +526,7 @@ defmodule Spikard.TestClient do
           "json" -> stringify_keys(value)
           _ -> value
         end
+
       Map.put(acc, key_str, converted_value)
     end)
   end
@@ -541,6 +550,7 @@ defmodule Spikard.TestClient do
   defp convert_multipart_parts(parts) when is_list(parts) do
     Enum.map(parts, &convert_single_multipart_part/1)
   end
+
   defp convert_multipart_parts(_), do: []
 
   defp convert_single_multipart_part({name, data}) when is_binary(name) and is_binary(data) do
@@ -561,12 +571,13 @@ defmodule Spikard.TestClient do
     }
   end
 
-  defp convert_single_multipart_part(_), do: %{
-    "name" => "",
-    "content" => "",
-    "filename" => nil,
-    "content_type" => "application/octet-stream"
-  }
+  defp convert_single_multipart_part(_),
+    do: %{
+      "name" => "",
+      "content" => "",
+      "filename" => nil,
+      "content_type" => "application/octet-stream"
+    }
 
   defp convert_headers_to_map(headers) when is_list(headers) do
     Enum.into(headers, %{}, fn {k, v} -> {to_string(k), to_string(v)} end)

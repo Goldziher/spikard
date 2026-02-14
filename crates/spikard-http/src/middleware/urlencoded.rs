@@ -18,7 +18,7 @@ use url::form_urlencoded;
 pub fn parse_urlencoded_to_json(data: &[u8]) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     if data.contains(&b'[') {
         let body_str = std::str::from_utf8(data)?;
-        let config = serde_qs::Config::new(10, false);
+        let config = serde_qs::Config::new().max_depth(10).use_form_encoding(true);
         let parsed: HashMap<String, serde_json::Value> = config.deserialize_str(body_str)?;
         let mut json_value = serde_json::to_value(parsed)?;
         convert_types_recursive(&mut json_value);

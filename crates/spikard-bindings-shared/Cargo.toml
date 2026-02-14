@@ -33,12 +33,12 @@ ruby-support = ["magnus"]
 php-support = ["ext-php-rs"]
 
 [dependencies.pyo3]
-version = "0.27"
+version = "0.28"
 optional = true
 features = ["abi3-py310"]
 
 [dependencies.pyo3-async-runtimes]
-version = "0.27"
+version = "0.28"
 optional = true
 features = ["tokio-runtime"]
 

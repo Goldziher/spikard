@@ -1,11 +1,14 @@
 [build-system]
 build-backend = "maturin"
-requires = [ "maturin>=1.11.5,<2" ]
+requires = [ "maturin>=1.12,<2" ]
 
 [project]
 name = "spikard"
 version = "0.10.2"
-description = "High-performance Python web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with FastAPI/Litestar-style decorators backed by Axum and Tower-HTTP. 2.8x faster than FastAPI."
+description = """\
+  High-performance Python web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with \
+  FastAPI/Litestar-style decorators backed by Axum and Tower-HTTP. 2.8x faster than FastAPI.\
+  """
 readme = "README.md"
 keywords = [
   "api",
@@ -50,11 +53,10 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Stubs Only",
 ]
-
 dependencies = [
   "cloudpickle>=3.1.2",
-  "granian>=2.6.1",
-  "grpcio>=1.76",
+  "granian>=2.7.1",
+  "grpcio>=1.78",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
   "msgspec>=0.19",
@@ -62,11 +64,9 @@ dependencies = [
   "uvloop>=0.22; sys_platform!='win32'",
   "websockets>=16",
 ]
-
 optional-dependencies.uvloop = [
   "uvloop>=0.22; sys_platform!='win32'",
 ]
-
 urls."Bug Tracker" = "https://github.com/Goldziher/spikard/issues"
 urls.Changelog = "https://github.com/Goldziher/spikard/releases"
 urls.Discord = "https://discord.gg/pXxagNK2zN"
@@ -74,11 +74,9 @@ urls.Documentation = "https://github.com/Goldziher/spikard/blob/main/packages/py
 urls.Homepage = "https://github.com/Goldziher/spikard"
 urls.Repository = "https://github.com/Goldziher/spikard"
 
-[tool.hatch.build.targets.wheel]
-packages = [ "spikard" ]
-
-[tool.hatch.build.targets.wheel.force-include]
-"spikard/py.typed" = "spikard/py.typed"
+[tool.hatch]
+build.targets.wheel.packages = [ "spikard" ]
+build.targets.wheel.force-include."spikard/py.typed" = "spikard/py.typed"
 
 [tool.maturin]
 module-name = "_spikard"

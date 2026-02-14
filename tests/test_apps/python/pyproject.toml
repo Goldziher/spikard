@@ -14,7 +14,6 @@ classifiers = [
 dependencies = [
   "spikard @ file:///Users/naamanhirschfeld/workspace/spikard/packages/python",
 ]
-
 optional-dependencies.dev = [
   "httpx>=0.27",
   "pytest>=8",
@@ -24,8 +23,8 @@ optional-dependencies.dev = [
 [tool.setuptools]
 py-modules = [ "app", "test_published" ]
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-testpaths = [ "." ]
-python_files = [ "test_*.py" ]
-python_functions = [ "test_*" ]
+[tool.pytest]
+ini_options.asyncio_mode = "auto"
+ini_options.testpaths = [ "." ]
+ini_options.python_files = [ "test_*.py" ]
+ini_options.python_functions = [ "test_*" ]

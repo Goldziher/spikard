@@ -14,6 +14,7 @@
 //! - `handler`: ElixirHandler trait implementation
 //! - `server`: HTTP server setup and lifecycle management
 //! - `testing`: Test client for testing HTTP handlers without network overhead
+//! - `websocket`: WebSocket handler implementation
 
 #![allow(dead_code)]
 #![allow(deprecated)]
@@ -84,38 +85,11 @@
 #![allow(clippy::collapsible_if)] // FFI validation patterns
 
 pub mod atoms;
-pub mod background;
 pub mod conversion;
-pub mod di;
 pub mod error;
 pub mod handler;
-pub mod lifecycle;
 pub mod server;
-pub mod sse;
 pub mod testing;
 pub mod websocket;
 
-use rustler::{Env, Term};
-
-fn on_load(env: Env, _: Term) -> bool {
-    testing::on_load(env)
-}
-
-rustler::init!(
-    "Elixir.Spikard.Native",
-    [
-        server::start_server,
-        server::stop_server,
-        server::server_info,
-        handler::deliver_handler_response,
-        testing::test_client_new,
-        testing::test_client_request,
-        testing::test_client_close,
-        lifecycle::deliver_hook_response_nif,
-        di::deliver_factory_response,
-        sse::deliver_sse_event_result,
-        websocket::websocket_send,
-        websocket::websocket_close,
-    ],
-    load = on_load
-);
+rustler::init!("Elixir.Spikard.Native");

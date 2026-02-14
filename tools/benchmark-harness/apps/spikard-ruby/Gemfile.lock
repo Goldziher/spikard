@@ -1,14 +1,17 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    base64 (0.3.0)
 
 PLATFORMS
   arm64-darwin-25
   ruby
 
 DEPENDENCIES
+  base64
 
 CHECKSUMS
+  base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
 
 BUNDLED WITH
   4.0.5

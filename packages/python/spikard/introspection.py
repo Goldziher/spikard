@@ -139,7 +139,7 @@ def _is_structured_type(annotation: Any) -> bool:
 
         if issubclass(annotation, msgspec.Struct):
             return True
-    except (ImportError, TypeError, AttributeError):
+    except ImportError, TypeError, AttributeError:
         pass
 
     if hasattr(annotation, "__attrs_attrs__"):

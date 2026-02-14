@@ -57,12 +57,11 @@ pub fn deliver_websocket_message(message_id: u64, response: JsonValue) -> bool {
         pending.remove(&message_id)
     };
 
-    match sender {
-        Some(tx) => tx.send(response).is_ok(),
-        None => {
-            debug!("No pending WebSocket message found for ID {}", message_id);
-            false
-        }
+    if let Some(tx) = sender {
+        tx.send(response).is_ok()
+    } else {
+        debug!("No pending WebSocket message found for ID {}", message_id);
+        false
     }
 }
 

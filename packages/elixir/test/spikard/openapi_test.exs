@@ -18,11 +18,12 @@ defmodule Spikard.OpenapiTest do
     end
 
     test "includes description when provided" do
-      config = OpenAPI.config(
-        title: "My API",
-        version: "1.0.0",
-        description: "A test API"
-      )
+      config =
+        OpenAPI.config(
+          title: "My API",
+          version: "1.0.0",
+          description: "A test API"
+        )
 
       assert config.description == "A test API"
     end
@@ -39,11 +40,12 @@ defmodule Spikard.OpenapiTest do
     end
 
     test "allows customizing openapi_json_path" do
-      config = OpenAPI.config(
-        title: "API",
-        version: "1.0.0",
-        openapi_json_path: "/api/spec.json"
-      )
+      config =
+        OpenAPI.config(
+          title: "API",
+          version: "1.0.0",
+          openapi_json_path: "/api/spec.json"
+        )
 
       assert config.openapi_json_path == "/api/spec.json"
     end
@@ -51,11 +53,12 @@ defmodule Spikard.OpenapiTest do
     test "includes contact information when provided" do
       contact = %{"name" => "Support", "email" => "support@example.com"}
 
-      config = OpenAPI.config(
-        title: "API",
-        version: "1.0.0",
-        contact: contact
-      )
+      config =
+        OpenAPI.config(
+          title: "API",
+          version: "1.0.0",
+          contact: contact
+        )
 
       assert config.contact == contact
     end
@@ -68,11 +71,12 @@ defmodule Spikard.OpenapiTest do
     test "includes license information when provided" do
       license = %{"name" => "MIT"}
 
-      config = OpenAPI.config(
-        title: "API",
-        version: "1.0.0",
-        license: license
-      )
+      config =
+        OpenAPI.config(
+          title: "API",
+          version: "1.0.0",
+          license: license
+        )
 
       assert config.license == license
     end
@@ -85,11 +89,12 @@ defmodule Spikard.OpenapiTest do
     test "includes server information when provided" do
       servers = [%{"url" => "https://api.example.com"}]
 
-      config = OpenAPI.config(
-        title: "API",
-        version: "1.0.0",
-        servers: servers
-      )
+      config =
+        OpenAPI.config(
+          title: "API",
+          version: "1.0.0",
+          servers: servers
+        )
 
       assert config.servers == servers
     end
@@ -143,15 +148,16 @@ defmodule Spikard.OpenapiTest do
     end
 
     test "preserves all config fields" do
-      config = OpenAPI.config(
-        title: "API",
-        version: "1.0.0",
-        description: "Test",
-        openapi_json_path: "/spec",
-        contact: %{"name" => "Support"},
-        license: %{"name" => "MIT"},
-        servers: [%{"url" => "http://localhost"}]
-      )
+      config =
+        OpenAPI.config(
+          title: "API",
+          version: "1.0.0",
+          description: "Test",
+          openapi_json_path: "/spec",
+          contact: %{"name" => "Support"},
+          license: %{"name" => "MIT"},
+          servers: [%{"url" => "http://localhost"}]
+        )
 
       generator = OpenAPI.Generator.new(config)
 

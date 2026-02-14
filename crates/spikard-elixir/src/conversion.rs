@@ -188,6 +188,5 @@ mod tests {
     fn test_json_conversion_types() {
         // Test that the conversion functions compile and have correct signatures
         // This is a compile-time check - if the module compiles, the signatures are correct
-        assert!(true);
     }
 }

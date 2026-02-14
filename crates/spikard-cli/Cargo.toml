@@ -36,7 +36,7 @@ tracing.workspace = true
 axum.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-serde-saphyr = "0.0.17"
+serde-saphyr = "0.0.18"
 openapiv3 = "2.2"
 asyncapiv3 = "0.1.3"  # AsyncAPI v3 spec parsing
 graphql-parser = "0.4"  # GraphQL SDL parsing
@@ -45,7 +45,7 @@ prost-types = "0.14"  # Protocol Buffers well-known types
 prost-reflect = "0.16"  # Protocol Buffers reflection
 protox = "0.9"  # Protocol Buffers compilation
 heck = "0.5"  # For case conversion (snake_case, PascalCase)
-tempfile = "3.24"  # For quality validation temporary files
+tempfile = "3.25"  # For quality validation temporary files
 
 # Optional language-specific dependencies
 pyo3 = { workspace = true, optional = true }
@@ -59,6 +59,6 @@ ruby = []    # TODO: Add Ruby support
 all = ["python", "node", "ruby"]
 
 [dev-dependencies]
-tempfile = "3.24"
+tempfile = "3.25"
 assert_cmd = "2.1"
 predicates = "3.1"

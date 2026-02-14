@@ -80,15 +80,17 @@ defmodule Spikard.DITest do
   describe "dependency injection in handlers" do
     test "handler receives value dependency from request" do
       db = %{connected: true}
+
       handler = fn req ->
         db = Spikard.Request.get_dependency(req, "db")
         %{status: 200, body: %{db_status: db.connected}}
       end
 
-      {:ok, client} = Spikard.TestClient.new(
-        routes: [{:get, "/", handler}],
-        dependencies: [Spikard.DI.value("db", db)]
-      )
+      {:ok, client} =
+        Spikard.TestClient.new(
+          routes: [{:get, "/", handler}],
+          dependencies: [Spikard.DI.value("db", db)]
+        )
 
       {:ok, response} = Spikard.TestClient.get(client, "/")
       assert response.status_code == 200
@@ -104,10 +106,11 @@ defmodule Spikard.DITest do
       end
 
       # Use singleton: false to get different values per request
-      {:ok, client} = Spikard.TestClient.new(
-        routes: [{:get, "/", handler}],
-        dependencies: [Spikard.DI.factory("ctx", factory, singleton: false)]
-      )
+      {:ok, client} =
+        Spikard.TestClient.new(
+          routes: [{:get, "/", handler}],
+          dependencies: [Spikard.DI.factory("ctx", factory, singleton: false)]
+        )
 
       {:ok, r1} = Spikard.TestClient.get(client, "/")
       {:ok, r2} = Spikard.TestClient.get(client, "/")
@@ -117,6 +120,7 @@ defmodule Spikard.DITest do
 
     test "factory dependency is called per request (not singleton)" do
       call_count = :counters.new(1, [:atomics])
+
       factory = fn ->
         :counters.add(call_count, 1, 1)
         %{id: :counters.get(call_count, 1)}
@@ -127,10 +131,11 @@ defmodule Spikard.DITest do
         %{status: 200, body: %{id: ctx.id}}
       end
 
-      {:ok, client} = Spikard.TestClient.new(
-        routes: [{:get, "/", handler}],
-        dependencies: [Spikard.DI.factory("ctx", factory, singleton: false)]
-      )
+      {:ok, client} =
+        Spikard.TestClient.new(
+          routes: [{:get, "/", handler}],
+          dependencies: [Spikard.DI.factory("ctx", factory, singleton: false)]
+        )
 
       {:ok, r1} = Spikard.TestClient.get(client, "/")
       {:ok, r2} = Spikard.TestClient.get(client, "/")
@@ -157,13 +162,14 @@ defmodule Spikard.DITest do
         }
       end
 
-      {:ok, client} = Spikard.TestClient.new(
-        routes: [{:get, "/", handler}],
-        dependencies: [
-          Spikard.DI.value("db", db),
-          Spikard.DI.value("cache", cache)
-        ]
-      )
+      {:ok, client} =
+        Spikard.TestClient.new(
+          routes: [{:get, "/", handler}],
+          dependencies: [
+            Spikard.DI.value("db", db),
+            Spikard.DI.value("cache", cache)
+          ]
+        )
 
       {:ok, response} = Spikard.TestClient.get(client, "/")
       assert Response.json(response)["db_name"] == "postgres"
@@ -176,10 +182,11 @@ defmodule Spikard.DITest do
         %{status: 200, body: %{missing: missing}}
       end
 
-      {:ok, client} = Spikard.TestClient.new(
-        routes: [{:get, "/", handler}],
-        dependencies: [Spikard.DI.value("db", %{connected: true})]
-      )
+      {:ok, client} =
+        Spikard.TestClient.new(
+          routes: [{:get, "/", handler}],
+          dependencies: [Spikard.DI.value("db", %{connected: true})]
+        )
 
       {:ok, response} = Spikard.TestClient.get(client, "/")
       assert Response.json(response)["missing"] == nil
@@ -196,10 +203,11 @@ defmodule Spikard.DITest do
         %{status: 200, body: %{level: logger["level"]}}
       end
 
-      {:ok, client} = Spikard.TestClient.new(
-        routes: [{:get, "/", handler}],
-        dependencies: [Spikard.DI.value("logger", logger)]
-      )
+      {:ok, client} =
+        Spikard.TestClient.new(
+          routes: [{:get, "/", handler}],
+          dependencies: [Spikard.DI.value("logger", logger)]
+        )
 
       {:ok, response} = Spikard.TestClient.get(client, "/")
       assert Response.json(response)["level"] == "info"

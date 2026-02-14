@@ -142,27 +142,35 @@ defmodule Spikard.Cors do
 
   defp validate_allowed_headers(config) do
     case Map.get(config, :allowed_headers) do
-      nil -> :ok
+      nil ->
+        :ok
+
       headers when is_list(headers) ->
         if Enum.all?(headers, &is_binary/1) do
           :ok
         else
           {:error, "CORS :allowed_headers must be a list of strings"}
         end
-      _ -> {:error, "CORS :allowed_headers must be a list or nil"}
+
+      _ ->
+        {:error, "CORS :allowed_headers must be a list or nil"}
     end
   end
 
   defp validate_expose_headers(config) do
     case Map.get(config, :expose_headers) do
-      nil -> :ok
+      nil ->
+        :ok
+
       headers when is_list(headers) ->
         if Enum.all?(headers, &is_binary/1) do
           :ok
         else
           {:error, "CORS :expose_headers must be a list of strings"}
         end
-      _ -> {:error, "CORS :expose_headers must be a list or nil"}
+
+      _ ->
+        {:error, "CORS :expose_headers must be a list or nil"}
     end
   end
 

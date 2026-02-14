@@ -14,10 +14,8 @@ crate-type = ["cdylib"]
 [workspace]
 
 [dependencies]
-async-stream = "0.3"
 axum = "0.8"
 bytes = "1.5"
-futures-util = "0.3"
 http-body-util = "0.1"
 once_cell = "1.19"
 rustler = "0.37"
@@ -27,6 +25,6 @@ spikard-core = { path = "../../../../crates/spikard-core", features = ["di"] }
 spikard-http = { path = "../../../../crates/spikard-http", features = ["di"] }
 spikard-bindings-shared = { path = "../../../../crates/spikard-bindings-shared" }
 tokio = { version = "1", features = ["full"] }
-tower = { version = "0.4", features = ["util"] }
+tower = { version = "0.5", features = ["util"] }
 tracing = "0.1"
 urlencoding = "2.1"

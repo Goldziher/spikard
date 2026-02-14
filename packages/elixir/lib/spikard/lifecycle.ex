@@ -164,16 +164,18 @@ defmodule Spikard.Lifecycle do
       end
     rescue
       e ->
-        {:short_circuit, %{
-          status: 500,
-          body: %{error: "Hook error", message: Exception.message(e)}
-        }}
+        {:short_circuit,
+         %{
+           status: 500,
+           body: %{error: "Hook error", message: Exception.message(e)}
+         }}
     catch
       kind, reason ->
-        {:short_circuit, %{
-          status: 500,
-          body: %{error: "Hook error", message: "#{kind}: #{inspect(reason)}"}
-        }}
+        {:short_circuit,
+         %{
+           status: 500,
+           body: %{error: "Hook error", message: "#{kind}: #{inspect(reason)}"}
+         }}
     end
   end
 end

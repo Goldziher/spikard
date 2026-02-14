@@ -91,9 +91,9 @@ defmodule Spikard.Auth.ApiKey do
   - `header_name`: Header to check (defaults to "x-api-key" if not specified)
   """
   @type t :: %{
-    required(:keys) => [String.t()],
-    optional(:header_name) => String.t()
-  }
+          required(:keys) => [String.t()],
+          optional(:header_name) => String.t()
+        }
 
   @doc """
   Validates API key configuration structure.

@@ -158,7 +158,7 @@ def websocket(
                     if return_type and return_type is not dict:
                         extracted_response_schema = extract_json_schema(return_type)
 
-            except (AttributeError, NameError, TypeError, ValueError):
+            except AttributeError, NameError, TypeError, ValueError:
                 pass
 
         _standalone_websocket_handlers[path] = lambda: WebSocketHandlerWrapper(

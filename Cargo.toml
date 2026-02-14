@@ -39,8 +39,8 @@ spikard-http = { version = "0.10.2", path = "crates/spikard-http" }
 spikard-graphql = { version = "0.10.2", path = "crates/spikard-graphql" }
 
 # Python bindings
-pyo3 = { version = "0.27", features = ["abi3-py310"] }
-pyo3-async-runtimes = { version = "0.27", features = ["tokio-runtime"] }
+pyo3 = { version = "0.28", features = ["abi3-py310"] }
+pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
 
 # CLI dependencies
 clap = { version = "4.5", features = ["derive"] }
@@ -84,7 +84,7 @@ serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http = "1.4"
-jsonschema = { version = "0.40", default-features = false }
+jsonschema = { version = "0.41", default-features = false }
 flate2 = { version = "=1.1.5", default-features = false, features = ["rust_backend"] }
 
 [workspace.lints.rust]

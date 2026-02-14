@@ -115,7 +115,7 @@ def test_websocket_and_sse_registration() -> None:
         async def generator() -> AsyncIterator[dict[str, object]]:
             yield {"data": "events"}
 
-        return SseEventProducer(lambda: generator())
+        return SseEventProducer(generator)
 
     assert app.get_websocket_handlers()["/ws"]() == "ws"
     sse_producer = app.get_sse_producers()["/events"]()

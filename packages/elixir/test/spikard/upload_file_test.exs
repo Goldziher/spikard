@@ -34,7 +34,8 @@ defmodule Spikard.UploadFileTest do
     end
 
     test "handles binary file data" do
-      binary_data = <<137, 80, 78, 71>>  # PNG magic bytes
+      # PNG magic bytes
+      binary_data = <<137, 80, 78, 71>>
       file = UploadFile.new("image.png", "image/png", 4, binary_data)
       assert file.data == binary_data
       assert file.size == 4
@@ -51,7 +52,14 @@ defmodule Spikard.UploadFileTest do
     end
 
     test "filename is string" do
-      file = UploadFile.new("document.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 512, "")
+      file =
+        UploadFile.new(
+          "document.docx",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          512,
+          ""
+        )
+
       assert is_binary(file.filename)
     end
 
@@ -105,7 +113,9 @@ defmodule Spikard.UploadFileTest do
       end
 
       {:ok, client} = Spikard.TestClient.new(routes: [{:post, "/upload", handler}])
-      {:ok, response} = Spikard.TestClient.post(client, "/upload", multipart: [{"file", "content", filename: "test.txt"}])
+
+      {:ok, response} =
+        Spikard.TestClient.post(client, "/upload", multipart: [{"file", "content", filename: "test.txt"}])
 
       assert response.status_code == 200
       body = Spikard.TestClient.Response.json(response)

@@ -297,24 +297,13 @@ pub fn test_client_close<'a>(env: Env<'a>, client: ResourceArc<TestClientResourc
 }
 
 /// Request options parsed from Elixir map.
+#[derive(Default)]
 struct RequestOptions {
     headers: HashMap<String, String>,
     query_params: Vec<(String, String)>,
     cookies: HashMap<String, String>,
     json_body: Option<JsonValue>,
     form_data: Option<Vec<(String, String)>>,
-}
-
-impl Default for RequestOptions {
-    fn default() -> Self {
-        Self {
-            headers: HashMap::new(),
-            query_params: Vec::new(),
-            cookies: HashMap::new(),
-            json_body: None,
-            form_data: None,
-        }
-    }
 }
 
 /// Parse request options from Elixir term.

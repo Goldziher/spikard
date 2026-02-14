@@ -78,12 +78,13 @@ defmodule Spikard.HandlerRunner do
 
   @impl true
   def init({handlers, lifecycle_hooks, dependencies}) do
-    {:ok, %{
-      handlers: handlers,
-      lifecycle_hooks: lifecycle_hooks,
-      dependencies: dependencies,
-      singleton_cache: %{}
-    }}
+    {:ok,
+     %{
+       handlers: handlers,
+       lifecycle_hooks: lifecycle_hooks,
+       dependencies: dependencies,
+       singleton_cache: %{}
+     }}
   end
 
   @impl true
@@ -140,7 +141,10 @@ defmodule Spikard.HandlerRunner do
 
       error ->
         Logger.error("Hook execution failed: #{inspect(error)}")
-        delivery_result = Spikard.Native.deliver_hook_response(request_id, :error, %{"error" => "Hook execution failed"})
+
+        delivery_result =
+          Spikard.Native.deliver_hook_response(request_id, :error, %{"error" => "Hook execution failed"})
+
         Logger.debug("Deliver hook error result: #{inspect(delivery_result)}")
     end
 
@@ -190,41 +194,42 @@ defmodule Spikard.HandlerRunner do
   defp resolve_dependencies(state, _request_map) do
     {resolved_deps, new_cache} =
       Enum.reduce(state.dependencies, {%{}, state.singleton_cache}, fn dep, {deps_acc, cache_acc} ->
-        case dep.type do
-          :value ->
-            # Value dependencies: use directly
-            {Map.put(deps_acc, dep.key, dep.value), cache_acc}
-
-          :factory ->
-            # Factory dependencies: resolve based on singleton flag
-            case dep.singleton do
-              true ->
-                # Singleton: check cache first
-                case Map.get(cache_acc, dep.key) do
-                  nil ->
-                    # Not cached, call factory and cache result
-                    value = dep.factory.()
-                    {Map.put(deps_acc, dep.key, value), Map.put(cache_acc, dep.key, value)}
-
-                  cached_value ->
-                    # Return cached value
-                    {Map.put(deps_acc, dep.key, cached_value), cache_acc}
-                end
-
-              false ->
-                # Non-singleton: call factory every time
-                value = dep.factory.()
-                {Map.put(deps_acc, dep.key, value), cache_acc}
-            end
-        end
+        resolve_dependency(dep, deps_acc, cache_acc)
       end)
 
     {resolved_deps, %{state | singleton_cache: new_cache}}
   end
 
+  @spec resolve_dependency(map(), map(), map()) :: {map(), map()}
+  defp resolve_dependency(%{type: :value, key: key, value: value}, deps_acc, cache_acc) do
+    {Map.put(deps_acc, key, value), cache_acc}
+  end
+
+  defp resolve_dependency(%{type: :factory} = dep, deps_acc, cache_acc) do
+    resolve_factory_dependency(dep, deps_acc, cache_acc)
+  end
+
+  @spec resolve_factory_dependency(map(), map(), map()) :: {map(), map()}
+  defp resolve_factory_dependency(%{singleton: true, key: key} = dep, deps_acc, cache_acc) do
+    case Map.fetch(cache_acc, key) do
+      {:ok, cached_value} ->
+        {Map.put(deps_acc, key, cached_value), cache_acc}
+
+      :error ->
+        value = dep.factory.()
+        {Map.put(deps_acc, key, value), Map.put(cache_acc, key, value)}
+    end
+  end
+
+  defp resolve_factory_dependency(%{singleton: false, key: key} = dep, deps_acc, cache_acc) do
+    value = dep.factory.()
+    {Map.put(deps_acc, key, value), cache_acc}
+  end
+
   @spec normalize_response(term()) :: map()
   defp normalize_response(response) when is_map(response) do
     body = Map.get(response, :body, Map.get(response, "body"))
+
     %{
       "status" => Map.get(response, :status, Map.get(response, "status", 200)),
       "headers" => normalize_headers(Map.get(response, :headers, Map.get(response, "headers", %{}))),
@@ -325,7 +330,6 @@ defmodule Spikard.HandlerRunner do
               e ->
                 Logger.error("Hook #{hook_type_str}[#{hook_index}] raised: #{inspect(e)}")
                 {:error, Exception.message(e)}
-
             catch
               kind, reason ->
                 Logger.error("Hook #{hook_type_str}[#{hook_index}] threw #{kind}: #{inspect(reason)}")

@@ -2,7 +2,6 @@
 
 require_relative 'lib/spikard/version'
 
-# rubocop:disable Metrics/BlockLength
 Gem::Specification.new do |spec|
   spec.name          = 'spikard'
   spec.version       = Spikard::VERSION
@@ -53,10 +52,9 @@ Gem::Specification.new do |spec|
   spec.extensions = ['ext/spikard_rb/extconf.rb']
 
   # Runtime dependencies
+  spec.add_dependency 'base64' # Required in Ruby 3.4+ (no longer in default gems)
   spec.add_dependency 'rb_sys', '~> 0.9'
   spec.add_dependency 'websocket-client-simple', '~> 0.8'
-  spec.add_dependency 'base64' # Required in Ruby 3.4+ (no longer in default gems)
 
   # gRPC runtime is handled by the Rust native extension; the grpc gem is only needed for testing
 end
-# rubocop:enable Metrics/BlockLength

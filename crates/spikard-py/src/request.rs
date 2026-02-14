@@ -27,7 +27,7 @@ impl Clone for PyRequest {
 ///
 /// This provides access to request properties and allows modifications.
 /// Used primarily in lifecycle hooks (on`Request`, preValidation, preHandler).
-#[pyclass]
+#[pyclass(from_py_object)]
 pub struct PyRequest {
     /// HTTP method
     #[pyo3(get, set)]

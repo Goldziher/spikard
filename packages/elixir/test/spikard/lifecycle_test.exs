@@ -424,9 +424,7 @@ defmodule Spikard.LifecycleTest do
   describe "no lifecycle hooks" do
     test "works without any lifecycle hooks" do
       {:ok, client} =
-        TestClient.new(
-          routes: [{:get, "/", fn _req -> %{status: 200, body: %{ok: true}} end}]
-        )
+        TestClient.new(routes: [{:get, "/", fn _req -> %{status: 200, body: %{ok: true}} end}])
 
       {:ok, response} = TestClient.get(client, "/")
 

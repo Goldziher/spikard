@@ -3,7 +3,7 @@
 Tests the PUBLISHED spikard package from PyPI (0.10.1).
 """
 
-from spikard import Cookie, Header, Path, Query, Spikard, delete, get, patch, post, put
+from spikard import Cookie, Header, Path, Query, Spikard
 from spikard.config import ServerConfig
 
 app = Spikard()
@@ -37,7 +37,7 @@ def user(user_id: str = Path()) -> dict[str, str]:
 
 
 @app.put("/items/{item_id}")
-def update_item(item_id: str = Path(), body: dict = None) -> dict:
+def update_item(item_id: str = Path(), body: dict | None = None) -> dict:
     """PUT endpoint - tests PUT method and path parameters."""
     return {"itemId": item_id, "updated": body, "method": "PUT"}
 
@@ -49,7 +49,7 @@ def delete_item(item_id: str = Path()) -> dict:
 
 
 @app.patch("/items/{item_id}")
-def patch_item(item_id: str = Path(), body: dict = None) -> dict:
+def patch_item(item_id: str = Path(), body: dict | None = None) -> dict:
     """PATCH endpoint - tests PATCH method and path parameters."""
     return {"itemId": item_id, "patched": body, "method": "PATCH"}
 

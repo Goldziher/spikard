@@ -449,9 +449,7 @@ defmodule Spikard.CorsTest do
         )
 
       {:ok, response} =
-        TestClient.post(client, "/api",
-          json: %{name: "test"}
-        )
+        TestClient.post(client, "/api", json: %{name: "test"})
 
       assert response.status_code == 201
     end

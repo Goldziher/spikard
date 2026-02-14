@@ -98,6 +98,7 @@ defmodule Spikard.DISimpleTest do
         Spikard.DI.factory("ctx", fn -> %{} end),
         Spikard.DI.value("cache", %{})
       ]
+
       assert :ok == Spikard.DI.validate(deps)
     end
   end
@@ -115,6 +116,7 @@ defmodule Spikard.DISimpleTest do
         Spikard.DI.value("db", %{}),
         Spikard.DI.value("cache", %{})
       ]
+
       counts = Spikard.DI.count(deps)
       assert counts.value == 2
       assert counts.factory == 0
@@ -127,6 +129,7 @@ defmodule Spikard.DISimpleTest do
         Spikard.DI.factory("ctx2", fn -> %{} end),
         Spikard.DI.factory("ctx3", fn -> %{} end)
       ]
+
       counts = Spikard.DI.count(deps)
       assert counts.value == 0
       assert counts.factory == 3
@@ -139,6 +142,7 @@ defmodule Spikard.DISimpleTest do
         Spikard.DI.factory("ctx", fn -> %{} end),
         Spikard.DI.value("cache", %{})
       ]
+
       counts = Spikard.DI.count(deps)
       assert counts.value == 2
       assert counts.factory == 1

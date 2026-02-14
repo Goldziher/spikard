@@ -11,7 +11,7 @@ use axum::body::Body;
 use axum::http::{HeaderName, HeaderValue, Request, StatusCode};
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, LocalPid, NifResult, OwnedEnv, Term};
-use serde_json::{json, Value as JsonValue};
+use serde_json::{Value as JsonValue, json};
 use spikard_bindings_shared::ErrorResponseBuilder;
 use spikard_core::problem::ProblemDetails;
 use spikard_http::SchemaValidator;
@@ -57,14 +57,11 @@ pub fn deliver_response(request_id: u64, response: JsonValue) -> bool {
         pending.remove(&request_id)
     };
 
-    match sender {
-        Some(tx) => {
-            tx.send(response).is_ok()
-        }
-        None => {
-            warn!("No pending request found for ID {}", request_id);
-            false
-        }
+    if let Some(tx) = sender {
+        tx.send(response).is_ok()
+    } else {
+        warn!("No pending request found for ID {}", request_id);
+        false
     }
 }
 
@@ -72,11 +69,7 @@ pub fn deliver_response(request_id: u64, response: JsonValue) -> bool {
 ///
 /// Called by the HandlerRunner GenServer after processing a request.
 #[rustler::nif]
-pub fn deliver_handler_response<'a>(
-    env: Env<'a>,
-    request_id: u64,
-    response_map: Term<'a>,
-) -> NifResult<Term<'a>> {
+pub fn deliver_handler_response<'a>(env: Env<'a>, request_id: u64, response_map: Term<'a>) -> NifResult<Term<'a>> {
     // Convert Elixir term to JSON
     let response_json = crate::conversion::elixir_to_json(env, response_map)?;
 
@@ -166,10 +159,7 @@ impl ElixirHandler {
     /// # Returns
     ///
     /// A new ElixirHandler ready to process requests.
-    pub fn new(
-        route: &spikard_http::Route,
-        handler_runner_pid: LocalPid,
-    ) -> Result<Self, String> {
+    pub fn new(route: &spikard_http::Route, handler_runner_pid: LocalPid) -> Result<Self, String> {
         let method = route.method.as_str().to_string();
         let path = route.path.clone();
 
@@ -203,7 +193,10 @@ impl ElixirHandler {
     /// 5. Interprets the response and validates it if needed
     /// 6. Returns an HTTP response
     pub async fn handle(&self, request_data: RequestData) -> HandlerResult {
-        debug!("[HANDLER] handle() called for {} {}", self.inner.method, self.inner.path);
+        debug!(
+            "[HANDLER] handle() called for {} {}",
+            self.inner.method, self.inner.path
+        );
 
         // Convert RequestData to JSON for Elixir
         let request_json = request_data_to_elixir_map(&request_data);
@@ -233,12 +226,18 @@ impl ElixirHandler {
 
         // Wait for response with timeout
         let timeout = Duration::from_millis(self.inner.timeout_ms);
-        debug!("[DEBUG] Waiting for response with timeout {:?} for request {}", timeout, request_id);
+        debug!(
+            "[DEBUG] Waiting for response with timeout {:?} for request {}",
+            timeout, request_id
+        );
 
         let response_json = match tokio::time::timeout(timeout, rx).await {
             Ok(Ok(json)) => json,
             Ok(Err(_)) => {
-                warn!("Handler response channel closed unexpectedly for request {}", request_id);
+                warn!(
+                    "Handler response channel closed unexpectedly for request {}",
+                    request_id
+                );
                 return Err(ErrorResponseBuilder::structured_error(
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "handler_channel_error",
@@ -293,9 +292,14 @@ impl ElixirHandler {
             raw_body,
         } = payload;
 
-        debug!("[DEBUG] payload_to_response: status={}, headers_count={}", status, headers.len());
+        debug!(
+            "[DEBUG] payload_to_response: status={}, headers_count={}",
+            status,
+            headers.len()
+        );
 
-        let mut response_builder = axum::http::Response::builder().status(StatusCode::from_u16(status).unwrap_or(StatusCode::OK));
+        let mut response_builder =
+            axum::http::Response::builder().status(StatusCode::from_u16(status).unwrap_or(StatusCode::OK));
         let mut has_content_type = false;
 
         for (name, value) in headers.iter() {
@@ -398,15 +402,15 @@ fn send_handler_request(
     owned_env.run(|env| {
         // Build the request message
         // Format: {:handle_request, request_id, handler_name, request_map}
-        let request_atom = rustler::Atom::from_str(env, "handle_request")
-            .map_err(|_| "Failed to create request atom".to_string())?;
+        let request_atom =
+            rustler::Atom::from_str(env, "handle_request").map_err(|_| "Failed to create request atom".to_string())?;
 
         let request_id_term = request_id.encode(env);
         let handler_name_term = handler_name.encode(env);
 
         // Convert JSON to Elixir term
-        let request_map_term = json_to_elixir(env, request_json)
-            .map_err(|e| format!("Failed to convert request to Elixir: {:?}", e))?;
+        let request_map_term =
+            json_to_elixir(env, request_json).map_err(|e| format!("Failed to convert request to Elixir: {:?}", e))?;
 
         // Build the message tuple
         let message = (request_atom, request_id_term, handler_name_term, request_map_term).encode(env);
@@ -433,11 +437,7 @@ fn send_handler_request(
 /// - `:raw_body` - Option<bytes::Bytes>
 /// - `:method` - String
 /// - `:path` - String
-/// - `:files` - Array of file objects (if multipart request)
 pub fn request_data_to_elixir_map(request_data: &RequestData) -> JsonValue {
-    // Check if this is a multipart request and parse files
-    let files = parse_multipart_files(request_data);
-
     json!({
         "path_params": request_data.path_params.as_ref().clone(),
         "query_params": request_data.query_params.as_ref().clone(),
@@ -447,134 +447,7 @@ pub fn request_data_to_elixir_map(request_data: &RequestData) -> JsonValue {
         "raw_body": request_data.raw_body.as_ref().map(|b| b.to_vec()),
         "method": request_data.method.clone(),
         "path": request_data.path.clone(),
-        "files": files,
     })
-}
-
-/// Parse multipart files from request data if content-type is multipart/form-data.
-fn parse_multipart_files(request_data: &RequestData) -> Vec<JsonValue> {
-    // Check content-type header (need original case for boundary extraction)
-    let content_type = request_data
-        .headers
-        .as_ref()
-        .get("content-type")
-        .cloned();
-
-    let content_type = match content_type {
-        Some(ct) if ct.to_lowercase().contains("multipart/form-data") => ct,
-        _ => return Vec::new(),
-    };
-
-    // Get raw body
-    let raw_body = match request_data.raw_body.as_ref() {
-        Some(b) => b,
-        None => return Vec::new(),
-    };
-
-    // Extract boundary from content-type
-    let boundary = content_type
-        .split(';')
-        .find_map(|part| {
-            let part = part.trim();
-            if part.starts_with("boundary=") {
-                Some(part.trim_start_matches("boundary=").trim_matches('"').to_string())
-            } else {
-                None
-            }
-        });
-
-    let boundary = match boundary {
-        Some(b) => b,
-        None => return Vec::new(),
-    };
-
-    // Parse multipart body
-    parse_multipart_body_to_files(raw_body, &boundary)
-}
-
-/// Parse a multipart body and return a list of file objects.
-fn parse_multipart_body_to_files(body: &[u8], boundary: &str) -> Vec<JsonValue> {
-    let mut files = Vec::new();
-
-    // Convert body to string for parsing (lossy for binary content)
-    let body_str = String::from_utf8_lossy(body);
-    let delimiter = format!("--{}", boundary);
-
-    // Split by boundary
-    let parts: Vec<&str> = body_str.split(&delimiter).collect();
-
-    for part in parts {
-        let part = part.trim();
-        if part.is_empty() || part == "--" || part.starts_with("--") && part.len() <= 4 {
-            continue;
-        }
-
-        // Remove leading CRLF if present
-        let part = part.trim_start_matches("\r\n").trim_start_matches('\n');
-
-        // Find the blank line separating headers from content
-        let header_end = part.find("\r\n\r\n").or_else(|| part.find("\n\n"));
-
-        if let Some(header_end_pos) = header_end {
-            let headers_section = &part[..header_end_pos];
-            let content_start = if part[header_end_pos..].starts_with("\r\n\r\n") {
-                header_end_pos + 4
-            } else {
-                header_end_pos + 2
-            };
-            let content = &part[content_start..];
-
-            // Remove trailing CRLF/boundary markers from content
-            let content = content.trim_end_matches("\r\n").trim_end_matches('\n');
-
-            // Parse headers
-            let mut filename: Option<String> = None;
-            let mut _field_name: Option<String> = None;
-            let mut part_content_type = "application/octet-stream".to_string();
-
-            for line in headers_section.lines() {
-                let line = line.trim();
-                let line_lower = line.to_lowercase();
-
-                if line_lower.starts_with("content-disposition:") {
-                    // Parse Content-Disposition: form-data; name="file"; filename="test.txt"
-                    for segment in line.split(';') {
-                        let segment = segment.trim();
-                        if segment.starts_with("name=") || segment.starts_with("name=\"") {
-                            _field_name = Some(
-                                segment
-                                    .trim_start_matches("name=")
-                                    .trim_matches('"')
-                                    .to_string(),
-                            );
-                        } else if segment.starts_with("filename=") || segment.starts_with("filename=\"") {
-                            filename = Some(
-                                segment
-                                    .trim_start_matches("filename=")
-                                    .trim_matches('"')
-                                    .to_string(),
-                            );
-                        }
-                    }
-                } else if line_lower.starts_with("content-type:") {
-                    part_content_type = line
-                        .split_once(':')
-                        .map(|(_, v)| v.trim().to_string())
-                        .unwrap_or_else(|| "application/octet-stream".to_string());
-                }
-            }
-
-            // Create file object
-            files.push(json!({
-                "filename": filename,
-                "content_type": part_content_type,
-                "size": content.len(),
-                "content": content,
-            }));
-        }
-    }
-
-    files
 }
 
 /// Interpret an Elixir handler response.
@@ -584,10 +457,7 @@ fn parse_multipart_body_to_files(body: &[u8], boundary: &str) -> Vec<JsonValue> 
 /// - `:headers` - HashMap<String, String> (default: {})
 /// - `:body` - serde_json::Value or raw bytes (default: null)
 pub fn interpret_elixir_response(response_map: &JsonValue) -> Result<HandlerResponsePayload, String> {
-    let status = response_map
-        .get("status")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(200) as u16;
+    let status = response_map.get("status").and_then(|v| v.as_u64()).unwrap_or(200) as u16;
 
     let headers = response_map
         .get("headers")
@@ -595,15 +465,12 @@ pub fn interpret_elixir_response(response_map: &JsonValue) -> Result<HandlerResp
         .unwrap_or_default();
 
     let body = response_map.get("body").cloned();
-    let raw_body = response_map
-        .get("raw_body")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_u64())
-                .map(|v| v as u8)
-                .collect::<Vec<u8>>()
-        });
+    let raw_body = response_map.get("raw_body").and_then(|v| v.as_array()).map(|arr| {
+        arr.iter()
+            .filter_map(|v| v.as_u64())
+            .map(|v| v as u8)
+            .collect::<Vec<u8>>()
+    });
 
     Ok(HandlerResponsePayload {
         status,
@@ -649,8 +516,7 @@ mod tests {
 
     #[test]
     fn test_handler_response_payload_with_header() {
-        let payload = HandlerResponsePayload::ok()
-            .with_header("x-custom".to_string(), "value".to_string());
+        let payload = HandlerResponsePayload::ok().with_header("x-custom".to_string(), "value".to_string());
         assert_eq!(payload.headers.get("x-custom"), Some(&"value".to_string()));
     }
 
@@ -663,7 +529,10 @@ mod tests {
             raw_query_params: Arc::new(HashMap::new()),
             body: Arc::new(json!({"name": "Alice"})),
             raw_body: None,
-            headers: Arc::new(HashMap::from([("content-type".to_string(), "application/json".to_string())])),
+            headers: Arc::new(HashMap::from([(
+                "content-type".to_string(),
+                "application/json".to_string(),
+            )])),
             cookies: Arc::new(HashMap::new()),
             method: "POST".to_string(),
             path: "/test".to_string(),
@@ -679,7 +548,7 @@ mod tests {
     #[test]
     fn test_interpret_elixir_response_defaults() {
         let response = json!({});
-        let payload = interpret_elixir_response(&response).unwrap();
+        let payload = interpret_elixir_response(&response).expect("empty response should use defaults");
         assert_eq!(payload.status, 200);
         assert!(payload.headers.is_empty());
     }
@@ -690,7 +559,7 @@ mod tests {
             "status": 201,
             "body": {"id": 42}
         });
-        let payload = interpret_elixir_response(&response).unwrap();
+        let payload = interpret_elixir_response(&response).expect("valid status/body should parse");
         assert_eq!(payload.status, 201);
         assert_eq!(payload.body, Some(json!({"id": 42})));
     }
@@ -701,7 +570,7 @@ mod tests {
             "status": 200,
             "headers": {"x-custom": "header-value"}
         });
-        let payload = interpret_elixir_response(&response).unwrap();
+        let payload = interpret_elixir_response(&response).expect("valid headers should parse");
         assert_eq!(payload.headers.get("x-custom"), Some(&"header-value".to_string()));
     }
 }

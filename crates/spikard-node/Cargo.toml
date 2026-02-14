@@ -45,7 +45,7 @@ url = "2.5"
 http = { workspace = true }
 http-body-util = "0.1"
 cookie = "0.18"
-serde_qs = "0.15"
+serde_qs = "1.0"
 rustc-hash = "2.1"
 urlencoding = "2.1"
 tracing.workspace = true

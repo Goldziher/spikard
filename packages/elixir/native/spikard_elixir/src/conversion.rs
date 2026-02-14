@@ -47,8 +47,7 @@ pub fn json_to_elixir<'a>(env: Env<'a>, value: &JsonValue) -> NifResult<Term<'a>
         }
         JsonValue::String(s) => Ok(s.as_str().encode(env)),
         JsonValue::Array(arr) => {
-            let terms: Result<Vec<Term>, _> =
-                arr.iter().map(|v| json_to_elixir(env, v)).collect();
+            let terms: Result<Vec<Term>, _> = arr.iter().map(|v| json_to_elixir(env, v)).collect();
             Ok(terms?.encode(env))
         }
         JsonValue::Object(obj) => {
@@ -60,8 +59,7 @@ pub fn json_to_elixir<'a>(env: Env<'a>, value: &JsonValue) -> NifResult<Term<'a>
                     Ok((key_term, val_term))
                 })
                 .collect();
-            Term::map_from_pairs(env, &pairs?)
-                .map_err(|_| rustler::Error::BadArg)
+            Term::map_from_pairs(env, &pairs?).map_err(|_| rustler::Error::BadArg)
         }
     }
 }
@@ -111,8 +109,7 @@ pub fn elixir_to_json(env: Env, term: Term) -> NifResult<JsonValue> {
 
     // Try list
     if let Ok(list) = term.decode::<Vec<Term>>() {
-        let arr: Result<Vec<JsonValue>, _> =
-            list.into_iter().map(|t| elixir_to_json(env, t)).collect();
+        let arr: Result<Vec<JsonValue>, _> = list.into_iter().map(|t| elixir_to_json(env, t)).collect();
         return Ok(JsonValue::Array(arr?));
     }
 
@@ -121,36 +118,15 @@ pub fn elixir_to_json(env: Env, term: Term) -> NifResult<JsonValue> {
         let mut obj = serde_json::Map::new();
         for (key, val) in iter {
             let key_term: Term = key;
-            // Try to decode key as string first, or convert atom key to string
+            // Try to decode key as string first
             let key_str = if let Ok(s) = key_term.decode::<String>() {
                 s
             } else if key_term.is_atom() {
-                // For atoms, we need to get the string name
-                // Rustler doesn't provide a direct way, so we rely on Elixir-side stringify_keys
-                // However, for common response atoms, we can use a lookup
-                match key_term.decode::<rustler::Atom>() {
-                    Ok(atom) => {
-                        // Check against common response keys
-                        if atom == crate::atoms::status() { "status".to_string() }
-                        else if atom == crate::atoms::body() { "body".to_string() }
-                        else if atom == crate::atoms::headers() { "headers".to_string() }
-                        else if atom == crate::atoms::filename() { "filename".to_string() }
-                        else if atom == crate::atoms::content_type() { "content_type".to_string() }
-                        else if atom == crate::atoms::size() { "size".to_string() }
-                        else if atom == crate::atoms::data() { "data".to_string() }
-                        else if atom == crate::atoms::count() { "count".to_string() }
-                        else if atom == crate::atoms::filenames() { "filenames".to_string() }
-                        else if atom == crate::atoms::is_binary() { "is_binary".to_string() }
-                        else if atom == crate::atoms::data_length() { "data_length".to_string() }
-                        else if atom == crate::atoms::error() { "error".to_string() }
-                        else if atom == crate::atoms::file_count() { "file_count".to_string() }
-                        else {
-                            // Skip unknown atoms
-                            continue;
-                        }
-                    }
-                    Err(_) => continue,
-                }
+                // Convert atom to string by getting its representation
+                // Format: the term debug format gives us ":atom_name"
+                let debug_str = format!("{:?}", key_term);
+                // Remove the leading colon if present
+                debug_str.trim_start_matches(':').to_string()
             } else {
                 // Skip keys that can't be converted to strings
                 continue;
@@ -165,10 +141,7 @@ pub fn elixir_to_json(env: Env, term: Term) -> NifResult<JsonValue> {
 }
 
 /// Convert a HashMap<String, String> to an Elixir map.
-pub fn map_to_elixir_map<'a>(
-    env: Env<'a>,
-    map: &HashMap<String, String>,
-) -> NifResult<Term<'a>> {
+pub fn map_to_elixir_map<'a>(env: Env<'a>, map: &HashMap<String, String>) -> NifResult<Term<'a>> {
     let pairs: Vec<(Term<'a>, Term<'a>)> = map
         .iter()
         .map(|(k, v)| (k.as_str().encode(env), v.as_str().encode(env)))
@@ -177,10 +150,7 @@ pub fn map_to_elixir_map<'a>(
 }
 
 /// Convert a HashMap<String, Vec<String>> to an Elixir map with list values.
-pub fn multimap_to_elixir_map<'a>(
-    env: Env<'a>,
-    map: &HashMap<String, Vec<String>>,
-) -> NifResult<Term<'a>> {
+pub fn multimap_to_elixir_map<'a>(env: Env<'a>, map: &HashMap<String, Vec<String>>) -> NifResult<Term<'a>> {
     let pairs: Vec<(Term<'a>, Term<'a>)> = map
         .iter()
         .map(|(k, values)| {
@@ -218,6 +188,5 @@ mod tests {
     fn test_json_conversion_types() {
         // Test that the conversion functions compile and have correct signatures
         // This is a compile-time check - if the module compiles, the signatures are correct
-        assert!(true);
     }
 }

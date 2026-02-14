@@ -88,27 +88,32 @@ defmodule Spikard.Background do
     timeout = Keyword.get(opts, :timeout, nil)
 
     # Spawn a task wrapper that executes the function safely
-    task = Task.start(fn ->
-      try do
-        fun.()
-      rescue
-        _e -> :ok
-      catch
-        _kind, _reason -> :ok
-      end
-    end)
+    task =
+      Task.start(fn ->
+        try do
+          fun.()
+        rescue
+          _e -> :ok
+        catch
+          _kind, _reason -> :ok
+        end
+      end)
 
     # Apply timeout if specified
     case {task, timeout} do
       {{:ok, pid}, timeout_ms} when is_integer(timeout_ms) and timeout_ms > 0 ->
         # Spawn a monitor process to enforce timeout
-        Process.spawn(fn ->
-          Process.sleep(timeout_ms)
-          case Process.info(pid) do
-            nil -> :ok
-            _ -> Process.exit(pid, :kill)
-          end
-        end, [])
+        Process.spawn(
+          fn ->
+            Process.sleep(timeout_ms)
+
+            case Process.info(pid) do
+              nil -> :ok
+              _ -> Process.exit(pid, :kill)
+            end
+          end,
+          []
+        )
 
       _other ->
         :ok

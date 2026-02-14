@@ -61,9 +61,9 @@ defmodule Spikard.WebSocket do
               {:ok, state :: term()} | {:error, reason :: term()}
 
   @callback handle_message(message :: term(), state :: term()) ::
-              {:reply, message :: term(), state :: term()} |
-              {:noreply, state :: term()} |
-              {:error, reason :: term()}
+              {:reply, message :: term(), state :: term()}
+              | {:noreply, state :: term()}
+              | {:error, reason :: term()}
 
   @callback handle_disconnect(ws :: term(), state :: term()) ::
               :ok | {:error, reason :: term()}
@@ -89,7 +89,6 @@ defmodule Spikard.WebSocket do
   def send(ws_ref, message) do
     Spikard.WebSocket.Client.send(ws_ref, message)
   end
-
 
   @doc """
   Use the WebSocket behaviour in a module.

@@ -45,13 +45,15 @@ defmodule Spikard.WebSocket.Handler do
     case call_handler_callback(handler_module, :handle_connect, [ws_ref, opts]) do
       {:ok, state} ->
         Logger.debug("WebSocket connection established")
-        {:ok, %{
-          handler_module: handler_module,
-          ws_ref: ws_ref,
-          opts: opts,
-          state: state,
-          connected: true
-        }}
+
+        {:ok,
+         %{
+           handler_module: handler_module,
+           ws_ref: ws_ref,
+           opts: opts,
+           state: state,
+           connected: true
+         }}
 
       {:error, reason} ->
         Logger.warning("WebSocket connection rejected: #{inspect(reason)}")

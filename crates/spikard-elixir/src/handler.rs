@@ -57,12 +57,11 @@ pub fn deliver_response(request_id: u64, response: JsonValue) -> bool {
         pending.remove(&request_id)
     };
 
-    match sender {
-        Some(tx) => tx.send(response).is_ok(),
-        None => {
-            warn!("No pending request found for ID {}", request_id);
-            false
-        }
+    if let Some(tx) = sender {
+        tx.send(response).is_ok()
+    } else {
+        warn!("No pending request found for ID {}", request_id);
+        false
     }
 }
 
@@ -549,7 +548,7 @@ mod tests {
     #[test]
     fn test_interpret_elixir_response_defaults() {
         let response = json!({});
-        let payload = interpret_elixir_response(&response).unwrap();
+        let payload = interpret_elixir_response(&response).expect("empty response should use defaults");
         assert_eq!(payload.status, 200);
         assert!(payload.headers.is_empty());
     }
@@ -560,7 +559,7 @@ mod tests {
             "status": 201,
             "body": {"id": 42}
         });
-        let payload = interpret_elixir_response(&response).unwrap();
+        let payload = interpret_elixir_response(&response).expect("valid status/body should parse");
         assert_eq!(payload.status, 201);
         assert_eq!(payload.body, Some(json!({"id": 42})));
     }
@@ -571,7 +570,7 @@ mod tests {
             "status": 200,
             "headers": {"x-custom": "header-value"}
         });
-        let payload = interpret_elixir_response(&response).unwrap();
+        let payload = interpret_elixir_response(&response).expect("valid headers should parse");
         assert_eq!(payload.headers.get("x-custom"), Some(&"header-value".to_string()));
     }
 }

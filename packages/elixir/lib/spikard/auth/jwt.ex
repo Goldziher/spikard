@@ -111,6 +111,21 @@ defmodule Spikard.Auth.Jwt do
     required_claims: []
   ]
 
+  @supported_algorithms [:hs256, :hs384, :hs512, :rs256, :rs384, :rs512, :es256, :es384, :ps256, :ps384, :ps512]
+  @algorithm_strings %{
+    hs256: "HS256",
+    hs384: "HS384",
+    hs512: "HS512",
+    rs256: "RS256",
+    rs384: "RS384",
+    rs512: "RS512",
+    es256: "ES256",
+    es384: "ES384",
+    ps256: "PS256",
+    ps384: "PS384",
+    ps512: "PS512"
+  }
+
   @doc """
   Create a new JWT configuration.
 
@@ -209,38 +224,19 @@ defmodule Spikard.Auth.Jwt do
   # Convert Elixir atom to Rust algorithm string
   @spec algorithm_to_string(atom()) :: String.t()
   defp algorithm_to_string(alg) do
-    case alg do
-      :hs256 -> "HS256"
-      :hs384 -> "HS384"
-      :hs512 -> "HS512"
-      :rs256 -> "RS256"
-      :rs384 -> "RS384"
-      :rs512 -> "RS512"
-      :es256 -> "ES256"
-      :es384 -> "ES384"
-      :ps256 -> "PS256"
-      :ps384 -> "PS384"
-      :ps512 -> "PS512"
-      other -> raise ArgumentError, "unsupported algorithm: #{inspect(other)}"
+    case @algorithm_strings do
+      %{^alg => algorithm} -> algorithm
+      _ -> raise ArgumentError, "unsupported algorithm: #{inspect(alg)}"
     end
   end
 
   # Validate that algorithm is a supported atom
   @spec validate_algorithm!(atom()) :: :ok
   defp validate_algorithm!(alg) do
-    case alg do
-      :hs256 -> :ok
-      :hs384 -> :ok
-      :hs512 -> :ok
-      :rs256 -> :ok
-      :rs384 -> :ok
-      :rs512 -> :ok
-      :es256 -> :ok
-      :es384 -> :ok
-      :ps256 -> :ok
-      :ps384 -> :ok
-      :ps512 -> :ok
-      other -> raise ArgumentError, "unsupported algorithm: #{inspect(other)}"
+    if alg in @supported_algorithms do
+      :ok
+    else
+      raise ArgumentError, "unsupported algorithm: #{inspect(alg)}"
     end
   end
 end

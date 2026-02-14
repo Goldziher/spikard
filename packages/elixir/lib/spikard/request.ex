@@ -428,21 +428,29 @@ defmodule Spikard.Request do
       case Map.get(file_data, "size") do
         nil ->
           if is_binary(content), do: byte_size(content), else: 0
-        s when is_integer(s) -> s
-        _ -> 0
+
+        s when is_integer(s) ->
+          s
+
+        _ ->
+          0
       end
 
     # Convert content to binary if needed
     data =
       case content do
-        b when is_binary(b) -> b
+        b when is_binary(b) ->
+          b
+
         l when is_list(l) ->
           try do
             Enum.map(l, &Integer.to_string/1) |> Enum.join("") |> String.to_charlist() |> List.to_string()
           rescue
             _ -> ""
           end
-        _ -> ""
+
+        _ ->
+          ""
       end
 
     Spikard.UploadFile.new(filename, content_type, size, data)

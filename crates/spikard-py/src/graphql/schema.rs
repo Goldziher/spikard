@@ -9,7 +9,7 @@ use std::fmt;
 ///
 /// Encapsulates all schema-level configuration options including
 /// introspection control, complexity limits, and depth limits.
-#[pyclass(name = "GraphQLSchemaConfig")]
+#[pyclass(name = "GraphQLSchemaConfig", from_py_object)]
 #[derive(Clone, Debug)]
 pub struct PySchemaConfig {
     /// Enable introspection queries
@@ -144,7 +144,7 @@ impl fmt::Display for PySchemaConfig {
 ///     .`depth_limit`(50)
 ///     .build())
 /// ```
-#[pyclass(name = "GraphQLSchemaBuilder")]
+#[pyclass(name = "GraphQLSchemaBuilder", from_py_object)]
 #[derive(Clone, Debug)]
 pub struct PySchemaBuilder {
     config: PySchemaConfig,

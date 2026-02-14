@@ -265,66 +265,60 @@ fn extract_static_files_config(term: Term) -> Result<Vec<StaticFilesConfig>, Str
 
     // Try to decode as a list of maps
     // If the decode fails, it might be nil or an empty list
-    match term.decode::<Vec<Term>>() {
-        Ok(list) => {
-            for item in list {
-                let iter = match MapIterator::new(item) {
-                    Some(it) => it,
-                    None => continue,
+    if let Ok(list) = term.decode::<Vec<Term>>() {
+        for item in list {
+            let iter = match MapIterator::new(item) {
+                Some(it) => it,
+                None => continue,
+            };
+
+            let mut directory = String::new();
+            let mut route_prefix = String::new();
+            let mut index_file = true;
+            let mut cache_control = None;
+
+            for (key, value) in iter {
+                let key_str: String = if let Ok(s) = key.decode::<String>() {
+                    s
+                } else if let Ok(atom) = key.decode::<rustler::Atom>() {
+                    format!("{:?}", atom).trim_start_matches(':').to_string()
+                } else {
+                    continue;
                 };
 
-                let mut directory = String::new();
-                let mut route_prefix = String::new();
-                let mut index_file = true;
-                let mut cache_control = None;
-
-                for (key, value) in iter {
-                    let key_str: String = if let Ok(s) = key.decode::<String>() {
-                        s
-                    } else if let Ok(atom) = key.decode::<rustler::Atom>() {
-                        format!("{:?}", atom).trim_start_matches(':').to_string()
-                    } else {
-                        continue;
-                    };
-
-                    match key_str.as_str() {
-                        "directory" => {
-                            if let Ok(v) = value.decode::<String>() {
-                                directory = v;
-                            }
+                match key_str.as_str() {
+                    "directory" => {
+                        if let Ok(v) = value.decode::<String>() {
+                            directory = v;
                         }
-                        "route_prefix" => {
-                            if let Ok(v) = value.decode::<String>() {
-                                route_prefix = v;
-                            }
-                        }
-                        "index_file" => {
-                            if let Ok(v) = value.decode::<bool>() {
-                                index_file = v;
-                            }
-                        }
-                        "cache_control" => {
-                            if let Ok(v) = value.decode::<String>() {
-                                cache_control = Some(v);
-                            }
-                        }
-                        _ => {}
                     }
-                }
-
-                if !directory.is_empty() && !route_prefix.is_empty() {
-                    configs.push(StaticFilesConfig {
-                        directory,
-                        route_prefix,
-                        index_file,
-                        cache_control,
-                    });
+                    "route_prefix" => {
+                        if let Ok(v) = value.decode::<String>() {
+                            route_prefix = v;
+                        }
+                    }
+                    "index_file" => {
+                        if let Ok(v) = value.decode::<bool>() {
+                            index_file = v;
+                        }
+                    }
+                    "cache_control" => {
+                        if let Ok(v) = value.decode::<String>() {
+                            cache_control = Some(v);
+                        }
+                    }
+                    _ => {}
                 }
             }
-        }
-        Err(_) => {
-            // Failed to decode as list - return empty configs
-            // This is expected for cases where static_files isn't configured
+
+            if !directory.is_empty() && !route_prefix.is_empty() {
+                configs.push(StaticFilesConfig {
+                    directory,
+                    route_prefix,
+                    index_file,
+                    cache_control,
+                });
+            }
         }
     }
 
@@ -654,11 +648,5 @@ mod tests {
     fn test_global_runtime_access() {
         let result = global_runtime();
         assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_port_validation() {
-        assert!(0 < 1);
-        assert!(65535 < 65536);
     }
 }

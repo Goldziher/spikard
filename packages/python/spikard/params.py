@@ -4,8 +4,10 @@ These types are used to extract values from request headers, cookies, etc.
 and to specify default values and factories for query/body/path parameters.
 """
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 T = TypeVar("T")
 

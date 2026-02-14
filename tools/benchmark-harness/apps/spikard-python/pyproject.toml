@@ -15,11 +15,12 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
   "pyinstrument>=4.7.3",
   "spikard",
 ]
 
-[tool.uv.sources]
-spikard = { workspace = true }
+[tool.uv]
+sources.spikard = { workspace = true }
