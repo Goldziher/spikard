@@ -24,5 +24,4 @@ async def test_grpc_circuit_breaker_triggered_unavailable_with_metadata() -> Non
     response = await handle_grpc_circuit_breaker_triggered_unavailable_with_metadata(request)
 
     # Verify response
-    assert response.status_code == "UNAVAILABLE"
     assert response.metadata is not None

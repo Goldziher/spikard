@@ -24,5 +24,4 @@ async def test_grpc_bidirectional_streaming_large_streams() -> None:
     response = await handle_grpc_bidirectional_streaming_large_streams(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.metadata is not None

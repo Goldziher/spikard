@@ -23,11 +23,7 @@ pub fn build_handler_name(category: &str, fixture_name: &str) -> String {
 
 /// Build a test name from category and fixture name.
 pub fn build_test_name(category: &str, fixture_name: &str) -> String {
-    format!(
-        "test {} {}",
-        category.replace('_', " "),
-        fixture_name.replace('_', " ")
-    )
+    format!("test {} {}", category.replace('_', " "), fixture_name.replace('_', " "))
 }
 
 /// Convert a serde_json::Value to Elixir literal representation.

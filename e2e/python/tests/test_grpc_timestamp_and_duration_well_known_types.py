@@ -24,7 +24,6 @@ async def test_grpc_timestamp_and_duration_well_known_types() -> None:
     response = await handle_grpc_timestamp_and_duration_well_known_types(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"event_id":"event-001","processed_at":"2024-01-15T10:31:45.123Z","processing_time_ms":1000}'

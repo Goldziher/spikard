@@ -1,19 +1,14 @@
 //! Generated route handlers - one handler per fixture for complete isolation
 
-use axum::body::Body;
-use axum::http::{HeaderName, HeaderValue, Response, StatusCode};
-use bytes::Bytes;
-use futures::stream;
-use serde_json::{json, Value};
-use spikard::{
-    add_cors_headers, delete, get, handle_preflight, patch, post, put, request_hook, response_hook,
-    validate_cors_request, App, AppError, CompressionConfig, CorsConfig, HandlerResponse, HandlerResult, HookResult,
-    LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, RateLimitConfig, RequestContext, RouteBuilder,
-    ServerConfig, SseEvent, SseEventProducer, StaticFilesConfig, WebSocketHandler,
-};
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use bytes::Bytes;
+use futures::stream;
+use axum::body::Body;
+use axum::http::{HeaderName, HeaderValue, Response, StatusCode};
+use serde_json::{json, Value};
+use spikard::{App, AppError, CompressionConfig, CorsConfig, HandlerResponse, HandlerResult, HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, RateLimitConfig, RequestContext, RouteBuilder, ServerConfig, SseEvent, SseEventProducer, StaticFilesConfig, WebSocketHandler, add_cors_headers, handle_preflight, request_hook, response_hook, validate_cors_request, delete, get, patch, post, put};
 type HttpResponse = Response<Body>;
 
 fn apply_expected_headers(mut response: HttpResponse, headers: &[(&str, &str)]) -> HttpResponse {
@@ -29,8 +24,11 @@ fn apply_expected_headers(mut response: HttpResponse, headers: &[(&str, &str)]) 
 
 /// Safe header value parser - never panics
 fn safe_header_value(value: &str) -> HeaderValue {
-    HeaderValue::from_str(value).unwrap_or_else(|_| HeaderValue::from_static(""))
+    HeaderValue::from_str(value)
+        .unwrap_or_else(|_| HeaderValue::from_static(""))
 }
+
+
 
 // Default app for backwards compatibility (empty)
 pub fn create_app() -> Result<App, AppError> {
@@ -50,15 +48,7 @@ pub fn create_app_auth_api_key_authentication_invalid_key() -> Result<App, AppEr
 pub fn create_app_auth_api_key_authentication_missing_header() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/data")
-            .handler_name("auth_api_key_authentication_missing_header_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        auth_api_key_authentication_missing_header_handler,
-    )?;
+    app.route(get("/api/data").handler_name("auth_api_key_authentication_missing_header_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), auth_api_key_authentication_missing_header_handler)?;
     Ok(app)
 }
 
@@ -74,15 +64,7 @@ pub fn create_app_auth_api_key_authentication_valid_key() -> Result<App, AppErro
 pub fn create_app_auth_api_key_in_query_parameter() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/data")
-            .handler_name("auth_api_key_in_query_parameter_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        auth_api_key_in_query_parameter_handler,
-    )?;
+    app.route(get("/api/data").handler_name("auth_api_key_in_query_parameter_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), auth_api_key_in_query_parameter_handler)?;
     Ok(app)
 }
 
@@ -138,15 +120,7 @@ pub fn create_app_auth_jwt_authentication_invalid_signature() -> Result<App, App
 pub fn create_app_auth_jwt_authentication_missing_authorization_header() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/protected/user")
-            .handler_name("auth_jwt_authentication_missing_authorization_header_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        auth_jwt_authentication_missing_authorization_header_handler,
-    )?;
+    app.route(get("/protected/user").handler_name("auth_jwt_authentication_missing_authorization_header_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), auth_jwt_authentication_missing_authorization_header_handler)?;
     Ok(app)
 }
 
@@ -245,13 +219,10 @@ pub fn create_app_background_background_event_logging_second_payload() -> Result
     {
         let state_clone = Arc::clone(&state);
         app.route(
-            get("/background/events")
-                .handler_name("background_background_event_logging_second_payload_handler_background_state"),
+            get("/background/events").handler_name("background_background_event_logging_second_payload_handler_background_state"),
             move |ctx: RequestContext| {
                 let state_clone = Arc::clone(&state_clone);
-                async move {
-                    background_background_event_logging_second_payload_handler_background_state(ctx, state_clone).await
-                }
+                async move { background_background_event_logging_second_payload_handler_background_state(ctx, state_clone).await }
             },
         )?;
     }
@@ -287,15 +258,7 @@ pub fn create_app_compression_compression_gzip_applied() -> Result<App, AppError
         quality: 4,
     });
     let mut app = App::new().config(config);
-    app.route(
-        get("/compression/gzip")
-            .handler_name("compression_compression_gzip_applied_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        compression_compression_gzip_applied_handler,
-    )?;
+    app.route(get("/compression/gzip").handler_name("compression_compression_gzip_applied_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), compression_compression_gzip_applied_handler)?;
     Ok(app)
 }
 
@@ -309,15 +272,7 @@ pub fn create_app_compression_compression_payload_below_min_size_is_not_compress
         quality: 6,
     });
     let mut app = App::new().config(config);
-    app.route(
-        get("/compression/skip")
-            .handler_name("compression_compression_payload_below_min_size_is_not_compressed_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        compression_compression_payload_below_min_size_is_not_compressed_handler,
-    )?;
+    app.route(get("/compression/skip").handler_name("compression_compression_payload_below_min_size_is_not_compressed_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), compression_compression_payload_below_min_size_is_not_compressed_handler)?;
     Ok(app)
 }
 
@@ -325,19 +280,7 @@ pub fn create_app_compression_compression_payload_below_min_size_is_not_compress
 pub fn create_app_content_types_13_json_with_charset_utf16() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/data")
-            .handler_name("content_types_13_json_with_charset_utf16_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"value\":{\"type\":\"string\"}}}")
-                    .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_13_json_with_charset_utf16_handler,
-    )?;
+    app.route(post("/data").handler_name("content_types_13_json_with_charset_utf16_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"value\":{\"type\":\"string\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_13_json_with_charset_utf16_handler)?;
     Ok(app)
 }
 
@@ -345,21 +288,7 @@ pub fn create_app_content_types_13_json_with_charset_utf16() -> Result<App, AppE
 pub fn create_app_content_types_14_content_type_case_insensitive() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/data")
-            .handler_name("content_types_14_content_type_case_insensitive_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"required\":[\"name\"],\"properties\":{\"name\":{\"type\":\"string\"}}}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_14_content_type_case_insensitive_handler,
-    )?;
+    app.route(post("/data").handler_name("content_types_14_content_type_case_insensitive_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"required\":[\"name\"],\"properties\":{\"name\":{\"type\":\"string\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_14_content_type_case_insensitive_handler)?;
     Ok(app)
 }
 
@@ -367,18 +296,7 @@ pub fn create_app_content_types_14_content_type_case_insensitive() -> Result<App
 pub fn create_app_content_types_15_multipart_boundary_required() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/upload")
-            .handler_name("content_types_15_multipart_boundary_required_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            )
-            .file_params_json(
-                serde_json::from_str::<Value>("{\"document\":{\"required\":true}}").unwrap_or(Value::Null),
-            ),
-        content_types_15_multipart_boundary_required_handler,
-    )?;
+    app.route(post("/upload").handler_name("content_types_15_multipart_boundary_required_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)).file_params_json(serde_json::from_str::<Value>("{\"document\":{\"required\":true}}").unwrap_or(Value::Null)), content_types_15_multipart_boundary_required_handler)?;
     Ok(app)
 }
 
@@ -386,21 +304,7 @@ pub fn create_app_content_types_15_multipart_boundary_required() -> Result<App, 
 pub fn create_app_content_types_16_text_plain_not_accepted() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/data")
-            .handler_name("content_types_16_text_plain_not_accepted_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"string\"}}}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_16_text_plain_not_accepted_handler,
-    )?;
+    app.route(post("/data").handler_name("content_types_16_text_plain_not_accepted_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"string\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_16_text_plain_not_accepted_handler)?;
     Ok(app)
 }
 
@@ -408,21 +312,7 @@ pub fn create_app_content_types_16_text_plain_not_accepted() -> Result<App, AppE
 pub fn create_app_content_types_17_vendor_json_accepted() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/api/v1/resource")
-            .handler_name("content_types_17_vendor_json_accepted_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"string\"}}}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_17_vendor_json_accepted_handler,
-    )?;
+    app.route(post("/api/v1/resource").handler_name("content_types_17_vendor_json_accepted_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"string\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_17_vendor_json_accepted_handler)?;
     Ok(app)
 }
 
@@ -430,19 +320,7 @@ pub fn create_app_content_types_17_vendor_json_accepted() -> Result<App, AppErro
 pub fn create_app_content_types_18_content_type_with_multiple_params() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/data")
-            .handler_name("content_types_18_content_type_with_multiple_params_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"value\":{\"type\":\"string\"}}}")
-                    .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_18_content_type_with_multiple_params_handler,
-    )?;
+    app.route(post("/data").handler_name("content_types_18_content_type_with_multiple_params_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"value\":{\"type\":\"string\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_18_content_type_with_multiple_params_handler)?;
     Ok(app)
 }
 
@@ -450,21 +328,7 @@ pub fn create_app_content_types_18_content_type_with_multiple_params() -> Result
 pub fn create_app_content_types_19_missing_content_type_default_json() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/data")
-            .handler_name("content_types_19_missing_content_type_default_json_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"required\":[\"name\"],\"properties\":{\"name\":{\"type\":\"string\"}}}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_19_missing_content_type_default_json_handler,
-    )?;
+    app.route(post("/data").handler_name("content_types_19_missing_content_type_default_json_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"required\":[\"name\"],\"properties\":{\"name\":{\"type\":\"string\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_19_missing_content_type_default_json_handler)?;
     Ok(app)
 }
 
@@ -480,16 +344,7 @@ pub fn create_app_content_types_20_content_length_mismatch() -> Result<App, AppE
 pub fn create_app_content_types_415_unsupported_media_type() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/items/")
-            .handler_name("content_types_415_unsupported_media_type_handler")
-            .request_schema_json(serde_json::from_str::<Value>("{\"type\":\"string\"}").unwrap_or(Value::Null))
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_415_unsupported_media_type_handler,
-    )?;
+    app.route(post("/items/").handler_name("content_types_415_unsupported_media_type_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"string\"}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_415_unsupported_media_type_handler)?;
     Ok(app)
 }
 
@@ -497,15 +352,7 @@ pub fn create_app_content_types_415_unsupported_media_type() -> Result<App, AppE
 pub fn create_app_content_types_binary_response_application_octet_stream() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/download/file.bin")
-            .handler_name("content_types_binary_response_application_octet_stream_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_binary_response_application_octet_stream_handler,
-    )?;
+    app.route(get("/download/file.bin").handler_name("content_types_binary_response_application_octet_stream_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_binary_response_application_octet_stream_handler)?;
     Ok(app)
 }
 
@@ -513,15 +360,7 @@ pub fn create_app_content_types_binary_response_application_octet_stream() -> Re
 pub fn create_app_content_types_csv_response_text_csv() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/export/data.csv")
-            .handler_name("content_types_csv_response_text_csv_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_csv_response_text_csv_handler,
-    )?;
+    app.route(get("/export/data.csv").handler_name("content_types_csv_response_text_csv_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_csv_response_text_csv_handler)?;
     Ok(app)
 }
 
@@ -537,15 +376,7 @@ pub fn create_app_content_types_content_negotiation_accept_header() -> Result<Ap
 pub fn create_app_content_types_html_response_text_html() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/html")
-            .handler_name("content_types_html_response_text_html_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_html_response_text_html_handler,
-    )?;
+    app.route(get("/html").handler_name("content_types_html_response_text_html_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_html_response_text_html_handler)?;
     Ok(app)
 }
 
@@ -553,15 +384,7 @@ pub fn create_app_content_types_html_response_text_html() -> Result<App, AppErro
 pub fn create_app_content_types_jpeg_image_response_image_jpeg() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/images/photo.jpg")
-            .handler_name("content_types_jpeg_image_response_image_jpeg_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_jpeg_image_response_image_jpeg_handler,
-    )?;
+    app.route(get("/images/photo.jpg").handler_name("content_types_jpeg_image_response_image_jpeg_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_jpeg_image_response_image_jpeg_handler)?;
     Ok(app)
 }
 
@@ -569,15 +392,7 @@ pub fn create_app_content_types_jpeg_image_response_image_jpeg() -> Result<App, 
 pub fn create_app_content_types_json_response_application_json() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/items/json")
-            .handler_name("content_types_json_response_application_json_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_json_response_application_json_handler,
-    )?;
+    app.route(get("/items/json").handler_name("content_types_json_response_application_json_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_json_response_application_json_handler)?;
     Ok(app)
 }
 
@@ -585,15 +400,7 @@ pub fn create_app_content_types_json_response_application_json() -> Result<App, 
 pub fn create_app_content_types_json_with_utf_8_charset() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/items/unicode")
-            .handler_name("content_types_json_with_utf_8_charset_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_json_with_utf_8_charset_handler,
-    )?;
+    app.route(get("/items/unicode").handler_name("content_types_json_with_utf_8_charset_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_json_with_utf_8_charset_handler)?;
     Ok(app)
 }
 
@@ -601,15 +408,7 @@ pub fn create_app_content_types_json_with_utf_8_charset() -> Result<App, AppErro
 pub fn create_app_content_types_pdf_response_application_pdf() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/download/document.pdf")
-            .handler_name("content_types_pdf_response_application_pdf_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_pdf_response_application_pdf_handler,
-    )?;
+    app.route(get("/download/document.pdf").handler_name("content_types_pdf_response_application_pdf_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_pdf_response_application_pdf_handler)?;
     Ok(app)
 }
 
@@ -617,15 +416,7 @@ pub fn create_app_content_types_pdf_response_application_pdf() -> Result<App, Ap
 pub fn create_app_content_types_png_image_response_image_png() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/images/logo.png")
-            .handler_name("content_types_png_image_response_image_png_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_png_image_response_image_png_handler,
-    )?;
+    app.route(get("/images/logo.png").handler_name("content_types_png_image_response_image_png_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_png_image_response_image_png_handler)?;
     Ok(app)
 }
 
@@ -633,15 +424,7 @@ pub fn create_app_content_types_png_image_response_image_png() -> Result<App, Ap
 pub fn create_app_content_types_plain_text_response_text_plain() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/text")
-            .handler_name("content_types_plain_text_response_text_plain_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_plain_text_response_text_plain_handler,
-    )?;
+    app.route(get("/text").handler_name("content_types_plain_text_response_text_plain_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_plain_text_response_text_plain_handler)?;
     Ok(app)
 }
 
@@ -649,15 +432,7 @@ pub fn create_app_content_types_plain_text_response_text_plain() -> Result<App, 
 pub fn create_app_content_types_xml_response_application_xml() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/xml")
-            .handler_name("content_types_xml_response_application_xml_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        content_types_xml_response_application_xml_handler,
-    )?;
+    app.route(get("/xml").handler_name("content_types_xml_response_application_xml_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), content_types_xml_response_application_xml_handler)?;
     Ok(app)
 }
 
@@ -841,15 +616,7 @@ pub fn create_app_cookies_response_cookie_with_samesite_strict() -> Result<App, 
 pub fn create_app_cookies_response_cookie_with_attributes() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/cookie/set")
-            .handler_name("cookies_response_cookie_with_attributes_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cookies_response_cookie_with_attributes_handler,
-    )?;
+    app.route(get("/cookie/set").handler_name("cookies_response_cookie_with_attributes_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cookies_response_cookie_with_attributes_handler)?;
     Ok(app)
 }
 
@@ -873,15 +640,7 @@ pub fn create_app_cookies_response_cookie_with_path_attribute() -> Result<App, A
 pub fn create_app_cookies_response_set_cookie_basic() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/cookie/")
-            .handler_name("cookies_response_set_cookie_basic_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cookies_response_set_cookie_basic_handler,
-    )?;
+    app.route(post("/cookie/").handler_name("cookies_response_set_cookie_basic_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cookies_response_set_cookie_basic_handler)?;
     Ok(app)
 }
 
@@ -929,18 +688,7 @@ pub fn create_app_cors_10_cors_origin_null() -> Result<App, AppError> {
 pub fn create_app_cors_cors_private_network_access() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        RouteBuilder::new(
-            Method::from_str("OPTIONS").expect("invalid method"),
-            "/api/local-resource",
-        )
-        .handler_name("cors_cors_private_network_access_handler")
-        .params_schema_json(
-            serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                .unwrap_or(Value::Null),
-        ),
-        cors_cors_private_network_access_handler,
-    )?;
+    app.route(RouteBuilder::new(Method::from_str("OPTIONS").expect("invalid method"), "/api/local-resource").handler_name("cors_cors_private_network_access_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_private_network_access_handler)?;
     Ok(app)
 }
 
@@ -948,15 +696,7 @@ pub fn create_app_cors_cors_private_network_access() -> Result<App, AppError> {
 pub fn create_app_cors_cors_vary_header_for_proper_caching() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/cached-resource")
-            .handler_name("cors_cors_vary_header_for_proper_caching_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_cors_vary_header_for_proper_caching_handler,
-    )?;
+    app.route(get("/api/cached-resource").handler_name("cors_cors_vary_header_for_proper_caching_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_vary_header_for_proper_caching_handler)?;
     Ok(app)
 }
 
@@ -964,15 +704,7 @@ pub fn create_app_cors_cors_vary_header_for_proper_caching() -> Result<App, AppE
 pub fn create_app_cors_cors_multiple_allowed_origins() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/data")
-            .handler_name("cors_cors_multiple_allowed_origins_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_cors_multiple_allowed_origins_handler,
-    )?;
+    app.route(get("/api/data").handler_name("cors_cors_multiple_allowed_origins_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_multiple_allowed_origins_handler)?;
     Ok(app)
 }
 
@@ -980,15 +712,7 @@ pub fn create_app_cors_cors_multiple_allowed_origins() -> Result<App, AppError> 
 pub fn create_app_cors_cors_origin_case_sensitivity() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/data")
-            .handler_name("cors_cors_origin_case_sensitivity_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_cors_origin_case_sensitivity_handler,
-    )?;
+    app.route(get("/api/data").handler_name("cors_cors_origin_case_sensitivity_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_origin_case_sensitivity_handler)?;
     Ok(app)
 }
 
@@ -996,18 +720,7 @@ pub fn create_app_cors_cors_origin_case_sensitivity() -> Result<App, AppError> {
 pub fn create_app_cors_cors_preflight_for_delete_method() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        RouteBuilder::new(
-            Method::from_str("OPTIONS").expect("invalid method"),
-            "/api/resource/456",
-        )
-        .handler_name("cors_cors_preflight_for_delete_method_handler")
-        .params_schema_json(
-            serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                .unwrap_or(Value::Null),
-        ),
-        cors_cors_preflight_for_delete_method_handler,
-    )?;
+    app.route(RouteBuilder::new(Method::from_str("OPTIONS").expect("invalid method"), "/api/resource/456").handler_name("cors_cors_preflight_for_delete_method_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_preflight_for_delete_method_handler)?;
     Ok(app)
 }
 
@@ -1015,18 +728,7 @@ pub fn create_app_cors_cors_preflight_for_delete_method() -> Result<App, AppErro
 pub fn create_app_cors_cors_preflight_for_put_method() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        RouteBuilder::new(
-            Method::from_str("OPTIONS").expect("invalid method"),
-            "/api/resource/123",
-        )
-        .handler_name("cors_cors_preflight_for_put_method_handler")
-        .params_schema_json(
-            serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                .unwrap_or(Value::Null),
-        ),
-        cors_cors_preflight_for_put_method_handler,
-    )?;
+    app.route(RouteBuilder::new(Method::from_str("OPTIONS").expect("invalid method"), "/api/resource/123").handler_name("cors_cors_preflight_for_put_method_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_preflight_for_put_method_handler)?;
     Ok(app)
 }
 
@@ -1034,15 +736,7 @@ pub fn create_app_cors_cors_preflight_for_put_method() -> Result<App, AppError> 
 pub fn create_app_cors_cors_preflight_request() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        RouteBuilder::new(Method::from_str("OPTIONS").expect("invalid method"), "/items/")
-            .handler_name("cors_cors_preflight_request_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_cors_preflight_request_handler,
-    )?;
+    app.route(RouteBuilder::new(Method::from_str("OPTIONS").expect("invalid method"), "/items/").handler_name("cors_cors_preflight_request_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_preflight_request_handler)?;
     Ok(app)
 }
 
@@ -1050,15 +744,7 @@ pub fn create_app_cors_cors_preflight_request() -> Result<App, AppError> {
 pub fn create_app_cors_cors_regex_pattern_matching_for_origins() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/data")
-            .handler_name("cors_cors_regex_pattern_matching_for_origins_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_cors_regex_pattern_matching_for_origins_handler,
-    )?;
+    app.route(get("/api/data").handler_name("cors_cors_regex_pattern_matching_for_origins_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_regex_pattern_matching_for_origins_handler)?;
     Ok(app)
 }
 
@@ -1074,15 +760,7 @@ pub fn create_app_cors_cors_request_blocked() -> Result<App, AppError> {
 pub fn create_app_cors_cors_safelisted_headers_without_preflight() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/api/form")
-            .handler_name("cors_cors_safelisted_headers_without_preflight_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_cors_safelisted_headers_without_preflight_handler,
-    )?;
+    app.route(post("/api/form").handler_name("cors_cors_safelisted_headers_without_preflight_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_safelisted_headers_without_preflight_handler)?;
     Ok(app)
 }
 
@@ -1090,15 +768,7 @@ pub fn create_app_cors_cors_safelisted_headers_without_preflight() -> Result<App
 pub fn create_app_cors_cors_wildcard_origin() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/public/data")
-            .handler_name("cors_cors_wildcard_origin_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_cors_wildcard_origin_handler,
-    )?;
+    app.route(get("/public/data").handler_name("cors_cors_wildcard_origin_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_wildcard_origin_handler)?;
     Ok(app)
 }
 
@@ -1106,15 +776,7 @@ pub fn create_app_cors_cors_wildcard_origin() -> Result<App, AppError> {
 pub fn create_app_cors_cors_with_credentials() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/user/profile")
-            .handler_name("cors_cors_with_credentials_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_cors_with_credentials_handler,
-    )?;
+    app.route(get("/api/user/profile").handler_name("cors_cors_with_credentials_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_cors_with_credentials_handler)?;
     Ok(app)
 }
 
@@ -1122,15 +784,7 @@ pub fn create_app_cors_cors_with_credentials() -> Result<App, AppError> {
 pub fn create_app_cors_simple_cors_request() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/items/")
-            .handler_name("cors_simple_cors_request_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        cors_simple_cors_request_handler,
-    )?;
+    app.route(get("/items/").handler_name("cors_simple_cors_request_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), cors_simple_cors_request_handler)?;
     Ok(app)
 }
 
@@ -1138,15 +792,7 @@ pub fn create_app_cors_simple_cors_request() -> Result<App, AppError> {
 pub fn create_app_di_async_factory_dependency_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/db-status")
-            .handler_name("di_async_factory_dependency_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_async_factory_dependency_success_handler,
-    )?;
+    app.route(get("/api/db-status").handler_name("di_async_factory_dependency_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_async_factory_dependency_success_handler)?;
     Ok(app)
 }
 
@@ -1154,43 +800,18 @@ pub fn create_app_di_async_factory_dependency_success() -> Result<App, AppError>
 pub fn create_app_di_circular_dependency_detection_error() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/circular")
-            .handler_name("di_circular_dependency_detection_error_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_circular_dependency_detection_error_handler,
-    )?;
+    app.route(get("/api/circular").handler_name("di_circular_dependency_detection_error_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_circular_dependency_detection_error_handler)?;
     Ok(app)
 }
 
 /// App for fixture: Dependency injection in lifecycle hooks - success
 pub fn create_app_di_dependency_injection_in_lifecycle_hooks_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .on_request(spikard::request_hook(
-                "log_request",
-                di_dependency_injection_in_lifecycle_hooks_success_log_request_on_request_0,
-            ))
-            .pre_handler(spikard::request_hook(
-                "auth_check",
-                di_dependency_injection_in_lifecycle_hooks_success_auth_check_pre_handler_0,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .on_request(spikard::request_hook("log_request", di_dependency_injection_in_lifecycle_hooks_success_log_request_on_request_0))
+        .pre_handler(spikard::request_hook("auth_check", di_dependency_injection_in_lifecycle_hooks_success_auth_check_pre_handler_0)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/hook-di-test")
-            .handler_name("di_dependency_injection_in_lifecycle_hooks_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_dependency_injection_in_lifecycle_hooks_success_handler,
-    )?;
+    app.route(get("/api/hook-di-test").handler_name("di_dependency_injection_in_lifecycle_hooks_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_dependency_injection_in_lifecycle_hooks_success_handler)?;
     Ok(app)
 }
 
@@ -1198,15 +819,7 @@ pub fn create_app_di_dependency_injection_in_lifecycle_hooks_success() -> Result
 pub fn create_app_di_factory_dependency_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/timestamp")
-            .handler_name("di_factory_dependency_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_factory_dependency_success_handler,
-    )?;
+    app.route(get("/api/timestamp").handler_name("di_factory_dependency_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_factory_dependency_success_handler)?;
     Ok(app)
 }
 
@@ -1214,15 +827,7 @@ pub fn create_app_di_factory_dependency_success() -> Result<App, AppError> {
 pub fn create_app_di_missing_dependency_error() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/missing-dep")
-            .handler_name("di_missing_dependency_error_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_missing_dependency_error_handler,
-    )?;
+    app.route(get("/api/missing-dep").handler_name("di_missing_dependency_error_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_missing_dependency_error_handler)?;
     Ok(app)
 }
 
@@ -1230,15 +835,7 @@ pub fn create_app_di_missing_dependency_error() -> Result<App, AppError> {
 pub fn create_app_di_mixed_singleton_and_per_request_caching_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/mixed-caching")
-            .handler_name("di_mixed_singleton_and_per_request_caching_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_mixed_singleton_and_per_request_caching_success_handler,
-    )?;
+    app.route(get("/api/mixed-caching").handler_name("di_mixed_singleton_and_per_request_caching_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_mixed_singleton_and_per_request_caching_success_handler)?;
     Ok(app)
 }
 
@@ -1248,18 +845,10 @@ pub fn create_app_di_multiple_dependencies_with_cleanup_success() -> Result<App,
     let mut app = App::new();
     {
         let handler_state = Arc::clone(&state);
-        app.route(
-            get("/api/multi-cleanup-test")
-                .handler_name("di_multiple_dependencies_with_cleanup_success_handler")
-                .params_schema_json(
-                    serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                        .unwrap_or(Value::Null),
-                ),
-            move |ctx: RequestContext| {
-                let handler_state = Arc::clone(&handler_state);
-                async move { di_multiple_dependencies_with_cleanup_success_handler(ctx, handler_state).await }
-            },
-        )?;
+        app.route(get("/api/multi-cleanup-test").handler_name("di_multiple_dependencies_with_cleanup_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), move |ctx: RequestContext| {
+            let handler_state = Arc::clone(&handler_state);
+            async move { di_multiple_dependencies_with_cleanup_success_handler(ctx, handler_state).await }
+        })?;
     }
     {
         let state_clone = Arc::clone(&state);
@@ -1279,15 +868,7 @@ pub fn create_app_di_multiple_dependencies_with_cleanup_success() -> Result<App,
 pub fn create_app_di_nested_dependencies_3_levels_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/auth-status")
-            .handler_name("di_nested_dependencies_3_levels_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_nested_dependencies_3_levels_success_handler,
-    )?;
+    app.route(get("/api/auth-status").handler_name("di_nested_dependencies_3_levels_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_nested_dependencies_3_levels_success_handler)?;
     Ok(app)
 }
 
@@ -1295,15 +876,7 @@ pub fn create_app_di_nested_dependencies_3_levels_success() -> Result<App, AppEr
 pub fn create_app_di_node_js_object_destructuring_injection_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/node-destructure")
-            .handler_name("di_node_js_object_destructuring_injection_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_node_js_object_destructuring_injection_success_handler,
-    )?;
+    app.route(get("/api/node-destructure").handler_name("di_node_js_object_destructuring_injection_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_node_js_object_destructuring_injection_success_handler)?;
     Ok(app)
 }
 
@@ -1311,15 +884,7 @@ pub fn create_app_di_node_js_object_destructuring_injection_success() -> Result<
 pub fn create_app_di_per_request_dependency_caching_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/request-id")
-            .handler_name("di_per_request_dependency_caching_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_per_request_dependency_caching_success_handler,
-    )?;
+    app.route(get("/api/request-id").handler_name("di_per_request_dependency_caching_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_per_request_dependency_caching_success_handler)?;
     Ok(app)
 }
 
@@ -1327,15 +892,7 @@ pub fn create_app_di_per_request_dependency_caching_success() -> Result<App, App
 pub fn create_app_di_python_parameter_name_based_injection_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/python-name-inject")
-            .handler_name("di_python_parameter_name_based_injection_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_python_parameter_name_based_injection_success_handler,
-    )?;
+    app.route(get("/api/python-name-inject").handler_name("di_python_parameter_name_based_injection_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_python_parameter_name_based_injection_success_handler)?;
     Ok(app)
 }
 
@@ -1343,15 +900,7 @@ pub fn create_app_di_python_parameter_name_based_injection_success() -> Result<A
 pub fn create_app_di_python_type_annotation_based_injection_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/python-type-inject")
-            .handler_name("di_python_type_annotation_based_injection_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_python_type_annotation_based_injection_success_handler,
-    )?;
+    app.route(get("/api/python-type-inject").handler_name("di_python_type_annotation_based_injection_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_python_type_annotation_based_injection_success_handler)?;
     Ok(app)
 }
 
@@ -1361,18 +910,10 @@ pub fn create_app_di_resource_cleanup_after_request_success() -> Result<App, App
     let mut app = App::new();
     {
         let handler_state = Arc::clone(&state);
-        app.route(
-            get("/api/cleanup-test")
-                .handler_name("di_resource_cleanup_after_request_success_handler")
-                .params_schema_json(
-                    serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                        .unwrap_or(Value::Null),
-                ),
-            move |ctx: RequestContext| {
-                let handler_state = Arc::clone(&handler_state);
-                async move { di_resource_cleanup_after_request_success_handler(ctx, handler_state).await }
-            },
-        )?;
+        app.route(get("/api/cleanup-test").handler_name("di_resource_cleanup_after_request_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), move |ctx: RequestContext| {
+            let handler_state = Arc::clone(&handler_state);
+            async move { di_resource_cleanup_after_request_success_handler(ctx, handler_state).await }
+        })?;
     }
     {
         let state_clone = Arc::clone(&state);
@@ -1392,15 +933,7 @@ pub fn create_app_di_resource_cleanup_after_request_success() -> Result<App, App
 pub fn create_app_di_route_level_dependency_override_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/override-test")
-            .handler_name("di_route_level_dependency_override_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_route_level_dependency_override_success_handler,
-    )?;
+    app.route(get("/api/override-test").handler_name("di_route_level_dependency_override_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_route_level_dependency_override_success_handler)?;
     Ok(app)
 }
 
@@ -1408,15 +941,7 @@ pub fn create_app_di_route_level_dependency_override_success() -> Result<App, Ap
 pub fn create_app_di_ruby_keyword_argument_injection_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/ruby-kwargs")
-            .handler_name("di_ruby_keyword_argument_injection_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_ruby_keyword_argument_injection_success_handler,
-    )?;
+    app.route(get("/api/ruby-kwargs").handler_name("di_ruby_keyword_argument_injection_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_ruby_keyword_argument_injection_success_handler)?;
     Ok(app)
 }
 
@@ -1424,15 +949,7 @@ pub fn create_app_di_ruby_keyword_argument_injection_success() -> Result<App, Ap
 pub fn create_app_di_singleton_dependency_caching_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/app-counter")
-            .handler_name("di_singleton_dependency_caching_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_singleton_dependency_caching_success_handler,
-    )?;
+    app.route(get("/api/app-counter").handler_name("di_singleton_dependency_caching_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_singleton_dependency_caching_success_handler)?;
     Ok(app)
 }
 
@@ -1440,15 +957,7 @@ pub fn create_app_di_singleton_dependency_caching_success() -> Result<App, AppEr
 pub fn create_app_di_type_mismatch_in_dependency_resolution_error() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/type-mismatch")
-            .handler_name("di_type_mismatch_in_dependency_resolution_error_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_type_mismatch_in_dependency_resolution_error_handler,
-    )?;
+    app.route(get("/api/type-mismatch").handler_name("di_type_mismatch_in_dependency_resolution_error_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_type_mismatch_in_dependency_resolution_error_handler)?;
     Ok(app)
 }
 
@@ -1456,15 +965,7 @@ pub fn create_app_di_type_mismatch_in_dependency_resolution_error() -> Result<Ap
 pub fn create_app_di_value_dependency_injection_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/config")
-            .handler_name("di_value_dependency_injection_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        di_value_dependency_injection_success_handler,
-    )?;
+    app.route(get("/api/config").handler_name("di_value_dependency_injection_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), di_value_dependency_injection_success_handler)?;
     Ok(app)
 }
 
@@ -1504,21 +1005,7 @@ pub fn create_app_edge_cases_14_large_integer_boundary() -> Result<App, AppError
 pub fn create_app_edge_cases_15_float_precision_preservation() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/calculate")
-            .handler_name("edge_cases_15_float_precision_preservation_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"required\":[\"value\"],\"properties\":{\"value\":{\"type\":\"number\"}}}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        edge_cases_15_float_precision_preservation_handler,
-    )?;
+    app.route(post("/calculate").handler_name("edge_cases_15_float_precision_preservation_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"required\":[\"value\"],\"properties\":{\"value\":{\"type\":\"number\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), edge_cases_15_float_precision_preservation_handler)?;
     Ok(app)
 }
 
@@ -1526,21 +1013,7 @@ pub fn create_app_edge_cases_15_float_precision_preservation() -> Result<App, Ap
 pub fn create_app_edge_cases_16_negative_zero_handling() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/data")
-            .handler_name("edge_cases_16_negative_zero_handling_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"required\":[\"offset\"],\"properties\":{\"offset\":{\"type\":\"number\"}}}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        edge_cases_16_negative_zero_handling_handler,
-    )?;
+    app.route(post("/data").handler_name("edge_cases_16_negative_zero_handling_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"required\":[\"offset\"],\"properties\":{\"offset\":{\"type\":\"number\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), edge_cases_16_negative_zero_handling_handler)?;
     Ok(app)
 }
 
@@ -1596,16 +1069,7 @@ pub fn create_app_edge_cases_22_leading_zeros_integer() -> Result<App, AppError>
 pub fn create_app_edge_cases_23_deeply_nested_json_limit() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/data")
-            .handler_name("edge_cases_23_deeply_nested_json_limit_handler")
-            .request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\"}").unwrap_or(Value::Null))
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        edge_cases_23_deeply_nested_json_limit_handler,
-    )?;
+    app.route(post("/data").handler_name("edge_cases_23_deeply_nested_json_limit_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\"}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), edge_cases_23_deeply_nested_json_limit_handler)?;
     Ok(app)
 }
 
@@ -1965,15 +1429,7 @@ pub fn create_app_http_methods_head_get_metadata_without_body() -> Result<App, A
 pub fn create_app_http_methods_options_cors_preflight_request() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        RouteBuilder::new(Method::from_str("OPTIONS").expect("invalid method"), "/items/")
-            .handler_name("http_methods_options_cors_preflight_request_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        http_methods_options_cors_preflight_request_handler,
-    )?;
+    app.route(RouteBuilder::new(Method::from_str("OPTIONS").expect("invalid method"), "/items/").handler_name("http_methods_options_cors_preflight_request_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), http_methods_options_cors_preflight_request_handler)?;
     Ok(app)
 }
 
@@ -2165,18 +1621,7 @@ pub fn create_app_json_bodies_44_const_validation_failure() -> Result<App, AppEr
 pub fn create_app_json_bodies_45_minproperties_validation_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/config")
-            .handler_name("json_bodies_45_minproperties_validation_success_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"minProperties\":2}").unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        json_bodies_45_minproperties_validation_success_handler,
-    )?;
+    app.route(post("/config").handler_name("json_bodies_45_minproperties_validation_success_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"minProperties\":2}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), json_bodies_45_minproperties_validation_success_handler)?;
     Ok(app)
 }
 
@@ -2184,18 +1629,7 @@ pub fn create_app_json_bodies_45_minproperties_validation_success() -> Result<Ap
 pub fn create_app_json_bodies_46_minproperties_validation_failure() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/config")
-            .handler_name("json_bodies_46_minproperties_validation_failure_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"minProperties\":2}").unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        json_bodies_46_minproperties_validation_failure_handler,
-    )?;
+    app.route(post("/config").handler_name("json_bodies_46_minproperties_validation_failure_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"minProperties\":2}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), json_bodies_46_minproperties_validation_failure_handler)?;
     Ok(app)
 }
 
@@ -2203,18 +1637,7 @@ pub fn create_app_json_bodies_46_minproperties_validation_failure() -> Result<Ap
 pub fn create_app_json_bodies_47_maxproperties_validation_failure() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/config")
-            .handler_name("json_bodies_47_maxproperties_validation_failure_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"maxProperties\":3}").unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        json_bodies_47_maxproperties_validation_failure_handler,
-    )?;
+    app.route(post("/config").handler_name("json_bodies_47_maxproperties_validation_failure_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"maxProperties\":3}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), json_bodies_47_maxproperties_validation_failure_handler)?;
     Ok(app)
 }
 
@@ -2302,19 +1725,7 @@ pub fn create_app_json_bodies_deeply_nested_objects() -> Result<App, AppError> {
 pub fn create_app_json_bodies_empty_json_object() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/items/optional-all")
-            .handler_name("json_bodies_empty_json_object_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}")
-                    .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        json_bodies_empty_json_object_handler,
-    )?;
+    app.route(post("/items/optional-all").handler_name("json_bodies_empty_json_object_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), json_bodies_empty_json_object_handler)?;
     Ok(app)
 }
 
@@ -2473,78 +1884,28 @@ pub fn create_app_json_bodies_uuid_field_success() -> Result<App, AppError> {
 /// App for fixture: Hook Execution Order
 pub fn create_app_lifecycle_hooks_hook_execution_order() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .on_request(spikard::request_hook(
-                "first_hook",
-                lifecycle_hooks_hook_execution_order_first_hook_on_request_0,
-            ))
-            .on_request(spikard::request_hook(
-                "second_hook",
-                lifecycle_hooks_hook_execution_order_second_hook_on_request_1,
-            ))
-            .on_request(spikard::request_hook(
-                "third_hook",
-                lifecycle_hooks_hook_execution_order_third_hook_on_request_2,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .on_request(spikard::request_hook("first_hook", lifecycle_hooks_hook_execution_order_first_hook_on_request_0))
+        .on_request(spikard::request_hook("second_hook", lifecycle_hooks_hook_execution_order_second_hook_on_request_1))
+        .on_request(spikard::request_hook("third_hook", lifecycle_hooks_hook_execution_order_third_hook_on_request_2)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/test-hook-order")
-            .handler_name("lifecycle_hooks_hook_execution_order_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_hook_execution_order_handler,
-    )?;
+    app.route(get("/api/test-hook-order").handler_name("lifecycle_hooks_hook_execution_order_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_hook_execution_order_handler)?;
     Ok(app)
 }
 
 /// App for fixture: Multiple Hooks - All Phases
 pub fn create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .on_request(spikard::request_hook(
-                "request_logger",
-                lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0,
-            ))
-            .on_request(spikard::request_hook(
-                "request_id_generator",
-                lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1,
-            ))
-            .pre_validation(spikard::request_hook(
-                "rate_limiter",
-                lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0,
-            ))
-            .pre_handler(spikard::request_hook(
-                "authenticator",
-                lifecycle_hooks_multiple_hooks_all_phases_authenticator_pre_handler_0,
-            ))
-            .pre_handler(spikard::request_hook(
-                "authorizer",
-                lifecycle_hooks_multiple_hooks_all_phases_authorizer_pre_handler_1,
-            ))
-            .on_response(spikard::response_hook(
-                "security_headers",
-                lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response_0,
-            ))
-            .on_response(spikard::response_hook(
-                "response_timer",
-                lifecycle_hooks_multiple_hooks_all_phases_response_timer_on_response_1,
-            ))
-            .on_response(spikard::response_hook(
-                "audit_logger",
-                lifecycle_hooks_multiple_hooks_all_phases_audit_logger_on_response_2,
-            ))
-            .on_error(spikard::response_hook(
-                "error_logger",
-                lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .on_request(spikard::request_hook("request_logger", lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0))
+        .on_request(spikard::request_hook("request_id_generator", lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1))
+        .pre_validation(spikard::request_hook("rate_limiter", lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0))
+        .pre_handler(spikard::request_hook("authenticator", lifecycle_hooks_multiple_hooks_all_phases_authenticator_pre_handler_0))
+        .pre_handler(spikard::request_hook("authorizer", lifecycle_hooks_multiple_hooks_all_phases_authorizer_pre_handler_1))
+        .on_response(spikard::response_hook("security_headers", lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response_0))
+        .on_response(spikard::response_hook("response_timer", lifecycle_hooks_multiple_hooks_all_phases_response_timer_on_response_1))
+        .on_response(spikard::response_hook("audit_logger", lifecycle_hooks_multiple_hooks_all_phases_audit_logger_on_response_2))
+        .on_error(spikard::response_hook("error_logger", lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0)).build()));
     let mut app = App::new().config(config);
     app.route(post("/api/full-lifecycle").handler_name("lifecycle_hooks_multiple_hooks_all_phases_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"user_id\":{\"type\":\"string\"},\"action\":{\"type\":\"string\"}},\"required\":[\"user_id\",\"action\"]}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_multiple_hooks_all_phases_handler)?;
     Ok(app)
@@ -2553,272 +1914,105 @@ pub fn create_app_lifecycle_hooks_multiple_hooks_all_phases() -> Result<App, App
 /// App for fixture: onError - Error Logging
 pub fn create_app_lifecycle_hooks_onerror_error_logging() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .on_error(spikard::response_hook(
-                "error_logger",
-                lifecycle_hooks_onerror_error_logging_error_logger_on_error_0,
-            ))
-            .on_error(spikard::response_hook(
-                "error_formatter",
-                lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .on_error(spikard::response_hook("error_logger", lifecycle_hooks_onerror_error_logging_error_logger_on_error_0))
+        .on_error(spikard::response_hook("error_formatter", lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/test-error")
-            .handler_name("lifecycle_hooks_onerror_error_logging_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_onerror_error_logging_handler,
-    )?;
+    app.route(get("/api/test-error").handler_name("lifecycle_hooks_onerror_error_logging_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_onerror_error_logging_handler)?;
     Ok(app)
 }
 
 /// App for fixture: onRequest - Request Logging
 pub fn create_app_lifecycle_hooks_onrequest_request_logging() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .on_request(spikard::request_hook(
-                "request_logger",
-                lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0,
-            ))
-            .on_request(spikard::request_hook(
-                "request_id_generator",
-                lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .on_request(spikard::request_hook("request_logger", lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0))
+        .on_request(spikard::request_hook("request_id_generator", lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/test-on-request")
-            .handler_name("lifecycle_hooks_onrequest_request_logging_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_onrequest_request_logging_handler,
-    )?;
+    app.route(get("/api/test-on-request").handler_name("lifecycle_hooks_onrequest_request_logging_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_onrequest_request_logging_handler)?;
     Ok(app)
 }
 
 /// App for fixture: onResponse - Response Timing
 pub fn create_app_lifecycle_hooks_onresponse_response_timing() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .on_request(spikard::request_hook(
-                "start_timer",
-                lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0,
-            ))
-            .on_response(spikard::response_hook(
-                "response_timer",
-                lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .on_request(spikard::request_hook("start_timer", lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0))
+        .on_response(spikard::response_hook("response_timer", lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/test-timing")
-            .handler_name("lifecycle_hooks_onresponse_response_timing_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_onresponse_response_timing_handler,
-    )?;
+    app.route(get("/api/test-timing").handler_name("lifecycle_hooks_onresponse_response_timing_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_onresponse_response_timing_handler)?;
     Ok(app)
 }
 
 /// App for fixture: onResponse - Security Headers
 pub fn create_app_lifecycle_hooks_onresponse_security_headers() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .on_response(spikard::response_hook(
-                "security_headers",
-                lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .on_response(spikard::response_hook("security_headers", lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/test-security-headers")
-            .handler_name("lifecycle_hooks_onresponse_security_headers_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_onresponse_security_headers_handler,
-    )?;
+    app.route(get("/api/test-security-headers").handler_name("lifecycle_hooks_onresponse_security_headers_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_onresponse_security_headers_handler)?;
     Ok(app)
 }
 
 /// App for fixture: preHandler - Authentication Failed (Short Circuit)
 pub fn create_app_lifecycle_hooks_prehandler_authentication_failed_short_circuit() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .pre_handler(spikard::request_hook(
-                "authenticator",
-                lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .pre_handler(spikard::request_hook("authenticator", lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/protected-resource-fail")
-            .handler_name("lifecycle_hooks_prehandler_authentication_failed_short_circuit_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_prehandler_authentication_failed_short_circuit_handler,
-    )?;
+    app.route(get("/api/protected-resource-fail").handler_name("lifecycle_hooks_prehandler_authentication_failed_short_circuit_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_prehandler_authentication_failed_short_circuit_handler)?;
     Ok(app)
 }
 
 /// App for fixture: preHandler - Authentication Success
 pub fn create_app_lifecycle_hooks_prehandler_authentication_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .pre_handler(spikard::request_hook(
-                "authenticator",
-                lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .pre_handler(spikard::request_hook("authenticator", lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/protected-resource")
-            .handler_name("lifecycle_hooks_prehandler_authentication_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_prehandler_authentication_success_handler,
-    )?;
+    app.route(get("/api/protected-resource").handler_name("lifecycle_hooks_prehandler_authentication_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_prehandler_authentication_success_handler)?;
     Ok(app)
 }
 
 /// App for fixture: preHandler - Authorization Check
 pub fn create_app_lifecycle_hooks_prehandler_authorization_check() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .pre_handler(spikard::request_hook(
-                "authenticator",
-                lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0,
-            ))
-            .pre_handler(spikard::request_hook(
-                "authorizer",
-                lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .pre_handler(spikard::request_hook("authenticator", lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0))
+        .pre_handler(spikard::request_hook("authorizer", lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/admin-only")
-            .handler_name("lifecycle_hooks_prehandler_authorization_check_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_prehandler_authorization_check_handler,
-    )?;
+    app.route(get("/api/admin-only").handler_name("lifecycle_hooks_prehandler_authorization_check_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_prehandler_authorization_check_handler)?;
     Ok(app)
 }
 
 /// App for fixture: preHandler - Authorization Forbidden (Short Circuit)
 pub fn create_app_lifecycle_hooks_prehandler_authorization_forbidden_short_circuit() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .pre_handler(spikard::request_hook(
-                "authenticator",
-                lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authenticator_pre_handler_0,
-            ))
-            .pre_handler(spikard::request_hook(
-                "authorizer",
-                lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .pre_handler(spikard::request_hook("authenticator", lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authenticator_pre_handler_0))
+        .pre_handler(spikard::request_hook("authorizer", lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/admin-only-forbidden")
-            .handler_name("lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_handler,
-    )?;
+    app.route(get("/api/admin-only-forbidden").handler_name("lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_handler)?;
     Ok(app)
 }
 
 /// App for fixture: preValidation - Rate Limit Exceeded (Short Circuit)
 pub fn create_app_lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .pre_validation(spikard::request_hook(
-                "rate_limiter",
-                lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .pre_validation(spikard::request_hook("rate_limiter", lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        post("/api/test-rate-limit-exceeded")
-            .handler_name("lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"properties\":{\"data\":{\"type\":\"string\"}},\"required\":[\"data\"]}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_handler,
-    )?;
+    app.route(post("/api/test-rate-limit-exceeded").handler_name("lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"data\":{\"type\":\"string\"}},\"required\":[\"data\"]}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_handler)?;
     Ok(app)
 }
 
 /// App for fixture: preValidation - Rate Limiting
 pub fn create_app_lifecycle_hooks_prevalidation_rate_limiting() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.lifecycle_hooks = Some(Arc::new(
-        spikard::LifecycleHooks::builder()
-            .pre_validation(spikard::request_hook(
-                "rate_limiter",
-                lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0,
-            ))
-            .build(),
-    ));
+    config.lifecycle_hooks = Some(Arc::new(spikard::LifecycleHooks::builder()
+        .pre_validation(spikard::request_hook("rate_limiter", lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0)).build()));
     let mut app = App::new().config(config);
-    app.route(
-        post("/api/test-rate-limit")
-            .handler_name("lifecycle_hooks_prevalidation_rate_limiting_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"properties\":{\"data\":{\"type\":\"string\"}},\"required\":[\"data\"]}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        lifecycle_hooks_prevalidation_rate_limiting_handler,
-    )?;
+    app.route(post("/api/test-rate-limit").handler_name("lifecycle_hooks_prevalidation_rate_limiting_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"data\":{\"type\":\"string\"}},\"required\":[\"data\"]}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), lifecycle_hooks_prevalidation_rate_limiting_handler)?;
     Ok(app)
 }
 
@@ -2826,21 +2020,7 @@ pub fn create_app_lifecycle_hooks_prevalidation_rate_limiting() -> Result<App, A
 pub fn create_app_multipart_17_file_magic_number_png_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/upload")
-            .handler_name("multipart_17_file_magic_number_png_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            )
-            .file_params_json(
-                serde_json::from_str::<Value>(
-                    "{\"image\":{\"required\":true,\"content_type\":[\"image/png\"],\"validate_magic_numbers\":true}}",
-                )
-                .unwrap_or(Value::Null),
-            ),
-        multipart_17_file_magic_number_png_success_handler,
-    )?;
+    app.route(post("/upload").handler_name("multipart_17_file_magic_number_png_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)).file_params_json(serde_json::from_str::<Value>("{\"image\":{\"required\":true,\"content_type\":[\"image/png\"],\"validate_magic_numbers\":true}}").unwrap_or(Value::Null)), multipart_17_file_magic_number_png_success_handler)?;
     Ok(app)
 }
 
@@ -2848,21 +2028,7 @@ pub fn create_app_multipart_17_file_magic_number_png_success() -> Result<App, Ap
 pub fn create_app_multipart_18_file_magic_number_jpeg_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/upload")
-            .handler_name("multipart_18_file_magic_number_jpeg_success_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            )
-            .file_params_json(
-                serde_json::from_str::<Value>(
-                    "{\"image\":{\"required\":true,\"content_type\":[\"image/jpeg\"],\"validate_magic_numbers\":true}}",
-                )
-                .unwrap_or(Value::Null),
-            ),
-        multipart_18_file_magic_number_jpeg_success_handler,
-    )?;
+    app.route(post("/upload").handler_name("multipart_18_file_magic_number_jpeg_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)).file_params_json(serde_json::from_str::<Value>("{\"image\":{\"required\":true,\"content_type\":[\"image/jpeg\"],\"validate_magic_numbers\":true}}").unwrap_or(Value::Null)), multipart_18_file_magic_number_jpeg_success_handler)?;
     Ok(app)
 }
 
@@ -2870,21 +2036,7 @@ pub fn create_app_multipart_18_file_magic_number_jpeg_success() -> Result<App, A
 pub fn create_app_multipart_19_file_mime_spoofing_png_as_jpeg() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/upload")
-            .handler_name("multipart_19_file_mime_spoofing_png_as_jpeg_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            )
-            .file_params_json(
-                serde_json::from_str::<Value>(
-                    "{\"image\":{\"required\":true,\"content_type\":[\"image/jpeg\"],\"validate_magic_numbers\":true}}",
-                )
-                .unwrap_or(Value::Null),
-            ),
-        multipart_19_file_mime_spoofing_png_as_jpeg_handler,
-    )?;
+    app.route(post("/upload").handler_name("multipart_19_file_mime_spoofing_png_as_jpeg_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)).file_params_json(serde_json::from_str::<Value>("{\"image\":{\"required\":true,\"content_type\":[\"image/jpeg\"],\"validate_magic_numbers\":true}}").unwrap_or(Value::Null)), multipart_19_file_mime_spoofing_png_as_jpeg_handler)?;
     Ok(app)
 }
 
@@ -2892,21 +2044,7 @@ pub fn create_app_multipart_19_file_mime_spoofing_png_as_jpeg() -> Result<App, A
 pub fn create_app_multipart_20_file_mime_spoofing_jpeg_as_png() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/upload")
-            .handler_name("multipart_20_file_mime_spoofing_jpeg_as_png_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            )
-            .file_params_json(
-                serde_json::from_str::<Value>(
-                    "{\"image\":{\"required\":true,\"content_type\":[\"image/png\"],\"validate_magic_numbers\":true}}",
-                )
-                .unwrap_or(Value::Null),
-            ),
-        multipart_20_file_mime_spoofing_jpeg_as_png_handler,
-    )?;
+    app.route(post("/upload").handler_name("multipart_20_file_mime_spoofing_jpeg_as_png_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)).file_params_json(serde_json::from_str::<Value>("{\"image\":{\"required\":true,\"content_type\":[\"image/png\"],\"validate_magic_numbers\":true}}").unwrap_or(Value::Null)), multipart_20_file_mime_spoofing_jpeg_as_png_handler)?;
     Ok(app)
 }
 
@@ -2922,19 +2060,7 @@ pub fn create_app_multipart_21_file_pdf_magic_number_success() -> Result<App, Ap
 pub fn create_app_multipart_22_file_empty_buffer() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/upload")
-            .handler_name("multipart_22_file_empty_buffer_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            )
-            .file_params_json(
-                serde_json::from_str::<Value>("{\"file\":{\"required\":true,\"validate_magic_numbers\":true}}")
-                    .unwrap_or(Value::Null),
-            ),
-        multipart_22_file_empty_buffer_handler,
-    )?;
+    app.route(post("/upload").handler_name("multipart_22_file_empty_buffer_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)).file_params_json(serde_json::from_str::<Value>("{\"file\":{\"required\":true,\"validate_magic_numbers\":true}}").unwrap_or(Value::Null)), multipart_22_file_empty_buffer_handler)?;
     Ok(app)
 }
 
@@ -3030,19 +2156,7 @@ pub fn create_app_multipart_multiple_values_for_same_field_name() -> Result<App,
 pub fn create_app_multipart_optional_file_upload_missing() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/files/optional")
-            .handler_name("multipart_optional_file_upload_missing_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}")
-                    .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        multipart_optional_file_upload_missing_handler,
-    )?;
+    app.route(post("/files/optional").handler_name("multipart_optional_file_upload_missing_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), multipart_optional_file_upload_missing_handler)?;
     Ok(app)
 }
 
@@ -3247,8 +2361,7 @@ pub fn create_app_path_params_integer_path_parameter_success() -> Result<App, Ap
 }
 
 /// App for fixture: Integer path parameter with combined lt and gt constraints - success
-pub fn create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success(
-) -> Result<App, AppError> {
+pub fn create_app_path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
     app.route(get("/path/param-lt-gt/{item_id}").handler_name("path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"item_id\":{\"type\":\"integer\",\"exclusiveMinimum\":1,\"exclusiveMaximum\":3,\"source\":\"path\"}},\"required\":[\"item_id\"]}").unwrap_or(Value::Null)), path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success_handler)?;
@@ -3307,15 +2420,7 @@ pub fn create_app_path_params_multiple_path_parameters_success() -> Result<App, 
 pub fn create_app_path_params_path_parameter_type_syntax_invalid_uuid() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/type-syntax/items/{id:uuid}")
-            .handler_name("path_params_path_parameter_type_syntax_invalid_uuid_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        path_params_path_parameter_type_syntax_invalid_uuid_handler,
-    )?;
+    app.route(get("/type-syntax/items/{id:uuid}").handler_name("path_params_path_parameter_type_syntax_invalid_uuid_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), path_params_path_parameter_type_syntax_invalid_uuid_handler)?;
     Ok(app)
 }
 
@@ -3331,15 +2436,7 @@ pub fn create_app_path_params_path_parameter_type_syntax_with_override() -> Resu
 pub fn create_app_path_params_path_parameter_with_type_syntax_uuid() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/type-syntax/items/{id:uuid}")
-            .handler_name("path_params_path_parameter_with_type_syntax_uuid_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        path_params_path_parameter_with_type_syntax_uuid_handler,
-    )?;
+    app.route(get("/type-syntax/items/{id:uuid}").handler_name("path_params_path_parameter_with_type_syntax_uuid_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), path_params_path_parameter_with_type_syntax_uuid_handler)?;
     Ok(app)
 }
 
@@ -3347,15 +2444,7 @@ pub fn create_app_path_params_path_parameter_with_type_syntax_uuid() -> Result<A
 pub fn create_app_path_params_path_parameter_with_type_syntax_integer() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/type-syntax/users/{user_id:int}")
-            .handler_name("path_params_path_parameter_with_type_syntax_integer_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        path_params_path_parameter_with_type_syntax_integer_handler,
-    )?;
+    app.route(get("/type-syntax/users/{user_id:int}").handler_name("path_params_path_parameter_with_type_syntax_integer_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), path_params_path_parameter_with_type_syntax_integer_handler)?;
     Ok(app)
 }
 
@@ -3970,42 +3059,18 @@ pub fn create_app_query_params_uuid_query_parameter_success() -> Result<App, App
 /// App for fixture: Rate limit below threshold succeeds
 pub fn create_app_rate_limit_rate_limit_below_threshold_succeeds() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.rate_limit = Some(RateLimitConfig {
-        per_second: 5,
-        burst: 5,
-        ip_based: false,
-    });
+    config.rate_limit = Some(RateLimitConfig { per_second: 5, burst: 5, ip_based: false });
     let mut app = App::new().config(config);
-    app.route(
-        get("/rate-limit/basic")
-            .handler_name("rate_limit_rate_limit_below_threshold_succeeds_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        rate_limit_rate_limit_below_threshold_succeeds_handler,
-    )?;
+    app.route(get("/rate-limit/basic").handler_name("rate_limit_rate_limit_below_threshold_succeeds_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), rate_limit_rate_limit_below_threshold_succeeds_handler)?;
     Ok(app)
 }
 
 /// App for fixture: Rate limit exceeded returns 429
 pub fn create_app_rate_limit_rate_limit_exceeded_returns_429() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.rate_limit = Some(RateLimitConfig {
-        per_second: 1,
-        burst: 1,
-        ip_based: false,
-    });
+    config.rate_limit = Some(RateLimitConfig { per_second: 1, burst: 1, ip_based: false });
     let mut app = App::new().config(config);
-    app.route(
-        get("/rate-limit/exceeded")
-            .handler_name("rate_limit_rate_limit_exceeded_returns_429_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        rate_limit_rate_limit_exceeded_returns_429_handler,
-    )?;
+    app.route(get("/rate-limit/exceeded").handler_name("rate_limit_rate_limit_exceeded_returns_429_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), rate_limit_rate_limit_exceeded_returns_429_handler)?;
     Ok(app)
 }
 
@@ -4013,15 +3078,7 @@ pub fn create_app_rate_limit_rate_limit_exceeded_returns_429() -> Result<App, Ap
 pub fn create_app_request_id_request_id_header_is_preserved() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/request-id/preserved")
-            .handler_name("request_id_request_id_header_is_preserved_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        request_id_request_id_header_is_preserved_handler,
-    )?;
+    app.route(get("/request-id/preserved").handler_name("request_id_request_id_header_is_preserved_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), request_id_request_id_header_is_preserved_handler)?;
     Ok(app)
 }
 
@@ -4030,15 +3087,7 @@ pub fn create_app_request_id_request_id_is_generated_when_not_provided() -> Resu
     let mut config = ServerConfig::default();
     config.enable_request_id = true;
     let mut app = App::new().config(config);
-    app.route(
-        get("/request-id/generated")
-            .handler_name("request_id_request_id_is_generated_when_not_provided_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        request_id_request_id_is_generated_when_not_provided_handler,
-    )?;
+    app.route(get("/request-id/generated").handler_name("request_id_request_id_is_generated_when_not_provided_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), request_id_request_id_is_generated_when_not_provided_handler)?;
     Ok(app)
 }
 
@@ -4047,15 +3096,7 @@ pub fn create_app_request_id_request_id_middleware_can_be_disabled() -> Result<A
     let mut config = ServerConfig::default();
     config.enable_request_id = false;
     let mut app = App::new().config(config);
-    app.route(
-        get("/request-id/disabled")
-            .handler_name("request_id_request_id_middleware_can_be_disabled_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        request_id_request_id_middleware_can_be_disabled_handler,
-    )?;
+    app.route(get("/request-id/disabled").handler_name("request_id_request_id_middleware_can_be_disabled_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), request_id_request_id_middleware_can_be_disabled_handler)?;
     Ok(app)
 }
 
@@ -4064,15 +3105,7 @@ pub fn create_app_request_timeout_request_completes_before_timeout() -> Result<A
     let mut config = ServerConfig::default();
     config.request_timeout = Some(2);
     let mut app = App::new().config(config);
-    app.route(
-        get("/timeouts/fast")
-            .handler_name("request_timeout_request_completes_before_timeout_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        request_timeout_request_completes_before_timeout_handler,
-    )?;
+    app.route(get("/timeouts/fast").handler_name("request_timeout_request_completes_before_timeout_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), request_timeout_request_completes_before_timeout_handler)?;
     Ok(app)
 }
 
@@ -4081,49 +3114,23 @@ pub fn create_app_request_timeout_request_exceeds_timeout() -> Result<App, AppEr
     let mut config = ServerConfig::default();
     config.request_timeout = Some(1);
     let mut app = App::new().config(config);
-    app.route(
-        get("/timeouts/slow")
-            .handler_name("request_timeout_request_exceeds_timeout_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        request_timeout_request_exceeds_timeout_handler,
-    )?;
+    app.route(get("/timeouts/slow").handler_name("request_timeout_request_exceeds_timeout_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), request_timeout_request_exceeds_timeout_handler)?;
     Ok(app)
 }
 
 /// App for fixture: Static file server returns text file
 pub fn create_app_static_files_static_file_server_returns_text_file() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.static_files.push(StaticFilesConfig {
-        directory: "static_assets/static_files_static_file_server_returns_text_file/public_0".to_string(),
-        route_prefix: "/public".to_string(),
-        index_file: true,
-        cache_control: Some("public, max-age=60".to_string()),
-    });
+    config.static_files.push(StaticFilesConfig { directory: "static_assets/static_files_static_file_server_returns_text_file/public_0".to_string(), route_prefix: "/public".to_string(), index_file: true, cache_control: Some("public, max-age=60".to_string()) });
     let mut app = App::new().config(config);
-    app.route(
-        get("/public/hello.txt")
-            .handler_name("static_files_static_file_server_returns_text_file_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        static_files_static_file_server_returns_text_file_handler,
-    )?;
+    app.route(get("/public/hello.txt").handler_name("static_files_static_file_server_returns_text_file_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), static_files_static_file_server_returns_text_file_handler)?;
     Ok(app)
 }
 
 /// App for fixture: Static server returns index.html for directory
 pub fn create_app_static_files_static_server_returns_index_html_for_directory() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
-    config.static_files.push(StaticFilesConfig {
-        directory: "static_assets/static_files_static_server_returns_index_html_for_directory/app_0".to_string(),
-        route_prefix: "/app".to_string(),
-        index_file: true,
-        cache_control: None,
-    });
+    config.static_files.push(StaticFilesConfig { directory: "static_assets/static_files_static_server_returns_index_html_for_directory/app_0".to_string(), route_prefix: "/app".to_string(), index_file: true, cache_control: None });
     let mut app = App::new().config(config);
     Ok(app)
 }
@@ -4132,19 +3139,7 @@ pub fn create_app_static_files_static_server_returns_index_html_for_directory() 
 pub fn create_app_status_codes_19_413_payload_too_large() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/upload")
-            .handler_name("status_codes_19_413_payload_too_large_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"data\":{\"type\":\"string\"}}}")
-                    .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_19_413_payload_too_large_handler,
-    )?;
+    app.route(post("/upload").handler_name("status_codes_19_413_payload_too_large_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{\"data\":{\"type\":\"string\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_19_413_payload_too_large_handler)?;
     Ok(app)
 }
 
@@ -4184,15 +3179,7 @@ pub fn create_app_status_codes_204_no_content_success_with_no_body() -> Result<A
 pub fn create_app_status_codes_206_partial_content() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/files/document.pdf")
-            .handler_name("status_codes_206_partial_content_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_206_partial_content_handler,
-    )?;
+    app.route(get("/files/document.pdf").handler_name("status_codes_206_partial_content_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_206_partial_content_handler)?;
     Ok(app)
 }
 
@@ -4200,15 +3187,7 @@ pub fn create_app_status_codes_206_partial_content() -> Result<App, AppError> {
 pub fn create_app_status_codes_20_414_uri_too_long() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/data")
-            .handler_name("status_codes_20_414_uri_too_long_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_20_414_uri_too_long_handler,
-    )?;
+    app.route(get("/data").handler_name("status_codes_20_414_uri_too_long_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_20_414_uri_too_long_handler)?;
     Ok(app)
 }
 
@@ -4224,15 +3203,7 @@ pub fn create_app_status_codes_21_431_request_header_fields_too_large() -> Resul
 pub fn create_app_status_codes_22_501_not_implemented() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        RouteBuilder::new(Method::from_str("TRACE").expect("invalid method"), "/data")
-            .handler_name("status_codes_22_501_not_implemented_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_22_501_not_implemented_handler,
-    )?;
+    app.route(RouteBuilder::new(Method::from_str("TRACE").expect("invalid method"), "/data").handler_name("status_codes_22_501_not_implemented_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_22_501_not_implemented_handler)?;
     Ok(app)
 }
 
@@ -4240,15 +3211,7 @@ pub fn create_app_status_codes_22_501_not_implemented() -> Result<App, AppError>
 pub fn create_app_status_codes_23_503_service_unavailable() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/data")
-            .handler_name("status_codes_23_503_service_unavailable_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_23_503_service_unavailable_handler,
-    )?;
+    app.route(get("/data").handler_name("status_codes_23_503_service_unavailable_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_23_503_service_unavailable_handler)?;
     Ok(app)
 }
 
@@ -4256,15 +3219,7 @@ pub fn create_app_status_codes_23_503_service_unavailable() -> Result<App, AppEr
 pub fn create_app_status_codes_301_moved_permanently_permanent_redirect() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/old-path")
-            .handler_name("status_codes_301_moved_permanently_permanent_redirect_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_301_moved_permanently_permanent_redirect_handler,
-    )?;
+    app.route(get("/old-path").handler_name("status_codes_301_moved_permanently_permanent_redirect_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_301_moved_permanently_permanent_redirect_handler)?;
     Ok(app)
 }
 
@@ -4272,15 +3227,7 @@ pub fn create_app_status_codes_301_moved_permanently_permanent_redirect() -> Res
 pub fn create_app_status_codes_302_found_temporary_redirect() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/temp-redirect")
-            .handler_name("status_codes_302_found_temporary_redirect_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_302_found_temporary_redirect_handler,
-    )?;
+    app.route(get("/temp-redirect").handler_name("status_codes_302_found_temporary_redirect_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_302_found_temporary_redirect_handler)?;
     Ok(app)
 }
 
@@ -4296,19 +3243,7 @@ pub fn create_app_status_codes_304_not_modified_cached_content_valid() -> Result
 pub fn create_app_status_codes_307_temporary_redirect_method_preserved() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/redirect-post")
-            .handler_name("status_codes_307_temporary_redirect_method_preserved_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}")
-                    .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_307_temporary_redirect_method_preserved_handler,
-    )?;
+    app.route(post("/redirect-post").handler_name("status_codes_307_temporary_redirect_method_preserved_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_307_temporary_redirect_method_preserved_handler)?;
     Ok(app)
 }
 
@@ -4316,16 +3251,7 @@ pub fn create_app_status_codes_307_temporary_redirect_method_preserved() -> Resu
 pub fn create_app_status_codes_400_bad_request_invalid_request() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/items/")
-            .handler_name("status_codes_400_bad_request_invalid_request_handler")
-            .request_schema_json(serde_json::from_str::<Value>("{\"type\":\"string\"}").unwrap_or(Value::Null))
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_400_bad_request_invalid_request_handler,
-    )?;
+    app.route(post("/items/").handler_name("status_codes_400_bad_request_invalid_request_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"string\"}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_400_bad_request_invalid_request_handler)?;
     Ok(app)
 }
 
@@ -4333,15 +3259,7 @@ pub fn create_app_status_codes_400_bad_request_invalid_request() -> Result<App, 
 pub fn create_app_status_codes_401_unauthorized_missing_authentication() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/users/me")
-            .handler_name("status_codes_401_unauthorized_missing_authentication_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_401_unauthorized_missing_authentication_handler,
-    )?;
+    app.route(get("/users/me").handler_name("status_codes_401_unauthorized_missing_authentication_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_401_unauthorized_missing_authentication_handler)?;
     Ok(app)
 }
 
@@ -4349,15 +3267,7 @@ pub fn create_app_status_codes_401_unauthorized_missing_authentication() -> Resu
 pub fn create_app_status_codes_403_forbidden_insufficient_permissions() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/admin/users")
-            .handler_name("status_codes_403_forbidden_insufficient_permissions_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_403_forbidden_insufficient_permissions_handler,
-    )?;
+    app.route(get("/admin/users").handler_name("status_codes_403_forbidden_insufficient_permissions_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_403_forbidden_insufficient_permissions_handler)?;
     Ok(app)
 }
 
@@ -4389,15 +3299,7 @@ pub fn create_app_status_codes_422_unprocessable_entity_validation_error() -> Re
 pub fn create_app_status_codes_429_too_many_requests() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/api/resource")
-            .handler_name("status_codes_429_too_many_requests_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_429_too_many_requests_handler,
-    )?;
+    app.route(get("/api/resource").handler_name("status_codes_429_too_many_requests_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_429_too_many_requests_handler)?;
     Ok(app)
 }
 
@@ -4405,15 +3307,7 @@ pub fn create_app_status_codes_429_too_many_requests() -> Result<App, AppError> 
 pub fn create_app_status_codes_500_internal_server_error_server_error() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/error")
-            .handler_name("status_codes_500_internal_server_error_server_error_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_500_internal_server_error_server_error_handler,
-    )?;
+    app.route(get("/error").handler_name("status_codes_500_internal_server_error_server_error_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_500_internal_server_error_server_error_handler)?;
     Ok(app)
 }
 
@@ -4421,15 +3315,7 @@ pub fn create_app_status_codes_500_internal_server_error_server_error() -> Resul
 pub fn create_app_status_codes_503_service_unavailable_server_overload() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/health")
-            .handler_name("status_codes_503_service_unavailable_server_overload_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        status_codes_503_service_unavailable_server_overload_handler,
-    )?;
+    app.route(get("/health").handler_name("status_codes_503_service_unavailable_server_overload_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), status_codes_503_service_unavailable_server_overload_handler)?;
     Ok(app)
 }
 
@@ -4437,15 +3323,7 @@ pub fn create_app_status_codes_503_service_unavailable_server_overload() -> Resu
 pub fn create_app_streaming_binary_log_download() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/stream/logfile")
-            .handler_name("streaming_binary_log_download_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        streaming_binary_log_download_handler,
-    )?;
+    app.route(get("/stream/logfile").handler_name("streaming_binary_log_download_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), streaming_binary_log_download_handler)?;
     Ok(app)
 }
 
@@ -4453,15 +3331,7 @@ pub fn create_app_streaming_binary_log_download() -> Result<App, AppError> {
 pub fn create_app_streaming_chunked_csv_export() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/stream/csv-report")
-            .handler_name("streaming_chunked_csv_export_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        streaming_chunked_csv_export_handler,
-    )?;
+    app.route(get("/stream/csv-report").handler_name("streaming_chunked_csv_export_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), streaming_chunked_csv_export_handler)?;
     Ok(app)
 }
 
@@ -4469,15 +3339,7 @@ pub fn create_app_streaming_chunked_csv_export() -> Result<App, AppError> {
 pub fn create_app_streaming_stream_json_lines() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        get("/stream/json-lines")
-            .handler_name("streaming_stream_json_lines_handler")
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        streaming_stream_json_lines_handler,
-    )?;
+    app.route(get("/stream/json-lines").handler_name("streaming_stream_json_lines_handler").params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), streaming_stream_json_lines_handler)?;
     Ok(app)
 }
 
@@ -4549,21 +3411,7 @@ pub fn create_app_url_encoded_20_format_email_validation_failure() -> Result<App
 pub fn create_app_url_encoded_21_integer_type_coercion_failure() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/products")
-            .handler_name("url_encoded_21_integer_type_coercion_failure_handler")
-            .request_schema_json(
-                serde_json::from_str::<Value>(
-                    "{\"type\":\"object\",\"required\":[\"price\"],\"properties\":{\"price\":{\"type\":\"integer\"}}}",
-                )
-                .unwrap_or(Value::Null),
-            )
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        url_encoded_21_integer_type_coercion_failure_handler,
-    )?;
+    app.route(post("/products").handler_name("url_encoded_21_integer_type_coercion_failure_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"required\":[\"price\"],\"properties\":{\"price\":{\"type\":\"integer\"}}}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), url_encoded_21_integer_type_coercion_failure_handler)?;
     Ok(app)
 }
 
@@ -4763,16 +3611,7 @@ pub fn create_app_validation_errors_invalid_enum_value() -> Result<App, AppError
 pub fn create_app_validation_errors_malformed_json_body() -> Result<App, AppError> {
     let mut config = ServerConfig::default();
     let mut app = App::new().config(config);
-    app.route(
-        post("/items/")
-            .handler_name("validation_errors_malformed_json_body_handler")
-            .request_schema_json(serde_json::from_str::<Value>("{\"type\":\"string\"}").unwrap_or(Value::Null))
-            .params_schema_json(
-                serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}")
-                    .unwrap_or(Value::Null),
-            ),
-        validation_errors_malformed_json_body_handler,
-    )?;
+    app.route(post("/items/").handler_name("validation_errors_malformed_json_body_handler").request_schema_json(serde_json::from_str::<Value>("{\"type\":\"string\"}").unwrap_or(Value::Null)).params_schema_json(serde_json::from_str::<Value>("{\"type\":\"object\",\"properties\":{},\"required\":[]}").unwrap_or(Value::Null)), validation_errors_malformed_json_body_handler)?;
     Ok(app)
 }
 
@@ -4859,10 +3698,7 @@ pub fn create_app_validation_errors_string_regex_pattern_mismatch() -> Result<Ap
 /// App for SSE channel: /notifications
 pub fn create_app_sse_notifications() -> Result<App, AppError> {
     let mut app = App::new();
-    app.route(
-        get("/notifications").handler_name("sse_notifications_handler"),
-        sse_notifications_handler,
-    )?;
+    app.route(get("/notifications").handler_name("sse_notifications_handler"), sse_notifications_handler)?;
     Ok(app)
 }
 
@@ -4880,12 +3716,7 @@ async fn auth_api_key_authentication_invalid_key_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -4895,77 +3726,48 @@ async fn auth_api_key_authentication_missing_header_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn auth_api_key_authentication_valid_key_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"data\":\"sensitive information\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"data\":\"sensitive information\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn auth_api_key_in_query_parameter_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"data\":\"sensitive information\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"data\":\"sensitive information\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn auth_api_key_rotation_old_key_still_valid_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"data\":\"sensitive information\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"data\":\"sensitive information\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("x-api-key-deprecated", "true")]);
     Ok(response)
 }
 
 async fn auth_api_key_with_custom_header_name_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"data\":\"sensitive information\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"data\":\"sensitive information\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -4975,12 +3777,7 @@ async fn auth_bearer_token_without_prefix_handler(_ctx: RequestContext) -> Handl
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -4990,12 +3787,7 @@ async fn auth_jwt_authentication_expired_token_handler(_ctx: RequestContext) -> 
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5005,12 +3797,7 @@ async fn auth_jwt_authentication_invalid_audience_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5020,12 +3807,7 @@ async fn auth_jwt_authentication_invalid_signature_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5035,28 +3817,17 @@ async fn auth_jwt_authentication_missing_authorization_header_handler(_ctx: Requ
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn auth_jwt_authentication_valid_token_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"user_id\":\"user123\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"user_id\":\"user123\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5066,12 +3837,7 @@ async fn auth_jwt_invalid_issuer_handler(_ctx: RequestContext) -> HandlerResult 
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5081,12 +3847,7 @@ async fn auth_jwt_malformed_token_format_handler(_ctx: RequestContext) -> Handle
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5096,12 +3857,7 @@ async fn auth_jwt_missing_required_custom_claims_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(403).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5111,52 +3867,31 @@ async fn auth_jwt_not_before_claim_in_future_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn auth_jwt_with_multiple_audiences_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"user_id\":\"user123\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"user_id\":\"user123\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn auth_multiple_authentication_schemes_jwt_precedence_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Access granted\",\"user_id\":\"user123\",\"auth_method\":\"jwt\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"user_id\":\"user123\",\"auth_method\":\"jwt\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn background_background_event_logging_handler(
-    ctx: RequestContext,
-    state: Arc<Mutex<Vec<Value>>>,
-) -> HandlerResult {
+async fn background_background_event_logging_handler(ctx: RequestContext, state: Arc<Mutex<Vec<Value>>>) -> HandlerResult {
     let body = ctx.body_value();
     let value = body.get("event").cloned();
     let value = match value {
@@ -5166,13 +3901,8 @@ async fn background_background_event_logging_handler(
                 .status(StatusCode::BAD_REQUEST)
                 .header("content-type", "application/json")
                 .body(Body::from(json!({"error": "missing background value"}).to_string()))
-                .unwrap_or_else(|_| {
-                    Response::builder()
-                        .status(StatusCode::INTERNAL_SERVER_ERROR)
-                        .body(Body::empty())
-                        .unwrap()
-                });
-            let response = apply_expected_headers(response, &[("content-type", "application/json")]);
+                .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("content-type", "application/json")]);
 
             return Ok(response);
         }
@@ -5186,21 +3916,13 @@ async fn background_background_event_logging_handler(
     let response = Response::builder()
         .status(StatusCode::from_u16(202).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "application/json")]);
 
     Ok(response)
 }
 
-async fn background_background_event_logging_handler_background_state(
-    _ctx: RequestContext,
-    state: Arc<Mutex<Vec<Value>>>,
-) -> HandlerResult {
+async fn background_background_event_logging_handler_background_state(_ctx: RequestContext, state: Arc<Mutex<Vec<Value>>>) -> HandlerResult {
     let values = {
         let guard = state.lock().await;
         guard.clone()
@@ -5209,19 +3931,11 @@ async fn background_background_event_logging_handler_background_state(
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json!({ "events": values }).to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn background_background_event_logging_second_payload_handler(
-    ctx: RequestContext,
-    state: Arc<Mutex<Vec<Value>>>,
-) -> HandlerResult {
+async fn background_background_event_logging_second_payload_handler(ctx: RequestContext, state: Arc<Mutex<Vec<Value>>>) -> HandlerResult {
     let body = ctx.body_value();
     let value = body.get("event").cloned();
     let value = match value {
@@ -5231,13 +3945,8 @@ async fn background_background_event_logging_second_payload_handler(
                 .status(StatusCode::BAD_REQUEST)
                 .header("content-type", "application/json")
                 .body(Body::from(json!({"error": "missing background value"}).to_string()))
-                .unwrap_or_else(|_| {
-                    Response::builder()
-                        .status(StatusCode::INTERNAL_SERVER_ERROR)
-                        .body(Body::empty())
-                        .unwrap()
-                });
-            let response = apply_expected_headers(response, &[("content-type", "application/json")]);
+                .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("content-type", "application/json")]);
 
             return Ok(response);
         }
@@ -5251,21 +3960,13 @@ async fn background_background_event_logging_second_payload_handler(
     let response = Response::builder()
         .status(StatusCode::from_u16(202).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "application/json")]);
 
     Ok(response)
 }
 
-async fn background_background_event_logging_second_payload_handler_background_state(
-    _ctx: RequestContext,
-    state: Arc<Mutex<Vec<Value>>>,
-) -> HandlerResult {
+async fn background_background_event_logging_second_payload_handler_background_state(_ctx: RequestContext, state: Arc<Mutex<Vec<Value>>>) -> HandlerResult {
     let values = {
         let guard = state.lock().await;
         guard.clone()
@@ -5274,12 +3975,7 @@ async fn background_background_event_logging_second_payload_handler_background_s
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json!({ "events": values }).to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5287,28 +3983,17 @@ async fn body_limits_body_over_limit_returns_413_handler(_ctx: RequestContext) -
     let response = Response::builder()
         .status(StatusCode::from_u16(413).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn body_limits_body_under_limit_succeeds_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"accepted\":true,\"note\":\"small\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"accepted\":true,\"note\":\"small\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5318,31 +4003,18 @@ async fn compression_compression_gzip_applied_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("vary", "Accept-Encoding")]);
     Ok(response)
 }
 
-async fn compression_compression_payload_below_min_size_is_not_compressed_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Small payload\",\"payload\":\"tiny\"}").unwrap_or_else(|_| Value::Null);
+async fn compression_compression_payload_below_min_size_is_not_compressed_handler(_ctx: RequestContext) -> HandlerResult {
+    let body_value: Value = serde_json::from_str("{\"message\":\"Small payload\",\"payload\":\"tiny\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5352,12 +4024,7 @@ async fn content_types_13_json_with_charset_utf16_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(415).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5367,28 +4034,17 @@ async fn content_types_14_content_type_case_insensitive_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn content_types_15_multipart_boundary_required_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"error\":\"multipart/form-data requires 'boundary' parameter\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"error\":\"multipart/form-data requires 'boundary' parameter\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(400).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5398,12 +4054,7 @@ async fn content_types_16_text_plain_not_accepted_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(415).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5413,12 +4064,7 @@ async fn content_types_17_vendor_json_accepted_handler(_ctx: RequestContext) -> 
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5428,12 +4074,7 @@ async fn content_types_18_content_type_with_multiple_params_handler(_ctx: Reques
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5443,12 +4084,7 @@ async fn content_types_19_missing_content_type_default_json_handler(_ctx: Reques
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5458,12 +4094,7 @@ async fn content_types_20_content_length_mismatch_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(400).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5473,12 +4104,7 @@ async fn content_types_415_unsupported_media_type_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(415).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5488,42 +4114,19 @@ async fn content_types_binary_response_application_octet_stream_handler(_ctx: Re
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("content-type", "application/octet-stream"),
-            ("content-disposition", "attachment; filename=file.bin"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("content-disposition", "attachment; filename=file.bin"), ("content-type", "application/octet-stream")]);
     Ok(response)
 }
 
 async fn content_types_csv_response_text_csv_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("\"id,name,price\\n1,Item A,10.0\\n2,Item B,20.0\"").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("\"id,name,price\\n1,Item A,10.0\\n2,Item B,20.0\"").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("content-type", "text/csv; charset=utf-8"),
-            ("content-disposition", "attachment; filename=data.csv"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("content-disposition", "attachment; filename=data.csv"), ("content-type", "text/csv; charset=utf-8")]);
     Ok(response)
 }
 
@@ -5533,29 +4136,18 @@ async fn content_types_content_negotiation_accept_header_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "application/json")]);
     Ok(response)
 }
 
 async fn content_types_html_response_text_html_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("\"<html><body><h1>Hello</h1></body></html>\"").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("\"<html><body><h1>Hello</h1></body></html>\"").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "text/html; charset=utf-8")]);
     Ok(response)
 }
@@ -5566,12 +4158,7 @@ async fn content_types_jpeg_image_response_image_jpeg_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "image/jpeg")]);
     Ok(response)
 }
@@ -5582,29 +4169,18 @@ async fn content_types_json_response_application_json_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "application/json")]);
     Ok(response)
 }
 
 async fn content_types_json_with_utf_8_charset_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Café\",\"emoji\":\"☕\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Café\",\"emoji\":\"☕\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "application/json; charset=utf-8")]);
     Ok(response)
 }
@@ -5615,19 +4191,8 @@ async fn content_types_pdf_response_application_pdf_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("content-disposition", "attachment; filename=document.pdf"),
-            ("content-type", "application/pdf"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("content-disposition", "attachment; filename=document.pdf"), ("content-type", "application/pdf")]);
     Ok(response)
 }
 
@@ -5637,12 +4202,7 @@ async fn content_types_png_image_response_image_png_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "image/png")]);
     Ok(response)
 }
@@ -5653,30 +4213,18 @@ async fn content_types_plain_text_response_text_plain_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "text/plain; charset=utf-8")]);
     Ok(response)
 }
 
 async fn content_types_xml_response_application_xml_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("\"<?xml version=\\\"1.0\\\"?><item><name>Item</name><price>42.0</price></item>\"")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("\"<?xml version=\\\"1.0\\\"?><item><name>Item</name><price>42.0</price></item>\"").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "application/xml")]);
     Ok(response)
 }
@@ -5685,12 +4233,7 @@ async fn cookies_24_cookie_samesite_strict_handler(_ctx: RequestContext) -> Hand
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5698,12 +4241,7 @@ async fn cookies_25_cookie_samesite_lax_handler(_ctx: RequestContext) -> Handler
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5711,12 +4249,7 @@ async fn cookies_26_cookie_secure_flag_handler(_ctx: RequestContext) -> HandlerR
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5724,12 +4257,7 @@ async fn cookies_27_cookie_httponly_flag_handler(_ctx: RequestContext) -> Handle
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5739,12 +4267,7 @@ async fn cookies_apikey_cookie_authentication_missing_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5754,12 +4277,7 @@ async fn cookies_apikey_cookie_authentication_success_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5769,12 +4287,7 @@ async fn cookies_cookie_regex_pattern_validation_fail_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5784,12 +4297,7 @@ async fn cookies_cookie_regex_pattern_validation_success_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5799,12 +4307,7 @@ async fn cookies_cookie_validation_max_length_constraint_fail_handler(_ctx: Requ
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5814,12 +4317,7 @@ async fn cookies_cookie_validation_min_length_constraint_success_handler(_ctx: R
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5829,46 +4327,27 @@ async fn cookies_cookie_validation_min_length_failure_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_multiple_cookies_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"session_id\":\"session123\",\"fatebook_tracker\":\"tracker456\",\"googall_tracker\":\"ga789\"}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"session_id\":\"session123\",\"fatebook_tracker\":\"tracker456\",\"googall_tracker\":\"ga789\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_optional_apikey_cookie_missing_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"msg\":\"Create an account first\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"msg\":\"Create an account first\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5878,12 +4357,7 @@ async fn cookies_optional_cookie_parameter_missing_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5893,12 +4367,7 @@ async fn cookies_optional_cookie_parameter_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5908,12 +4377,7 @@ async fn cookies_required_cookie_missing_handler(_ctx: RequestContext) -> Handle
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -5923,92 +4387,57 @@ async fn cookies_response_delete_cookie_handler(_ctx: RequestContext) -> Handler
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_response_multiple_cookies_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Multiple cookies set\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Multiple cookies set\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_response_session_cookie_no_max_age_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Session cookie set\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Session cookie set\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_response_cookie_with_samesite_lax_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Cookie set with SameSite=Lax\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Cookie set with SameSite=Lax\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_response_cookie_with_samesite_none_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Cookie set with SameSite=None\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Cookie set with SameSite=None\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_response_cookie_with_samesite_strict_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Cookie set with SameSite=Strict\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Cookie set with SameSite=Strict\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6018,60 +4447,37 @@ async fn cookies_response_cookie_with_attributes_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_response_cookie_with_domain_attribute_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Cookie set with domain\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Cookie set with domain\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_response_cookie_with_path_attribute_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Cookie set with path\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Cookie set with path\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn cookies_response_set_cookie_basic_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"message\":\"Come to the dark side, we have cookies\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Come to the dark side, we have cookies\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6079,12 +4485,7 @@ async fn cors_06_cors_preflight_method_not_allowed_handler(_ctx: RequestContext)
     let response = Response::builder()
         .status(StatusCode::from_u16(403).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6092,12 +4493,7 @@ async fn cors_07_cors_preflight_header_not_allowed_handler(_ctx: RequestContext)
     let response = Response::builder()
         .status(StatusCode::from_u16(403).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6105,21 +4501,8 @@ async fn cors_08_cors_max_age_handler(_ctx: RequestContext) -> HandlerResult {
     let response = Response::builder()
         .status(StatusCode::from_u16(204).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-origin", "https://example.com"),
-            ("access-control-allow-headers", "Content-Type"),
-            ("access-control-allow-methods", "POST"),
-            ("access-control-max-age", "3600"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-headers", "Content-Type"), ("access-control-allow-methods", "POST"), ("access-control-allow-origin", "https://example.com"), ("access-control-max-age", "3600")]);
     Ok(response)
 }
 
@@ -6127,37 +4510,18 @@ async fn cors_09_cors_expose_headers_handler(_ctx: RequestContext) -> HandlerRes
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-expose-headers", "X-Total-Count, X-Request-Id"),
-            ("access-control-allow-origin", "https://example.com"),
-            ("x-total-count", "42"),
-            ("x-request-id", "abc123"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-origin", "https://example.com"), ("x-total-count", "42"), ("access-control-expose-headers", "X-Total-Count, X-Request-Id"), ("x-request-id", "abc123")]);
     Ok(response)
 }
 
 async fn cors_10_cors_origin_null_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"error\":\"Origin 'null' is not allowed\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"error\":\"Origin 'null' is not allowed\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(403).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6165,21 +4529,8 @@ async fn cors_cors_private_network_access_handler(_ctx: RequestContext) -> Handl
     let response = Response::builder()
         .status(StatusCode::from_u16(204).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-methods", "GET, POST"),
-            ("vary", "Origin"),
-            ("access-control-allow-origin", "https://public.example.com"),
-            ("access-control-allow-private-network", "true"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-origin", "https://public.example.com"), ("access-control-allow-methods", "GET, POST"), ("vary", "Origin"), ("access-control-allow-private-network", "true")]);
     Ok(response)
 }
 
@@ -6189,20 +4540,8 @@ async fn cors_cors_vary_header_for_proper_caching_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("vary", "Origin"),
-            ("access-control-allow-origin", "https://app.example.com"),
-            ("cache-control", "public, max-age=3600"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-origin", "https://app.example.com"), ("cache-control", "public, max-age=3600"), ("vary", "Origin")]);
     Ok(response)
 }
 
@@ -6212,19 +4551,8 @@ async fn cors_cors_multiple_allowed_origins_handler(_ctx: RequestContext) -> Han
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("vary", "Origin"),
-            ("access-control-allow-origin", "https://admin.example.com"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-origin", "https://admin.example.com"), ("vary", "Origin")]);
     Ok(response)
 }
 
@@ -6232,12 +4560,7 @@ async fn cors_cors_origin_case_sensitivity_handler(_ctx: RequestContext) -> Hand
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("vary", "Origin")]);
     Ok(response)
 }
@@ -6246,21 +4569,8 @@ async fn cors_cors_preflight_for_delete_method_handler(_ctx: RequestContext) -> 
     let response = Response::builder()
         .status(StatusCode::from_u16(204).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-max-age", "3600"),
-            ("access-control-allow-origin", "https://app.example.com"),
-            ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"),
-            ("vary", "Origin"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("vary", "Origin"), ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"), ("access-control-allow-origin", "https://app.example.com"), ("access-control-max-age", "3600")]);
     Ok(response)
 }
 
@@ -6268,22 +4578,8 @@ async fn cors_cors_preflight_for_put_method_handler(_ctx: RequestContext) -> Han
     let response = Response::builder()
         .status(StatusCode::from_u16(204).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"),
-            ("access-control-max-age", "3600"),
-            ("vary", "Origin"),
-            ("access-control-allow-origin", "https://app.example.com"),
-            ("access-control-allow-headers", "Content-Type, X-Custom-Header"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-max-age", "3600"), ("access-control-allow-origin", "https://app.example.com"), ("vary", "Origin"), ("access-control-allow-methods", "GET, POST, PUT, PATCH, DELETE"), ("access-control-allow-headers", "Content-Type, X-Custom-Header")]);
     Ok(response)
 }
 
@@ -6291,21 +4587,8 @@ async fn cors_cors_preflight_request_handler(_ctx: RequestContext) -> HandlerRes
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-origin", "https://example.com"),
-            ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS"),
-            ("access-control-allow-headers", "Content-Type, X-Custom-Header"),
-            ("access-control-max-age", "600"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-headers", "Content-Type, X-Custom-Header"), ("access-control-max-age", "600"), ("access-control-allow-origin", "https://example.com"), ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS")]);
     Ok(response)
 }
 
@@ -6315,36 +4598,18 @@ async fn cors_cors_regex_pattern_matching_for_origins_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-origin", "https://subdomain.example.com"),
-            ("vary", "Origin"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-origin", "https://subdomain.example.com"), ("vary", "Origin")]);
     Ok(response)
 }
 
 async fn cors_cors_request_blocked_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"detail\":\"CORS request from origin 'https://malicious-site.com' not allowed\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"detail\":\"CORS request from origin 'https://malicious-site.com' not allowed\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(403).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6354,19 +4619,8 @@ async fn cors_cors_safelisted_headers_without_preflight_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-origin", "https://app.example.com"),
-            ("vary", "Origin"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-origin", "https://app.example.com"), ("vary", "Origin")]);
     Ok(response)
 }
 
@@ -6376,12 +4630,7 @@ async fn cors_cors_wildcard_origin_handler(_ctx: RequestContext) -> HandlerResul
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("access-control-allow-origin", "*")]);
     Ok(response)
 }
@@ -6392,20 +4641,8 @@ async fn cors_cors_with_credentials_handler(_ctx: RequestContext) -> HandlerResu
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-credentials", "true"),
-            ("vary", "Origin"),
-            ("access-control-allow-origin", "https://app.example.com"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-credentials", "true"), ("access-control-allow-origin", "https://app.example.com"), ("vary", "Origin")]);
     Ok(response)
 }
 
@@ -6415,35 +4652,18 @@ async fn cors_simple_cors_request_handler(_ctx: RequestContext) -> HandlerResult
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-origin", "https://example.com"),
-            ("vary", "Origin"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-allow-origin", "https://example.com"), ("vary", "Origin")]);
     Ok(response)
 }
 
 async fn di_async_factory_dependency_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"pool_status\":\"connected\",\"max_size\":10}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"pool_status\":\"connected\",\"max_size\":10}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6453,45 +4673,30 @@ async fn di_circular_dependency_detection_error_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(500).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn di_dependency_injection_in_lifecycle_hooks_success_log_request_on_request_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn di_dependency_injection_in_lifecycle_hooks_success_log_request_on_request_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: log_request
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn di_dependency_injection_in_lifecycle_hooks_success_auth_check_pre_handler_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn di_dependency_injection_in_lifecycle_hooks_success_auth_check_pre_handler_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock preHandler hook: auth_check
     Ok(spikard::HookResult::Continue(req))
 }
 
+
+
 async fn di_dependency_injection_in_lifecycle_hooks_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"authenticated\":true,\"logged\":true}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"authenticated\":true,\"logged\":true}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(response, &[("x-log-level", "debug"), ("x-auth-mode", "strict")]);
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("x-auth-mode", "strict"), ("x-log-level", "debug")]);
     Ok(response)
 }
 
@@ -6501,12 +4706,7 @@ async fn di_factory_dependency_success_handler(_ctx: RequestContext) -> HandlerR
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6516,36 +4716,21 @@ async fn di_missing_dependency_error_handler(_ctx: RequestContext) -> HandlerRes
         .status(StatusCode::from_u16(500).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_mixed_singleton_and_per_request_caching_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"app_name\":\"MyApp\",\"pool_id\":\"<<uuid>>\",\"context_id\":\"<<uuid>>\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"app_name\":\"MyApp\",\"pool_id\":\"<<uuid>>\",\"context_id\":\"<<uuid>>\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn di_multiple_dependencies_with_cleanup_success_handler(
-    ctx: RequestContext,
-    state: Arc<Mutex<Vec<Value>>>,
-) -> HandlerResult {
+async fn di_multiple_dependencies_with_cleanup_success_handler(ctx: RequestContext, state: Arc<Mutex<Vec<Value>>>) -> HandlerResult {
     let body = ctx.body_value();
     let value = body.get("event").cloned();
     let value = match value {
@@ -6555,12 +4740,7 @@ async fn di_multiple_dependencies_with_cleanup_success_handler(
                 .status(StatusCode::BAD_REQUEST)
                 .header("content-type", "application/json")
                 .body(Body::from(json!({"error": "missing background value"}).to_string()))
-                .unwrap_or_else(|_| {
-                    Response::builder()
-                        .status(StatusCode::INTERNAL_SERVER_ERROR)
-                        .body(Body::empty())
-                        .unwrap()
-                });
+                .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
 
             return Ok(response);
         }
@@ -6574,20 +4754,12 @@ async fn di_multiple_dependencies_with_cleanup_success_handler(
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
 
     Ok(response)
 }
 
-async fn di_multiple_dependencies_with_cleanup_success_handler_background_state(
-    _ctx: RequestContext,
-    state: Arc<Mutex<Vec<Value>>>,
-) -> HandlerResult {
+async fn di_multiple_dependencies_with_cleanup_success_handler_background_state(_ctx: RequestContext, state: Arc<Mutex<Vec<Value>>>) -> HandlerResult {
     let values = {
         let guard = state.lock().await;
         guard.clone()
@@ -6596,99 +4768,61 @@ async fn di_multiple_dependencies_with_cleanup_success_handler_background_state(
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json!({ "cleanup_order": values }).to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_nested_dependencies_3_levels_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"auth_enabled\":true,\"has_db\":true,\"has_cache\":true}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"auth_enabled\":true,\"has_db\":true,\"has_cache\":true}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_node_js_object_destructuring_injection_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"db_name\":\"PostgreSQL\",\"log_level\":\"info\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"db_name\":\"PostgreSQL\",\"log_level\":\"info\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_per_request_dependency_caching_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"first_id\":\"<<uuid>>\",\"second_id\":\"<<same_as:first_id>>\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"first_id\":\"<<uuid>>\",\"second_id\":\"<<same_as:first_id>>\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_python_parameter_name_based_injection_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"db_status\":\"connected\",\"cache_status\":\"ready\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"db_status\":\"connected\",\"cache_status\":\"ready\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_python_type_annotation_based_injection_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"pool_type\":\"PostgreSQL\",\"cache_type\":\"Redis\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"pool_type\":\"PostgreSQL\",\"cache_type\":\"Redis\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn di_resource_cleanup_after_request_success_handler(
-    ctx: RequestContext,
-    state: Arc<Mutex<Vec<Value>>>,
-) -> HandlerResult {
+async fn di_resource_cleanup_after_request_success_handler(ctx: RequestContext, state: Arc<Mutex<Vec<Value>>>) -> HandlerResult {
     let body = ctx.body_value();
     let value = body.get("session_id").cloned();
     let value = match value {
@@ -6698,12 +4832,7 @@ async fn di_resource_cleanup_after_request_success_handler(
                 .status(StatusCode::BAD_REQUEST)
                 .header("content-type", "application/json")
                 .body(Body::from(json!({"error": "missing background value"}).to_string()))
-                .unwrap_or_else(|_| {
-                    Response::builder()
-                        .status(StatusCode::INTERNAL_SERVER_ERROR)
-                        .body(Body::empty())
-                        .unwrap()
-                });
+                .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
 
             return Ok(response);
         }
@@ -6717,20 +4846,12 @@ async fn di_resource_cleanup_after_request_success_handler(
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
 
     Ok(response)
 }
 
-async fn di_resource_cleanup_after_request_success_handler_background_state(
-    _ctx: RequestContext,
-    state: Arc<Mutex<Vec<Value>>>,
-) -> HandlerResult {
+async fn di_resource_cleanup_after_request_success_handler_background_state(_ctx: RequestContext, state: Arc<Mutex<Vec<Value>>>) -> HandlerResult {
     let values = {
         let guard = state.lock().await;
         guard.clone()
@@ -6739,60 +4860,37 @@ async fn di_resource_cleanup_after_request_success_handler_background_state(
         .status(StatusCode::OK)
         .header("content-type", "application/json")
         .body(Body::from(json!({ "cleanup_events": values }).to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_route_level_dependency_override_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"mode\":\"test\",\"strict\":false}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"mode\":\"test\",\"strict\":false}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_ruby_keyword_argument_injection_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"adapter\":\"postgresql\",\"user_id\":42}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"adapter\":\"postgresql\",\"user_id\":42}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_singleton_dependency_caching_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"counter_id\":\"<<uuid>>\",\"count\":1}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"counter_id\":\"<<uuid>>\",\"count\":1}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6802,29 +4900,17 @@ async fn di_type_mismatch_in_dependency_resolution_error_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(500).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn di_value_dependency_injection_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"app_name\":\"SpikardApp\",\"version\":\"1.0.0\",\"max_connections\":100}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"app_name\":\"SpikardApp\",\"version\":\"1.0.0\",\"max_connections\":100}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6834,12 +4920,7 @@ async fn edge_cases_11_utf8_query_parameter_handler(_ctx: RequestContext) -> Han
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6849,12 +4930,7 @@ async fn edge_cases_12_percent_encoded_special_chars_handler(_ctx: RequestContex
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6864,12 +4940,7 @@ async fn edge_cases_13_empty_string_query_param_preserved_handler(_ctx: RequestC
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6879,12 +4950,7 @@ async fn edge_cases_14_large_integer_boundary_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6894,12 +4960,7 @@ async fn edge_cases_15_float_precision_preservation_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6909,12 +4970,7 @@ async fn edge_cases_16_negative_zero_handling_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6924,12 +4980,7 @@ async fn edge_cases_17_extremely_long_string_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6939,12 +4990,7 @@ async fn edge_cases_18_unicode_normalization_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6954,12 +5000,7 @@ async fn edge_cases_19_emoji_in_strings_handler(_ctx: RequestContext) -> Handler
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6969,12 +5010,7 @@ async fn edge_cases_20_null_byte_in_string_handler(_ctx: RequestContext) -> Hand
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6984,12 +5020,7 @@ async fn edge_cases_21_scientific_notation_number_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -6999,63 +5030,37 @@ async fn edge_cases_22_leading_zeros_integer_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn edge_cases_23_deeply_nested_json_limit_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"error\":\"Request body exceeds maximum nesting depth of 32\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"error\":\"Request body exceeds maximum nesting depth of 32\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(400).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn edge_cases_24_array_with_holes_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"error\":\"Failed to parse URL-encoded form data: missing index, expected: 1 got 2\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"error\":\"Failed to parse URL-encoded form data: missing index, expected: 1 got 2\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(400).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn edge_cases_deeply_nested_structure_10_levels_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"message\":\"Processed deeply nested structure\",\"max_depth\":10,\"value_found\":\"deep\"}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Processed deeply nested structure\",\"max_depth\":10,\"value_found\":\"deep\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7065,12 +5070,7 @@ async fn edge_cases_empty_and_null_value_handling_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7080,30 +5080,17 @@ async fn edge_cases_float_precision_and_rounding_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn edge_cases_large_integer_boundary_values_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"max_safe_int\":9007199254740991,\"large_int\":9223372036854775807,\"negative_large\":-9223372036854775808}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"max_safe_int\":9007199254740991,\"large_int\":9223372036854775807,\"negative_large\":-9223372036854775808}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7113,12 +5100,7 @@ async fn edge_cases_special_string_values_and_escaping_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7128,12 +5110,7 @@ async fn edge_cases_unicode_and_emoji_handling_handler(_ctx: RequestContext) -> 
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7141,12 +5118,7 @@ async fn headers_30_bearer_token_format_valid_handler(_ctx: RequestContext) -> H
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7156,12 +5128,7 @@ async fn headers_31_bearer_token_format_invalid_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7171,12 +5138,7 @@ async fn headers_32_bearer_token_missing_prefix_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7184,12 +5146,7 @@ async fn headers_33_api_key_header_valid_handler(_ctx: RequestContext) -> Handle
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7199,12 +5156,7 @@ async fn headers_34_api_key_header_invalid_handler(_ctx: RequestContext) -> Hand
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7214,44 +5166,27 @@ async fn headers_accept_header_json_handler(_ctx: RequestContext) -> HandlerResu
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_accept_encoding_header_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"accept_encoding\":\"gzip, deflate, br\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"accept_encoding\":\"gzip, deflate, br\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_accept_language_header_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"accept_language\":\"en-US,en;q=0.9\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"accept_language\":\"en-US,en;q=0.9\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7261,28 +5196,17 @@ async fn headers_authorization_header_missing_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_authorization_header_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"scheme\":\"Digest\",\"credentials\":\"foobar\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"scheme\":\"Digest\",\"credentials\":\"foobar\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7292,28 +5216,17 @@ async fn headers_authorization_header_wrong_scheme_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_basic_authentication_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"username\":\"username\",\"password\":\"password\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"username\":\"username\",\"password\":\"password\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7323,12 +5236,7 @@ async fn headers_bearer_token_authentication_missing_handler(_ctx: RequestContex
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7338,28 +5246,17 @@ async fn headers_bearer_token_authentication_success_handler(_ctx: RequestContex
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_content_type_header_application_json_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"content_type\":\"application/json\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"content_type\":\"application/json\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7369,12 +5266,7 @@ async fn headers_header_case_insensitivity_access_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7384,12 +5276,7 @@ async fn headers_header_regex_validation_fail_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7399,12 +5286,7 @@ async fn headers_header_regex_validation_success_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7414,12 +5296,7 @@ async fn headers_header_validation_max_length_constraint_fail_handler(_ctx: Requ
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7429,12 +5306,7 @@ async fn headers_header_validation_min_length_constraint_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7444,12 +5316,7 @@ async fn headers_header_with_underscore_conversion_explicit_handler(_ctx: Reques
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7459,46 +5326,27 @@ async fn headers_host_header_handler(_ctx: RequestContext) -> HandlerResult {
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_multiple_custom_headers_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"x_request_id\":\"req-12345\",\"x_client_version\":\"1.2.3\",\"x_trace_id\":\"trace-abc\"}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"x_request_id\":\"req-12345\",\"x_client_version\":\"1.2.3\",\"x_trace_id\":\"trace-abc\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_multiple_header_values_x_token_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"X-Token values\":[\"foo\",\"bar\"]}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"X-Token values\":[\"foo\",\"bar\"]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7508,60 +5356,37 @@ async fn headers_optional_header_with_none_default_missing_handler(_ctx: Request
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_origin_header_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"origin\":\"https://example.com\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"origin\":\"https://example.com\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_referer_header_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"referer\":\"https://example.com/page\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"referer\":\"https://example.com/page\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn headers_user_agent_header_custom_value_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"User-Agent\":\"Mozilla/5.0 Custom Browser\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"User-Agent\":\"Mozilla/5.0 Custom Browser\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7571,12 +5396,7 @@ async fn headers_user_agent_header_default_value_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7586,12 +5406,7 @@ async fn headers_x_api_key_optional_header_missing_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7601,12 +5416,7 @@ async fn headers_x_api_key_optional_header_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7616,12 +5426,7 @@ async fn headers_x_api_key_required_header_missing_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7631,12 +5436,7 @@ async fn headers_x_api_key_required_header_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7646,12 +5446,7 @@ async fn http_methods_delete_remove_resource_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7661,29 +5456,17 @@ async fn http_methods_delete_resource_not_found_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn http_methods_delete_with_response_body_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"id\":1,\"name\":\"Deleted Item\",\"message\":\"Item deleted successfully\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"id\":1,\"name\":\"Deleted Item\",\"message\":\"Item deleted successfully\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7691,16 +5474,8 @@ async fn http_methods_head_get_metadata_without_body_handler(_ctx: RequestContex
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[("content-type", "application/json"), ("content-length", "85")],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("content-type", "application/json"), ("content-length", "85")]);
     Ok(response)
 }
 
@@ -7708,55 +5483,28 @@ async fn http_methods_options_cors_preflight_request_handler(_ctx: RequestContex
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS"),
-            ("access-control-allow-origin", "https://example.com"),
-            ("access-control-allow-headers", "Content-Type"),
-            ("access-control-max-age", "86400"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("access-control-max-age", "86400"), ("access-control-allow-origin", "https://example.com"), ("access-control-allow-headers", "Content-Type"), ("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS")]);
     Ok(response)
 }
 
 async fn http_methods_patch_partial_update_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"id\":1,\"name\":\"Existing Item\",\"price\":79.99,\"in_stock\":true}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"id\":1,\"name\":\"Existing Item\",\"price\":79.99,\"in_stock\":true}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn http_methods_patch_update_multiple_fields_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"id\":1,\"name\":\"Updated Name\",\"price\":89.99,\"in_stock\":false}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"id\":1,\"name\":\"Updated Name\",\"price\":89.99,\"in_stock\":false}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7766,44 +5514,27 @@ async fn http_methods_put_complete_resource_replacement_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn http_methods_put_create_resource_if_doesn_t_exist_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"id\":999,\"name\":\"New Item\",\"price\":49.99}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"id\":999,\"name\":\"New Item\",\"price\":49.99}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn http_methods_put_idempotent_operation_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"id\":1,\"name\":\"Fixed Name\",\"price\":50.0}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"id\":1,\"name\":\"Fixed Name\",\"price\":50.0}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7813,12 +5544,7 @@ async fn http_methods_put_missing_required_field_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7828,12 +5554,7 @@ async fn http_methods_put_validation_error_handler(_ctx: RequestContext) -> Hand
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7841,12 +5562,7 @@ async fn json_bodies_29_nested_object_validation_success_handler(_ctx: RequestCo
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7856,12 +5572,7 @@ async fn json_bodies_30_nested_object_missing_field_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7869,12 +5580,7 @@ async fn json_bodies_31_nullable_property_null_value_handler(_ctx: RequestContex
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7882,12 +5588,7 @@ async fn json_bodies_32_schema_ref_definitions_handler(_ctx: RequestContext) -> 
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7895,12 +5596,7 @@ async fn json_bodies_33_allof_schema_composition_handler(_ctx: RequestContext) -
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7910,12 +5606,7 @@ async fn json_bodies_34_additional_properties_false_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7923,12 +5614,7 @@ async fn json_bodies_35_oneof_schema_success_handler(_ctx: RequestContext) -> Ha
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7938,12 +5624,7 @@ async fn json_bodies_36_oneof_schema_multiple_match_failure_handler(_ctx: Reques
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7953,12 +5634,7 @@ async fn json_bodies_37_oneof_schema_no_match_failure_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7966,12 +5642,7 @@ async fn json_bodies_38_anyof_schema_success_handler(_ctx: RequestContext) -> Ha
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7979,12 +5650,7 @@ async fn json_bodies_39_anyof_schema_multiple_match_success_handler(_ctx: Reques
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -7994,12 +5660,7 @@ async fn json_bodies_40_anyof_schema_failure_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8007,12 +5668,7 @@ async fn json_bodies_41_not_schema_success_handler(_ctx: RequestContext) -> Hand
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8022,12 +5678,7 @@ async fn json_bodies_42_not_schema_failure_handler(_ctx: RequestContext) -> Hand
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8035,12 +5686,7 @@ async fn json_bodies_43_const_validation_success_handler(_ctx: RequestContext) -
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8050,12 +5696,7 @@ async fn json_bodies_44_const_validation_failure_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8063,12 +5704,7 @@ async fn json_bodies_45_minproperties_validation_success_handler(_ctx: RequestCo
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8078,12 +5714,7 @@ async fn json_bodies_46_minproperties_validation_failure_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8093,12 +5724,7 @@ async fn json_bodies_47_maxproperties_validation_failure_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8106,12 +5732,7 @@ async fn json_bodies_48_dependencies_validation_success_handler(_ctx: RequestCon
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8121,12 +5742,7 @@ async fn json_bodies_49_dependencies_validation_failure_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8134,12 +5750,7 @@ async fn json_bodies_50_deep_nesting_4_levels_handler(_ctx: RequestContext) -> H
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8149,94 +5760,57 @@ async fn json_bodies_array_of_objects_success_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_array_of_primitive_values_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"name\":\"Product\",\"tags\":[\"electronics\",\"gadget\",\"new\"],\"ratings\":[4.5,4.8,5.0,4.2]}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Product\",\"tags\":[\"electronics\",\"gadget\",\"new\"],\"ratings\":[4.5,4.8,5.0,4.2]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_body_with_query_parameters_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"item\":{\"name\":\"Item\",\"price\":42.0},\"limit\":10}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"item\":{\"name\":\"Item\",\"price\":42.0},\"limit\":10}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_boolean_field_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Item\",\"price\":42.0,\"in_stock\":true}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Item\",\"price\":42.0,\"in_stock\":true}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_date_field_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Conference\",\"event_date\":\"2024-03-15\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Conference\",\"event_date\":\"2024-03-15\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_datetime_field_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"name\":\"Meeting\",\"created_at\":\"2024-03-15T10:30:00Z\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Meeting\",\"created_at\":\"2024-03-15T10:30:00Z\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8246,28 +5820,17 @@ async fn json_bodies_deeply_nested_objects_handler(_ctx: RequestContext) -> Hand
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_empty_json_object_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"name\":null,\"description\":null,\"price\":null,\"tax\":null}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":null,\"description\":null,\"price\":null,\"tax\":null}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8277,12 +5840,7 @@ async fn json_bodies_empty_array_validation_fail_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8292,28 +5850,17 @@ async fn json_bodies_enum_field_invalid_value_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_enum_field_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Item\",\"category\":\"electronics\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Item\",\"category\":\"electronics\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8323,12 +5870,7 @@ async fn json_bodies_extra_fields_ignored_no_additionalproperties_handler(_ctx: 
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8338,12 +5880,7 @@ async fn json_bodies_field_type_validation_invalid_type_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8353,29 +5890,17 @@ async fn json_bodies_nested_object_success_handler(_ctx: RequestContext) -> Hand
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_null_value_for_optional_field_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Item\",\"price\":42.0,\"description\":null,\"tax\":null}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Item\",\"price\":42.0,\"description\":null,\"tax\":null}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8385,12 +5910,7 @@ async fn json_bodies_numeric_ge_validation_fail_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8400,45 +5920,27 @@ async fn json_bodies_numeric_le_validation_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_optional_fields_omitted_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"name\":\"Foo\",\"price\":35.4,\"description\":null,\"tax\":null}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Foo\",\"price\":35.4,\"description\":null,\"tax\":null}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_patch_partial_update_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Original Item\",\"price\":45.0,\"description\":\"Original description\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Original Item\",\"price\":45.0,\"description\":\"Original description\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8448,29 +5950,17 @@ async fn json_bodies_required_field_missing_validation_error_handler(_ctx: Reque
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_simple_json_object_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Foo\",\"description\":\"A very nice Item\",\"price\":35.4,\"tax\":3.2}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Foo\",\"description\":\"A very nice Item\",\"price\":35.4,\"tax\":3.2}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8480,12 +5970,7 @@ async fn json_bodies_string_max_length_validation_fail_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8495,12 +5980,7 @@ async fn json_bodies_string_min_length_validation_fail_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8510,28 +5990,17 @@ async fn json_bodies_string_pattern_validation_fail_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_string_pattern_validation_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Item\",\"sku\":\"ABC1234\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Item\",\"sku\":\"ABC1234\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -8541,157 +6010,99 @@ async fn json_bodies_uuid_field_invalid_format_handler(_ctx: RequestContext) -> 
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn json_bodies_uuid_field_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"name\":\"Item\",\"item_id\":\"c892496f-b1fd-4b91-bdb8-b46f92df1716\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"Item\",\"item_id\":\"c892496f-b1fd-4b91-bdb8-b46f92df1716\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn lifecycle_hooks_hook_execution_order_first_hook_on_request_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_hook_execution_order_first_hook_on_request_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: first_hook
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_hook_execution_order_second_hook_on_request_1(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_hook_execution_order_second_hook_on_request_1(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: second_hook
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_hook_execution_order_third_hook_on_request_2(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_hook_execution_order_third_hook_on_request_2(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: third_hook
     Ok(spikard::HookResult::Continue(req))
 }
 
+
+
 async fn lifecycle_hooks_hook_execution_order_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"message\":\"Hooks executed in order\",\"execution_order\":[\"first_hook\",\"second_hook\",\"third_hook\"]}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Hooks executed in order\",\"execution_order\":[\"first_hook\",\"second_hook\",\"third_hook\"]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_request_logger_on_request_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: request_logger
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_request_id_generator_on_request_1(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: request_id_generator
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_rate_limiter_pre_validation_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock preValidation hook: rate_limiter
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_authenticator_pre_handler_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_authenticator_pre_handler_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock preHandler hook: authenticator
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_authorizer_pre_handler_1(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_authorizer_pre_handler_1(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock preHandler hook: authorizer
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response_0(
-    mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_security_headers_on_response_0(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // onResponse hook: security_headers - Adds security headers
-    resp.headers_mut()
-        .insert("X-Content-Type-Options", safe_header_value("nosniff"));
+    resp.headers_mut().insert("X-Content-Type-Options", safe_header_value("nosniff"));
     resp.headers_mut().insert("X-Frame-Options", safe_header_value("DENY"));
-    resp.headers_mut()
-        .insert("X-XSS-Protection", safe_header_value("1; mode=block"));
-    resp.headers_mut().insert(
-        "Strict-Transport-Security",
-        safe_header_value("max-age=31536000; includeSubDomains"),
-    );
+    resp.headers_mut().insert("X-XSS-Protection", safe_header_value("1; mode=block"));
+    resp.headers_mut().insert("Strict-Transport-Security", safe_header_value("max-age=31536000; includeSubDomains"));
     Ok(spikard::HookResult::Continue(resp))
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_response_timer_on_response_1(
-    mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_response_timer_on_response_1(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // onResponse hook: response_timer - Adds timing header
     resp.headers_mut().insert("X-Response-Time", safe_header_value(".*ms"));
     Ok(spikard::HookResult::Continue(resp))
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_audit_logger_on_response_2(
-    resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_audit_logger_on_response_2(resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onResponse hook: audit_logger
     Ok(spikard::HookResult::Continue(resp))
 }
 
-async fn lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0(
-    mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_multiple_hooks_all_phases_error_logger_on_error_0(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // onError hook: error_logger - Format error response
-    resp.headers_mut()
-        .insert("Content-Type", safe_header_value("application/json"));
+    resp.headers_mut().insert("Content-Type", safe_header_value("application/json"));
     Ok(spikard::HookResult::Continue(resp))
 }
+
+
 
 async fn lifecycle_hooks_multiple_hooks_all_phases_handler(_ctx: RequestContext) -> HandlerResult {
     let body_value: Value = serde_json::from_str("{\"message\":\"Action completed successfully\",\"user_id\":\"user-123\",\"action\":\"update_profile\",\"request_id\":\".*\"}").unwrap_or_else(|_| Value::Null);
@@ -8699,178 +6110,106 @@ async fn lifecycle_hooks_multiple_hooks_all_phases_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("x-request-id", ".*"),
-            ("x-response-time", ".*ms"),
-            ("x-content-type-options", "nosniff"),
-            ("x-frame-options", "DENY"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("x-request-id", ".*"), ("x-response-time", ".*ms"), ("x-content-type-options", "nosniff"), ("x-frame-options", "DENY")]);
     Ok(response)
 }
 
-async fn lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(
-    mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_onerror_error_logging_error_logger_on_error_0(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // onError hook: error_logger - Format error response
-    resp.headers_mut()
-        .insert("Content-Type", safe_header_value("application/json"));
+    resp.headers_mut().insert("Content-Type", safe_header_value("application/json"));
     Ok(spikard::HookResult::Continue(resp))
 }
 
-async fn lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1(
-    mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_onerror_error_logging_error_formatter_on_error_1(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // onError hook: error_formatter - Format error response
-    resp.headers_mut()
-        .insert("Content-Type", safe_header_value("application/json"));
+    resp.headers_mut().insert("Content-Type", safe_header_value("application/json"));
     Ok(spikard::HookResult::Continue(resp))
 }
+
+
 
 async fn lifecycle_hooks_onerror_error_logging_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"error\":\"Internal Server Error\",\"message\":\"An unexpected error occurred\",\"error_id\":\".*\"}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"error\":\"Internal Server Error\",\"message\":\"An unexpected error occurred\",\"error_id\":\".*\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(500).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("content-type", "application/json")]);
     Ok(response)
 }
 
-async fn lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_onrequest_request_logging_request_logger_on_request_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: request_logger
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_onrequest_request_logging_request_id_generator_on_request_1(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: request_id_generator
     Ok(spikard::HookResult::Continue(req))
 }
 
+
+
 async fn lifecycle_hooks_onrequest_request_logging_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"message\":\"onRequest hooks executed\",\"request_logged\":true,\"has_request_id\":true}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"onRequest hooks executed\",\"request_logged\":true,\"has_request_id\":true}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("x-request-id", ".*")]);
     Ok(response)
 }
 
-async fn lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_onresponse_response_timing_start_timer_on_request_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock onRequest hook: start_timer
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0(
-    mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_onresponse_response_timing_response_timer_on_response_0(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // onResponse hook: response_timer - Adds timing header
     resp.headers_mut().insert("X-Response-Time", safe_header_value(".*ms"));
     Ok(spikard::HookResult::Continue(resp))
 }
 
+
+
 async fn lifecycle_hooks_onresponse_response_timing_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Response with timing info\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Response with timing info\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("x-response-time", ".*ms")]);
     Ok(response)
 }
 
-async fn lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0(
-    mut resp: axum::http::Response<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_onresponse_security_headers_security_headers_on_response_0(mut resp: axum::http::Response<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Response<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // onResponse hook: security_headers - Adds security headers
-    resp.headers_mut()
-        .insert("X-Content-Type-Options", safe_header_value("nosniff"));
+    resp.headers_mut().insert("X-Content-Type-Options", safe_header_value("nosniff"));
     resp.headers_mut().insert("X-Frame-Options", safe_header_value("DENY"));
-    resp.headers_mut()
-        .insert("X-XSS-Protection", safe_header_value("1; mode=block"));
-    resp.headers_mut().insert(
-        "Strict-Transport-Security",
-        safe_header_value("max-age=31536000; includeSubDomains"),
-    );
+    resp.headers_mut().insert("X-XSS-Protection", safe_header_value("1; mode=block"));
+    resp.headers_mut().insert("Strict-Transport-Security", safe_header_value("max-age=31536000; includeSubDomains"));
     Ok(spikard::HookResult::Continue(resp))
 }
 
+
+
 async fn lifecycle_hooks_onresponse_security_headers_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Response with security headers\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Response with security headers\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("strict-transport-security", "max-age=31536000; includeSubDomains"),
-            ("x-content-type-options", "nosniff"),
-            ("x-frame-options", "DENY"),
-            ("x-xss-protection", "1; mode=block"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("x-frame-options", "DENY"), ("x-content-type-options", "nosniff"), ("strict-transport-security", "max-age=31536000; includeSubDomains"), ("x-xss-protection", "1; mode=block")]);
     Ok(response)
 }
 
-async fn lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0(
-    _req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenticator_pre_handler_0(_req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // preHandler hook: authenticator - Short circuits with 401
     use axum::response::IntoResponse;
     let response = (
@@ -8878,91 +6217,63 @@ async fn lifecycle_hooks_prehandler_authentication_failed_short_circuit_authenti
         axum::Json(serde_json::json!({
             "error": "Unauthorized",
             "message": "Invalid or expired authentication token"
-        })),
-    )
-        .into_response();
+        }))
+    ).into_response();
     Ok(spikard::HookResult::ShortCircuit(response))
 }
 
+
+
 async fn lifecycle_hooks_prehandler_authentication_failed_short_circuit_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"error\":\"Unauthorized\",\"message\":\"Invalid or expired authentication token\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"error\":\"Unauthorized\",\"message\":\"Invalid or expired authentication token\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_prehandler_authentication_success_authenticator_pre_handler_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock preHandler hook: authenticator
     Ok(spikard::HookResult::Continue(req))
 }
 
+
+
 async fn lifecycle_hooks_prehandler_authentication_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Access granted\",\"user_id\":\"user-123\",\"authenticated\":true}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Access granted\",\"user_id\":\"user-123\",\"authenticated\":true}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_prehandler_authorization_check_authenticator_pre_handler_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock preHandler hook: authenticator
     Ok(spikard::HookResult::Continue(req))
 }
 
-async fn lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_prehandler_authorization_check_authorizer_pre_handler_1(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock preHandler hook: authorizer
     Ok(spikard::HookResult::Continue(req))
 }
 
+
+
 async fn lifecycle_hooks_prehandler_authorization_check_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Admin access granted\",\"user_id\":\"admin-456\",\"role\":\"admin\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Admin access granted\",\"user_id\":\"admin-456\",\"role\":\"admin\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authenticator_pre_handler_0(
-    _req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authenticator_pre_handler_0(_req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // preHandler hook: authenticator - Short circuits with 403
     use axum::response::IntoResponse;
     let response = (
@@ -8970,16 +6281,12 @@ async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authen
         axum::Json(serde_json::json!({
             "error": "Forbidden",
             "message": "Admin role required for this endpoint"
-        })),
-    )
-        .into_response();
+        }))
+    ).into_response();
     Ok(spikard::HookResult::ShortCircuit(response))
 }
 
-async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1(
-    _req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_authorizer_pre_handler_1(_req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // preHandler hook: authorizer - Short circuits with 403
     use axum::response::IntoResponse;
     let response = (
@@ -8987,35 +6294,24 @@ async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_author
         axum::Json(serde_json::json!({
             "error": "Forbidden",
             "message": "Admin role required for this endpoint"
-        })),
-    )
-        .into_response();
+        }))
+    ).into_response();
     Ok(spikard::HookResult::ShortCircuit(response))
 }
 
-async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"error\":\"Forbidden\",\"message\":\"Admin role required for this endpoint\"}")
-            .unwrap_or_else(|_| Value::Null);
+
+
+async fn lifecycle_hooks_prehandler_authorization_forbidden_short_circuit_handler(_ctx: RequestContext) -> HandlerResult {
+    let body_value: Value = serde_json::from_str("{\"error\":\"Forbidden\",\"message\":\"Admin role required for this endpoint\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(403).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0(
-    _req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_limiter_pre_validation_0(_req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // preValidation hook: rate_limiter - Short circuits with 429
     use axum::response::IntoResponse;
     let mut response = (
@@ -9023,55 +6319,39 @@ async fn lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_rate_li
         axum::Json(serde_json::json!({
             "error": "Rate limit exceeded",
             "message": "Too many requests, please try again later"
-        })),
-    )
-        .into_response();
+        }))
+    ).into_response();
     response.headers_mut().insert("Retry-After", safe_header_value("60"));
     Ok(spikard::HookResult::ShortCircuit(response))
 }
 
-async fn lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"error\":\"Rate limit exceeded\",\"message\":\"Too many requests, please try again later\"}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+
+
+async fn lifecycle_hooks_prevalidation_rate_limit_exceeded_short_circuit_handler(_ctx: RequestContext) -> HandlerResult {
+    let body_value: Value = serde_json::from_str("{\"error\":\"Rate limit exceeded\",\"message\":\"Too many requests, please try again later\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(429).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("retry-after", "60")]);
     Ok(response)
 }
 
-async fn lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0(
-    req: axum::http::Request<axum::body::Body>,
-) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String>
-{
+async fn lifecycle_hooks_prevalidation_rate_limiting_rate_limiter_pre_validation_0(req: axum::http::Request<axum::body::Body>) -> Result<spikard::HookResult<axum::http::Request<axum::body::Body>, axum::http::Response<axum::body::Body>>, String> {
     // Mock preValidation hook: rate_limiter
     Ok(spikard::HookResult::Continue(req))
 }
 
+
+
 async fn lifecycle_hooks_prevalidation_rate_limiting_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"message\":\"Request accepted\",\"rate_limit_checked\":true}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Request accepted\",\"rate_limit_checked\":true}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9079,12 +6359,7 @@ async fn multipart_17_file_magic_number_png_success_handler(_ctx: RequestContext
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9092,12 +6367,7 @@ async fn multipart_18_file_magic_number_jpeg_success_handler(_ctx: RequestContex
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9107,12 +6377,7 @@ async fn multipart_19_file_mime_spoofing_png_as_jpeg_handler(_ctx: RequestContex
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9122,12 +6387,7 @@ async fn multipart_20_file_mime_spoofing_jpeg_as_png_handler(_ctx: RequestContex
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9135,12 +6395,7 @@ async fn multipart_21_file_pdf_magic_number_success_handler(_ctx: RequestContext
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9150,12 +6405,7 @@ async fn multipart_22_file_empty_buffer_handler(_ctx: RequestContext) -> Handler
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9163,60 +6413,37 @@ async fn multipart_content_type_validation_invalid_type_handler(_ctx: RequestCon
     let response = Response::builder()
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn multipart_empty_file_upload_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"filename\":\"empty.txt\",\"size\":0}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"filename\":\"empty.txt\",\"size\":0}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn multipart_file_list_upload_array_of_files_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"filenames\":[\"file1.txt\",\"file2.txt\"],\"total_size\":35}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"filenames\":[\"file1.txt\",\"file2.txt\"],\"total_size\":35}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn multipart_file_size_validation_too_large_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"detail\":\"File too large. Maximum size is 1MB\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"detail\":\"File too large. Maximum size is 1MB\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(413).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9226,12 +6453,7 @@ async fn multipart_file_upload_with_custom_headers_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9241,12 +6463,7 @@ async fn multipart_file_upload_without_filename_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9256,29 +6473,17 @@ async fn multipart_form_data_without_files_handler(_ctx: RequestContext) -> Hand
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn multipart_image_file_upload_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"filename\":\"photo.jpg\",\"content_type\":\"image/jpeg\",\"size\":22}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"filename\":\"photo.jpg\",\"content_type\":\"image/jpeg\",\"size\":22}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9288,12 +6493,7 @@ async fn multipart_mixed_files_and_form_data_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9303,12 +6503,7 @@ async fn multipart_multiple_file_uploads_handler(_ctx: RequestContext) -> Handle
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9318,12 +6513,7 @@ async fn multipart_multiple_values_for_same_field_name_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9333,46 +6523,27 @@ async fn multipart_optional_file_upload_missing_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn multipart_optional_file_upload_provided_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"filename\":\"optional.txt\",\"content_type\":\"text/plain\",\"size\":21}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"filename\":\"optional.txt\",\"content_type\":\"text/plain\",\"size\":21}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn multipart_pdf_file_upload_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"filename\":\"report.pdf\",\"content_type\":\"application/pdf\",\"size\":16}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"filename\":\"report.pdf\",\"content_type\":\"application/pdf\",\"size\":16}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9382,12 +6553,7 @@ async fn multipart_required_file_upload_missing_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9397,44 +6563,27 @@ async fn multipart_simple_file_upload_handler(_ctx: RequestContext) -> HandlerRe
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn path_params_20_uuid_v3_path_param_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"id\":\"e8b5a51d-11c8-3310-a6ab-367563f20686\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"id\":\"e8b5a51d-11c8-3310-a6ab-367563f20686\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn path_params_21_uuid_v5_path_param_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"id\":\"630eb68f-e0fa-5ecc-887a-7c7a62614681\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"id\":\"630eb68f-e0fa-5ecc-887a-7c7a62614681\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9444,12 +6593,7 @@ async fn path_params_24_date_format_path_param_success_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9459,28 +6603,17 @@ async fn path_params_25_date_format_invalid_failure_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn path_params_27_datetime_format_path_param_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"timestamp\":\"2025-10-30T14:30:00Z\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"timestamp\":\"2025-10-30T14:30:00Z\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9490,12 +6623,7 @@ async fn path_params_28_duration_format_path_param_success_handler(_ctx: Request
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9505,12 +6633,7 @@ async fn path_params_29_decimal_path_param_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9520,12 +6643,7 @@ async fn path_params_30_string_minlength_path_success_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9535,12 +6653,7 @@ async fn path_params_31_string_minlength_path_failure_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9550,28 +6663,17 @@ async fn path_params_32_string_maxlength_path_failure_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn path_params_33_string_pattern_path_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"owner\":\"spikard-labs\",\"repo\":\"spikard-http\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"owner\":\"spikard-labs\",\"repo\":\"spikard-http\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9581,12 +6683,7 @@ async fn path_params_34_string_pattern_path_failure_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9596,12 +6693,7 @@ async fn path_params_35_negative_integer_path_param_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9611,12 +6703,7 @@ async fn path_params_boolean_path_parameter_true_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9626,12 +6713,7 @@ async fn path_params_boolean_path_parameter_numeric_1_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9641,12 +6723,7 @@ async fn path_params_date_path_parameter_success_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9656,12 +6733,7 @@ async fn path_params_enum_path_parameter_invalid_value_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9671,12 +6743,7 @@ async fn path_params_enum_path_parameter_success_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9686,12 +6753,7 @@ async fn path_params_float_path_parameter_success_handler(_ctx: RequestContext) 
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9701,12 +6763,7 @@ async fn path_params_integer_path_parameter_invalid_string_handler(_ctx: Request
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9716,29 +6773,17 @@ async fn path_params_integer_path_parameter_success_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
+async fn path_params_integer_path_parameter_with_combined_lt_and_gt_constraints_success_handler(_ctx: RequestContext) -> HandlerResult {
     let body_value: Value = serde_json::from_str("{\"item_id\":2}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9748,12 +6793,7 @@ async fn path_params_integer_path_parameter_with_ge_constraint_success_handler(_
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9763,12 +6803,7 @@ async fn path_params_integer_path_parameter_with_gt_constraint_failure_handler(_
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9778,12 +6813,7 @@ async fn path_params_integer_path_parameter_with_gt_constraint_success_handler(_
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9793,12 +6823,7 @@ async fn path_params_integer_path_parameter_with_le_constraint_success_handler(_
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9808,30 +6833,17 @@ async fn path_params_integer_path_parameter_with_lt_constraint_success_handler(_
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn path_params_multiple_path_parameters_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str(
-        "{\"version\":1.0,\"service_id\":1,\"user_id\":\"abc\",\"order_id\":\"c892496f-b1fd-4b91-bdb8-b46f92df1716\"}",
-    )
-    .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"version\":1.0,\"service_id\":1,\"user_id\":\"abc\",\"order_id\":\"c892496f-b1fd-4b91-bdb8-b46f92df1716\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9841,12 +6853,7 @@ async fn path_params_path_parameter_type_syntax_invalid_uuid_handler(_ctx: Reque
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9856,28 +6863,17 @@ async fn path_params_path_parameter_type_syntax_with_override_handler(_ctx: Requ
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn path_params_path_parameter_with_type_syntax_uuid_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"id\":\"550e8400-e29b-41d4-a716-446655440000\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"id\":\"550e8400-e29b-41d4-a716-446655440000\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9887,28 +6883,17 @@ async fn path_params_path_parameter_with_type_syntax_integer_handler(_ctx: Reque
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn path_params_path_type_parameter_file_path_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"file_path\":\"home/johndoe/myfile.txt\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"file_path\":\"home/johndoe/myfile.txt\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9918,12 +6903,7 @@ async fn path_params_string_path_parameter_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9933,12 +6913,7 @@ async fn path_params_string_path_parameter_with_max_length_failure_handler(_ctx:
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9948,28 +6923,17 @@ async fn path_params_string_path_parameter_with_min_length_failure_handler(_ctx:
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn path_params_uuid_path_parameter_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"item_id\":\"ec38df32-ceda-4cfa-9b4a-1aeb94ad551a\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"item_id\":\"ec38df32-ceda-4cfa-9b4a-1aeb94ad551a\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9979,12 +6943,7 @@ async fn query_params_42_negative_integer_query_param_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -9994,12 +6953,7 @@ async fn query_params_43_scientific_notation_float_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10009,12 +6963,7 @@ async fn query_params_44_string_minlength_validation_success_handler(_ctx: Reque
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10024,12 +6973,7 @@ async fn query_params_45_string_minlength_validation_failure_handler(_ctx: Reque
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10039,12 +6983,7 @@ async fn query_params_46_string_maxlength_validation_failure_handler(_ctx: Reque
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10054,12 +6993,7 @@ async fn query_params_47_pattern_validation_email_success_handler(_ctx: RequestC
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10069,12 +7003,7 @@ async fn query_params_48_pattern_validation_email_failure_handler(_ctx: RequestC
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10084,12 +7013,7 @@ async fn query_params_49_integer_gt_constraint_success_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10099,12 +7023,7 @@ async fn query_params_50_integer_gt_constraint_failure_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10114,12 +7033,7 @@ async fn query_params_51_integer_ge_constraint_boundary_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10129,12 +7043,7 @@ async fn query_params_52_integer_le_constraint_boundary_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10144,12 +7053,7 @@ async fn query_params_53_integer_le_constraint_failure_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10159,12 +7063,7 @@ async fn query_params_54_array_minitems_constraint_success_handler(_ctx: Request
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10174,12 +7073,7 @@ async fn query_params_55_array_minitems_constraint_failure_handler(_ctx: Request
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10189,12 +7083,7 @@ async fn query_params_56_array_maxitems_constraint_failure_handler(_ctx: Request
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10204,12 +7093,7 @@ async fn query_params_57_boolean_empty_string_coercion_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10219,12 +7103,7 @@ async fn query_params_58_format_email_success_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10234,12 +7113,7 @@ async fn query_params_59_format_email_failure_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10249,12 +7123,7 @@ async fn query_params_60_format_ipv4_success_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10264,44 +7133,27 @@ async fn query_params_61_format_ipv4_failure_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn query_params_62_format_ipv6_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"ip\":\"2001:0db8:85a3:0000:0000:8a2e:0370:7334\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"ip\":\"2001:0db8:85a3:0000:0000:8a2e:0370:7334\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn query_params_63_format_uri_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"url\":\"https://example.com/path?query=value\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"url\":\"https://example.com/path?query=value\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10311,12 +7163,7 @@ async fn query_params_64_format_uri_failure_handler(_ctx: RequestContext) -> Han
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10326,12 +7173,7 @@ async fn query_params_65_format_hostname_success_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10341,12 +7183,7 @@ async fn query_params_66_multipleof_constraint_success_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10356,12 +7193,7 @@ async fn query_params_67_multipleof_constraint_failure_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10371,12 +7203,7 @@ async fn query_params_68_array_uniqueitems_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10386,60 +7213,37 @@ async fn query_params_69_array_uniqueitems_failure_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn query_params_70_array_separator_pipe_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"tags\":[\"python\",\"rust\",\"typescript\"]}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"tags\":[\"python\",\"rust\",\"typescript\"]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn query_params_71_array_separator_semicolon_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"colors\":[\"red\",\"green\",\"blue\"]}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"colors\":[\"red\",\"green\",\"blue\"]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn query_params_72_array_separator_space_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"keywords\":[\"rust\",\"web\",\"framework\"]}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"keywords\":[\"rust\",\"web\",\"framework\"]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10449,12 +7253,7 @@ async fn query_params_array_query_parameter_empty_array_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10464,12 +7263,7 @@ async fn query_params_array_query_parameter_single_value_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10479,12 +7273,7 @@ async fn query_params_boolean_query_parameter_numeric_1_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10494,12 +7283,7 @@ async fn query_params_boolean_query_parameter_true_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10509,28 +7293,17 @@ async fn query_params_date_query_parameter_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn query_params_datetime_query_parameter_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"timestamp\":\"2024-01-15T10:30:00Z\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"timestamp\":\"2024-01-15T10:30:00Z\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10540,12 +7313,7 @@ async fn query_params_enum_query_parameter_invalid_value_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10555,12 +7323,7 @@ async fn query_params_enum_query_parameter_success_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10570,12 +7333,7 @@ async fn query_params_float_query_param_with_ge_constraint_success_handler(_ctx:
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10585,12 +7343,7 @@ async fn query_params_integer_query_param_with_ge_constraint_boundary_handler(_c
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10600,12 +7353,7 @@ async fn query_params_integer_query_param_with_gt_constraint_valid_handler(_ctx:
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10615,12 +7363,7 @@ async fn query_params_integer_query_param_with_le_constraint_boundary_handler(_c
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10630,12 +7373,7 @@ async fn query_params_integer_query_param_with_lt_constraint_valid_handler(_ctx:
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10645,12 +7383,7 @@ async fn query_params_integer_with_default_value_not_provided_handler(_ctx: Requ
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10660,12 +7393,7 @@ async fn query_params_integer_with_default_value_override_handler(_ctx: RequestC
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10675,12 +7403,7 @@ async fn query_params_list_of_integers_multiple_values_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10690,12 +7413,7 @@ async fn query_params_list_of_strings_multiple_values_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10705,12 +7423,7 @@ async fn query_params_list_query_parameter_required_but_missing_handler(_ctx: Re
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10720,28 +7433,17 @@ async fn query_params_list_with_default_empty_array_no_values_provided_handler(_
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn query_params_multiple_query_parameters_with_different_types_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"name\":\"john\",\"age\":30,\"active\":true,\"score\":95.5}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"john\",\"age\":30,\"active\":true,\"score\":95.5}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10751,12 +7453,7 @@ async fn query_params_optional_integer_query_parameter_missing_handler(_ctx: Req
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10766,12 +7463,7 @@ async fn query_params_optional_query_parameter_with_default_value_handler(_ctx: 
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10781,12 +7473,7 @@ async fn query_params_optional_string_query_parameter_missing_handler(_ctx: Requ
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10796,12 +7483,7 @@ async fn query_params_optional_string_query_parameter_provided_handler(_ctx: Req
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10811,47 +7493,27 @@ async fn query_params_query_parameter_with_url_encoded_space_handler(_ctx: Reque
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn query_params_query_parameter_with_url_encoded_special_characters_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
+async fn query_params_query_parameter_with_url_encoded_special_characters_handler(_ctx: RequestContext) -> HandlerResult {
     let body_value: Value = serde_json::from_str("{\"name\":\"test&value=123\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn query_params_query_parameter_with_special_characters_url_encoding_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"email\":\"x@test.com\",\"special\":\"&@A.ac\"}").unwrap_or_else(|_| Value::Null);
+async fn query_params_query_parameter_with_special_characters_url_encoding_handler(_ctx: RequestContext) -> HandlerResult {
+    let body_value: Value = serde_json::from_str("{\"email\":\"x@test.com\",\"special\":\"&@A.ac\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10861,12 +7523,7 @@ async fn query_params_required_integer_query_parameter_float_value_handler(_ctx:
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10876,12 +7533,7 @@ async fn query_params_required_integer_query_parameter_invalid_type_handler(_ctx
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10891,12 +7543,7 @@ async fn query_params_required_integer_query_parameter_missing_handler(_ctx: Req
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10906,12 +7553,7 @@ async fn query_params_required_integer_query_parameter_success_handler(_ctx: Req
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10921,12 +7563,7 @@ async fn query_params_required_string_query_parameter_missing_handler(_ctx: Requ
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10936,46 +7573,27 @@ async fn query_params_required_string_query_parameter_success_handler(_ctx: Requ
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn query_params_string_query_param_with_max_length_constraint_fail_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
+async fn query_params_string_query_param_with_max_length_constraint_fail_handler(_ctx: RequestContext) -> HandlerResult {
     let body_value: Value = serde_json::from_str("{\"type\":\"https://spikard.dev/errors/validation-error\",\"title\":\"Request Validation Failed\",\"status\":422,\"detail\":\"1 validation error in request\",\"errors\":[{\"type\":\"string_too_long\",\"loc\":[\"query\",\"name\"],\"msg\":\"String should have at most 10 characters\",\"input\":\"this_is_way_too_long\",\"ctx\":{\"max_length\":10}}]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn query_params_string_query_param_with_min_length_constraint_fail_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
+async fn query_params_string_query_param_with_min_length_constraint_fail_handler(_ctx: RequestContext) -> HandlerResult {
     let body_value: Value = serde_json::from_str("{\"type\":\"https://spikard.dev/errors/validation-error\",\"title\":\"Request Validation Failed\",\"status\":422,\"detail\":\"1 validation error in request\",\"errors\":[{\"type\":\"string_too_short\",\"loc\":[\"query\",\"name\"],\"msg\":\"String should have at least 3 characters\",\"input\":\"ab\",\"ctx\":{\"min_length\":3}}]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -10985,12 +7603,7 @@ async fn query_params_string_query_param_with_regex_pattern_fail_handler(_ctx: R
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11000,12 +7613,7 @@ async fn query_params_string_validation_with_regex_failure_handler(_ctx: Request
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11015,12 +7623,7 @@ async fn query_params_string_validation_with_regex_success_handler(_ctx: Request
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11030,44 +7633,27 @@ async fn query_params_uuid_query_parameter_invalid_format_handler(_ctx: RequestC
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn query_params_uuid_query_parameter_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"item_id\":\"c892496f-b1fd-4b91-bdb8-b46f92df1716\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"item_id\":\"c892496f-b1fd-4b91-bdb8-b46f92df1716\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn rate_limit_rate_limit_below_threshold_succeeds_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"status\":\"ok\",\"request\":\"under-limit\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"status\":\"ok\",\"request\":\"under-limit\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11075,28 +7661,17 @@ async fn rate_limit_rate_limit_exceeded_returns_429_handler(_ctx: RequestContext
     let response = Response::builder()
         .status(StatusCode::from_u16(429).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn request_id_request_id_header_is_preserved_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"status\":\"preserved\",\"echo\":\"trace-123\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"status\":\"preserved\",\"echo\":\"trace-123\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("x-request-id", "trace-123")]);
     Ok(response)
 }
@@ -11107,12 +7682,7 @@ async fn request_id_request_id_is_generated_when_not_provided_handler(_ctx: Requ
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("x-request-id", "00000000-0000-4000-8000-000000000000")]);
     Ok(response)
 }
@@ -11123,28 +7693,17 @@ async fn request_id_request_id_middleware_can_be_disabled_handler(_ctx: RequestC
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn request_timeout_request_completes_before_timeout_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"status\":\"ok\",\"duration\":\"fast\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"status\":\"ok\",\"duration\":\"fast\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11152,12 +7711,7 @@ async fn request_timeout_request_exceeds_timeout_handler(_ctx: RequestContext) -
     let response = Response::builder()
         .status(StatusCode::from_u16(408).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11167,16 +7721,8 @@ async fn static_files_static_file_server_returns_text_file_handler(_ctx: Request
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[("content-type", "text/plain"), ("cache-control", "public, max-age=60")],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("cache-control", "public, max-age=60"), ("content-type", "text/plain")]);
     Ok(response)
 }
 
@@ -11186,12 +7732,7 @@ async fn status_codes_19_413_payload_too_large_handler(_ctx: RequestContext) -> 
         .status(StatusCode::from_u16(413).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11201,12 +7742,7 @@ async fn status_codes_200_ok_success_handler(_ctx: RequestContext) -> HandlerRes
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11216,29 +7752,17 @@ async fn status_codes_201_created_resource_created_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn status_codes_202_accepted_request_accepted_for_processing_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"message\":\"Task accepted for processing\",\"task_id\":\"abc123\"}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"message\":\"Task accepted for processing\",\"task_id\":\"abc123\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(202).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11246,12 +7770,7 @@ async fn status_codes_204_no_content_success_with_no_body_handler(_ctx: RequestC
     let response = Response::builder()
         .status(StatusCode::from_u16(204).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11261,20 +7780,8 @@ async fn status_codes_206_partial_content_handler(_ctx: RequestContext) -> Handl
         .status(StatusCode::from_u16(206).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("content-type", "application/pdf"),
-            ("accept-ranges", "bytes"),
-            ("content-range", "bytes 0-21/5000"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("accept-ranges", "bytes"), ("content-range", "bytes 0-21/5000"), ("content-type", "application/pdf")]);
     Ok(response)
 }
 
@@ -11284,12 +7791,7 @@ async fn status_codes_20_414_uri_too_long_handler(_ctx: RequestContext) -> Handl
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11299,12 +7801,7 @@ async fn status_codes_21_431_request_header_fields_too_large_handler(_ctx: Reque
         .status(StatusCode::from_u16(431).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11312,12 +7809,7 @@ async fn status_codes_22_501_not_implemented_handler(_ctx: RequestContext) -> Ha
     let response = Response::builder()
         .status(StatusCode::from_u16(405).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11327,12 +7819,7 @@ async fn status_codes_23_503_service_unavailable_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(503).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("retry-after", "0")]);
     Ok(response)
 }
@@ -11341,12 +7828,7 @@ async fn status_codes_301_moved_permanently_permanent_redirect_handler(_ctx: Req
     let response = Response::builder()
         .status(StatusCode::from_u16(301).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("location", "/new-path")]);
     Ok(response)
 }
@@ -11355,12 +7837,7 @@ async fn status_codes_302_found_temporary_redirect_handler(_ctx: RequestContext)
     let response = Response::builder()
         .status(StatusCode::from_u16(302).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("location", "/target-path")]);
     Ok(response)
 }
@@ -11369,12 +7846,7 @@ async fn status_codes_304_not_modified_cached_content_valid_handler(_ctx: Reques
     let response = Response::builder()
         .status(StatusCode::from_u16(304).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .body(Body::empty())
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11384,29 +7856,18 @@ async fn status_codes_307_temporary_redirect_method_preserved_handler(_ctx: Requ
         .status(StatusCode::from_u16(307).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("location", "/target-post")]);
     Ok(response)
 }
 
 async fn status_codes_400_bad_request_invalid_request_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"detail\":\"Invalid request format\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"detail\":\"Invalid request format\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(400).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11416,29 +7877,18 @@ async fn status_codes_401_unauthorized_missing_authentication_handler(_ctx: Requ
         .status(StatusCode::from_u16(401).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("www-authenticate", "Bearer")]);
     Ok(response)
 }
 
 async fn status_codes_403_forbidden_insufficient_permissions_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"detail\":\"Not enough permissions\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"detail\":\"Not enough permissions\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(403).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11448,12 +7898,7 @@ async fn status_codes_404_not_found_resource_not_found_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(404).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11463,12 +7908,7 @@ async fn status_codes_408_request_timeout_handler(_ctx: RequestContext) -> Handl
         .status(StatusCode::from_u16(408).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("connection", "close")]);
     Ok(response)
 }
@@ -11479,37 +7919,18 @@ async fn status_codes_422_unprocessable_entity_validation_error_handler(_ctx: Re
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn status_codes_429_too_many_requests_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"detail\":\"Rate limit exceeded. Try again in 60 seconds.\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"detail\":\"Rate limit exceeded. Try again in 60 seconds.\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(429).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
-    let response = apply_expected_headers(
-        response,
-        &[
-            ("retry-after", "60"),
-            ("x-ratelimit-limit", "100"),
-            ("x-ratelimit-remaining", "0"),
-            ("x-ratelimit-reset", "1609459200"),
-        ],
-    );
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    let response = apply_expected_headers(response, &[("x-ratelimit-remaining", "0"), ("retry-after", "60"), ("x-ratelimit-reset", "1609459200"), ("x-ratelimit-limit", "100")]);
     Ok(response)
 }
 
@@ -11519,28 +7940,17 @@ async fn status_codes_500_internal_server_error_server_error_handler(_ctx: Reque
         .status(StatusCode::from_u16(500).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn status_codes_503_service_unavailable_server_overload_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"detail\":\"Service temporarily unavailable\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"detail\":\"Service temporarily unavailable\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(503).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     let response = apply_expected_headers(response, &[("retry-after", "0")]);
     Ok(response)
 }
@@ -11564,16 +7974,9 @@ async fn streaming_binary_log_download_handler(_ctx: RequestContext) -> HandlerR
 
 async fn streaming_chunked_csv_export_handler(_ctx: RequestContext) -> HandlerResult {
     let stream = stream::iter(vec![
-        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
-            0x69u8, 0x64u8, 0x2cu8, 0x6eu8, 0x61u8, 0x6du8, 0x65u8, 0x2cu8, 0x76u8, 0x61u8, 0x6cu8, 0x75u8, 0x65u8,
-            0x5cu8, 0x6eu8,
-        ])),
-        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
-            0x31u8, 0x2cu8, 0x41u8, 0x6cu8, 0x69u8, 0x63u8, 0x65u8, 0x2cu8, 0x34u8, 0x32u8, 0x5cu8, 0x6eu8,
-        ])),
-        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
-            0x32u8, 0x2cu8, 0x42u8, 0x6fu8, 0x62u8, 0x2cu8, 0x37u8, 0x5cu8, 0x6eu8,
-        ])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x69u8, 0x64u8, 0x2cu8, 0x6eu8, 0x61u8, 0x6du8, 0x65u8, 0x2cu8, 0x76u8, 0x61u8, 0x6cu8, 0x75u8, 0x65u8, 0x5cu8, 0x6eu8])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x31u8, 0x2cu8, 0x41u8, 0x6cu8, 0x69u8, 0x63u8, 0x65u8, 0x2cu8, 0x34u8, 0x32u8, 0x5cu8, 0x6eu8])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x32u8, 0x2cu8, 0x42u8, 0x6fu8, 0x62u8, 0x2cu8, 0x37u8, 0x5cu8, 0x6eu8])),
     ]);
 
     let response = HandlerResponse::stream(stream)
@@ -11586,21 +7989,9 @@ async fn streaming_chunked_csv_export_handler(_ctx: RequestContext) -> HandlerRe
 
 async fn streaming_stream_json_lines_handler(_ctx: RequestContext) -> HandlerResult {
     let stream = stream::iter(vec![
-        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
-            0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x30u8, 0x2cu8, 0x22u8, 0x70u8,
-            0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x61u8, 0x6cu8, 0x70u8, 0x68u8,
-            0x61u8, 0x22u8, 0x7du8, 0x5cu8, 0x6eu8,
-        ])),
-        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
-            0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x31u8, 0x2cu8, 0x22u8, 0x70u8,
-            0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x62u8, 0x65u8, 0x74u8, 0x61u8,
-            0x22u8, 0x7du8, 0x5cu8, 0x6eu8,
-        ])),
-        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[
-            0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x32u8, 0x2cu8, 0x22u8, 0x70u8,
-            0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x67u8, 0x61u8, 0x6du8, 0x6du8,
-            0x61u8, 0x22u8, 0x7du8, 0x5cu8, 0x6eu8,
-        ])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x30u8, 0x2cu8, 0x22u8, 0x70u8, 0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x61u8, 0x6cu8, 0x70u8, 0x68u8, 0x61u8, 0x22u8, 0x7du8, 0x5cu8, 0x6eu8])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x31u8, 0x2cu8, 0x22u8, 0x70u8, 0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x62u8, 0x65u8, 0x74u8, 0x61u8, 0x22u8, 0x7du8, 0x5cu8, 0x6eu8])),
+        Ok::<Bytes, std::io::Error>(Bytes::from_static(&[0x7bu8, 0x22u8, 0x69u8, 0x6eu8, 0x64u8, 0x65u8, 0x78u8, 0x22u8, 0x3au8, 0x32u8, 0x2cu8, 0x22u8, 0x70u8, 0x61u8, 0x79u8, 0x6cu8, 0x6fu8, 0x61u8, 0x64u8, 0x22u8, 0x3au8, 0x22u8, 0x67u8, 0x61u8, 0x6du8, 0x6du8, 0x61u8, 0x22u8, 0x7du8, 0x5cu8, 0x6eu8])),
     ]);
 
     let response = HandlerResponse::stream(stream)
@@ -11612,51 +8003,32 @@ async fn streaming_stream_json_lines_handler(_ctx: RequestContext) -> HandlerRes
 }
 
 async fn url_encoded_13_array_field_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"tags\":[\"python\",\"rust\",\"typescript\"]}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"tags\":[\"python\",\"rust\",\"typescript\"]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_14_nested_object_bracket_notation_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"user\":{\"name\":\"John Doe\",\"email\":\"john@example.com\",\"age\":30}}")
-            .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"user\":{\"name\":\"John Doe\",\"email\":\"john@example.com\",\"age\":30}}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_15_special_characters_field_names_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"user-name\":\"JohnDoe\",\"contact.email\":\"john@example.com\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"user-name\":\"JohnDoe\",\"contact.email\":\"john@example.com\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(201).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11666,12 +8038,7 @@ async fn url_encoded_16_minlength_validation_failure_handler(_ctx: RequestContex
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11681,12 +8048,7 @@ async fn url_encoded_17_pattern_validation_failure_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11696,12 +8058,7 @@ async fn url_encoded_18_integer_minimum_validation_failure_handler(_ctx: Request
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11711,12 +8068,7 @@ async fn url_encoded_19_array_minitems_validation_failure_handler(_ctx: RequestC
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11726,12 +8078,7 @@ async fn url_encoded_20_format_email_validation_failure_handler(_ctx: RequestCon
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11741,12 +8088,7 @@ async fn url_encoded_21_integer_type_coercion_failure_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11756,108 +8098,67 @@ async fn url_encoded_22_additional_properties_strict_failure_handler(_ctx: Reque
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_boolean_field_conversion_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"username\":\"johndoe\",\"subscribe\":true}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"username\":\"johndoe\",\"subscribe\":true}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_empty_string_value_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"username\":\"johndoe\",\"description\":\"\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"username\":\"johndoe\",\"description\":\"\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_multiple_values_for_same_field_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"tags\":[\"python\",\"fastapi\",\"web\"]}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"tags\":[\"python\",\"fastapi\",\"web\"]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_numeric_field_type_conversion_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"username\":\"johndoe\",\"age\":30}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"username\":\"johndoe\",\"age\":30}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_oauth2_password_grant_flow_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"access_token\":\"johndoe\",\"token_type\":\"bearer\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"access_token\":\"johndoe\",\"token_type\":\"bearer\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_optional_field_missing_success_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"username\":\"johndoe\",\"email\":null}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"username\":\"johndoe\",\"email\":null}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11867,12 +8168,7 @@ async fn url_encoded_pattern_validation_fail_handler(_ctx: RequestContext) -> Ha
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11882,12 +8178,7 @@ async fn url_encoded_required_field_missing_validation_error_handler(_ctx: Reque
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11897,28 +8188,17 @@ async fn url_encoded_simple_form_submission_success_handler(_ctx: RequestContext
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn url_encoded_special_characters_encoding_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value = serde_json::from_str("{\"name\":\"John Doe\",\"description\":\"Test & Development\"}")
-        .unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"name\":\"John Doe\",\"description\":\"Test & Development\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(200).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11928,12 +8208,7 @@ async fn url_encoded_string_max_length_validation_fail_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11943,12 +8218,7 @@ async fn url_encoded_string_min_length_validation_fail_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11958,12 +8228,7 @@ async fn validation_errors_09_multiple_validation_errors_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11973,12 +8238,7 @@ async fn validation_errors_10_nested_error_path_handler(_ctx: RequestContext) ->
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -11988,12 +8248,7 @@ async fn validation_errors_array_item_validation_error_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12003,12 +8258,7 @@ async fn validation_errors_array_max_items_constraint_violation_handler(_ctx: Re
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12018,12 +8268,7 @@ async fn validation_errors_array_min_items_constraint_violation_handler(_ctx: Re
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12033,12 +8278,7 @@ async fn validation_errors_body_field_type_error_string_for_float_handler(_ctx: 
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12048,12 +8288,7 @@ async fn validation_errors_header_validation_error_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12063,12 +8298,7 @@ async fn validation_errors_invalid_uuid_format_handler(_ctx: RequestContext) -> 
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12078,12 +8308,7 @@ async fn validation_errors_invalid_boolean_value_handler(_ctx: RequestContext) -
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12093,12 +8318,7 @@ async fn validation_errors_invalid_datetime_format_handler(_ctx: RequestContext)
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12108,28 +8328,17 @@ async fn validation_errors_invalid_enum_value_handler(_ctx: RequestContext) -> H
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
 async fn validation_errors_malformed_json_body_handler(_ctx: RequestContext) -> HandlerResult {
-    let body_value: Value =
-        serde_json::from_str("{\"detail\":\"Invalid request format\"}").unwrap_or_else(|_| Value::Null);
+    let body_value: Value = serde_json::from_str("{\"detail\":\"Invalid request format\"}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(400).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12139,12 +8348,7 @@ async fn validation_errors_missing_required_body_field_handler(_ctx: RequestCont
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12154,12 +8358,7 @@ async fn validation_errors_missing_required_query_parameter_handler(_ctx: Reques
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12169,12 +8368,7 @@ async fn validation_errors_multiple_validation_errors_handler(_ctx: RequestConte
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12184,12 +8378,7 @@ async fn validation_errors_nested_object_validation_error_handler(_ctx: RequestC
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12199,46 +8388,27 @@ async fn validation_errors_numeric_constraint_violation_gt_greater_than_handler(
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn validation_errors_numeric_constraint_violation_le_less_than_or_equal_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
+async fn validation_errors_numeric_constraint_violation_le_less_than_or_equal_handler(_ctx: RequestContext) -> HandlerResult {
     let body_value: Value = serde_json::from_str("{\"type\":\"https://spikard.dev/errors/validation-error\",\"title\":\"Request Validation Failed\",\"status\":422,\"detail\":\"1 validation error in request\",\"errors\":[{\"type\":\"less_than_equal\",\"loc\":[\"query\",\"limit\"],\"msg\":\"Input should be less than or equal to 100\",\"input\":\"101\",\"ctx\":{\"le\":100}}]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
-async fn validation_errors_query_param_type_error_string_provided_for_int_handler(
-    _ctx: RequestContext,
-) -> HandlerResult {
+async fn validation_errors_query_param_type_error_string_provided_for_int_handler(_ctx: RequestContext) -> HandlerResult {
     let body_value: Value = serde_json::from_str("{\"type\":\"https://spikard.dev/errors/validation-error\",\"title\":\"Request Validation Failed\",\"status\":422,\"detail\":\"1 validation error in request\",\"errors\":[{\"type\":\"int_parsing\",\"loc\":[\"query\",\"skip\"],\"msg\":\"Input should be a valid integer, unable to parse string as an integer\",\"input\":\"not_a_number\"}]}").unwrap_or_else(|_| Value::Null);
     let response = Response::builder()
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12248,12 +8418,7 @@ async fn validation_errors_string_max_length_constraint_violation_handler(_ctx: 
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12263,12 +8428,7 @@ async fn validation_errors_string_min_length_constraint_violation_handler(_ctx: 
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12278,12 +8438,7 @@ async fn validation_errors_string_regex_pattern_mismatch_handler(_ctx: RequestCo
         .status(StatusCode::from_u16(422).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
         .header("content-type", "application/json")
         .body(Body::from(body_value.to_string()))
-        .unwrap_or_else(|_| {
-            Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::empty())
-                .unwrap()
-        });
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
     Ok(response)
 }
 
@@ -12297,21 +8452,16 @@ async fn sse_notifications_handler(_ctx: RequestContext) -> HandlerResult {
 ", "data: {\"message\":\"All systems operational\",\"metadata\":{\"region\":\"us-east-1\",\"uptime\":99.99},\"service\":\"payment-gateway\",\"status\":\"operational\",\"timestamp\":\"2024-01-15T10:30:00Z\",\"type\":\"status_update\"}
 
 "].into_iter().map(String::from).collect::<Vec<_>>();
-    let stream = stream::iter(
-        events
-            .into_iter()
-            .map(|chunk| Ok::<Bytes, std::io::Error>(Bytes::from(chunk))),
-    );
+    let stream = stream::iter(events.into_iter().map(|chunk| {
+        Ok::<Bytes, std::io::Error>(Bytes::from(chunk))
+    }));
     let response = HandlerResponse::stream(stream)
         .with_status(StatusCode::OK)
         .with_header(
             HeaderName::from_static("content-type"),
             HeaderValue::from_static("text/event-stream"),
         )
-        .with_header(
-            HeaderName::from_static("cache-control"),
-            HeaderValue::from_static("no-cache"),
-        )
+        .with_header(HeaderName::from_static("cache-control"), HeaderValue::from_static("no-cache"))
         .into_response();
     Ok(response)
 }

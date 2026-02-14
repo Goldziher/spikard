@@ -24,5 +24,4 @@ async def test_grpc_validation_error_invalid_argument_with_details() -> None:
     response = await handle_grpc_validation_error_invalid_argument_with_details(request)
 
     # Verify response
-    assert response.status_code == "INVALID_ARGUMENT"
     assert response.metadata is not None

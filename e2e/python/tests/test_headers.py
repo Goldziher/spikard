@@ -402,8 +402,8 @@ async def test_multiple_custom_headers() -> None:
 
     async with TestClient(create_app_headers_multiple_custom_headers()) as client:
         headers = {
-            "X-Client-Version": "1.2.3",
             "X-Trace-Id": "trace-abc",
+            "X-Client-Version": "1.2.3",
             "X-Request-Id": "req-12345",
         }
         response = await client.get("/headers/multiple", headers=headers)

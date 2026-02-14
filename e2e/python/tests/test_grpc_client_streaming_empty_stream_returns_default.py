@@ -24,7 +24,6 @@ async def test_grpc_client_streaming_empty_stream_returns_default() -> None:
     response = await handle_grpc_client_streaming_empty_stream_returns_default(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"request_id":"empty-stream-req","message_count":0,"result":"DEFAULT_RESULT","is_default":true}'

@@ -223,6 +223,26 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
     if schema_source is None or schema_source in (int, str, float, bool):
         return None
 
+    # Spikard response wrapper types are opaque containers (status/headers/body) and don't carry a JSON schema.
+    # Treat them as "no schema" so schema extraction doesn't blow up on handlers that return Response objects.
+    spikard_ext: Any | None
+    try:  # pragma: no cover - exercised in e2e where the Rust extension is available
+        import _spikard as spikard_ext  # noqa: PLC0415
+    except Exception:
+        spikard_ext = None
+    if (
+        spikard_ext is not None
+        and isinstance(schema_source, type)
+        and schema_source
+        in (
+            getattr(spikard_ext, "Response", object()),
+            getattr(spikard_ext, "StreamingResponse", object()),
+            getattr(spikard_ext, "GrpcResponse", object()),
+            getattr(spikard_ext, "GrpcRequest", object()),
+        )
+    ):
+        return None
+
     origin = get_origin(schema_source)
     args = get_args(schema_source)
     if origin is dict and len(args) == 2 and args[1] is object:

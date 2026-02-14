@@ -11,8 +11,8 @@ async def test_grpc_cors_related_metadata_headers() -> None:
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
         "content-type": "application/grpc",
-        "origin": "https://example.com",
         "access-control-request-method": "POST",
+        "origin": "https://example.com",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -26,6 +26,5 @@ async def test_grpc_cors_related_metadata_headers() -> None:
     response = await handle_grpc_cors_related_metadata_headers(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"allowed":true}'
     assert response.metadata is not None

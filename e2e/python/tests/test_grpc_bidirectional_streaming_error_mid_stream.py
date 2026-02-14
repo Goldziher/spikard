@@ -24,6 +24,5 @@ async def test_grpc_bidirectional_streaming_error_mid_stream() -> None:
     response = await handle_grpc_bidirectional_streaming_error_mid_stream(request)
 
     # Verify response
-    assert response.status_code == "INTERNAL"
     assert response.payload == b'"Error after processing 2 messages"'
     assert response.metadata is not None

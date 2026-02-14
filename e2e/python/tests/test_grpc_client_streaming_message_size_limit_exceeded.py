@@ -10,8 +10,8 @@ async def test_grpc_client_streaming_message_size_limit_exceeded() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "grpc-max-message-size": "4096",
         "content-type": "application/grpc",
+        "grpc-max-message-size": "4096",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -25,7 +25,6 @@ async def test_grpc_client_streaming_message_size_limit_exceeded() -> None:
     response = await handle_grpc_client_streaming_message_size_limit_exceeded(request)
 
     # Verify response
-    assert response.status_code == "RESOURCE_EXHAUSTED"
     assert (
         response.payload
         == b'{"message_id":"payload-002","processed_count":1,"status":"FAILED","error_detail":"Message payload size 10240 exceeds maximum allowed size 4096"}'

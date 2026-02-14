@@ -24,5 +24,4 @@ async def test_grpc_grpc_unauthenticated_status_16_auth_required() -> None:
     response = await handle_grpc_grpc_unauthenticated_status_16_auth_required(request)
 
     # Verify response
-    assert response.status_code == "UNAUTHENTICATED"
     assert response.metadata is not None

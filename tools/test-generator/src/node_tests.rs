@@ -5,8 +5,8 @@
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::codegen_utils::{
-    escape_string, format_property_access, format_ts_property_key, is_large_integer,
-    is_value_effectively_empty, json_to_typescript,
+    escape_string, format_property_access, format_ts_property_key, is_large_integer, is_value_effectively_empty,
+    json_to_typescript,
 };
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::fixture_filter::is_http_fixture_category;
@@ -124,7 +124,8 @@ pub fn generate_node_tests(fixtures_dir: &Path, output_dir: &Path, target: &Type
                 final_code.push_str("});\n");
 
                 let test_file = tests_dir.join(format!("grpc_{}{}", test_name, test_suffix));
-                fs::write(&test_file, final_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
+                fs::write(&test_file, final_code)
+                    .with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
                 println!("  ✓ Generated tests/grpc_{}{}", test_name, test_suffix);
             }
         }
@@ -1279,7 +1280,10 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     let handler_name = format!("handleGrpc{}", to_pascal_case(&sanitize_identifier(&fixture.name)));
 
     // Test function
-    code.push_str(&format!("test(\"should handle gRPC request: {}\", async () => {{\n", test_name));
+    code.push_str(&format!(
+        "test(\"should handle gRPC request: {}\", async () => {{\n",
+        test_name
+    ));
     code.push_str(&format!(
         "  // {}\n",
         fixture.description.as_deref().unwrap_or(&fixture.name)
@@ -1309,14 +1313,8 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
 
     // Build request payload
     code.push_str("  const request: GrpcRequest = {\n");
-    code.push_str(&format!(
-        "    serviceName: \"{}\",\n",
-        fixture.handler.service
-    ));
-    code.push_str(&format!(
-        "    methodName: \"{}\",\n",
-        fixture.handler.method
-    ));
+    code.push_str(&format!("    serviceName: \"{}\",\n", fixture.handler.service));
+    code.push_str(&format!("    methodName: \"{}\",\n", fixture.handler.method));
     code.push_str("    payload: Buffer.from(JSON.stringify({})),\n");
     code.push_str("    metadata,\n");
     code.push_str("  };\n\n");
@@ -1333,8 +1331,7 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
 
     // Assert payload if present
     if let Some(ref expected_msg) = fixture.expected_response.message {
-        let expected_json = serde_json::to_string(expected_msg)
-            .context("Failed to serialize expected response")?;
+        let expected_json = serde_json::to_string(expected_msg).context("Failed to serialize expected response")?;
         code.push_str(&format!(
             "  expect(response.payload).toEqual(Buffer.from(JSON.stringify({})));\n",
             json_to_typescript(expected_msg)

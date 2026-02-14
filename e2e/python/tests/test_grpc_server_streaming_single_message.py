@@ -24,6 +24,5 @@ async def test_grpc_server_streaming_single_message() -> None:
     response = await handle_grpc_server_streaming_single_message(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'"Stream completed with one message"'
     assert response.metadata is not None

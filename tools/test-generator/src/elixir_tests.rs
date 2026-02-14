@@ -7,7 +7,7 @@ use crate::fixture_filter::is_http_fixture_category;
 use anyhow::{Context, Result};
 use serde_json::Value;
 use spikard_codegen::openapi::from_fixtures::FixtureRequest;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
@@ -284,10 +284,7 @@ fn build_url(path: &str, query_params: &Option<HashMap<String, Value>>) -> Strin
     }
 }
 
-fn build_headers(
-    headers: &Option<HashMap<String, String>>,
-    cookies: &Option<HashMap<String, String>>,
-) -> String {
+fn build_headers(headers: &Option<HashMap<String, String>>, cookies: &Option<HashMap<String, String>>) -> String {
     let mut pairs: Vec<String> = Vec::new();
 
     // Add regular headers
@@ -309,10 +306,7 @@ fn build_headers(
                 .map(|(k, v)| format!("{}={}", k, v))
                 .collect::<Vec<_>>()
                 .join("; ");
-            pairs.push(format!(
-                "{{~c\"Cookie\", ~c\"{}\"}}",
-                cookie_str.replace('"', "\\\"")
-            ));
+            pairs.push(format!("{{~c\"Cookie\", ~c\"{}\"}}", cookie_str.replace('"', "\\\"")));
         }
     }
 
@@ -411,9 +405,7 @@ fn build_http_request_with_error_handling(method: &str, content_type: &str, is_m
     // For 503 responses, :httpc may timeout due to Retry-After handling.
     // We build a let statement that assigns status and resp_body from the case result.
     let httpc_call: String = match method {
-        "GET" => {
-            ":httpc.request(:get, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string()
-        }
+        "GET" => ":httpc.request(:get, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string(),
         "POST" | "PUT" | "PATCH" => {
             if is_multipart {
                 format!(
@@ -428,21 +420,11 @@ fn build_http_request_with_error_handling(method: &str, content_type: &str, is_m
                 )
             }
         }
-        "DELETE" => {
-            ":httpc.request(:delete, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string()
-        }
-        "HEAD" => {
-            ":httpc.request(:head, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string()
-        }
-        "OPTIONS" => {
-            ":httpc.request(:options, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string()
-        }
-        "TRACE" => {
-            ":httpc.request(:trace, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string()
-        }
-        _ => {
-            "".to_string()
-        }
+        "DELETE" => ":httpc.request(:delete, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string(),
+        "HEAD" => ":httpc.request(:head, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string(),
+        "OPTIONS" => ":httpc.request(:options, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string(),
+        "TRACE" => ":httpc.request(:trace, {String.to_charlist(url), headers}, [{:timeout, 5000}], [])".to_string(),
+        _ => "".to_string(),
     };
 
     let mut code = String::new();
@@ -512,10 +494,7 @@ fn build_test_case(category: &str, fixture: &Fixture) -> String {
 
         // Request body (for methods that need it)
         if matches!(method.as_str(), "POST" | "PUT" | "PATCH") {
-            code.push_str(&format!(
-                "      req_body = {}\n",
-                build_request_body(&fixture.request)
-            ));
+            code.push_str(&format!("      req_body = {}\n", build_request_body(&fixture.request)));
         }
     }
 
@@ -524,9 +503,18 @@ fn build_test_case(category: &str, fixture: &Fixture) -> String {
 
     // For 503 responses, :httpc may timeout due to Retry-After handling
     if response.status_code == 503 {
-        code.push_str(&build_http_request_with_error_handling(&method, content_type, is_multipart));
+        code.push_str(&build_http_request_with_error_handling(
+            &method,
+            content_type,
+            is_multipart,
+        ));
     } else {
-        code.push_str(&build_http_request(&method, content_type, response.status_code, is_multipart));
+        code.push_str(&build_http_request(
+            &method,
+            content_type,
+            response.status_code,
+            is_multipart,
+        ));
     }
 
     // Assertions
@@ -614,11 +602,7 @@ fn add_body_assertions(code: &mut String, expected: &Value, indent: &str) {
             code.push_str(&format!("{}assert is_list(parsed_body)\n", indent));
         }
         Value::String(s) => {
-            code.push_str(&format!(
-                "{}assert resp_body_str == {}\n",
-                indent,
-                string_literal(s)
-            ));
+            code.push_str(&format!("{}assert resp_body_str == {}\n", indent, string_literal(s)));
         }
         _ => {}
     }

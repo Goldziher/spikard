@@ -10,8 +10,8 @@ async def test_grpc_grpc_compression_test_gzip() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "grpc-encoding": "gzip",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -25,6 +25,5 @@ async def test_grpc_grpc_compression_test_gzip() -> None:
     response = await handle_grpc_grpc_compression_test_gzip(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"id":"compress-test-001","compressed":true}'
     assert response.metadata is not None

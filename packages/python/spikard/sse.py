@@ -23,10 +23,10 @@ Each dict is sent as a Server-Sent Event with JSON data.
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterator, Callable
+from contextlib import suppress
 from dataclasses import dataclass
-from typing import Any, TypeVar, get_args, get_origin, get_type_hints
+from typing import Any, TypeVar, cast, get_args, get_origin, get_type_hints
 
 __all__ = ["SseEvent", "SseEventProducer", "get_standalone_sse_producers", "sse"]
 
@@ -84,54 +84,23 @@ class SseEventProducer:
         self._generator: AsyncIterator[dict[str, Any]] | None = None
         self._event_schema = event_schema
 
-    def on_connect(self) -> None:
+    async def on_connect(self) -> None:
         """Called when a client connects. Initializes the generator."""
         self._generator = self._generator_func()
 
-    def on_disconnect(self) -> None:
+    async def on_disconnect(self) -> None:
         """Called when a client disconnects. Cleans up the generator."""
         if self._generator is not None and hasattr(self._generator, "aclose"):
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # Event loop is running; use a temporary loop to close
-                    temp_loop = asyncio.new_event_loop()
-                    try:
-                        asyncio.set_event_loop(temp_loop)
-                        temp_loop.run_until_complete(self._generator.aclose())
-                    finally:
-                        temp_loop.close()
-                        asyncio.set_event_loop(loop)
-                else:
-                    loop.run_until_complete(self._generator.aclose())
-            except Exception:
-                pass
+            with suppress(Exception):
+                await cast("Any", self._generator).aclose()
         self._generator = None
 
-    def next_event(self) -> SseEvent | None:
-        """Get the next event from the generator (SYNCHRONOUS).
+    async def next_event(self) -> SseEvent | None:
+        """Get the next event from the generator.
 
-        Returns:
-            SseEvent or None when the stream ends.
+        The Rust binding drives this coroutine using pyo3-async-runtimes.
         """
-        if self._generator is None:
-            return None
-
-        try:
-            coro = self._async_next_event()
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                temp_loop = asyncio.new_event_loop()
-                try:
-                    asyncio.set_event_loop(temp_loop)
-                    return temp_loop.run_until_complete(coro)
-                finally:
-                    temp_loop.close()
-                    asyncio.set_event_loop(loop)
-            else:
-                return loop.run_until_complete(coro)
-        except Exception:
-            return None
+        return await self._async_next_event()
 
     async def _async_next_event(self) -> SseEvent | None:
         """Get the next event asynchronously."""

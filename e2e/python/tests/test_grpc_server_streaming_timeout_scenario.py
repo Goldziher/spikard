@@ -25,5 +25,8 @@ async def test_grpc_server_streaming_timeout_scenario() -> None:
     response = await handle_grpc_server_streaming_timeout_scenario(request)
 
     # Verify response
-    assert response.status_code == "DEADLINE_EXCEEDED"
+    assert (
+        response.payload
+        == b'[{"sequence":1,"data":"Message 1","elapsed_ms":500},{"sequence":2,"data":"Message 2","elapsed_ms":1000}]'
+    )
     assert response.metadata is not None

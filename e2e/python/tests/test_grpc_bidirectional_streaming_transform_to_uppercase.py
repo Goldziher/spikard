@@ -24,5 +24,5 @@ async def test_grpc_bidirectional_streaming_transform_to_uppercase() -> None:
     response = await handle_grpc_bidirectional_streaming_transform_to_uppercase(request)
 
     # Verify response
-    assert response.status_code == "OK"
+    assert response.payload == b'[{"content":"HELLO"},{"content":"WORLD"},{"content":"TEST"}]'
     assert response.metadata is not None

@@ -6,6 +6,8 @@ use spikard_http::{SseEvent, SseEventProducer};
 use std::sync::Arc;
 use tracing::{debug, error};
 
+use crate::handler::PYTHON_TASK_LOCALS;
+
 /// Python implementation of SseEventProducer
 pub struct PythonSseEventProducer {
     /// Python producer instance wrapped in `Arc` for cheap cloning
@@ -43,8 +45,14 @@ impl SseEventProducer for PythonSseEventProducer {
 
                 if is_coroutine {
                     debug!("Python SSE producer: result is coroutine, awaiting...");
-                    let future_result =
-                        Python::attach(|py| pyo3_async_runtimes::tokio::into_future(result_py.bind(py).clone()));
+                    let Some(task_locals) = PYTHON_TASK_LOCALS.get().cloned() else {
+                        error!("Python async context not initialized (SSE)");
+                        return None;
+                    };
+
+                    let future_result = Python::attach(|py| {
+                        pyo3_async_runtimes::into_future_with_locals(&task_locals, result_py.bind(py).clone())
+                    });
 
                     match future_result {
                         Ok(future) => match future.await {
@@ -94,8 +102,14 @@ impl SseEventProducer for PythonSseEventProducer {
         });
 
         if let Ok(coroutine) = coroutine_py {
-            let future_result =
-                Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine.bind(py).clone()));
+            let Some(task_locals) = PYTHON_TASK_LOCALS.get().cloned() else {
+                error!("Python async context not initialized (SSE)");
+                return;
+            };
+
+            let future_result = Python::attach(|py| {
+                pyo3_async_runtimes::into_future_with_locals(&task_locals, coroutine.bind(py).clone())
+            });
 
             if let Ok(future) = future_result {
                 let _ = future.await;
@@ -119,8 +133,14 @@ impl SseEventProducer for PythonSseEventProducer {
         });
 
         if let Ok(coroutine) = coroutine_py {
-            let future_result =
-                Python::attach(|py| pyo3_async_runtimes::tokio::into_future(coroutine.bind(py).clone()));
+            let Some(task_locals) = PYTHON_TASK_LOCALS.get().cloned() else {
+                error!("Python async context not initialized (SSE)");
+                return;
+            };
+
+            let future_result = Python::attach(|py| {
+                pyo3_async_runtimes::into_future_with_locals(&task_locals, coroutine.bind(py).clone())
+            });
 
             if let Ok(future) = future_result {
                 let _ = future.await;

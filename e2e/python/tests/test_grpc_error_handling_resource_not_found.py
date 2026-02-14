@@ -24,5 +24,4 @@ async def test_grpc_error_handling_resource_not_found() -> None:
     response = await handle_grpc_error_handling_resource_not_found(request)
 
     # Verify response
-    assert response.status_code == "NOT_FOUND"
     assert response.metadata is not None

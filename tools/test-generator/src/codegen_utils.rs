@@ -212,10 +212,7 @@ mod tests {
         assert_eq!(json_to_typescript(&json!("hello")), "\"hello\"");
         assert_eq!(json_to_typescript(&json!([1, 2, 3])), "[1, 2, 3]");
         // Valid identifiers don't get quoted, non-identifiers do
-        assert_eq!(
-            json_to_typescript(&json!({"key": "value"})),
-            "{ key: \"value\" }"
-        );
+        assert_eq!(json_to_typescript(&json!({"key": "value"})), "{ key: \"value\" }");
         assert_eq!(
             json_to_typescript(&json!({"foo-bar": "baz"})),
             "{ \"foo-bar\": \"baz\" }"

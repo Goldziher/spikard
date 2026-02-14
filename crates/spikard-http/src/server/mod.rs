@@ -507,11 +507,7 @@ fn build_router_with_handlers_inner(
         for (route, handler) in route_handlers {
             #[cfg(feature = "di")]
             let handler = if let Some(ref container) = di_container {
-                let mut required_deps = extract_handler_dependencies(&route);
-                if required_deps.is_empty() {
-                    required_deps = container.keys();
-                }
-
+                let required_deps = extract_handler_dependencies(&route);
                 if !required_deps.is_empty() {
                     Arc::new(crate::di_handler::DependencyInjectingHandler::new(
                         handler,

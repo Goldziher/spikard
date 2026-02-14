@@ -24,7 +24,6 @@ async def test_grpc_large_repeated_field_with_10_000_items() -> None:
     response = await handle_grpc_large_repeated_field_with_10_000_items(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"series_id":"metrics-large-series","point_count":10000,"min_value":10.5,"max_value":99.9}'

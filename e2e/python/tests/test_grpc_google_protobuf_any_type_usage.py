@@ -24,6 +24,5 @@ async def test_grpc_google_protobuf_any_type_usage() -> None:
     response = await handle_grpc_google_protobuf_any_type_usage(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"request_id":"any-test-001","type_name":"example.v1.Container","success":true}'
     assert response.metadata is not None

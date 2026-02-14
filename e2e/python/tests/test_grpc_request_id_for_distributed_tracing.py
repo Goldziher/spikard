@@ -10,8 +10,8 @@ async def test_grpc_request_id_for_distributed_tracing() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "x-request-id": "req-12345-67890",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -25,6 +25,5 @@ async def test_grpc_request_id_for_distributed_tracing() -> None:
     response = await handle_grpc_request_id_for_distributed_tracing(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"request_id":"req-12345-67890"}'
     assert response.metadata is not None

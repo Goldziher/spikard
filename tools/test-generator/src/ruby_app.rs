@@ -1289,13 +1289,9 @@ pub fn generate_grpc_handler(fixture: &GrpcFixture) -> Result<String> {
 
     // Build response payload from expected_response
     if let Some(ref response_msg) = fixture.expected_response.message {
-        let response_json = serde_json::to_string(response_msg)
-            .context("Failed to serialize expected response")?;
+        let response_json = serde_json::to_string(response_msg).context("Failed to serialize expected response")?;
         let response_literal = value_to_ruby(&serde_json::json!(response_json));
-        code.push_str(&format!(
-            "    response_payload = {}.to_json\n",
-            response_literal
-        ));
+        code.push_str(&format!("    response_payload = {}.to_json\n", response_literal));
     } else {
         code.push_str("    response_payload = {}.to_json\n");
     }

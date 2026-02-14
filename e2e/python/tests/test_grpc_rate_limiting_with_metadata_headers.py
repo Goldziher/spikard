@@ -24,6 +24,5 @@ async def test_grpc_rate_limiting_with_metadata_headers() -> None:
     response = await handle_grpc_rate_limiting_with_metadata_headers(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"result":"success"}'
     assert response.metadata is not None

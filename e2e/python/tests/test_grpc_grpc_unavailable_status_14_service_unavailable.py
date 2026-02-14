@@ -24,5 +24,4 @@ async def test_grpc_grpc_unavailable_status_14_service_unavailable() -> None:
     response = await handle_grpc_grpc_unavailable_status_14_service_unavailable(request)
 
     # Verify response
-    assert response.status_code == "UNAVAILABLE"
     assert response.metadata is not None

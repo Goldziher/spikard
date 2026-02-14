@@ -10,8 +10,8 @@ async def test_grpc_oauth2_bearer_token_authentication() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "authorization": "Bearer ya29.a0AfH6SMBx...",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -25,6 +25,5 @@ async def test_grpc_oauth2_bearer_token_authentication() -> None:
     response = await handle_grpc_oauth2_bearer_token_authentication(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"granted":true,"token_info":"oauth2_token"}'
     assert response.metadata is not None

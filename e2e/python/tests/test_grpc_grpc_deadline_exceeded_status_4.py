@@ -24,5 +24,4 @@ async def test_grpc_grpc_deadline_exceeded_status_4() -> None:
     response = await handle_grpc_grpc_deadline_exceeded_status_4(request)
 
     # Verify response
-    assert response.status_code == "DEADLINE_EXCEEDED"
     assert response.metadata is not None

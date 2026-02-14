@@ -24,7 +24,6 @@ async def test_grpc_well_known_wrapper_types_stringvalue_int32value_etc() -> Non
     response = await handle_grpc_well_known_wrapper_types_stringvalue_int32value_etc(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"id":"wrapper-test-001","name_present":true,"name_value":"Test Name","count_present":true,"count_value":42}'

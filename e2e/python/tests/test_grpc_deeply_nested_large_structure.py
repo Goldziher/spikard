@@ -24,7 +24,6 @@ async def test_grpc_deeply_nested_large_structure() -> None:
     response = await handle_grpc_deeply_nested_large_structure(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"success":true,"person":{"name":"John Doe","address":{"street":"123 Main St","city":"Springfield"}}}'

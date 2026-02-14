@@ -20,7 +20,7 @@ import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 try:
     from typing import Self
@@ -66,14 +66,21 @@ class TestResponse:
         result: dict[str, str] = self._response.headers
         return result
 
-    def bytes(self) -> bytes:
-        """Get the response body as bytes."""
+    @property
+    def content(self) -> bytes:
+        """Get the response body as bytes (httpx-compatible alias)."""
         result: bytes = self._response.bytes()
         return result
 
+    @property
     def text(self) -> str:
-        """Get the response body as text."""
+        """Get the response body as text (httpx-compatible alias)."""
         result: str = self._response.text()
+        return result
+
+    def bytes(self) -> bytes:
+        """Get the response body as bytes."""
+        result: bytes = self._response.bytes()
         return result
 
     def json(self) -> Any:
@@ -123,6 +130,11 @@ class WebSocketConnection:
         Args:
             data: The message to send
         """
+        # Rust binding exposes `send_text` / `receive_text` for the test connection.
+        # Keep compatibility with older internal clients that may implement `send` / `recv`.
+        if hasattr(self._conn, "send_text"):
+            await self._conn.send_text(data)
+            return
         await self._conn.send(data)
 
     async def recv(self) -> str:
@@ -131,8 +143,9 @@ class WebSocketConnection:
         Returns:
             The received message
         """
-        result: str = await self._conn.recv()
-        return result
+        if hasattr(self._conn, "receive_text"):
+            return cast("str", await self._conn.receive_text())
+        return cast("str", await self._conn.recv())
 
     async def close(self) -> None:
         """Close the WebSocket connection."""
@@ -270,6 +283,40 @@ class TestClient:
         Returns:
             TestResponse: The response from the server
         """
+        # The Rust test client expects `files` as a dict (optionally with list values for repeated keys),
+        # but the generated e2e tests pass httpx-style `files=[(name, file_tuple), ...]` too.
+        if files is not None and not isinstance(files, dict):
+            if isinstance(files, (list, tuple)):
+                normalized: dict[str, Any] = {}
+                for item in files:
+                    if not (isinstance(item, (list, tuple)) and len(item) == 2):
+                        raise TypeError("files must be a dict or a list of (field, file) pairs")
+                    field, file_spec = item
+                    field = field if isinstance(field, str) else str(field)
+                    existing = normalized.get(field)
+                    if existing is None:
+                        normalized[field] = file_spec
+                    elif isinstance(existing, list):
+                        existing.append(file_spec)
+                    else:
+                        normalized[field] = [existing, file_spec]
+                files = normalized
+            else:
+                raise TypeError("files must be a dict or a list of (field, file) pairs")
+
+        # If the caller explicitly requests urlencoded, encode dict `data` accordingly.
+        # This avoids the Rust layer defaulting to multipart for dict form data (needed by multipart-only tests).
+        if data is not None and isinstance(data, dict) and headers:
+            content_type = None
+            for k, v in headers.items():
+                if k.lower() == "content-type":
+                    content_type = v
+                    break
+            if content_type and "application/x-www-form-urlencoded" in content_type.lower():
+                import urllib.parse  # noqa: PLC0415
+
+                data = urllib.parse.urlencode(data, doseq=True)
+
         self._check_client()
         response = await self._client.post(
             path, json=json, data=data, files=files, query_params=params, headers=headers, cookies=cookies

@@ -63,7 +63,8 @@ pub fn generate_ruby_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
                 let test_name = sanitize_identifier(&fixture.name);
                 let test_file = spec_dir.join(format!("grpc_{}_spec.rb", test_name));
 
-                fs::write(&test_file, test_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
+                fs::write(&test_file, test_code)
+                    .with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
                 println!("  ✓ Generated spec/generated/grpc_{}_spec.rb", test_name);
             }
         }
@@ -844,10 +845,7 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     let handler_name = format!("handle_grpc_{}", test_name);
 
     // Test block header with describe and it
-    code.push_str(&format!(
-        "  describe \"gRPC: {}\" do\n",
-        fixture.handler.method
-    ));
+    code.push_str(&format!("  describe \"gRPC: {}\" do\n", fixture.handler.method));
     code.push_str(&format!(
         "    it \"{}\" do\n",
         fixture.description.as_deref().unwrap_or(&fixture.name)
@@ -859,7 +857,11 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
         if !metadata.is_empty() {
             code.push_str("      metadata = {\n");
             for (key, value) in metadata {
-                code.push_str(&format!("        {} => {},\n", string_literal(key), string_literal(value)));
+                code.push_str(&format!(
+                    "        {} => {},\n",
+                    string_literal(key),
+                    string_literal(value)
+                ));
             }
             code.push_str("      }\n");
         } else {
@@ -872,8 +874,7 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     // Build request payload
     code.push_str("\n      # Build request payload\n");
     if let Some(ref request_msg) = fixture.request.message {
-        let request_json = serde_json::to_string(request_msg)
-            .context("Failed to serialize request message")?;
+        let request_json = serde_json::to_string(request_msg).context("Failed to serialize request message")?;
         let request_literal = value_to_ruby(&serde_json::json!(request_json));
         code.push_str(&format!("      request_payload = {}.to_json\n", request_literal));
     } else {
@@ -907,8 +908,7 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
 
     // Assert payload if present
     if let Some(ref expected_msg) = fixture.expected_response.message {
-        let expected_json = serde_json::to_string(expected_msg)
-            .context("Failed to serialize expected response")?;
+        let expected_json = serde_json::to_string(expected_msg).context("Failed to serialize expected response")?;
         let expected_literal = value_to_ruby(&serde_json::json!(expected_json));
         code.push_str(&format!(
             "      expect(response.payload).to eq({}.to_json)\n",

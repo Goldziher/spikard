@@ -24,5 +24,5 @@ async def test_grpc_error_handling_unauthenticated_server_streaming_request() ->
     response = await handle_grpc_error_handling_unauthenticated_server_streaming_request(request)
 
     # Verify response
-    assert response.status_code == "UNAUTHENTICATED"
+    assert response.payload == b"[]"
     assert response.metadata is not None

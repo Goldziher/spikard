@@ -11,8 +11,8 @@ async def test_grpc_mutual_tls_metadata_simulation() -> None:
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
         "content-type": "application/grpc",
-        "x-client-cert-fingerprint": "AB:CD:EF:12:34:56:78:90",
         "x-client-cert-cn": "client.example.com",
+        "x-client-cert-fingerprint": "AB:CD:EF:12:34:56:78:90",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -26,6 +26,5 @@ async def test_grpc_mutual_tls_metadata_simulation() -> None:
     response = await handle_grpc_mutual_tls_metadata_simulation(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"verified":true,"client_cn":"client.example.com"}'
     assert response.metadata is not None

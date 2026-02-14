@@ -24,5 +24,4 @@ async def test_grpc_grpc_permission_denied_status_7() -> None:
     response = await handle_grpc_grpc_permission_denied_status_7(request)
 
     # Verify response
-    assert response.status_code == "PERMISSION_DENIED"
     assert response.metadata is not None

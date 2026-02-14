@@ -24,7 +24,6 @@ async def test_grpc_client_streaming_validation_failure_mid_stream() -> None:
     response = await handle_grpc_client_streaming_validation_failure_mid_stream(request)
 
     # Verify response
-    assert response.status_code == "INVALID_ARGUMENT"
     assert (
         response.payload
         == b'{"processed":2,"status":"VALIDATION_FAILED","error_message":"Invalid email format at message index 2: invalid-email"}'

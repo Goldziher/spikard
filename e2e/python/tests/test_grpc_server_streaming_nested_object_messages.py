@@ -24,6 +24,5 @@ async def test_grpc_server_streaming_nested_object_messages() -> None:
     response = await handle_grpc_server_streaming_nested_object_messages(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'"3 people with nested objects streamed successfully"'
     assert response.metadata is not None

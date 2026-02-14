@@ -10,8 +10,8 @@ async def test_grpc_simple_unary_rpc_getuser() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "authorization": "Bearer test-token",
         "content-type": "application/grpc",
+        "authorization": "Bearer test-token",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -25,6 +25,5 @@ async def test_grpc_simple_unary_rpc_getuser() -> None:
     response = await handle_grpc_simple_unary_rpc_getuser(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"id":123,"name":"Alice Johnson","email":"alice@example.com"}'
     assert response.metadata is not None

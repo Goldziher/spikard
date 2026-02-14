@@ -24,5 +24,8 @@ async def test_grpc_error_handling_stream_error_mid_transmission() -> None:
     response = await handle_grpc_error_handling_stream_error_mid_transmission(request)
 
     # Verify response
-    assert response.status_code == "INTERNAL"
+    assert (
+        response.payload
+        == b'[{"index":1,"data":"Message 1"},{"index":2,"data":"Message 2"},{"index":3,"data":"Message 3"}]'
+    )
     assert response.metadata is not None

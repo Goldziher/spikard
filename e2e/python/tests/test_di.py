@@ -206,8 +206,8 @@ async def test_dependency_injection_in_lifecycle_hooks_success() -> None:
         assert "logged" in response_data
         assert response_data["logged"] == True
         response_headers = response.headers
-        assert response_headers.get("x-auth-mode") == "strict"
         assert response_headers.get("x-log-level") == "debug"
+        assert response_headers.get("x-auth-mode") == "strict"
 
 
 async def test_ruby_keyword_argument_injection_success() -> None:

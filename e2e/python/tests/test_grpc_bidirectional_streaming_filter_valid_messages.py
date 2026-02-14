@@ -24,5 +24,5 @@ async def test_grpc_bidirectional_streaming_filter_valid_messages() -> None:
     response = await handle_grpc_bidirectional_streaming_filter_valid_messages(request)
 
     # Verify response
-    assert response.status_code == "OK"
+    assert response.payload == b'[{"id":"point-1","value":10},{"id":"point-3","value":25}]'
     assert response.metadata is not None

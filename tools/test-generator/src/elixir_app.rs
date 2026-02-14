@@ -7,15 +7,14 @@
 //! manually from headers, query params, etc.
 
 use crate::elixir_utils::{
-    build_handler_name, build_parameter_schema_elixir, sanitize_identifier, string_literal,
-    value_to_elixir,
+    build_handler_name, build_parameter_schema_elixir, sanitize_identifier, string_literal, value_to_elixir,
 };
 use crate::fixture_filter::is_http_fixture_category;
-use crate::middleware::{parse_middleware, write_static_assets, MiddlewareMetadata};
+use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use anyhow::{Context, Result};
 use serde_json::Value;
 use spikard_codegen::openapi::from_fixtures::FixtureExpectedResponse;
-use spikard_codegen::openapi::{load_fixtures_from_dir, Fixture};
+use spikard_codegen::openapi::{Fixture, load_fixtures_from_dir};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
@@ -26,8 +25,7 @@ pub fn generate_elixir_app(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
 
     let static_root = app_dir.join("static_assets");
     if static_root.exists() {
-        fs::remove_dir_all(&static_root)
-            .with_context(|| format!("Failed to clear {}", static_root.display()))?;
+        fs::remove_dir_all(&static_root).with_context(|| format!("Failed to clear {}", static_root.display()))?;
     }
 
     let fixtures_by_category = load_fixtures_grouped(fixtures_dir)?;
@@ -214,12 +212,10 @@ fn needs_dynamic_response(fixture: &Fixture) -> bool {
 /// Check if the response body contains patterns suggesting it echoes input
 fn body_contains_echo_pattern(body: &Value) -> bool {
     match body {
-        Value::Object(map) => {
-            map.keys().any(|k| {
-                let k_lower = k.to_lowercase();
-                k_lower == "echo" || k_lower == "received" || k_lower == "body"
-            })
-        }
+        Value::Object(map) => map.keys().any(|k| {
+            let k_lower = k.to_lowercase();
+            k_lower == "echo" || k_lower == "received" || k_lower == "body"
+        }),
         _ => false,
     }
 }
@@ -387,8 +383,10 @@ fn generate_config_code(metadata: &MiddlewareMetadata, fixture_id: &str) -> Resu
         let mut static_files = String::from("static_files: [\n");
         for dir in &metadata.static_dirs {
             static_files.push_str("      %{\n");
-            static_files.push_str(&format!("        directory: {:?},\n", format!("lib/e2e_elixir_app/static_assets/{}/{}",
-                fixture_id, dir.directory_name)));
+            static_files.push_str(&format!(
+                "        directory: {:?},\n",
+                format!("lib/e2e_elixir_app/static_assets/{}/{}", fixture_id, dir.directory_name)
+            ));
             static_files.push_str(&format!("        route_prefix: {:?},\n", dir.route_prefix));
             if !dir.index_file {
                 static_files.push_str("        index_file: false,\n");

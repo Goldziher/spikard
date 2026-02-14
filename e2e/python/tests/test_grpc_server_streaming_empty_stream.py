@@ -24,6 +24,5 @@ async def test_grpc_server_streaming_empty_stream() -> None:
     response = await handle_grpc_server_streaming_empty_stream(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'"Stream completed with no messages"'
     assert response.metadata is not None

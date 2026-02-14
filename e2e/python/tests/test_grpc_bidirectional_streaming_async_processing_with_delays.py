@@ -24,5 +24,8 @@ async def test_grpc_bidirectional_streaming_async_processing_with_delays() -> No
     response = await handle_grpc_bidirectional_streaming_async_processing_with_delays(request)
 
     # Verify response
-    assert response.status_code == "OK"
+    assert (
+        response.payload
+        == b'[{"id":"task-1","status":"processed"},{"id":"task-2","status":"processed"},{"id":"task-3","status":"processed"}]'
+    )
     assert response.metadata is not None

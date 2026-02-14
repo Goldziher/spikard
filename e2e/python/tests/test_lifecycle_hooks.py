@@ -30,10 +30,10 @@ async def test_onresponse_security_headers() -> None:
         assert "message" in response_data
         assert response_data["message"] == "Response with security headers"
         response_headers = response.headers
-        assert response_headers.get("x-content-type-options") == "nosniff"
-        assert response_headers.get("x-xss-protection") == "1; mode=block"
-        assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("strict-transport-security") == "max-age=31536000; includeSubDomains"
+        assert response_headers.get("x-xss-protection") == "1; mode=block"
+        assert response_headers.get("x-content-type-options") == "nosniff"
+        assert response_headers.get("x-frame-options") == "DENY"
 
 
 async def test_prehandler_authentication_failed_short_circuit() -> None:
@@ -134,8 +134,8 @@ async def test_multiple_hooks_all_phases() -> None:
 
     async with TestClient(create_app_lifecycle_hooks_multiple_hooks_all_phases()) as client:
         headers = {
-            "Content-Type": "application/json",
             "Authorization": "Bearer valid-token-12345",
+            "Content-Type": "application/json",
         }
         json_data = {"user_id": "user-123", "action": "update_profile"}
         response = await client.post("/api/full-lifecycle", headers=headers, json=json_data)

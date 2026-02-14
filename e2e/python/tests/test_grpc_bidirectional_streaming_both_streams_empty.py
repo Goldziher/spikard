@@ -24,5 +24,5 @@ async def test_grpc_bidirectional_streaming_both_streams_empty() -> None:
     response = await handle_grpc_bidirectional_streaming_both_streams_empty(request)
 
     # Verify response
-    assert response.status_code == "OK"
+    assert response.payload == b"[]"
     assert response.metadata is not None

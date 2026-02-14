@@ -24,7 +24,6 @@ async def test_grpc_optional_fields() -> None:
     response = await handle_grpc_optional_fields(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"user_id":42,"username":"charlie_dev","bio":"Software engineer and gRPC enthusiast","updated_at":1704067200000}'

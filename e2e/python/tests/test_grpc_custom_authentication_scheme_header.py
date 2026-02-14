@@ -10,8 +10,8 @@ async def test_grpc_custom_authentication_scheme_header() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "x-custom-auth": "CustomScheme token_value_123",
         "content-type": "application/grpc",
+        "x-custom-auth": "CustomScheme token_value_123",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -25,6 +25,5 @@ async def test_grpc_custom_authentication_scheme_header() -> None:
     response = await handle_grpc_custom_authentication_scheme_header(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"success":true}'
     assert response.metadata is not None

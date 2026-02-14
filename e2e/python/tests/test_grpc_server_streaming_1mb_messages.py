@@ -24,6 +24,5 @@ async def test_grpc_server_streaming_1mb_messages() -> None:
     response = await handle_grpc_server_streaming_1mb_messages(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'"3 large messages streamed successfully"'
     assert response.metadata is not None

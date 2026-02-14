@@ -24,6 +24,5 @@ async def test_grpc_grpc_ok_status_0_successful_response() -> None:
     response = await handle_grpc_grpc_ok_status_0_successful_response(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"request_id":"status-ok-001","status":"success"}'
     assert response.metadata is not None

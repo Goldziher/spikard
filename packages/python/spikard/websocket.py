@@ -22,7 +22,6 @@ The handler function receives the parsed JSON message and can return:
 - None to not send a response
 """
 
-import asyncio
 import inspect
 from collections.abc import Callable
 from typing import Any, TypeVar, get_type_hints
@@ -61,55 +60,27 @@ class WebSocketHandlerWrapper:
 
     def handle_message(self, message: dict[str, Any]) -> Any:
         """Handle incoming WebSocket message."""
-        result = self._websocket_func(message)
-        if inspect.isawaitable(result):
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                temp_loop = asyncio.new_event_loop()
-                try:
-                    asyncio.set_event_loop(temp_loop)
-                    return temp_loop.run_until_complete(result)
-                finally:
-                    temp_loop.close()
-                    asyncio.set_event_loop(loop)
-            return loop.run_until_complete(result)
-        return result
+        # IMPORTANT: Do not manage event loops here.
+        #
+        # The Rust side (spikard-py) detects awaitables and drives them to completion.
+        # Trying to run the coroutine here can fail when no loop is set for the current
+        # OS thread (common in FFI contexts) and will leak "coroutine was never awaited"
+        # warnings.
+        return self._websocket_func(message)
 
     def on_connect(self) -> None:
         """Called when WebSocket connection is established."""
         hook = getattr(self._websocket_func, "on_connect", None)
         if hook:
-            result = hook()
-            if inspect.isawaitable(result):
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    temp_loop = asyncio.new_event_loop()
-                    try:
-                        asyncio.set_event_loop(temp_loop)
-                        temp_loop.run_until_complete(result)
-                    finally:
-                        temp_loop.close()
-                        asyncio.set_event_loop(loop)
-                else:
-                    loop.run_until_complete(result)
+            # Return value may be awaitable; Rust drives it.
+            hook()
 
     def on_disconnect(self) -> None:
         """Called when WebSocket connection is closed."""
         hook = getattr(self._websocket_func, "on_disconnect", None)
         if hook:
-            result = hook()
-            if inspect.isawaitable(result):
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    temp_loop = asyncio.new_event_loop()
-                    try:
-                        asyncio.set_event_loop(temp_loop)
-                        temp_loop.run_until_complete(result)
-                    finally:
-                        temp_loop.close()
-                        asyncio.set_event_loop(loop)
-                else:
-                    loop.run_until_complete(result)
+            # Return value may be awaitable; Rust drives it.
+            hook()
 
 
 def websocket(

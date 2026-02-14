@@ -114,10 +114,7 @@ pub fn load_graphql_fixtures(fixtures_dir: &Path) -> Result<Vec<GraphQLFixture>>
 }
 
 #[allow(dead_code)]
-pub fn load_graphql_fixtures_by_category(
-    fixtures_dir: &Path,
-    category: &str,
-) -> Result<Vec<GraphQLFixture>> {
+pub fn load_graphql_fixtures_by_category(fixtures_dir: &Path, category: &str) -> Result<Vec<GraphQLFixture>> {
     let category_dir = fixtures_dir.join("graphql").join(category);
 
     if !category_dir.exists() {
@@ -133,10 +130,10 @@ pub fn load_graphql_fixtures_by_category(
         if file_path.extension().is_some_and(|e| e == "json")
             && file_path.file_name().unwrap().to_str().unwrap() != "schema.json"
         {
-            let content = fs::read_to_string(&file_path)
-                .with_context(|| format!("Failed to read {}", file_path.display()))?;
-            let fixture: GraphQLFixture = serde_json::from_str(&content)
-                .with_context(|| format!("Failed to parse {}", file_path.display()))?;
+            let content =
+                fs::read_to_string(&file_path).with_context(|| format!("Failed to read {}", file_path.display()))?;
+            let fixture: GraphQLFixture =
+                serde_json::from_str(&content).with_context(|| format!("Failed to parse {}", file_path.display()))?;
             fixtures.push(fixture);
         }
     }

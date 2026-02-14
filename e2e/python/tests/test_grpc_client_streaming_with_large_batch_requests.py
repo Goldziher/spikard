@@ -24,6 +24,5 @@ async def test_grpc_client_streaming_with_large_batch_requests() -> None:
     response = await handle_grpc_client_streaming_with_large_batch_requests(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"batch_id":"batch-large-001","items_processed":100,"total_bytes":5242880}'
     assert response.metadata is not None

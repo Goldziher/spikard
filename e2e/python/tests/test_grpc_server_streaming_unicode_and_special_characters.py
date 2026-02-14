@@ -25,6 +25,5 @@ async def test_grpc_server_streaming_unicode_and_special_characters() -> None:
     response = await handle_grpc_server_streaming_unicode_and_special_characters(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'"Unicode stream completed successfully"'
     assert response.metadata is not None

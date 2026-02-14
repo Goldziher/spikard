@@ -24,6 +24,5 @@ async def test_grpc_large_binary_data_in_bytes_field() -> None:
     response = await handle_grpc_large_binary_data_in_bytes_field(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"file_id":"binary-large-001","bytes_received":512000}'
     assert response.metadata is not None

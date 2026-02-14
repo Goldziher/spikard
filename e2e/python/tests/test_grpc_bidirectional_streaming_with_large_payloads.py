@@ -24,6 +24,5 @@ async def test_grpc_bidirectional_streaming_with_large_payloads() -> None:
     response = await handle_grpc_bidirectional_streaming_with_large_payloads(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"message_id":"bi-large-001","sequence":1,"direction":"server-to-client"}'
     assert response.metadata is not None

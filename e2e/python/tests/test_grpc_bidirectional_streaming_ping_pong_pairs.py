@@ -24,5 +24,8 @@ async def test_grpc_bidirectional_streaming_ping_pong_pairs() -> None:
     response = await handle_grpc_bidirectional_streaming_ping_pong_pairs(request)
 
     # Verify response
-    assert response.status_code == "OK"
+    assert (
+        response.payload
+        == b'[{"sequence":1,"response":"pong"},{"sequence":2,"response":"pong"},{"sequence":3,"response":"pong"}]'
+    )
     assert response.metadata is not None

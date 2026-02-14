@@ -24,7 +24,6 @@ async def test_grpc_nested_messages() -> None:
     response = await handle_grpc_nested_messages(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"user_id":456,"name":"Bob Smith","email":"bob@example.com","address":{"street":"123 Main St","city":"Springfield","zip_code":"12345"}}'

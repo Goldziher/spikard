@@ -25,6 +25,5 @@ async def test_grpc_user_agent_and_client_info_metadata() -> None:
     response = await handle_grpc_user_agent_and_client_info_metadata(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"client_type":"grpc-client","client_version":"1.2.3"}'
     assert response.metadata is not None

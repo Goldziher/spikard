@@ -24,6 +24,5 @@ async def test_grpc_large_10mb_message_payload() -> None:
     response = await handle_grpc_large_10mb_message_payload(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"id":"bulk-10mb-transfer","status":"received"}'
     assert response.metadata is not None

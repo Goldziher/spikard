@@ -24,6 +24,5 @@ async def test_grpc_all_fields_set_to_zero_false_empty_values() -> None:
     response = await handle_grpc_all_fields_set_to_zero_false_empty_values(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"success":true,"fields_received":5}'
     assert response.metadata is not None

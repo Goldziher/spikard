@@ -357,6 +357,6 @@ async def test_206_partial_content() -> None:
         response_data = response.json()
         assert response_data == "binary_data_1024_bytes"
         response_headers = response.headers
-        assert response_headers.get("content-type") == "application/pdf"
-        assert response_headers.get("accept-ranges") == "bytes"
         assert response_headers.get("content-range") == "bytes 0-21/5000"
+        assert response_headers.get("accept-ranges") == "bytes"
+        assert response_headers.get("content-type") == "application/pdf"

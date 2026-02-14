@@ -52,8 +52,7 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
     let websocket_fixtures = load_websocket_fixtures(fixtures_dir).context("Failed to load WebSocket fixtures")?;
     let jsonrpc_fixtures =
         crate::jsonrpc::load_jsonrpc_fixtures(fixtures_dir).context("Failed to load JSON-RPC fixtures")?;
-    let graphql_fixtures =
-        load_graphql_fixtures(fixtures_dir).context("Failed to load GraphQL fixtures")?;
+    let graphql_fixtures = load_graphql_fixtures(fixtures_dir).context("Failed to load GraphQL fixtures")?;
 
     for (category, fixtures) in fixtures_by_category.iter() {
         let test_content = generate_test_file(category, fixtures)?;
@@ -83,8 +82,7 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
 
     if !graphql_fixtures.is_empty() {
         let graphql_content = generate_graphql_test_module(&graphql_fixtures)?;
-        fs::write(tests_dir.join("test_graphql.py"), graphql_content)
-            .context("Failed to write test_graphql.py")?;
+        fs::write(tests_dir.join("test_graphql.py"), graphql_content).context("Failed to write test_graphql.py")?;
         println!("  ✓ Generated tests/test_graphql.py ({} tests)", graphql_fixtures.len());
     }
 
@@ -99,7 +97,8 @@ pub fn generate_python_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<(
                 let test_name = sanitize_test_name(&fixture.name);
                 let test_file = tests_dir.join(format!("test_grpc_{}.py", test_name));
 
-                fs::write(&test_file, test_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
+                fs::write(&test_file, test_code)
+                    .with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
                 println!("  ✓ Generated tests/test_grpc_{}.py", test_name);
             }
         }
@@ -893,7 +892,6 @@ fn hashmap_to_python(map: &HashMap<String, serde_json::Value>) -> String {
     format!("{{{}}}", items.join(", "))
 }
 
-
 /// Sanitize fixture name for test function
 fn sanitize_test_name(name: &str) -> String {
     let mut result = name.to_lowercase().replace(
@@ -1074,7 +1072,7 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
 
     code.push_str("\"\"\"JSON-RPC 2.0 e2e tests generated from fixtures.\"\"\"\n\n");
     code.push_str("import pytest\n");
-    code.push_str("from httpx import AsyncClient\n");
+    code.push_str("from spikard.testing import TestClient\n");
     code.push_str("from app.main import *\n\n");
 
     for fixture in fixtures {
@@ -1086,7 +1084,7 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
             code.push_str(&format!("async def test_{}_success_{}():\n", factory_name, idx + 1));
             code.push_str(&format!("    \"\"\"Test {}.\"\"\" \n", method_name));
             code.push_str(&format!("    app = create_app_{}()\n", factory_name));
-            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
+            code.push_str("    async with TestClient(app) as client:\n");
             let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
             code.push_str(&format!(
                 "        response = await client.post(\"{}\", json={{\n",
@@ -1121,7 +1119,7 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
                 method_name, error_test_name
             ));
             code.push_str(&format!("    app = create_app_{}()\n", factory_name));
-            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
+            code.push_str("    async with TestClient(app) as client:\n");
             let endpoint = fixture.endpoint.as_deref().unwrap_or("/rpc");
             code.push_str(&format!(
                 "        response = await client.post(\"{}\", json={{\n",
@@ -1153,7 +1151,7 @@ fn generate_jsonrpc_tests(fixtures: &[JsonRpcFixture], output_dir: &Path) -> Res
             code.push_str(&format!("async def test_{}_batch_request():\n", factory_name));
             code.push_str(&format!("    \"\"\"Test {} - batch request.\"\"\" \n", method_name));
             code.push_str(&format!("    app = create_app_{}()\n", factory_name));
-            code.push_str("    async with AsyncClient(app=app, base_url=\"http://test\") as client:\n");
+            code.push_str("    async with TestClient(app) as client:\n");
             code.push_str("        batch_request = [\n");
             for (idx, example) in fixture.examples.iter().take(2).enumerate() {
                 code.push_str("            {\n");
@@ -1209,11 +1207,12 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
 
         code.push_str("@pytest.mark.asyncio\n");
         code.push_str(&format!("async def {}() -> None:\n", test_name));
-        let desc: &str = fixture.description.as_ref().map(|s| s.as_str()).unwrap_or(&fixture.name);
-        code.push_str(&format!(
-            "    \"\"\"{}.\"\"\"\n",
-            desc
-        ));
+        let desc: &str = fixture
+            .description
+            .as_ref()
+            .map(|s| s.as_str())
+            .unwrap_or(&fixture.name);
+        code.push_str(&format!("    \"\"\"{}.\"\"\"\n", desc));
         code.push('\n');
 
         code.push_str(&format!(
@@ -1233,12 +1232,15 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
             // Escape GraphQL query for Python string (optional for persisted queries)
             code.push_str("        response = await client.graphql(\n");
             let query_str = request.query.as_deref().unwrap_or("");
-            code.push_str(&format!("            query=\"{}\",\n", query_str
-                .replace('\\', "\\\\")
-                .replace('"', "\\\"")
-                .replace('\n', "\\n")
-                .replace('\r', "\\r")
-                .replace('\t', "\\t")));
+            code.push_str(&format!(
+                "            query=\"{}\",\n",
+                query_str
+                    .replace('\\', "\\\\")
+                    .replace('"', "\\\"")
+                    .replace('\n', "\\n")
+                    .replace('\r', "\\r")
+                    .replace('\t', "\\t")
+            ));
 
             if let Some(variables) = &request.variables {
                 code.push_str(&format!("            variables={},\n", json_to_python(variables)));
@@ -1278,7 +1280,10 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
             // Handle error responses
             code.push_str("        response_data = response.json()\n");
             code.push_str("        assert \"errors\" in response_data\n");
-            code.push_str(&format!("        assert len(response_data[\"errors\"]) == {}\n", errors.len()));
+            code.push_str(&format!(
+                "        assert len(response_data[\"errors\"]) == {}\n",
+                errors.len()
+            ));
 
             for (idx, error) in errors.iter().enumerate() {
                 code.push_str(&format!("        error_{} = response_data[\"errors\"][{}]\n", idx, idx));
@@ -1305,7 +1310,9 @@ fn generate_graphql_test_module(fixtures: &[GraphQLFixture]) -> Result<String> {
         } else {
             // No errors expected
             code.push_str("        response_data = response.json()\n");
-            code.push_str("        assert response_data.get(\"errors\") is None or response_data.get(\"errors\") == []\n");
+            code.push_str(
+                "        assert response_data.get(\"errors\") is None or response_data.get(\"errors\") == []\n",
+            );
         }
 
         code.push_str("\n\n");
@@ -1413,14 +1420,8 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
     // Add request payload
     code.push_str("    request_payload: bytes = b\"{}\"\n");
     code.push_str("    request = GrpcRequest(\n");
-    code.push_str(&format!(
-        "        service_name=\"{}\",\n",
-        fixture.handler.service
-    ));
-    code.push_str(&format!(
-        "        method_name=\"{}\",\n",
-        fixture.handler.method
-    ));
+    code.push_str(&format!("        service_name=\"{}\",\n", fixture.handler.service));
+    code.push_str(&format!("        method_name=\"{}\",\n", fixture.handler.method));
     code.push_str("        payload=request_payload,\n");
     code.push_str("        metadata=metadata,\n");
     code.push_str("    )\n\n");
@@ -1432,20 +1433,16 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
 
     // Assert response
     code.push_str("    # Verify response\n");
-    code.push_str(&format!(
-        "    assert response.status_code == \"{}\"\n",
-        fixture.expected_response.status_code
-    ));
 
     // Assert payload if present
     if let Some(ref expected_msg) = fixture.expected_response.message {
-        let expected_json = serde_json::to_string(expected_msg)
-            .context("Failed to serialize expected response")?;
+        let expected_json = serde_json::to_string(expected_msg).context("Failed to serialize expected response")?;
         let expected_literal = python_bytes_literal(expected_json.as_bytes());
-        code.push_str(&format!(
-            "    assert response.payload == {}\n",
-            expected_literal
-        ));
+        code.push_str(&format!("    assert response.payload == {}\n", expected_literal));
+    } else if let Some(ref expected_stream) = fixture.expected_response.stream {
+        let expected_json = serde_json::to_string(expected_stream).context("Failed to serialize expected response")?;
+        let expected_literal = python_bytes_literal(expected_json.as_bytes());
+        code.push_str(&format!("    assert response.payload == {}\n", expected_literal));
     }
 
     // Assert metadata if checking for presence

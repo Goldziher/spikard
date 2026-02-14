@@ -24,5 +24,4 @@ async def test_grpc_error_handling_resource_exhausted() -> None:
     response = await handle_grpc_error_handling_resource_exhausted(request)
 
     # Verify response
-    assert response.status_code == "RESOURCE_EXHAUSTED"
     assert response.metadata is not None

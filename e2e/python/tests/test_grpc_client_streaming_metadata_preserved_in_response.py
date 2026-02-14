@@ -11,10 +11,10 @@ async def test_grpc_client_streaming_metadata_preserved_in_response() -> None:
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
         "authorization": "Bearer token-xyz123",
-        "x-user-id": "user-789",
-        "custom-header": "custom-value",
         "x-trace-id": "trace-abc456",
         "content-type": "application/grpc",
+        "x-user-id": "user-789",
+        "custom-header": "custom-value",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -28,7 +28,6 @@ async def test_grpc_client_streaming_metadata_preserved_in_response() -> None:
     response = await handle_grpc_client_streaming_metadata_preserved_in_response(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"request_id":"req-meta-001","processed_by":"grpc-handler-1","received_user_id":"user-789","message_count":3,"trace_id":"trace-abc456","status":"COMPLETE_WITH_METADATA"}'

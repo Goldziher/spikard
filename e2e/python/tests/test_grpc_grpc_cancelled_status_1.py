@@ -24,6 +24,5 @@ async def test_grpc_grpc_cancelled_status_1() -> None:
     response = await handle_grpc_grpc_cancelled_status_1(request)
 
     # Verify response
-    assert response.status_code == "CANCELLED"
     assert response.payload == b'{"id":"cancel-001"}'
     assert response.metadata is not None

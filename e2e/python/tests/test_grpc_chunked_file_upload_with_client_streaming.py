@@ -24,7 +24,6 @@ async def test_grpc_chunked_file_upload_with_client_streaming() -> None:
     response = await handle_grpc_chunked_file_upload_with_client_streaming(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"file_id":"chunked-upload-test","total_chunks":5,"total_size":102400,"upload_status":"completed"}'

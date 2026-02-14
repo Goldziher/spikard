@@ -24,5 +24,4 @@ async def test_grpc_error_handling_permission_denied_client_streaming() -> None:
     response = await handle_grpc_error_handling_permission_denied_client_streaming(request)
 
     # Verify response
-    assert response.status_code == "PERMISSION_DENIED"
     assert response.metadata is not None

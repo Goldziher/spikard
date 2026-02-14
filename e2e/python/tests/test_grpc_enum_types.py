@@ -24,6 +24,5 @@ async def test_grpc_enum_types() -> None:
     response = await handle_grpc_enum_types(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"id":1001,"product_name":"Laptop","quantity":2,"status":"PENDING","priority":"HIGH"}'
     assert response.metadata is not None

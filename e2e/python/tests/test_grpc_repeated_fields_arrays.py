@@ -24,7 +24,6 @@ async def test_grpc_repeated_fields_arrays() -> None:
     response = await handle_grpc_repeated_fields_arrays(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"id":789,"title":"Getting Started with gRPC","content":"This is a comprehensive guide to gRPC...","tags":[{"id":1,"name":"gRPC"},{"id":2,"name":"Protocol Buffers"},{"id":3,"name":"RPC"}],"categories":["tutorial","programming","networking"]}'

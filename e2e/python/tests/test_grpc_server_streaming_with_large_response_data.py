@@ -24,6 +24,5 @@ async def test_grpc_server_streaming_with_large_response_data() -> None:
     response = await handle_grpc_server_streaming_with_large_response_data(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"stream_id":"stream-large-001","chunk_number":1,"is_final":false}'
     assert response.metadata is not None

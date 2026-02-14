@@ -53,12 +53,10 @@ pub fn generate_rust_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         println!("  ✓ Generated websocket_tests.rs");
     }
 
-    let graphql_fixtures = load_graphql_fixtures(fixtures_dir)
-        .context("Failed to load GraphQL fixtures")?;
+    let graphql_fixtures = load_graphql_fixtures(fixtures_dir).context("Failed to load GraphQL fixtures")?;
     if !graphql_fixtures.is_empty() {
         let graphql_content = generate_graphql_tests(&graphql_fixtures)?;
-        fs::write(tests_dir.join("graphql_tests.rs"), graphql_content)
-            .context("Failed to write graphql_tests.rs")?;
+        fs::write(tests_dir.join("graphql_tests.rs"), graphql_content).context("Failed to write graphql_tests.rs")?;
         println!("  ✓ Generated graphql_tests.rs ({} tests)", graphql_fixtures.len());
     }
 
@@ -816,7 +814,11 @@ fn generate_graphql_tests(fixtures: &[GraphQLFixture]) -> Result<String> {
 
         code.push_str(&format!("    #[tokio::test]\n"));
         code.push_str(&format!("    async fn {}() {{\n", test_name));
-        let desc: &str = fixture.description.as_ref().map(|s| s.as_str()).unwrap_or(&fixture.name);
+        let desc: &str = fixture
+            .description
+            .as_ref()
+            .map(|s| s.as_str())
+            .unwrap_or(&fixture.name);
         code.push_str(&format!("        // Test: {}\n", desc));
         code.push_str(&format!("        // Operation type: {}\n", fixture.operation_type));
         code.push_str(&format!("        // Endpoint: {}\n\n", fixture.endpoint));
@@ -840,7 +842,10 @@ fn generate_graphql_tests(fixtures: &[GraphQLFixture]) -> Result<String> {
             }
 
             if let Some(op_name) = &request.operation_name {
-                code.push_str(&format!("            \"operationName\": \"{}\",\n", escape_rust_string(op_name)));
+                code.push_str(&format!(
+                    "            \"operationName\": \"{}\",\n",
+                    escape_rust_string(op_name)
+                ));
             }
 
             code.push_str("        });\n\n");

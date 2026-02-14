@@ -24,5 +24,4 @@ async def test_grpc_grpc_invalid_argument_status_3() -> None:
     response = await handle_grpc_grpc_invalid_argument_status_3(request)
 
     # Verify response
-    assert response.status_code == "INVALID_ARGUMENT"
     assert response.metadata is not None

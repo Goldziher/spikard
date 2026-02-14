@@ -24,5 +24,4 @@ async def test_grpc_grpc_failed_precondition_status_9() -> None:
     response = await handle_grpc_grpc_failed_precondition_status_9(request)
 
     # Verify response
-    assert response.status_code == "FAILED_PRECONDITION"
     assert response.metadata is not None

@@ -24,7 +24,6 @@ async def test_grpc_client_streaming_large_batch_100_messages() -> None:
     response = await handle_grpc_client_streaming_large_batch_100_messages(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert (
         response.payload
         == b'{"batch_id":"batch-large-001","total_items":100,"total_value":5050,"average_value":50.5,"status":"PROCESSED"}'

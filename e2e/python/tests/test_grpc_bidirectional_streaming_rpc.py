@@ -10,8 +10,8 @@ async def test_grpc_bidirectional_streaming_rpc() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "authorization": "Bearer user-token",
         "content-type": "application/grpc",
+        "authorization": "Bearer user-token",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -25,5 +25,8 @@ async def test_grpc_bidirectional_streaming_rpc() -> None:
     response = await handle_grpc_bidirectional_streaming_rpc(request)
 
     # Verify response
-    assert response.status_code == "OK"
+    assert (
+        response.payload
+        == b'[{"message_id":1,"user_id":10,"username":"alice","message":"Hello, everyone!","timestamp":1704067200000,"acknowledged":true},{"message_id":2,"user_id":20,"username":"bob","message":"Hey Alice, doing great!","timestamp":1704067205000,"acknowledged":true},{"message_id":3,"user_id":10,"username":"alice","message":"How is everyone doing?","timestamp":1704067210000,"acknowledged":true}]'
+    )
     assert response.metadata is not None

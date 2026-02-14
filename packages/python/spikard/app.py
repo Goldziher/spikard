@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING, Any
 
 from spikard.config import ServerConfig
@@ -323,21 +324,119 @@ class Spikard:
 
     # -- WebSocket / SSE -----------------------------------------------------------
 
-    def websocket(self, path: str) -> Callable[[Callable[[], Any]], Callable[[], Any]]:
-        """Register a WebSocket endpoint."""
+    def websocket(
+        self,
+        path: str,
+        *,
+        message_schema: dict[str, Any] | None = None,
+        response_schema: dict[str, Any] | None = None,
+    ) -> Callable[[Any], Any]:
+        """Register a WebSocket endpoint.
 
-        def decorator(factory: Callable[[], Any]) -> Callable[[], Any]:
+        Supports two decorator styles:
+        - Decorate a *factory* returning a handler object (backwards compatible).
+        - Decorate a *message handler* (sync/async) taking a single ``message`` dict.
+          In that case, Spikard wraps it in ``WebSocketHandlerWrapper`` internally.
+        """
+
+        def decorator(target: Any) -> Any:
+            from spikard.websocket import WebSocketHandlerWrapper  # noqa: PLC0415
+
+            # Back-compat: `@app.websocket("/path")` decorating a zero-arg factory.
+            try:
+                sig = inspect.signature(target)
+                has_message_param = len(sig.parameters) > 0
+            except (TypeError, ValueError):
+                has_message_param = False
+
+            if not has_message_param:
+                self._websocket_handlers[path] = target
+                return target
+
+            extracted_message_schema = message_schema
+            extracted_response_schema = response_schema
+
+            if extracted_message_schema is None or extracted_response_schema is None:
+                try:
+                    from spikard.schema import extract_json_schema  # noqa: PLC0415
+
+                    type_hints = getattr(target, "__annotations__", {}) or {}
+                    params = list(sig.parameters.values()) if "sig" in locals() else []
+
+                    if extracted_message_schema is None and params:
+                        # Prefer a parameter named "message"; otherwise use the first param.
+                        param_name = "message" if any(p.name == "message" for p in params) else params[0].name
+                        param_type = type_hints.get(param_name)
+                        if param_type and param_type is not dict:
+                            extracted_message_schema = extract_json_schema(param_type)
+
+                    if extracted_response_schema is None:
+                        return_type = type_hints.get("return")
+                        if return_type and return_type is not dict:
+                            extracted_response_schema = extract_json_schema(return_type)
+                except (AttributeError, NameError, TypeError, ValueError):
+                    pass
+
+            def factory() -> Any:
+                return WebSocketHandlerWrapper(
+                    target,
+                    message_schema=extracted_message_schema,
+                    response_schema=extracted_response_schema,
+                    path=path,
+                )
+
             self._websocket_handlers[path] = factory
-            return factory
+            return target
 
         return decorator
 
-    def sse(self, path: str) -> Callable[[Callable[[], SseEventProducer]], Callable[[], SseEventProducer]]:
-        """Register a Server-Sent Events endpoint."""
+    def sse(
+        self,
+        path: str,
+        *,
+        event_schema: dict[str, Any] | None = None,
+    ) -> Callable[[Any], Any]:
+        """Register a Server-Sent Events endpoint.
 
-        def decorator(factory: Callable[[], SseEventProducer]) -> Callable[[], SseEventProducer]:
-            self._sse_producers[path] = factory
-            return factory
+        Supports two decorator styles:
+        - Decorate a *factory* returning ``SseEventProducer`` (backwards compatible).
+        - Decorate an *async generator function* yielding event dicts; Spikard wraps it
+          in ``SseEventProducer`` internally.
+        """
+
+        def decorator(target: Any) -> Any:
+            from spikard.sse import SseEventProducer  # noqa: PLC0415
+
+            # If this is an async generator function, treat it as the handler.
+            if inspect.isasyncgenfunction(target):
+                extracted_event_schema = event_schema
+
+                if extracted_event_schema is None:
+                    try:
+                        from typing import get_args, get_origin, get_type_hints  # noqa: PLC0415
+
+                        from spikard.schema import extract_json_schema  # noqa: PLC0415
+
+                        type_hints = get_type_hints(target)
+                        return_type = type_hints.get("return")
+                        if return_type:
+                            origin = get_origin(return_type)
+                            if origin is not None:
+                                args = get_args(return_type)
+                                if args and args[0] is not dict:
+                                    extracted_event_schema = extract_json_schema(args[0])
+                    except (AttributeError, NameError, TypeError, ValueError):
+                        pass
+
+                def factory() -> SseEventProducer:
+                    return SseEventProducer(target, event_schema=extracted_event_schema)
+
+                self._sse_producers[path] = factory
+                return target
+
+            # Otherwise assume we are decorating a factory already.
+            self._sse_producers[path] = target
+            return target
 
         return decorator
 

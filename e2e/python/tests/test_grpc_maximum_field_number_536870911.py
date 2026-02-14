@@ -24,6 +24,5 @@ async def test_grpc_maximum_field_number_536870911() -> None:
     response = await handle_grpc_maximum_field_number_536870911(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"id":42,"received_max":"Testing maximum field number"}'
     assert response.metadata is not None

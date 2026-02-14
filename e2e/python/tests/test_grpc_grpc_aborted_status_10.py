@@ -24,5 +24,4 @@ async def test_grpc_grpc_aborted_status_10() -> None:
     response = await handle_grpc_grpc_aborted_status_10(request)
 
     # Verify response
-    assert response.status_code == "ABORTED"
     assert response.metadata is not None

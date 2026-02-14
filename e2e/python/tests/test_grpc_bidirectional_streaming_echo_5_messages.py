@@ -24,5 +24,8 @@ async def test_grpc_bidirectional_streaming_echo_5_messages() -> None:
     response = await handle_grpc_bidirectional_streaming_echo_5_messages(request)
 
     # Verify response
-    assert response.status_code == "OK"
+    assert (
+        response.payload
+        == b'[{"text":"message_1"},{"text":"message_2"},{"text":"message_3"},{"text":"message_4"},{"text":"message_5"}]'
+    )
     assert response.metadata is not None

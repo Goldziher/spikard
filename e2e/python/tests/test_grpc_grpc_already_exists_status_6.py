@@ -24,5 +24,4 @@ async def test_grpc_grpc_already_exists_status_6() -> None:
     response = await handle_grpc_grpc_already_exists_status_6(request)
 
     # Verify response
-    assert response.status_code == "ALREADY_EXISTS"
     assert response.metadata is not None

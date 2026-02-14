@@ -1,7 +1,7 @@
 """JSON-RPC 2.0 e2e tests generated from fixtures."""
 
 import pytest
-from httpx import AsyncClient
+from spikard.testing import TestClient
 from app.main import *
 
 
@@ -9,7 +9,7 @@ from app.main import *
 async def test_user_create_success_1():
     """Test user.create."""
     app = create_app_user_create()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -40,7 +40,7 @@ async def test_user_create_success_1():
 async def test_user_create_email_already_exists_error():
     """Test user.create - email_already_exists error case."""
     app = create_app_user_create()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -65,7 +65,7 @@ async def test_user_create_email_already_exists_error():
 async def test_user_create_invalid_email_error():
     """Test user.create - invalid_email error case."""
     app = create_app_user_create()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -88,7 +88,7 @@ async def test_user_create_invalid_email_error():
 async def test_user_create_password_too_short_error():
     """Test user.create - password_too_short error case."""
     app = create_app_user_create()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -111,7 +111,7 @@ async def test_user_create_password_too_short_error():
 async def test_user_delete_success_1():
     """Test user.delete."""
     app = create_app_user_delete()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -135,7 +135,7 @@ async def test_user_delete_success_1():
 async def test_user_delete_user_not_found_error():
     """Test user.delete - user_not_found error case."""
     app = create_app_user_delete()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -158,7 +158,7 @@ async def test_user_delete_user_not_found_error():
 async def test_user_delete_invalid_uuid_error():
     """Test user.delete - invalid_uuid error case."""
     app = create_app_user_delete()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -181,7 +181,7 @@ async def test_user_delete_invalid_uuid_error():
 async def test_user_getbyid_success_1():
     """Test user.getById."""
     app = create_app_user_getbyid()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -205,7 +205,7 @@ async def test_user_getbyid_success_1():
 async def test_user_getbyid_success_2():
     """Test user.getById."""
     app = create_app_user_getbyid()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -229,7 +229,7 @@ async def test_user_getbyid_success_2():
 async def test_user_getbyid_user_not_found_error():
     """Test user.getById - user_not_found error case."""
     app = create_app_user_getbyid()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -252,7 +252,7 @@ async def test_user_getbyid_user_not_found_error():
 async def test_user_getbyid_invalid_uuid_error():
     """Test user.getById - invalid_uuid error case."""
     app = create_app_user_getbyid()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -275,7 +275,7 @@ async def test_user_getbyid_invalid_uuid_error():
 async def test_user_getbyid_batch_request():
     """Test user.getById - batch request."""
     app = create_app_user_getbyid()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         batch_request = [
             {
                 "jsonrpc": "2.0",
@@ -302,7 +302,7 @@ async def test_user_getbyid_batch_request():
 async def test_user_list_success_1():
     """Test user.list."""
     app = create_app_user_list()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -326,7 +326,7 @@ async def test_user_list_success_1():
 async def test_user_list_success_2():
     """Test user.list."""
     app = create_app_user_list()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -350,7 +350,7 @@ async def test_user_list_success_2():
 async def test_user_list_invalid_page_error():
     """Test user.list - invalid_page error case."""
     app = create_app_user_list()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -373,7 +373,7 @@ async def test_user_list_invalid_page_error():
 async def test_user_list_perpage_too_large_error():
     """Test user.list - perpage_too_large error case."""
     app = create_app_user_list()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -396,7 +396,7 @@ async def test_user_list_perpage_too_large_error():
 async def test_user_list_batch_request():
     """Test user.list - batch request."""
     app = create_app_user_list()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         batch_request = [
             {
                 "jsonrpc": "2.0",
@@ -423,7 +423,7 @@ async def test_user_list_batch_request():
 async def test_user_update_success_1():
     """Test user.update."""
     app = create_app_user_update()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -447,7 +447,7 @@ async def test_user_update_success_1():
 async def test_user_update_success_2():
     """Test user.update."""
     app = create_app_user_update()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -474,7 +474,7 @@ async def test_user_update_success_2():
 async def test_user_update_user_not_found_error():
     """Test user.update - user_not_found error case."""
     app = create_app_user_update()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -497,7 +497,7 @@ async def test_user_update_user_not_found_error():
 async def test_user_update_invalid_role_error():
     """Test user.update - invalid_role error case."""
     app = create_app_user_update()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         response = await client.post(
             "/rpc",
             json={
@@ -520,7 +520,7 @@ async def test_user_update_invalid_role_error():
 async def test_user_update_batch_request():
     """Test user.update - batch request."""
     app = create_app_user_update()
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with TestClient(app) as client:
         batch_request = [
             {
                 "jsonrpc": "2.0",

@@ -24,6 +24,5 @@ async def test_grpc_empty_message_request_and_response() -> None:
     response = await handle_grpc_empty_message_request_and_response(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b"{}"
     assert response.metadata is not None

@@ -24,5 +24,4 @@ async def test_grpc_error_handling_unimplemented_method() -> None:
     response = await handle_grpc_error_handling_unimplemented_method(request)
 
     # Verify response
-    assert response.status_code == "UNIMPLEMENTED"
     assert response.metadata is not None

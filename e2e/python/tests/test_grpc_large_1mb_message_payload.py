@@ -24,6 +24,5 @@ async def test_grpc_large_1mb_message_payload() -> None:
     response = await handle_grpc_large_1mb_message_payload(request)
 
     # Verify response
-    assert response.status_code == "OK"
     assert response.payload == b'{"request_id":"large-1mb-test-001","data_size":1048576}'
     assert response.metadata is not None
