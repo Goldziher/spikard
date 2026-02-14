@@ -53,7 +53,6 @@ RSpec.describe "di" do
     app = E2ERubyApp.create_app_di_5_missing_dependency_error
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/missing-dep")
-    puts "DEBUG Missing-dep: Status=#{response.status_code}, Body=#{response.body[0..300]}"
     expect(response.status_code).to eq(500)
     body = response.json
     expect(body).to be_a(Hash)
@@ -69,7 +68,7 @@ RSpec.describe "di" do
     app = E2ERubyApp.create_app_di_6_mixed_singleton_and_per_request_caching_success
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/mixed-caching")
-    puts "DEBUG Mixed: Status=#{response.status_code}, Body=#{response.body}"
+
     # Second request to verify singleton caching
     response2 = client.get("/api/mixed-caching")
     expect(response.status_code).to eq(200)
@@ -77,13 +76,13 @@ RSpec.describe "di" do
     data1 = response.json
     data2 = response2.json
 
-    # Singleton should have same ID but incremented count
-    expect(data1).to have_key('id')
-    expect(data2).to have_key('id')
-    expect(data1['id']).to eq(data2['id'])  # Same singleton instance
-    if data1.key?('count') && data2.key?('count')
-      expect(data2['count']).to be > data1['count']  # Count incremented
-    end
+    # pool_id is singleton; context_id is per-request
+    expect(data1).to have_key('pool_id')
+    expect(data2).to have_key('pool_id')
+    expect(data1['pool_id']).to eq(data2['pool_id'])
+    expect(data1).to have_key('context_id')
+    expect(data2).to have_key('context_id')
+    expect(data1['context_id']).not_to eq(data2['context_id'])
     client.close
   end
 
@@ -91,7 +90,6 @@ RSpec.describe "di" do
     app = E2ERubyApp.create_app_di_7_multiple_dependencies_with_cleanup_success
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/multi-cleanup-test")
-    puts "DEBUG Multi-cleanup: Status=#{response.status_code}, Body=#{response.body[0..200]}"
     expect(response.status_code).to eq(200)
 
     # Allow async cleanup to complete
@@ -195,23 +193,19 @@ RSpec.describe "di" do
     app = E2ERubyApp.create_app_di_16_singleton_dependency_caching_success
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/app-counter")
-    puts "DEBUG Singleton 1st: Status=#{response.status_code}, Body=#{response.body[0..200]}"
 
     # Second request to verify singleton caching
     response2 = client.get("/api/app-counter")
-    puts "DEBUG Singleton 2nd: Status=#{response2.status_code}, Body=#{response2.body[0..200]}"
     expect(response.status_code).to eq(200)
     expect(response2.status_code).to eq(200)
     data1 = response.json
     data2 = response2.json
 
-    # Singleton should have same ID but incremented count
-    expect(data1).to have_key('id')
-    expect(data2).to have_key('id')
-    expect(data1['id']).to eq(data2['id'])  # Same singleton instance
-    if data1.key?('count') && data2.key?('count')
-      expect(data2['count']).to be > data1['count']  # Count incremented
-    end
+    # Singleton counter should have stable counter_id and incremented count
+    expect(data1).to have_key('counter_id')
+    expect(data2).to have_key('counter_id')
+    expect(data1['counter_id']).to eq(data2['counter_id'])
+    expect(data2['count']).to be > data1['count']
     client.close
   end
 

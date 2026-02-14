@@ -43,6 +43,7 @@ repos:
       - id: ruff
         args: ["--fix", "--unsafe-fixes"]
       - id: ruff-format
+        args: ["--target-version=py313"]
 
   - repo: https://github.com/doublify/pre-commit-rust
     rev: v1.0
@@ -69,6 +70,7 @@ repos:
     rev: v2.3.15
     hooks:
       - id: biome-format
+        exclude: ^docs/assets/benchmarks/aggregated\.json$
       - id: biome-lint
 
   - repo: https://github.com/oxc-project/mirrors-oxlint

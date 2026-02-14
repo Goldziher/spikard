@@ -7,10 +7,11 @@ that can be passed to Rust for validation and caching.
 from datetime import date, datetime, time, timedelta
 from enum import Enum
 from pathlib import Path, PurePath
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from spikard._internal.field_definition import FieldDefinition  # noqa: TC001
+if TYPE_CHECKING:
+    from spikard._internal.field_definition import FieldDefinition
 
 __all__ = ("field_definition_to_json_schema",)
 
@@ -75,7 +76,7 @@ def field_definition_to_json_schema(field: FieldDefinition) -> dict[str, Any]:
         try:
             enum_class = field.annotation
             schema["enum"] = [item.value for item in enum_class]
-        except AttributeError, TypeError, ValueError:
+        except (AttributeError, TypeError, ValueError):
             schema["type"] = "string"
         return schema
 

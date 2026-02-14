@@ -133,7 +133,15 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
 
             println!("Running ruff fix on generated Python code...");
             let ruff_fix_status = std::process::Command::new("uv")
-                .args(["run", "ruff", "check", "--fix", "--unsafe-fixes"])
+                .args([
+                    "run",
+                    "ruff",
+                    "check",
+                    "--fix",
+                    "--unsafe-fixes",
+                    "--target-version",
+                    "py313",
+                ])
                 .arg(&output)
                 .status()
                 .context("Failed to run ruff fix")?;
@@ -147,7 +155,7 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
 
             println!("Running ruff format on generated Python code...");
             let ruff_format_status = std::process::Command::new("uv")
-                .args(["run", "ruff", "format"])
+                .args(["run", "ruff", "format", "--target-version", "py313"])
                 .arg(&output)
                 .status()
                 .context("Failed to run ruff format")?;

@@ -55,7 +55,7 @@ class ParsedSignature:
 
         try:
             fn_type_hints = get_type_hints(fn, include_extras=True)
-        except AttributeError, NameError, TypeError, ValueError, RecursionError:
+        except (AttributeError, NameError, TypeError, ValueError, RecursionError):
             fn_type_hints = getattr(fn, "__annotations__", {})
 
         return cls.from_signature(signature, fn_type_hints)

@@ -38,7 +38,7 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const form = { password: "secret", username: "johndoe" };
+		const form = { username: "johndoe", password: "secret" };
 		const response = await client.post("/login/", { headers, form });
 
 		expect(response.statusCode).toBe(200);
@@ -59,10 +59,10 @@ describe("url_encoded", () => {
 
 		expect(response.statusCode).toBe(201);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("contact.email");
-		expect(responseData["contact.email"]).toBe("john@example.com");
 		expect(responseData).toHaveProperty("user-name");
 		expect(responseData["user-name"]).toBe("JohnDoe");
+		expect(responseData).toHaveProperty("contact.email");
+		expect(responseData["contact.email"]).toBe("john@example.com");
 	});
 
 	test("Pattern validation - fail", async () => {
@@ -180,10 +180,10 @@ describe("url_encoded", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("age");
-		expect(responseData.age).toBe(30);
 		expect(responseData).toHaveProperty("username");
 		expect(responseData.username).toBe("johndoe");
+		expect(responseData).toHaveProperty("age");
+		expect(responseData.age).toBe(30);
 	});
 
 	test("Special characters encoding", async () => {
@@ -198,10 +198,10 @@ describe("url_encoded", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("description");
-		expect(responseData.description).toBe("Test & Development");
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("John Doe");
+		expect(responseData).toHaveProperty("description");
+		expect(responseData.description).toBe("Test & Development");
 	});
 
 	test("Boolean field conversion", async () => {
@@ -216,10 +216,10 @@ describe("url_encoded", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("subscribe");
-		expect(responseData.subscribe).toBe(true);
 		expect(responseData).toHaveProperty("username");
 		expect(responseData.username).toBe("johndoe");
+		expect(responseData).toHaveProperty("subscribe");
+		expect(responseData.subscribe).toBe(true);
 	});
 
 	test("Empty string value", async () => {
@@ -234,10 +234,10 @@ describe("url_encoded", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("description");
-		expect(responseData.description).toBe("");
 		expect(responseData).toHaveProperty("username");
 		expect(responseData.username).toBe("johndoe");
+		expect(responseData).toHaveProperty("description");
+		expect(responseData.description).toBe("");
 	});
 
 	test("OAuth2 password grant flow", async () => {
@@ -247,7 +247,7 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const form = { grant_type: "password", password: "secret", scope: "", username: "johndoe" };
+		const form = { username: "johndoe", grant_type: "password", password: "secret", scope: "" };
 		const response = await client.post("/token", { headers, form });
 
 		expect(response.statusCode).toBe(200);
@@ -278,15 +278,15 @@ describe("url_encoded", () => {
 		const headers = {
 			"Content-Type": "application/x-www-form-urlencoded",
 		};
-		const form = { password: "secret", username: "johndoe" };
+		const form = { username: "johndoe", password: "secret" };
 		const response = await client.post("/register/", { headers, form });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("email");
-		expect(responseData.email).toBe(null);
 		expect(responseData).toHaveProperty("username");
 		expect(responseData.username).toBe("johndoe");
+		expect(responseData).toHaveProperty("email");
+		expect(responseData.email).toBe(null);
 	});
 
 	test("14_nested_object_bracket_notation", async () => {
@@ -302,12 +302,12 @@ describe("url_encoded", () => {
 		expect(response.statusCode).toBe(201);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("user");
-		expect(responseData.user).toHaveProperty("age");
-		expect(responseData.user.age).toBe(30);
-		expect(responseData.user).toHaveProperty("email");
-		expect(responseData.user.email).toBe("john@example.com");
 		expect(responseData.user).toHaveProperty("name");
 		expect(responseData.user.name).toBe("John Doe");
+		expect(responseData.user).toHaveProperty("email");
+		expect(responseData.user.email).toBe("john@example.com");
+		expect(responseData.user).toHaveProperty("age");
+		expect(responseData.user.age).toBe(30);
 	});
 
 	test("String max_length validation - fail", async () => {

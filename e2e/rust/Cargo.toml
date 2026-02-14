@@ -1,7 +1,7 @@
 [package]
 name = "spikard-e2e-app"
-version = "0.10.2"
-edition = "2024"
+version = "0.1.0"
+edition = "2021"
 publish = false
 
 # Opt out of parent workspace

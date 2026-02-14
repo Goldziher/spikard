@@ -34,14 +34,14 @@ async def test_jwt_malformed_token_format() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Malformed JWT token: expected 3 parts separated by dots, found 2"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "Malformed JWT token"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "Malformed JWT token"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "Malformed JWT token: expected 3 parts separated by dots, found 2"
 
 
 async def test_bearer_token_without_prefix() -> None:
@@ -55,14 +55,14 @@ async def test_bearer_token_without_prefix() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Authorization header must use Bearer scheme: 'Bearer <token>'"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "Invalid Authorization header format"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "Invalid Authorization header format"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "Authorization header must use Bearer scheme: 'Bearer <token>'"
 
 
 async def test_jwt_authentication_valid_token() -> None:
@@ -93,10 +93,10 @@ async def test_api_key_rotation_old_key_still_valid() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "data" in response_data
-        assert response_data["data"] == "sensitive information"
         assert "message" in response_data
         assert response_data["message"] == "Access granted"
+        assert "data" in response_data
+        assert response_data["data"] == "sensitive information"
         response_headers = response.headers
         assert response_headers.get("x-api-key-deprecated") == "true"
 
@@ -112,14 +112,14 @@ async def test_jwt_invalid_issuer() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Token issuer is invalid, expected 'https://auth.example.com'"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "JWT validation failed"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "JWT validation failed"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "Token issuer is invalid, expected 'https://auth.example.com'"
 
 
 async def test_jwt_with_multiple_audiences() -> None:
@@ -147,10 +147,10 @@ async def test_api_key_in_query_parameter() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "data" in response_data
-        assert response_data["data"] == "sensitive information"
         assert "message" in response_data
         assert response_data["message"] == "Access granted"
+        assert "data" in response_data
+        assert response_data["data"] == "sensitive information"
 
 
 async def test_jwt_authentication_expired_token() -> None:
@@ -164,14 +164,14 @@ async def test_jwt_authentication_expired_token() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Token has expired"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "JWT validation failed"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "JWT validation failed"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "Token has expired"
 
 
 async def test_api_key_authentication_invalid_key() -> None:
@@ -185,14 +185,14 @@ async def test_api_key_authentication_invalid_key() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "The provided API key is not valid"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "Invalid API key"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "Invalid API key"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "The provided API key is not valid"
 
 
 async def test_jwt_not_before_claim_in_future() -> None:
@@ -206,14 +206,14 @@ async def test_jwt_not_before_claim_in_future() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "JWT not valid yet, not before claim is in the future"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "JWT validation failed"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "JWT validation failed"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "JWT not valid yet, not before claim is in the future"
 
 
 async def test_multiple_authentication_schemes_jwt_precedence() -> None:
@@ -221,19 +221,19 @@ async def test_multiple_authentication_schemes_jwt_precedence() -> None:
 
     async with TestClient(create_app_auth_multiple_authentication_schemes_jwt_precedence()) as client:
         headers = {
-            "X-API-Key": "sk_test_123456",
             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
+            "X-API-Key": "sk_test_123456",
         }
         response = await client.get("/api/data", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "auth_method" in response_data
-        assert response_data["auth_method"] == "jwt"
         assert "message" in response_data
         assert response_data["message"] == "Access granted"
         assert "user_id" in response_data
         assert response_data["user_id"] == "user123"
+        assert "auth_method" in response_data
+        assert response_data["auth_method"] == "jwt"
 
 
 async def test_jwt_missing_required_custom_claims() -> None:
@@ -247,14 +247,14 @@ async def test_jwt_missing_required_custom_claims() -> None:
 
         assert response.status_code == 403
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Required claims 'role' and 'permissions' missing from JWT"
-        assert "status" in response_data
-        assert response_data["status"] == 403
-        assert "title" in response_data
-        assert response_data["title"] == "Forbidden"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/forbidden"
+        assert "title" in response_data
+        assert response_data["title"] == "Forbidden"
+        assert "status" in response_data
+        assert response_data["status"] == 403
+        assert "detail" in response_data
+        assert response_data["detail"] == "Required claims 'role' and 'permissions' missing from JWT"
 
 
 async def test_api_key_authentication_valid_key() -> None:
@@ -268,10 +268,10 @@ async def test_api_key_authentication_valid_key() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "data" in response_data
-        assert response_data["data"] == "sensitive information"
         assert "message" in response_data
         assert response_data["message"] == "Access granted"
+        assert "data" in response_data
+        assert response_data["data"] == "sensitive information"
 
 
 async def test_api_key_with_custom_header_name() -> None:
@@ -285,10 +285,10 @@ async def test_api_key_with_custom_header_name() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "data" in response_data
-        assert response_data["data"] == "sensitive information"
         assert "message" in response_data
         assert response_data["message"] == "Access granted"
+        assert "data" in response_data
+        assert response_data["data"] == "sensitive information"
 
 
 async def test_api_key_authentication_missing_header() -> None:
@@ -299,14 +299,14 @@ async def test_api_key_authentication_missing_header() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "Missing API key"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "Missing API key"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"
 
 
 async def test_jwt_authentication_invalid_signature() -> None:
@@ -320,14 +320,14 @@ async def test_jwt_authentication_invalid_signature() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Token signature is invalid"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "JWT validation failed"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "JWT validation failed"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "Token signature is invalid"
 
 
 async def test_jwt_authentication_missing_authorization_header() -> None:
@@ -338,14 +338,14 @@ async def test_jwt_authentication_missing_authorization_header() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Expected 'Authorization: Bearer <token>'"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "Missing or invalid Authorization header"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "Missing or invalid Authorization header"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "Expected 'Authorization: Bearer <token>'"
 
 
 async def test_jwt_authentication_invalid_audience() -> None:
@@ -359,11 +359,11 @@ async def test_jwt_authentication_invalid_audience() -> None:
 
         assert response.status_code == 401
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Token audience is invalid"
-        assert "status" in response_data
-        assert response_data["status"] == 401
-        assert "title" in response_data
-        assert response_data["title"] == "JWT validation failed"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unauthorized"
+        assert "title" in response_data
+        assert response_data["title"] == "JWT validation failed"
+        assert "status" in response_data
+        assert response_data["status"] == 401
+        assert "detail" in response_data
+        assert response_data["detail"] == "Token audience is invalid"

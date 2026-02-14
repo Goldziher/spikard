@@ -32,9 +32,9 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
+			"Access-Control-Request-Headers": "X-Custom-Header",
 			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
-			"Access-Control-Request-Headers": "X-Custom-Header",
 		};
 		const response = await client.options("/api/data", { headers });
 
@@ -46,8 +46,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Cache-Control": "max-age=3600",
 			Origin: "https://app.example.com",
+			"Cache-Control": "max-age=3600",
 		};
 		const response = await client.get("/api/cached-resource", headers);
 
@@ -56,9 +56,9 @@ describe("cors", () => {
 		expect(responseData).toHaveProperty("data");
 		expect(responseData.data).toBe("cacheable resource");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["cache-control"]).toBe("public, max-age=3600");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://app.example.com");
 		expect(responseHeaders.vary).toBe("Origin");
+		expect(responseHeaders["cache-control"]).toBe("public, max-age=3600");
 	});
 
 	test("CORS preflight for PUT method", async () => {
@@ -75,9 +75,9 @@ describe("cors", () => {
 		expect(response.statusCode).toBe(204);
 		const responseHeaders = response.headers();
 		expect(responseHeaders["access-control-max-age"]).toBe("3600");
+		expect(responseHeaders.vary).toBe("Origin");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://app.example.com");
 		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, PATCH, DELETE");
-		expect(responseHeaders.vary).toBe("Origin");
 		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type, X-Custom-Header");
 	});
 
@@ -93,10 +93,10 @@ describe("cors", () => {
 
 		expect(response.statusCode).toBe(204);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, PATCH, DELETE");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://app.example.com");
 		expect(responseHeaders["access-control-max-age"]).toBe("3600");
 		expect(responseHeaders.vary).toBe("Origin");
+		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, PATCH, DELETE");
 	});
 
 	test("CORS multiple allowed origins", async () => {
@@ -122,18 +122,18 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Origin: "https://example.com",
-			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
 			"Access-Control-Request-Method": "POST",
+			"Access-Control-Request-Headers": "Content-Type, X-Custom-Header",
+			Origin: "https://example.com",
 		};
 		const response = await client.options("/items/", { headers });
 
 		expect(response.statusCode).toBe(200);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["access-control-max-age"]).toBe("600");
-		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type, X-Custom-Header");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://example.com");
 		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST, PUT, DELETE, OPTIONS");
+		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type, X-Custom-Header");
+		expect(responseHeaders["access-control-max-age"]).toBe("600");
 	});
 
 	test("CORS with credentials", async () => {
@@ -141,8 +141,8 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Cookie: "session=abc123",
 			Origin: "https://app.example.com",
+			Cookie: "session=abc123",
 		};
 		const response = await client.get("/api/user/profile", headers);
 
@@ -170,8 +170,8 @@ describe("cors", () => {
 		expect(responseData).toHaveProperty("data");
 		expect(responseData.data).toBe("resource data");
 		const responseHeaders = response.headers();
-		expect(responseHeaders.vary).toBe("Origin");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://subdomain.example.com");
+		expect(responseHeaders.vary).toBe("Origin");
 	});
 
 	test("08_cors_max_age", async () => {
@@ -179,18 +179,18 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Origin: "https://example.com",
 			"Access-Control-Request-Headers": "Content-Type",
+			Origin: "https://example.com",
 			"Access-Control-Request-Method": "POST",
 		};
 		const response = await client.options("/api/data", { headers });
 
 		expect(response.statusCode).toBe(204);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["access-control-max-age"]).toBe("3600");
 		expect(responseHeaders["access-control-allow-methods"]).toBe("POST");
-		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type");
+		expect(responseHeaders["access-control-max-age"]).toBe("3600");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://example.com");
+		expect(responseHeaders["access-control-allow-headers"]).toBe("Content-Type");
 	});
 
 	test("10_cors_origin_null", async () => {
@@ -227,10 +227,10 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Origin: "https://app.example.com",
-			"Accept-Language": "en-US",
 			Accept: "application/json",
+			Origin: "https://app.example.com",
 			"Content-Type": "text/plain",
+			"Accept-Language": "en-US",
 		};
 		const response = await client.post("/api/form", { headers });
 
@@ -248,18 +248,18 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
+			"Access-Control-Request-Private-Network": "true",
 			Origin: "https://public.example.com",
 			"Access-Control-Request-Method": "GET",
-			"Access-Control-Request-Private-Network": "true",
 		};
 		const response = await client.options("/api/local-resource", { headers });
 
 		expect(response.statusCode).toBe(204);
 		const responseHeaders = response.headers();
 		expect(responseHeaders["access-control-allow-methods"]).toBe("GET, POST");
-		expect(responseHeaders.vary).toBe("Origin");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://public.example.com");
 		expect(responseHeaders["access-control-allow-private-network"]).toBe("true");
+		expect(responseHeaders.vary).toBe("Origin");
 	});
 
 	test("CORS origin case sensitivity", async () => {
@@ -302,8 +302,8 @@ describe("cors", () => {
 		expect(responseData).toHaveProperty("items");
 		expect(responseData.items.length).toBe(0);
 		const responseHeaders = response.headers();
-		expect(responseHeaders.vary).toBe("Origin");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://example.com");
+		expect(responseHeaders.vary).toBe("Origin");
 	});
 
 	test("09_cors_expose_headers", async () => {
@@ -317,10 +317,10 @@ describe("cors", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseHeaders = response.headers();
-		expect(responseHeaders["access-control-expose-headers"]).toBe("X-Total-Count, X-Request-Id");
 		expect(responseHeaders["access-control-allow-origin"]).toBe("https://example.com");
-		expect(responseHeaders["x-request-id"]).toBe("abc123");
 		expect(responseHeaders["x-total-count"]).toBe("42");
+		expect(responseHeaders["x-request-id"]).toBe("abc123");
+		expect(responseHeaders["access-control-expose-headers"]).toBe("X-Total-Count, X-Request-Id");
 	});
 
 	test("06_cors_preflight_method_not_allowed", async () => {
@@ -328,9 +328,9 @@ describe("cors", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			"Access-Control-Request-Method": "DELETE",
 			"Access-Control-Request-Headers": "Content-Type",
 			Origin: "https://example.com",
+			"Access-Control-Request-Method": "DELETE",
 		};
 		const response = await client.options("/api/data", { headers });
 

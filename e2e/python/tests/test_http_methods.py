@@ -22,8 +22,8 @@ async def test_options_cors_preflight_request() -> None:
 
     async with TestClient(create_app_http_methods_options_cors_preflight_request()) as client:
         headers = {
-            "Access-Control-Request-Headers": "Content-Type",
             "Origin": "https://example.com",
+            "Access-Control-Request-Headers": "Content-Type",
             "Access-Control-Request-Method": "POST",
         }
         response = await client.options("/items/", headers=headers)
@@ -31,10 +31,10 @@ async def test_options_cors_preflight_request() -> None:
         assert response.status_code == 200
         response_data = response.json()
         response_headers = response.headers
-        assert response_headers.get("access-control-allow-origin") == "https://example.com"
-        assert response_headers.get("access-control-max-age") == "86400"
-        assert response_headers.get("access-control-allow-headers") == "Content-Type"
         assert response_headers.get("access-control-allow-methods") == "GET, POST, PUT, DELETE, OPTIONS"
+        assert response_headers.get("access-control-max-age") == "86400"
+        assert response_headers.get("access-control-allow-origin") == "https://example.com"
+        assert response_headers.get("access-control-allow-headers") == "Content-Type"
 
 
 async def test_delete_remove_resource() -> None:
@@ -74,19 +74,19 @@ async def test_patch_update_multiple_fields() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"in_stock": False, "name": "Updated Name", "price": 89.99}
+        json_data = {"name": "Updated Name", "price": 89.99, "in_stock": False}
         response = await client.patch("/items/1", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
         assert "id" in response_data
         assert response_data["id"] == 1
-        assert "in_stock" in response_data
-        assert response_data["in_stock"] == False
         assert "name" in response_data
         assert response_data["name"] == "Updated Name"
         assert "price" in response_data
         assert response_data["price"] == 89.99
+        assert "in_stock" in response_data
+        assert response_data["in_stock"] == False
 
 
 async def test_put_validation_error() -> None:
@@ -101,6 +101,7 @@ async def test_put_validation_error() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -126,10 +127,10 @@ async def test_delete_with_response_body() -> None:
         response_data = response.json()
         assert "id" in response_data
         assert response_data["id"] == 1
-        assert "message" in response_data
-        assert response_data["message"] == "Item deleted successfully"
         assert "name" in response_data
         assert response_data["name"] == "Deleted Item"
+        assert "message" in response_data
+        assert response_data["message"] == "Item deleted successfully"
 
 
 async def test_put_missing_required_field() -> None:
@@ -144,6 +145,7 @@ async def test_put_missing_required_field() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -161,12 +163,12 @@ async def test_patch_partial_update() -> None:
         response_data = response.json()
         assert "id" in response_data
         assert response_data["id"] == 1
-        assert "in_stock" in response_data
-        assert response_data["in_stock"] == True
         assert "name" in response_data
         assert response_data["name"] == "Existing Item"
         assert "price" in response_data
         assert response_data["price"] == 79.99
+        assert "in_stock" in response_data
+        assert response_data["in_stock"] == True
 
 
 async def test_delete_resource_not_found() -> None:
@@ -207,23 +209,23 @@ async def test_put_complete_resource_replacement() -> None:
             "Content-Type": "application/json",
         }
         json_data = {
-            "description": "Completely replaced",
             "id": 1,
-            "in_stock": True,
             "name": "Updated Item",
+            "description": "Completely replaced",
             "price": 99.99,
+            "in_stock": True,
         }
         response = await client.put("/items/1", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "description" in response_data
-        assert response_data["description"] == "Completely replaced"
         assert "id" in response_data
         assert response_data["id"] == 1
-        assert "in_stock" in response_data
-        assert response_data["in_stock"] == True
         assert "name" in response_data
         assert response_data["name"] == "Updated Item"
+        assert "description" in response_data
+        assert response_data["description"] == "Completely replaced"
         assert "price" in response_data
         assert response_data["price"] == 99.99
+        assert "in_stock" in response_data
+        assert response_data["in_stock"] == True

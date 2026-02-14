@@ -70,6 +70,7 @@ RSpec.describe "edge_cases" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "content"])
+    expect(body['errors'].first['type']).to eq("string_too_long")
     client.close
   end
 
@@ -103,6 +104,7 @@ RSpec.describe "edge_cases" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "filename"])
+    expect(body['errors'].first['type']).to eq("string_pattern_mismatch")
     client.close
   end
 
@@ -137,8 +139,8 @@ RSpec.describe "edge_cases" do
     app = E2ERubyApp.create_app_edge_cases_14_24_array_with_holes
     client = Spikard::Testing.create_test_client(app)
     response = client.post("/items", headers: {"Content-Type" => "application/x-www-form-urlencoded"}, raw_body: "items[0]=first&items[2]=third&items[5]=sixth")
-    expect(response.status_code).to eq(200)
-    expect(response.json).to eq({"items" => ["first", "third", "sixth"]})
+    expect(response.status_code).to eq(400)
+    expect(response.json).to eq({"error" => "Failed to parse URL-encoded form data: missing index, expected: 1 got 2"})
     client.close
   end
 
@@ -163,9 +165,9 @@ RSpec.describe "edge_cases" do
   it "Float precision and rounding" do
     app = E2ERubyApp.create_app_edge_cases_17_float_precision_and_rounding
     client = Spikard::Testing.create_test_client(app)
-    response = client.post("/calculations/", headers: {"Content-Type" => "application/json"}, json: {"expected_sum" => 0.3, "precise_value" => 3.141592653589793, "value1" => 0.1, "value2" => 0.2, "very_large" => 1.7976931348623157e308, "very_small" => 1e-10})
+    response = client.post("/calculations/", headers: {"Content-Type" => "application/json"}, json: {"expected_sum" => 0.3, "precise_value" => 3.141592653589793, "value1" => 0.1, "value2" => 0.2, "very_large" => 1.7976931348623157e+308, "very_small" => 1e-10})
     expect(response.status_code).to eq(200)
-    expect(response.json).to eq({"precise_value" => 3.141592653589793, "sum" => 0.30000000000000004, "very_large" => 1.7976931348623157e308, "very_small" => 1e-10})
+    expect(response.json).to eq({"precise_value" => 3.141592653589793, "sum" => 0.30000000000000004, "very_large" => 1.7976931348623157e+308, "very_small" => 1e-10})
     client.close
   end
 

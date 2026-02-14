@@ -25,6 +25,7 @@ RSpec.describe "json_bodies" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "profile", "email"])
+    expect(body['errors'].first['type']).to eq("missing")
     client.close
   end
 

@@ -126,7 +126,7 @@ def extract_schemas(
     """
     try:
         type_hints = get_type_hints(func)
-    except AttributeError, NameError, TypeError, ValueError:
+    except (AttributeError, NameError, TypeError, ValueError):
         return None, None
 
     sig = inspect.signature(func)
@@ -148,7 +148,7 @@ def extract_schemas(
                     if request_schema and "required" in request_schema:
                         try:
                             body_type_hints = get_type_hints(param_type)
-                        except AttributeError, NameError, TypeError, ValueError:
+                        except (AttributeError, NameError, TypeError, ValueError):
                             body_type_hints = {}
 
                         def _is_optional_upload(field_type: Any) -> bool:

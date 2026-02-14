@@ -48,22 +48,22 @@ describe("multipart", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("files");
 		expect(responseData.files.length).toBe(2);
-		expect(responseData.files[0]).toHaveProperty("content");
-		expect(responseData.files[0].content).toBe("first file");
-		expect(responseData.files[0]).toHaveProperty("content_type");
-		expect(responseData.files[0].content_type).toBe("text/plain");
 		expect(responseData.files[0]).toHaveProperty("filename");
 		expect(responseData.files[0].filename).toBe("file1.txt");
 		expect(responseData.files[0]).toHaveProperty("size");
 		expect(responseData.files[0].size).toBe(10);
-		expect(responseData.files[1]).toHaveProperty("content");
-		expect(responseData.files[1].content).toBe("second file");
-		expect(responseData.files[1]).toHaveProperty("content_type");
-		expect(responseData.files[1].content_type).toBe("text/plain");
+		expect(responseData.files[0]).toHaveProperty("content");
+		expect(responseData.files[0].content).toBe("first file");
+		expect(responseData.files[0]).toHaveProperty("content_type");
+		expect(responseData.files[0].content_type).toBe("text/plain");
 		expect(responseData.files[1]).toHaveProperty("filename");
 		expect(responseData.files[1].filename).toBe("file2.txt");
 		expect(responseData.files[1]).toHaveProperty("size");
 		expect(responseData.files[1].size).toBe(11);
+		expect(responseData.files[1]).toHaveProperty("content");
+		expect(responseData.files[1].content).toBe("second file");
+		expect(responseData.files[1]).toHaveProperty("content_type");
+		expect(responseData.files[1].content_type).toBe("text/plain");
 		expect(responseData).toHaveProperty("tags");
 		expect(responseData.tags.length).toBe(3);
 		expect(responseData.tags[0]).toBe("python");
@@ -134,10 +134,10 @@ describe("multipart", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("content_type");
-		expect(responseData.content_type).toBe("application/pdf");
 		expect(responseData).toHaveProperty("filename");
 		expect(responseData.filename).toBe("report.pdf");
+		expect(responseData).toHaveProperty("content_type");
+		expect(responseData.content_type).toBe("application/pdf");
 		expect(responseData).toHaveProperty("size");
 		expect(responseData.size).toBe(16);
 	});
@@ -175,10 +175,10 @@ describe("multipart", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("content_type");
-		expect(responseData.content_type).toBe("text/plain");
 		expect(responseData).toHaveProperty("filename");
 		expect(responseData.filename).toBe("optional.txt");
+		expect(responseData).toHaveProperty("content_type");
+		expect(responseData.content_type).toBe("text/plain");
 		expect(responseData).toHaveProperty("size");
 		expect(responseData.size).toBe(21);
 	});
@@ -198,28 +198,28 @@ describe("multipart", () => {
 		const client = new TestClient(app);
 
 		const multipart = {
-			fields: { active: "true", age: "25", username: "testuser" },
+			fields: { age: "25", active: "true", username: "testuser" },
 			files: [{ name: "file", filename: "upload.txt", content: "file data here", contentType: "text/plain" }],
 		};
 		const response = await client.post("/", { multipart });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("active");
-		expect(responseData.active).toBe("true");
-		expect(responseData).toHaveProperty("age");
-		expect(responseData.age).toBe("25");
 		expect(responseData).toHaveProperty("file");
-		expect(responseData.file).toHaveProperty("content");
-		expect(responseData.file.content).toBe("file data here");
-		expect(responseData.file).toHaveProperty("content_type");
-		expect(responseData.file.content_type).toBe("text/plain");
 		expect(responseData.file).toHaveProperty("filename");
 		expect(responseData.file.filename).toBe("upload.txt");
 		expect(responseData.file).toHaveProperty("size");
 		expect(responseData.file.size).toBe(14);
+		expect(responseData.file).toHaveProperty("content");
+		expect(responseData.file.content).toBe("file data here");
+		expect(responseData.file).toHaveProperty("content_type");
+		expect(responseData.file.content_type).toBe("text/plain");
 		expect(responseData).toHaveProperty("username");
 		expect(responseData.username).toBe("testuser");
+		expect(responseData).toHaveProperty("age");
+		expect(responseData.age).toBe("25");
+		expect(responseData).toHaveProperty("active");
+		expect(responseData.active).toBe("true");
 	});
 
 	test("Simple file upload", async () => {
@@ -234,14 +234,14 @@ describe("multipart", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("test");
-		expect(responseData.test).toHaveProperty("content");
-		expect(responseData.test.content).toBe("<file content>");
-		expect(responseData.test).toHaveProperty("content_type");
-		expect(responseData.test.content_type).toBe("text/plain");
 		expect(responseData.test).toHaveProperty("filename");
 		expect(responseData.test.filename).toBe("test.txt");
 		expect(responseData.test).toHaveProperty("size");
 		expect(responseData.test.size).toBe(14);
+		expect(responseData.test).toHaveProperty("content");
+		expect(responseData.test.content).toBe("<file content>");
+		expect(responseData.test).toHaveProperty("content_type");
+		expect(responseData.test.content_type).toBe("text/plain");
 	});
 
 	test("Empty file upload", async () => {
@@ -347,23 +347,23 @@ describe("multipart", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("test1");
-		expect(responseData.test1).toHaveProperty("content");
-		expect(responseData.test1.content).toBe("<file1 content>");
-		expect(responseData.test1).toHaveProperty("content_type");
-		expect(responseData.test1.content_type).toBe("text/plain");
 		expect(responseData.test1).toHaveProperty("filename");
 		expect(responseData.test1.filename).toBe("test1.txt");
 		expect(responseData.test1).toHaveProperty("size");
 		expect(responseData.test1.size).toBe(15);
+		expect(responseData.test1).toHaveProperty("content");
+		expect(responseData.test1.content).toBe("<file1 content>");
+		expect(responseData.test1).toHaveProperty("content_type");
+		expect(responseData.test1.content_type).toBe("text/plain");
 		expect(responseData).toHaveProperty("test2");
-		expect(responseData.test2).toHaveProperty("content");
-		expect(responseData.test2.content).toBe("<file2 content>");
-		expect(responseData.test2).toHaveProperty("content_type");
-		expect(responseData.test2.content_type).toBe("text/plain");
 		expect(responseData.test2).toHaveProperty("filename");
 		expect(responseData.test2.filename).toBe("test2.txt");
 		expect(responseData.test2).toHaveProperty("size");
 		expect(responseData.test2.size).toBe(15);
+		expect(responseData.test2).toHaveProperty("content");
+		expect(responseData.test2.content).toBe("<file2 content>");
+		expect(responseData.test2).toHaveProperty("content_type");
+		expect(responseData.test2.content_type).toBe("text/plain");
 	});
 
 	test("File upload with custom headers", async () => {
@@ -378,12 +378,14 @@ describe("multipart", () => {
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("test2");
+		expect(responseData.test2).toHaveProperty("filename");
+		expect(responseData.test2.filename).toBe("test2.txt");
+		expect(responseData.test2).toHaveProperty("size");
+		expect(responseData.test2.size).toBe(15);
 		expect(responseData.test2).toHaveProperty("content");
 		expect(responseData.test2.content).toBe("<file2 content>");
 		expect(responseData.test2).toHaveProperty("content_type");
 		expect(responseData.test2.content_type).toBe("text/plain");
-		expect(responseData.test2).toHaveProperty("filename");
-		expect(responseData.test2.filename).toBe("test2.txt");
 		expect(responseData.test2).toHaveProperty("headers");
 		expect(responseData.test2.headers.length).toBe(3);
 		expect(responseData.test2.headers[0].length).toBe(2);
@@ -395,8 +397,6 @@ describe("multipart", () => {
 		expect(responseData.test2.headers[2].length).toBe(2);
 		expect(responseData.test2.headers[2][0]).toBe("x-custom");
 		expect(responseData.test2.headers[2][1]).toBe("f2");
-		expect(responseData.test2).toHaveProperty("size");
-		expect(responseData.test2.size).toBe(15);
 	});
 
 	test("Required file upload - missing", async () => {
@@ -420,10 +420,10 @@ describe("multipart", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("content_type");
-		expect(responseData.content_type).toBe("image/jpeg");
 		expect(responseData).toHaveProperty("filename");
 		expect(responseData.filename).toBe("photo.jpg");
+		expect(responseData).toHaveProperty("content_type");
+		expect(responseData.content_type).toBe("image/jpeg");
 		expect(responseData).toHaveProperty("size");
 		expect(responseData.size).toBe(22);
 	});

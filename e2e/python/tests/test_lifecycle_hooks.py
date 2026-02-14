@@ -30,8 +30,8 @@ async def test_onresponse_security_headers() -> None:
         assert "message" in response_data
         assert response_data["message"] == "Response with security headers"
         response_headers = response.headers
-        assert response_headers.get("x-content-type-options") == "nosniff"
         assert response_headers.get("x-xss-protection") == "1; mode=block"
+        assert response_headers.get("x-content-type-options") == "nosniff"
         assert response_headers.get("x-frame-options") == "DENY"
         assert response_headers.get("strict-transport-security") == "max-age=31536000; includeSubDomains"
 
@@ -66,10 +66,10 @@ async def test_prehandler_authorization_check() -> None:
         response_data = response.json()
         assert "message" in response_data
         assert response_data["message"] == "Admin access granted"
-        assert "role" in response_data
-        assert response_data["role"] == "admin"
         assert "user_id" in response_data
         assert response_data["user_id"] == "admin-456"
+        assert "role" in response_data
+        assert response_data["role"] == "admin"
 
 
 async def test_prehandler_authentication_success() -> None:
@@ -83,12 +83,12 @@ async def test_prehandler_authentication_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "authenticated" in response_data
-        assert response_data["authenticated"] == True
         assert "message" in response_data
         assert response_data["message"] == "Access granted"
         assert "user_id" in response_data
         assert response_data["user_id"] == "user-123"
+        assert "authenticated" in response_data
+        assert response_data["authenticated"] == True
 
 
 async def test_prevalidation_rate_limit_exceeded_short_circuit() -> None:
@@ -121,10 +121,10 @@ async def test_onerror_error_logging() -> None:
         response_data = response.json()
         assert "error" in response_data
         assert response_data["error"] == "Internal Server Error"
-        assert "error_id" in response_data
-        assert response_data["error_id"] == ".*"
         assert "message" in response_data
         assert response_data["message"] == "An unexpected error occurred"
+        assert "error_id" in response_data
+        assert response_data["error_id"] == ".*"
         response_headers = response.headers
         assert response_headers.get("content-type") == "application/json"
 
@@ -134,30 +134,30 @@ async def test_multiple_hooks_all_phases() -> None:
 
     async with TestClient(create_app_lifecycle_hooks_multiple_hooks_all_phases()) as client:
         headers = {
-            "Authorization": "Bearer valid-token-12345",
             "Content-Type": "application/json",
+            "Authorization": "Bearer valid-token-12345",
         }
-        json_data = {"action": "update_profile", "user_id": "user-123"}
+        json_data = {"user_id": "user-123", "action": "update_profile"}
         response = await client.post("/api/full-lifecycle", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "action" in response_data
-        assert response_data["action"] == "update_profile"
         assert "message" in response_data
         assert response_data["message"] == "Action completed successfully"
-        assert "request_id" in response_data
-        assert response_data["request_id"] == ".*"
         assert "user_id" in response_data
         assert response_data["user_id"] == "user-123"
+        assert "action" in response_data
+        assert response_data["action"] == "update_profile"
+        assert "request_id" in response_data
+        assert response_data["request_id"] == ".*"
         response_headers = response.headers
-        header_value = response_headers.get("x-response-time")
-        assert header_value is not None
-        assert re.match(r".*ms", header_value)
         header_value = response_headers.get("x-request-id")
         assert header_value is not None
         assert re.match(r".*", header_value)
         assert response_headers.get("x-content-type-options") == "nosniff"
+        header_value = response_headers.get("x-response-time")
+        assert header_value is not None
+        assert re.match(r".*ms", header_value)
         assert response_headers.get("x-frame-options") == "DENY"
 
 
@@ -169,13 +169,13 @@ async def test_hook_execution_order() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
+        assert "message" in response_data
+        assert response_data["message"] == "Hooks executed in order"
         assert "execution_order" in response_data
         assert len(response_data["execution_order"]) == 3
         assert response_data["execution_order"][0] == "first_hook"
         assert response_data["execution_order"][1] == "second_hook"
         assert response_data["execution_order"][2] == "third_hook"
-        assert "message" in response_data
-        assert response_data["message"] == "Hooks executed in order"
 
 
 async def test_onresponse_response_timing() -> None:
@@ -219,12 +219,12 @@ async def test_onrequest_request_logging() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "has_request_id" in response_data
-        assert response_data["has_request_id"] == True
         assert "message" in response_data
         assert response_data["message"] == "onRequest hooks executed"
         assert "request_logged" in response_data
         assert response_data["request_logged"] == True
+        assert "has_request_id" in response_data
+        assert response_data["has_request_id"] == True
         response_headers = response.headers
         header_value = response_headers.get("x-request-id")
         assert header_value is not None

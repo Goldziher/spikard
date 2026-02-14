@@ -138,6 +138,9 @@ lint.per-file-ignores."examples/**/*.py" = [
   "INP001", # Implicit namespace package (examples don't need __init__.py)
   "S101",   # Assertions are fine in examples
 ]
+lint.per-file-ignores."packages/python/spikard/datastructures.py" = [
+  "UP035", # Keep typing_extensions.Self fallback for Python 3.10 compatibility
+]
 lint.per-file-ignores."packages/python/tests/*.py" = [
   "B008",
   "C901",

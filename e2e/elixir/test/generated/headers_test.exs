@@ -612,8 +612,8 @@ defmodule E2EElixirApp.HeadersTest do
       url = @base_url <> "/headers/multiple"
 
       headers = [
-        {~c"X-Client-Version", ~c"1.2.3"},
         {~c"X-Request-Id", ~c"req-12345"},
+        {~c"X-Client-Version", ~c"1.2.3"},
         {~c"X-Trace-Id", ~c"trace-abc"}
       ]
 

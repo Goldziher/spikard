@@ -42,22 +42,22 @@ async def test_multiple_values_for_same_field_name() -> None:
         response_data = response.json()
         assert "files" in response_data
         assert len(response_data["files"]) == 2
-        assert "content" in response_data["files"][0]
-        assert response_data["files"][0]["content"] == "first file"
-        assert "content_type" in response_data["files"][0]
-        assert response_data["files"][0]["content_type"] == "text/plain"
         assert "filename" in response_data["files"][0]
         assert response_data["files"][0]["filename"] == "file1.txt"
         assert "size" in response_data["files"][0]
         assert response_data["files"][0]["size"] == 10
-        assert "content" in response_data["files"][1]
-        assert response_data["files"][1]["content"] == "second file"
-        assert "content_type" in response_data["files"][1]
-        assert response_data["files"][1]["content_type"] == "text/plain"
+        assert "content" in response_data["files"][0]
+        assert response_data["files"][0]["content"] == "first file"
+        assert "content_type" in response_data["files"][0]
+        assert response_data["files"][0]["content_type"] == "text/plain"
         assert "filename" in response_data["files"][1]
         assert response_data["files"][1]["filename"] == "file2.txt"
         assert "size" in response_data["files"][1]
         assert response_data["files"][1]["size"] == 11
+        assert "content" in response_data["files"][1]
+        assert response_data["files"][1]["content"] == "second file"
+        assert "content_type" in response_data["files"][1]
+        assert response_data["files"][1]["content_type"] == "text/plain"
         assert "tags" in response_data
         assert len(response_data["tags"]) == 3
         assert response_data["tags"][0] == "python"
@@ -76,6 +76,7 @@ async def test_19_file_mime_spoofing_png_as_jpeg() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -90,6 +91,7 @@ async def test_20_file_mime_spoofing_jpeg_as_png() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -116,6 +118,7 @@ async def test_content_type_validation_invalid_type() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
         response_data = response.json()
         assert "errors" in response_data
@@ -139,10 +142,10 @@ async def test_pdf_file_upload() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "content_type" in response_data
-        assert response_data["content_type"] == "application/pdf"
         assert "filename" in response_data
         assert response_data["filename"] == "report.pdf"
+        assert "content_type" in response_data
+        assert response_data["content_type"] == "application/pdf"
         assert "size" in response_data
         assert response_data["size"] == 16
 
@@ -178,10 +181,10 @@ async def test_optional_file_upload_provided() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "content_type" in response_data
-        assert response_data["content_type"] == "text/plain"
         assert "filename" in response_data
         assert response_data["filename"] == "optional.txt"
+        assert "content_type" in response_data
+        assert response_data["content_type"] == "text/plain"
         assert "size" in response_data
         assert response_data["size"] == 21
 
@@ -213,21 +216,21 @@ async def test_mixed_files_and_form_data() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "active" in response_data
-        assert response_data["active"] == "true"
-        assert "age" in response_data
-        assert response_data["age"] == "25"
         assert "file" in response_data
-        assert "content" in response_data["file"]
-        assert response_data["file"]["content"] == "file data here"
-        assert "content_type" in response_data["file"]
-        assert response_data["file"]["content_type"] == "text/plain"
         assert "filename" in response_data["file"]
         assert response_data["file"]["filename"] == "upload.txt"
         assert "size" in response_data["file"]
         assert response_data["file"]["size"] == 14
+        assert "content" in response_data["file"]
+        assert response_data["file"]["content"] == "file data here"
+        assert "content_type" in response_data["file"]
+        assert response_data["file"]["content_type"] == "text/plain"
         assert "username" in response_data
         assert response_data["username"] == "testuser"
+        assert "age" in response_data
+        assert response_data["age"] == "25"
+        assert "active" in response_data
+        assert response_data["active"] == "true"
 
 
 async def test_simple_file_upload() -> None:
@@ -242,14 +245,14 @@ async def test_simple_file_upload() -> None:
         assert response.status_code == 200
         response_data = response.json()
         assert "test" in response_data
-        assert "content" in response_data["test"]
-        assert response_data["test"]["content"] == "<file content>"
-        assert "content_type" in response_data["test"]
-        assert response_data["test"]["content_type"] == "text/plain"
         assert "filename" in response_data["test"]
         assert response_data["test"]["filename"] == "test.txt"
         assert "size" in response_data["test"]
         assert response_data["test"]["size"] == 14
+        assert "content" in response_data["test"]
+        assert response_data["test"]["content"] == "<file content>"
+        assert "content_type" in response_data["test"]
+        assert response_data["test"]["content_type"] == "text/plain"
 
 
 async def test_empty_file_upload() -> None:
@@ -319,6 +322,7 @@ async def test_22_file_empty_buffer() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -352,31 +356,31 @@ async def test_multiple_file_uploads() -> None:
 
     async with TestClient(create_app_multipart_multiple_file_uploads()) as client:
         files = {
-            "test2": ("test2.txt", b"<file2 content>", "text/plain"),
             "test1": ("test1.txt", b"<file1 content>", "text/plain"),
+            "test2": ("test2.txt", b"<file2 content>", "text/plain"),
         }
         response = await client.post("/", files=files)
 
         assert response.status_code == 200
         response_data = response.json()
         assert "test1" in response_data
-        assert "content" in response_data["test1"]
-        assert response_data["test1"]["content"] == "<file1 content>"
-        assert "content_type" in response_data["test1"]
-        assert response_data["test1"]["content_type"] == "text/plain"
         assert "filename" in response_data["test1"]
         assert response_data["test1"]["filename"] == "test1.txt"
         assert "size" in response_data["test1"]
         assert response_data["test1"]["size"] == 15
+        assert "content" in response_data["test1"]
+        assert response_data["test1"]["content"] == "<file1 content>"
+        assert "content_type" in response_data["test1"]
+        assert response_data["test1"]["content_type"] == "text/plain"
         assert "test2" in response_data
-        assert "content" in response_data["test2"]
-        assert response_data["test2"]["content"] == "<file2 content>"
-        assert "content_type" in response_data["test2"]
-        assert response_data["test2"]["content_type"] == "text/plain"
         assert "filename" in response_data["test2"]
         assert response_data["test2"]["filename"] == "test2.txt"
         assert "size" in response_data["test2"]
         assert response_data["test2"]["size"] == 15
+        assert "content" in response_data["test2"]
+        assert response_data["test2"]["content"] == "<file2 content>"
+        assert "content_type" in response_data["test2"]
+        assert response_data["test2"]["content_type"] == "text/plain"
 
 
 async def test_file_upload_with_custom_headers() -> None:
@@ -391,12 +395,14 @@ async def test_file_upload_with_custom_headers() -> None:
         assert response.status_code == 200
         response_data = response.json()
         assert "test2" in response_data
+        assert "filename" in response_data["test2"]
+        assert response_data["test2"]["filename"] == "test2.txt"
+        assert "size" in response_data["test2"]
+        assert response_data["test2"]["size"] == 15
         assert "content" in response_data["test2"]
         assert response_data["test2"]["content"] == "<file2 content>"
         assert "content_type" in response_data["test2"]
         assert response_data["test2"]["content_type"] == "text/plain"
-        assert "filename" in response_data["test2"]
-        assert response_data["test2"]["filename"] == "test2.txt"
         assert "headers" in response_data["test2"]
         assert len(response_data["test2"]["headers"]) == 3
         assert len(response_data["test2"]["headers"][0]) == 2
@@ -408,8 +414,6 @@ async def test_file_upload_with_custom_headers() -> None:
         assert len(response_data["test2"]["headers"][2]) == 2
         assert response_data["test2"]["headers"][2][0] == "x-custom"
         assert response_data["test2"]["headers"][2][1] == "f2"
-        assert "size" in response_data["test2"]
-        assert response_data["test2"]["size"] == 15
 
 
 async def test_required_file_upload_missing() -> None:
@@ -420,6 +424,7 @@ async def test_required_file_upload_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -434,9 +439,9 @@ async def test_image_file_upload() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "content_type" in response_data
-        assert response_data["content_type"] == "image/jpeg"
         assert "filename" in response_data
         assert response_data["filename"] == "photo.jpg"
+        assert "content_type" in response_data
+        assert response_data["content_type"] == "image/jpeg"
         assert "size" in response_data
         assert response_data["size"] == 22

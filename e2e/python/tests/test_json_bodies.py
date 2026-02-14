@@ -61,11 +61,12 @@ async def test_uuid_field_invalid_format() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"item_id": "not-a-valid-uuid", "name": "Item"}
+        json_data = {"name": "Item", "item_id": "not-a-valid-uuid"}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -73,11 +74,12 @@ async def test_44_const_validation_failure() -> None:
     """Field with const constraint not matching exact value should fail."""
 
     async with TestClient(create_app_json_bodies_44_const_validation_failure()) as client:
-        json_data = {"data": "test", "version": "2.0"}
+        json_data = {"version": "2.0", "data": "test"}
         response = await client.post("/api/v1/data", json=json_data)
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -88,17 +90,17 @@ async def test_boolean_field_success() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"in_stock": True, "name": "Item", "price": 42.0}
+        json_data = {"name": "Item", "price": 42.0, "in_stock": True}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "in_stock" in response_data
-        assert response_data["in_stock"] == True
         assert "name" in response_data
         assert response_data["name"] == "Item"
         assert "price" in response_data
         assert response_data["price"] == 42.0
+        assert "in_stock" in response_data
+        assert response_data["in_stock"] == True
 
 
 async def test_numeric_le_validation_success() -> None:
@@ -130,8 +132,8 @@ async def test_deeply_nested_objects() -> None:
             "name": "Product",
             "price": 100.0,
             "seller": {
-                "address": {"city": "Springfield", "country": {"code": "US", "name": "USA"}, "street": "123 Main St"},
                 "name": "John Doe",
+                "address": {"street": "123 Main St", "city": "Springfield", "country": {"name": "USA", "code": "US"}},
             },
         }
         response = await client.post("/items/nested", headers=headers, json=json_data)
@@ -143,18 +145,18 @@ async def test_deeply_nested_objects() -> None:
         assert "price" in response_data
         assert response_data["price"] == 100.0
         assert "seller" in response_data
+        assert "name" in response_data["seller"]
+        assert response_data["seller"]["name"] == "John Doe"
         assert "address" in response_data["seller"]
+        assert "street" in response_data["seller"]["address"]
+        assert response_data["seller"]["address"]["street"] == "123 Main St"
         assert "city" in response_data["seller"]["address"]
         assert response_data["seller"]["address"]["city"] == "Springfield"
         assert "country" in response_data["seller"]["address"]
-        assert "code" in response_data["seller"]["address"]["country"]
-        assert response_data["seller"]["address"]["country"]["code"] == "US"
         assert "name" in response_data["seller"]["address"]["country"]
         assert response_data["seller"]["address"]["country"]["name"] == "USA"
-        assert "street" in response_data["seller"]["address"]
-        assert response_data["seller"]["address"]["street"] == "123 Main St"
-        assert "name" in response_data["seller"]
-        assert response_data["seller"]["name"] == "John Doe"
+        assert "code" in response_data["seller"]["address"]["country"]
+        assert response_data["seller"]["address"]["country"]["code"] == "US"
 
 
 async def test_optional_fields_omitted() -> None:
@@ -169,12 +171,12 @@ async def test_optional_fields_omitted() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "description" in response_data
-        assert response_data["description"] == None
         assert "name" in response_data
         assert response_data["name"] == "Foo"
         assert "price" in response_data
         assert response_data["price"] == 35.4
+        assert "description" in response_data
+        assert response_data["description"] == None
         assert "tax" in response_data
         assert response_data["tax"] == None
 
@@ -186,15 +188,15 @@ async def test_uuid_field_success() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716", "name": "Item"}
+        json_data = {"name": "Item", "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "item_id" in response_data
-        assert response_data["item_id"] == "c892496f-b1fd-4b91-bdb8-b46f92df1716"
         assert "name" in response_data
         assert response_data["name"] == "Item"
+        assert "item_id" in response_data
+        assert response_data["item_id"] == "c892496f-b1fd-4b91-bdb8-b46f92df1716"
 
 
 async def test_date_field_success() -> None:
@@ -204,26 +206,27 @@ async def test_date_field_success() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"event_date": "2024-03-15", "name": "Conference"}
+        json_data = {"name": "Conference", "event_date": "2024-03-15"}
         response = await client.post("/events/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "event_date" in response_data
-        assert response_data["event_date"] == "2024-03-15"
         assert "name" in response_data
         assert response_data["name"] == "Conference"
+        assert "event_date" in response_data
+        assert response_data["event_date"] == "2024-03-15"
 
 
 async def test_47_maxproperties_validation_failure() -> None:
     """Object with more properties than maxProperties should fail."""
 
     async with TestClient(create_app_json_bodies_47_maxproperties_validation_failure()) as client:
-        json_data = {"debug": False, "host": "localhost", "port": 8080, "ssl": True}
+        json_data = {"host": "localhost", "port": 8080, "ssl": True, "debug": False}
         response = await client.post("/config", json=json_data)
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -236,6 +239,7 @@ async def test_46_minproperties_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -251,6 +255,7 @@ async def test_string_min_length_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -261,11 +266,12 @@ async def test_field_type_validation_invalid_type() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"description": "A very nice Item", "name": "Foo", "price": "not a number", "tax": 3.2}
+        json_data = {"name": "Foo", "description": "A very nice Item", "price": "not a number", "tax": 3.2}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -278,6 +284,7 @@ async def test_36_oneof_schema_multiple_match_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -289,23 +296,23 @@ async def test_nested_object_success() -> None:
             "Content-Type": "application/json",
         }
         json_data = {
-            "image": {"name": "Product Image", "url": "https://example.com/image.jpg"},
             "name": "Foo",
             "price": 42.0,
+            "image": {"url": "https://example.com/image.jpg", "name": "Product Image"},
         }
         response = await client.post("/items/nested", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "image" in response_data
-        assert "name" in response_data["image"]
-        assert response_data["image"]["name"] == "Product Image"
-        assert "url" in response_data["image"]
-        assert response_data["image"]["url"] == "https://example.com/image.jpg"
         assert "name" in response_data
         assert response_data["name"] == "Foo"
         assert "price" in response_data
         assert response_data["price"] == 42.0
+        assert "image" in response_data
+        assert "url" in response_data["image"]
+        assert response_data["image"]["url"] == "https://example.com/image.jpg"
+        assert "name" in response_data["image"]
+        assert response_data["image"]["name"] == "Product Image"
 
 
 async def test_41_not_schema_success() -> None:
@@ -330,6 +337,7 @@ async def test_string_max_length_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -347,7 +355,7 @@ async def test_48_dependencies_validation_success() -> None:
     """Dependencies constraint - when A present, B is required and provided."""
 
     async with TestClient(create_app_json_bodies_48_dependencies_validation_success()) as client:
-        json_data = {"billing_address": "123 Main St", "credit_card": "1234567812345678", "name": "John Doe"}
+        json_data = {"name": "John Doe", "credit_card": "1234567812345678", "billing_address": "123 Main St"}
         response = await client.post("/billing", json=json_data)
 
         assert response.status_code == 201
@@ -365,12 +373,12 @@ async def test_patch_partial_update() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "description" in response_data
-        assert response_data["description"] == "Original description"
         assert "name" in response_data
         assert response_data["name"] == "Original Item"
         assert "price" in response_data
         assert response_data["price"] == 45.0
+        assert "description" in response_data
+        assert response_data["description"] == "Original description"
 
 
 async def test_30_nested_object_missing_field() -> None:
@@ -382,6 +390,7 @@ async def test_30_nested_object_missing_field() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -392,15 +401,15 @@ async def test_datetime_field_success() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"created_at": "2024-03-15T10:30:00Z", "name": "Meeting"}
+        json_data = {"name": "Meeting", "created_at": "2024-03-15T10:30:00Z"}
         response = await client.post("/events/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "created_at" in response_data
-        assert response_data["created_at"] == "2024-03-15T10:30:00Z"
         assert "name" in response_data
         assert response_data["name"] == "Meeting"
+        assert "created_at" in response_data
+        assert response_data["created_at"] == "2024-03-15T10:30:00Z"
 
 
 async def test_string_pattern_validation_success() -> None:
@@ -428,7 +437,7 @@ async def test_extra_fields_ignored_no_additionalproperties() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"another_extra": 123, "extra_field": "this should be ignored", "name": "Item", "price": 42.0}
+        json_data = {"name": "Item", "price": 42.0, "extra_field": "this should be ignored", "another_extra": 123}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 200
@@ -448,6 +457,7 @@ async def test_40_anyof_schema_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -455,7 +465,7 @@ async def test_39_anyof_schema_multiple_match_success() -> None:
     """anyOf schema composition - succeeds when multiple schemas match."""
 
     async with TestClient(create_app_json_bodies_39_anyof_schema_multiple_match_success()) as client:
-        json_data = {"email": "john@example.com", "name": "John Doe", "phone": "+1-555-0100"}
+        json_data = {"name": "John Doe", "email": "john@example.com", "phone": "+1-555-0100"}
         response = await client.post("/contact", json=json_data)
 
         assert response.status_code == 201
@@ -468,24 +478,24 @@ async def test_array_of_primitive_values() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"name": "Product", "ratings": [4.5, 4.8, 5.0, 4.2], "tags": ["electronics", "gadget", "new"]}
+        json_data = {"name": "Product", "tags": ["electronics", "gadget", "new"], "ratings": [4.5, 4.8, 5.0, 4.2]}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
         assert "name" in response_data
         assert response_data["name"] == "Product"
+        assert "tags" in response_data
+        assert len(response_data["tags"]) == 3
+        assert response_data["tags"][0] == "electronics"
+        assert response_data["tags"][1] == "gadget"
+        assert response_data["tags"][2] == "new"
         assert "ratings" in response_data
         assert len(response_data["ratings"]) == 4
         assert response_data["ratings"][0] == 4.5
         assert response_data["ratings"][1] == 4.8
         assert response_data["ratings"][2] == 5.0
         assert response_data["ratings"][3] == 4.2
-        assert "tags" in response_data
-        assert len(response_data["tags"]) == 3
-        assert response_data["tags"][0] == "electronics"
-        assert response_data["tags"][1] == "gadget"
-        assert response_data["tags"][2] == "new"
 
 
 async def test_numeric_ge_validation_fail() -> None:
@@ -500,6 +510,7 @@ async def test_numeric_ge_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -512,6 +523,7 @@ async def test_37_oneof_schema_no_match_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -527,6 +539,7 @@ async def test_empty_array_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -534,7 +547,7 @@ async def test_38_anyof_schema_success() -> None:
     """anyOf schema composition - at least one schema must match."""
 
     async with TestClient(create_app_json_bodies_38_anyof_schema_success()) as client:
-        json_data = {"email": "john@example.com", "name": "John Doe"}
+        json_data = {"name": "John Doe", "email": "john@example.com"}
         response = await client.post("/contact", json=json_data)
 
         assert response.status_code == 201
@@ -552,10 +565,10 @@ async def test_empty_json_object() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "description" in response_data
-        assert response_data["description"] == None
         assert "name" in response_data
         assert response_data["name"] == None
+        assert "description" in response_data
+        assert response_data["description"] == None
         assert "price" in response_data
         assert response_data["price"] == None
         assert "tax" in response_data
@@ -574,6 +587,7 @@ async def test_string_pattern_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -581,11 +595,12 @@ async def test_49_dependencies_validation_failure() -> None:
     """Dependencies constraint - when A present, B is required but missing."""
 
     async with TestClient(create_app_json_bodies_49_dependencies_validation_failure()) as client:
-        json_data = {"credit_card": "1234567812345678", "name": "John Doe"}
+        json_data = {"name": "John Doe", "credit_card": "1234567812345678"}
         response = await client.post("/billing", json=json_data)
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -596,15 +611,15 @@ async def test_simple_json_object_success() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"description": "A very nice Item", "name": "Foo", "price": 35.4, "tax": 3.2}
+        json_data = {"name": "Foo", "description": "A very nice Item", "price": 35.4, "tax": 3.2}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "description" in response_data
-        assert response_data["description"] == "A very nice Item"
         assert "name" in response_data
         assert response_data["name"] == "Foo"
+        assert "description" in response_data
+        assert response_data["description"] == "A very nice Item"
         assert "price" in response_data
         assert response_data["price"] == 35.4
         assert "tax" in response_data
@@ -623,6 +638,7 @@ async def test_required_field_missing_validation_error() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -643,11 +659,12 @@ async def test_enum_field_invalid_value() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"category": "furniture", "name": "Item"}
+        json_data = {"name": "Item", "category": "furniture"}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -658,15 +675,15 @@ async def test_enum_field_success() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"category": "electronics", "name": "Item"}
+        json_data = {"name": "Item", "category": "electronics"}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "category" in response_data
-        assert response_data["category"] == "electronics"
         assert "name" in response_data
         assert response_data["name"] == "Item"
+        assert "category" in response_data
+        assert response_data["category"] == "electronics"
 
 
 async def test_33_allof_schema_composition() -> None:
@@ -722,6 +739,7 @@ async def test_42_not_schema_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -729,7 +747,7 @@ async def test_43_const_validation_success() -> None:
     """Field with const constraint matching exact value should succeed."""
 
     async with TestClient(create_app_json_bodies_43_const_validation_success()) as client:
-        json_data = {"data": "test", "version": "1.0"}
+        json_data = {"version": "1.0", "data": "test"}
         response = await client.post("/api/v1/data", json=json_data)
 
         assert response.status_code == 201
@@ -749,7 +767,7 @@ async def test_29_nested_object_validation_success() -> None:
     """Nested object in JSON body should validate correctly."""
 
     async with TestClient(create_app_json_bodies_29_nested_object_validation_success()) as client:
-        json_data = {"profile": {"email": "john@example.com", "name": "John Doe"}}
+        json_data = {"profile": {"name": "John Doe", "email": "john@example.com"}}
         response = await client.post("/users", json=json_data)
 
         assert response.status_code == 201
@@ -759,11 +777,12 @@ async def test_34_additional_properties_false() -> None:
     """Schema with additionalProperties false should reject extra fields."""
 
     async with TestClient(create_app_json_bodies_34_additional_properties_false()) as client:
-        json_data = {"email": "john@example.com", "extra_field": "should fail", "name": "John"}
+        json_data = {"name": "John", "email": "john@example.com", "extra_field": "should fail"}
         response = await client.post("/users", json=json_data)
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -774,17 +793,17 @@ async def test_null_value_for_optional_field() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"description": None, "name": "Item", "price": 42.0, "tax": None}
+        json_data = {"name": "Item", "price": 42.0, "description": None, "tax": None}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "description" in response_data
-        assert response_data["description"] == None
         assert "name" in response_data
         assert response_data["name"] == "Item"
         assert "price" in response_data
         assert response_data["price"] == 42.0
+        assert "description" in response_data
+        assert response_data["description"] == None
         assert "tax" in response_data
         assert response_data["tax"] == None
 
@@ -793,7 +812,7 @@ async def test_31_nullable_property_null_value() -> None:
     """Nullable property with null value should be accepted."""
 
     async with TestClient(create_app_json_bodies_31_nullable_property_null_value()) as client:
-        json_data = {"description": None, "name": "Test User"}
+        json_data = {"name": "Test User", "description": None}
         response = await client.post("/users", json=json_data)
 
         assert response.status_code == 201
@@ -807,30 +826,30 @@ async def test_array_of_objects_success() -> None:
             "Content-Type": "application/json",
         }
         json_data = {
-            "images": [
-                {"name": "Front", "url": "https://example.com/img1.jpg"},
-                {"name": "Back", "url": "https://example.com/img2.jpg"},
-            ],
             "name": "Product Bundle",
             "tags": ["electronics", "gadget"],
+            "images": [
+                {"url": "https://example.com/img1.jpg", "name": "Front"},
+                {"url": "https://example.com/img2.jpg", "name": "Back"},
+            ],
         }
         response = await client.post("/items/list", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "images" in response_data
-        assert len(response_data["images"]) == 2
-        assert "name" in response_data["images"][0]
-        assert response_data["images"][0]["name"] == "Front"
-        assert "url" in response_data["images"][0]
-        assert response_data["images"][0]["url"] == "https://example.com/img1.jpg"
-        assert "name" in response_data["images"][1]
-        assert response_data["images"][1]["name"] == "Back"
-        assert "url" in response_data["images"][1]
-        assert response_data["images"][1]["url"] == "https://example.com/img2.jpg"
         assert "name" in response_data
         assert response_data["name"] == "Product Bundle"
         assert "tags" in response_data
         assert len(response_data["tags"]) == 2
         assert response_data["tags"][0] == "electronics"
         assert response_data["tags"][1] == "gadget"
+        assert "images" in response_data
+        assert len(response_data["images"]) == 2
+        assert "url" in response_data["images"][0]
+        assert response_data["images"][0]["url"] == "https://example.com/img1.jpg"
+        assert "name" in response_data["images"][0]
+        assert response_data["images"][0]["name"] == "Front"
+        assert "url" in response_data["images"][1]
+        assert response_data["images"][1]["url"] == "https://example.com/img2.jpg"
+        assert "name" in response_data["images"][1]
+        assert response_data["images"][1]["name"] == "Back"

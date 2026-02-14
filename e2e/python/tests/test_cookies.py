@@ -70,6 +70,7 @@ async def test_cookie_regex_pattern_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -165,6 +166,7 @@ async def test_cookie_validation_min_length_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -179,6 +181,7 @@ async def test_cookie_validation_max_length_constraint_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -193,6 +196,7 @@ async def test_required_cookie_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -216,6 +220,7 @@ async def test_apikey_cookie_authentication_missing() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -223,7 +228,7 @@ async def test_response_multiple_cookies() -> None:
     """Tests setting multiple cookies in single response."""
 
     async with TestClient(create_app_cookies_response_multiple_cookies()) as client:
-        json_data = {"session": "session123", "user": "john"}
+        json_data = {"user": "john", "session": "session123"}
         response = await client.post("/cookies/multiple", json=json_data)
 
         assert response.status_code == 200
@@ -343,20 +348,20 @@ async def test_multiple_cookies_success() -> None:
 
     async with TestClient(create_app_cookies_multiple_cookies_success()) as client:
         cookies = {
-            "session_id": "session123",
             "fatebook_tracker": "tracker456",
             "googall_tracker": "ga789",
+            "session_id": "session123",
         }
         response = await client.get("/items/", cookies=cookies)
 
         assert response.status_code == 200
         response_data = response.json()
+        assert "session_id" in response_data
+        assert response_data["session_id"] == "session123"
         assert "fatebook_tracker" in response_data
         assert response_data["fatebook_tracker"] == "tracker456"
         assert "googall_tracker" in response_data
         assert response_data["googall_tracker"] == "ga789"
-        assert "session_id" in response_data
-        assert response_data["session_id"] == "session123"
 
 
 async def test_26_cookie_secure_flag() -> None:

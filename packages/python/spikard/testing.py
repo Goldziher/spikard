@@ -22,7 +22,8 @@ from typing import TYPE_CHECKING, Any
 try:
     from typing import Self
 except ImportError:  # pragma: no cover - py310 fallback
-    from typing_extensions import Self  # noqa: UP035
+    from typing import Self
+
 
 import cloudpickle
 import httpx
@@ -637,7 +638,7 @@ app.run(host="127.0.0.1", port={self._port})
                         os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
                     else:
                         self._process.kill()
-            except ProcessLookupError, AttributeError:
+            except (ProcessLookupError, AttributeError):
                 pass
             finally:
                 self._process = None
@@ -662,7 +663,7 @@ app.run(host="127.0.0.1", port={self._port})
                 sock.close()
                 await asyncio.sleep(0.5)
                 return
-            except ConnectionRefusedError, OSError:
+            except (ConnectionRefusedError, OSError):
                 await asyncio.sleep(0.1)
 
             if self._process is not None and self._process.poll() is not None:
@@ -677,7 +678,7 @@ app.run(host="127.0.0.1", port={self._port})
                     os.killpg(os.getpgid(self._process.pid), signal.SIGKILL)
                 else:
                     self._process.kill()
-            except ProcessLookupError, AttributeError:
+            except (ProcessLookupError, AttributeError):
                 pass
 
         raise TimeoutError(f"Server did not start within {timeout} seconds")

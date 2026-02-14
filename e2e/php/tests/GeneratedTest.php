@@ -506,7 +506,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_content_types_20_content_length_mismatch_8();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/data', ['headers' => ["Content-Length" => "100", "Content-Type" => "application/json"], 'body' => ["value" => "short"]]);
+        $response = $client->request('POST', '/data', ['headers' => ["Content-Type" => "application/json", "Content-Length" => "100"], 'body' => ["value" => "short"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1106,7 +1106,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_06_cors_preflight_method_not_allowed_1();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Access-Control-Request-Headers" => "Content-Type", "Access-Control-Request-Method" => "DELETE", "Origin" => "https://example.com"]]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Access-Control-Request-Headers" => "Content-Type", "Origin" => "https://example.com", "Access-Control-Request-Method" => "DELETE"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1120,7 +1120,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_07_cors_preflight_header_not_allowed_2();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Access-Control-Request-Headers" => "X-Custom-Header", "Origin" => "https://example.com", "Access-Control-Request-Method" => "POST"]]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "X-Custom-Header"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1134,7 +1134,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_08_cors_max_age_3();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Access-Control-Request-Headers" => "Content-Type", "Access-Control-Request-Method" => "POST", "Origin" => "https://example.com"]]);
+        $response = $client->request('OPTIONS', '/api/data', ['headers' => ["Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type", "Origin" => "https://example.com"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1178,7 +1178,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_private_network_access_6();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ["Origin" => "https://public.example.com", "Access-Control-Request-Method" => "GET", "Access-Control-Request-Private-Network" => "true"]]);
+        $response = $client->request('OPTIONS', '/api/local-resource', ['headers' => ["Origin" => "https://public.example.com", "Access-Control-Request-Private-Network" => "true", "Access-Control-Request-Method" => "GET"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1192,7 +1192,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_vary_header_for_proper_caching_7();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/api/cached-resource', ['headers' => ["Origin" => "https://app.example.com", "Cache-Control" => "max-age=3600"]]);
+        $response = $client->request('GET', '/api/cached-resource', ['headers' => ["Cache-Control" => "max-age=3600", "Origin" => "https://app.example.com"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1238,7 +1238,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_for_delete_method_10();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/api/resource/456', ['headers' => ["Origin" => "https://app.example.com", "Access-Control-Request-Method" => "DELETE"]]);
+        $response = $client->request('OPTIONS', '/api/resource/456', ['headers' => ["Access-Control-Request-Method" => "DELETE", "Origin" => "https://app.example.com"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1266,7 +1266,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_preflight_request_12();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Access-Control-Request-Headers" => "Content-Type, X-Custom-Header", "Access-Control-Request-Method" => "POST", "Origin" => "https://example.com"]]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type, X-Custom-Header", "Origin" => "https://example.com"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1312,7 +1312,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_cors_cors_safelisted_headers_without_preflight_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/form', ['headers' => ["Accept" => "application/json", "Accept-Language" => "en-US", "Origin" => "https://app.example.com", "Content-Type" => "text/plain"]]);
+        $response = $client->request('POST', '/api/form', ['headers' => ["Origin" => "https://app.example.com", "Content-Type" => "text/plain", "Accept" => "application/json", "Accept-Language" => "en-US"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -1876,11 +1876,11 @@ final class GeneratedTest extends TestCase
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
-        $this->assertSame(200, $statusCode);
+        $this->assertSame(400, $statusCode);
 
         $body = $response->body;
         /** @var array<string, mixed>|string|int|float|bool|null $expected */
-        $expected = ["items" => ["first", "third", "sixth"]];
+        $expected = ["error" => "Failed to parse URL-encoded form data: missing index, expected: 1 got 2"];
         $this->assertEquals($expected, $body);
     }
 
@@ -2332,7 +2332,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_headers_multiple_custom_headers_23();
         $client = TestClient::create($app);
-        $response = $client->request('GET', '/headers/multiple', ['headers' => ["X-Client-Version" => "1.2.3", "X-Trace-Id" => "trace-abc", "X-Request-Id" => "req-12345"]]);
+        $response = $client->request('GET', '/headers/multiple', ['headers' => ["X-Request-Id" => "req-12345", "X-Client-Version" => "1.2.3", "X-Trace-Id" => "trace-abc"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -2570,7 +2570,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_http_methods_options_cors_preflight_request_5();
         $client = TestClient::create($app);
-        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type", "Origin" => "https://example.com"]]);
+        $response = $client->request('OPTIONS', '/items/', ['headers' => ["Origin" => "https://example.com", "Access-Control-Request-Headers" => "Content-Type", "Access-Control-Request-Method" => "POST"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -3472,7 +3472,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_lifecycle_hooks_multiple_hooks_all_phases_2();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ["Content-Type" => "application/json", "Authorization" => "Bearer valid-token-12345"], 'body' => ["user_id" => "user-123", "action" => "update_profile"]]);
+        $response = $client->request('POST', '/api/full-lifecycle', ['headers' => ["Authorization" => "Bearer valid-token-12345", "Content-Type" => "application/json"], 'body' => ["user_id" => "user-123", "action" => "update_profile"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6464,7 +6464,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_oauth2_password_grant_flow_15();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/token', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["grant_type" => "password", "username" => "johndoe", "password" => "secret", "scope" => ""]]);
+        $response = $client->request('POST', '/token', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["username" => "johndoe", "grant_type" => "password", "scope" => "", "password" => "secret"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;
@@ -6544,7 +6544,7 @@ final class GeneratedTest extends TestCase
     {
         $app = AppFactory::create_url_encoded_special_characters_encoding_20();
         $client = TestClient::create($app);
-        $response = $client->request('POST', '/form/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["name" => "John Doe", "description" => "Test & Development"]]);
+        $response = $client->request('POST', '/form/', ['headers' => ["Content-Type" => "application/x-www-form-urlencoded"], 'form_data' => ["description" => "Test & Development", "name" => "John Doe"]]);
 
         /** @var int $statusCode */
         $statusCode = $response->statusCode;

@@ -112,13 +112,29 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
 /// Generate package.json for the e2e Node.js project by reading from workspace templates
 fn generate_package_json(target: &TypeScriptTarget) -> String {
     let template_path = "e2e/node/package.json";
+    let fallback_template = r#"{
+  "name": "spikard-e2e-node",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@spikard/node": "workspace:*",
+    "@types/node": "^25.2.3",
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}"#;
 
     // Read and parse template package.json
-    let template_content = fs::read_to_string(template_path)
-        .unwrap_or_else(|e| panic!("Failed to read template {}: {}", template_path, e));
+    let template_content = fs::read_to_string(template_path).unwrap_or_else(|_| fallback_template.to_string());
 
     let mut package_json: Value = serde_json::from_str(&template_content)
-        .unwrap_or_else(|e| panic!("Failed to parse template {}: {}", template_path, e));
+        .unwrap_or_else(|e| panic!("Failed to parse package.json template from {}: {}", template_path, e));
 
     // Update package name
     if let Some(obj) = package_json.as_object_mut() {

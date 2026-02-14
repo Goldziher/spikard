@@ -262,7 +262,7 @@ defmodule E2EElixirApp.ContentTypesTest do
 
     try do
       url = @base_url <> "/data"
-      headers = [{~c"Content-Length", ~c"100"}, {~c"Content-Type", ~c"application/json"}]
+      headers = [{~c"Content-Type", ~c"application/json"}, {~c"Content-Length", ~c"100"}]
       req_body = Jason.encode!(%{"value" => "short"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =

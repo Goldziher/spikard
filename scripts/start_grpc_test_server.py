@@ -20,9 +20,11 @@ import json
 import signal
 import sys
 import time
-from collections.abc import AsyncIterator  # noqa: TC003
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 # Add packages/python to path so we can import from conftest
 sys.path.insert(0, str(Path(__file__).parent.parent / "packages" / "python"))

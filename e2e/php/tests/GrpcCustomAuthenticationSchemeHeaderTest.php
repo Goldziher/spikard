@@ -14,7 +14,7 @@ final class GrpcCustomAuthenticationSchemeHeaderTest extends TestCase
         // Tests custom authentication header scheme. Validates that custom auth headers are properly extracted and validated.
 
         // Build gRPC request from fixture
-        $metadata = ["x-custom-auth" => "CustomScheme token_value_123", "content-type" => "application/grpc"];
+        $metadata = ["content-type" => "application/grpc", "x-custom-auth" => "CustomScheme token_value_123"];
         $requestPayload = json_encode(["action" => "execute"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

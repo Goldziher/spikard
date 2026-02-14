@@ -10,25 +10,35 @@ mod static_files {
 
     #[tokio::test]
     async fn test_static_files_static_file_server_returns_text_file() {
+        // Fixture: Static file server returns text file
+        // Description: Tests serving a plain text file with Cache-Control headers.
+        // Expected status: 200
 
+        // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/static_files/01_serves_plain_text.json")
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
+        // Create app for this specific fixture
         let app = spikard_e2e_app::create_app_static_files_static_file_server_returns_text_file()
             .expect("Failed to build fixture app");
         let server = TestServer::from_app(app).expect("Failed to build server");
 
+        // Build request
         let mut uri = "/public/hello.txt".to_string();
 
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
             if !query_string.is_empty() {
                 uri.push_str("?");
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
 
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
             const QUERY: &AsciiSet = &CONTROLS
                 .add(b' ')
                 .add(b'"')
@@ -58,6 +68,7 @@ mod static_files {
                         Value::Number(n) => vec![format!("{}={}", key, n)],
                         Value::Bool(b) => vec![format!("{}={}", key, b)],
                         Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
                             arr.iter()
                                 .filter_map(|item| match item {
                                     Value::String(s) => {
@@ -79,8 +90,10 @@ mod static_files {
             }
         }
 
+        // Build request with optional body
         let mut request_builder = Request::builder().method("GET").uri(uri);
 
+        // Add headers from fixture if present
         if let Some(headers) = fixture["request"]["headers"].as_object() {
             for (key, value) in headers {
                 if let Some(value_str) = value.as_str() {
@@ -89,6 +102,7 @@ mod static_files {
             }
         }
 
+        // Add cookies from fixture if present
         if let Some(cookies) = fixture["request"]["cookies"].as_object() {
             let cookie_header: Vec<String> = cookies
                 .iter()
@@ -105,16 +119,22 @@ mod static_files {
             }
         }
 
+        // Add body if present in fixture
         let body = if let Some(files) = fixture["request"]["files"].as_array() {
+            // Handle multipart/form-data with files
             let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             let mut multipart_body = String::new();
 
+            // Add files
             for file in files {
                 let field_name = file["field_name"].as_str().unwrap();
 
+                // Handle both regular content and magic_bytes (hex-encoded binary)
                 let content_str = if let Some(content) = file["content"].as_str() {
                     content.to_string()
                 } else if let Some(magic_bytes) = file["magic_bytes"].as_str() {
+                    // Decode hex string to bytes, then to string
+                    // For binary data, we'll use the hex representation as placeholder
                     format!("<binary data: {}>", magic_bytes)
                 } else {
                     String::new()
@@ -140,6 +160,7 @@ mod static_files {
                 multipart_body.push_str("\r\n");
             }
 
+            // Add form data fields if present
             if let Some(data) = fixture["request"]["data"].as_object() {
                 for (key, value) in data {
                     multipart_body.push_str(&format!("--{}\r\n", boundary));
@@ -155,11 +176,13 @@ mod static_files {
 
             multipart_body.push_str(&format!("--{}--\r\n", boundary));
 
+            // Set Content-Type header with boundary
             request_builder =
                 request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
 
             Body::from(multipart_body)
         } else if let Some(data) = fixture["request"]["data"].as_object() {
+            // Multipart with only form data (no files)
             let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             let mut multipart_body = String::new();
 
@@ -176,26 +199,33 @@ mod static_files {
 
             multipart_body.push_str(&format!("--{}--\r\n", boundary));
 
+            // Set Content-Type header with boundary
             request_builder =
                 request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
 
             Body::from(multipart_body)
         } else if let Some(request_body) = fixture["request"]["body"].as_str() {
+            // Body is already encoded as a string (e.g., URL-encoded form data)
+            // Don't override Content-Type if already set
             Body::from(request_body.to_string())
         } else if let Some(request_body) = fixture["request"]["body"].as_object() {
+            // Body is a JSON object, encode it
+            // Only add content-type header if not already set by fixture headers
             if fixture["request"]["headers"]["Content-Type"].is_null() {
                 request_builder = request_builder.header("content-type", "application/json");
             }
             let body_str = serde_json::to_string(request_body).unwrap();
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
-            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
+            // Handle URL-encoded form data
+            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
 
             let form_params: Vec<String> = form_data
                 .iter()
                 .flat_map(|(key, value)| {
                     match value {
                         serde_json::Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
                             arr.iter()
                                 .map(|item| {
                                     let encoded_value = match item {
@@ -231,6 +261,7 @@ mod static_files {
 
             let body_str = form_params.join("&");
 
+            // Only add content-type header if not already set by fixture headers
             if fixture["request"]["headers"]["Content-Type"].is_null() {
                 request_builder = request_builder.header("content-type", "application/x-www-form-urlencoded");
             }
@@ -260,25 +291,35 @@ mod static_files {
 
     #[tokio::test]
     async fn test_static_files_static_server_returns_index_html_for_directory() {
+        // Fixture: Static server returns index.html for directory
+        // Description: When index files are enabled the server should serve index.html when the directory root is requested.
+        // Expected status: 200
 
+        // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/static_files/02_index_html_fallback.json")
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
+        // Create app for this specific fixture
         let app = spikard_e2e_app::create_app_static_files_static_server_returns_index_html_for_directory()
             .expect("Failed to build fixture app");
         let server = TestServer::from_app(app).expect("Failed to build server");
 
+        // Build request
         let mut uri = "/app/".to_string();
 
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
             if !query_string.is_empty() {
                 uri.push_str("?");
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
 
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
             const QUERY: &AsciiSet = &CONTROLS
                 .add(b' ')
                 .add(b'"')
@@ -308,6 +349,7 @@ mod static_files {
                         Value::Number(n) => vec![format!("{}={}", key, n)],
                         Value::Bool(b) => vec![format!("{}={}", key, b)],
                         Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
                             arr.iter()
                                 .filter_map(|item| match item {
                                     Value::String(s) => {
@@ -329,8 +371,10 @@ mod static_files {
             }
         }
 
+        // Build request with optional body
         let mut request_builder = Request::builder().method("GET").uri(uri);
 
+        // Add headers from fixture if present
         if let Some(headers) = fixture["request"]["headers"].as_object() {
             for (key, value) in headers {
                 if let Some(value_str) = value.as_str() {
@@ -339,6 +383,7 @@ mod static_files {
             }
         }
 
+        // Add cookies from fixture if present
         if let Some(cookies) = fixture["request"]["cookies"].as_object() {
             let cookie_header: Vec<String> = cookies
                 .iter()
@@ -355,16 +400,22 @@ mod static_files {
             }
         }
 
+        // Add body if present in fixture
         let body = if let Some(files) = fixture["request"]["files"].as_array() {
+            // Handle multipart/form-data with files
             let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             let mut multipart_body = String::new();
 
+            // Add files
             for file in files {
                 let field_name = file["field_name"].as_str().unwrap();
 
+                // Handle both regular content and magic_bytes (hex-encoded binary)
                 let content_str = if let Some(content) = file["content"].as_str() {
                     content.to_string()
                 } else if let Some(magic_bytes) = file["magic_bytes"].as_str() {
+                    // Decode hex string to bytes, then to string
+                    // For binary data, we'll use the hex representation as placeholder
                     format!("<binary data: {}>", magic_bytes)
                 } else {
                     String::new()
@@ -390,6 +441,7 @@ mod static_files {
                 multipart_body.push_str("\r\n");
             }
 
+            // Add form data fields if present
             if let Some(data) = fixture["request"]["data"].as_object() {
                 for (key, value) in data {
                     multipart_body.push_str(&format!("--{}\r\n", boundary));
@@ -405,11 +457,13 @@ mod static_files {
 
             multipart_body.push_str(&format!("--{}--\r\n", boundary));
 
+            // Set Content-Type header with boundary
             request_builder =
                 request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
 
             Body::from(multipart_body)
         } else if let Some(data) = fixture["request"]["data"].as_object() {
+            // Multipart with only form data (no files)
             let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             let mut multipart_body = String::new();
 
@@ -426,26 +480,33 @@ mod static_files {
 
             multipart_body.push_str(&format!("--{}--\r\n", boundary));
 
+            // Set Content-Type header with boundary
             request_builder =
                 request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
 
             Body::from(multipart_body)
         } else if let Some(request_body) = fixture["request"]["body"].as_str() {
+            // Body is already encoded as a string (e.g., URL-encoded form data)
+            // Don't override Content-Type if already set
             Body::from(request_body.to_string())
         } else if let Some(request_body) = fixture["request"]["body"].as_object() {
+            // Body is a JSON object, encode it
+            // Only add content-type header if not already set by fixture headers
             if fixture["request"]["headers"]["Content-Type"].is_null() {
                 request_builder = request_builder.header("content-type", "application/json");
             }
             let body_str = serde_json::to_string(request_body).unwrap();
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
-            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
+            // Handle URL-encoded form data
+            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
 
             let form_params: Vec<String> = form_data
                 .iter()
                 .flat_map(|(key, value)| {
                     match value {
                         serde_json::Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
                             arr.iter()
                                 .map(|item| {
                                     let encoded_value = match item {
@@ -481,6 +542,7 @@ mod static_files {
 
             let body_str = form_params.join("&");
 
+            // Only add content-type header if not already set by fixture headers
             if fixture["request"]["headers"]["Content-Type"].is_null() {
                 request_builder = request_builder.header("content-type", "application/x-www-form-urlencoded");
             }

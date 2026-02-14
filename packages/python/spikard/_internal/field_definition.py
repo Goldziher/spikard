@@ -11,6 +11,8 @@ Modifications for Spikard:
 - Removed Litestar-specific kwarg definitions
 """
 
+from __future__ import annotations
+
 from collections import abc
 from dataclasses import dataclass
 from inspect import Parameter, Signature

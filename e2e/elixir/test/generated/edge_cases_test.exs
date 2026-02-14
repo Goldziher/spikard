@@ -528,11 +528,13 @@ defmodule E2EElixirApp.EdgeCasesTest do
           []
         )
 
-      assert status == 200, "Expected status 200, got #{status}"
+      assert status == 400, "Expected status 400, got #{status}"
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert Map.has_key?(parsed_body, "items")
+
+      assert parsed_body["error"] ==
+               "Failed to parse URL-encoded form data: missing index, expected: 1 got 2"
     after
       Spikard.stop(server)
     end

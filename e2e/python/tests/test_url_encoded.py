@@ -55,10 +55,10 @@ async def test_15_special_characters_field_names() -> None:
 
         assert response.status_code == 201
         response_data = response.json()
-        assert "contact.email" in response_data
-        assert response_data["contact.email"] == "john@example.com"
         assert "user-name" in response_data
         assert response_data["user-name"] == "JohnDoe"
+        assert "contact.email" in response_data
+        assert response_data["contact.email"] == "john@example.com"
 
 
 async def test_pattern_validation_fail() -> None:
@@ -73,6 +73,7 @@ async def test_pattern_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -88,6 +89,7 @@ async def test_22_additional_properties_strict_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -103,6 +105,7 @@ async def test_17_pattern_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -118,6 +121,7 @@ async def test_20_format_email_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -152,6 +156,7 @@ async def test_required_field_missing_validation_error() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -186,10 +191,10 @@ async def test_numeric_field_type_conversion() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "age" in response_data
-        assert response_data["age"] == 30
         assert "username" in response_data
         assert response_data["username"] == "johndoe"
+        assert "age" in response_data
+        assert response_data["age"] == 30
 
 
 async def test_special_characters_encoding() -> None:
@@ -204,10 +209,10 @@ async def test_special_characters_encoding() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "description" in response_data
-        assert response_data["description"] == "Test & Development"
         assert "name" in response_data
         assert response_data["name"] == "John Doe"
+        assert "description" in response_data
+        assert response_data["description"] == "Test & Development"
 
 
 async def test_boolean_field_conversion() -> None:
@@ -222,10 +227,10 @@ async def test_boolean_field_conversion() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "subscribe" in response_data
-        assert response_data["subscribe"] == True
         assert "username" in response_data
         assert response_data["username"] == "johndoe"
+        assert "subscribe" in response_data
+        assert response_data["subscribe"] == True
 
 
 async def test_empty_string_value() -> None:
@@ -240,10 +245,10 @@ async def test_empty_string_value() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "description" in response_data
-        assert response_data["description"] == ""
         assert "username" in response_data
         assert response_data["username"] == "johndoe"
+        assert "description" in response_data
+        assert response_data["description"] == ""
 
 
 async def test_oauth2_password_grant_flow() -> None:
@@ -276,6 +281,7 @@ async def test_19_array_minitems_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -291,10 +297,10 @@ async def test_optional_field_missing_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "email" in response_data
-        assert response_data["email"] == None
         assert "username" in response_data
         assert response_data["username"] == "johndoe"
+        assert "email" in response_data
+        assert response_data["email"] == None
 
 
 async def test_14_nested_object_bracket_notation() -> None:
@@ -310,12 +316,12 @@ async def test_14_nested_object_bracket_notation() -> None:
         assert response.status_code == 201
         response_data = response.json()
         assert "user" in response_data
-        assert "age" in response_data["user"]
-        assert response_data["user"]["age"] == 30
-        assert "email" in response_data["user"]
-        assert response_data["user"]["email"] == "john@example.com"
         assert "name" in response_data["user"]
         assert response_data["user"]["name"] == "John Doe"
+        assert "email" in response_data["user"]
+        assert response_data["user"]["email"] == "john@example.com"
+        assert "age" in response_data["user"]
+        assert response_data["user"]["age"] == 30
 
 
 async def test_string_max_length_validation_fail() -> None:
@@ -330,6 +336,7 @@ async def test_string_max_length_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -345,6 +352,7 @@ async def test_18_integer_minimum_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -360,6 +368,7 @@ async def test_21_integer_type_coercion_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -375,6 +384,7 @@ async def test_16_minlength_validation_failure() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data
 
 
@@ -390,4 +400,5 @@ async def test_string_min_length_validation_fail() -> None:
 
         assert response.status_code == 422
         response_data = response.json()
+        # Validation should be done by framework, not handler
         assert "errors" in response_data or "detail" in response_data

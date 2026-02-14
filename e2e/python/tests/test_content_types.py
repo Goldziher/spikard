@@ -38,6 +38,12 @@ async def test_415_unsupported_media_type() -> None:
 
         assert response.status_code == 415
         response_data = response.json()
+        assert "type" in response_data
+        assert response_data["type"] == "https://spikard.dev/errors/unsupported-media-type"
+        assert "title" in response_data
+        assert response_data["title"] == "Unsupported Media Type"
+        assert "status" in response_data
+        assert response_data["status"] == 415
         assert "detail" in response_data
         assert response_data["detail"] == "Unsupported media type"
 
@@ -79,10 +85,10 @@ async def test_json_with_utf_8_charset() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "emoji" in response_data
-        assert response_data["emoji"] == "☕"
         assert "name" in response_data
         assert response_data["name"] == "Café"
+        assert "emoji" in response_data
+        assert response_data["emoji"] == "☕"
         response_headers = response.headers
         assert response_headers.get("content-type") == "application/json; charset=utf-8"
 
@@ -99,14 +105,14 @@ async def test_16_text_plain_not_accepted() -> None:
 
         assert response.status_code == 415
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Unsupported media type"
-        assert "status" in response_data
-        assert response_data["status"] == 415
-        assert "title" in response_data
-        assert response_data["title"] == "Unsupported Media Type"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unsupported-media-type"
+        assert "title" in response_data
+        assert response_data["title"] == "Unsupported Media Type"
+        assert "status" in response_data
+        assert response_data["status"] == 415
+        assert "detail" in response_data
+        assert response_data["detail"] == "Unsupported media type"
 
 
 async def test_pdf_response_application_pdf() -> None:
@@ -119,8 +125,8 @@ async def test_pdf_response_application_pdf() -> None:
         response_data = response.json()
         assert response_data == "pdf_binary_data"
         response_headers = response.headers
-        assert response_headers.get("content-type") == "application/pdf"
         assert response_headers.get("content-disposition") == "attachment; filename=document.pdf"
+        assert response_headers.get("content-type") == "application/pdf"
 
 
 async def test_20_content_length_mismatch() -> None:
@@ -157,14 +163,14 @@ async def test_13_json_with_charset_utf16() -> None:
 
         assert response.status_code == 415
         response_data = response.json()
-        assert "detail" in response_data
-        assert response_data["detail"] == "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
-        assert "status" in response_data
-        assert response_data["status"] == 415
-        assert "title" in response_data
-        assert response_data["title"] == "Unsupported Charset"
         assert "type" in response_data
         assert response_data["type"] == "https://spikard.dev/errors/unsupported-charset"
+        assert "title" in response_data
+        assert response_data["title"] == "Unsupported Charset"
+        assert "status" in response_data
+        assert response_data["status"] == 415
+        assert "detail" in response_data
+        assert response_data["detail"] == "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
 
 
 async def test_json_response_application_json() -> None:
@@ -319,5 +325,5 @@ async def test_binary_response_application_octet_stream() -> None:
         response_data = response.json()
         assert response_data == "binary_data_placeholder"
         response_headers = response.headers
-        assert response_headers.get("content-disposition") == "attachment; filename=file.bin"
         assert response_headers.get("content-type") == "application/octet-stream"
+        assert response_headers.get("content-disposition") == "attachment; filename=file.bin"

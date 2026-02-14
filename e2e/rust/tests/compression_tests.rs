@@ -10,25 +10,35 @@ mod compression {
 
     #[tokio::test]
     async fn test_compression_compression_gzip_applied() {
+        // Fixture: Compression - gzip applied
+        // Description: Serves a JSON payload compressed with gzip when the client advertises support.
+        // Expected status: 200
 
+        // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/compression/01_gzip_applied.json")
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
+        // Create app for this specific fixture
         let app =
             spikard_e2e_app::create_app_compression_compression_gzip_applied().expect("Failed to build fixture app");
         let server = TestServer::from_app(app).expect("Failed to build server");
 
+        // Build request
         let mut uri = "/compression/gzip".to_string();
 
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
             if !query_string.is_empty() {
                 uri.push_str("?");
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
 
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
             const QUERY: &AsciiSet = &CONTROLS
                 .add(b' ')
                 .add(b'"')
@@ -58,6 +68,7 @@ mod compression {
                         Value::Number(n) => vec![format!("{}={}", key, n)],
                         Value::Bool(b) => vec![format!("{}={}", key, b)],
                         Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
                             arr.iter()
                                 .filter_map(|item| match item {
                                     Value::String(s) => {
@@ -79,8 +90,10 @@ mod compression {
             }
         }
 
+        // Build request with optional body
         let mut request_builder = Request::builder().method("GET").uri(uri);
 
+        // Add headers from fixture if present
         if let Some(headers) = fixture["request"]["headers"].as_object() {
             for (key, value) in headers {
                 if let Some(value_str) = value.as_str() {
@@ -89,6 +102,7 @@ mod compression {
             }
         }
 
+        // Add cookies from fixture if present
         if let Some(cookies) = fixture["request"]["cookies"].as_object() {
             let cookie_header: Vec<String> = cookies
                 .iter()
@@ -105,16 +119,22 @@ mod compression {
             }
         }
 
+        // Add body if present in fixture
         let body = if let Some(files) = fixture["request"]["files"].as_array() {
+            // Handle multipart/form-data with files
             let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             let mut multipart_body = String::new();
 
+            // Add files
             for file in files {
                 let field_name = file["field_name"].as_str().unwrap();
 
+                // Handle both regular content and magic_bytes (hex-encoded binary)
                 let content_str = if let Some(content) = file["content"].as_str() {
                     content.to_string()
                 } else if let Some(magic_bytes) = file["magic_bytes"].as_str() {
+                    // Decode hex string to bytes, then to string
+                    // For binary data, we'll use the hex representation as placeholder
                     format!("<binary data: {}>", magic_bytes)
                 } else {
                     String::new()
@@ -140,6 +160,7 @@ mod compression {
                 multipart_body.push_str("\r\n");
             }
 
+            // Add form data fields if present
             if let Some(data) = fixture["request"]["data"].as_object() {
                 for (key, value) in data {
                     multipart_body.push_str(&format!("--{}\r\n", boundary));
@@ -155,11 +176,13 @@ mod compression {
 
             multipart_body.push_str(&format!("--{}--\r\n", boundary));
 
+            // Set Content-Type header with boundary
             request_builder =
                 request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
 
             Body::from(multipart_body)
         } else if let Some(data) = fixture["request"]["data"].as_object() {
+            // Multipart with only form data (no files)
             let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             let mut multipart_body = String::new();
 
@@ -176,26 +199,33 @@ mod compression {
 
             multipart_body.push_str(&format!("--{}--\r\n", boundary));
 
+            // Set Content-Type header with boundary
             request_builder =
                 request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
 
             Body::from(multipart_body)
         } else if let Some(request_body) = fixture["request"]["body"].as_str() {
+            // Body is already encoded as a string (e.g., URL-encoded form data)
+            // Don't override Content-Type if already set
             Body::from(request_body.to_string())
         } else if let Some(request_body) = fixture["request"]["body"].as_object() {
+            // Body is a JSON object, encode it
+            // Only add content-type header if not already set by fixture headers
             if fixture["request"]["headers"]["Content-Type"].is_null() {
                 request_builder = request_builder.header("content-type", "application/json");
             }
             let body_str = serde_json::to_string(request_body).unwrap();
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
-            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
+            // Handle URL-encoded form data
+            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
 
             let form_params: Vec<String> = form_data
                 .iter()
                 .flat_map(|(key, value)| {
                     match value {
                         serde_json::Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
                             arr.iter()
                                 .map(|item| {
                                     let encoded_value = match item {
@@ -231,6 +261,7 @@ mod compression {
 
             let body_str = form_params.join("&");
 
+            // Only add content-type header if not already set by fixture headers
             if fixture["request"]["headers"]["Content-Type"].is_null() {
                 request_builder = request_builder.header("content-type", "application/x-www-form-urlencoded");
             }
@@ -246,6 +277,11 @@ mod compression {
 
         assert_eq!(snapshot.status, 200, "Expected status 200, got {}", snapshot.status);
         let headers = &snapshot.headers;
+        if let Some(actual) = headers.get("content-encoding") {
+            assert_eq!(actual, "gzip", "Mismatched header 'content-encoding'");
+        } else {
+            panic!("Expected header 'content-encoding' to be present");
+        }
         if let Some(actual) = headers.get("vary") {
             assert_eq!(
                 actual.to_ascii_lowercase(),
@@ -255,34 +291,39 @@ mod compression {
         } else {
             panic!("Expected header 'vary' to be present");
         }
-        if let Some(actual) = headers.get("content-encoding") {
-            assert_eq!(actual, "gzip", "Mismatched header 'content-encoding'");
-        } else {
-            panic!("Expected header 'content-encoding' to be present");
-        }
     }
 
     #[tokio::test]
     async fn test_compression_compression_payload_below_min_size_is_not_compressed() {
+        // Fixture: Compression - payload below min_size is not compressed
+        // Description: Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding.
+        // Expected status: 200
 
+        // Load fixture
         let fixture_json = std::fs::read_to_string("../../testing_data/compression/02_min_size_skip.json")
             .expect("Failed to read fixture file");
         let fixture: Value = serde_json::from_str(&fixture_json).expect("Failed to parse fixture JSON");
 
+        // Create app for this specific fixture
         let app = spikard_e2e_app::create_app_compression_compression_payload_below_min_size_is_not_compressed()
             .expect("Failed to build fixture app");
         let server = TestServer::from_app(app).expect("Failed to build server");
 
+        // Build request
         let mut uri = "/compression/skip".to_string();
 
+        // Use query_string if provided (for exact encoding control), otherwise build from query_params
         if let Some(query_string) = fixture["request"]["query_string"].as_str() {
             if !query_string.is_empty() {
                 uri.push_str("?");
                 uri.push_str(query_string);
             }
         } else if let Some(query_params) = fixture["request"]["query_params"].as_object() {
-            use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+            use percent_encoding::{percent_encode, AsciiSet, CONTROLS};
 
+            // Define the query component encoding set (RFC 3986)
+            // Encode: space, ", #, <, >, %, {, }, |, \\, ^, `, and control characters
+            // Plus query-specific: &, =, +
             const QUERY: &AsciiSet = &CONTROLS
                 .add(b' ')
                 .add(b'"')
@@ -312,6 +353,7 @@ mod compression {
                         Value::Number(n) => vec![format!("{}={}", key, n)],
                         Value::Bool(b) => vec![format!("{}={}", key, b)],
                         Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
                             arr.iter()
                                 .filter_map(|item| match item {
                                     Value::String(s) => {
@@ -333,8 +375,10 @@ mod compression {
             }
         }
 
+        // Build request with optional body
         let mut request_builder = Request::builder().method("GET").uri(uri);
 
+        // Add headers from fixture if present
         if let Some(headers) = fixture["request"]["headers"].as_object() {
             for (key, value) in headers {
                 if let Some(value_str) = value.as_str() {
@@ -343,6 +387,7 @@ mod compression {
             }
         }
 
+        // Add cookies from fixture if present
         if let Some(cookies) = fixture["request"]["cookies"].as_object() {
             let cookie_header: Vec<String> = cookies
                 .iter()
@@ -359,16 +404,22 @@ mod compression {
             }
         }
 
+        // Add body if present in fixture
         let body = if let Some(files) = fixture["request"]["files"].as_array() {
+            // Handle multipart/form-data with files
             let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             let mut multipart_body = String::new();
 
+            // Add files
             for file in files {
                 let field_name = file["field_name"].as_str().unwrap();
 
+                // Handle both regular content and magic_bytes (hex-encoded binary)
                 let content_str = if let Some(content) = file["content"].as_str() {
                     content.to_string()
                 } else if let Some(magic_bytes) = file["magic_bytes"].as_str() {
+                    // Decode hex string to bytes, then to string
+                    // For binary data, we'll use the hex representation as placeholder
                     format!("<binary data: {}>", magic_bytes)
                 } else {
                     String::new()
@@ -394,6 +445,7 @@ mod compression {
                 multipart_body.push_str("\r\n");
             }
 
+            // Add form data fields if present
             if let Some(data) = fixture["request"]["data"].as_object() {
                 for (key, value) in data {
                     multipart_body.push_str(&format!("--{}\r\n", boundary));
@@ -409,11 +461,13 @@ mod compression {
 
             multipart_body.push_str(&format!("--{}--\r\n", boundary));
 
+            // Set Content-Type header with boundary
             request_builder =
                 request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
 
             Body::from(multipart_body)
         } else if let Some(data) = fixture["request"]["data"].as_object() {
+            // Multipart with only form data (no files)
             let boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
             let mut multipart_body = String::new();
 
@@ -430,26 +484,33 @@ mod compression {
 
             multipart_body.push_str(&format!("--{}--\r\n", boundary));
 
+            // Set Content-Type header with boundary
             request_builder =
                 request_builder.header("content-type", format!("multipart/form-data; boundary={}", boundary));
 
             Body::from(multipart_body)
         } else if let Some(request_body) = fixture["request"]["body"].as_str() {
+            // Body is already encoded as a string (e.g., URL-encoded form data)
+            // Don't override Content-Type if already set
             Body::from(request_body.to_string())
         } else if let Some(request_body) = fixture["request"]["body"].as_object() {
+            // Body is a JSON object, encode it
+            // Only add content-type header if not already set by fixture headers
             if fixture["request"]["headers"]["Content-Type"].is_null() {
                 request_builder = request_builder.header("content-type", "application/json");
             }
             let body_str = serde_json::to_string(request_body).unwrap();
             Body::from(body_str)
         } else if let Some(form_data) = fixture["request"]["form_data"].as_object() {
-            use percent_encoding::{NON_ALPHANUMERIC, percent_encode};
+            // Handle URL-encoded form data
+            use percent_encoding::{percent_encode, NON_ALPHANUMERIC};
 
             let form_params: Vec<String> = form_data
                 .iter()
                 .flat_map(|(key, value)| {
                     match value {
                         serde_json::Value::Array(arr) => {
+                            // For arrays, repeat the key for each value
                             arr.iter()
                                 .map(|item| {
                                     let encoded_value = match item {
@@ -485,6 +546,7 @@ mod compression {
 
             let body_str = form_params.join("&");
 
+            // Only add content-type header if not already set by fixture headers
             if fixture["request"]["headers"]["Content-Type"].is_null() {
                 request_builder = request_builder.header("content-type", "application/x-www-form-urlencoded");
             }

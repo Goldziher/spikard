@@ -138,12 +138,12 @@ def _handler_metadata(
 
     try:
         type_hints = get_type_hints(handler_func)
-    except AttributeError, NameError, TypeError, ValueError:
+    except (AttributeError, NameError, TypeError, ValueError):
         type_hints = None
 
     try:
         sig = inspect.signature(handler_func)
-    except ValueError, TypeError, AttributeError:
+    except (ValueError, TypeError, AttributeError):
         _HANDLER_METADATA_CACHE[cache_key] = (type_hints, None, None)
         return type_hints, None, None
 
@@ -220,7 +220,7 @@ def _get_upload_file_fields(target_type: type) -> dict[str, bool]:
 
     try:
         type_hints = get_type_hints(target_type)
-    except AttributeError, NameError, TypeError:
+    except (AttributeError, NameError, TypeError):
         return {}
 
     return {field_name: _is_upload_file_type(field_type) for field_name, field_type in type_hints.items()}
@@ -289,7 +289,7 @@ def _coerce_file_dicts_for_scalar_fields(value: dict[str, Any], target_type: typ
     """Coerce file metadata dicts into string/bytes for scalar-typed fields."""
     try:
         type_hints = get_type_hints(target_type)
-    except AttributeError, NameError, TypeError:
+    except (AttributeError, NameError, TypeError):
         return value
 
     result = value.copy()
@@ -464,7 +464,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                     decoder = _get_or_create_decoder(target_type)
                     converted[key] = decoder.decode(value)
                     continue
-                except TypeError, ValueError, msgspec.DecodeError, msgspec.ValidationError:
+                except (TypeError, ValueError, msgspec.DecodeError, msgspec.ValidationError):
                     if strict:
                         raise
                     converted[key] = value
@@ -478,7 +478,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 else:
                     value = decoded_value
 
-            except msgspec.DecodeError, ValueError:
+            except (msgspec.DecodeError, ValueError):
                 if strict:
                     raise
                 converted[key] = value

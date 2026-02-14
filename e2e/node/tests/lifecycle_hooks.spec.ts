@@ -32,10 +32,10 @@ describe("lifecycle_hooks", () => {
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Response with security headers");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["x-frame-options"]).toBe("DENY");
-		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
-		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
 		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
+		expect(responseHeaders["x-xss-protection"]).toBe("1; mode=block");
+		expect(responseHeaders["strict-transport-security"]).toBe("max-age=31536000; includeSubDomains");
+		expect(responseHeaders["x-frame-options"]).toBe("DENY");
 	});
 
 	test("preHandler - Authentication Failed Short Circuit", async () => {
@@ -63,10 +63,10 @@ describe("lifecycle_hooks", () => {
 		const responseData = response.json();
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Admin access granted");
-		expect(responseData).toHaveProperty("role");
-		expect(responseData.role).toBe("admin");
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("admin-456");
+		expect(responseData).toHaveProperty("role");
+		expect(responseData.role).toBe("admin");
 	});
 
 	test("preHandler - Authentication Success", async () => {
@@ -80,12 +80,12 @@ describe("lifecycle_hooks", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("authenticated");
-		expect(responseData.authenticated).toBe(true);
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Access granted");
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("user-123");
+		expect(responseData).toHaveProperty("authenticated");
+		expect(responseData.authenticated).toBe(true);
 	});
 
 	test("preValidation - Rate Limit Exceeded Short Circuit", async () => {
@@ -122,19 +122,19 @@ describe("lifecycle_hooks", () => {
 			"Content-Type": "application/json",
 			Authorization: "Bearer valid-token-12345",
 		};
-		const json = { action: "update_profile", user_id: "user-123" };
+		const json = { user_id: "user-123", action: "update_profile" };
 		const response = await client.post("/api/full-lifecycle", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("action");
-		expect(responseData.action).toBe("update_profile");
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Action completed successfully");
-		expect(responseData).toHaveProperty("request_id");
-		expect(responseData.request_id).toMatch(/.*/);
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("user-123");
+		expect(responseData).toHaveProperty("action");
+		expect(responseData.action).toBe("update_profile");
+		expect(responseData).toHaveProperty("request_id");
+		expect(responseData.request_id).toMatch(/.*/);
 		const responseHeaders = response.headers();
 		expect(responseHeaders["x-response-time"]).toMatch(/.*ms/);
 		expect(responseHeaders["x-content-type-options"]).toBe("nosniff");
@@ -150,13 +150,13 @@ describe("lifecycle_hooks", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
+		expect(responseData).toHaveProperty("message");
+		expect(responseData.message).toBe("Hooks executed in order");
 		expect(responseData).toHaveProperty("execution_order");
 		expect(responseData.execution_order.length).toBe(3);
 		expect(responseData.execution_order[0]).toBe("first_hook");
 		expect(responseData.execution_order[1]).toBe("second_hook");
 		expect(responseData.execution_order[2]).toBe("third_hook");
-		expect(responseData).toHaveProperty("message");
-		expect(responseData.message).toBe("Hooks executed in order");
 	});
 
 	test("onResponse - Response Timing", async () => {
@@ -193,12 +193,12 @@ describe("lifecycle_hooks", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("has_request_id");
-		expect(responseData.has_request_id).toBe(true);
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("onRequest hooks executed");
 		expect(responseData).toHaveProperty("request_logged");
 		expect(responseData.request_logged).toBe(true);
+		expect(responseData).toHaveProperty("has_request_id");
+		expect(responseData.has_request_id).toBe(true);
 		const responseHeaders = response.headers();
 		expect(responseHeaders["x-request-id"]).toMatch(/.*/);
 	});

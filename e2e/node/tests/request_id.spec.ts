@@ -23,10 +23,10 @@ describe("request_id", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("echo");
-		expect(responseData.echo).toBe("trace-123");
 		expect(responseData).toHaveProperty("status");
 		expect(responseData.status).toBe("preserved");
+		expect(responseData).toHaveProperty("echo");
+		expect(responseData.echo).toBe("trace-123");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["x-request-id"]).toBe("trace-123");
 	});

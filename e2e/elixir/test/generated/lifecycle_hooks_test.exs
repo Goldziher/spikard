@@ -55,8 +55,8 @@ defmodule E2EElixirApp.LifecycleHooksTest do
       url = @base_url <> "/api/full-lifecycle"
 
       headers = [
-        {~c"Content-Type", ~c"application/json"},
-        {~c"Authorization", ~c"Bearer valid-token-12345"}
+        {~c"Authorization", ~c"Bearer valid-token-12345"},
+        {~c"Content-Type", ~c"application/json"}
       ]
 
       req_body = Jason.encode!(%{"user_id" => "user-123", "action" => "update_profile"})
