@@ -770,7 +770,11 @@ mod tests {
         }
 
         let mut registry = GrpcRegistry::new();
-        registry.register("test.BidiService", Arc::new(BidiHandler), RpcMode::BidirectionalStreaming);
+        registry.register(
+            "test.BidiService",
+            Arc::new(BidiHandler),
+            RpcMode::BidirectionalStreaming,
+        );
         let registry = Arc::new(registry);
         let config = GrpcConfig::default();
 
