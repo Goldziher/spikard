@@ -411,9 +411,12 @@ pub fn is_grpc_request(request: &Request<Body>) -> bool {
 mod tests {
     use super::*;
     use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
+    use crate::grpc::streaming::{MessageStream, StreamingRequest, message_stream_from_vec};
     use bytes::Bytes;
+    use futures_util::StreamExt;
     use std::future::Future;
     use std::pin::Pin;
+    use tonic::metadata::MetadataMap;
 
     struct EchoHandler;
 
@@ -624,5 +627,225 @@ mod tests {
         let (status, message) = result.unwrap_err();
         assert_eq!(status, StatusCode::PAYLOAD_TOO_LARGE);
         assert!(message.contains("Message exceeds maximum size"));
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_server_streaming_success() {
+        struct StreamHandler;
+
+        impl GrpcHandler for StreamHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async { Err(tonic::Status::unimplemented("Use server streaming")) })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.StreamService"
+            }
+
+            fn call_server_stream(
+                &self,
+                _request: GrpcRequestData,
+            ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
+                Box::pin(async {
+                    let messages = vec![Bytes::from("m1"), Bytes::from("m2")];
+                    Ok(message_stream_from_vec(messages))
+                })
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register("test.StreamService", Arc::new(StreamHandler), RpcMode::ServerStreaming);
+        let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
+
+        let request = Request::builder()
+            .uri("/test.StreamService/Stream")
+            .header("content-type", "application/grpc")
+            .body(Body::from(Bytes::from("ignored")))
+            .unwrap();
+
+        let response = route_grpc_request(registry, &config, request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response.headers().get("content-type").unwrap(),
+            "application/grpc+proto"
+        );
+        assert_eq!(response.headers().get("grpc-status").unwrap(), "0");
+
+        // The body is a stream. For test purposes, just ensure we can read it.
+        let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
+        assert!(!body.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_client_streaming_success_and_response_metadata() {
+        struct ClientStreamHandler;
+
+        impl GrpcHandler for ClientStreamHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async { Err(tonic::Status::unimplemented("Use client streaming")) })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.ClientStreamService"
+            }
+
+            fn call_client_stream(
+                &self,
+                mut request: StreamingRequest,
+            ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
+                Box::pin(async move {
+                    // Make sure routing copied request headers into metadata.
+                    assert!(request.metadata.get("x-request-id").is_some());
+
+                    let mut first = None;
+                    while let Some(item) = request.message_stream.next().await {
+                        first = Some(item?);
+                        break;
+                    }
+
+                    let payload = first.unwrap_or_else(Bytes::new);
+                    let mut metadata = MetadataMap::new();
+                    metadata.insert("x-response-id", "resp-123".parse().unwrap());
+
+                    Ok(GrpcResponseData { payload, metadata })
+                })
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register(
+            "test.ClientStreamService",
+            Arc::new(ClientStreamHandler),
+            RpcMode::ClientStreaming,
+        );
+        let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
+
+        // Single gRPC frame: compression=0, length=5, message="hello"
+        let frame = vec![
+            0x00, // compression: no
+            0x00, 0x00, 0x00, 0x05, // length: 5 bytes
+            b'h', b'e', b'l', b'l', b'o',
+        ];
+
+        let request = Request::builder()
+            .uri("/test.ClientStreamService/ClientStream")
+            .header("content-type", "application/grpc")
+            .header("x-request-id", "req-123")
+            .body(Body::from(frame))
+            .unwrap();
+
+        let response = route_grpc_request(registry, &config, request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers().get("grpc-status").unwrap(), "0");
+        assert_eq!(response.headers().get("x-response-id").unwrap(), "resp-123");
+
+        let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
+        assert_eq!(body, Bytes::from_static(b"hello"));
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_bidi_streaming_success() {
+        struct BidiHandler;
+
+        impl GrpcHandler for BidiHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async { Err(tonic::Status::unimplemented("Use bidi streaming")) })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.BidiService"
+            }
+
+            fn call_bidi_stream(
+                &self,
+                _request: StreamingRequest,
+            ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
+                Box::pin(async {
+                    let messages = vec![Bytes::from("r1")];
+                    Ok(message_stream_from_vec(messages))
+                })
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register("test.BidiService", Arc::new(BidiHandler), RpcMode::BidirectionalStreaming);
+        let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
+
+        // Provide a well-formed request frame so the frame parser succeeds.
+        let frame = vec![
+            0x00, // compression: no
+            0x00, 0x00, 0x00, 0x01, // length: 1 byte
+            b'x',
+        ];
+
+        let request = Request::builder()
+            .uri("/test.BidiService/Chat")
+            .header("content-type", "application/grpc")
+            .body(Body::from(frame))
+            .unwrap();
+
+        let response = route_grpc_request(registry, &config, request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers().get("grpc-status").unwrap(), "0");
+
+        let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
+        assert!(!body.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_client_streaming_invalid_compression_flag_maps_to_501() {
+        // Use a handler that would succeed, but the request is invalid before handler gets called.
+        struct NeverCalledHandler;
+
+        impl GrpcHandler for NeverCalledHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async { Err(tonic::Status::unimplemented("not used")) })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.BadClientStreamService"
+            }
+
+            fn call_client_stream(
+                &self,
+                _request: StreamingRequest,
+            ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
+                Box::pin(async {
+                    Ok(GrpcResponseData {
+                        payload: Bytes::from_static(b"ok"),
+                        metadata: MetadataMap::new(),
+                    })
+                })
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register(
+            "test.BadClientStreamService",
+            Arc::new(NeverCalledHandler),
+            RpcMode::ClientStreaming,
+        );
+        let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
+
+        // Compression flag = 1 => UNIMPLEMENTED per parser.
+        let frame = vec![
+            0x01, // compression: yes (unsupported)
+            0x00, 0x00, 0x00, 0x01, // length: 1 byte
+            b'x',
+        ];
+
+        let request = Request::builder()
+            .uri("/test.BadClientStreamService/ClientStream")
+            .header("content-type", "application/grpc")
+            .body(Body::from(frame))
+            .unwrap();
+
+        let err = route_grpc_request(registry, &config, request).await.unwrap_err();
+        assert_eq!(err.0, StatusCode::NOT_IMPLEMENTED);
+        assert!(err.1.contains("compression") || err.1.contains("supported"));
     }
 }
