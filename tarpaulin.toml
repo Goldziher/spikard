@@ -43,6 +43,7 @@ exclude-files = [
   "**/crates/spikard-node/src/**",
   "**/crates/spikard-rb/src/**",
   "**/crates/spikard-php/src/**",
+  "**/crates/spikard-elixir/src/**",
 
   # Exclude examples (not part of core library)
   "**/examples/**",
@@ -54,7 +55,7 @@ exclude-files = [
 
 # Crates to exclude from coverage
 # php crate excluded on macOS due to OpenSSL symbol mismatch; measured on Linux via coverage-rust-php-linux
-exclude-crates = ["spikard-php"]
+exclude-crates = ["spikard-php", "spikard-elixir"]
 
 # Examples and benchmarks are in the workspace but not tested for coverage
 # as they demonstrate usage patterns and are tested separately

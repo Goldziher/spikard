@@ -170,7 +170,8 @@ jobs:
           "**/src/main.rs" "**/src/bin/**"
           "**/examples/**" "**/tools/**" "**/packages/**"
           "**/crates/spikard-cli/src/**" "**/crates/spikard-codegen/src/**" "**/crates/spikard-graphql/src/**"
-          "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**"          "**/packages/ruby/vendor/**"
+          "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-elixir/src/**"
+          "**/packages/ruby/vendor/**"
 
       - name: Upload coverage to Codecov
         if: github.actor != 'dependabot[bot]'
@@ -239,7 +240,7 @@ jobs:
             --output-dir target/tarpaulin-php \
             --timeout 300 \
             --fail-under 50 \
-            --exclude-files "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "**/src/main.rs" "**/src/bin/**" "**/examples/**" "**/tools/**" "**/packages/**" "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**"
+            --exclude-files "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "**/src/main.rs" "**/src/bin/**" "**/examples/**" "**/tools/**" "**/packages/**" "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-elixir/src/**"
       - name: Upload PHP FFI coverage to Codecov
         if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@v5
