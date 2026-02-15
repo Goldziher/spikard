@@ -26,20 +26,23 @@ defmodule SpikardIntegrationTest do
       end
 
       # Start server with the handler
+      port = free_port()
+
       result =
         Spikard.start(
-          port: 59900,
+          port: port,
           host: "127.0.0.1",
           routes: [{:get, "/test", handler}]
         )
 
       case result do
         {:ok, server} ->
-          # Give server time to start
-          Process.sleep(100)
+          on_exit(fn -> Spikard.stop(server) end)
 
           # Make HTTP request
-          case :httpc.request(:get, {~c"http://127.0.0.1:59900/test", []}, [], []) do
+          url = "http://127.0.0.1:#{port}/test"
+
+          case wait_for_http_ok(url) do
             {:ok, {{_, status, _}, _headers, body}} ->
               body_str = to_string(body)
               IO.puts("Response body: #{inspect(body_str)}")
@@ -54,13 +57,31 @@ defmodule SpikardIntegrationTest do
               flunk("HTTP request failed: #{inspect(reason)}")
           end
 
-          # Stop server
-          assert :ok = Spikard.stop(server)
-
         {:error, reason} ->
           # Port might be in use, skip
           IO.puts("Skipping integration test: #{inspect(reason)}")
       end
+    end
+  end
+
+  defp free_port do
+    {:ok, socket} = :gen_tcp.listen(0, [:binary, active: false])
+    {:ok, {_addr, port}} = :inet.sockname(socket)
+    :gen_tcp.close(socket)
+    port
+  end
+
+  defp wait_for_http_ok(url, attempts \\ 50) do
+    case :httpc.request(:get, {to_charlist(url), []}, [], []) do
+      {:ok, _} = ok ->
+        ok
+
+      {:error, _reason} when attempts > 0 ->
+        Process.sleep(50)
+        wait_for_http_ok(url, attempts - 1)
+
+      {:error, _reason} = err ->
+        err
     end
   end
 end
