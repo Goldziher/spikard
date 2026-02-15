@@ -21,10 +21,10 @@ async def test_request_id_header_is_preserved() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "echo" in response_data
-        assert response_data["echo"] == "trace-123"
         assert "status" in response_data
         assert response_data["status"] == "preserved"
+        assert "echo" in response_data
+        assert response_data["echo"] == "trace-123"
         response_headers = response.headers
         assert response_headers.get("x-request-id") == "trace-123"
 

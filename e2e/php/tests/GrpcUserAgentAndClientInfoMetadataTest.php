@@ -14,7 +14,7 @@ final class GrpcUserAgentAndClientInfoMetadataTest extends TestCase
         // Tests User-Agent header handling and client identification. Validates proper user-agent parsing and logging.
 
         // Build gRPC request from fixture
-        $metadata = ["user-agent" => "grpc-client/1.2.3 (linux; amd64)", "content-type" => "application/grpc"];
+        $metadata = ["content-type" => "application/grpc", "user-agent" => "grpc-client/1.2.3 (linux; amd64)"];
         $requestPayload = json_encode(["action" => "identify"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

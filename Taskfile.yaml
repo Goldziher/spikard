@@ -39,6 +39,7 @@ tasks:
       - task: python:install
       - task: js:install
       - task: ruby:install
+      - task: elixir:install
       - task: php:install
       - task: pre-commit:install
       - task: python:build
@@ -47,14 +48,25 @@ tasks:
   update:
     desc: "Update all dependencies to latest versions"
     cmds:
+      - echo "Updating Rust dependencies..."
       - task: rust:update
+      - echo "Updating Python dependencies..."
       - task: python:update
+      - echo "Updating TypeScript dependencies..."
       - task: js:update
+      - echo "Updating Ruby dependencies..."
       - task: ruby:update
+      - echo "Updating Elixir dependencies..."
+      - task: elixir:update
+      - echo "Updating PHP dependencies..."
       - task: php:update
+      - echo "Updating prek dependencies..."
+      - prek autoupdate
+      - echo "Rebuilding Python bindings..."
       - task: python:build
-      - task: pre-commit:update
+      - echo "Updating benchmark dependencies..."
       - task: bench:update
+      - echo "All dependencies updated"
   version:sync:
     desc: "Sync all package versions to the workspace version"
     cmds:
@@ -66,6 +78,7 @@ tasks:
       - task: python:build
       - task: js:build
       - task: ruby:build
+      - task: elixir:build
       - task: php:build
   test:
     desc: "Run test suites for all languages"
@@ -74,6 +87,7 @@ tasks:
       - task: python:test
       - task: js:test
       - task: ruby:test
+      - task: elixir:test
       - task: php:test
       - task: test:e2e
 
@@ -140,6 +154,7 @@ tasks:
       - task: python:lint
       - task: js:lint
       - task: ruby:lint
+      - task: elixir:lint
       - task: php:lint
 
   lint:check:
@@ -149,6 +164,7 @@ tasks:
       - task: python:lint:check
       - task: js:lint:check
       - task: ruby:lint:check
+      - task: elixir:lint:check
       - task: php:lint:check
 
   format:
@@ -158,6 +174,7 @@ tasks:
       - task: python:format
       - task: js:format
       - task: ruby:format
+      - task: elixir:format
       - task: php:format
 
   format:check:
@@ -167,6 +184,7 @@ tasks:
       - task: python:format:check
       - task: js:format:check
       - task: ruby:format:check
+      - task: elixir:format:check
       - task: php:format:check
 
   python:install:
@@ -429,6 +447,77 @@ tasks:
     cmds:
       - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rubocop"
 
+  elixir:install:
+    desc: "Install Elixir dependencies"
+    dir: packages/elixir
+    cmds:
+      - mix deps.get
+
+  elixir:update:
+    desc: "Update Elixir dependencies"
+    dir: packages/elixir
+    cmds:
+      - mix deps.update --all
+
+  elixir:vendor:
+    desc: "Vendor Rust NIF source into native/spikard_elixir"
+    dir: packages/elixir
+    cmds:
+      - ./scripts/vendor_nif.sh
+
+  elixir:build:
+    desc: "Build Elixir with NIF"
+    deps:
+      - elixir:vendor
+      - elixir:install
+    dir: packages/elixir
+    cmds:
+      - SPIKARD_BUILD=1 mix compile --warnings-as-errors
+
+  elixir:test:
+    desc: "Run Elixir tests"
+    deps:
+      - elixir:build
+    dir: packages/elixir
+    cmds:
+      - SPIKARD_BUILD=1 mix test
+
+  elixir:lint:
+    desc: "Run Credo static analysis (auto-fix suggestions)"
+    deps:
+      - elixir:build
+    dir: packages/elixir
+    cmds:
+      - SPIKARD_BUILD=1 mix credo suggest --all --strict
+
+  elixir:lint:check:
+    desc: "Check Elixir linting without modifications (Credo check-only)"
+    deps:
+      - elixir:build
+    dir: packages/elixir
+    cmds:
+      - SPIKARD_BUILD=1 mix credo suggest --all --strict
+
+  elixir:format:
+    desc: "Format Elixir code"
+    dir: packages/elixir
+    cmds:
+      - SPIKARD_BUILD=1 mix format
+
+  elixir:format:check:
+    desc: "Check Elixir formatting without modifications"
+    dir: packages/elixir
+    cmds:
+      - SPIKARD_BUILD=1 mix format --check-formatted
+
+  elixir:dialyzer:
+    desc: "Run Dialyzer type checker"
+    deps:
+      - elixir:build
+    dir: packages/elixir
+    cmds:
+      - SPIKARD_BUILD=1 mix dialyzer
+
   node:format:
     desc: "Format TypeScript code with biome"
     cmds:
@@ -653,6 +742,11 @@ tasks:
       - rm -rf e2e/php
       - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang php --output e2e/php
 
+  generate:tests:elixir:
+    desc: "Generate Elixir e2e test suite from fixtures"
+    cmds:
+      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang elixir --output e2e/elixir
+
   generate:tests:
     desc: "Generate all e2e test suites from fixtures"
     cmds:
@@ -661,6 +755,7 @@ tasks:
       - task: generate:tests:node
       - task: generate:tests:ruby
       - task: generate:tests:php
+      - task: generate:tests:elixir
 
   verify:tests:rust:
     desc: "Regenerate and run Rust e2e suite, ensuring no diff"
@@ -697,6 +792,13 @@ tasks:
       - task: test:e2e:php
       - git diff --exit-code
 
+  verify:tests:elixir:
+    desc: "Regenerate and run Elixir e2e suite, ensuring no diff"
+    cmds:
+      - task: generate:tests:elixir
+      - task: test:e2e:elixir
+      - git diff --exit-code
+
   verify:tests:
     desc: "Verify all e2e suites are up to date and pass"
     cmds:
@@ -705,6 +807,7 @@ tasks:
       - task: verify:tests:node
       - task: verify:tests:ruby
       - task: verify:tests:php
+      - task: verify:tests:elixir
 
   clean:generated:
     desc: "Remove all generated e2e test infrastructure"
@@ -755,6 +858,14 @@ tasks:
     cmds:
       - php -d extension={{.PHP_EXTENSION_PATH}} ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
 
+  test:e2e:elixir:
+    desc: "Run Elixir e2e tests (fixture-driven integration tests)"
+    dir: e2e/elixir
+    deps:
+      - elixir:build
+    cmds:
+      - SPIKARD_BUILD=1 mix test
+
   test:e2e:
     desc: "Run all e2e fixture-driven integration tests"
     cmds:
@@ -763,6 +874,7 @@ tasks:
       - task: test:e2e:node
       - task: test:e2e:ruby
       - task: test:e2e:php
+      - task: test:e2e:elixir
 
   build:js:
     desc: "Build all JavaScript/TypeScript packages"
@@ -916,14 +1028,24 @@ tasks:
       - ./tools/app-generator/target/release/app-generator generate --framework spikard-php --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-php
       - task: bench:lint:php
 
+  bench:generate:elixir:
+    desc: "Generate Spikard-Elixir benchmark server from fixtures"
+    deps:
+      - bench:generator:build
+    cmds:
+      - rm -rf tools/benchmark-harness/apps/spikard-elixir
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-elixir --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-elixir
+      - task: bench:lint:elixir
+
   bench:generate:all:
-    desc: "Generate all benchmark servers (Python, Rust, Node, Ruby, PHP)"
+    desc: "Generate all benchmark servers (Python, Rust, Node, Ruby, PHP, Elixir)"
     cmds:
       - task: bench:generate:python
       - task: bench:generate:rust
       - task: bench:generate:node
       - task: bench:generate:ruby
       - task: bench:generate:php
+      - task: bench:generate:elixir
 
   bench:format:python:
     desc: "Format generated Python benchmark code"
@@ -969,6 +1091,16 @@ tasks:
     desc: "Lint generated PHP benchmark code"
     cmds:
       - cd tools/benchmark-harness/apps/spikard-php && php -l server.php
+
+  bench:format:elixir:
+    desc: "Format generated Elixir benchmark code"
+    cmds:
+      - cd tools/benchmark-harness/apps/spikard-elixir && mix format || true
+
+  bench:lint:elixir:
+    desc: "Lint generated Elixir benchmark code"
+    cmds:
+      - cd tools/benchmark-harness/apps/spikard-elixir && mix credo --strict || true
 
   bench:build:python:
     desc: "Verify generated Python benchmark app loads"
@@ -1374,6 +1506,13 @@ tasks:
     cmds:
       - cargo test --locked
 
+  test:apps:elixir:
+    desc: "Run Elixir published package test app"
+    dir: tests/test_apps/elixir
+    cmds:
+      - mix deps.get
+      - mix test
+
   test:apps:all:
     desc: "Run all published package test apps"
     cmds:
@@ -1382,6 +1521,7 @@ tasks:
       - task: test:apps:ruby
       - task: test:apps:php
       - task: test:apps:rust
+      - task: test:apps:elixir
 
   test:apps:update-versions:
     desc: "Update all test app package versions"

@@ -49,7 +49,7 @@ impl Clone for Response {
 ///     >>> response = `Response`(content={"message": "Cookie set"})
 ///     >>> response.set_cookie("session_id", "abc123")
 ///     >>> return response
-#[pyclass]
+#[pyclass(from_py_object)]
 pub struct Response {
     /// `Response` body content (can be dict, list, string, or `None`)
     #[pyo3(get, set)]

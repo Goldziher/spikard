@@ -3,14 +3,12 @@
 import dataclasses
 import inspect
 import types
-from typing import TYPE_CHECKING, Any, Protocol, Union, get_args, get_origin, get_type_hints, runtime_checkable
+from collections.abc import Callable
+from typing import Any, Protocol, Union, get_args, get_origin, get_type_hints, runtime_checkable
 
 import msgspec
 
 from spikard.datastructures import UploadFile
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 
 @runtime_checkable
@@ -223,6 +221,26 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
         raise TypeError(f"No schema available for {type_}")
 
     if schema_source is None or schema_source in (int, str, float, bool):
+        return None
+
+    # Spikard response wrapper types are opaque containers (status/headers/body) and don't carry a JSON schema.
+    # Treat them as "no schema" so schema extraction doesn't blow up on handlers that return Response objects.
+    spikard_ext: Any | None
+    try:  # pragma: no cover - exercised in e2e where the Rust extension is available
+        import _spikard as spikard_ext  # noqa: PLC0415
+    except Exception:
+        spikard_ext = None
+    if (
+        spikard_ext is not None
+        and isinstance(schema_source, type)
+        and schema_source
+        in (
+            getattr(spikard_ext, "Response", object()),
+            getattr(spikard_ext, "StreamingResponse", object()),
+            getattr(spikard_ext, "GrpcResponse", object()),
+            getattr(spikard_ext, "GrpcRequest", object()),
+        )
+    ):
         return None
 
     origin = get_origin(schema_source)

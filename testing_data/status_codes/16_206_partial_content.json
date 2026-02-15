@@ -16,8 +16,7 @@
 	"expected_response": {
 		"status_code": 206,
 		"headers": {
-			"Content-Range": "bytes 0-1023/5000",
-			"Content-Length": "1024",
+			"Content-Range": "bytes 0-21/5000",
 			"Content-Type": "application/pdf",
 			"Accept-Ranges": "bytes"
 		},

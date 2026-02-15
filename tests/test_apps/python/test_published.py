@@ -11,7 +11,8 @@ import importlib.metadata
 import pytest
 from app import app
 
-from spikard import Cookie, Header, Path, Query, Spikard, TestClient, delete, get, patch, post, put
+import spikard
+from spikard import TestClient
 
 
 def test_package_version() -> None:
@@ -139,30 +140,15 @@ async def test_error_500() -> None:
 
 def test_imports() -> None:
     """Validate that all necessary imports are available from spikard."""
-    # These imports should not raise ImportError
-    from spikard import (
-        Cookie,
-        Header,
-        Path,
-        Query,
-        Spikard,
-        TestClient,
-        delete,
-        get,
-        patch,
-        post,
-        put,
-    )
-
-    # Verify they are the correct types
-    assert callable(get)
-    assert callable(post)
-    assert callable(put)
-    assert callable(delete)
-    assert callable(patch)
-    assert callable(Header)
-    assert callable(Cookie)
-    assert callable(Query)
-    assert callable(Path)
-    assert callable(Spikard)
-    assert callable(TestClient)
+    # Verify public exports are available and callable
+    assert callable(spikard.get)
+    assert callable(spikard.post)
+    assert callable(spikard.put)
+    assert callable(spikard.delete)
+    assert callable(spikard.patch)
+    assert callable(spikard.Header)
+    assert callable(spikard.Cookie)
+    assert callable(spikard.Query)
+    assert callable(spikard.Path)
+    assert callable(spikard.Spikard)
+    assert callable(spikard.TestClient)

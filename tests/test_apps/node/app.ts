@@ -130,7 +130,7 @@ export function createApp(): Spikard {
 			handler_name: "health",
 			is_async: false,
 		},
-		health
+		health,
 	);
 
 	app.addRoute(
@@ -140,7 +140,7 @@ export function createApp(): Spikard {
 			handler_name: "query",
 			is_async: false,
 		},
-		query
+		query,
 	);
 
 	app.addRoute(
@@ -150,7 +150,7 @@ export function createApp(): Spikard {
 			handler_name: "echo",
 			is_async: false,
 		},
-		echo
+		echo,
 	);
 
 	app.addRoute(
@@ -160,7 +160,7 @@ export function createApp(): Spikard {
 			handler_name: "user",
 			is_async: false,
 		},
-		user
+		user,
 	);
 
 	app.addRoute(
@@ -170,7 +170,7 @@ export function createApp(): Spikard {
 			handler_name: "putItem",
 			is_async: false,
 		},
-		putItem
+		putItem,
 	);
 
 	app.addRoute(
@@ -180,7 +180,7 @@ export function createApp(): Spikard {
 			handler_name: "deleteItem",
 			is_async: false,
 		},
-		deleteItem
+		deleteItem,
 	);
 
 	app.addRoute(
@@ -190,7 +190,7 @@ export function createApp(): Spikard {
 			handler_name: "patchItem",
 			is_async: false,
 		},
-		patchItem
+		patchItem,
 	);
 
 	app.addRoute(
@@ -200,7 +200,7 @@ export function createApp(): Spikard {
 			handler_name: "headers",
 			is_async: false,
 		},
-		headers
+		headers,
 	);
 
 	app.addRoute(
@@ -210,7 +210,7 @@ export function createApp(): Spikard {
 			handler_name: "cookies",
 			is_async: false,
 		},
-		cookies
+		cookies,
 	);
 
 	app.addRoute(
@@ -220,7 +220,7 @@ export function createApp(): Spikard {
 			handler_name: "errorHandler",
 			is_async: false,
 		},
-		errorHandler
+		errorHandler,
 	);
 
 	return app;

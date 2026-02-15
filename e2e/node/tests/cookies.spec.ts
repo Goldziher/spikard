@@ -214,7 +214,7 @@ describe("cookies", () => {
 		const app = createAppCookiesResponseMultipleCookies();
 		const client = new TestClient(app);
 
-		const json = { session: "session123", user: "john" };
+		const json = { user: "john", session: "session123" };
 		const response = await client.post("/cookies/multiple", { json });
 
 		expect(response.statusCode).toBe(200);
@@ -334,18 +334,18 @@ describe("cookies", () => {
 		const client = new TestClient(app);
 
 		const headers = {
-			Cookie: "googall_tracker=ga789; fatebook_tracker=tracker456; session_id=session123",
+			Cookie: "googall_tracker=ga789; session_id=session123; fatebook_tracker=tracker456",
 		};
 		const response = await client.get("/items/", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
+		expect(responseData).toHaveProperty("session_id");
+		expect(responseData.session_id).toBe("session123");
 		expect(responseData).toHaveProperty("fatebook_tracker");
 		expect(responseData.fatebook_tracker).toBe("tracker456");
 		expect(responseData).toHaveProperty("googall_tracker");
 		expect(responseData.googall_tracker).toBe("ga789");
-		expect(responseData).toHaveProperty("session_id");
-		expect(responseData.session_id).toBe("session123");
 	});
 
 	test("26_cookie_secure_flag", async () => {

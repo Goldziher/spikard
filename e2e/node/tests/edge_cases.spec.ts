@@ -62,32 +62,32 @@ describe("edge_cases", () => {
 			"Content-Type": "application/json",
 		};
 		const json = {
-			backslashes: "C:\\\\Users\\\\Path",
 			empty_string: "",
-			quotes: "He said \"hello\" and 'goodbye'",
-			special_chars: "!@#$%^&*()_+-=[]{}|;':\",./<>?",
-			tabs_newlines: "line1\n\tline2\r\nline3",
-			unicode_escapes: "\\u0048\\u0065\\u006c\\u006c\\u006f",
 			whitespace: "   ",
+			tabs_newlines: "line1\n\tline2\r\nline3",
+			quotes: "He said \"hello\" and 'goodbye'",
+			backslashes: "C:\\\\Users\\\\Path",
+			unicode_escapes: "\\u0048\\u0065\\u006c\\u006c\\u006f",
+			special_chars: "!@#$%^&*()_+-=[]{}|;':\",./<>?",
 		};
 		const response = await client.post("/strings/", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("backslashes");
-		expect(responseData.backslashes).toBe("C:\\\\Users\\\\Path");
 		expect(responseData).toHaveProperty("empty_string");
 		expect(responseData.empty_string).toBe("");
-		expect(responseData).toHaveProperty("quotes");
-		expect(responseData.quotes).toBe("He said \"hello\" and 'goodbye'");
-		expect(responseData).toHaveProperty("special_chars");
-		expect(responseData.special_chars).toBe("!@#$%^&*()_+-=[]{}|;':\",./<>?");
-		expect(responseData).toHaveProperty("tabs_newlines");
-		expect(responseData.tabs_newlines).toBe("line1\n\tline2\r\nline3");
-		expect(responseData).toHaveProperty("unicode_escapes");
-		expect(responseData.unicode_escapes).toBe("Hello");
 		expect(responseData).toHaveProperty("whitespace");
 		expect(responseData.whitespace).toBe("   ");
+		expect(responseData).toHaveProperty("tabs_newlines");
+		expect(responseData.tabs_newlines).toBe("line1\n\tline2\r\nline3");
+		expect(responseData).toHaveProperty("quotes");
+		expect(responseData.quotes).toBe("He said \"hello\" and 'goodbye'");
+		expect(responseData).toHaveProperty("backslashes");
+		expect(responseData.backslashes).toBe("C:\\\\Users\\\\Path");
+		expect(responseData).toHaveProperty("unicode_escapes");
+		expect(responseData.unicode_escapes).toBe("Hello");
+		expect(responseData).toHaveProperty("special_chars");
+		expect(responseData.special_chars).toBe("!@#$%^&*()_+-=[]{}|;':\",./<>?");
 	});
 
 	test("15_float_precision_preservation", async () => {
@@ -125,13 +125,7 @@ describe("edge_cases", () => {
 		const form = "items[0]=first&items[2]=third&items[5]=sixth";
 		const response = await client.post("/items", { headers, form });
 
-		expect(response.statusCode).toBe(200);
-		const responseData = response.json();
-		expect(responseData).toHaveProperty("items");
-		expect(responseData.items.length).toBe(3);
-		expect(responseData.items[0]).toBe("first");
-		expect(responseData.items[1]).toBe("third");
-		expect(responseData.items[2]).toBe("sixth");
+		expect(response.statusCode).toBe(400);
 	});
 
 	test("21_scientific_notation_number", async () => {
@@ -155,25 +149,25 @@ describe("edge_cases", () => {
 			"Content-Type": "application/json",
 		};
 		const json = {
-			expected_sum: 0.3,
-			precise_value: 3.141592653589793,
 			value1: 0.1,
 			value2: 0.2,
-			very_large: 1.7976931348623157e308,
+			expected_sum: 0.3,
+			precise_value: 3.141592653589793,
 			very_small: 1e-10,
+			very_large: 1.7976931348623157e308,
 		};
 		const response = await client.post("/calculations/", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("precise_value");
-		expect(responseData.precise_value).toBe(3.141592653589793);
 		expect(responseData).toHaveProperty("sum");
 		expect(responseData.sum).toBe(0.30000000000000004);
-		expect(responseData).toHaveProperty("very_large");
-		expect(responseData.very_large).toBe(1.7976931348623157e308);
+		expect(responseData).toHaveProperty("precise_value");
+		expect(responseData.precise_value).toBe(3.141592653589793);
 		expect(responseData).toHaveProperty("very_small");
 		expect(responseData.very_small).toBe(1e-10);
+		expect(responseData).toHaveProperty("very_large");
+		expect(responseData.very_large).toBe(1.7976931348623157e308);
 	});
 
 	test("Unicode and emoji handling", async () => {
@@ -184,28 +178,28 @@ describe("edge_cases", () => {
 			"Content-Type": "application/json; charset=utf-8",
 		};
 		const json = {
-			description: "Best café in München 🇩🇪",
-			emoji_reactions: "👍❤️😂🎉",
 			name: "Coffee Shop ☕",
+			description: "Best café in München 🇩🇪",
 			tags: ["食べ物", "音楽", "💰"],
+			emoji_reactions: "👍❤️😂🎉",
 		};
 		const response = await client.post("/items/", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("description");
-		expect(responseData.description).toBe("Best café in München 🇩🇪");
-		expect(responseData).toHaveProperty("emoji_reactions");
-		expect(responseData.emoji_reactions).toBe("👍❤️😂🎉");
 		expect(responseData).toHaveProperty("id");
 		expect(responseData.id).toBe(1);
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Coffee Shop ☕");
+		expect(responseData).toHaveProperty("description");
+		expect(responseData.description).toBe("Best café in München 🇩🇪");
 		expect(responseData).toHaveProperty("tags");
 		expect(responseData.tags.length).toBe(3);
 		expect(responseData.tags[0]).toBe("食べ物");
 		expect(responseData.tags[1]).toBe("音楽");
 		expect(responseData.tags[2]).toBe("💰");
+		expect(responseData).toHaveProperty("emoji_reactions");
+		expect(responseData.emoji_reactions).toBe("👍❤️😂🎉");
 	});
 
 	test("17_extremely_long_string", async () => {
@@ -398,18 +392,18 @@ describe("edge_cases", () => {
 			"Content-Type": "application/json",
 		};
 		const json = {
-			large_int: 9223372036854775807n,
 			max_safe_int: 9007199254740991,
+			large_int: 9223372036854775807n,
 			negative_large: -9223372036854775808n,
 		};
 		const response = await client.post("/numbers/", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("large_int");
-		expect(responseData.large_int).toBe("9223372036854775807");
 		expect(responseData).toHaveProperty("max_safe_int");
 		expect(responseData.max_safe_int).toBe(9007199254740991);
+		expect(responseData).toHaveProperty("large_int");
+		expect(responseData.large_int).toBe("9223372036854775807");
 		expect(responseData).toHaveProperty("negative_large");
 		expect(responseData.negative_large).toBe("-9223372036854775808");
 	});
@@ -426,7 +420,7 @@ describe("edge_cases", () => {
 				level2: {
 					level3: {
 						level4: {
-							level5: { level6: { level7: { level8: { level9: { level10: { depth: 10, value: "deep" } } } } } },
+							level5: { level6: { level7: { level8: { level9: { level10: { value: "deep", depth: 10 } } } } } },
 						},
 					},
 				},
@@ -436,10 +430,10 @@ describe("edge_cases", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("max_depth");
-		expect(responseData.max_depth).toBe(10);
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Processed deeply nested structure");
+		expect(responseData).toHaveProperty("max_depth");
+		expect(responseData.max_depth).toBe(10);
 		expect(responseData).toHaveProperty("value_found");
 		expect(responseData.value_found).toBe("deep");
 	});
@@ -452,29 +446,29 @@ describe("edge_cases", () => {
 			"Content-Type": "application/json",
 		};
 		const json = {
+			explicit_null: null,
+			empty_string: "",
 			empty_array: [],
 			empty_object: {},
-			empty_string: "",
-			explicit_null: null,
-			false_boolean: false,
 			zero_number: 0,
+			false_boolean: false,
 		};
 		const response = await client.post("/nulls/", { headers, json });
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
+		expect(responseData).toHaveProperty("explicit_null_is_null");
+		expect(responseData.explicit_null_is_null).toBe(true);
+		expect(responseData).toHaveProperty("empty_string_length");
+		expect(responseData.empty_string_length).toBe(0);
 		expect(responseData).toHaveProperty("empty_array_length");
 		expect(responseData.empty_array_length).toBe(0);
 		expect(responseData).toHaveProperty("empty_object_keys");
 		expect(responseData.empty_object_keys).toBe(0);
-		expect(responseData).toHaveProperty("empty_string_length");
-		expect(responseData.empty_string_length).toBe(0);
-		expect(responseData).toHaveProperty("explicit_null_is_null");
-		expect(responseData.explicit_null_is_null).toBe(true);
-		expect(responseData).toHaveProperty("false_is_false");
-		expect(responseData.false_is_false).toBe(true);
 		expect(responseData).toHaveProperty("zero_is_falsy");
 		expect(responseData.zero_is_falsy).toBe(true);
+		expect(responseData).toHaveProperty("false_is_false");
+		expect(responseData.false_is_false).toBe(true);
 	});
 
 	test("16_negative_zero_handling", async () => {

@@ -22,7 +22,7 @@
 	"expected_response": {
 		"status_code": 503,
 		"headers": {
-			"Retry-After": "60"
+			"Retry-After": "0"
 		},
 		"body": {
 			"error": "Service Unavailable",

@@ -76,7 +76,7 @@ RSpec.describe "content_types" do
     client = Spikard::Testing.create_test_client(app)
     response = client.post("/items/", headers: {"Content-Type" => "application/xml"}, json: "<?xml version=\"1.0\"?><item><name>Item</name></item>")
     expect(response.status_code).to eq(415)
-    expect(response.json).to eq({"detail" => "Unsupported media type"})
+    expect(response.json).to eq({"detail" => "Unsupported media type", "status" => 415, "title" => "Unsupported Media Type", "type" => "https://spikard.dev/errors/unsupported-media-type"})
     client.close
   end
 

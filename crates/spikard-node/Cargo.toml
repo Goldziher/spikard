@@ -30,7 +30,11 @@ spikard-http = { path = "../spikard-http", features = ["di"] }
 spikard-core = { path = "../spikard-core" }
 spikard-bindings-shared = { path = "../spikard-bindings-shared" }
 spikard-graphql = { path = "../spikard-graphql", optional = true }
-napi = { version = "3.8", default-features = false, features = ["napi8", "async", "serde-json"] }
+napi = { version = "3.8", default-features = false, features = [
+  "napi8",
+  "async",
+  "serde-json",
+] }
 napi-derive = "3.5"
 tokio = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
@@ -45,7 +49,7 @@ url = "2.5"
 http = { workspace = true }
 http-body-util = "0.1"
 cookie = "0.18"
-serde_qs = "0.15"
+serde_qs = "1.0"
 rustc-hash = "2.1"
 urlencoding = "2.1"
 tracing.workspace = true

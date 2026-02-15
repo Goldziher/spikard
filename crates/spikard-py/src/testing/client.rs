@@ -7,6 +7,8 @@ use crate::conversion::{json_to_python, python_to_json};
 use crate::testing::sse;
 use crate::testing::websocket;
 use axum::Router as AxumRouter;
+use axum::http::Method;
+use bytes::Bytes;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
 use serde_json::Value;
@@ -24,6 +26,11 @@ pub struct TestClient {
 impl TestClient {
     /// Create a new test client from an Axum router
     pub fn from_router(router: AxumRouter) -> PyResult<Self> {
+        // `axum_test::TestServer` needs a Tokio runtime for HTTP transport (WebSocket support).
+        // Python calls into this from a sync context, so we enter the pyo3_async_runtimes Tokio runtime
+        // to ensure `tokio::runtime::Handle::try_current()` succeeds in the core test client.
+        let _guard = pyo3_async_runtimes::tokio::get_runtime().enter();
+
         let client = CoreTestClient::from_router(router)
             .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to create test server: {}", e)))?;
 
@@ -121,14 +128,14 @@ impl TestClient {
         }
 
         let mut form_data = Vec::new();
-        let mut raw_body: Option<Vec<u8>> = None;
+        let mut raw_body: Option<Bytes> = None;
         if let Some(obj) = data {
             if let Ok(dict) = obj.cast::<PyDict>() {
                 form_data = extract_dict_to_vec(Some(dict))?;
             } else if let Ok(py_bytes) = obj.cast::<pyo3::types::PyBytes>() {
-                raw_body = Some(py_bytes.as_bytes().to_vec());
+                raw_body = Some(Bytes::copy_from_slice(py_bytes.as_bytes()));
             } else if let Ok(py_str) = obj.cast::<pyo3::types::PyString>() {
-                raw_body = Some(py_str.to_str()?.as_bytes().to_vec());
+                raw_body = Some(Bytes::copy_from_slice(py_str.to_str()?.as_bytes()));
             } else {
                 return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
                     "data must be a dict, str, or bytes",
@@ -137,16 +144,31 @@ impl TestClient {
         }
 
         let files_data = extract_files(files)?;
+        let has_raw_body = raw_body.is_some();
 
         let fut = async move {
+            if let Some(body) = raw_body {
+                return client
+                    .request_raw(
+                        Method::POST,
+                        &path,
+                        body,
+                        Some(query_params_vec),
+                        wrap_optional_vec(headers_vec),
+                    )
+                    .await
+                    .map(|snapshot| TestResponse { snapshot })
+                    .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()));
+            }
+
             let multipart =
-                if !files_data.is_empty() || (!form_data.is_empty() && raw_body.is_none() && json_value.is_none()) {
+                if !files_data.is_empty() || (!form_data.is_empty() && !has_raw_body && json_value.is_none()) {
                     Some((form_data.clone(), files_data))
                 } else {
                     None
                 };
 
-            let form_for_encoding = if multipart.is_none() && raw_body.is_none() && !form_data.is_empty() {
+            let form_for_encoding = if multipart.is_none() && !has_raw_body && !form_data.is_empty() {
                 Some(form_data)
             } else {
                 None

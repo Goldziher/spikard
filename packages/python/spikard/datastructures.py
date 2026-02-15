@@ -15,7 +15,7 @@ from typing import Annotated, Any
 try:
     from typing import Self
 except ImportError:  # pragma: no cover - py310 fallback
-    from typing_extensions import Self  # noqa: UP035
+    from typing_extensions import Self
 
 import msgspec
 

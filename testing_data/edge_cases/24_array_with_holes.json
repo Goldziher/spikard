@@ -33,9 +33,9 @@
 		"body": "items[0]=first&items[2]=third&items[5]=sixth"
 	},
 	"expected_response": {
-		"status_code": 200,
+		"status_code": 400,
 		"body": {
-			"items": ["first", "third", "sixth"]
+			"error": "Failed to parse URL-encoded form data: missing index, expected: 1 got 2"
 		}
 	},
 	"tags": ["edge_cases", "arrays", "sparse", "validation", "error"]

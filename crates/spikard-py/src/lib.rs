@@ -384,6 +384,17 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
         }
     }
 
+    // Lifecycle hooks (onRequest/preValidation/preHandler/onResponse/onError)
+    // are part of the server config and must be applied in the test client as well,
+    // otherwise e2e tests can't exercise hook behavior.
+    {
+        use std::sync::Arc;
+
+        let hooks_dict = app.call_method0("get_lifecycle_hooks")?;
+        let lifecycle_hooks = crate::lifecycle::build_lifecycle_hooks(py, &hooks_dict)?;
+        config.lifecycle_hooks = Some(Arc::new(lifecycle_hooks));
+    }
+
     eprintln!(
         "[UNCONDITIONAL DEBUG] Building Axum router with {} routes",
         routes.len()

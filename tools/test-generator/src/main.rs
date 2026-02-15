@@ -9,6 +9,9 @@ mod asyncapi;
 mod background;
 mod codegen_utils;
 mod dependencies;
+mod elixir_app;
+mod elixir_tests;
+mod elixir_utils;
 mod fixture_filter;
 mod graphql;
 mod graphql_tests;
@@ -65,7 +68,7 @@ enum Commands {
     /// Generate test suite for a language
     Tests {
         /// Target language
-        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby", "php"])]
+        #[arg(long, value_parser = ["rust", "python", "typescript", "node", "ruby", "php", "elixir"])]
         lang: String,
 
         /// Fixtures directory
@@ -130,7 +133,15 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
 
             println!("Running ruff fix on generated Python code...");
             let ruff_fix_status = std::process::Command::new("uv")
-                .args(["run", "ruff", "check", "--fix", "--unsafe-fixes"])
+                .args([
+                    "run",
+                    "ruff",
+                    "check",
+                    "--fix",
+                    "--unsafe-fixes",
+                    "--target-version",
+                    "py313",
+                ])
                 .arg(&output)
                 .status()
                 .context("Failed to run ruff fix")?;
@@ -144,7 +155,7 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
 
             println!("Running ruff format on generated Python code...");
             let ruff_format_status = std::process::Command::new("uv")
-                .args(["run", "ruff", "format"])
+                .args(["run", "ruff", "format", "--target-version", "py313"])
                 .arg(&output)
                 .status()
                 .context("Failed to run ruff format")?;
@@ -171,6 +182,27 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
         "php" => {
             php_app::generate_php_app(&fixtures, &output)?;
             php_tests::generate_php_tests(&fixtures, &output)?;
+        }
+        "elixir" => {
+            elixir_app::generate_elixir_app(&fixtures, &output)?;
+            elixir_tests::generate_elixir_tests(&fixtures, &output)?;
+
+            println!("Running mix format on generated Elixir code...");
+            let mix_format_status = std::process::Command::new("mix")
+                .args(["format"])
+                .current_dir(&output)
+                .status();
+
+            if let Ok(status) = mix_format_status {
+                if !status.success() {
+                    eprintln!(
+                        "Warning: mix format had issues (exit code {})",
+                        status.code().unwrap_or(-1)
+                    );
+                }
+            } else {
+                eprintln!("Warning: mix format not available or failed to run");
+            }
         }
         _ => unreachable!("Invalid language"),
     }

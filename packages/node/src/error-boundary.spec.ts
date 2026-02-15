@@ -515,7 +515,7 @@ describe("error-boundary", () => {
 
 			const payload = createRequestPayload();
 
-			await expect(syncHandler(JSON.stringify(payload))).rejects.toThrow("Sync error");
+			expect(() => syncHandler(JSON.stringify(payload))).toThrow("Sync error");
 			await expect(asyncHandler(JSON.stringify(payload))).rejects.toThrow("Async error");
 		});
 

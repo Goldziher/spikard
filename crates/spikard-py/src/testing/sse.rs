@@ -55,7 +55,7 @@ impl SseStream {
 }
 
 /// Python wrapper for SSE event
-#[pyclass]
+#[pyclass(from_py_object)]
 #[derive(Clone)]
 pub struct SseEvent {
     inner: RustSseEvent,

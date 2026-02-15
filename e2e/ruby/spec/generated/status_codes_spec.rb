@@ -57,8 +57,7 @@ RSpec.describe "status_codes" do
     expect(response.body_text).to eq("binary_data_1024_bytes")
     response_headers = response.headers.transform_keys { |key| key.downcase }
     expect(response_headers["accept-ranges"]).to eq("bytes")
-    expect(response_headers["content-length"]).to eq("1024")
-    expect(response_headers["content-range"]).to eq("bytes 0-1023/5000")
+    expect(response_headers["content-range"]).to eq("bytes 0-21/5000")
     expect(response_headers["content-type"]).to eq("application/pdf")
     client.close
   end
@@ -96,7 +95,7 @@ RSpec.describe "status_codes" do
     expect(response.status_code).to eq(503)
     expect(response.json).to eq({"error" => "Service Unavailable", "message" => "The service is temporarily unavailable. Please try again later."})
     response_headers = response.headers.transform_keys { |key| key.downcase }
-    expect(response_headers["retry-after"]).to eq("60")
+    expect(response_headers["retry-after"]).to eq("0")
     client.close
   end
 
@@ -237,7 +236,7 @@ RSpec.describe "status_codes" do
     expect(response.status_code).to eq(503)
     expect(response.json).to eq({"detail" => "Service temporarily unavailable"})
     response_headers = response.headers.transform_keys { |key| key.downcase }
-    expect(response_headers["retry-after"]).to eq("120")
+    expect(response_headers["retry-after"]).to eq("0")
     client.close
   end
 

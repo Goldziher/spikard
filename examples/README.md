@@ -1,6 +1,6 @@
 # Spikard Examples
 
-Practical examples across Python, Node.js, Ruby, PHP, and WebAssembly.
+Practical examples across Python, Node.js, Ruby, PHP, Elixir, and WebAssembly.
 
 ## Quick Start
 
@@ -14,6 +14,9 @@ cd node-simple && npm install && npm start
 # Ruby
 cd ruby && bundle install && bundle exec rackup
 
+# Elixir
+cd elixir && elixir 01_basic_server.exs
+
 # Rust lifecycle hooks
 cd rust-lifecycle-hooks && cargo run --example lifecycle
 ```
@@ -24,6 +27,7 @@ cd rust-lifecycle-hooks && cargo run --example lifecycle
 |---------|------|----------|
 | **php/** | REST + middleware | PHP |
 | **ruby/** | REST + RBS types | Ruby |
+| **elixir/** | REST + Rustler NIFs | Elixir |
 | **node/** | Tutorial examples | TypeScript/Node.js |
 | **node-simple/** | Minimal setup | Node.js |
 | **graphql/** | GraphQL server | Rust |
@@ -53,6 +57,7 @@ task test:python       # Language-specific
 task test:node
 task test:ruby
 task test:php
+task test:elixir
 ```
 
 Tests validate against fixtures in `testing_data/`:
@@ -68,6 +73,7 @@ Tests validate against fixtures in `testing_data/`:
 - **Node.js** (napi-rs, TypeScript, strict mode)
 - **Ruby** (magnus, RBS types, Steep)
 - **PHP** (ext-php-rs, PSR-4, PSR-12)
+- **Elixir** (Rustler NIF, ExUnit, Typespecs)
 - **Rust** (Tokio, Tower-HTTP)
 
 ## Architecture

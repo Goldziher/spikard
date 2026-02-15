@@ -216,10 +216,7 @@ pub fn load_grpc_fixtures(fixtures_dir: &Path) -> Result<Vec<GrpcFixture>> {
 ///
 /// A vector of loaded `GrpcFixture` instances from that category
 #[allow(dead_code)]
-pub fn load_grpc_fixtures_by_category(
-    fixtures_dir: &Path,
-    category: &str,
-) -> Result<Vec<GrpcFixture>> {
+pub fn load_grpc_fixtures_by_category(fixtures_dir: &Path, category: &str) -> Result<Vec<GrpcFixture>> {
     let category_dir = fixtures_dir.join("grpc").join(category);
 
     if !category_dir.exists() {
@@ -302,16 +299,28 @@ pub fn generate_proto_file(protobuf: &ProtobufDef) -> Result<String> {
         for method in &service.methods {
             let method_def = if method.client_streaming && method.server_streaming {
                 // Bidirectional streaming
-                format!("  rpc {}(stream {}) returns (stream {});\n", method.name, method.input_type, method.output_type)
+                format!(
+                    "  rpc {}(stream {}) returns (stream {});\n",
+                    method.name, method.input_type, method.output_type
+                )
             } else if method.client_streaming {
                 // Client streaming
-                format!("  rpc {}(stream {}) returns ({});\n", method.name, method.input_type, method.output_type)
+                format!(
+                    "  rpc {}(stream {}) returns ({});\n",
+                    method.name, method.input_type, method.output_type
+                )
             } else if method.server_streaming {
                 // Server streaming
-                format!("  rpc {}({}) returns (stream {});\n", method.name, method.input_type, method.output_type)
+                format!(
+                    "  rpc {}({}) returns (stream {});\n",
+                    method.name, method.input_type, method.output_type
+                )
             } else {
                 // Unary
-                format!("  rpc {}({}) returns ({});\n", method.name, method.input_type, method.output_type)
+                format!(
+                    "  rpc {}({}) returns ({});\n",
+                    method.name, method.input_type, method.output_type
+                )
             };
             proto.push_str(&method_def);
         }
@@ -637,10 +646,7 @@ mod tests {
         assert!(fixture.request.metadata.is_some());
         let metadata = fixture.request.metadata.unwrap();
         assert_eq!(metadata.get("authorization").map(|s| s.as_str()), Some("Bearer token"));
-        assert_eq!(
-            metadata.get("custom-header").map(|s| s.as_str()),
-            Some("value")
-        );
+        assert_eq!(metadata.get("custom-header").map(|s| s.as_str()), Some("value"));
     }
 
     #[test]

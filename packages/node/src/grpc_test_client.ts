@@ -249,10 +249,11 @@ export class GrpcTestClient {
 					if (typeof code === "number" && code !== 0) {
 						const details = status.details ?? status.message ?? "gRPC error";
 						const statusError = new Error(String(details));
-						(statusError as Record<string, unknown>).code = code;
-						(statusError as Record<string, unknown>).details = details;
-						(statusError as Record<string, unknown>).metadata = status.metadata;
-						(statusError as Record<string, unknown>).responses = responses;
+						const statusErrorRecord = statusError as unknown as Record<string, unknown>;
+						statusErrorRecord.code = code;
+						statusErrorRecord.details = details;
+						statusErrorRecord.metadata = status.metadata;
+						statusErrorRecord.responses = responses;
 						finishWithError(statusError);
 					}
 				});
@@ -262,10 +263,11 @@ export class GrpcTestClient {
 					if (typeof code === "number" && code !== 0) {
 						const details = finalStatus?.details ?? finalStatus?.message ?? "gRPC error";
 						const statusError = new Error(String(details));
-						(statusError as Record<string, unknown>).code = code;
-						(statusError as Record<string, unknown>).details = details;
-						(statusError as Record<string, unknown>).metadata = finalStatus?.metadata;
-						(statusError as Record<string, unknown>).responses = responses;
+						const statusErrorRecord = statusError as unknown as Record<string, unknown>;
+						statusErrorRecord.code = code;
+						statusErrorRecord.details = details;
+						statusErrorRecord.metadata = finalStatus?.metadata;
+						statusErrorRecord.responses = responses;
 						finishWithError(statusError);
 						return;
 					}
@@ -432,10 +434,11 @@ export class GrpcTestClient {
 					if (typeof code === "number" && code !== 0) {
 						const details = status.details ?? status.message ?? "gRPC error";
 						const statusError = new Error(String(details));
-						(statusError as Record<string, unknown>).code = code;
-						(statusError as Record<string, unknown>).details = details;
-						(statusError as Record<string, unknown>).metadata = status.metadata;
-						(statusError as Record<string, unknown>).responses = responses;
+						const statusErrorRecord = statusError as unknown as Record<string, unknown>;
+						statusErrorRecord.code = code;
+						statusErrorRecord.details = details;
+						statusErrorRecord.metadata = status.metadata;
+						statusErrorRecord.responses = responses;
 						finishWithError(statusError);
 					}
 				});
@@ -445,10 +448,11 @@ export class GrpcTestClient {
 					if (typeof code === "number" && code !== 0) {
 						const details = finalStatus?.details ?? finalStatus?.message ?? "gRPC error";
 						const statusError = new Error(String(details));
-						(statusError as Record<string, unknown>).code = code;
-						(statusError as Record<string, unknown>).details = details;
-						(statusError as Record<string, unknown>).metadata = finalStatus?.metadata;
-						(statusError as Record<string, unknown>).responses = responses;
+						const statusErrorRecord = statusError as unknown as Record<string, unknown>;
+						statusErrorRecord.code = code;
+						statusErrorRecord.details = details;
+						statusErrorRecord.metadata = finalStatus?.metadata;
+						statusErrorRecord.responses = responses;
 						finishWithError(statusError);
 						return;
 					}

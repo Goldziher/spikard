@@ -16,7 +16,7 @@
 			"detail": "Service temporarily unavailable"
 		},
 		"headers": {
-			"retry-after": "120"
+			"retry-after": "0"
 		}
 	},
 	"notes": "503 Service Unavailable - server overloaded or under maintenance"

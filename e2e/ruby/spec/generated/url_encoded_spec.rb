@@ -43,6 +43,7 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "username"])
+    expect(body['errors'].first['type']).to eq("string_too_short")
     client.close
   end
 
@@ -58,6 +59,7 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "account_id"])
+    expect(body['errors'].first['type']).to eq("string_pattern_mismatch")
     client.close
   end
 
@@ -73,6 +75,7 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "quantity"])
+    expect(body['errors'].first['type']).to eq("greater_than_equal")
     client.close
   end
 
@@ -88,6 +91,7 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "tags"])
+    expect(body['errors'].first['type']).to eq("too_short")
     client.close
   end
 
@@ -103,6 +107,7 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "email"])
+    expect(body['errors'].first['type']).to eq("string_pattern_mismatch")
     client.close
   end
 
@@ -118,6 +123,7 @@ RSpec.describe "url_encoded" do
     expect(body['detail']).to eq("1 validation error in request")
     expect(body['status']).to eq(422)
     expect(body['errors'].first['loc']).to eq(["body", "price"])
+    expect(body['errors'].first['type']).to eq("int_parsing")
     client.close
   end
 

@@ -78,10 +78,10 @@ describe("content_types", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("emoji");
-		expect(responseData.emoji).toBe("☕");
 		expect(responseData).toHaveProperty("name");
 		expect(responseData.name).toBe("Café");
+		expect(responseData).toHaveProperty("emoji");
+		expect(responseData.emoji).toBe("☕");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["content-type"]).toBe("application/json; charset=utf-8");
 	});
@@ -284,8 +284,8 @@ describe("content_types", () => {
 		const responseData = response.json();
 		expect(responseData).toBe("id,name,price\n1,Item A,10.0\n2,Item B,20.0");
 		const responseHeaders = response.headers();
-		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
 		expect(responseHeaders["content-disposition"]).toBe("attachment; filename=data.csv");
+		expect(responseHeaders["content-type"]).toBe("text/csv; charset=utf-8");
 	});
 
 	test("Binary response - application octet-stream", async () => {

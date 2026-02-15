@@ -356,22 +356,13 @@ from spikard import Spikard, websocket
 app = Spikard()
 
 @app.websocket("/chat")
-def chat_handler():
-    async def handle_message(message: dict):
-        return {"echo": message}
-
-    handler = type('Handler', (), {
-        'handle_message': handle_message,
-        'on_connect': lambda: None,
-        'on_disconnect': lambda: None,
-    })()
-    return handler
+async def chat_handler(message: dict) -> dict | None:
+    return {"echo": message}
 ```
 
 WebSocket handlers receive JSON messages and can return dicts to send as responses:
-- `handle_message(message)` - Required, receives and responds to messages
-- `on_connect()` - Optional, called when client connects
-- `on_disconnect()` - Optional, called when client disconnects
+- The handler is called with the parsed JSON `message`
+- Return a `dict` to send a JSON response, or `None` to send nothing
 
 ## Server-Sent Events (SSE)
 

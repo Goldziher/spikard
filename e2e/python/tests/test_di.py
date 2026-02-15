@@ -47,23 +47,23 @@ async def test_circular_dependency_detection_error() -> None:
 
         assert response.status_code == 500
         response_data = response.json()
+        assert "type" in response_data
+        assert response_data["type"] == "https://spikard.dev/errors/dependency-error"
+        assert "title" in response_data
+        assert response_data["title"] == "Dependency Resolution Failed"
+        assert "status" in response_data
+        assert response_data["status"] == 500
         assert "detail" in response_data
         assert response_data["detail"] == "Circular dependency detected"
         assert "errors" in response_data
         assert len(response_data["errors"]) == 1
+        assert "type" in response_data["errors"][0]
+        assert "msg" in response_data["errors"][0]
         assert "cycle" in response_data["errors"][0]
         assert len(response_data["errors"][0]["cycle"]) == 3
         assert response_data["errors"][0]["cycle"][0] == "service_a"
         assert response_data["errors"][0]["cycle"][1] == "service_b"
         assert response_data["errors"][0]["cycle"][2] == "service_a"
-        assert "msg" in response_data["errors"][0]
-        assert "type" in response_data["errors"][0]
-        assert "status" in response_data
-        assert response_data["status"] == 500
-        assert "title" in response_data
-        assert response_data["title"] == "Dependency Resolution Failed"
-        assert "type" in response_data
-        assert response_data["type"] == "https://spikard.dev/errors/dependency-error"
 
 
 async def test_factory_dependency_success() -> None:
@@ -88,10 +88,10 @@ async def test_value_dependency_injection_success() -> None:
         response_data = response.json()
         assert "app_name" in response_data
         assert response_data["app_name"] == "SpikardApp"
-        assert "max_connections" in response_data
-        assert response_data["max_connections"] == 100
         assert "version" in response_data
         assert response_data["version"] == "1.0.0"
+        assert "max_connections" in response_data
+        assert response_data["max_connections"] == 100
 
 
 async def test_node_js_object_destructuring_injection_success() -> None:
@@ -118,10 +118,10 @@ async def test_nested_dependencies_3_levels_success() -> None:
         response_data = response.json()
         assert "auth_enabled" in response_data
         assert response_data["auth_enabled"] == True
-        assert "has_cache" in response_data
-        assert response_data["has_cache"] == True
         assert "has_db" in response_data
         assert response_data["has_db"] == True
+        assert "has_cache" in response_data
+        assert response_data["has_cache"] == True
 
 
 async def test_type_mismatch_in_dependency_resolution_error() -> None:
@@ -132,24 +132,24 @@ async def test_type_mismatch_in_dependency_resolution_error() -> None:
 
         assert response.status_code == 500
         response_data = response.json()
+        assert "type" in response_data
+        assert response_data["type"] == "https://spikard.dev/errors/dependency-error"
+        assert "title" in response_data
+        assert response_data["title"] == "Dependency Resolution Failed"
+        assert "status" in response_data
+        assert response_data["status"] == 500
         assert "detail" in response_data
         assert response_data["detail"] == "Dependency type mismatch"
         assert "errors" in response_data
         assert len(response_data["errors"]) == 1
-        assert "actual_type" in response_data["errors"][0]
-        assert response_data["errors"][0]["actual_type"] == "string"
+        assert "type" in response_data["errors"][0]
+        assert "msg" in response_data["errors"][0]
         assert "dependency_key" in response_data["errors"][0]
         assert response_data["errors"][0]["dependency_key"] == "config"
         assert "expected_type" in response_data["errors"][0]
         assert response_data["errors"][0]["expected_type"] == "object"
-        assert "msg" in response_data["errors"][0]
-        assert "type" in response_data["errors"][0]
-        assert "status" in response_data
-        assert response_data["status"] == 500
-        assert "title" in response_data
-        assert response_data["title"] == "Dependency Resolution Failed"
-        assert "type" in response_data
-        assert response_data["type"] == "https://spikard.dev/errors/dependency-error"
+        assert "actual_type" in response_data["errors"][0]
+        assert response_data["errors"][0]["actual_type"] == "string"
 
 
 async def test_missing_dependency_error() -> None:
@@ -160,20 +160,20 @@ async def test_missing_dependency_error() -> None:
 
         assert response.status_code == 500
         response_data = response.json()
+        assert "type" in response_data
+        assert response_data["type"] == "https://spikard.dev/errors/dependency-error"
+        assert "title" in response_data
+        assert response_data["title"] == "Dependency Resolution Failed"
+        assert "status" in response_data
+        assert response_data["status"] == 500
         assert "detail" in response_data
         assert response_data["detail"] == "Required dependency not found"
         assert "errors" in response_data
         assert len(response_data["errors"]) == 1
+        assert "type" in response_data["errors"][0]
+        assert "msg" in response_data["errors"][0]
         assert "dependency_key" in response_data["errors"][0]
         assert response_data["errors"][0]["dependency_key"] == "non_existent_service"
-        assert "msg" in response_data["errors"][0]
-        assert "type" in response_data["errors"][0]
-        assert "status" in response_data
-        assert response_data["status"] == 500
-        assert "title" in response_data
-        assert response_data["title"] == "Dependency Resolution Failed"
-        assert "type" in response_data
-        assert response_data["type"] == "https://spikard.dev/errors/dependency-error"
 
 
 async def test_python_parameter_name_based_injection_success() -> None:
@@ -184,10 +184,10 @@ async def test_python_parameter_name_based_injection_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "cache_status" in response_data
-        assert response_data["cache_status"] == "ready"
         assert "db_status" in response_data
         assert response_data["db_status"] == "connected"
+        assert "cache_status" in response_data
+        assert response_data["cache_status"] == "ready"
 
 
 async def test_dependency_injection_in_lifecycle_hooks_success() -> None:
@@ -253,15 +253,17 @@ async def test_mixed_singleton_and_per_request_caching_success() -> None:
 
         assert response.status_code == 200
 
+        # Second request to verify singleton caching
         response2 = await client.get("/api/mixed-caching")
         assert response2.status_code == 200
         data1 = response.json()
         data2 = response2.json()
 
-        assert "id" in data1 and "id" in data2
-        assert data1["id"] == data2["id"]
-        if "count" in data1 and "count" in data2:
-            assert data2["count"] > data1["count"]
+        # pool_id is singleton; context_id is per-request
+        assert "pool_id" in data1 and "pool_id" in data2
+        assert data1["pool_id"] == data2["pool_id"]
+        assert "context_id" in data1 and "context_id" in data2
+        assert data1["context_id"] != data2["context_id"]
 
 
 async def test_resource_cleanup_after_request_success() -> None:
@@ -284,10 +286,10 @@ async def test_python_type_annotation_based_injection_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "cache_type" in response_data
-        assert response_data["cache_type"] == "Redis"
         assert "pool_type" in response_data
         assert response_data["pool_type"] == "PostgreSQL"
+        assert "cache_type" in response_data
+        assert response_data["cache_type"] == "Redis"
 
 
 async def test_per_request_dependency_caching_success() -> None:
@@ -312,15 +314,16 @@ async def test_singleton_dependency_caching_success() -> None:
 
         assert response.status_code == 200
 
+        # Second request to verify singleton caching
         response2 = await client.get("/api/app-counter")
         assert response2.status_code == 200
         data1 = response.json()
         data2 = response2.json()
 
-        assert "id" in data1 and "id" in data2
-        assert data1["id"] == data2["id"]
-        if "count" in data1 and "count" in data2:
-            assert data2["count"] > data1["count"]
+        # Singleton counter should have stable counter_id and incremented count
+        assert "counter_id" in data1 and "counter_id" in data2
+        assert data1["counter_id"] == data2["counter_id"]
+        assert data2["count"] > data1["count"]
 
 
 async def test_async_factory_dependency_success() -> None:
@@ -331,7 +334,7 @@ async def test_async_factory_dependency_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "max_size" in response_data
-        assert response_data["max_size"] == 10
         assert "pool_status" in response_data
         assert response_data["pool_status"] == "connected"
+        assert "max_size" in response_data
+        assert response_data["max_size"] == 10

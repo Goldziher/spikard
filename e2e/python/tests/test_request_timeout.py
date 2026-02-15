@@ -24,7 +24,7 @@ async def test_request_completes_before_timeout() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "duration" in response_data
-        assert response_data["duration"] == "fast"
         assert "status" in response_data
         assert response_data["status"] == "ok"
+        assert "duration" in response_data
+        assert response_data["duration"] == "fast"

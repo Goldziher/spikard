@@ -11,6 +11,8 @@ Modifications for Spikard:
 - Removed Litestar-specific kwarg definitions
 """
 
+from __future__ import annotations
+
 from collections import abc
 from dataclasses import dataclass
 from inspect import Parameter, Signature
@@ -185,7 +187,7 @@ class FieldDefinition:
     """An equivalent type to ``origin`` that can be safely instantiated. E.g., ``Sequence`` -> ``list``."""
     safe_generic_origin: Any
     """An equivalent type to ``origin`` that can be safely used as a generic type across all supported Python versions."""
-    inner_types: tuple["FieldDefinition", ...]
+    inner_types: tuple[FieldDefinition, ...]
     """The type's generic args parsed as ``FieldDefinition``, if applicable."""
     default: Any
     """Default value of the field."""
@@ -304,7 +306,7 @@ class FieldDefinition:
         return annotation
 
     @classmethod
-    def from_annotation(cls, annotation: Any, **kwargs: Any) -> "FieldDefinition":
+    def from_annotation(cls, annotation: Any, **kwargs: Any) -> FieldDefinition:
         """Initialize FieldDefinition from a type annotation.
 
         Args:
@@ -376,7 +378,7 @@ class FieldDefinition:
         return FieldDefinition(**kwargs)
 
     @classmethod
-    def from_parameter(cls, parameter: Parameter, fn_type_hints: dict[str, Any]) -> "FieldDefinition":
+    def from_parameter(cls, parameter: Parameter, fn_type_hints: dict[str, Any]) -> FieldDefinition:
         """Initialize FieldDefinition from an inspect.Parameter.
 
         Args:

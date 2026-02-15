@@ -81,10 +81,10 @@ describe("auth", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("data");
-		expect(responseData.data).toBe("sensitive information");
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Access granted");
+		expect(responseData).toHaveProperty("data");
+		expect(responseData.data).toBe("sensitive information");
 		const responseHeaders = response.headers();
 		expect(responseHeaders["x-api-key-deprecated"]).toBe("true");
 	});
@@ -128,10 +128,10 @@ describe("auth", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("data");
-		expect(responseData.data).toBe("sensitive information");
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Access granted");
+		expect(responseData).toHaveProperty("data");
+		expect(responseData.data).toBe("sensitive information");
 	});
 
 	test("JWT authentication - expired token", async () => {
@@ -177,20 +177,20 @@ describe("auth", () => {
 		const client = new TestClient(app);
 
 		const headers = {
+			"X-API-Key": "sk_test_123456",
 			Authorization:
 				"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
-			"X-API-Key": "sk_test_123456",
 		};
 		const response = await client.get("/api/data", headers);
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("auth_method");
-		expect(responseData.auth_method).toBe("jwt");
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Access granted");
 		expect(responseData).toHaveProperty("user_id");
 		expect(responseData.user_id).toBe("user123");
+		expect(responseData).toHaveProperty("auth_method");
+		expect(responseData.auth_method).toBe("jwt");
 	});
 
 	test("JWT missing required custom claims", async () => {
@@ -217,10 +217,10 @@ describe("auth", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("data");
-		expect(responseData.data).toBe("sensitive information");
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Access granted");
+		expect(responseData).toHaveProperty("data");
+		expect(responseData.data).toBe("sensitive information");
 	});
 
 	test("API key with custom header name", async () => {
@@ -234,10 +234,10 @@ describe("auth", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("data");
-		expect(responseData.data).toBe("sensitive information");
 		expect(responseData).toHaveProperty("message");
 		expect(responseData.message).toBe("Access granted");
+		expect(responseData).toHaveProperty("data");
+		expect(responseData.data).toBe("sensitive information");
 	});
 
 	test("API key authentication - missing header", async () => {

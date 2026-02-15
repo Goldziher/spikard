@@ -28,9 +28,9 @@ describe("request_timeout", () => {
 
 		expect(response.statusCode).toBe(200);
 		const responseData = response.json();
-		expect(responseData).toHaveProperty("duration");
-		expect(responseData.duration).toBe("fast");
 		expect(responseData).toHaveProperty("status");
 		expect(responseData.status).toBe("ok");
+		expect(responseData).toHaveProperty("duration");
+		expect(responseData.duration).toBe("fast");
 	});
 });

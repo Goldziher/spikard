@@ -14,7 +14,7 @@ final class GrpcFullAuthorizationContextWithRoleBasedAccessControlTest extends T
         // Tests complete authorization context including user roles, permissions, and resource-level access control.
 
         // Build gRPC request from fixture
-        $metadata = ["authorization" => "Bearer token123", "content-type" => "application/grpc", "x-user-id" => "user-admin-001", "x-user-roles" => "admin,editor", "x-user-permissions" => "read,write,delete"];
+        $metadata = ["content-type" => "application/grpc", "x-user-id" => "user-admin-001", "authorization" => "Bearer token123", "x-user-roles" => "admin,editor", "x-user-permissions" => "read,write,delete"];
         $requestPayload = json_encode(["resource_id" => "resource-456", "operation" => "write"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(

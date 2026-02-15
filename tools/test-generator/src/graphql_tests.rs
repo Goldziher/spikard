@@ -2,9 +2,7 @@
 //!
 //! Generates Vitest test suites from GraphQL fixtures for e2e testing.
 
-use crate::codegen_utils::{
-    escape_string, format_property_access, json_to_typescript, json_to_typescript_string,
-};
+use crate::codegen_utils::{escape_string, format_property_access, json_to_typescript, json_to_typescript_string};
 use crate::graphql::{GraphQLFixture, load_graphql_fixtures};
 use crate::ts_target::TypeScriptTarget;
 use anyhow::Result;
@@ -30,7 +28,10 @@ pub fn generate_graphql_tests(fixtures_dir: &Path, output_dir: &Path, target: &T
     let mut fixtures_by_category: HashMap<String, Vec<_>> = HashMap::new();
     for fixture in fixtures {
         let category = fixture.operation_type.clone();
-        fixtures_by_category.entry(category).or_insert_with(Vec::new).push(fixture);
+        fixtures_by_category
+            .entry(category)
+            .or_insert_with(Vec::new)
+            .push(fixture);
     }
 
     let test_suffix = ".spec.ts";
@@ -52,7 +53,11 @@ pub fn generate_graphql_tests(fixtures_dir: &Path, output_dir: &Path, target: &T
 }
 
 /// Generate test file for a specific category
-fn generate_graphql_test_file(category: &str, fixtures: &[GraphQLFixture], target: &TypeScriptTarget) -> Result<String> {
+fn generate_graphql_test_file(
+    category: &str,
+    fixtures: &[GraphQLFixture],
+    target: &TypeScriptTarget,
+) -> Result<String> {
     let mut code = String::new();
 
     code.push_str(&format!("/**\n * GraphQL {} tests\n * @generated\n */\n\n", category));
@@ -113,20 +118,14 @@ fn generate_graphql_test_function(fixture: &GraphQLFixture) -> Result<String> {
 
         // Variables (if present)
         if let Some(ref variables) = request.variables {
-            code.push_str(&format!(
-                "\t\t\t\t\tvariables: {},\n",
-                json_to_typescript(variables)
-            ));
+            code.push_str(&format!("\t\t\t\t\tvariables: {},\n", json_to_typescript(variables)));
         } else {
             code.push_str("\t\t\t\t\tvariables: null,\n");
         }
 
         // Operation name (if present)
         if let Some(ref op_name) = request.operation_name {
-            code.push_str(&format!(
-                "\t\t\t\t\toperationName: \"{}\",\n",
-                escape_string(op_name)
-            ));
+            code.push_str(&format!("\t\t\t\t\toperationName: \"{}\",\n", escape_string(op_name)));
         } else {
             code.push_str("\t\t\t\t\toperationName: null,\n");
         }

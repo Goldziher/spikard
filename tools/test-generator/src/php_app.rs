@@ -548,8 +548,8 @@ pub fn generate_grpc_handler(fixture: &GrpcFixture) -> Result<String> {
     let method_name = &fixture.handler.method;
 
     // Build response payload from expected response
-    let response_json = serde_json::to_string(&fixture.expected_response.message)
-        .context("Failed to serialize expected response")?;
+    let response_json =
+        serde_json::to_string(&fixture.expected_response.message).context("Failed to serialize expected response")?;
 
     // PHP opening tag and namespace
     code.push_str("<?php\n\n");
@@ -574,7 +574,13 @@ pub fn generate_grpc_handler(fixture: &GrpcFixture) -> Result<String> {
     code.push_str("    // Build response from fixture\n");
     code.push_str(&format!(
         "    $responsePayload = json_encode({});\n",
-        value_to_php(&fixture.expected_response.message.clone().unwrap_or(serde_json::Value::Null))
+        value_to_php(
+            &fixture
+                .expected_response
+                .message
+                .clone()
+                .unwrap_or(serde_json::Value::Null)
+        )
     ));
 
     // Initialize metadata

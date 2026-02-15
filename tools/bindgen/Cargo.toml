@@ -15,10 +15,10 @@ rust-version = "1.70.0"
 name = "bindgen"
 version = "0.10.2"
 authors = [
-    "Jyun-Yan You <jyyou.tw@gmail.com>",
-    "Emilio Cobos Álvarez <emilio@crisal.io>",
-    "Nick Fitzgerald <fitzgen@gmail.com>",
-    "The Servo project developers",
+  "Jyun-Yan You <jyyou.tw@gmail.com>",
+  "Emilio Cobos Álvarez <emilio@crisal.io>",
+  "Nick Fitzgerald <fitzgen@gmail.com>",
+  "The Servo project developers",
 ]
 build = "build.rs"
 autolib = false
@@ -30,15 +30,8 @@ description = "Automatically generates Rust FFI bindings to C and C++ libraries.
 homepage = "https://rust-lang.github.io/rust-bindgen/"
 documentation = "https://docs.rs/bindgen"
 readme = "README.md"
-keywords = [
-    "bindings",
-    "ffi",
-    "code-generation",
-]
-categories = [
-    "external-ffi-bindings",
-    "development-tools::ffi",
-]
+keywords = ["bindings", "ffi", "code-generation"]
+categories = ["external-ffi-bindings", "development-tools::ffi"]
 license = "BSD-3-Clause"
 repository = "https://github.com/rust-lang/rust-bindgen"
 
@@ -46,10 +39,7 @@ repository = "https://github.com/rust-lang/rust-bindgen"
 features = ["experimental"]
 
 [package.metadata.release]
-pre-release-hook = [
-    "../node_modules/doctoc/doctoc.js",
-    "../CHANGELOG.md",
-]
+pre-release-hook = ["../node_modules/doctoc/doctoc.js", "../CHANGELOG.md"]
 release = true
 
 [[package.metadata.release.pre-release-replacements]]
@@ -66,18 +56,11 @@ replace = """
 search = "# Unreleased"
 
 [features]
-__cli = [
-    "dep:clap",
-    "dep:clap_complete",
-]
+__cli = ["dep:clap", "dep:clap_complete"]
 __testing_only_extra_assertions = []
 __testing_only_libclang_16 = []
 __testing_only_libclang_9 = []
-default = [
-    "logging",
-    "prettyplease",
-    "runtime",
-]
+default = ["logging", "prettyplease", "runtime"]
 experimental = ["dep:annotate-snippets"]
 logging = ["dep:log"]
 runtime = ["clang-sys/runtime"]
@@ -132,10 +115,7 @@ default-features = false
 
 [dependencies.regex]
 version = "1.5.3"
-features = [
-    "std",
-    "unicode-perl",
-]
+features = ["std", "unicode-perl"]
 default-features = false
 
 [dependencies.rustc-hash]
@@ -146,11 +126,7 @@ version = "1"
 
 [dependencies.syn]
 version = "2.0"
-features = [
-    "full",
-    "extra-traits",
-    "visit-mut",
-]
+features = ["full", "extra-traits", "visit-mut"]
 
 [lints.clippy]
 cast_possible_truncation = "allow"

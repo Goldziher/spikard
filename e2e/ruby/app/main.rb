@@ -442,7 +442,7 @@ module E2ERubyApp
   def create_app_content_types_8_20_content_length_mismatch
     app = Spikard::App.new
     app.post("/data", handler_name: "content_types_8_20_content_length_mismatch", parameter_schema: {"properties" => {"Content-Length" => {"source" => "header", "type" => "string"}}, "required" => [], "type" => "object"}, request_schema: {"properties" => {"value" => {"type" => "string"}}, "type" => "object"}) do |_request|
-      build_response(content: {"error" => "Content-Length header does not match actual body size"}, status: 400, headers: nil)
+      build_response(content: {"detail" => "Content-Length header does not match actual body size", "status" => 400, "title" => "Content-Length header mismatch", "type" => "https://spikard.dev/errors/content-length-mismatch"}, status: 400, headers: nil)
     end
     app
   end
@@ -450,7 +450,7 @@ module E2ERubyApp
   def create_app_content_types_9_415_unsupported_media_type
     app = Spikard::App.new
     app.post("/items/", handler_name: "content_types_9_415_unsupported_media_type", request_schema: {"type" => "string"}) do |_request|
-      build_response(content: {"detail" => "Unsupported media type"}, status: 415, headers: nil)
+      build_response(content: {"detail" => "Unsupported media type", "status" => 415, "title" => "Unsupported Media Type", "type" => "https://spikard.dev/errors/unsupported-media-type"}, status: 415, headers: nil)
     end
     app
   end
@@ -895,7 +895,7 @@ module E2ERubyApp
     app
   end
 
-  def create_db_pool_simple()
+  def create_db_pool()
     { id: '000000000007', type: 'db_pool', timestamp: Time.now.to_s }
   end
 
@@ -906,16 +906,16 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_simple), cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool"), cacheable: true))
     app
   end
 
-  def create_service_b(service_a)
-    { id: '000000000009', type: 'service_b', timestamp: Time.now.to_s }
+  def create_service_a(service_b:)
+    { id: '000000000009', type: 'service_a', timestamp: Time.now.to_s }
   end
 
-  def create_service_a(service_b)
-    { id: '000000000009', type: 'service_a', timestamp: Time.now.to_s }
+  def create_service_b(service_a:)
+    { id: '000000000009', type: 'service_b', timestamp: Time.now.to_s }
   end
 
   def create_app_di_2_circular_dependency_detection_error
@@ -925,8 +925,8 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("service_a", Spikard::Provide.new(method(:create_service_a), depends_on: ["service_b"]))
-    app.provide("service_b", Spikard::Provide.new(method(:create_service_b), depends_on: ["service_a"]))
+    app.provide("service_b", Spikard::Provide.new(method("create_service_b"), depends_on: ["service_a"]))
+    app.provide("service_a", Spikard::Provide.new(method("create_service_a"), depends_on: ["service_b"]))
     app
   end
 
@@ -963,7 +963,7 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("timestamp_generator", Spikard::Provide.new(method(:create_timestamp)))
+    app.provide("timestamp_generator", Spikard::Provide.new(method("create_timestamp")))
     app
   end
 
@@ -975,62 +975,35 @@ module E2ERubyApp
     app
   end
 
-  def create_db_pool_singleton(app_config = nil)
-    # Singleton with counter - initialize once, return reference
+  def create_db_pool(app_config:)
+    # Singleton with counter
     singleton_key = 'singleton_db_pool'
-    # Don't use ||= with BACKGROUND_STATE because default proc returns []
-    unless BACKGROUND_STATE.key?(singleton_key) && BACKGROUND_STATE[singleton_key].is_a?(Hash)
-      BACKGROUND_STATE[singleton_key] = {
-        id: '00000000-0000-0000-0000-000000000063',
-        count: 0
-      }
-    end
+    BACKGROUND_STATE[singleton_key] ||= {
+      id: '00000000-0000-0000-0000-000000000063',
+      count: 0
+    }
+    BACKGROUND_STATE[singleton_key][:count] += 1
     BACKGROUND_STATE[singleton_key]
   end
 
-  def create_request_context(db_pool)
+  def create_request_context(db_pool:)
     { id: '00000000000f', type: 'request_context', timestamp: Time.now.to_s }
   end
 
   def create_app_di_6_mixed_singleton_and_per_request_caching_success
     app = Spikard::App.new
     app.get("/api/mixed-caching", handler_name: "di_6_mixed_singleton_and_per_request_caching_success") do |_request, app_config:, db_pool:, request_context:|
-      # Increment the counter on each request (like Python)
-      # Note: We receive the actual Ruby object with symbol keys
-      db_pool[:count] += 1
-      build_response(
-        content: {
-          id: db_pool[:id],
-          count: db_pool[:count],
-          context_id: request_context["id"],
-          app_name: app_config["app_name"]
-        },
-        status: 200,
-        headers: nil
-      )
+      build_response(content: {"app_name" => "MyApp", "context_id" => "<<uuid>>", "pool_id" => "<<uuid>>"}, status: 200, headers: nil)
     end
 
     # Register dependencies
+    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool"), depends_on: ["app_config"], singleton: true))
     app.provide("app_config", {"app_name" => "MyApp", "version" => "2.0"})
-    app.provide("request_context", Spikard::Provide.new(method(:create_request_context), depends_on: ["db_pool"], cacheable: true))
-    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_singleton), depends_on: ["app_config"], singleton: true))
+    app.provide("request_context", Spikard::Provide.new(method("create_request_context"), depends_on: ["db_pool"], cacheable: true))
     app
   end
 
   def create_cache_connection_with_cleanup()
-    # Create resource
-    CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
-    resource = { id: '00000000002d', active: true }
-
-    # Return resource and cleanup proc
-    cleanup_proc = -> do
-      CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_closed'
-    end
-
-    [resource, cleanup_proc]
-  end
-
-  def create_session_with_cleanup(db_connection, cache_connection)
     # Create resource
     CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
     resource = { id: '00000000002d', active: true }
@@ -1056,10 +1029,29 @@ module E2ERubyApp
     [resource, cleanup_proc]
   end
 
+  def create_session_with_cleanup(db_connection:, cache_connection:)
+    # Create resource
+    CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
+    resource = { id: '00000000002d', active: true }
+
+    # Return resource and cleanup proc
+    cleanup_proc = -> do
+      CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_closed'
+    end
+
+    [resource, cleanup_proc]
+  end
+
   def create_app_di_7_multiple_dependencies_with_cleanup_success
     app = Spikard::App.new
     app.get("/api/multi-cleanup-test", handler_name: "di_7_multiple_dependencies_with_cleanup_success") do |_request, session:|
-      # Session is injected via DI, just return success
+      body = request[:body]
+      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
+      value = body["event"]
+      raise ArgumentError, 'background handler missing value' if value.nil?
+      Spikard::Background.run do
+        BACKGROUND_STATE["di_7_multiple_dependencies_with_cleanup_success"] << value
+      end
       build_response(content: {"session_active" => true}, status: 200, headers: nil)
     end
     app.get("/api/multi-cleanup-state", handler_name: "di_7_multiple_dependencies_with_cleanup_success_background_state") do |_req|
@@ -1067,26 +1059,26 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("cache_connection", Spikard::Provide.new(method(:create_cache_connection_with_cleanup), cacheable: true))
-    app.provide("db_connection", Spikard::Provide.new(method(:create_db_connection_with_cleanup), cacheable: true))
-    app.provide("session", Spikard::Provide.new(method(:create_session_with_cleanup), depends_on: ["db_connection", "cache_connection"], cacheable: true))
+    app.provide("session", Spikard::Provide.new(method("create_session_with_cleanup"), depends_on: ["db_connection", "cache_connection"], cacheable: true))
+    app.provide("cache_connection", Spikard::Provide.new(method("create_cache_connection_with_cleanup"), cacheable: true))
+    app.provide("db_connection", Spikard::Provide.new(method("create_db_connection_with_cleanup"), cacheable: true))
     app.get('/api/cleanup-state', handler_name: "di_7_multiple_dependencies_with_cleanup_success_cleanup_state") do |_req|
       build_response(content: { cleanup_events: CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] }, status: 200)
     end
     app
   end
 
-  def create_cache_from_config(config)
-    { id: '000000000005', type: 'cache', timestamp: Time.now.to_s }
-  end
-
-  def create_auth_service(db_pool, cache)
+  def create_auth_service(db_pool:, cache:)
     # Create auth service
     { auth_service_enabled: true, has_db: !db_pool.nil?, has_cache: !cache.nil? }
   end
 
-  def create_db_pool_from_config(config)
+  def create_db_pool_from_config(config:)
     { id: '000000000007', type: 'db_pool', timestamp: Time.now.to_s }
+  end
+
+  def create_cache_from_config(config:)
+    { id: '000000000005', type: 'cache', timestamp: Time.now.to_s }
   end
 
   def create_app_di_8_nested_dependencies_3_levels_success
@@ -1096,10 +1088,10 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("auth_service", Spikard::Provide.new(method(:create_auth_service), depends_on: ["db_pool", "cache"], cacheable: true))
-    app.provide("db_pool", Spikard::Provide.new(method(:create_db_pool_from_config), depends_on: ["config"], cacheable: true))
-    app.provide("cache", Spikard::Provide.new(method(:create_cache_from_config), depends_on: ["config"], cacheable: true))
     app.provide("config", {"cache_ttl" => 300, "db_url" => "postgresql://localhost/mydb"})
+    app.provide("cache", Spikard::Provide.new(method("create_cache_from_config"), depends_on: ["config"], cacheable: true))
+    app.provide("auth_service", Spikard::Provide.new(method("create_auth_service"), depends_on: ["db_pool", "cache"], cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool_from_config"), depends_on: ["config"], cacheable: true))
     app
   end
 
@@ -1126,7 +1118,7 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("request_id_generator", Spikard::Provide.new(method(:create_request_id), cacheable: true))
+    app.provide("request_id_generator", Spikard::Provide.new(method("create_request_id"), cacheable: true))
     app
   end
 
@@ -1170,7 +1162,13 @@ module E2ERubyApp
   def create_app_di_13_resource_cleanup_after_request_success
     app = Spikard::App.new
     app.get("/api/cleanup-test", handler_name: "di_13_resource_cleanup_after_request_success") do |_request, db_session:|
-      # db_session is injected via DI, just return success
+      body = request[:body]
+      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
+      value = body["session_id"]
+      raise ArgumentError, 'background handler missing value' if value.nil?
+      Spikard::Background.run do
+        BACKGROUND_STATE["di_13_resource_cleanup_after_request_success"] << value
+      end
       build_response(content: {"session_id" => "<<uuid>>", "status" => "completed"}, status: 200, headers: nil)
     end
     app.get("/api/cleanup-state", handler_name: "di_13_resource_cleanup_after_request_success_background_state") do |_req|
@@ -1178,7 +1176,7 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("db_session", Spikard::Provide.new(method(:create_db_session_with_cleanup), cacheable: true))
+    app.provide("db_session", Spikard::Provide.new(method("create_db_session_with_cleanup"), cacheable: true))
     app.get('/api/cleanup-state', handler_name: "di_13_resource_cleanup_after_request_success_cleanup_state") do |_req|
       build_response(content: { cleanup_events: CLEANUP_STATE[:di_resource_cleanup_after_request_success] }, status: 200)
     end
@@ -1203,35 +1201,30 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("db_pool", {"adapter" => "postgresql", "pool_size" => 5})
     app.provide("session", {"session_id" => "abc123", "user_id" => 42})
+    app.provide("db_pool", {"adapter" => "postgresql", "pool_size" => 5})
     app
   end
 
   def create_app_counter()
-    # Singleton with counter - initialize once, return reference
+    # Singleton with counter
     singleton_key = 'singleton_app_counter'
-    # Don't use ||= with BACKGROUND_STATE because default proc returns []
-    unless BACKGROUND_STATE.key?(singleton_key) && BACKGROUND_STATE[singleton_key].is_a?(Hash)
-      BACKGROUND_STATE[singleton_key] = {
-        id: '00000000-0000-0000-0000-000000000063',
-        count: 0
-      }
-    end
+    BACKGROUND_STATE[singleton_key] ||= {
+      id: '00000000-0000-0000-0000-000000000063',
+      count: 0
+    }
+    BACKGROUND_STATE[singleton_key][:count] += 1
     BACKGROUND_STATE[singleton_key]
   end
 
   def create_app_di_16_singleton_dependency_caching_success
     app = Spikard::App.new
     app.get("/api/app-counter", handler_name: "di_16_singleton_dependency_caching_success") do |_request, app_counter:|
-      # Increment the counter on each access (like Python handler does)
-      # Note: We receive the actual Ruby object with symbol keys
-      app_counter[:count] += 1
-      build_response(content: { id: app_counter[:id], count: app_counter[:count] }, status: 200, headers: nil)
+      build_response(content: {"count" => 1, "counter_id" => "<<uuid>>"}, status: 200, headers: nil)
     end
 
     # Register dependencies
-    app.provide("app_counter", Spikard::Provide.new(method(:create_app_counter), singleton: true))
+    app.provide("app_counter", Spikard::Provide.new(method("create_app_counter"), singleton: true))
     app
   end
 
@@ -1253,9 +1246,9 @@ module E2ERubyApp
     end
 
     # Register dependencies
+    app.provide("version", "1.0.0")
     app.provide("app_name", "SpikardApp")
     app.provide("max_connections", 100)
-    app.provide("version", "1.0.0")
     app
   end
 
@@ -1310,7 +1303,7 @@ module E2ERubyApp
   def create_app_edge_cases_7_17_extremely_long_string
     app = Spikard::App.new
     app.post("/text", handler_name: "edge_cases_7_17_extremely_long_string", request_schema: {"properties" => {"content" => {"maxLength" => 10000, "type" => "string"}}, "required" => ["content"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"actual_length" => 10001, "max_length" => 10000}, "loc" => ["body", "content"], "msg" => "String length must not exceed 10000", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"max_length" => 10000}, "input" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "loc" => ["body", "content"], "msg" => "String should have at most 10000 characters", "type" => "string_too_long"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1334,7 +1327,7 @@ module E2ERubyApp
   def create_app_edge_cases_10_20_null_byte_in_string
     app = Spikard::App.new
     app.post("/files", handler_name: "edge_cases_10_20_null_byte_in_string", request_schema: {"properties" => {"filename" => {"pattern" => "^[^\\x00]+$", "type" => "string"}}, "required" => ["filename"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"value" => "file\\u0000.txt"}, "loc" => ["body", "filename"], "msg" => "String contains null byte character", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^[^\\x00]+$"}, "input" => "file\u{0}.txt", "loc" => ["body", "filename"], "msg" => "String should match pattern \'^[^\\x00]+$\'", "type" => "string_pattern_mismatch"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1366,7 +1359,7 @@ module E2ERubyApp
   def create_app_edge_cases_14_24_array_with_holes
     app = Spikard::App.new
     app.post("/items", handler_name: "edge_cases_14_24_array_with_holes", request_schema: {"properties" => {"items" => {"items" => {"type" => "string"}, "type" => "array"}}, "required" => ["items"], "type" => "object"}) do |_request|
-      build_response(content: {"items" => ["first", "third", "sixth"]}, status: 200, headers: nil)
+      build_response(content: {"error" => "Failed to parse URL-encoded form data: missing index, expected: 1 got 2"}, status: 400, headers: nil)
     end
     app
   end
@@ -1390,7 +1383,7 @@ module E2ERubyApp
   def create_app_edge_cases_17_float_precision_and_rounding
     app = Spikard::App.new
     app.post("/calculations/", handler_name: "edge_cases_17_float_precision_and_rounding", request_schema: {"additionalProperties" => false, "properties" => {"expected_sum" => {"type" => "number"}, "precise_value" => {"type" => "number"}, "value1" => {"type" => "number"}, "value2" => {"type" => "number"}, "very_large" => {"type" => "number"}, "very_small" => {"type" => "number"}}, "required" => ["value1", "value2", "expected_sum", "precise_value", "very_small", "very_large"], "type" => "object"}) do |_request|
-      build_response(content: {"precise_value" => 3.141592653589793, "sum" => 0.30000000000000004, "very_large" => 1.7976931348623157e308, "very_small" => 1e-10}, status: 200, headers: nil)
+      build_response(content: {"precise_value" => 3.141592653589793, "sum" => 0.30000000000000004, "very_large" => 1.7976931348623157e+308, "very_small" => 1e-10}, status: 200, headers: nil)
     end
     app
   end
@@ -1597,7 +1590,7 @@ module E2ERubyApp
 
   def create_app_headers_23_multiple_custom_headers
     app = Spikard::App.new
-    app.get("/headers/multiple", handler_name: "headers_23_multiple_custom_headers", parameter_schema: {"properties" => {"X-Client-Version" => {"annotation" => "str", "source" => "header", "type" => "string"}, "X-Request-Id" => {"annotation" => "str", "source" => "header", "type" => "string"}, "X-Trace-Id" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["X-Client-Version", "X-Request-Id", "X-Trace-Id"], "type" => "object"}) do |_request|
+    app.get("/headers/multiple", handler_name: "headers_23_multiple_custom_headers", parameter_schema: {"properties" => {"X-Client-Version" => {"annotation" => "str", "source" => "header", "type" => "string"}, "X-Request-Id" => {"annotation" => "str", "source" => "header", "type" => "string"}, "X-Trace-Id" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["X-Request-Id", "X-Client-Version", "X-Trace-Id"], "type" => "object"}) do |_request|
       build_response(content: {"x_client_version" => "1.2.3", "x_request_id" => "req-12345", "x_trace_id" => "trace-abc"}, status: 200, headers: nil)
     end
     app
@@ -1766,7 +1759,7 @@ module E2ERubyApp
   def create_app_http_methods_11_put_missing_required_field
     app = Spikard::App.new
     app.put("/items/{id}", handler_name: "http_methods_11_put_missing_required_field", parameter_schema: {"properties" => {"id" => {"source" => "path", "type" => "string"}}, "required" => ["id"], "type" => "object"}, request_schema: {"properties" => {"id" => {"type" => "integer"}, "name" => {"type" => "string"}, "price" => {"type" => "string"}}, "required" => ["price"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "1", "loc" => ["body", "price"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"id" => 1, "name" => "Item Name"}, "loc" => ["body", "price"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1774,7 +1767,7 @@ module E2ERubyApp
   def create_app_http_methods_12_put_validation_error
     app = Spikard::App.new
     app.put("/items/{id}", handler_name: "http_methods_12_put_validation_error", parameter_schema: {"properties" => {"id" => {"source" => "path", "type" => "string"}}, "required" => ["id"], "type" => "object"}, request_schema: {"$schema" => "https://json-schema.org/draft/2020-12/schema", "properties" => {"id" => {"type" => "integer"}, "name" => {"minLength" => 3, "type" => "string"}, "price" => {"exclusiveMinimum" => 0, "type" => "number"}}, "required" => ["id", "name", "price"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "2 validation errors in request", "errors" => [{"input" => "X", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "type" => "string_too_short"}, {"input" => -10, "loc" => ["body", "price"], "msg" => "Input should be greater than 0", "type" => "greater_than"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "2 validation errors in request", "errors" => [{"ctx" => {"min_length" => 3}, "input" => "X", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "type" => "string_too_short"}, {"ctx" => {"gt" => 0}, "input" => -10, "loc" => ["body", "price"], "msg" => "Input should be greater than 0", "type" => "greater_than"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1790,7 +1783,7 @@ module E2ERubyApp
   def create_app_json_bodies_2_30_nested_object_missing_field
     app = Spikard::App.new
     app.post("/users", handler_name: "json_bodies_2_30_nested_object_missing_field", request_schema: {"properties" => {"profile" => {"properties" => {"email" => {"format" => "email", "type" => "string"}, "name" => {"minLength" => 1, "type" => "string"}}, "required" => ["name", "email"], "type" => "object"}}, "required" => ["profile"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"required" => true}, "loc" => ["body", "profile", "email"], "msg" => "Field required", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"name" => "John Doe"}, "loc" => ["body", "profile", "email"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1822,7 +1815,7 @@ module E2ERubyApp
   def create_app_json_bodies_6_34_additional_properties_false
     app = Spikard::App.new
     app.post("/users", handler_name: "json_bodies_6_34_additional_properties_false", request_schema: {"additionalProperties" => false, "properties" => {"email" => {"type" => "string"}, "name" => {"type" => "string"}}, "required" => ["name"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"additional_properties" => false, "unexpected_field" => "extra_field"}, "loc" => ["body", "extra_field"], "msg" => "Additional properties are not allowed", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"additional_properties" => false, "unexpected_field" => "extra_field"}, "input" => {"email" => "john@example.com", "extra_field" => "should fail", "name" => "John"}, "loc" => ["body", "extra_field"], "msg" => "Additional properties are not allowed", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1838,7 +1831,7 @@ module E2ERubyApp
   def create_app_json_bodies_8_36_oneof_schema_multiple_match_failure
     app = Spikard::App.new
     app.post("/payment", handler_name: "json_bodies_8_36_oneof_schema_multiple_match_failure", request_schema: {"oneOf" => [{"properties" => {"credit_card" => {"pattern" => "^[0-9]{16}$", "type" => "string"}}, "required" => ["credit_card"], "type" => "object"}, {"properties" => {"paypal_email" => {"format" => "email", "type" => "string"}}, "required" => ["paypal_email"], "type" => "object"}]}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"matched_schemas" => 2}, "loc" => ["body"], "msg" => "Must match exactly one schema (oneOf), but matched 2", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"credit_card" => "1234567812345678", "paypal_email" => "user@example.com"}, "loc" => ["body"], "msg" => "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the \'oneOf\' keyword", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1846,7 +1839,7 @@ module E2ERubyApp
   def create_app_json_bodies_9_37_oneof_schema_no_match_failure
     app = Spikard::App.new
     app.post("/payment", handler_name: "json_bodies_9_37_oneof_schema_no_match_failure", request_schema: {"oneOf" => [{"properties" => {"credit_card" => {"pattern" => "^[0-9]{16}$", "type" => "string"}}, "required" => ["credit_card"], "type" => "object"}, {"properties" => {"paypal_email" => {"format" => "email", "type" => "string"}}, "required" => ["paypal_email"], "type" => "object"}]}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"matched_schemas" => 0}, "loc" => ["body"], "msg" => "Must match exactly one schema (oneOf), but matched 0", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"bitcoin_address" => "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"}, "loc" => ["body"], "msg" => "{\"bitcoin_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa\"} is not valid under any of the schemas listed in the \'oneOf\' keyword", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1870,7 +1863,7 @@ module E2ERubyApp
   def create_app_json_bodies_12_40_anyof_schema_failure
     app = Spikard::App.new
     app.post("/contact", handler_name: "json_bodies_12_40_anyof_schema_failure", request_schema: {"anyOf" => [{"required" => ["email"]}, {"required" => ["phone"]}], "properties" => {"email" => {"format" => "email", "type" => "string"}, "name" => {"type" => "string"}, "phone" => {"type" => "string"}}, "required" => ["name"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"matched_schemas" => 0}, "loc" => ["body"], "msg" => "Must match at least one schema (anyOf), but matched 0", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"name" => "John Doe"}, "loc" => ["body"], "msg" => "{\"name\":\"John Doe\"} is not valid under any of the schemas listed in the \'anyOf\' keyword", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1886,7 +1879,7 @@ module E2ERubyApp
   def create_app_json_bodies_14_42_not_schema_failure
     app = Spikard::App.new
     app.post("/users", handler_name: "json_bodies_14_42_not_schema_failure", request_schema: {"properties" => {"username" => {"not" => {"enum" => ["admin", "root", "system"]}, "type" => "string"}}, "required" => ["username"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"prohibited_value" => "admin"}, "loc" => ["body", "username"], "msg" => "Must not match the schema", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "admin", "loc" => ["body", "username"], "msg" => "{\"enum\":[\"admin\",\"root\",\"system\"]} is not allowed for \"admin\"", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1902,7 +1895,7 @@ module E2ERubyApp
   def create_app_json_bodies_16_44_const_validation_failure
     app = Spikard::App.new
     app.post("/api/v1/data", handler_name: "json_bodies_16_44_const_validation_failure", request_schema: {"properties" => {"data" => {"type" => "string"}, "version" => {"const" => "1.0", "type" => "string"}}, "required" => ["version", "data"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"const" => "1.0", "value" => "2.0"}, "loc" => ["body", "version"], "msg" => "Value must be exactly \'1.0\'", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "2.0", "loc" => ["body", "version"], "msg" => "\"1.0\" was expected", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1918,7 +1911,7 @@ module E2ERubyApp
   def create_app_json_bodies_18_46_minproperties_validation_failure
     app = Spikard::App.new
     app.post("/config", handler_name: "json_bodies_18_46_minproperties_validation_failure", request_schema: {"minProperties" => 2, "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"actual_properties" => 1, "min_properties" => 2}, "loc" => ["body"], "msg" => "Object must have at least 2 properties", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"host" => "localhost"}, "loc" => ["body"], "msg" => "{\"host\":\"localhost\"} has less than 2 properties", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1926,7 +1919,7 @@ module E2ERubyApp
   def create_app_json_bodies_19_47_maxproperties_validation_failure
     app = Spikard::App.new
     app.post("/config", handler_name: "json_bodies_19_47_maxproperties_validation_failure", request_schema: {"maxProperties" => 3, "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"actual_properties" => 4, "max_properties" => 3}, "loc" => ["body"], "msg" => "Object must have at most 3 properties", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"debug" => false, "host" => "localhost", "port" => 8080, "ssl" => true}, "loc" => ["body"], "msg" => "{\"host\":\"localhost\",\"port\":8080,\"ssl\":true,\"debug\":false} has more than 3 properties", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -1942,7 +1935,7 @@ module E2ERubyApp
   def create_app_json_bodies_21_49_dependencies_validation_failure
     app = Spikard::App.new
     app.post("/billing", handler_name: "json_bodies_21_49_dependencies_validation_failure", request_schema: {"dependencies" => {"credit_card" => ["billing_address"]}, "properties" => {"billing_address" => {"type" => "string"}, "credit_card" => {"type" => "string"}, "name" => {"type" => "string"}}, "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"dependency" => "credit_card", "required_fields" => ["billing_address"]}, "loc" => ["body"], "msg" => "When \'credit_card\' is present, \'billing_address\' is required", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"credit_card" => "1234567812345678", "name" => "John Doe"}, "loc" => ["body"], "msg" => "\"billing_address\" is a required property", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -2054,7 +2047,7 @@ module E2ERubyApp
   def create_app_json_bodies_35_field_type_validation_invalid_type
     app = Spikard::App.new
     app.post("/items/", handler_name: "json_bodies_35_field_type_validation_invalid_type", request_schema: {"additionalProperties" => false, "properties" => {"description" => {"type" => "string"}, "name" => {"type" => "string"}, "price" => {"type" => "number"}, "tax" => {"type" => "number"}}, "required" => ["name", "description", "price", "tax"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "not a number", "loc" => ["body", "price"], "msg" => "Input should be a valid number", "type" => "float_parsing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "not a number", "loc" => ["body", "price"], "msg" => "Input should be a valid number, unable to parse string as a number", "type" => "float_parsing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -2110,7 +2103,7 @@ module E2ERubyApp
   def create_app_json_bodies_42_required_field_missing_validation_error
     app = Spikard::App.new
     app.post("/items/", handler_name: "json_bodies_42_required_field_missing_validation_error", request_schema: {"additionalProperties" => false, "properties" => {"description" => {"type" => "string"}, "name" => {"type" => "string"}, "price" => {"type" => "number"}}, "required" => ["description", "price", "name"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "", "loc" => ["body", "name"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"description" => "A very nice Item", "price" => 35.4}, "loc" => ["body", "name"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -2580,7 +2573,7 @@ module E2ERubyApp
   def create_app_multipart_21_required_file_upload_missing
     app = Spikard::App.new
     app.post("/files/required", handler_name: "multipart_21_required_file_upload_missing", request_schema: {"additionalProperties" => false, "properties" => {"file" => {"format" => "binary", "type" => "string"}}, "required" => ["file"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "required", "loc" => ["body", "file"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => [], "loc" => ["body", "file"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -2811,7 +2804,7 @@ module E2ERubyApp
 
   def create_app_path_params_28_multiple_path_parameters_success
     app = Spikard::App.new
-    app.get("/{version}/{service_id}/{user_id}/{order_id}", handler_name: "path_params_28_multiple_path_parameters_success", parameter_schema: {"properties" => {"order_id" => {"format" => "uuid", "source" => "path", "type" => "string"}, "service_id" => {"source" => "path", "type" => "integer"}, "user_id" => {"source" => "path", "type" => "string"}, "version" => {"source" => "path", "type" => "number"}}, "required" => ["order_id", "service_id", "user_id", "version"], "type" => "object"}) do |_request|
+    app.get("/{version}/{service_id}/{user_id}/{order_id}", handler_name: "path_params_28_multiple_path_parameters_success", parameter_schema: {"properties" => {"order_id" => {"format" => "uuid", "source" => "path", "type" => "string"}, "service_id" => {"source" => "path", "type" => "integer"}, "user_id" => {"source" => "path", "type" => "string"}, "version" => {"source" => "path", "type" => "number"}}, "required" => ["version", "service_id", "user_id", "order_id"], "type" => "object"}) do |_request|
       build_response(content: {"order_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716", "service_id" => 1, "user_id" => "abc", "version" => 1.0}, status: 200, headers: nil)
     end
     app
@@ -3291,7 +3284,7 @@ module E2ERubyApp
 
   def create_app_query_params_51_multiple_query_parameters_with_different_types
     app = Spikard::App.new
-    app.get("/query/multi-type", handler_name: "query_params_51_multiple_query_parameters_with_different_types", parameter_schema: {"properties" => {"active" => {"annotation" => "bool", "source" => "query", "type" => "boolean"}, "age" => {"annotation" => "int", "source" => "query", "type" => "integer"}, "name" => {"annotation" => "str", "source" => "query", "type" => "string"}, "score" => {"annotation" => "float", "source" => "query", "type" => "number"}}, "required" => ["active", "age", "name", "score"], "type" => "object"}) do |_request|
+    app.get("/query/multi-type", handler_name: "query_params_51_multiple_query_parameters_with_different_types", parameter_schema: {"properties" => {"active" => {"annotation" => "bool", "source" => "query", "type" => "boolean"}, "age" => {"annotation" => "int", "source" => "query", "type" => "integer"}, "name" => {"annotation" => "str", "source" => "query", "type" => "string"}, "score" => {"annotation" => "float", "source" => "query", "type" => "number"}}, "required" => ["name", "age", "active", "score"], "type" => "object"}) do |_request|
       build_response(content: {"active" => true, "age" => 30, "name" => "john", "score" => 95.5}, status: 200, headers: nil)
     end
     app
@@ -3606,7 +3599,7 @@ module E2ERubyApp
   def create_app_status_codes_6_206_partial_content
     app = Spikard::App.new
     app.get("/files/document.pdf", handler_name: "status_codes_6_206_partial_content") do |_request|
-      build_response(content: "binary_data_1024_bytes", status: 206, headers: {"Accept-Ranges" => "bytes", "Content-Length" => "1024", "Content-Range" => "bytes 0-1023/5000", "Content-Type" => "application/pdf"})
+      build_response(content: "binary_data_1024_bytes", status: 206, headers: {"Accept-Ranges" => "bytes", "Content-Range" => "bytes 0-21/5000", "Content-Type" => "application/pdf"})
     end
     app
   end
@@ -3638,7 +3631,7 @@ module E2ERubyApp
   def create_app_status_codes_10_23_503_service_unavailable
     app = Spikard::App.new
     app.get("/data", handler_name: "status_codes_10_23_503_service_unavailable") do |_request|
-      build_response(content: {"error" => "Service Unavailable", "message" => "The service is temporarily unavailable. Please try again later."}, status: 503, headers: {"Retry-After" => "60"})
+      build_response(content: {"error" => "Service Unavailable", "message" => "The service is temporarily unavailable. Please try again later."}, status: 503, headers: {"Retry-After" => "0"})
     end
     app
   end
@@ -3718,7 +3711,7 @@ module E2ERubyApp
   def create_app_status_codes_20_422_unprocessable_entity_validation_error
     app = Spikard::App.new
     app.post("/items/", handler_name: "status_codes_20_422_unprocessable_entity_validation_error", request_schema: {"additionalProperties" => false, "properties" => {"name" => {"type" => "string"}, "price" => {"type" => "string"}}, "required" => ["price", "name"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "", "loc" => ["body", "name"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"price" => "not a number"}, "loc" => ["body", "name"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -3742,7 +3735,7 @@ module E2ERubyApp
   def create_app_status_codes_23_503_service_unavailable_server_overload
     app = Spikard::App.new
     app.get("/health", handler_name: "status_codes_23_503_service_unavailable_server_overload") do |_request|
-      build_response(content: {"detail" => "Service temporarily unavailable"}, status: 503, headers: {"retry-after" => "120"})
+      build_response(content: {"detail" => "Service temporarily unavailable"}, status: 503, headers: {"retry-after" => "0"})
     end
     app
   end
@@ -3830,7 +3823,7 @@ module E2ERubyApp
   def create_app_url_encoded_4_16_minlength_validation_failure
     app = Spikard::App.new
     app.post("/users", handler_name: "url_encoded_4_16_minlength_validation_failure", request_schema: {"properties" => {"username" => {"minLength" => 3, "type" => "string"}}, "required" => ["username"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"actual_length" => 2, "min_length" => 3, "value" => "ab"}, "loc" => ["body", "username"], "msg" => "String length must be at least 3", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"min_length" => 3}, "input" => "ab", "loc" => ["body", "username"], "msg" => "String should have at least 3 characters", "type" => "string_too_short"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -3838,7 +3831,7 @@ module E2ERubyApp
   def create_app_url_encoded_5_17_pattern_validation_failure
     app = Spikard::App.new
     app.post("/accounts", handler_name: "url_encoded_5_17_pattern_validation_failure", request_schema: {"properties" => {"account_id" => {"pattern" => "^ACC-[0-9]{6}$", "type" => "string"}}, "required" => ["account_id"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^ACC-[0-9]{6}$", "value" => "INVALID123"}, "loc" => ["body", "account_id"], "msg" => "String does not match pattern \'^ACC-[0-9]{6}$\'", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^ACC-[0-9]{6}$"}, "input" => "INVALID123", "loc" => ["body", "account_id"], "msg" => "String should match pattern \'^ACC-[0-9]{6}$\'", "type" => "string_pattern_mismatch"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -3846,7 +3839,7 @@ module E2ERubyApp
   def create_app_url_encoded_6_18_integer_minimum_validation_failure
     app = Spikard::App.new
     app.post("/products", handler_name: "url_encoded_6_18_integer_minimum_validation_failure", request_schema: {"properties" => {"quantity" => {"minimum" => 1, "type" => "integer"}}, "required" => ["quantity"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"actual_value" => 0, "minimum" => 1}, "loc" => ["body", "quantity"], "msg" => "Value must be at least 1", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"ge" => 1}, "input" => 0, "loc" => ["body", "quantity"], "msg" => "Input should be greater than or equal to 1", "type" => "greater_than_equal"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -3854,7 +3847,7 @@ module E2ERubyApp
   def create_app_url_encoded_7_19_array_minitems_validation_failure
     app = Spikard::App.new
     app.post("/tags", handler_name: "url_encoded_7_19_array_minitems_validation_failure", request_schema: {"properties" => {"tags" => {"items" => {"type" => "string"}, "minItems" => 2, "type" => "array"}}, "required" => ["tags"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"actual_items" => 1, "min_items" => 2}, "loc" => ["body", "tags"], "msg" => "Array must contain at least 2 items", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"min_length" => 2}, "input" => ["single"], "loc" => ["body", "tags"], "msg" => "List should have at least 2 item after validation", "type" => "too_short"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -3862,7 +3855,7 @@ module E2ERubyApp
   def create_app_url_encoded_8_20_format_email_validation_failure
     app = Spikard::App.new
     app.post("/subscribe", handler_name: "url_encoded_8_20_format_email_validation_failure", request_schema: {"properties" => {"email" => {"format" => "email", "type" => "string"}}, "required" => ["email"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"format" => "email", "value" => "not-an-email"}, "loc" => ["body", "email"], "msg" => "Invalid email format", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"}, "input" => "not-an-email", "loc" => ["body", "email"], "msg" => "String should match pattern \'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\'", "type" => "string_pattern_mismatch"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -3870,7 +3863,7 @@ module E2ERubyApp
   def create_app_url_encoded_9_21_integer_type_coercion_failure
     app = Spikard::App.new
     app.post("/products", handler_name: "url_encoded_9_21_integer_type_coercion_failure", request_schema: {"properties" => {"price" => {"type" => "integer"}}, "required" => ["price"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"value" => "not-a-number"}, "loc" => ["body", "price"], "msg" => "Value is not a valid integer", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "not-a-number", "loc" => ["body", "price"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "type" => "int_parsing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -3878,7 +3871,7 @@ module E2ERubyApp
   def create_app_url_encoded_10_22_additional_properties_strict_failure
     app = Spikard::App.new
     app.post("/settings", handler_name: "url_encoded_10_22_additional_properties_strict_failure", request_schema: {"additionalProperties" => false, "properties" => {"theme" => {"enum" => ["light", "dark"], "type" => "string"}}, "required" => ["theme"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"property" => "unknown_field"}, "loc" => ["body", "unknown_field"], "msg" => "Additional properties are not allowed", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"additional_properties" => false, "unexpected_field" => "unknown_field"}, "input" => {"theme" => "dark", "unknown_field" => "value"}, "loc" => ["body", "unknown_field"], "msg" => "Additional properties are not allowed", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -3942,7 +3935,7 @@ module E2ERubyApp
   def create_app_url_encoded_18_required_field_missing_validation_error
     app = Spikard::App.new
     app.post("/login/", handler_name: "url_encoded_18_required_field_missing_validation_error", request_schema: {"properties" => {"password" => {"type" => "string"}, "username" => {"type" => "string"}}, "required" => ["username", "password"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "", "loc" => ["body", "username"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => {"password" => "secret"}, "loc" => ["body", "username"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -4006,7 +3999,7 @@ module E2ERubyApp
   def create_app_validation_errors_4_array_max_items_constraint_violation
     app = Spikard::App.new
     app.post("/items/", handler_name: "validation_errors_4_array_max_items_constraint_violation", request_schema: {"additionalProperties" => false, "properties" => {"name" => {"type" => "string"}, "price" => {"type" => "number"}, "tags" => {"items" => {"type" => "string"}, "maxItems" => 10, "type" => "array"}}, "required" => ["name", "price", "tags"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"], "loc" => ["body", "tags"], "msg" => "[\"tag1\",\"tag2\",\"tag3\",\"tag4\",\"tag5\",\"tag6\",\"tag7\",\"tag8\",\"tag9\",\"tag10\",\"tag11\"] has more than 10 items", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"max_length" => 10}, "input" => ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"], "loc" => ["body", "tags"], "msg" => "List should have at most 10 items after validation", "type" => "too_long"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -4014,7 +4007,7 @@ module E2ERubyApp
   def create_app_validation_errors_5_array_min_items_constraint_violation
     app = Spikard::App.new
     app.post("/items/", handler_name: "validation_errors_5_array_min_items_constraint_violation", request_schema: {"additionalProperties" => false, "properties" => {"name" => {"type" => "string"}, "price" => {"type" => "number"}, "tags" => {"items" => {}, "minItems" => 1, "type" => "array"}}, "required" => ["name", "price", "tags"], "type" => "object"}) do |_request|
-      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => [], "loc" => ["body", "tags"], "msg" => "[] has less than 1 item", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
+      build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"min_length" => 1}, "input" => [], "loc" => ["body", "tags"], "msg" => "List should have at least 1 item after validation", "type" => "too_short"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
   end
@@ -4045,7 +4038,7 @@ module E2ERubyApp
 
   def create_app_validation_errors_9_invalid_boolean_value
     app = Spikard::App.new
-    app.get("/items/", handler_name: "validation_errors_9_invalid_boolean_value", parameter_schema: {"properties" => {"is_active" => {"source" => "query", "type" => "boolean"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["is_active", "q"], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "validation_errors_9_invalid_boolean_value", parameter_schema: {"properties" => {"is_active" => {"source" => "query", "type" => "boolean"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["q", "is_active"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "maybe", "loc" => ["query", "is_active"], "msg" => "Input should be a valid boolean, unable to interpret input", "type" => "bool_parsing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
@@ -4109,7 +4102,7 @@ module E2ERubyApp
 
   def create_app_validation_errors_17_numeric_constraint_violation_gt_greater_than
     app = Spikard::App.new
-    app.get("/items/", handler_name: "validation_errors_17_numeric_constraint_violation_gt_greater_than", parameter_schema: {"properties" => {"price" => {"exclusiveMinimum" => 0, "source" => "query", "type" => "number"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["price", "q"], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "validation_errors_17_numeric_constraint_violation_gt_greater_than", parameter_schema: {"properties" => {"price" => {"exclusiveMinimum" => 0, "source" => "query", "type" => "number"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["q", "price"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"gt" => 0}, "input" => "0", "loc" => ["query", "price"], "msg" => "Input should be greater than 0", "type" => "greater_than"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
@@ -4117,7 +4110,7 @@ module E2ERubyApp
 
   def create_app_validation_errors_18_numeric_constraint_violation_le_less_than_or_equal
     app = Spikard::App.new
-    app.get("/items/", handler_name: "validation_errors_18_numeric_constraint_violation_le_less_than_or_equal", parameter_schema: {"properties" => {"limit" => {"maximum" => 100, "source" => "query", "type" => "integer"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["limit", "q"], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "validation_errors_18_numeric_constraint_violation_le_less_than_or_equal", parameter_schema: {"properties" => {"limit" => {"maximum" => 100, "source" => "query", "type" => "integer"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["q", "limit"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"le" => 100}, "input" => "101", "loc" => ["query", "limit"], "msg" => "Input should be less than or equal to 100", "type" => "less_than_equal"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app

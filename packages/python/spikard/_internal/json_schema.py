@@ -4,13 +4,16 @@ This module converts the universal FieldDefinition IR into JSON Schema format
 that can be passed to Rust for validation and caching.
 """
 
+from __future__ import annotations
+
 from datetime import date, datetime, time, timedelta
 from enum import Enum
 from pathlib import Path, PurePath
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from spikard._internal.field_definition import FieldDefinition  # noqa: TC001
+if TYPE_CHECKING:
+    from spikard._internal.field_definition import FieldDefinition
 
 __all__ = ("field_definition_to_json_schema",)
 

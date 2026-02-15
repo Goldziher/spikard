@@ -97,8 +97,7 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
     fs::write(output_dir.join("tsconfig.json"), tsconfig).context("Failed to write tsconfig.json")?;
 
     let vitest_config = generate_vitest_config(target);
-    fs::write(output_dir.join("vitest.config.ts"), vitest_config)
-        .context("Failed to write vitest.config.ts")?;
+    fs::write(output_dir.join("vitest.config.ts"), vitest_config).context("Failed to write vitest.config.ts")?;
 
     println!("  ✓ Generated app/main.ts");
     println!("  ✓ Generated package.json");
@@ -112,13 +111,29 @@ pub fn generate_node_app(fixtures_dir: &Path, output_dir: &Path, target: &TypeSc
 /// Generate package.json for the e2e Node.js project by reading from workspace templates
 fn generate_package_json(target: &TypeScriptTarget) -> String {
     let template_path = "e2e/node/package.json";
+    let fallback_template = r#"{
+  "name": "spikard-e2e-node",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@spikard/node": "workspace:*",
+    "@types/node": "^25.2.3",
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}"#;
 
     // Read and parse template package.json
-    let template_content = fs::read_to_string(template_path)
-        .unwrap_or_else(|e| panic!("Failed to read template {}: {}", template_path, e));
+    let template_content = fs::read_to_string(template_path).unwrap_or_else(|_| fallback_template.to_string());
 
     let mut package_json: Value = serde_json::from_str(&template_content)
-        .unwrap_or_else(|e| panic!("Failed to parse template {}: {}", template_path, e));
+        .unwrap_or_else(|e| panic!("Failed to parse package.json template from {}: {}", template_path, e));
 
     // Update package name
     if let Some(obj) = package_json.as_object_mut() {
@@ -132,14 +147,13 @@ fn generate_package_json(target: &TypeScriptTarget) -> String {
             // Add the correct workspace dependency for this target
             dev_deps.insert(
                 target.dependency_package.to_string(),
-                Value::String("workspace:*".to_string())
+                Value::String("workspace:*".to_string()),
             );
         }
     }
 
     // Serialize back to pretty JSON
-    serde_json::to_string_pretty(&package_json)
-        .unwrap_or_else(|e| panic!("Failed to serialize package.json: {}", e))
+    serde_json::to_string_pretty(&package_json).unwrap_or_else(|e| panic!("Failed to serialize package.json: {}", e))
 }
 
 /// Generate tsconfig.json for TypeScript compilation
@@ -159,7 +173,8 @@ fn generate_tsconfig(_target: &TypeScriptTarget) -> String {
 	},
 	"include": ["app/**/*", "tests/**/*"]
 }
-"#.to_string()
+"#
+    .to_string()
 }
 
 fn format_generated_ts(dir: &Path) -> Result<()> {
@@ -186,7 +201,8 @@ export default defineConfig({
 		environment: "node",
 	},
 });
-"#.to_string()
+"#
+    .to_string()
 }
 
 /// Generate app file with per-fixture app factory functions
@@ -464,10 +480,7 @@ fn generate_app_file_per_fixture(
         &mut all_app_factories,
         &mut handler_names,
     )?;
-    append_grpc_handlers(
-        &mut code,
-        grpc_fixtures,
-    )?;
+    append_grpc_handlers(&mut code, grpc_fixtures)?;
 
     code.push_str("// App factory functions:\n");
     for (category, fixture_name, factory_fn) in &all_app_factories {
@@ -1376,7 +1389,9 @@ fn append_graphql_factories(
     code.push_str("function graphqlVariablesKey(value: unknown): string {\n");
     code.push_str("\treturn JSON.stringify(value ?? null);\n");
     code.push_str("}\n\n");
-    code.push_str("function getHeaderValue(headers: Record<string, string> | undefined, name: string): string | null {\n");
+    code.push_str(
+        "function getHeaderValue(headers: Record<string, string> | undefined, name: string): string | null {\n",
+    );
     code.push_str("\tif (!headers) return null;\n");
     code.push_str("\tconst target = name.toLowerCase();\n");
     code.push_str("\tfor (const [key, value] of Object.entries(headers)) {\n");
@@ -1393,7 +1408,9 @@ fn append_graphql_factories(
     code.push_str("\t\tif (byName) return byName;\n");
     code.push_str("\t}\n");
     code.push_str("\tif (!body || typeof body !== \"object\") return null;\n");
-    code.push_str("\tconst payload = body as { query?: string; variables?: unknown; operationName?: string | null };\n");
+    code.push_str(
+        "\tconst payload = body as { query?: string; variables?: unknown; operationName?: string | null };\n",
+    );
     code.push_str("\tconst query = payload.query ?? \"\";\n");
     code.push_str("\tconst variables = payload.variables ?? null;\n");
     code.push_str("\tconst operationName = payload.operationName ?? null;\n");
@@ -1965,10 +1982,7 @@ fn build_openapi_config_ts(openapi_obj: &serde_json::Map<String, Value>) -> Resu
     Ok(Some(format!("\t\topenapi: {{\n{}\n\t\t}}", parts.join(",\n"))))
 }
 
-fn append_grpc_handlers(
-    code: &mut String,
-    grpc_fixtures: &[GrpcFixture],
-) -> Result<()> {
+fn append_grpc_handlers(code: &mut String, grpc_fixtures: &[GrpcFixture]) -> Result<()> {
     if grpc_fixtures.is_empty() {
         return Ok(());
     }

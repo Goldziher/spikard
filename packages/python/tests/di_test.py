@@ -201,7 +201,7 @@ def test_auto_detect_lambda() -> None:
     Lambda functions can have parameters that should be auto-detected
     as dependencies.
     """
-    provider = Provide(dependency=lambda db: str(db))
+    provider = Provide(dependency=lambda db: str(db))  # noqa: PLW0108
 
     assert provider.depends_on == ["db"]
 

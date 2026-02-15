@@ -17,10 +17,10 @@ async def test_rate_limit_below_threshold_succeeds() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "request" in response_data
-        assert response_data["request"] == "under-limit"
         assert "status" in response_data
         assert response_data["status"] == "ok"
+        assert "request" in response_data
+        assert response_data["request"] == "under-limit"
 
 
 async def test_rate_limit_exceeded_returns_429() -> None:

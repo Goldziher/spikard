@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -13,7 +13,11 @@ if TYPE_CHECKING:
     from spikard.jsonrpc import JsonRpcMethodInfo
 
 
-type HandlerReturn = dict[str, Any] | list[Any] | str | bytes | Response | StreamingResponse | None
+if TYPE_CHECKING:
+    HandlerReturn: TypeAlias = dict[str, Any] | list[Any] | str | bytes | Response | StreamingResponse | None
+else:
+    # Runtime doesn't need the full union; keep import-free for environments without the extension built.
+    HandlerReturn: TypeAlias = Any
 
 
 class SameSite(enum.Enum):

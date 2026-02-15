@@ -183,64 +183,29 @@ async def events(request):
 Production WebSocket handler with complete lifecycle management:
 
 ```python
-import asyncio
-import json
 from spikard import Spikard, websocket
 
 app = Spikard()
 
-# Track active connections
-active_connections = set()
-
 @websocket("/ws")
-async def chat(socket):
-    client_id = id(socket)
-    active_connections.add(client_id)
-    app.logger.info(f"Client {client_id} connected. Active: {len(active_connections)}")
+async def chat(message: dict) -> dict | None:
+    # Simple protocol: respond to pings, otherwise echo.
+    if message.get("type") == "ping":
+        return {"type": "pong"}
+    return {"type": "echo", "data": message}
 
-    try:
-        # Send welcome message
-        await socket.send_json({
-            "type": "welcome",
-            "client_id": client_id,
-            "message": "Connected successfully"
-        })
 
-        # Message loop
-        async for message in socket:
-            try:
-                # Parse and validate message
-                data = json.loads(message) if isinstance(message, str) else message
+def _on_connect() -> None:
+    app.logger.info("WebSocket client connected")
 
-                # Handle different message types
-                if data.get("type") == "ping":
-                    await socket.send_json({"type": "pong"})
-                elif data.get("type") == "broadcast":
-                    # Broadcast to other clients
-                    for conn_id in active_connections:
-                        if conn_id != client_id:
-                            await socket.send_json({
-                                "type": "message",
-                                "from": client_id,
-                                "data": data.get("data")
-                            })
-                else:
-                    await socket.send_json({"type": "echo", "data": data})
 
-            except json.JSONDecodeError:
-                await socket.send_json({"type": "error", "message": "Invalid JSON"})
-            except Exception as e:
-                app.logger.error(f"Error processing message: {e}")
-                await socket.send_json({"type": "error", "message": "Server error"})
+def _on_disconnect() -> None:
+    app.logger.info("WebSocket client disconnected")
 
-    except asyncio.CancelledError:
-        app.logger.info(f"Client {client_id} connection cancelled")
-    except Exception as e:
-        app.logger.error(f"WebSocket error for client {client_id}: {e}")
-    finally:
-        # Cleanup on disconnect
-        active_connections.discard(client_id)
-        app.logger.info(f"Client {client_id} disconnected. Active: {len(active_connections)}")
+
+# Optional lifecycle hooks.
+chat.on_connect = _on_connect
+chat.on_disconnect = _on_disconnect
 ```
 
 ## Server-Sent Events (SSE)

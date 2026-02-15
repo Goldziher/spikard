@@ -38,7 +38,8 @@ pub fn generate_php_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()> 
                 let test_name_pascal = to_pascal_case(&test_name);
                 let test_file = tests_dir.join(format!("Grpc{}Test.php", test_name_pascal));
 
-                fs::write(&test_file, test_code).with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
+                fs::write(&test_file, test_code)
+                    .with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
                 println!("  ✓ Generated tests/Grpc{}Test.php", test_name_pascal);
             }
         }
@@ -243,7 +244,10 @@ fn build_fixture_test(category: &str, index: usize, fixture: &Fixture) -> String
             )
         }
     } else {
-        format!("        $body = $response->body;\n        $this->assertEquals({}, $body);", expected_body)
+        format!(
+            "        $body = $response->body;\n        $this->assertEquals({}, $body);",
+            expected_body
+        )
     };
 
     format!(
@@ -717,7 +721,10 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
         "[]".to_string()
     };
 
-    code.push_str(&format!("        $requestPayload = json_encode({});\n", request_payload));
+    code.push_str(&format!(
+        "        $requestPayload = json_encode({});\n",
+        request_payload
+    ));
     code.push('\n');
 
     code.push_str("        $request = new \\Spikard\\Grpc\\GrpcRequest(\n");
@@ -729,7 +736,9 @@ pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
 
     // Call handler
     code.push_str("        // Call handler\n");
-    code.push_str(&format!("        /** @var \\Spikard\\Grpc\\GrpcResponse $response */\n"));
+    code.push_str(&format!(
+        "        /** @var \\Spikard\\Grpc\\GrpcResponse $response */\n"
+    ));
     code.push_str(&format!("        $response = {}($request);\n", handler_name));
     code.push('\n');
 

@@ -3,7 +3,6 @@
 require 'spec_helper'
 
 # Minimal Dry::Schema/Dry::Struct stubs so we can exercise the extraction helpers
-# rubocop:disable Style/Documentation
 module Dry
   module Schema
     class Processor
@@ -21,7 +20,6 @@ module Dry
   class Struct; end
   # rubocop:enable Lint/EmptyClass
 end
-# rubocop:enable Style/Documentation
 
 # Helper struct for required/optional attribute extraction.
 class FakeStruct < Dry::Struct

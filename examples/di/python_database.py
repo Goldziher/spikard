@@ -7,14 +7,13 @@ This example demonstrates:
 - Singleton vs per-request caching
 """
 
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING
+from collections.abc import AsyncGenerator
 
 from spikard import Spikard
 from spikard.di import Provide
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

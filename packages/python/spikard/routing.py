@@ -163,7 +163,7 @@ class Router:
             ]
         )
 
-        return body_param_name, handler_dependencies if handler_dependencies else None
+        return body_param_name, handler_dependencies or None
 
     @staticmethod
     def _wrap_with_defaults(func: Callable[..., Any]) -> Callable[..., Any]:

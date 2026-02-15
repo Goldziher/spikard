@@ -14,7 +14,7 @@ final class GrpcOauth2BearerTokenAuthenticationTest extends TestCase
         // Tests OAuth2 Bearer token authentication. Validates token validation and scope checking.
 
         // Build gRPC request from fixture
-        $metadata = ["content-type" => "application/grpc", "authorization" => "Bearer ya29.a0AfH6SMBx..."];
+        $metadata = ["authorization" => "Bearer ya29.a0AfH6SMBx...", "content-type" => "application/grpc"];
         $requestPayload = json_encode(["scope" => "read:users"]);
 
         $request = new \Spikard\Grpc\GrpcRequest(
