@@ -170,6 +170,46 @@ pub async fn snapshot_http_response(
     })
 }
 
+/// Convert an Axum response into a reusable [`ResponseSnapshot`], allowing body stream errors.
+///
+/// This is useful for streaming responses where a producer might abort mid-stream (for example,
+/// a JavaScript async generator throwing). In those cases, collecting the whole body can fail
+/// with a "Stream error". This helper returns the bytes read up to the first stream error.
+pub async fn snapshot_http_response_allow_body_errors(
+    response: axum::response::Response<Body>,
+) -> Result<ResponseSnapshot, SnapshotError> {
+    let (parts, mut body) = response.into_parts();
+    let status = parts.status.as_u16();
+
+    let mut headers = HashMap::new();
+    for (name, value) in parts.headers.iter() {
+        let header_value = value
+            .to_str()
+            .map_err(|e| SnapshotError::InvalidHeader(e.to_string()))?;
+        headers.insert(name.to_string().to_ascii_lowercase(), header_value.to_string());
+    }
+
+    let mut bytes = Vec::<u8>::new();
+    while let Some(frame_result) = body.frame().await {
+        match frame_result {
+            Ok(frame) => {
+                if let Ok(data) = frame.into_data() {
+                    bytes.extend_from_slice(&data);
+                }
+            }
+            Err(_) => break,
+        }
+    }
+
+    let decoded_body = decode_body(&headers, bytes)?;
+
+    Ok(ResponseSnapshot {
+        status,
+        headers,
+        body: decoded_body,
+    })
+}
+
 fn decode_body(headers: &HashMap<String, String>, body: Vec<u8>) -> Result<Vec<u8>, SnapshotError> {
     let encoding = headers
         .get("content-encoding")

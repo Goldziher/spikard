@@ -15,6 +15,7 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use serde_json::{Map as JsonMap, Value, json};
+use tower::ServiceExt;
 // TODO: Update to use current handler trait API
 #[cfg(feature = "di")]
 use crate::di::NO_DI_DEP_KEY;
@@ -22,7 +23,8 @@ use crate::test_sse;
 use crate::test_websocket;
 use spikard_http::ProblemDetails;
 use spikard_http::testing::{
-    MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body, snapshot_response,
+    MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body,
+    snapshot_http_response_allow_body_errors, snapshot_response,
 };
 use spikard_http::{HandlerResult, RequestData, ResponseBodySize, Server};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
@@ -432,6 +434,7 @@ impl spikard_http::Handler for JsHandler {
 // codeql[rust/access-invalid-pointer]
 pub struct TestClient {
     server: Arc<TestServer>,
+    router: axum::Router,
     #[allow(dead_code)]
     http_runtime: Option<std::sync::Arc<tokio::runtime::Runtime>>,
     websocket_paths: HashSet<String>,
@@ -625,6 +628,7 @@ impl TestClient {
         } else {
             Transport::HttpRandomPort
         };
+        let router = axum_router.clone();
         let server = TestServer::builder()
             .transport(transport)
             .build(axum_router)
@@ -633,6 +637,7 @@ impl TestClient {
 
         Ok(Self {
             server: Arc::new(server),
+            router,
             http_runtime: Some(runtime),
             websocket_paths,
             route_patterns,
@@ -721,19 +726,8 @@ impl TestClient {
             .find(|pattern| pattern.matches(method, path_only));
         let route_matches = matched_pattern.is_some();
         let prefers_raw_body = matched_pattern.map(|pattern| pattern.prefers_raw_body).unwrap_or(true);
-        let mut request = match method {
-            "GET" => self.server.get(&path),
-            "POST" => self.server.post(&path),
-            "PUT" => self.server.put(&path),
-            "DELETE" => self.server.delete(&path),
-            "PATCH" => self.server.patch(&path),
-            "HEAD" | "OPTIONS" | "TRACE" => self.server.method(
-                Method::from_bytes(method.as_bytes())
-                    .map_err(|e| Error::from_reason(format!("Invalid method: {}", e)))?,
-                &path,
-            ),
-            _ => return Err(Error::from_reason(format!("Unsupported method: {}", method))),
-        };
+        let parsed_method =
+            Method::from_bytes(method.as_bytes()).map_err(|e| Error::from_reason(format!("Invalid method: {}", e)))?;
 
         let mut headers_map = HeaderMap::new();
 
@@ -749,9 +743,10 @@ impl TestClient {
                     .map_err(|e| Error::from_reason(format!("Invalid header value: {}", e)))?;
 
                 headers_map.insert(header_name.clone(), header_value.clone());
-                request = request.add_header(header_name, header_value);
             }
         }
+
+        let mut body_bytes: Option<Vec<u8>> = None;
 
         if let Some(body_value) = body {
             if body_value.is_null() {
@@ -761,13 +756,13 @@ impl TestClient {
                     BodyPayload::Json(json_data) => {
                         match json_data {
                             Value::String(raw_body) => {
-                                request = request.bytes(Bytes::from(raw_body.into_bytes()));
+                                body_bytes = Some(raw_body.into_bytes());
                             }
                             Value::Null => {}
                             other => {
                                 let body_vec = serde_json::to_vec(&other)
                                     .map_err(|e| Error::from_reason(format!("Failed to serialize JSON body: {}", e)))?;
-                                request = request.bytes(Bytes::from(body_vec));
+                                body_bytes = Some(body_vec);
                             }
                         }
 
@@ -775,37 +770,68 @@ impl TestClient {
                             .keys()
                             .any(|name| name.as_str().eq_ignore_ascii_case("content-type"))
                         {
-                            request = request.content_type("application/json");
+                            headers_map.insert(header::CONTENT_TYPE, HeaderValue::from_static("application/json"));
                         }
                     }
                     BodyPayload::Form(form_data) => {
                         let body_vec = encode_urlencoded_body(&form_data)
                             .map_err(|err| Error::from_reason(format!("Failed to encode form body: {}", err)))?;
-                        request = request.bytes(Bytes::from(body_vec));
+                        body_bytes = Some(body_vec);
 
                         if !headers_map
                             .keys()
                             .any(|name| name.as_str().eq_ignore_ascii_case("content-type"))
                         {
-                            request = request.content_type("application/x-www-form-urlencoded");
+                            headers_map.insert(
+                                header::CONTENT_TYPE,
+                                HeaderValue::from_static("application/x-www-form-urlencoded"),
+                            );
                         }
                     }
                     BodyPayload::Multipart(multipart) => {
-                        let (body_bytes, content_type) =
+                        let (multipart_bytes, content_type) =
                             encode_multipart_body(&multipart).map_err(Error::from_reason)?;
 
-                        request = request.bytes(Bytes::from(body_bytes));
-                        request = request.content_type(&content_type);
+                        body_bytes = Some(multipart_bytes);
+                        headers_map.insert(
+                            header::CONTENT_TYPE,
+                            HeaderValue::from_str(&content_type)
+                                .map_err(|e| Error::from_reason(format!("Invalid content-type: {}", e)))?,
+                        );
                     }
                 }
             }
         }
 
-        let response = request.await;
-        if !route_matches && response.status_code() == StatusCode::NOT_FOUND {
+        let mut request_builder = axum::http::Request::builder().method(parsed_method).uri(&path);
+
+        for (name, value) in headers_map.iter() {
+            request_builder = request_builder.header(name, value);
+        }
+
+        let request_body = body_bytes
+            .map(|bytes| Body::from(Bytes::from(bytes)))
+            .unwrap_or_else(Body::empty);
+
+        let request = request_builder
+            .body(request_body)
+            .map_err(|e| Error::from_reason(format!("Failed to build request: {}", e)))?;
+
+        let response = self
+            .router
+            .clone()
+            .oneshot(request)
+            .await
+            .map_err(|_| Error::from_reason("Router returned an unexpected error".to_string()))?;
+
+        if !route_matches && response.status() == StatusCode::NOT_FOUND {
             return Err(Error::from_reason(format!("No route matched {} {}", method, path_only)));
         }
-        let snapshot = snapshot_response(response).await.map_err(map_snapshot_error)?;
+
+        // Streaming bodies can error mid-stream; capture partial bytes instead of panicking.
+        let snapshot = snapshot_http_response_allow_body_errors(response)
+            .await
+            .map_err(map_snapshot_error)?;
         Ok(TestResponse::from_snapshot(snapshot))
     }
 }
