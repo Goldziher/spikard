@@ -6,6 +6,7 @@
 [![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
 [![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 Ruby bindings for Spikard: a Rust-centric web framework with type-safe code generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage Sinatra-style routing with zero-copy FFI performance.
@@ -246,7 +247,7 @@ Spikard is **1.4x faster** than Roda with significantly lower tail latency.
 ## Learn More
 
 **Examples & Code Generation:**
-- [Runnable Examples](../../examples/) - Ruby, Python, TypeScript, PHP, and WASM
+- [Runnable Examples](../../examples/) - Ruby, Python, TypeScript, PHP, Elixir, and Rust
 - [Code Generation Guide](../../examples/README.md) - Generate from OpenAPI, GraphQL, AsyncAPI, OpenRPC
 
 **Documentation:**
@@ -256,8 +257,9 @@ Spikard is **1.4x faster** than Roda with significantly lower tail latency.
 
 **Other Languages:**
 - [Python (PyPI)](https://pypi.org/project/spikard/)
-- [TypeScript (npm)](https://www.npmjs.com/package/spikard)
+- [TypeScript (npm)](https://www.npmjs.com/package/@spikard/node)
 - [PHP (Packagist)](https://packagist.org/packages/spikard/spikard)
+- [Elixir (Hex.pm)](https://hex.pm/packages/spikard)
 - [Rust (Crates.io)](https://crates.io/crates/spikard)
 
 ## License

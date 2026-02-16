@@ -8,6 +8,7 @@ High-performance Python web framework backed by a Rust core. Build REST APIs, We
 [![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
 [![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 ## Installation
@@ -208,6 +209,7 @@ Full documentation at [spikard.dev](https://spikard.dev). See also [CONTRIBUTING
 - **TypeScript:** [npm (@spikard/node)](https://www.npmjs.com/package/@spikard/node)
 - **Ruby:** [RubyGems](https://rubygems.org/gems/spikard)
 - **PHP:** [Packagist](https://packagist.org/packages/spikard/spikard)
+- **Elixir:** [Hex.pm](https://hex.pm/packages/spikard)
 
 ## License
 

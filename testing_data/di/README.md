@@ -12,7 +12,7 @@ The DI system enables handlers to declare dependencies that are automatically re
 - **Nested Dependencies** - Dependencies that depend on other dependencies
 - **Caching Strategies** - Singleton (global) and per-request caching
 - **Resource Cleanup** - Generator pattern for cleanup (Python yield, etc.)
-- **Cross-Language Support** - Python, Node.js, TypeScript, Ruby, WASM
+- **Cross-Language Support** - Python, Node.js, TypeScript, Ruby, Elixir
 
 ## Fixture Categories
 
@@ -534,7 +534,7 @@ All fixtures are designed to work across:
 - **Python** - Type hints, generator cleanup, async/await
 - **Node.js/TypeScript** - Object destructuring, TypeScript types, async/await
 - **Ruby** - Keyword arguments, blocks, async
-- **WASM** - JavaScript interop, promises
+- **Elixir** - Rustler NIF integration, BEAM process model
 
 The test generator will create language-specific implementations that satisfy the same fixtures.
 

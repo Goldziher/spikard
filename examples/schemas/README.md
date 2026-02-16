@@ -352,7 +352,7 @@ The schemas align with:
 
 1. **Code Generation**: Use these schemas to generate handler stubs
 2. **Fixture Creation**: Create JSON test fixtures from schema examples
-3. **Implementation**: Implement handlers in Python, Node, Ruby, PHP, WASM
+3. **Implementation**: Implement handlers in Python, Node, Ruby, PHP, Elixir
 4. **Testing**: Validate implementations against fixture-driven tests
 5. **Documentation**: Generate API docs from schemas with Swagger UI / Redoc
 

@@ -7,6 +7,7 @@ High-performance HTTP server for Spikard with a complete tower-http middleware s
 [![Crates.io](https://img.shields.io/crates/v/spikard-http.svg)](https://crates.io/crates/spikard-http)
 [![Downloads](https://img.shields.io/crates/d/spikard-http.svg)](https://crates.io/crates/spikard-http)
 [![Documentation](https://docs.rs/spikard-http/badge.svg)](https://docs.rs/spikard-http)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Features
@@ -14,7 +15,7 @@ High-performance HTTP server for Spikard with a complete tower-http middleware s
 - **Axum-based routing** - Fast, ergonomic router with zero-allocation path matching
 - **Tower middleware stack** - Compression (gzip/brotli), rate limiting, timeouts, CORS, request IDs, auth
 - **JSON Schema validation** - Request/response validation against JSON schemas
-- **Cross-language handlers** - Handler trait for Python, Node.js, Ruby, PHP, and WASM bindings
+- **Cross-language handlers** - Handler trait for Python, Node.js, Ruby, PHP, and Elixir bindings
 - **OpenAPI generation** - Automatic OpenAPI 3.1 and AsyncAPI spec generation
 - **WebSocket & SSE support** - Real-time bidirectional and server-sent event communication
 - **Graceful shutdown** - Proper shutdown handling with in-flight request completion

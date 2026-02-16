@@ -14,9 +14,10 @@ High-performance HTTP framework built on Axum and Tower-HTTP with type-safe rout
 ### Multi-Language Bindings
 
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/spikard.svg)](https://www.npmjs.com/package/spikard)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg)](https://www.npmjs.com/package/@spikard/node)
 [![RubyGems](https://img.shields.io/gem/v/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg)](https://packagist.org/packages/spikard/spikard)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg)](https://hex.pm/packages/spikard)
 
 ## Features
 
@@ -29,7 +30,7 @@ High-performance HTTP framework built on Axum and Tower-HTTP with type-safe rout
 - **Testing utilities** with in-memory test server
 - **File upload** handling with multipart form support
 - **Streaming responses** with native async/await
-- **Multi-language bindings** (Python, Node.js, Ruby, PHP)
+- **Multi-language bindings** (Python, Node.js, Ruby, PHP, Elixir)
 
 ## Installation
 

@@ -1,6 +1,6 @@
 # Spikard Examples
 
-Practical examples across Python, Node.js, Ruby, PHP, Elixir, and WebAssembly.
+Practical examples across Python, Node.js, Ruby, PHP, Elixir, and Rust.
 
 ## Quick Start
 

@@ -7,6 +7,7 @@ Shared transport-agnostic primitives and types for building Spikard runtimes acr
 [![Crates.io](https://img.shields.io/crates/v/spikard-core.svg)](https://crates.io/crates/spikard-core)
 [![Downloads](https://img.shields.io/crates/d/spikard-core.svg)](https://crates.io/crates/spikard-core)
 [![Documentation](https://docs.rs/spikard-core/badge.svg)](https://docs.rs/spikard-core)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Overview
@@ -133,7 +134,7 @@ let decompressed = compression::brotli_decode(&compressed)?;
 ```
 ┌─────────────────────────────────────┐
 │  Language Bindings                  │
-│  (Python, Node, Ruby, PHP, WASM)    │
+│  (Python, Node, Ruby, PHP, Elixir)  │
 └──────────────┬──────────────────────┘
                │ implements
 ┌──────────────▼──────────────────────┐
@@ -159,6 +160,7 @@ All language bindings depend on `spikard-core` to ensure consistent request/resp
 - [spikard-http](../spikard-http/README.md) - HTTP server implementation
 - [spikard-py](../spikard-py/README.md) - Python bindings
 - [spikard-node](../spikard-node/README.md) - Node.js bindings
+- [spikard-elixir](../spikard-elixir/README.md) - Elixir bindings
 
 ## License
 

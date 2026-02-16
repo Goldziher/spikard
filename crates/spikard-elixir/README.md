@@ -1,20 +1,30 @@
 # spikard-elixir
 
-Elixir bindings for the Spikard HTTP framework via Rustler NIFs.
+Rustler NIF crate for Spikard's Elixir bindings.
+
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
+[![Crates.io](https://img.shields.io/crates/v/spikard-elixir.svg)](https://crates.io/crates/spikard-elixir)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg)](https://hex.pm/packages/spikard)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 ## Overview
 
-This crate provides the Rust-side NIF (Native Implemented Functions) implementation for Spikard's Elixir bindings.
-The Elixir package is located at `packages/elixir/`.
+`spikard-elixir` provides the Rust-side implementation for Spikard's Elixir runtime integration.
+The public Elixir API lives in `packages/elixir/`.
 
-## Building
+## Build
 
-This crate is built automatically when compiling the Elixir package:
+This crate is compiled as part of the Elixir package build:
 
 ```bash
 cd packages/elixir
 SPIKARD_BUILD=1 mix compile
 ```
+
+## Related
+
+- Elixir package README: `packages/elixir/README.md`
+- Root project README: `README.md`
 
 ## License
 

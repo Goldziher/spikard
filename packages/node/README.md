@@ -6,6 +6,7 @@
 [![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
 [![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 High-performance HTTP framework for Node.js powered by a Rust core. Provides type-safe routing, validation, middleware, and testing via **napi-rs** bindings with zero-copy JSON conversion.
@@ -277,6 +278,7 @@ Spikard is available across multiple languages:
 | **Rust** | [spikard](https://crates.io/crates/spikard) | Stable |
 | **Ruby** | [spikard](https://rubygems.org/gems/spikard) | Stable |
 | **PHP** | [spikard/spikard](https://packagist.org/packages/spikard/spikard) | Stable |
+| **Elixir** | [spikard](https://hex.pm/packages/spikard) | Stable |
 
 ## License
 

@@ -28,7 +28,7 @@ Add `spikard` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:spikard, "~> 0.10"}
+    {:spikard, "~> 0.11"}
   ]
 end
 ```
@@ -246,7 +246,7 @@ end
 ## Learn More
 
 **Examples & Code Generation:**
-- [Runnable Examples](../../examples/) - Elixir, Python, TypeScript, Ruby, PHP, and WASM
+- [Runnable Examples](../../examples/) - Elixir, Python, TypeScript, Ruby, PHP, and Rust
 - [Code Generation Guide](../../examples/README.md) - Generate from OpenAPI, GraphQL, AsyncAPI, OpenRPC
 
 **Documentation:**
@@ -256,7 +256,7 @@ end
 
 **Other Languages:**
 - [Python (PyPI)](https://pypi.org/project/spikard/)
-- [TypeScript (npm)](https://www.npmjs.com/package/spikard)
+- [TypeScript (npm)](https://www.npmjs.com/package/@spikard/node)
 - [Ruby (RubyGems)](https://rubygems.org/gems/spikard)
 - [PHP (Packagist)](https://packagist.org/packages/spikard/spikard)
 - [Rust (Crates.io)](https://crates.io/crates/spikard)

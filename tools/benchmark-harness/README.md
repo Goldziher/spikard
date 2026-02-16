@@ -6,7 +6,7 @@ For user-facing documentation, see [docs/benchmarks/usage.md](../../docs/benchma
 
 ## Architecture Overview
 
-The benchmark harness is a Rust-based CLI tool that orchestrates performance testing across multiple HTTP frameworks in different languages (Rust, Python, Node.js, Ruby, PHP, WASM). It provides two primary modes:
+The benchmark harness is a Rust-based CLI tool that orchestrates performance testing across multiple HTTP frameworks in different languages (Rust, Python, Node.js, Ruby, PHP, Elixir). It provides two primary modes:
 
 1. **Profile Mode** - Deep performance analysis of a single framework with optional language-specific profiling
 2. **Compare Mode** - Statistical comparison of multiple frameworks running the same workload suite

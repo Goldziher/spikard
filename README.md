@@ -1,6 +1,6 @@
 # Spikard
 
-A Rust-centric multi-language toolkit for building and validating typed web services. Generate type-safe API handlers from OpenAPI, GraphQL, gRPC/Protobuf, AsyncAPI, or JSON-RPC specifications and deploy to Python, TypeScript, Ruby, PHP, or WebAssembly.
+A Rust-centric multi-language toolkit for building and validating typed web services. Generate type-safe API handlers from OpenAPI, GraphQL, gRPC/Protobuf, AsyncAPI, or JSON-RPC specifications and deploy to Python, TypeScript, Ruby, PHP, or Elixir.
 
 [![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
 [![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
@@ -16,7 +16,7 @@ A Rust-centric multi-language toolkit for building and validating typed web serv
 - **Multi-Language Code Generation**: Generate type-safe handlers from OpenAPI 3.0.x, GraphQL SDL, gRPC/Protobuf, AsyncAPI 2.x, or OpenRPC 1.x specifications
 - **Project Scaffolding**: `spikard init` bootstraps starter projects with language-specific tooling
 - **Automatic Quality Validation**: Syntax, type checking, and linting automatically applied to generated code
-- **Zero-Copy Bindings**: Performance-optimized FFI layers (PyO3, napi-rs, magnus, ext-php-rs)
+- **Zero-Copy Bindings**: Performance-optimized FFI layers (PyO3, napi-rs, magnus, ext-php-rs, Rustler)
 - **Tower-HTTP Runtime**: Complete HTTP/gRPC server with compression, rate limiting, authentication, and CORS
 - **Fixture-Driven Testing**: Comprehensive test coverage with JSON-based fixtures
 

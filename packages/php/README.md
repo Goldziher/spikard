@@ -6,6 +6,7 @@
 [![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
 [![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
 
 High-performance PHP bindings for Spikard. Build REST APIs, WebSockets, and SSE services with modern PHP 8.2+ patterns backed by a Rust core via ext-php-rs.
@@ -239,4 +240,4 @@ MIT - See [LICENSE](../../LICENSE) for details
 
 ## Ecosystem
 
-Spikard is available for Python, TypeScript, Ruby, PHP, WebAssembly, and Rust. See [spikard.dev](https://spikard.dev) for all language bindings.
+Spikard is available for Python, TypeScript, Ruby, PHP, Elixir, and Rust. See [spikard.dev](https://spikard.dev) for all language bindings.

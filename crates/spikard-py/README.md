@@ -8,6 +8,7 @@ High-performance Python bindings for Spikard HTTP framework via PyO3.
 [![Downloads](https://img.shields.io/crates/d/spikard-py.svg)](https://crates.io/crates/spikard-py)
 [![Documentation](https://docs.rs/spikard-py/badge.svg)](https://docs.rs/spikard-py)
 [![PyPI](https://img.shields.io/pypi/v/spikard.svg)](https://pypi.org/project/spikard/)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Overview
@@ -51,7 +52,7 @@ pub trait Handler: Send + Sync {
 }
 ```
 
-The `PythonHandler` struct (`src/handler.rs`) implements this trait, wrapping Python callable objects and converting between Rust and Python types. This design keeps `spikard-http` completely free of FFI dependencies while enabling multiple language bindings (Python, Node.js, WASM) to share the same HTTP core.
+The `PythonHandler` struct (`src/handler.rs`) implements this trait, wrapping Python callable objects and converting between Rust and Python types. This design keeps `spikard-http` completely free of FFI dependencies while enabling multiple language bindings (Python, Node.js, Ruby, PHP, Elixir) to share the same HTTP core.
 
 **Key architectural benefits:**
 

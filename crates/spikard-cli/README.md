@@ -4,6 +4,7 @@ CLI for Spikard applications: code generation, project scaffolding, and schema v
 
 [![Crates.io](https://img.shields.io/crates/v/spikard-cli.svg)](https://crates.io/crates/spikard-cli)
 [![Documentation](https://docs.rs/spikard-cli/badge.svg)](https://docs.rs/spikard-cli)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg)](https://hex.pm/packages/spikard)
 
 ## Installation
 

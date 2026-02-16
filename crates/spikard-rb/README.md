@@ -8,6 +8,7 @@ High-performance Ruby bindings for Spikard HTTP framework via Magnus.
 [![Downloads](https://img.shields.io/gem/dt/spikard.svg)](https://rubygems.org/gems/spikard)
 [![Crates.io](https://img.shields.io/crates/v/spikard-rb.svg)](https://crates.io/crates/spikard-rb)
 [![Documentation](https://docs.rs/spikard-rb/badge.svg)](https://docs.rs/spikard-rb)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg)](https://hex.pm/packages/spikard)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289da)](https://discord.gg/pXxagNK2zN)
 
