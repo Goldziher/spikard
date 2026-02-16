@@ -1478,7 +1478,25 @@ jobs:
         working-directory: packages/elixir
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
-        run: mix hex.publish --yes
+        run: |
+          set -euo pipefail
+          tmp_log="$(mktemp)"
+
+          # Keep publish idempotent if another concurrent publish wins the race.
+          if mix hex.publish --yes 2>&1 | tee "$tmp_log"; then
+            rm -f "$tmp_log"
+            exit 0
+          fi
+
+          if grep -Eiq "already exists|has already been published|already published" "$tmp_log"; then
+            echo "Hex.pm package appears to be already published; treating as success."
+            rm -f "$tmp_log"
+            exit 0
+          fi
+
+          echo "::error::Hex publish failed"
+          rm -f "$tmp_log"
+          exit 1
 
       - name: Dry run summary
         if: ${{ needs.prepare.outputs.dry_run == 'true' }}

@@ -59,8 +59,19 @@ defmodule Spikard.MixProject do
   defp package do
     [
       name: "spikard",
-      files: ~w(lib native .formatter.exs mix.exs README.md LICENSE),
+      files:
+        ~w(
+          lib
+          native/spikard_elixir/src
+          native/spikard_elixir/Cargo.toml
+          native/spikard_elixir/Cargo.lock
+          .formatter.exs
+          mix.exs
+          README.md
+          LICENSE
+        ),
       licenses: ["MIT"],
+      maintainers: ["Na'aman Hirschfeld"],
       links: %{
         "GitHub" => @source_url,
         "Changelog" => "#{@source_url}/blob/main/CHANGELOG.md"

@@ -7,7 +7,7 @@
 [![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
 [![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
 [![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Elixir bindings for Spikard: a Rust-centric web framework with type-safe code generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage Phoenix-style routing with zero-copy Rustler NIF performance.
 
@@ -263,4 +263,4 @@ end
 
 ## License
 
-MIT - See [LICENSE](../../LICENSE) for details
+MIT - See [LICENSE](LICENSE) for details
