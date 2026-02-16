@@ -280,6 +280,48 @@ jobs:
         id: check
         run: bash scripts/publish/check_hex.sh "${{ needs.prepare.outputs.version }}"
 
+  check-packagist:
+    name: Check if PHP package exists on Packagist
+    needs: prepare
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_php == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Check Packagist for existing version
+        id: check
+        run: bash scripts/publish/check_packagist.sh "${{ needs.prepare.outputs.version }}"
+
+  packagist-already-published:
+    name: Packagist already published summary
+    needs: [prepare, check-packagist]
+    if: >-
+      ${{
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_php == 'true' &&
+        needs.prepare.outputs.force_republish != 'true' &&
+        needs.check-packagist.outputs.exists == 'true'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Write summary
+        run: |
+          {
+            echo "## Packagist Publish"
+            echo ""
+            echo "Version \`${{ needs.prepare.outputs.version }}\` is already indexed on Packagist for \`spikard/spikard\`."
+            echo "Skipping Packagist notification."
+          } >> "$GITHUB_STEP_SUMMARY"
+
   python-wheels:
     name: Build Python wheels (${{ matrix.label }})
     needs: prepare
@@ -1367,8 +1409,15 @@ jobs:
 
   publish-packagist:
     name: Publish PHP extension to Packagist
-    needs: [prepare, build-php-extension]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_php == 'true' }}
+    needs: [prepare, build-php-extension, check-packagist]
+    if: >-
+      ${{
+        needs.prepare.result == 'success' &&
+        needs.prepare.outputs.tag &&
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_php == 'true' &&
+        (needs.prepare.outputs.force_republish == 'true' || needs.check-packagist.outputs.exists != 'true')
+      }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

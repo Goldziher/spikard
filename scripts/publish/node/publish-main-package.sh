@@ -13,6 +13,15 @@ cat >~/.npmrc <<'EOF'
 @spikard:registry=https://registry.npmjs.org/
 EOF
 
+package_name="$(node -p "require('./package.json').name")"
+package_version="$(node -p "require('./package.json').version")"
+
+if npm view "${package_name}@${package_version}" version >/dev/null 2>&1; then
+	echo "::notice::${package_name}@${package_version} already published; skipping."
+	echo "${package_name}@${package_version} already published; skipping." >>"${GITHUB_STEP_SUMMARY}"
+	exit 0
+fi
+
 publish_log=$(mktemp)
 set +e
 npm publish --access public 2>&1 | tee "${publish_log}"
