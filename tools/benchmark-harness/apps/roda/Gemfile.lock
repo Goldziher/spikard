@@ -7,7 +7,7 @@ GEM
       io-event (~> 1.11)
       metrics (~> 0.12)
       traces (~> 0.18)
-    async-container (0.30.0)
+    async-container (0.31.1)
       async (~> 2.22)
     async-container-supervisor (0.9.3)
       async-service
@@ -120,7 +120,7 @@ GEM
       protocol-http (~> 0.58)
       rack (>= 1.0)
     protocol-url (0.4.0)
-    rack (3.2.4)
+    rack (3.2.5)
     rackup (2.3.1)
       rack (>= 3)
     roda (3.101.0)

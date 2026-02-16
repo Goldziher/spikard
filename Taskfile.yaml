@@ -221,6 +221,7 @@ tasks:
     desc: "Update Ruby dependencies"
     dir: packages/ruby
     cmds:
+      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} config set --local frozen false"
       - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} update --all"
 
   ruby:build:
