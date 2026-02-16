@@ -1,23 +1,23 @@
 {
-	"name": "spikard-workspace",
-	"version": "0.10.2",
-	"private": true,
-	"description": "Spikard HTTP framework - Multi-language workspace",
-	"scripts": {
-		"build": "task build",
-		"test": "task test",
-		"lint": "task lint",
-		"format": "task format"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.4.0",
-		"oxlint": "^1.47.0",
-		"typescript": "^5.9.3",
-		"zod": "^4.3.6"
-	},
-	"engines": {
-		"node": ">=18",
-		"pnpm": ">=8"
-	},
-	"packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc"
+  "name": "spikard-workspace",
+  "version": "0.11.0",
+  "private": true,
+  "description": "Spikard HTTP framework - Multi-language workspace",
+  "scripts": {
+    "build": "task build",
+    "test": "task test",
+    "lint": "task lint",
+    "format": "task format"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.0",
+    "oxlint": "^1.47.0",
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  },
+  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc"
 }

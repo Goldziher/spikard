@@ -1,75 +1,82 @@
 {
-	"name": "spikard/spikard",
-	"description": "High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with ext-php-rs bindings, async handlers, dependency injection, and lifecycle hooks.",
-	"version": "0.10.2",
-	"type": "library",
-	"license": "MIT",
-	"keywords": [
-		"framework",
-		"http",
-		"rust",
-		"performance",
-		"websocket",
-		"sse",
-		"async",
-		"ffi",
-		"ext-php-rs",
-		"tower-http",
-		"axum",
-		"tokio",
-		"web-framework",
-		"rest-api",
-		"php8"
-	],
-	"homepage": "https://github.com/Goldziher/spikard",
-	"support": {
-		"issues": "https://github.com/Goldziher/spikard/issues",
-		"source": "https://github.com/Goldziher/spikard",
-		"docs": "https://github.com/Goldziher/spikard/tree/main/packages/php"
-	},
-	"authors": [
-		{
-			"name": "Na'aman Hirschfeld",
-			"email": "nhirschfeld@gmail.com",
-			"role": "creator"
-		}
-	],
-	"require": {
-		"php": "^8.2"
-	},
-	"require-dev": {
-		"friendsofphp/php-cs-fixer": "^3.0,<3.90",
-		"phpstan/extension-installer": "^1.4",
-		"phpstan/phpstan": "^1.12",
-		"phpunit/phpunit": "^11.3"
-	},
-	"autoload": {
-		"psr-4": {
-			"Spikard\\": "packages/php/src/"
-		}
-	},
-	"autoload-dev": {
-		"psr-4": {
-			"Spikard\\Tests\\": "packages/php/tests/"
-		}
-	},
-	"scripts": {
-		"phpstan": "PHPRC=$(pwd)/packages/php/phpstan.ini PHPSTAN_MEMORY_LIMIT=1G PHP_MEMORY_LIMIT=1G php -d detect_unicode=0 -d memory_limit=1G vendor/bin/phpstan --configuration=packages/php/phpstan.neon --memory-limit=1G --no-progress",
-		"csfixer": "php vendor/bin/php-cs-fixer fix --config packages/php/php-cs-fixer.php packages/php/src packages/php/tests",
-		"format": "@csfixer",
-		"format:check": "php vendor/bin/php-cs-fixer fix --config packages/php/php-cs-fixer.php --dry-run packages/php/src packages/php/tests",
-		"test": "php -d detect_unicode=0 vendor/bin/phpunit --configuration packages/php/phpunit.xml",
-		"lint": "@phpstan",
-		"lint:fix": ["@csfixer", "@phpstan"],
-		"post-install-cmd": ["@php packages/php/bin/install-extension.php"],
-		"post-update-cmd": ["@php packages/php/bin/install-extension.php"]
-	},
-	"config": {
-		"sort-packages": true,
-		"allow-plugins": {
-			"phpstan/extension-installer": true
-		}
-	},
-	"minimum-stability": "stable",
-	"prefer-stable": true
+  "name": "spikard/spikard",
+  "description": "High-performance PHP web framework with a Rust core. Build REST APIs, WebSockets, and SSE services with ext-php-rs bindings, async handlers, dependency injection, and lifecycle hooks.",
+  "version": "0.11.0",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "framework",
+    "http",
+    "rust",
+    "performance",
+    "websocket",
+    "sse",
+    "async",
+    "ffi",
+    "ext-php-rs",
+    "tower-http",
+    "axum",
+    "tokio",
+    "web-framework",
+    "rest-api",
+    "php8"
+  ],
+  "homepage": "https://github.com/Goldziher/spikard",
+  "support": {
+    "issues": "https://github.com/Goldziher/spikard/issues",
+    "source": "https://github.com/Goldziher/spikard",
+    "docs": "https://github.com/Goldziher/spikard/tree/main/packages/php"
+  },
+  "authors": [
+    {
+      "name": "Na'aman Hirschfeld",
+      "email": "nhirschfeld@gmail.com",
+      "role": "creator"
+    }
+  ],
+  "require": {
+    "php": "^8.2"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.0,<3.90",
+    "phpstan/extension-installer": "^1.4",
+    "phpstan/phpstan": "^1.12",
+    "phpunit/phpunit": "^11.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Spikard\\": "packages/php/src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Spikard\\Tests\\": "packages/php/tests/"
+    }
+  },
+  "scripts": {
+    "phpstan": "PHPRC=$(pwd)/packages/php/phpstan.ini PHPSTAN_MEMORY_LIMIT=1G PHP_MEMORY_LIMIT=1G php -d detect_unicode=0 -d memory_limit=1G vendor/bin/phpstan --configuration=packages/php/phpstan.neon --memory-limit=1G --no-progress",
+    "csfixer": "php vendor/bin/php-cs-fixer fix --config packages/php/php-cs-fixer.php packages/php/src packages/php/tests",
+    "format": "@csfixer",
+    "format:check": "php vendor/bin/php-cs-fixer fix --config packages/php/php-cs-fixer.php --dry-run packages/php/src packages/php/tests",
+    "test": "php -d detect_unicode=0 vendor/bin/phpunit --configuration packages/php/phpunit.xml",
+    "lint": "@phpstan",
+    "lint:fix": [
+      "@csfixer",
+      "@phpstan"
+    ],
+    "post-install-cmd": [
+      "@php packages/php/bin/install-extension.php"
+    ],
+    "post-update-cmd": [
+      "@php packages/php/bin/install-extension.php"
+    ]
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "phpstan/extension-installer": true
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-02-16
+
+### Added
+
+- **Elixir bindings (first release)**: Introduced official Elixir support via Rustler NIF bindings, including typed Elixir-facing APIs, tuple-based error semantics (`{:ok, value}` / `{:error, reason}`), and ExUnit coverage for binding behavior.
+
+### Changed
+
+- **Version synchronization for release**: Bumped the workspace to `0.11.0` and synchronized package manifests across supported ecosystems for the Elixir release.
+
 ## [0.10.2] - 2026-02-03
 
 ### Fixed
