@@ -15,7 +15,7 @@ use http_body_util::BodyExt;
 use once_cell::sync::Lazy;
 use rustler::{Encoder, Env, LocalPid, MapIterator, NifResult, ResourceArc, Term};
 use serde_json::Value as JsonValue;
-use spikard_http::testing::{MultipartFilePart, build_multipart_body};
+use spikard_http::testing::{MultipartFilePart, TestClient as CoreTestClient, build_multipart_body};
 use spikard_http::testing::{ResponseSnapshot, SnapshotError};
 use spikard_http::{Handler, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig};
 use std::collections::HashMap;
@@ -290,6 +290,85 @@ pub fn test_client_request<'a>(
             Ok((atoms::ok(), response_map).encode(env))
         }
         Err(e) => Ok(struct_error(env, atoms::error(), &format!("Request error: {}", e))),
+    }
+}
+
+/// Execute a GraphQL subscription over WebSocket and return the first event snapshot.
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn test_client_graphql_subscription<'a>(
+    env: Env<'a>,
+    client: ResourceArc<TestClientResource>,
+    query: String,
+    variables: Option<Term<'a>>,
+    operation_name: Option<String>,
+    path: Option<String>,
+) -> NifResult<Term<'a>> {
+    let inner = client.inner.lock().map_err(|_| rustler::Error::BadArg)?;
+    let inner = match inner.as_ref() {
+        Some(i) => i,
+        None => {
+            return Ok(struct_error(env, atoms::error(), "Test client has been closed"));
+        }
+    };
+
+    let variables_json = match variables {
+        Some(term) => Some(elixir_to_json(env, term)?),
+        None => None,
+    };
+
+    let endpoint = path.unwrap_or_else(|| "/graphql".to_string());
+    let core_client = match CoreTestClient::from_router(inner.router.clone()) {
+        Ok(client) => client,
+        Err(err) => {
+            return Ok(struct_error(
+                env,
+                atoms::error(),
+                &format!("Failed to initialize GraphQL subscription client: {}", err),
+            ));
+        }
+    };
+
+    let snapshot = TEST_RUNTIME.block_on(async move {
+        core_client
+            .graphql_subscription_at(
+                endpoint.as_str(),
+                query.as_str(),
+                variables_json,
+                operation_name.as_deref(),
+            )
+            .await
+    });
+
+    match snapshot {
+        Ok(snapshot) => {
+            let event_term = if let Some(event) = snapshot.event.as_ref() {
+                json_to_elixir(env, event)?
+            } else {
+                atoms::nil().encode(env)
+            };
+
+            let error_terms: Vec<Term<'a>> = snapshot
+                .errors
+                .iter()
+                .map(|error| json_to_elixir(env, error))
+                .collect::<NifResult<Vec<_>>>()?;
+
+            let pairs: Vec<(Term<'a>, Term<'a>)> = vec![
+                ("operation_id".encode(env), snapshot.operation_id.encode(env)),
+                ("acknowledged".encode(env), snapshot.acknowledged.encode(env)),
+                ("event".encode(env), event_term),
+                ("errors".encode(env), error_terms.encode(env)),
+                ("complete_received".encode(env), snapshot.complete_received.encode(env)),
+            ];
+
+            let snapshot_term = Term::map_from_pairs(env, &pairs).map_err(|_| rustler::Error::BadArg)?;
+            Ok((atoms::ok(), snapshot_term).encode(env))
+        }
+        Err(err) => Ok(struct_error(
+            env,
+            atoms::error(),
+            &format!("GraphQL subscription failed: {}", err),
+        )),
     }
 }
 

@@ -243,6 +243,48 @@ defmodule Spikard.TestClientTest do
     end
   end
 
+  describe "GraphQL helpers" do
+    test "graphql/3 posts GraphQL payload" do
+      handler = fn req ->
+        body = Spikard.Request.get_body(req)
+        %{status: 200, body: body}
+      end
+
+      {:ok, client} = TestClient.new(routes: [{:post, "/graphql", handler}])
+
+      {:ok, response} =
+        TestClient.graphql(client, "query Hello($id: ID!) { hello(id: $id) }",
+          variables: %{"id" => "42"},
+          operation_name: "Hello"
+        )
+
+      assert response.status_code == 200
+      json = Response.json(response)
+      assert json["query"] == "query Hello($id: ID!) { hello(id: $id) }"
+      assert json["variables"]["id"] == "42"
+      assert json["operationName"] == "Hello"
+    end
+
+    test "graphql_with_status/3 returns status and response" do
+      handler = fn _req -> %{status: 201, body: %{"ok" => true}} end
+      {:ok, client} = TestClient.new(routes: [{:post, "/graphql", handler}])
+
+      assert {:ok, {status, response}} = TestClient.graphql_with_status(client, "query { ok }")
+      assert status == 201
+      assert response.status_code == 201
+    end
+
+    test "graphql_subscription/3 returns error when endpoint is not a websocket route" do
+      handler = fn _req -> %{status: 200, body: %{"data" => %{"hello" => "world"}}} end
+      {:ok, client} = TestClient.new(routes: [{:post, "/graphql", handler}])
+
+      assert {:error, {_reason, message}} =
+               TestClient.graphql_subscription(client, "subscription { ticker }")
+
+      assert is_binary(message)
+    end
+  end
+
   describe "Response helpers" do
     test "Response.json/1 parses JSON body" do
       handler = fn _req -> %{status: 200, body: %{data: [1, 2, 3]}} end

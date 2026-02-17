@@ -169,6 +169,28 @@ defmodule Spikard.Native do
   end
 
   @doc """
+  Execute a GraphQL subscription over WebSocket and return the first event snapshot.
+
+  ## Arguments
+
+    - `client` - TestClient resource reference
+    - `query` - GraphQL subscription query
+    - `variables` - Optional variables map (or nil)
+    - `operation_name` - Optional operation name (or nil)
+    - `path` - Optional endpoint path (defaults to "/graphql")
+
+  ## Returns
+
+    - `{:ok, snapshot_map}` - Subscription exchange completed
+    - `{:error, reason}` - Subscription failed
+  """
+  @spec test_client_graphql_subscription(reference(), String.t(), map() | nil, String.t() | nil, String.t() | nil) ::
+          {:ok, map()} | {:error, term()}
+  def test_client_graphql_subscription(_client, _query, _variables, _operation_name, _path) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  @doc """
   Close the test client and release resources.
 
   ## Arguments

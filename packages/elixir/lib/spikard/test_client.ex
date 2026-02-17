@@ -22,6 +22,9 @@ defmodule Spikard.TestClient do
   - `delete/3` - DELETE requests
   - `options/3` - OPTIONS requests
   - `head/3` - HEAD requests
+  - `graphql/3` - GraphQL query/mutation requests
+  - `graphql_with_status/3` - GraphQL requests with explicit HTTP status tuple
+  - `graphql_subscription/3` - GraphQL subscription snapshots over WebSocket
 
   ## Request Options
 
@@ -481,6 +484,71 @@ defmodule Spikard.TestClient do
   end
 
   @doc """
+  Execute a GraphQL query or mutation.
+
+  The default endpoint is `/graphql`. Override with `:path`.
+
+  ## GraphQL Options
+
+    * `:variables` - Variables map
+    * `:operation_name` - Operation name for multi-operation documents
+    * `:path` - GraphQL endpoint path (default: `"/graphql"`)
+
+  Any remaining options are forwarded as request options (`:headers`, `:cookies`, etc.).
+  """
+  @spec graphql(client(), String.t(), request_opts()) :: {:ok, response()} | {:error, term()}
+  def graphql(client, query, opts \\ []) when is_binary(query) and is_list(opts) do
+    path = Keyword.get(opts, :path, "/graphql")
+    variables = Keyword.get(opts, :variables)
+    operation_name = Keyword.get(opts, :operation_name)
+
+    payload =
+      %{"query" => query}
+      |> maybe_put_graphql_payload("variables", variables)
+      |> maybe_put_graphql_payload("operationName", operation_name)
+
+    request_opts =
+      opts
+      |> Keyword.drop([:path, :variables, :operation_name])
+      |> Keyword.put(:json, payload)
+
+    post(client, path, request_opts)
+  end
+
+  @doc """
+  Execute a GraphQL query or mutation and return `{status_code, response}`.
+  """
+  @spec graphql_with_status(client(), String.t(), request_opts()) ::
+          {:ok, {integer(), response()}} | {:error, term()}
+  def graphql_with_status(client, query, opts \\ []) when is_binary(query) and is_list(opts) do
+    case graphql(client, query, opts) do
+      {:ok, response} -> {:ok, {response.status_code, response}}
+      error -> error
+    end
+  end
+
+  @doc """
+  Execute a GraphQL subscription and return a protocol snapshot.
+
+  This method delegates to the Rust test client's `graphql-transport-ws` flow and
+  returns the first subscription event payload (or protocol error details).
+
+  ## GraphQL Options
+
+    * `:variables` - Variables map
+    * `:operation_name` - Operation name for multi-operation documents
+    * `:path` - GraphQL endpoint path (default: `"/graphql"`)
+  """
+  @spec graphql_subscription(client(), String.t(), request_opts()) :: {:ok, map()} | {:error, term()}
+  def graphql_subscription(client, query, opts \\ []) when is_binary(query) and is_list(opts) do
+    variables = Keyword.get(opts, :variables)
+    operation_name = Keyword.get(opts, :operation_name)
+    path = Keyword.get(opts, :path, "/graphql")
+
+    Native.test_client_graphql_subscription(client, query, variables, operation_name, path)
+  end
+
+  @doc """
   Make a request to the test client.
 
   This is the underlying function that all HTTP method functions use.
@@ -585,6 +653,9 @@ defmodule Spikard.TestClient do
 
   defp convert_headers_to_map(headers) when is_map(headers), do: headers
   defp convert_headers_to_map(_), do: %{}
+
+  defp maybe_put_graphql_payload(payload, _key, nil), do: payload
+  defp maybe_put_graphql_payload(payload, key, value), do: Map.put(payload, key, value)
 end
 
 defmodule Spikard.TestClient.Response do
