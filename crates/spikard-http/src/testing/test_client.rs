@@ -370,7 +370,7 @@ impl TestClient {
                     if message
                         .get("id")
                         .and_then(Value::as_str)
-                        .map_or(true, |id| id == operation_id)
+                        .is_none_or(|id| id == operation_id)
                     {
                         event = message.get("payload").cloned();
 
@@ -391,7 +391,7 @@ impl TestClient {
                             && next_message
                                 .get("id")
                                 .and_then(Value::as_str)
-                                .map_or(true, |id| id == operation_id)
+                                .is_none_or(|id| id == operation_id)
                         {
                             complete_received = true;
                         }
@@ -406,7 +406,7 @@ impl TestClient {
                     if message
                         .get("id")
                         .and_then(Value::as_str)
-                        .map_or(true, |id| id == operation_id)
+                        .is_none_or(|id| id == operation_id)
                     {
                         complete_received = true;
                         break;

@@ -288,6 +288,25 @@ describe("GraphQL helpers", () => {
 		__setNativeClientFactory();
 	});
 
+	it("graphqlWithStatus returns HTTP status with GraphQL response payload", async () => {
+		const app = new Spikard();
+		const client = new TestClient(app);
+
+		const response = await client.graphqlWithStatus(
+			"query Hello($id: ID!) { hello(id: $id) }",
+			{ id: 42 },
+			"HelloQuery",
+		);
+
+		expect(response.status).toBe(200);
+		expect(response.statusCode).toBe(200);
+		expect(JSON.parse(response.bodyText)).toEqual({
+			query: "query Hello($id: ID!) { hello(id: $id) }",
+			variables: { id: 42 },
+			operationName: "HelloQuery",
+		});
+	});
+
 	it("graphqlSubscription returns first event payload", async () => {
 		const app = new Spikard();
 		let currentOperationId = "1";

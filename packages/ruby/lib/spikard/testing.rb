@@ -47,6 +47,7 @@ module Spikard
     end
 
     # High level wrapper around the native test client.
+    # rubocop:disable Metrics/ClassLength
     class TestClient
       def initialize(native)
         @native = native
@@ -91,7 +92,8 @@ module Spikard
         [response.status, response]
       end
 
-      # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+      # rubocop:disable Metrics/AbcSize, Metrics/BlockLength, Metrics/CyclomaticComplexity
+      # rubocop:disable Metrics/MethodLength, Metrics/PerceivedComplexity
       def graphql_subscription(query, variables = nil, operation_name = nil, path: '/graphql')
         operation_id = 'spikard-subscription-1'
         payload = { query: query }
@@ -119,11 +121,11 @@ module Spikard
           end
 
           if %w[connection_error error].include?(message_type)
-            raise RuntimeError, "GraphQL subscription rejected during init: #{message}"
+            raise "GraphQL subscription rejected during init: #{message}"
           end
         end
 
-        raise RuntimeError, 'No GraphQL connection_ack received' unless acknowledged
+        raise 'No GraphQL connection_ack received' unless acknowledged
 
         ws.send_json({
                        'id' => operation_id,
@@ -166,15 +168,15 @@ module Spikard
             break
           end
 
-          if message_type == 'ping'
-            pong = { 'type' => 'pong' }
-            pong['payload'] = websocket_field(message, :payload) if message.key?('payload') || message.key?(:payload)
-            ws.send_json(pong)
-          end
+          next unless message_type == 'ping'
+
+          pong = { 'type' => 'pong' }
+          pong['payload'] = websocket_field(message, :payload) if message.key?('payload') || message.key?(:payload)
+          ws.send_json(pong)
         end
 
         if event.nil? && errors.empty? && !complete_received
-          raise RuntimeError, 'No GraphQL subscription event received before timeout'
+          raise 'No GraphQL subscription event received before timeout'
         end
 
         {
@@ -187,7 +189,8 @@ module Spikard
       ensure
         ws&.close
       end
-      # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/MethodLength, Metrics/PerceivedComplexity
+      # rubocop:enable Metrics/AbcSize, Metrics/BlockLength, Metrics/CyclomaticComplexity
 
       def close
         @native.close
@@ -240,22 +243,23 @@ module Spikard
         case raw
         when String
           parsed = JSON.parse(raw)
-          raise RuntimeError, 'Expected GraphQL WebSocket JSON object message' unless parsed.is_a?(Hash)
+          raise 'Expected GraphQL WebSocket JSON object message' unless parsed.is_a?(Hash)
 
           parsed
         when Hash
           raw
         else
-          raise RuntimeError, "Expected GraphQL WebSocket message object, got #{raw.class}"
+          raise "Expected GraphQL WebSocket message object, got #{raw.class}"
         end
       rescue JSON::ParserError => e
-        raise RuntimeError, "Invalid GraphQL WebSocket message: #{e.message}"
+        raise "Invalid GraphQL WebSocket message: #{e.message}"
       end
 
       def websocket_field(message, key)
         message[key.to_s] || message[key.to_sym]
       end
     end
+    # rubocop:enable Metrics/ClassLength
 
     # WebSocket test connection wrapper
     class WebSocketTestConnection
