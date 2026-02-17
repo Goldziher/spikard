@@ -149,6 +149,52 @@ final class TestClientTest extends TestClientTestCase
         $this->assertSame(200, $response->statusCode);
     }
 
+    #[Test]
+    public function testGraphqlBuildsExpectedBodyInPhpFallback(): void
+    {
+        $capturedBody = null;
+        $handler = $this->createRequestTrackingHandler(
+            static function (Request $request) use (&$capturedBody): void {
+                $capturedBody = $request->body;
+            }
+        );
+        $app = $this->appWithRoute('POST', '/graphql', $handler);
+        $client = TestClient::create($app);
+
+        $response = $client->graphql('query Hello($id: ID!) { user(id: $id) { id } }', ['id' => 42], 'Hello');
+
+        $this->assertSame(200, $response->statusCode);
+        $this->assertIsArray($capturedBody);
+        $this->assertSame('query Hello($id: ID!) { user(id: $id) { id } }', $capturedBody['query']);
+        $this->assertSame(['id' => 42], $capturedBody['variables']);
+        $this->assertSame('Hello', $capturedBody['operationName']);
+    }
+
+    #[Test]
+    public function testGraphqlWithStatusReturnsStatusAndResponse(): void
+    {
+        $handler = $this->createBasicHandler();
+        $app = $this->appWithRoute('POST', '/graphql', $handler);
+        $client = TestClient::create($app);
+
+        $statusAndResponse = $client->graphqlWithStatus('query { ok }');
+
+        $this->assertCount(2, $statusAndResponse);
+        $this->assertSame(200, $statusAndResponse[0]);
+        $this->assertInstanceOf(Response::class, $statusAndResponse[1]);
+    }
+
+    #[Test]
+    public function testGraphqlSubscriptionRequiresNativeClient(): void
+    {
+        $app = new App();
+        $client = TestClient::create($app);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('GraphQL subscriptions require the native extension.');
+        $client->graphqlSubscription('subscription { ticker }');
+    }
+
     // ======================== Headers and Cookies Tests ========================
 
     #[Test]

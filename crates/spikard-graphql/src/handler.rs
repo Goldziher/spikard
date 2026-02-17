@@ -124,9 +124,9 @@ pub struct GraphQLHandler<Query, Mutation, Subscription> {
 
 impl<Query, Mutation, Subscription> GraphQLHandler<Query, Mutation, Subscription>
 where
-    Query: Send + Sync + 'static,
-    Mutation: Send + Sync + 'static,
-    Subscription: Send + Sync + 'static,
+    Query: async_graphql::ObjectType + Send + Sync + 'static,
+    Mutation: async_graphql::ObjectType + Send + Sync + 'static,
+    Subscription: async_graphql::SubscriptionType + Send + Sync + 'static,
 {
     /// Create a new GraphQL handler
     ///
@@ -155,7 +155,7 @@ where
     /// # Errors
     ///
     /// Returns `GraphQLError` if the request body cannot be parsed or execution fails.
-    pub fn handle_graphql(&self, request_data: &RequestData) -> Result<Value, GraphQLError> {
+    pub async fn handle_graphql(&self, request_data: &RequestData) -> Result<Value, GraphQLError> {
         // Extract raw body
         let body_bytes = request_data.raw_body.as_ref().map_or_else(
             || serde_json::to_vec(&request_data.body).unwrap_or_default(),
@@ -166,29 +166,23 @@ where
         let payload = parse_graphql_request(&body_bytes)?;
 
         // Execute the GraphQL query
-        self.executor.execute(
-            &payload.query,
-            payload.variables.as_ref(),
-            payload.operation_name.as_deref(),
-        )
+        self.executor
+            .execute(
+                &payload.query,
+                payload.variables.as_ref(),
+                payload.operation_name.as_deref(),
+            )
+            .await
     }
 
     /// Create an HTTP response from a GraphQL result
     fn response_from_result(result: Result<Value, GraphQLError>) -> Response<Body> {
         match result {
-            Ok(data) => {
-                let response_payload = GraphQLResponsePayload {
-                    data: Some(data),
-                    errors: None,
-                    extensions: None,
-                };
-
-                // Optimize serialization: avoid double JSON encoding (Value -> String -> Bytes)
-                let body = serde_json::to_vec(&response_payload).unwrap_or_else(|_| {
-                    serde_json::to_vec(&json!({"errors": [{"message": "Failed to serialize response"}]}))
-                        .unwrap_or_else(|_| b"Internal server error".to_vec())
+            Ok(graphql_response) => {
+                let body = serde_json::to_vec(&graphql_response).unwrap_or_else(|_| {
+                    serde_json::to_vec(&json!({"errors": [{"message": "Failed to serialize GraphQL response"}]}))
+                        .unwrap_or_else(|_| b"{\"errors\":[{\"message\":\"Internal server error\"}]}".to_vec())
                 });
-
                 Response::builder()
                     .status(StatusCode::OK)
                     .header("content-type", "application/json")
@@ -201,25 +195,15 @@ where
                     })
             }
             Err(e) => {
-                let error_response = GraphQLResponsePayload {
-                    data: None,
-                    errors: Some(vec![GraphQLErrorResponse {
-                        message: e.to_string(),
-                        locations: None,
-                        path: None,
-                        extensions: None,
-                    }]),
-                    extensions: None,
-                };
-
-                // Optimize serialization: avoid double JSON encoding (Value -> String -> Bytes)
+                let status = StatusCode::from_u16(e.status_code()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+                let error_response = e.to_graphql_response();
                 let body = serde_json::to_vec(&error_response).unwrap_or_else(|_| {
                     serde_json::to_vec(&json!({"errors": [{"message": "Internal server error"}]}))
-                        .unwrap_or_else(|_| b"Internal server error".to_vec())
+                        .unwrap_or_else(|_| b"{\"errors\":[{\"message\":\"Internal server error\"}]}".to_vec())
                 });
 
                 Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
+                    .status(status)
                     .header("content-type", "application/json")
                     .body(Body::from(body))
                     .unwrap_or_else(|_| {
@@ -243,9 +227,9 @@ impl<Query, Mutation, Subscription> Clone for GraphQLHandler<Query, Mutation, Su
 
 impl<Query, Mutation, Subscription> Handler for GraphQLHandler<Query, Mutation, Subscription>
 where
-    Query: Send + Sync + 'static,
-    Mutation: Send + Sync + 'static,
-    Subscription: Send + Sync + 'static,
+    Query: async_graphql::ObjectType + Send + Sync + 'static,
+    Mutation: async_graphql::ObjectType + Send + Sync + 'static,
+    Subscription: async_graphql::SubscriptionType + Send + Sync + 'static,
 {
     fn call(
         &self,
@@ -253,7 +237,7 @@ where
         request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            let result = self.handle_graphql(&request_data);
+            let result = self.handle_graphql(&request_data).await;
             Ok(Self::response_from_result(result))
         })
     }
@@ -274,6 +258,23 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
+
+    #[derive(Default)]
+    struct TestQuery;
+
+    #[Object]
+    impl TestQuery {
+        async fn hello(&self) -> &'static str {
+            "world"
+        }
+    }
+
+    fn make_test_handler() -> GraphQLHandler<TestQuery, EmptyMutation, EmptySubscription> {
+        let schema = Schema::build(TestQuery, EmptyMutation, EmptySubscription).finish();
+        let executor = Arc::new(GraphQLExecutor::new(schema));
+        GraphQLHandler::new(executor)
+    }
 
     #[test]
     fn test_graphql_request_payload_parsing_minimal() {
@@ -404,29 +405,25 @@ mod tests {
 
     #[test]
     fn test_handler_prefers_raw_json_body() {
-        let executor = Arc::new(GraphQLExecutor::<(), (), ()>::new(()));
-        let handler = GraphQLHandler::new(executor);
+        let handler = make_test_handler();
         assert!(handler.prefers_raw_json_body());
     }
 
     #[test]
     fn test_handler_does_not_want_headers() {
-        let executor = Arc::new(GraphQLExecutor::<(), (), ()>::new(()));
-        let handler = GraphQLHandler::new(executor);
+        let handler = make_test_handler();
         assert!(!handler.wants_headers());
     }
 
     #[test]
     fn test_handler_does_not_want_cookies() {
-        let executor = Arc::new(GraphQLExecutor::<(), (), ()>::new(()));
-        let handler = GraphQLHandler::new(executor);
+        let handler = make_test_handler();
         assert!(!handler.wants_cookies());
     }
 
     #[test]
     fn test_handler_clone() {
-        let executor = Arc::new(GraphQLExecutor::<(), (), ()>::new(()));
-        let handler1 = GraphQLHandler::new(executor);
+        let handler1 = make_test_handler();
         let handler2 = handler1.clone();
 
         // Verify Arc is shared

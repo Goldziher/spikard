@@ -117,14 +117,14 @@ impl GraphQLError {
     /// Convert error to HTTP status code
     ///
     /// Maps GraphQL error types to appropriate HTTP status codes:
-    /// - 400: Bad Request for parse/validation errors
+    /// - 400: Bad Request for parse/request-handling errors
     /// - 401: Unauthorized for authentication errors
     /// - 403: Forbidden for authorization errors
     /// - 404: Not Found for resource not found
     /// - 422: Unprocessable Entity for validation failures
     /// - 429: Too Many Requests for rate limit errors
-    /// - 500: Internal Server Error for execution/internal errors
-    /// - 200: OK for GraphQL errors (per GraphQL spec)
+    /// - 500: Internal Server Error for schema/serialization/internal errors
+    /// - 200: OK for GraphQL execution errors returned in GraphQL response body
     ///
     /// # Examples
     ///
@@ -140,7 +140,7 @@ impl GraphQLError {
     #[must_use]
     pub const fn status_code(&self) -> u16 {
         match self {
-            Self::ParseError(_) | Self::JsonError(_) => 400,
+            Self::ParseError(_) | Self::JsonError(_) | Self::RequestHandlingError(_) => 400,
             Self::ValidationError(_)
             | Self::InvalidInput { .. }
             | Self::ComplexityLimitExceeded
@@ -149,11 +149,8 @@ impl GraphQLError {
             Self::AuthorizationError(_) => 403,
             Self::NotFound(_) => 404,
             Self::RateLimitExceeded(_) => 429,
-            Self::ExecutionError(_)
-            | Self::SchemaBuildError(_)
-            | Self::RequestHandlingError(_)
-            | Self::SerializationError(_)
-            | Self::InternalError(_) => 200, // GraphQL errors return 200 with errors in body
+            Self::ExecutionError(_) => 200, // GraphQL execution errors return 200 with errors in body
+            Self::SchemaBuildError(_) | Self::SerializationError(_) | Self::InternalError(_) => 500,
         }
     }
 
@@ -237,7 +234,7 @@ impl GraphQLError {
     pub fn to_http_response(&self) -> Value {
         let status = self.status_code();
         let title = match self {
-            Self::ParseError(_) | Self::JsonError(_) => "Bad Request",
+            Self::ParseError(_) | Self::JsonError(_) | Self::RequestHandlingError(_) => "Bad Request",
             Self::ValidationError(_)
             | Self::InvalidInput { .. }
             | Self::ComplexityLimitExceeded
@@ -246,8 +243,8 @@ impl GraphQLError {
             Self::AuthorizationError(_) => "Forbidden",
             Self::NotFound(_) => "Not Found",
             Self::RateLimitExceeded(_) => "Too Many Requests",
-            Self::ExecutionError(_) | Self::InternalError(_) => "Internal Server Error",
-            Self::SchemaBuildError(_) | Self::RequestHandlingError(_) | Self::SerializationError(_) => "Server Error",
+            Self::ExecutionError(_) => "Execution Error",
+            Self::SchemaBuildError(_) | Self::SerializationError(_) | Self::InternalError(_) => "Internal Server Error",
         };
 
         json!({
@@ -441,7 +438,7 @@ mod tests {
     #[test]
     fn test_schema_build_error() {
         let error = GraphQLError::SchemaBuildError("Duplicate type definition".to_string());
-        assert_eq!(error.status_code(), 200);
+        assert_eq!(error.status_code(), 500);
         let response = error.to_graphql_response();
         assert_eq!(
             response["errors"][0]["extensions"]["code"],

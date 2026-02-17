@@ -17,19 +17,19 @@
 //!   -d '{"query":"{ hello }"}'
 //! ```
 
-use spikard_graphql::{
-    GraphQLExecutor, GraphQLHandler, GraphQLRouteConfig, QueryOnlyConfig, SchemaBuilder,
-};
+use async_graphql::{EmptyMutation, EmptySubscription, Object, Schema};
+use spikard_graphql::{GraphQLExecutor, GraphQLHandler};
 use spikard_http::{Handler, Route, Router, Server, ServerConfig};
 use std::sync::Arc;
 
 /// Simple GraphQL Query type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Query;
 
+#[Object]
 impl Query {
     /// Returns a greeting
-    pub fn hello(&self) -> String {
+    async fn hello(&self) -> String {
         "Hello from Spikard GraphQL!".to_string()
     }
 }
@@ -41,17 +41,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    // Create a simple GraphQL schema with only a query root
-    let schema_config = QueryOnlyConfig::builder()
-        .introspection_enabled(true)
-        .build();
-
-    let schema = SchemaBuilder::new()
-        .query_only(schema_config)
-        .build();
+    // Create a simple GraphQL schema with only a query root.
+    let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
+        .finish();
 
     // Create the GraphQL executor with the schema
-    let executor = Arc::new(GraphQLExecutor::<Query, (), ()>::new(schema));
+    let executor = Arc::new(GraphQLExecutor::<Query, EmptyMutation, EmptySubscription>::new(schema));
 
     // Create the GraphQL handler - it implements the Handler trait
     let graphql_handler = GraphQLHandler::new(executor);

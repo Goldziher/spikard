@@ -36,6 +36,48 @@ interface WebSocketTestConnection {
  * HTTP response from test client
  */
 export type TestResponse = NativeTestResponse;
+export interface GraphQLSubscriptionResult {
+	operationId: string;
+	acknowledged: boolean;
+	event: unknown | null;
+	errors: unknown[];
+	completeReceived: boolean;
+}
+
+const GRAPHQL_WS_TIMEOUT_MS = 2_000;
+const GRAPHQL_WS_MAX_CONTROL_MESSAGES = 32;
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, context: string): Promise<T> => {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	try {
+		return await Promise.race([
+			promise,
+			new Promise<T>((_resolve, reject) => {
+				timer = setTimeout(() => reject(new Error(`Timed out waiting for ${context}`)), timeoutMs);
+			}),
+		]);
+	} finally {
+		if (timer) {
+			clearTimeout(timer);
+		}
+	}
+};
+
+const decodeGraphqlWsMessage = (value: unknown): Record<string, unknown> => {
+	if (typeof value === "string") {
+		const parsed = JSON.parse(value) as unknown;
+		if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+			return parsed as Record<string, unknown>;
+		}
+		throw new Error("Expected GraphQL WebSocket JSON object message");
+	}
+
+	if (value && typeof value === "object" && !Array.isArray(value)) {
+		return value as Record<string, unknown>;
+	}
+
+	throw new Error("Expected GraphQL WebSocket message object");
+};
 
 interface MultipartFile {
 	name: string;
@@ -1030,6 +1072,128 @@ export class TestClient {
 			headers: JSON.stringify(response.headers()),
 			bodyText: response.text(),
 		};
+	}
+
+	/**
+	 * Send a GraphQL subscription over WebSocket and return the first event payload.
+	 */
+	async graphqlSubscription(
+		query: string,
+		variables?: Record<string, unknown> | null,
+		operationName?: string | null,
+		path = "/graphql",
+	): Promise<GraphQLSubscriptionResult> {
+		const operationId = "spikard-subscription-1";
+		const subscriptionPayload: Record<string, JsonValue> = { query };
+		if (variables !== null && variables !== undefined) {
+			subscriptionPayload.variables = variables as JsonValue;
+		}
+		if (operationName !== null && operationName !== undefined) {
+			subscriptionPayload.operationName = operationName;
+		}
+
+		const ws = await this.websocketConnect(path);
+		try {
+			await ws.sendJson({ type: "connection_init" });
+
+			let acknowledged = false;
+			for (let i = 0; i < GRAPHQL_WS_MAX_CONTROL_MESSAGES; i++) {
+				const message = decodeGraphqlWsMessage(
+					await withTimeout(ws.receiveJson(), GRAPHQL_WS_TIMEOUT_MS, "GraphQL connection_ack"),
+				);
+				const messageType = typeof message.type === "string" ? message.type : "";
+
+				if (messageType === "connection_ack") {
+					acknowledged = true;
+					break;
+				}
+				if (messageType === "ping") {
+					const pong: Record<string, unknown> = { type: "pong" };
+					if ("payload" in message) {
+						pong.payload = message.payload;
+					}
+					await ws.sendJson(pong);
+					continue;
+				}
+				if (messageType === "connection_error" || messageType === "error") {
+					throw new Error(`GraphQL subscription rejected during init: ${JSON.stringify(message)}`);
+				}
+			}
+
+			if (!acknowledged) {
+				throw new Error("No GraphQL connection_ack received");
+			}
+
+			await ws.sendJson({
+				id: operationId,
+				type: "subscribe",
+				payload: subscriptionPayload,
+			});
+
+			let event: unknown | null = null;
+			const errors: unknown[] = [];
+			let completeReceived = false;
+
+			for (let i = 0; i < GRAPHQL_WS_MAX_CONTROL_MESSAGES; i++) {
+				const message = decodeGraphqlWsMessage(
+					await withTimeout(ws.receiveJson(), GRAPHQL_WS_TIMEOUT_MS, "GraphQL subscription message"),
+				);
+				const messageType = typeof message.type === "string" ? message.type : "";
+				const messageId = typeof message.id === "string" ? message.id : undefined;
+				const idMatches = messageId === undefined || messageId === operationId;
+
+				if (messageType === "next" && idMatches) {
+					event = "payload" in message ? message.payload : null;
+					await ws.sendJson({ id: operationId, type: "complete" });
+
+					try {
+						const maybeComplete = decodeGraphqlWsMessage(
+							await withTimeout(ws.receiveJson(), GRAPHQL_WS_TIMEOUT_MS, "GraphQL complete message"),
+						);
+						const completeType = typeof maybeComplete.type === "string" ? maybeComplete.type : "";
+						const completeId = typeof maybeComplete.id === "string" ? maybeComplete.id : undefined;
+						if (completeType === "complete" && (completeId === undefined || completeId === operationId)) {
+							completeReceived = true;
+						}
+					} catch {
+						// It's valid for servers to end after client `complete` without sending a follow-up frame.
+					}
+					break;
+				}
+
+				if (messageType === "error") {
+					errors.push("payload" in message ? message.payload : message);
+					break;
+				}
+
+				if (messageType === "complete" && idMatches) {
+					completeReceived = true;
+					break;
+				}
+
+				if (messageType === "ping") {
+					const pong: Record<string, unknown> = { type: "pong" };
+					if ("payload" in message) {
+						pong.payload = message.payload;
+					}
+					await ws.sendJson(pong);
+				}
+			}
+
+			if (event === null && errors.length === 0 && !completeReceived) {
+				throw new Error("No GraphQL subscription event received before timeout");
+			}
+
+			return {
+				operationId,
+				acknowledged,
+				event,
+				errors,
+				completeReceived,
+			};
+		} finally {
+			await ws.close();
+		}
 	}
 
 	/**

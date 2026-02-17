@@ -19,6 +19,10 @@ class GraphQLTestClientTest extends TestCase
 
     protected function setUp(): void
     {
+        if (!\function_exists('spikard_version')) {
+            $this->markTestSkipped('Spikard PHP extension is not loaded.');
+        }
+
         // Create a minimal GraphQL route for testing
         $routes = [
             [
@@ -52,7 +56,9 @@ class GraphQLTestClientTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->client->close();
+        if (isset($this->client)) {
+            $this->client->close();
+        }
     }
 
     /**
@@ -324,6 +330,15 @@ class GraphQLTestClientTest extends TestCase
         $this->assertEquals(200, $statusAndResponse[0]);
 
         $client->close();
+    }
+
+    /**
+     * Test GraphQL subscription method is exposed and reports protocol errors.
+     */
+    public function testGraphQLSubscriptionWithoutWebSocketRouteFails(): void
+    {
+        $this->expectException(\Exception::class);
+        $this->client->graphqlSubscription('subscription { ticker }');
     }
 
     /**

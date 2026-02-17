@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import json
 import os
 import signal
 import socket
@@ -17,7 +18,7 @@ import sys
 import tempfile
 import threading
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -41,6 +42,9 @@ __all__ = [
     "LiveTestClient",
     "TestClient",
 ]
+
+_GRAPHQL_WS_TIMEOUT_SECONDS = 2.0
+_GRAPHQL_WS_MAX_CONTROL_MESSAGES = 32
 
 
 class TestResponse:
@@ -150,6 +154,144 @@ class WebSocketConnection:
     async def close(self) -> None:
         """Close the WebSocket connection."""
         await self._conn.close()
+
+
+def _decode_ws_json_message(raw: Any) -> dict[str, Any]:
+    if isinstance(raw, bytes):
+        raw = raw.decode("utf-8")
+    parsed = json.loads(raw) if isinstance(raw, str) else raw
+
+    if not isinstance(parsed, dict):
+        raise RuntimeError(f"Expected JSON object from WebSocket, got {type(parsed).__name__}")
+    return cast("dict[str, Any]", parsed)
+
+
+def _build_graphql_operation_payload(
+    query: str,
+    variables: dict[str, Any] | None,
+    operation_name: str | None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {"query": query}
+    if variables is not None:
+        payload["variables"] = variables
+    if operation_name is not None:
+        payload["operationName"] = operation_name
+    return payload
+
+
+async def _send_ws_json(send: Callable[[str], Awaitable[None]], message: dict[str, Any]) -> None:
+    await send(json.dumps(message))
+
+
+async def _recv_ws_json(recv: Callable[[], Awaitable[Any]], context: str) -> dict[str, Any]:
+    try:
+        raw = await asyncio.wait_for(recv(), timeout=_GRAPHQL_WS_TIMEOUT_SECONDS)
+    except asyncio.TimeoutError as exc:
+        raise RuntimeError(f"Timed out waiting for {context}") from exc
+    return _decode_ws_json_message(raw)
+
+
+def _graphql_message_id_matches(message: dict[str, Any], operation_id: str) -> bool:
+    message_id = message.get("id")
+    return message_id is None or message_id == operation_id
+
+
+async def _send_pong_if_ping(
+    send: Callable[[str], Awaitable[None]],
+    message: dict[str, Any],
+) -> bool:
+    if message.get("type") != "ping":
+        return False
+    pong: dict[str, Any] = {"type": "pong"}
+    if "payload" in message:
+        pong["payload"] = message["payload"]
+    await _send_ws_json(send, pong)
+    return True
+
+
+async def _await_graphql_connection_ack(
+    send: Callable[[str], Awaitable[None]],
+    recv: Callable[[], Awaitable[Any]],
+) -> None:
+    for _ in range(_GRAPHQL_WS_MAX_CONTROL_MESSAGES):
+        message = await _recv_ws_json(recv, "GraphQL connection_ack")
+        message_type = message.get("type")
+
+        if message_type == "connection_ack":
+            return
+        if await _send_pong_if_ping(send, message):
+            continue
+        if message_type in {"connection_error", "error"}:
+            raise RuntimeError(f"GraphQL subscription rejected during init: {message}")
+
+    raise RuntimeError("No GraphQL connection_ack received")
+
+
+async def _await_optional_graphql_complete(
+    recv: Callable[[], Awaitable[Any]],
+    operation_id: str,
+) -> bool:
+    try:
+        raw = await asyncio.wait_for(recv(), timeout=_GRAPHQL_WS_TIMEOUT_SECONDS)
+    except asyncio.TimeoutError:
+        return False
+    message = _decode_ws_json_message(raw)
+    return message.get("type") == "complete" and _graphql_message_id_matches(message, operation_id)
+
+
+async def _read_graphql_subscription_event(
+    send: Callable[[str], Awaitable[None]],
+    recv: Callable[[], Awaitable[Any]],
+    operation_id: str,
+) -> tuple[Any, list[Any], bool]:
+    for _ in range(_GRAPHQL_WS_MAX_CONTROL_MESSAGES):
+        message = await _recv_ws_json(recv, "GraphQL subscription message")
+        message_type = message.get("type")
+        id_matches = _graphql_message_id_matches(message, operation_id)
+
+        if message_type == "next" and id_matches:
+            event = message.get("payload")
+            await _send_ws_json(send, {"id": operation_id, "type": "complete"})
+            complete_received = await _await_optional_graphql_complete(recv, operation_id)
+            return event, [], complete_received
+
+        if message_type == "error":
+            return None, [message.get("payload", message)], False
+
+        if message_type == "complete" and id_matches:
+            return None, [], True
+
+        await _send_pong_if_ping(send, message)
+
+    raise RuntimeError("No GraphQL subscription event received before timeout")
+
+
+async def _graphql_subscription_exchange(
+    send: Callable[[str], Awaitable[None]],
+    recv: Callable[[], Awaitable[Any]],
+    payload: dict[str, Any],
+    operation_id: str,
+) -> dict[str, Any]:
+    await _send_ws_json(send, {"type": "connection_init"})
+    await _await_graphql_connection_ack(send, recv)
+
+    await _send_ws_json(
+        send,
+        {
+            "id": operation_id,
+            "type": "subscribe",
+            "payload": payload,
+        },
+    )
+
+    event, errors, complete_received = await _read_graphql_subscription_event(send, recv, operation_id)
+    return {
+        "operation_id": operation_id,
+        "acknowledged": True,
+        "event": event,
+        "errors": errors,
+        "complete_received": complete_received,
+    }
 
 
 class SseStream:
@@ -497,6 +639,20 @@ class TestClient:
         """
         response = await self.graphql(query, variables, operation_name, path, headers, cookies)
         return response.status_code, response
+
+    async def graphql_subscription(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+        operation_name: str | None = None,
+        path: str = "/graphql",
+    ) -> dict[str, Any]:
+        """Send a GraphQL subscription over WebSocket and return the first event."""
+        self._check_client()
+        payload = _build_graphql_operation_payload(query, variables, operation_name)
+        operation_id = "spikard-subscription-1"
+        async with self.websocket(path) as ws:
+            return await _graphql_subscription_exchange(ws.send, ws.recv, payload, operation_id)
 
 
 class PortAllocator:
@@ -955,3 +1111,16 @@ app.run(host="127.0.0.1", port={self._port})
         """
         response = await self.graphql(query, variables, operation_name, path, headers, cookies)
         return response.status_code, response
+
+    async def graphql_subscription(
+        self,
+        query: str,
+        variables: dict[str, Any] | None = None,
+        operation_name: str | None = None,
+        path: str = "/graphql",
+    ) -> dict[str, Any]:
+        """Send a GraphQL subscription over WebSocket and return the first event."""
+        payload = _build_graphql_operation_payload(query, variables, operation_name)
+        operation_id = "spikard-subscription-1"
+        async with self.websocket(path) as ws:
+            return await _graphql_subscription_exchange(ws.send, ws.recv, payload, operation_id)

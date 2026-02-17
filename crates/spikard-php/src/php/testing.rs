@@ -13,7 +13,9 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendCallable, ZendHashTable, Zval};
 use serde_json::Value as JsonValue;
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::testing::{ResponseSnapshot, SseStream as CoreSseStream, snapshot_http_response};
+use spikard_http::testing::{
+    ResponseSnapshot, SseStream as CoreSseStream, TestClient as CoreTestClient, snapshot_http_response,
+};
 use spikard_http::{Handler, Route, RouteMetadata, ServerConfig, WebSocketState};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -434,6 +436,50 @@ impl PhpNativeTestClient {
         let body_zval = response.body.clone().into_zval(false).map_err(super::map_ext_php_err)?;
 
         Ok(vec![status_zval, body_zval])
+    }
+
+    /// Send a GraphQL subscription over WebSocket and return the first event payload snapshot.
+    #[php(name = "graphqlSubscription")]
+    pub fn graphql_subscription(
+        &self,
+        query: String,
+        variables: Option<&Zval>,
+        operation_name: Option<String>,
+        path: Option<String>,
+    ) -> PhpResult<ZBox<ZendHashTable>> {
+        let variables_json = match variables {
+            Some(v) => Some(zval_to_json(v).map_err(PhpException::default)?),
+            None => None,
+        };
+
+        let inner_ref = self.inner.borrow();
+        let inner = inner_ref
+            .as_ref()
+            .ok_or_else(|| PhpException::default("TestClient is closed".to_string()))?;
+
+        let runtime = super::get_runtime()?;
+        let endpoint = path.unwrap_or_else(|| "/graphql".to_string());
+        let core_client = CoreTestClient::from_router(inner.router.as_ref().clone())
+            .map_err(|e| PhpException::default(format!("Failed to initialize GraphQL subscription client: {}", e)))?;
+
+        let snapshot = runtime
+            .block_on(core_client.graphql_subscription_at(
+                endpoint.as_str(),
+                query.as_str(),
+                variables_json,
+                operation_name.as_deref(),
+            ))
+            .map_err(|e| PhpException::default(format!("GraphQL subscription failed: {}", e)))?;
+
+        let payload = serde_json::json!({
+            "operationId": snapshot.operation_id,
+            "acknowledged": snapshot.acknowledged,
+            "event": snapshot.event,
+            "errors": snapshot.errors,
+            "completeReceived": snapshot.complete_received,
+        });
+
+        json_to_php_table(&payload)
     }
 
     /// Close the test client and release resources.

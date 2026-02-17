@@ -162,3 +162,51 @@ async def test_graphql_no_errors_field_returns_empty_list(graphql_app: Spikard) 
         errors = body.get("errors", [])
         assert isinstance(errors, list)
         assert len(errors) == 0
+
+
+@pytest.mark.asyncio
+async def test_graphql_subscription_returns_first_event() -> None:
+    """Test GraphQL subscription helper over WebSocket."""
+    app = Spikard()
+    state: dict[str, str] = {"operation_id": "1"}
+
+    @app.websocket("/graphql")
+    async def graphql_ws(message: dict[str, object]) -> dict[str, object] | None:
+        msg_type = message.get("type")
+        if msg_type == "connection_init":
+            return {"type": "connection_ack"}
+        if msg_type == "subscribe":
+            op_id = message.get("id", "1")
+            state["operation_id"] = str(op_id)
+            return {
+                "id": state["operation_id"],
+                "type": "next",
+                "payload": {"data": {"ticker": "AAPL"}},
+            }
+        if msg_type == "complete":
+            return {"id": state["operation_id"], "type": "complete"}
+        return None
+
+    async with TestClient(app) as client:
+        snapshot = await client.graphql_subscription("subscription { ticker }")
+
+        assert snapshot["acknowledged"] is True
+        assert snapshot["event"] == {"data": {"ticker": "AAPL"}}
+        assert snapshot["errors"] == []
+        assert snapshot["complete_received"] is True
+
+
+@pytest.mark.asyncio
+async def test_graphql_subscription_surfaces_connection_error() -> None:
+    """Test GraphQL subscription helper raises on init rejection."""
+    app = Spikard()
+
+    @app.websocket("/graphql")
+    async def graphql_ws(message: dict[str, object]) -> dict[str, object] | None:
+        if message.get("type") == "connection_init":
+            return {"type": "connection_error", "payload": {"message": "denied"}}
+        return None
+
+    async with TestClient(app) as client:
+        with pytest.raises(RuntimeError, match="connection_error"):
+            await client.graphql_subscription("subscription { privateFeed }")

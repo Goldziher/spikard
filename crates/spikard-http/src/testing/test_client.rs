@@ -13,9 +13,28 @@ use axum_test::TestServer;
 use bytes::Bytes;
 use serde_json::Value;
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::time::timeout;
 use urlencoding::encode;
 
 type MultipartPayload = Option<(Vec<(String, String)>, Vec<super::MultipartFilePart>)>;
+const GRAPHQL_WS_MESSAGE_TIMEOUT: Duration = Duration::from_secs(2);
+const GRAPHQL_WS_MAX_CONTROL_MESSAGES: usize = 32;
+
+/// Snapshot of a GraphQL subscription exchange over WebSocket.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GraphQLSubscriptionSnapshot {
+    /// Operation id used for the subscription request.
+    pub operation_id: String,
+    /// Whether the server acknowledged the GraphQL WebSocket connection.
+    pub acknowledged: bool,
+    /// First `next.payload` received for this subscription, if any.
+    pub event: Option<Value>,
+    /// GraphQL protocol errors emitted by the server.
+    pub errors: Vec<Value>,
+    /// Whether a `complete` frame was observed for this operation.
+    pub complete_received: bool,
+}
 
 /// Core test client for making HTTP requests to a Spikard application.
 ///
@@ -291,17 +310,148 @@ impl TestClient {
         Ok((status, snapshot))
     }
 
-    /// Send a GraphQL subscription (WebSocket)
+    /// Send a GraphQL subscription (WebSocket) to a custom endpoint.
+    ///
+    /// Uses the `graphql-transport-ws` protocol and captures the first `next` payload.
+    /// After the first payload is received, this client sends `complete` to unsubscribe.
+    pub async fn graphql_subscription_at(
+        &self,
+        endpoint: &str,
+        query: &str,
+        variables: Option<Value>,
+        operation_name: Option<&str>,
+    ) -> Result<GraphQLSubscriptionSnapshot, SnapshotError> {
+        let operation_id = "spikard-subscription-1".to_string();
+        let upgrade = self
+            .server
+            .get_websocket(endpoint)
+            .add_header("sec-websocket-protocol", "graphql-transport-ws")
+            .await;
+
+        if upgrade.status_code().as_u16() != 101 {
+            return Err(SnapshotError::Decompression(format!(
+                "GraphQL subscription upgrade failed with status {}",
+                upgrade.status_code()
+            )));
+        }
+
+        let mut websocket = super::WebSocketConnection::new(upgrade.into_websocket().await);
+
+        websocket
+            .send_json(&serde_json::json!({"type": "connection_init"}))
+            .await;
+        wait_for_graphql_ack(&mut websocket).await?;
+
+        websocket
+            .send_json(&serde_json::json!({
+                "id": operation_id,
+                "type": "subscribe",
+                "payload": build_graphql_body(query, variables, operation_name),
+            }))
+            .await;
+
+        let mut event = None;
+        let mut errors = Vec::new();
+        let mut complete_received = false;
+
+        for _ in 0..GRAPHQL_WS_MAX_CONTROL_MESSAGES {
+            let message = timeout(
+                GRAPHQL_WS_MESSAGE_TIMEOUT,
+                receive_graphql_protocol_message(&mut websocket),
+            )
+            .await
+            .map_err(|_| {
+                SnapshotError::Decompression("Timed out waiting for GraphQL subscription message".to_string())
+            })??;
+
+            let message_type = message.get("type").and_then(Value::as_str).unwrap_or_default();
+            match message_type {
+                "next" => {
+                    if message
+                        .get("id")
+                        .and_then(Value::as_str)
+                        .map_or(true, |id| id == operation_id)
+                    {
+                        event = message.get("payload").cloned();
+
+                        websocket
+                            .send_json(&serde_json::json!({
+                                "id": operation_id,
+                                "type": "complete",
+                            }))
+                            .await;
+
+                        if let Ok(next_message) = timeout(
+                            GRAPHQL_WS_MESSAGE_TIMEOUT,
+                            receive_graphql_protocol_message(&mut websocket),
+                        )
+                        .await
+                            && let Ok(next_message) = next_message
+                            && next_message.get("type").and_then(Value::as_str) == Some("complete")
+                            && next_message
+                                .get("id")
+                                .and_then(Value::as_str)
+                                .map_or(true, |id| id == operation_id)
+                        {
+                            complete_received = true;
+                        }
+                        break;
+                    }
+                }
+                "error" => {
+                    errors.push(message.get("payload").cloned().unwrap_or(message));
+                    break;
+                }
+                "complete" => {
+                    if message
+                        .get("id")
+                        .and_then(Value::as_str)
+                        .map_or(true, |id| id == operation_id)
+                    {
+                        complete_received = true;
+                        break;
+                    }
+                }
+                "ping" => {
+                    let mut pong = serde_json::json!({"type": "pong"});
+                    if let Some(payload) = message.get("payload") {
+                        pong["payload"] = payload.clone();
+                    }
+                    websocket.send_json(&pong).await;
+                }
+                "pong" => {}
+                _ => {}
+            }
+        }
+
+        websocket.close().await;
+
+        if event.is_none() && errors.is_empty() && !complete_received {
+            return Err(SnapshotError::Decompression(
+                "No GraphQL subscription event received before timeout".to_string(),
+            ));
+        }
+
+        Ok(GraphQLSubscriptionSnapshot {
+            operation_id,
+            acknowledged: true,
+            event,
+            errors,
+            complete_received,
+        })
+    }
+
+    /// Send a GraphQL subscription (WebSocket).
+    ///
+    /// Uses `/graphql` as the default subscription endpoint.
     pub async fn graphql_subscription(
         &self,
-        _query: &str,
-        _variables: Option<Value>,
-        _operation_name: Option<&str>,
-    ) -> Result<(), SnapshotError> {
-        // For now, return a placeholder - full WebSocket implementation comes later
-        Err(SnapshotError::Decompression(
-            "GraphQL subscriptions not yet implemented".to_string(),
-        ))
+        query: &str,
+        variables: Option<Value>,
+        operation_name: Option<&str>,
+    ) -> Result<GraphQLSubscriptionSnapshot, SnapshotError> {
+        self.graphql_subscription_at("/graphql", query, variables, operation_name)
+            .await
     }
 
     /// Add headers to a test request builder
@@ -318,6 +468,63 @@ impl TestClient {
             request = request.add_header(header_name, header_value);
         }
         Ok(request)
+    }
+}
+
+async fn wait_for_graphql_ack(websocket: &mut super::WebSocketConnection) -> Result<(), SnapshotError> {
+    for _ in 0..GRAPHQL_WS_MAX_CONTROL_MESSAGES {
+        let message = timeout(GRAPHQL_WS_MESSAGE_TIMEOUT, receive_graphql_protocol_message(websocket))
+            .await
+            .map_err(|_| SnapshotError::Decompression("Timed out waiting for GraphQL connection_ack".to_string()))??;
+
+        match message.get("type").and_then(Value::as_str).unwrap_or_default() {
+            "connection_ack" => return Ok(()),
+            "ping" => {
+                let mut pong = serde_json::json!({"type": "pong"});
+                if let Some(payload) = message.get("payload") {
+                    pong["payload"] = payload.clone();
+                }
+                websocket.send_json(&pong).await;
+            }
+            "connection_error" | "error" => {
+                return Err(SnapshotError::Decompression(format!(
+                    "GraphQL subscription rejected during init: {}",
+                    message
+                )));
+            }
+            _ => {}
+        }
+    }
+
+    Err(SnapshotError::Decompression(
+        "No GraphQL connection_ack received".to_string(),
+    ))
+}
+
+async fn receive_graphql_protocol_message(websocket: &mut super::WebSocketConnection) -> Result<Value, SnapshotError> {
+    loop {
+        match websocket.receive_message().await {
+            super::WebSocketMessage::Text(text) => {
+                return serde_json::from_str::<Value>(&text).map_err(|e| {
+                    SnapshotError::Decompression(format!("Failed to parse GraphQL WebSocket message as JSON: {}", e))
+                });
+            }
+            super::WebSocketMessage::Binary(bytes) => {
+                return serde_json::from_slice::<Value>(&bytes).map_err(|e| {
+                    SnapshotError::Decompression(format!(
+                        "Failed to parse GraphQL binary WebSocket message as JSON: {}",
+                        e
+                    ))
+                });
+            }
+            super::WebSocketMessage::Ping(_) | super::WebSocketMessage::Pong(_) => continue,
+            super::WebSocketMessage::Close(reason) => {
+                return Err(SnapshotError::Decompression(format!(
+                    "GraphQL WebSocket connection closed before response: {:?}",
+                    reason
+                )));
+            }
+        }
     }
 }
 
@@ -355,6 +562,11 @@ fn build_full_path(path: &str, query_params: Option<&[(String, String)]>) -> Str
 #[cfg(test)]
 mod tests {
     use super::*;
+    use axum::{
+        Router,
+        extract::ws::{Message, WebSocketUpgrade},
+        routing::get,
+    };
 
     #[test]
     fn build_full_path_no_params() {
@@ -460,5 +672,116 @@ mod tests {
         assert_eq!(body["query"], query);
         assert_eq!(body["variables"]["name"], "Alice");
         assert_eq!(body["operationName"], "CreateUser");
+    }
+
+    #[tokio::test]
+    async fn graphql_subscription_returns_first_event_and_completes() {
+        let app = Router::new().route(
+            "/graphql",
+            get(|ws: WebSocketUpgrade| async move {
+                ws.on_upgrade(|mut socket| async move {
+                    while let Some(result) = socket.recv().await {
+                        let Ok(Message::Text(text)) = result else {
+                            continue;
+                        };
+                        let Ok(message): Result<Value, _> = serde_json::from_str(&text) else {
+                            continue;
+                        };
+
+                        match message.get("type").and_then(Value::as_str) {
+                            Some("connection_init") => {
+                                let _ = socket
+                                    .send(Message::Text(
+                                        serde_json::json!({"type":"connection_ack"}).to_string().into(),
+                                    ))
+                                    .await;
+                            }
+                            Some("subscribe") => {
+                                let id = message.get("id").and_then(Value::as_str).unwrap_or("1");
+                                let _ = socket
+                                    .send(Message::Text(
+                                        serde_json::json!({
+                                            "id": id,
+                                            "type": "next",
+                                            "payload": {"data": {"ticker": "AAPL"}},
+                                        })
+                                        .to_string()
+                                        .into(),
+                                    ))
+                                    .await;
+
+                                if let Some(Ok(Message::Text(complete_text))) = socket.recv().await {
+                                    let Ok(complete_message): Result<Value, _> = serde_json::from_str(&complete_text)
+                                    else {
+                                        break;
+                                    };
+                                    if complete_message.get("type").and_then(Value::as_str) == Some("complete") {
+                                        let _ = socket
+                                            .send(Message::Text(
+                                                serde_json::json!({"id": id, "type":"complete"}).to_string().into(),
+                                            ))
+                                            .await;
+                                    }
+                                }
+                                break;
+                            }
+                            _ => {}
+                        }
+                    }
+                })
+            }),
+        );
+
+        let client = TestClient::from_router(app).expect("client");
+        let snapshot = client
+            .graphql_subscription("subscription { ticker }", None, None)
+            .await
+            .expect("subscription snapshot");
+
+        assert!(snapshot.acknowledged);
+        assert_eq!(snapshot.errors, Vec::<Value>::new());
+        assert_eq!(snapshot.event, Some(serde_json::json!({"data": {"ticker": "AAPL"}})));
+        assert!(snapshot.complete_received);
+    }
+
+    #[tokio::test]
+    async fn graphql_subscription_surfaces_connection_error() {
+        let app = Router::new().route(
+            "/graphql",
+            get(|ws: WebSocketUpgrade| async move {
+                ws.on_upgrade(|mut socket| async move {
+                    while let Some(result) = socket.recv().await {
+                        let Ok(Message::Text(text)) = result else {
+                            continue;
+                        };
+                        let Ok(message): Result<Value, _> = serde_json::from_str(&text) else {
+                            continue;
+                        };
+
+                        if message.get("type").and_then(Value::as_str) == Some("connection_init") {
+                            let _ = socket
+                                .send(Message::Text(
+                                    serde_json::json!({
+                                        "type": "connection_error",
+                                        "payload": {"message": "not authorized"},
+                                    })
+                                    .to_string()
+                                    .into(),
+                                ))
+                                .await;
+                            break;
+                        }
+                    }
+                })
+            }),
+        );
+
+        let client = TestClient::from_router(app).expect("client");
+        let error = client
+            .graphql_subscription("subscription { privateFeed }", None, None)
+            .await
+            .expect_err("expected connection error");
+
+        assert!(error.to_string().contains("connection_error"));
     }
 }

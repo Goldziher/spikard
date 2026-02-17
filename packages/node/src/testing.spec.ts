@@ -277,6 +277,68 @@ describe("WebSocket support", () => {
 	});
 });
 
+describe("GraphQL helpers", () => {
+	const mockFactory: NativeFactory = () => new MockNativeClient();
+
+	beforeEach(() => {
+		__setNativeClientFactory(mockFactory);
+	});
+
+	afterEach(() => {
+		__setNativeClientFactory();
+	});
+
+	it("graphqlSubscription returns first event payload", async () => {
+		const app = new Spikard();
+		let currentOperationId = "1";
+
+		app.websocket("/graphql", async (message) => {
+			const msg = message as Record<string, unknown>;
+			const type = msg.type;
+			if (type === "connection_init") {
+				return { type: "connection_ack" };
+			}
+			if (type === "subscribe") {
+				currentOperationId = String(msg.id ?? "1");
+				return {
+					id: currentOperationId,
+					type: "next",
+					payload: { data: { ticker: "AAPL" } },
+				};
+			}
+			if (type === "complete") {
+				return {
+					id: currentOperationId,
+					type: "complete",
+				};
+			}
+			return null;
+		});
+
+		const client = new TestClient(app);
+		const snapshot = await client.graphqlSubscription("subscription { ticker }");
+
+		expect(snapshot.acknowledged).toBe(true);
+		expect(snapshot.event).toEqual({ data: { ticker: "AAPL" } });
+		expect(snapshot.errors).toEqual([]);
+		expect(snapshot.completeReceived).toBe(true);
+	});
+
+	it("graphqlSubscription surfaces connection errors", async () => {
+		const app = new Spikard();
+		app.websocket("/graphql", async (message) => {
+			const msg = message as Record<string, unknown>;
+			if (msg.type === "connection_init") {
+				return { type: "connection_error", payload: { message: "denied" } };
+			}
+			return null;
+		});
+
+		const client = new TestClient(app);
+		await expect(client.graphqlSubscription("subscription { privateFeed }")).rejects.toThrow("connection_error");
+	});
+});
+
 describe("TestClient edge cases and internal behavior", () => {
 	it("should parse response with status field", async () => {
 		const app = {

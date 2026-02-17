@@ -324,8 +324,14 @@ module Spikard
       def head: (String, **jsonObject) -> Response
       def options: (String, **jsonObject) -> Response
       def trace: (String, **jsonObject) -> Response
-      def graphql: (String, ?Hash[String, untyped]?, ?String?, **jsonObject) -> Response
-      def graphql_with_status: (String, ?Hash[String, untyped]?, ?String?, **jsonObject) -> [Integer, Response]
+      def graphql: (String, ?Hash[String, untyped]?, ?String?, ?path: String) -> Response
+      def graphql_with_status: (String, ?Hash[String, untyped]?, ?String?, ?path: String) -> [Integer, Response]
+      def graphql_subscription: (
+        String,
+        ?Hash[String, untyped]?,
+        ?String?,
+        ?path: String
+      ) -> Hash[String, untyped]
     end
 
     class WebSocketTestConnection

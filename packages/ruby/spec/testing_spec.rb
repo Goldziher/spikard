@@ -158,6 +158,88 @@ RSpec.describe Spikard::Testing::TestClient do
     end
   end
 
+  describe '#graphql' do
+    it 'posts GraphQL payload to /graphql by default' do
+      native = instance_double('NativeTestClient')
+      allow(native).to receive(:request).and_return(
+        { status_code: 200, headers: {}, body: '{"data":{"hello":"world"}}' }
+      )
+      gql_client = described_class.new(native)
+
+      response = gql_client.graphql('query { hello }', { 'id' => 42 }, 'HelloQuery')
+
+      expect(response).to be_a(Spikard::Testing::Response)
+      expect(native).to have_received(:request).with(
+        'POST',
+        '/graphql',
+        hash_including(
+          json: hash_including(
+            query: 'query { hello }',
+            variables: { 'id' => 42 },
+            operationName: 'HelloQuery'
+          )
+        )
+      )
+    end
+  end
+
+  describe '#graphql_with_status' do
+    it 'returns HTTP status and response wrapper' do
+      native = instance_double('NativeTestClient')
+      allow(native).to receive(:request).and_return(
+        { status_code: 200, headers: {}, body: '{"data":{"hello":"world"}}' }
+      )
+      gql_client = described_class.new(native)
+
+      status, response = gql_client.graphql_with_status('query { hello }')
+
+      expect(status).to eq(200)
+      expect(response).to be_a(Spikard::Testing::Response)
+    end
+  end
+
+  describe '#graphql_subscription' do
+    it 'returns the first subscription event payload' do
+      native = instance_double('NativeTestClient')
+      native_ws = instance_double('NativeWebSocket')
+      allow(native).to receive(:websocket).with('/graphql').and_return(native_ws)
+      allow(native_ws).to receive(:send_json)
+      allow(native_ws).to receive(:close)
+      allow(native_ws).to receive(:receive_json).and_return(
+        { 'type' => 'connection_ack' },
+        { 'id' => 'spikard-subscription-1', 'type' => 'next', 'payload' => { 'data' => { 'ticker' => 'SPK' } } },
+        { 'id' => 'spikard-subscription-1', 'type' => 'complete' }
+      )
+
+      gql_client = described_class.new(native)
+      snapshot = gql_client.graphql_subscription('subscription { ticker }')
+
+      expect(snapshot['acknowledged']).to be(true)
+      expect(snapshot['event']).to eq({ 'data' => { 'ticker' => 'SPK' } })
+      expect(snapshot['errors']).to eq([])
+      expect(snapshot['complete_received']).to be(true)
+      expect(native_ws).to have_received(:close)
+    end
+
+    it 'raises when the server rejects GraphQL subscription init' do
+      native = instance_double('NativeTestClient')
+      native_ws = instance_double('NativeWebSocket')
+      allow(native).to receive(:websocket).with('/graphql').and_return(native_ws)
+      allow(native_ws).to receive(:send_json)
+      allow(native_ws).to receive(:close)
+      allow(native_ws).to receive(:receive_json).and_return(
+        { 'type' => 'connection_error', 'payload' => { 'message' => 'unauthorized' } }
+      )
+
+      gql_client = described_class.new(native)
+
+      expect do
+        gql_client.graphql_subscription('subscription { privateFeed }')
+      end.to raise_error(RuntimeError, /GraphQL subscription rejected during init/)
+      expect(native_ws).to have_received(:close)
+    end
+  end
+
   describe '#close' do
     it 'closes the client' do
       expect { client.close }.not_to raise_error

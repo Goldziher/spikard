@@ -66,6 +66,25 @@ class TestClient
     }
 
     /**
+     * Send a GraphQL subscription over WebSocket and return a snapshot.
+     *
+     * @param string $query GraphQL subscription query
+     * @param array<string, mixed> $variables Optional GraphQL variables
+     * @param string $operationName Optional operation name
+     * @param string $path Subscription endpoint path
+     *
+     * @return array<string, mixed>
+     */
+    public function graphqlSubscription(
+        string $query,
+        ?array $variables = null,
+        ?string $operationName = null,
+        string $path = '/graphql'
+    ): array
+    {
+    }
+
+    /**
      * Connect to a WebSocket endpoint for testing.
      *
      * @param string $path WebSocket endpoint path

@@ -1,208 +1,186 @@
-//! GraphQL executor for executing queries and mutations
+//! GraphQL executor for executing queries and mutations.
 //!
-//! This module provides the core GraphQL execution engine wrapper.
-//! It handles query/mutation execution, variable binding, and structured error responses.
+//! This module provides a thin wrapper around `async-graphql` execution that
+//! produces JSON payloads suitable for Spikard's HTTP handlers.
 
+use async_graphql::{ObjectType, Request, Response, Schema, SubscriptionType, Variables};
 use serde_json::Value;
 use std::sync::Arc;
 
 use crate::error::GraphQLError;
 
-/// Type alias for the schema phantom data tuple
-///
-/// This represents the three generic type parameters (Query, Mutation, Subscription)
-/// using `PhantomData` to maintain type information without storing actual values.
-type SchemaPhantomData<Query, Mutation, Subscription> = (
-    std::marker::PhantomData<Query>,
-    std::marker::PhantomData<Mutation>,
-    std::marker::PhantomData<Subscription>,
-);
-
-/// Generic GraphQL executor that wraps a schema
-///
-/// This is a generic wrapper around a GraphQL schema to handle
-/// query execution with variables and operation names. The executor follows
-/// the GraphQL specification for request/response handling.
-///
-/// When async-graphql feature is enabled, this wraps `async_graphql::Schema`.
-/// For demo purposes, this shows the public API interface.
+/// Generic GraphQL executor that wraps an `async-graphql` schema.
 ///
 /// # Type Parameters
 ///
 /// - `Query`: The root Query type
 /// - `Mutation`: The root Mutation type
 /// - `Subscription`: The root Subscription type
-#[derive(Debug)]
 pub struct GraphQLExecutor<Query, Mutation, Subscription> {
-    /// The underlying GraphQL schema, wrapped in Arc for thread safety
-    /// In a full implementation, this would be `Arc<async_graphql::Schema<Query, Mutation, Subscription>>`
-    schema: Arc<Option<SchemaPhantomData<Query, Mutation, Subscription>>>,
+    /// The underlying GraphQL schema, wrapped in Arc for thread safety.
+    schema: Arc<Schema<Query, Mutation, Subscription>>,
+}
+
+impl<Query, Mutation, Subscription> std::fmt::Debug for GraphQLExecutor<Query, Mutation, Subscription> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GraphQLExecutor")
+            .field("schema", &"<async_graphql::Schema>")
+            .finish()
+    }
 }
 
 impl<Query, Mutation, Subscription> GraphQLExecutor<Query, Mutation, Subscription>
 where
-    Query: Send + Sync + 'static,
-    Mutation: Send + Sync + 'static,
-    Subscription: Send + Sync + 'static,
+    Query: ObjectType + Send + Sync + 'static,
+    Mutation: ObjectType + Send + Sync + 'static,
+    Subscription: SubscriptionType + Send + Sync + 'static,
 {
-    /// Create a new GraphQL executor from a schema
-    ///
-    /// In a full implementation, this accepts an `async_graphql::Schema<Query, Mutation, Subscription>`.
-    /// This signature demonstrates the API contract for wrapping a GraphQL schema.
-    ///
-    /// # Arguments
-    ///
-    /// * `_schema_data` - The underlying schema data (type-erased for the example)
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// // With async-graphql:
-    /// let schema = Schema::build(query_root, mutation_root, subscription_root)
-    ///     .finish();
-    /// let executor = GraphQLExecutor::new(schema);
-    /// ```
+    /// Create a new GraphQL executor from an `async-graphql` schema.
     #[must_use]
-    pub fn new(_schema_data: ()) -> Self {
-        Self { schema: Arc::new(None) }
+    pub fn new(schema: Schema<Query, Mutation, Subscription>) -> Self {
+        Self {
+            schema: Arc::new(schema),
+        }
     }
 
-    /// Execute a GraphQL query or mutation
-    ///
-    /// Executes a GraphQL document against the schema, handling variables and
-    /// operation name selection. The response always includes `data` and `errors`
-    /// fields (when applicable) as per GraphQL specification.
-    ///
-    /// # Arguments
-    ///
-    /// * `query` - The GraphQL query/mutation document string
-    /// * `variables` - Optional JSON object containing query variables
-    /// * `operation_name` - Optional operation name when multiple operations are defined
-    ///
-    /// # Returns
-    ///
-    /// - `Ok(Value)` containing the full GraphQL response with `data` and optional `errors`
-    /// - `Err(GraphQLError)` for fatal errors (e.g., variable parsing failures)
+    /// Execute a GraphQL query or mutation and return GraphQL-spec JSON.
     ///
     /// # Errors
     ///
-    /// Returns `Err(GraphQLError::ExecutionError)` if the query string is empty.
-    /// Returns `Err(GraphQLError::ComplexityLimitExceeded)` if query complexity exceeds configured limit.
-    /// Returns `Err(GraphQLError::DepthLimitExceeded)` if query depth exceeds configured limit.
-    ///
-    /// # Complexity and Depth Limits
-    ///
-    /// When a schema is built with complexity and/or depth limits via the `SchemaBuilder`:
-    ///
-    /// ```ignore
-    /// let schema = SchemaBuilder::new(query, mutation, subscription)
-    ///     .complexity_limit(5000)
-    ///     .depth_limit(50)
-    ///     .finish();
-    /// ```
-    ///
-    /// The async-graphql schema enforces these limits internally during execution.
-    /// If a query violates either limit, it returns an error that this executor
-    /// detects and converts to the appropriate `GraphQLError` variant.
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// let query = r#"query GetUser($id: ID!) { user(id: $id) { name } }"#;
-    /// let variables = json!({"id": "123"});
-    /// let result = executor.execute(query, Some(&variables), None)?;
-    /// ```
-    pub fn execute(
+    /// Returns:
+    /// - `GraphQLError::ValidationError` for empty query strings
+    /// - `GraphQLError::ComplexityLimitExceeded` when limits are hit
+    /// - `GraphQLError::DepthLimitExceeded` when limits are hit
+    /// - `GraphQLError::SerializationError` when response JSON conversion fails
+    pub async fn execute(
         &self,
         query: &str,
         variables: Option<&Value>,
         operation_name: Option<&str>,
     ) -> Result<Value, GraphQLError> {
-        // Validate inputs
         if query.trim().is_empty() {
-            return Err(GraphQLError::ExecutionError("Query string is empty".to_string()));
+            return Err(GraphQLError::ValidationError(
+                "Query string cannot be empty".to_string(),
+            ));
         }
 
-        // In a full implementation with async-graphql:
-        // 1. Build the GraphQL request from the input parameters
-        // 2. Attach variables if provided
-        // 3. Set operation name if provided
-        // 4. Execute the request against the schema
-        //    - async-graphql enforces complexity/depth limits here if configured
-        //    - errors are returned in the response if limits are violated
-        // 5. Check response for complexity/depth limit violations before serialization
-        //    - Parse error messages for "complexity limit" or "depth limit" keywords
-        //    - Return ComplexityLimitExceeded or DepthLimitExceeded accordingly
-        // 6. Convert response to serde_json::Value
+        let mut request = Request::new(query);
+        if let Some(vars) = variables {
+            request = request.variables(Variables::from_json(vars.clone()));
+        }
+        if let Some(name) = operation_name {
+            request = request.operation_name(name);
+        }
 
-        // For now, return a placeholder response demonstrating the expected structure
-        Ok(serde_json::json!({
-            "data": null,
-            "query": query,
-            "variables": variables,
-            "operation_name": operation_name,
-        }))
+        let response = self.schema.execute(request).await;
+
+        if let Some(limit_error) = map_query_limit_error(&response) {
+            return Err(limit_error);
+        }
+
+        serde_json::to_value(response)
+            .map_err(|error| GraphQLError::SerializationError(format!("Failed to serialize GraphQL response: {error}")))
     }
 
-    /// Get a reference to the underlying schema
-    ///
-    /// # Returns
-    ///
-    /// Reference to the schema
+    /// Get a reference to the underlying schema.
     #[must_use]
-    pub const fn schema_ref(&self) -> &Arc<Option<SchemaPhantomData<Query, Mutation, Subscription>>> {
+    pub const fn schema_ref(&self) -> &Arc<Schema<Query, Mutation, Subscription>> {
         &self.schema
     }
 
-    /// Clone the Arc to the schema for sharing across async tasks
-    ///
-    /// This is useful when you need to spawn multiple concurrent executions
-    /// or pass the executor to different async tasks.
-    ///
-    /// # Returns
-    ///
-    /// A cloned Arc to the schema
+    /// Clone the Arc to the schema for sharing across async tasks.
     #[must_use]
-    pub fn clone_schema(&self) -> Arc<Option<SchemaPhantomData<Query, Mutation, Subscription>>> {
+    pub fn clone_schema(&self) -> Arc<Schema<Query, Mutation, Subscription>> {
         Arc::clone(&self.schema)
     }
+}
+
+fn map_query_limit_error(response: &Response) -> Option<GraphQLError> {
+    for error in &response.errors {
+        let message = error.message.to_ascii_lowercase();
+        if message.contains("complexity") {
+            return Some(GraphQLError::ComplexityLimitExceeded);
+        }
+        if message.contains("depth") {
+            return Some(GraphQLError::DepthLimitExceeded);
+        }
+
+        if let Some(extensions) = &error.extensions {
+            let extension_text = format!("{extensions:?}").to_ascii_lowercase();
+            if extension_text.contains("complexity") {
+                return Some(GraphQLError::ComplexityLimitExceeded);
+            }
+            if extension_text.contains("depth") {
+                return Some(GraphQLError::DepthLimitExceeded);
+            }
+        }
+    }
+
+    None
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use async_graphql::{EmptyMutation, EmptySubscription, Object};
 
-    #[test]
-    fn test_executor_creation_with_unit_type() {
-        // This test verifies the executor compiles and basic type constraints are met
-        let executor = GraphQLExecutor::<(), (), ()>::new(());
+    #[derive(Default)]
+    struct TestQuery;
 
-        // Verify we can get schema reference
+    #[Object]
+    impl TestQuery {
+        async fn hello(&self) -> &'static str {
+            "world"
+        }
+
+        async fn greet(&self, name: String) -> String {
+            format!("Hello, {name}")
+        }
+    }
+
+    fn make_executor() -> GraphQLExecutor<TestQuery, EmptyMutation, EmptySubscription> {
+        let schema = Schema::build(TestQuery, EmptyMutation, EmptySubscription).finish();
+        GraphQLExecutor::new(schema)
+    }
+
+    #[tokio::test]
+    async fn test_executor_creation() {
+        let executor = make_executor();
         let _ = executor.schema_ref();
-
-        // Verify we can clone the schema Arc
         let _ = executor.clone_schema();
     }
 
-    #[test]
-    fn test_execute_with_empty_query_fails() {
-        let executor = GraphQLExecutor::<(), (), ()>::new(());
-        let result = executor.execute("", None, None);
+    #[tokio::test]
+    async fn test_execute_with_empty_query_fails() {
+        let executor = make_executor();
+        let result = executor.execute("", None, None).await;
         assert!(result.is_err());
     }
 
-    #[test]
-    fn test_execute_with_variables() {
-        let executor = GraphQLExecutor::<(), (), ()>::new(());
-        let variables = serde_json::json!({"id": "123"});
-        let result = executor.execute("query { user }", Some(&variables), None);
-        assert!(result.is_ok());
+    #[tokio::test]
+    async fn test_execute_with_variables() {
+        let executor = make_executor();
+        let variables = serde_json::json!({ "name": "Alice" });
+        let result = executor
+            .execute("query($name: String!) { greet(name: $name) }", Some(&variables), None)
+            .await
+            .expect("query should execute");
+
+        assert_eq!(result["data"]["greet"], "Hello, Alice");
     }
 
-    #[test]
-    fn test_execute_with_operation_name() {
-        let executor = GraphQLExecutor::<(), (), ()>::new(());
-        let result = executor.execute("query GetUser { user }", None, Some("GetUser"));
-        assert!(result.is_ok());
+    #[tokio::test]
+    async fn test_execute_with_operation_name() {
+        let executor = make_executor();
+        let result = executor
+            .execute(
+                "query First { hello } query Second { greet(name: \"Bob\") }",
+                None,
+                Some("First"),
+            )
+            .await
+            .expect("query with operation name should execute");
+
+        assert_eq!(result["data"]["hello"], "world");
     }
 }

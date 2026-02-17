@@ -8,7 +8,7 @@ pub use multipart::{MultipartFilePart, build_multipart_body};
 pub mod form;
 
 pub mod test_client;
-pub use test_client::TestClient;
+pub use test_client::{GraphQLSubscriptionSnapshot, TestClient};
 
 use brotli::Decompressor;
 use flate2::read::GzDecoder;

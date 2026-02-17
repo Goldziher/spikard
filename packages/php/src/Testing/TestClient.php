@@ -128,6 +128,61 @@ final class TestClient
         return $this->nativeClient()->sse($path);
     }
 
+    /**
+     * Send a GraphQL query or mutation.
+     *
+     * @param array<string, mixed>|null $variables
+     */
+    public function graphql(string $query, ?array $variables = null, ?string $operationName = null): Response
+    {
+        if ($this->useNative()) {
+            return $this->nativeClient()->graphql($query, $variables, $operationName);
+        }
+
+        $payload = ['query' => $query];
+        if ($variables !== null) {
+            $payload['variables'] = $variables;
+        }
+        if ($operationName !== null) {
+            $payload['operationName'] = $operationName;
+        }
+
+        return $this->request('POST', '/graphql', ['body' => $payload]);
+    }
+
+    /**
+     * Send a GraphQL query and return status alongside the response.
+     *
+     * @param array<string, mixed>|null $variables
+     *
+     * @return array{0: int, 1: Response}
+     */
+    public function graphqlWithStatus(string $query, ?array $variables = null, ?string $operationName = null): array
+    {
+        $response = $this->graphql($query, $variables, $operationName);
+        return [$response->getStatusCode(), $response];
+    }
+
+    /**
+     * Send a GraphQL subscription over WebSocket and capture the first event payload.
+     *
+     * @param array<string, mixed>|null $variables
+     *
+     * @return array<string, mixed>
+     */
+    public function graphqlSubscription(
+        string $query,
+        ?array $variables = null,
+        ?string $operationName = null,
+        string $path = '/graphql'
+    ): array {
+        if (!$this->useNative()) {
+            throw new RuntimeException('GraphQL subscriptions require the native extension.');
+        }
+
+        return $this->nativeClient()->graphqlSubscription($query, $variables, $operationName, $path);
+    }
+
     public function get(string $path): Response
     {
         return $this->request('GET', $path);

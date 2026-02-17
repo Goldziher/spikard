@@ -88,6 +88,15 @@ namespace Spikard\Native {
          * @return array<int, string|int>
          */
         public function graphqlWithStatus(string $query, ?array $variables = null, ?string $operationName = null): array {}
+        /** @param array<string, mixed>|null $variables
+         * @return array<string, mixed>
+         */
+        public function graphqlSubscription(
+            string $query,
+            ?array $variables = null,
+            ?string $operationName = null,
+            string $path = '/graphql'
+        ): array {}
         public function websocket(string $path, ?string $sendText = null): \Spikard\Testing\WebSocketTestConnection {}
         public function sse(string $path): \Spikard\Testing\SseStream {}
         public function close(): void {}

@@ -70,6 +70,26 @@ final class TestClient
     }
 
     /**
+     * Send a GraphQL subscription over WebSocket and return the first event payload snapshot.
+     *
+     * @param string $query GraphQL subscription query
+     * @param array<string, mixed>|null $variables Optional GraphQL variables
+     * @param string|null $operationName Optional operation name
+     * @param string $path Subscription endpoint path (defaults to /graphql)
+     *
+     * @return array<string, mixed>
+     */
+    public function graphqlSubscription(
+        string $query,
+        ?array $variables = null,
+        ?string $operationName = null,
+        string $path = '/graphql'
+    ): array {
+        unset($query, $variables, $operationName, $path);
+        throw new RuntimeException('Spikard PHP extension is not loaded.');
+    }
+
+    /**
      * @return \Spikard\Testing\WebSocketTestConnection
      */
     public function websocket(string $path, ?string $sendText = null): object

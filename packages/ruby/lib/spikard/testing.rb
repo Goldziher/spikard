@@ -6,6 +6,8 @@ require 'timeout'
 module Spikard
   # Testing helpers that wrap the native Ruby extension.
   module Testing
+    GRAPHQL_WS_MAX_CONTROL_MESSAGES = 32
+
     module_function
 
     def create_test_client(app, config: nil)
@@ -77,6 +79,116 @@ module Spikard
         SseStream.new(native_sse)
       end
 
+      def graphql(query, variables = nil, operation_name = nil, path: '/graphql')
+        payload = { query: query }
+        payload[:variables] = variables unless variables.nil?
+        payload[:operationName] = operation_name unless operation_name.nil?
+        request('POST', path, nil, nil, json: payload)
+      end
+
+      def graphql_with_status(query, variables = nil, operation_name = nil, path: '/graphql')
+        response = graphql(query, variables, operation_name, path: path)
+        [response.status, response]
+      end
+
+      # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+      def graphql_subscription(query, variables = nil, operation_name = nil, path: '/graphql')
+        operation_id = 'spikard-subscription-1'
+        payload = { query: query }
+        payload[:variables] = variables unless variables.nil?
+        payload[:operationName] = operation_name unless operation_name.nil?
+
+        ws = websocket(path)
+        ws.send_json({ 'type' => 'connection_init' })
+
+        acknowledged = false
+        GRAPHQL_WS_MAX_CONTROL_MESSAGES.times do
+          message = websocket_protocol_message(ws.receive_json)
+          message_type = websocket_field(message, :type)
+
+          if message_type == 'connection_ack'
+            acknowledged = true
+            break
+          end
+
+          if message_type == 'ping'
+            pong = { 'type' => 'pong' }
+            pong['payload'] = websocket_field(message, :payload) if message.key?('payload') || message.key?(:payload)
+            ws.send_json(pong)
+            next
+          end
+
+          if %w[connection_error error].include?(message_type)
+            raise RuntimeError, "GraphQL subscription rejected during init: #{message}"
+          end
+        end
+
+        raise RuntimeError, 'No GraphQL connection_ack received' unless acknowledged
+
+        ws.send_json({
+                       'id' => operation_id,
+                       'type' => 'subscribe',
+                       'payload' => payload
+                     })
+
+        event = nil
+        errors = []
+        complete_received = false
+
+        GRAPHQL_WS_MAX_CONTROL_MESSAGES.times do
+          message = websocket_protocol_message(ws.receive_json)
+          message_type = websocket_field(message, :type)
+          message_id = websocket_field(message, :id)
+          id_matches = message_id.nil? || message_id == operation_id
+
+          if message_type == 'next' && id_matches
+            event = websocket_field(message, :payload)
+            ws.send_json({ 'id' => operation_id, 'type' => 'complete' })
+
+            begin
+              maybe_complete = websocket_protocol_message(ws.receive_json)
+              complete_type = websocket_field(maybe_complete, :type)
+              complete_id = websocket_field(maybe_complete, :id)
+              complete_received = complete_type == 'complete' && (complete_id.nil? || complete_id == operation_id)
+            rescue StandardError
+              # Some servers close immediately after client complete.
+            end
+            break
+          end
+
+          if message_type == 'error'
+            errors << (websocket_field(message, :payload) || message)
+            break
+          end
+
+          if message_type == 'complete' && id_matches
+            complete_received = true
+            break
+          end
+
+          if message_type == 'ping'
+            pong = { 'type' => 'pong' }
+            pong['payload'] = websocket_field(message, :payload) if message.key?('payload') || message.key?(:payload)
+            ws.send_json(pong)
+          end
+        end
+
+        if event.nil? && errors.empty? && !complete_received
+          raise RuntimeError, 'No GraphQL subscription event received before timeout'
+        end
+
+        {
+          'operation_id' => operation_id,
+          'acknowledged' => true,
+          'event' => event,
+          'errors' => errors,
+          'complete_received' => complete_received
+        }
+      ensure
+        ws&.close
+      end
+      # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
+
       def close
         @native.close
       end
@@ -122,6 +234,26 @@ module Spikard
         payload[:raw_body] = raw_body if raw_body
         payload[:files] = files if files
         payload
+      end
+
+      def websocket_protocol_message(raw)
+        case raw
+        when String
+          parsed = JSON.parse(raw)
+          raise RuntimeError, 'Expected GraphQL WebSocket JSON object message' unless parsed.is_a?(Hash)
+
+          parsed
+        when Hash
+          raw
+        else
+          raise RuntimeError, "Expected GraphQL WebSocket message object, got #{raw.class}"
+        end
+      rescue JSON::ParserError => e
+        raise RuntimeError, "Invalid GraphQL WebSocket message: #{e.message}"
+      end
+
+      def websocket_field(message, key)
+        message[key.to_s] || message[key.to_sym]
       end
     end
 

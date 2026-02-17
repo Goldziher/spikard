@@ -25,6 +25,7 @@ tracing.workspace = true
 axum = { version = "0.8" }
 futures = "0.3"
 bytes = "1.11"
+async-graphql = "7"
 
 [lints]
 workspace = true
