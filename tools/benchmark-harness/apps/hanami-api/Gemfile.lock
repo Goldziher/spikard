@@ -55,7 +55,7 @@ GEM
     rackup (2.3.1)
       rack (>= 3)
     ruby2_keywords (0.0.5)
-    zeitwerk (2.7.4)
+    zeitwerk (2.7.5)
 
 PLATFORMS
   arm64-darwin-24

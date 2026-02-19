@@ -8,10 +8,10 @@
 		"test:watch": "vitest"
 	},
 	"devDependencies": {
-		"@types/node": "^25.2.3",
+		"@spikard/node": "workspace:*",
+		"@types/node": "^25.3.0",
 		"@vitest/coverage-v8": "^4.0.18",
 		"typescript": "^5.9.3",
-		"vitest": "^4.0.18",
-		"@spikard/node": "workspace:*"
+		"vitest": "^4.0.18"
 	}
 }

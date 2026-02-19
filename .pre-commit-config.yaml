@@ -36,7 +36,7 @@ repos:
         exclude: (^|/)pyproject\.toml$
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.16.0
+    rev: v2.16.1
     hooks:
       - id: pyproject-fmt
 
@@ -69,14 +69,14 @@ repos:
         files: ^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|deny\.toml)$
 
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.4.0
+    rev: v2.4.2
     hooks:
       - id: biome-format
         exclude: ^docs/assets/benchmarks/aggregated\.json$
       - id: biome-lint
 
   - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.47.0
+    rev: v1.48.0
     hooks:
       - id: oxlint
         args: ["--fix"]
