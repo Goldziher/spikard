@@ -79,7 +79,7 @@ jobs:
           chmod +x artifacts/bin/benchmark-harness artifacts/bin/oha artifacts/bin/py-spy
 
       - name: Upload benchmark tools artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: bench-tools
           path: artifacts/bin/
@@ -126,7 +126,7 @@ jobs:
             --output results/spikard-rust-validation/profile.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: benchmark-results-spikard-rust-validation
@@ -189,7 +189,7 @@ jobs:
           SPIKARD_METRICS_DEBUG: "1"
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: benchmark-results-spikard-python-validation
@@ -246,7 +246,7 @@ jobs:
           SPIKARD_NODE_METRICS_FILE: ${{ github.workspace }}/results/spikard-node-validation/node-metrics.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: benchmark-results-spikard-node-validation
@@ -305,7 +305,7 @@ jobs:
           SPIKARD_RUBY_METRICS_FILE: ${{ github.workspace }}/results/spikard-ruby-validation/ruby-metrics.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: benchmark-results-spikard-ruby-validation
@@ -393,7 +393,7 @@ jobs:
           SPIKARD_PHP_PROFILE_OUTPUT: ${{ github.workspace }}/results/spikard-php-validation/php.speedscope.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: benchmark-results-spikard-php-validation

@@ -78,7 +78,7 @@ jobs:
         run: pnpm exec napi build --platform --release -o ../../packages/node
 
       - name: Upload Node bindings
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: napi-bindings
           path: packages/node/*.node
@@ -259,7 +259,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: node-coverage-report
           path: packages/node/coverage/
