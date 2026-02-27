@@ -72,7 +72,7 @@ jobs:
         run: bash scripts/ci/python/build-wheels.sh "3.13"
 
       - name: Upload wheels artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wheels
           path: target/wheels/*.whl
@@ -148,7 +148,7 @@ jobs:
         run: bash scripts/ci/python/build-sdist.sh
 
       - name: Upload sdist artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: python-sdist
           path: target/wheels/*.tar.gz
@@ -192,7 +192,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: python-coverage-report
           path: packages/python/htmlcov/

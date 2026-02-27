@@ -104,7 +104,7 @@ jobs:
         run: cargo build --release -p spikard-php --features extension-module
 
       - name: Upload PHP extension artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: php-extension
           path: |
@@ -368,7 +368,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: php-coverage-report
           path: packages/php/htmlcov/

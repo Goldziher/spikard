@@ -76,7 +76,7 @@ jobs:
         run: mix compile --warnings-as-errors
 
       - name: Upload Elixir NIF artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: elixir-nif
           path: |
@@ -179,7 +179,7 @@ jobs:
 
       - name: Archive coverage report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: elixir-coverage-report
           path: packages/elixir/coverage/
