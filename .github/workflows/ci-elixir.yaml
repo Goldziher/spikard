@@ -118,7 +118,7 @@ jobs:
         run: mix deps.get
 
       - name: Download Elixir NIF artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: elixir-nif
           path: packages/elixir/

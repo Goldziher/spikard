@@ -121,7 +121,7 @@ jobs:
           cache-prefix: grpc-server
 
       - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ruby-gem
           path: packages/ruby/
