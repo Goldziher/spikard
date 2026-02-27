@@ -159,7 +159,7 @@ jobs:
             ubuntu-composer-8.4-
 
       - name: Download PHP extension artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: php-extension
           path: target/release

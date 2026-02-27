@@ -101,7 +101,7 @@ jobs:
           cache-prefix: test-python
 
       - name: Download wheels artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: wheels
           path: dist/

@@ -1110,14 +1110,14 @@ jobs:
       id-token: write
     steps:
       - name: Download wheel artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: python-wheels-*
           path: dist
           merge-multiple: true
 
       - name: Download sdist artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: python-sdist
           path: dist
@@ -1164,7 +1164,7 @@ jobs:
           ref: ${{ needs.prepare.outputs.ref }}
 
       - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: rubygems-*
           path: dist
@@ -1217,14 +1217,14 @@ jobs:
           package_json_file: package.json
 
       - name: Download Node artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: node-bindings-*
           path: node-artifacts
           merge-multiple: true
 
       - name: Download TypeScript definitions
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: node-typescript-defs
           path: typescript-defs
@@ -1303,7 +1303,7 @@ jobs:
         run: bash scripts/publish/cli/ensure-release.sh "${{ needs.prepare.outputs.tag }}"
 
       - name: Download CLI artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: cli-*
           path: dist/cli
@@ -1339,7 +1339,7 @@ jobs:
         run: bash scripts/publish/cli/ensure-release.sh "${{ needs.prepare.outputs.tag }}"
 
       - name: Download bottle artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: homebrew-bottle-*
           path: dist/homebrew
@@ -1378,7 +1378,7 @@ jobs:
         run: bash scripts/publish/homebrew/extract-release-info.sh "$TAG" "$VERSION"
 
       - name: Download bottle artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: homebrew-bottle-*
           path: dist/homebrew
