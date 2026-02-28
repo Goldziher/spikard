@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Binding route metadata preservation**: Python, Ruby, and Elixir server startup paths now build routers with explicit route metadata so OpenAPI generation and other metadata-driven runtime features keep request/response/parameter schemas instead of silently dropping them.
+- **GraphQL server API docs**: Updated GraphQL documentation to match the breaking removal of `Server::new(...)/run()` and point to `Server::with_handlers_and_metadata(...)/run_with_config(...)`.
+- **JSON-RPC OpenRPC docs**: Removed stale claims that `/openrpc.json` is currently served automatically; the runtime still exposes only the implemented JSON-RPC HTTP endpoint.
+
 ## [0.12.0] - 2026-02-28
 
 ### Added

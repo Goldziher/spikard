@@ -552,7 +552,7 @@ pub fn start_server<'a>(
     // Create routes with Elixir handlers
     let mut routes_with_handlers: Vec<(Route, Arc<dyn Handler>)> = Vec::new();
 
-    for route_meta in metadata {
+    for route_meta in &metadata {
         let route = match Route::from_metadata(route_meta.clone(), &schema_registry) {
             Ok(r) => r,
             Err(e) => {
@@ -583,7 +583,7 @@ pub fn start_server<'a>(
     info!("Registered {} routes", routes_with_handlers.len());
 
     // Build the router
-    let app_router = match Server::with_handlers(config.clone(), routes_with_handlers) {
+    let app_router = match Server::with_handlers_and_metadata(config.clone(), routes_with_handlers, metadata) {
         Ok(router) => router,
         Err(e) => {
             let error_msg = format!("Failed to build router: {}", e);

@@ -104,12 +104,13 @@ let route = Route::new(
 );
 
 // Start server
-let mut router = Router::new();
-router.register_route(route);
-
 let config = ServerConfig::builder().port(8000).build();
-let server = Server::new(config, router);
-server.run().await?;
+let app = Server::with_handlers_and_metadata(
+    config.clone(),
+    vec![(route, handler as Arc<dyn Handler>)],
+    vec![route_metadata],
+)?;
+Server::run_with_config(app, config).await?;
 ```
 
 ## Error Handling

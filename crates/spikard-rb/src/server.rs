@@ -104,7 +104,7 @@ pub fn run_server(
 
     let mut routes_with_handlers: Vec<(Route, Arc<dyn Handler>)> = Vec::new();
 
-    for route_meta in metadata {
+    for route_meta in &metadata {
         let route = Route::from_metadata(route_meta.clone(), &schema_registry)
             .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to create route: {}", e)))?;
 
@@ -204,7 +204,7 @@ pub fn run_server(
     info!("Starting Spikard server on {}:{}", host, port);
     info!("Registered {} routes", routes_with_handlers.len());
 
-    let mut app_router = Server::with_handlers(config.clone(), routes_with_handlers)
+    let mut app_router = Server::with_handlers_and_metadata(config.clone(), routes_with_handlers, metadata)
         .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {}", e)))?;
 
     let mut ws_endpoints = Vec::new();

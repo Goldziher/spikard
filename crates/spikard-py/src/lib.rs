@@ -799,6 +799,11 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 
     let schema_registry = spikard_http::SchemaRegistry::new();
 
+    let route_metadata: Vec<RouteMetadata> = routes_with_handlers
+        .iter()
+        .map(|route| route.metadata.clone())
+        .collect();
+
     let routes: Vec<(Route, Arc<dyn spikard_http::Handler>)> = routes_with_handlers
         .into_iter()
         .map(|rwh| {
@@ -836,7 +841,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     eprintln!("[spikard] Registered {} routes", routes.len());
     eprintln!("[spikard] Listening on http://{}:{}", config.host, config.port);
 
-    let mut app_router = Server::with_handlers(config.clone(), routes)
+    let mut app_router = Server::with_handlers_and_metadata(config.clone(), routes, route_metadata)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {e}")))?;
 
     let websocket_handlers = app.call_method0("get_websocket_handlers")?;

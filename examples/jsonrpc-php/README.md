@@ -176,7 +176,7 @@ Invalid requests will receive a JSON-RPC 2.0 error response:
 
 ## Documentation
 
-Generated OpenRPC documentation can be accessed at `/openrpc.json` when OpenAPI is enabled.
+OpenRPC document serving is not exposed automatically yet. The current runtime only serves the configured JSON-RPC HTTP endpoint.
 
 ## See Also
 

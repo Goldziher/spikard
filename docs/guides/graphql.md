@@ -174,8 +174,12 @@ Register your GraphQL endpoint with the Spikard router. The handler implements t
         .port(8000)
         .build();
 
-    let server = Server::new(config, router);
-    server.run().await?;
+    let app = Server::with_handlers_and_metadata(
+        config.clone(),
+        vec![(route, handler as Arc<dyn Handler>)],
+        vec![route_metadata],
+    )?;
+    Server::run_with_config(app, config).await?;
     ```
 
 === "Python"
