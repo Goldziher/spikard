@@ -4,7 +4,7 @@
  * Demonstrates basic routing with GET and POST handlers
  */
 
-import { Spikard, get, post, type HandlerFunction } from "@spikard/node";
+import { get, type HandlerFunction, post, Spikard } from "@spikard/node";
 
 const app = new Spikard();
 

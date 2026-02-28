@@ -1127,6 +1127,15 @@ tasks:
     cmds:
       - php -l tools/benchmark-harness/apps/spikard-php/server.php
 
+  bench:build:elixir:
+    desc: "Build Elixir benchmark apps (spikard-elixir, plug-bandit, phoenix)"
+    deps:
+      - elixir:build
+    cmds:
+      - cd tools/benchmark-harness/apps/spikard-elixir && mix deps.get && SPIKARD_BUILD=1 mix compile
+      - cd tools/benchmark-harness/apps/plug-bandit && mix deps.get && mix compile
+      - cd tools/benchmark-harness/apps/phoenix && mix deps.get && mix compile
+
   bench:build:all:
     desc: "Build all benchmark servers"
     cmds:
@@ -1134,6 +1143,7 @@ tasks:
       - task: bench:build:rust
       - task: bench:build:rust:gen
       - task: bench:build:php
+      - task: bench:build:elixir
 
   bench:run:python:
     desc: "Run benchmark against Spikard-Python server"
@@ -1180,6 +1190,30 @@ tasks:
     cmds:
       - echo "PHP benchmark app uses packages/php - no separate install needed"
 
+  bench:run:spikard-elixir:
+    desc: "Run benchmark against Spikard-Elixir server"
+    deps:
+      - bench:harness:build
+      - bench:build:elixir
+    cmds:
+      - ./target/release/benchmark-harness run --framework spikard-elixir --app-dir tools/benchmark-harness/apps/spikard-elixir --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-elixir.json
+
+  bench:run:plug-bandit:
+    desc: "Run benchmark against Plug+Bandit server"
+    deps:
+      - bench:harness:build
+      - bench:build:elixir
+    cmds:
+      - ./target/release/benchmark-harness run --framework plug-bandit --app-dir tools/benchmark-harness/apps/plug-bandit --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/plug-bandit.json
+
+  bench:run:phoenix:
+    desc: "Run benchmark against Phoenix server"
+    deps:
+      - bench:harness:build
+      - bench:build:elixir
+    cmds:
+      - ./target/release/benchmark-harness run --framework phoenix --app-dir tools/benchmark-harness/apps/phoenix --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/phoenix.json
+
   bench:run:all:
     desc: "Run benchmarks for all frameworks"
     cmds:
@@ -1188,6 +1222,9 @@ tasks:
       - task: bench:run:ruby
       - task: bench:run:node
       - task: bench:run:php
+      - task: bench:run:spikard-elixir
+      - task: bench:run:plug-bandit
+      - task: bench:run:phoenix
 
   bench:run:python:json:
     desc: "Run JSON body benchmark against Spikard-Python"
@@ -1321,6 +1358,7 @@ tasks:
       - task: bench:update:ruby
       - task: bench:update:php
       - task: bench:update:rust
+      - task: bench:update:elixir
 
   bench:update:python:
     desc: "Update Python benchmark apps to latest dependencies"
@@ -1346,6 +1384,11 @@ tasks:
     desc: "Update Rust benchmark apps to latest dependencies"
     cmds:
       - scripts/bench/update-rust.sh
+
+  bench:update:elixir:
+    desc: "Update Elixir benchmark apps to latest dependencies"
+    cmds:
+      - scripts/bench/update-elixir.sh
 
   codegen:python:
     desc: "Generate Python server code from OpenAPI schema"

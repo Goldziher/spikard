@@ -191,6 +191,28 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "bundle exec ruby server.rb {port}",
             None,
         ),
+        // --- Elixir frameworks ---
+        FrameworkConfig::new(
+            "spikard-elixir",
+            vec!["mix.exs".to_string(), "run.exs".to_string()],
+            Some("mix deps.get && SPIKARD_BUILD=1 mix compile".to_string()),
+            "mix run --no-halt run.exs {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "plug-bandit",
+            vec!["mix.exs".to_string(), "run.exs".to_string()],
+            Some("mix deps.get && mix compile".to_string()),
+            "mix run --no-halt run.exs {port}",
+            None,
+        ),
+        FrameworkConfig::new(
+            "phoenix",
+            vec!["mix.exs".to_string(), "run.exs".to_string()],
+            Some("mix deps.get && mix compile".to_string()),
+            "mix run --no-halt run.exs {port}",
+            None,
+        ),
     ];
 
     // Third-party PHP frameworks -- always registered so detection and
@@ -375,7 +397,11 @@ mod tests {
         assert!(names.contains(&"trongate"));
         assert!(names.contains(&"phalcon"));
 
-        assert_eq!(registry.len(), 18);
+        assert!(names.contains(&"spikard-elixir"));
+        assert!(names.contains(&"plug-bandit"));
+        assert!(names.contains(&"phoenix"));
+
+        assert_eq!(registry.len(), 21);
     }
 
     #[test]
@@ -433,7 +459,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 18);
+        assert_eq!(frameworks.len(), 21);
     }
 
     #[test]

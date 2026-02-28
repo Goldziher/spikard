@@ -733,28 +733,14 @@ impl NativeTestClient {
         }
 
         let runtime = crate::server::global_runtime(ruby)?;
-        let http_server = runtime
-            .block_on(async { TestServer::new(router.clone()) })
-            .map_err(|err| {
-                Error::new(
-                    ruby.exception_runtime_error(),
-                    format!("Failed to initialise test server: {err}"),
-                )
-            })?;
+        let http_server = runtime.block_on(async { TestServer::new(router.clone()) });
 
         let transport_server = if has_ws {
             let ws_config = TestServerConfig {
                 transport: Some(Transport::HttpRandomPort),
                 ..Default::default()
             };
-            let server = runtime
-                .block_on(async { TestServer::new_with_config(router, ws_config) })
-                .map_err(|err| {
-                    Error::new(
-                        ruby.exception_runtime_error(),
-                        format!("Failed to initialise WebSocket transport server: {err}"),
-                    )
-                })?;
+            let server = runtime.block_on(async { TestServer::new_with_config(router, ws_config) });
             Some(Arc::new(server))
         } else {
             None

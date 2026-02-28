@@ -222,6 +222,10 @@ packages/elixir/.fetch
 packages/elixir/doc/
 packages/elixir/erl_crash.dump
 packages/elixir/*.swp
+
+# Benchmark Elixir apps
+tools/benchmark-harness/apps/*/_build/
+tools/benchmark-harness/apps/*/deps/
 packages/elixir/*.swo
 
 tools/benchmark-harness/apps/phalcon/composer.lock

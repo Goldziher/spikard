@@ -7,6 +7,7 @@ namespace Spikard\Tests;
 use PHPUnit\Framework\TestCase;
 use Spikard\Config\CompressionConfig;
 use Spikard\Config\CorsConfig;
+use Spikard\Config\JsonRpcConfig;
 use Spikard\Config\RateLimitConfig;
 use Spikard\Config\ServerConfig;
 use Spikard\Config\StaticFilesConfig;
@@ -301,6 +302,97 @@ final class ConfigTest extends TestCase
         $this->assertSame('/app/public', $staticFiles->root);
         $this->assertSame('home.html', $staticFiles->indexFile);
         $this->assertTrue($staticFiles->cache);
+    }
+
+    // JsonRpcConfig tests
+    public function testJsonRpcConfigDefaults(): void
+    {
+        $jsonRpc = new JsonRpcConfig();
+
+        $this->assertTrue($jsonRpc->enabled);
+        $this->assertSame('/rpc', $jsonRpc->endpointPath);
+        $this->assertTrue($jsonRpc->enableBatch);
+        $this->assertSame(100, $jsonRpc->maxBatchSize);
+    }
+
+    public function testJsonRpcConfigCustomValues(): void
+    {
+        $jsonRpc = new JsonRpcConfig(
+            enabled: false,
+            endpointPath: '/jsonrpc',
+            enableBatch: false,
+            maxBatchSize: 50
+        );
+
+        $this->assertFalse($jsonRpc->enabled);
+        $this->assertSame('/jsonrpc', $jsonRpc->endpointPath);
+        $this->assertFalse($jsonRpc->enableBatch);
+        $this->assertSame(50, $jsonRpc->maxBatchSize);
+    }
+
+    public function testJsonRpcConfigBuilder(): void
+    {
+        $jsonRpc = JsonRpcConfig::builder()
+            ->withEnabled(false)
+            ->withEndpointPath('/api/rpc')
+            ->withEnableBatch(false)
+            ->withMaxBatchSize(25)
+            ->build();
+
+        $this->assertFalse($jsonRpc->enabled);
+        $this->assertSame('/api/rpc', $jsonRpc->endpointPath);
+        $this->assertFalse($jsonRpc->enableBatch);
+        $this->assertSame(25, $jsonRpc->maxBatchSize);
+    }
+
+    public function testJsonRpcConfigBuilderPartialValues(): void
+    {
+        $jsonRpc = JsonRpcConfig::builder()
+            ->withEndpointPath('/v2/rpc')
+            ->withMaxBatchSize(200)
+            ->build();
+
+        $this->assertTrue($jsonRpc->enabled); // Default
+        $this->assertSame('/v2/rpc', $jsonRpc->endpointPath);
+        $this->assertTrue($jsonRpc->enableBatch); // Default
+        $this->assertSame(200, $jsonRpc->maxBatchSize);
+    }
+
+    public function testJsonRpcConfigBuilderDisabled(): void
+    {
+        $jsonRpc = JsonRpcConfig::builder()
+            ->withEnabled(false)
+            ->build();
+
+        $this->assertFalse($jsonRpc->enabled);
+        $this->assertSame('/rpc', $jsonRpc->endpointPath); // Default
+        $this->assertTrue($jsonRpc->enableBatch); // Default
+        $this->assertSame(100, $jsonRpc->maxBatchSize); // Default
+    }
+
+    public function testServerConfigBuilderWithJsonRpc(): void
+    {
+        $jsonRpc = new JsonRpcConfig(enabled: true, endpointPath: '/rpc');
+        $config = ServerConfig::builder()
+            ->withJsonRpc($jsonRpc)
+            ->build();
+
+        $this->assertSame($jsonRpc, $config->jsonrpc);
+    }
+
+    public function testServerConfigWithJsonRpc(): void
+    {
+        $jsonRpc = new JsonRpcConfig(
+            enabled: true,
+            endpointPath: '/api/jsonrpc',
+            enableBatch: true,
+            maxBatchSize: 150
+        );
+        $config = new ServerConfig(jsonrpc: $jsonRpc);
+
+        $this->assertSame($jsonRpc, $config->jsonrpc);
+        $this->assertTrue($config->jsonrpc->enabled);
+        $this->assertSame('/api/jsonrpc', $config->jsonrpc->endpointPath);
     }
 
     // Integration tests

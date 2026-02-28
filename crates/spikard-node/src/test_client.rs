@@ -631,8 +631,7 @@ impl TestClient {
         let router = axum_router.clone();
         let server = TestServer::builder()
             .transport(transport)
-            .build(axum_router)
-            .map_err(|e| Error::from_reason(format!("Failed to create test server: {}", e)))?;
+            .build(axum_router);
         drop(_guard);
 
         Ok(Self {

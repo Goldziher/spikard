@@ -1,5 +1,5 @@
+import type { HandlerResult, Request } from "@spikard/node";
 import { Spikard } from "@spikard/node";
-import type { Request, HandlerResult } from "@spikard/node";
 
 /**
  * Node.js test application for published @spikard/node package.
@@ -226,9 +226,9 @@ export function createApp(): Spikard {
 	return app;
 }
 
+import { dirname } from "node:path";
 // Run if executed directly
 import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
 import { runServer } from "@spikard/node";
 
 const __filename = fileURLToPath(import.meta.url);

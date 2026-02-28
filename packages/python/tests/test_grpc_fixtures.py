@@ -574,10 +574,20 @@ async def test_error_handling_fixture(
                     metadata=metadata,
                     timeout=timeout_ms / 1000 if timeout_ms else None,
                 )
-            else:
-                # Bidirectional or unary
+            elif is_client_streaming and is_server_streaming:
+                # Bidirectional streaming
                 assert isinstance(request_data, list), "Bidirectional streaming expects a list of messages"
                 await client.execute_bidirectional(
+                    service_name,
+                    method_name,
+                    request_data,
+                    metadata=metadata,
+                    timeout=timeout_ms / 1000 if timeout_ms else None,
+                )
+            else:
+                # Unary
+                assert isinstance(request_data, dict), "Unary RPC expects a single message dict"
+                await client.execute_unary(
                     service_name,
                     method_name,
                     request_data,

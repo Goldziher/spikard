@@ -17,7 +17,6 @@
  * @see crates/spikard-node/src/grpc/handler.rs for implementation details
  */
 
-import { Spikard } from "@spikard/node";
 import type { GrpcRequest, GrpcResponse } from "@spikard/node";
 
 // Mock protobuf types (in production, use generated proto files)

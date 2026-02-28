@@ -87,7 +87,7 @@ class ChatServiceHandler {
 					if (!this.messageHistory.has(chatMsg.roomId)) {
 						this.messageHistory.set(chatMsg.roomId, []);
 					}
-					this.messageHistory.get(chatMsg.roomId)!.push(chatMsg);
+					this.messageHistory.get(chatMsg.roomId)?.push(chatMsg);
 
 					// Simulate message processing
 					await this.delay(50);
