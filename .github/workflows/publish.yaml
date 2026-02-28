@@ -1258,8 +1258,6 @@ jobs:
 
       - name: Publish native binary packages
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: bash scripts/publish/node/publish-native-packages.sh
 
       - name: Wait for npm indexing
@@ -1268,9 +1266,6 @@ jobs:
 
       - name: Publish main Node package
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: crates/spikard-node
         run: bash ../../scripts/publish/node/publish-main-package.sh
 
@@ -1280,8 +1275,6 @@ jobs:
 
       - name: Build and publish @spikard/node wrapper package
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: bash scripts/publish/node/publish-wrapper-package.sh
 
   publish-cli-release:

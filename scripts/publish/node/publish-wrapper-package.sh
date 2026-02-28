@@ -23,7 +23,7 @@ fi
 
 publish_log="$(mktemp)"
 set +e
-pnpm publish --access public --no-git-checks 2>&1 | tee "${publish_log}"
+pnpm publish --access public --provenance --no-git-checks 2>&1 | tee "${publish_log}"
 status=${PIPESTATUS[0]}
 set -e
 if [ "${status}" -ne 0 ]; then
