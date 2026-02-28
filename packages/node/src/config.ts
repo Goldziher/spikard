@@ -328,7 +328,7 @@ export interface StaticFilesConfig {
  * Network Configuration:
  * - host: Host address to bind to (default: "127.0.0.1")
  * - port: Port number to listen on (default: 8000, range: 1-65535)
- * - workers: Number of worker processes (default: 1)
+ * - workers: Number of Tokio worker threads (default: 1)
  *
  * Request Handling:
  * - enableRequestId: Add X-Request-ID header to responses (default: true)
@@ -378,7 +378,7 @@ export interface ServerConfig {
 	host?: string;
 	/** Port number to listen on (default: 8000, range: 1-65535) */
 	port?: number;
-	/** Number of worker processes (default: 1) */
+	/** Number of Tokio worker threads (default: 1) */
 	workers?: number;
 
 	/** Add X-Request-ID header to responses (default: true) */

@@ -312,3 +312,24 @@ mod common_handler_tests {
         assert!(result.is_ok(), "JsonHandler::created should return Ok response");
     }
 }
+
+mod runtime_builder_tests {
+    use spikard_http::{ServerConfig, build_server_runtime};
+    use tokio::runtime::RuntimeFlavor;
+
+    #[test]
+    fn build_server_runtime_uses_current_thread_for_single_worker() {
+        let config = ServerConfig::builder().workers(1).build();
+        let runtime = build_server_runtime(&config).expect("runtime should build");
+
+        assert_eq!(runtime.handle().runtime_flavor(), RuntimeFlavor::CurrentThread);
+    }
+
+    #[test]
+    fn build_server_runtime_uses_multi_thread_for_multiple_workers() {
+        let config = ServerConfig::builder().workers(4).build();
+        let runtime = build_server_runtime(&config).expect("runtime should build");
+
+        assert_eq!(runtime.handle().runtime_flavor(), RuntimeFlavor::MultiThread);
+    }
+}

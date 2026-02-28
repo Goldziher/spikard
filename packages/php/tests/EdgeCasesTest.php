@@ -354,10 +354,12 @@ final class EdgeCasesTest extends TestCase
 
     public function testServerConfigWithZeroWorkers(): void
     {
-        $config = ServerConfig::builder()
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('workers must be >= 1');
+
+        ServerConfig::builder()
             ->withWorkers(0)
             ->build();
-        $this->assertSame(0, $config->workers);
     }
 
     public function testServerConfigWithHighWorkerCount(): void

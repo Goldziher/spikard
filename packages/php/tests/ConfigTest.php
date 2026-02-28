@@ -119,6 +119,14 @@ final class ConfigTest extends TestCase
         $this->assertSame(10, $config->shutdownTimeout);
     }
 
+    public function testServerConfigRejectsZeroWorkers(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('workers must be >= 1');
+
+        new ServerConfig(workers: 0);
+    }
+
     // CorsConfig tests
     public function testCorsConfigDefaults(): void
     {

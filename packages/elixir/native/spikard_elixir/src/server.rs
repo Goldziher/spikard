@@ -602,7 +602,7 @@ pub fn start_server<'a>(
     };
 
     // Create runtime for this server
-    let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+    let runtime = match spikard_http::build_server_runtime(&config) {
         Ok(rt) => rt,
         Err(e) => {
             let error_msg = format!("Failed to create Tokio runtime: {}", e);

@@ -162,6 +162,14 @@ final class ServerConfigBuilderTest extends TestCase
         $this->assertSame(8, $config->workers);
     }
 
+    public function testWithWorkersRejectsZero(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('workers must be >= 1');
+
+        ServerConfig::builder()->withWorkers(0);
+    }
+
     // ======================== Request ID Configuration Tests ========================
 
     public function testWithRequestIdEnables(): void

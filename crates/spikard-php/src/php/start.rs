@@ -626,9 +626,7 @@ pub fn spikard_start_server_impl(
     let app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
         .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
+    let runtime = spikard_http::build_server_runtime(&server_config)
         .map_err(|e| PhpException::default(format!("Failed to start Tokio runtime: {}", e)))?;
 
     let result: PhpResult<()> = runtime.block_on(async move {

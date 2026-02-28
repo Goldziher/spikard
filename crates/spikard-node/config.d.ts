@@ -248,7 +248,7 @@ export interface ServerConfig {
 	host?: string;
 	/** Port number to listen on (default: 8000, range: 1-65535) */
 	port?: number;
-	/** Number of worker processes (default: 1) */
+	/** Number of Tokio worker threads (default: 1) */
 	workers?: number;
 
 	/** Add X-Request-ID header to responses (default: true) */

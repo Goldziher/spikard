@@ -28,6 +28,7 @@ pub mod testing;
 pub mod websocket;
 
 use serde::{Deserialize, Serialize};
+use tokio::runtime::Runtime;
 
 #[cfg(test)]
 mod handler_trait_tests;
@@ -118,7 +119,7 @@ pub struct ServerConfig {
     pub host: String,
     /// Port to bind to
     pub port: u16,
-    /// Number of worker threads (unused with tokio)
+    /// Number of Tokio runtime worker threads used by binding-managed server runtimes
     pub workers: usize,
 
     /// Enable request ID generation and propagation
@@ -257,7 +258,7 @@ impl ServerConfigBuilder {
         self
     }
 
-    /// Set the number of worker threads (unused with tokio, kept for compatibility)
+    /// Set the number of Tokio runtime worker threads
     pub fn workers(mut self, workers: usize) -> Self {
         self.config.workers = workers;
         self
@@ -541,6 +542,22 @@ impl ServerConfigBuilder {
     pub fn build(self) -> ServerConfig {
         self.config
     }
+}
+
+/// Build a Tokio runtime for serving HTTP requests with the configured worker count.
+///
+/// `workers == 1` uses a current-thread runtime to minimize scheduling overhead.
+/// `workers > 1` uses a multi-thread runtime with an explicit worker thread count.
+pub fn build_server_runtime(config: &ServerConfig) -> std::io::Result<Runtime> {
+    let mut builder = if config.workers <= 1 {
+        tokio::runtime::Builder::new_current_thread()
+    } else {
+        let mut builder = tokio::runtime::Builder::new_multi_thread();
+        builder.worker_threads(config.workers);
+        builder
+    };
+
+    builder.enable_all().build()
 }
 
 const fn default_true() -> bool {

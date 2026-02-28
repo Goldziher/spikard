@@ -404,7 +404,7 @@ module Spikard
 
     # @param host [String] Host address to bind to (default: "127.0.0.1")
     # @param port [Integer] Port number to listen on (default: 8000, range: 1-65535)
-    # @param workers [Integer] Number of worker processes (default: 1)
+    # @param workers [Integer] Number of Tokio worker threads (default: 1)
     # @param enable_request_id [Boolean] Add X-Request-ID header to responses (default: true)
     # @param max_body_size [Integer, nil] Maximum request body size in bytes (default: 10MB, nil for unlimited)
     # @param request_timeout [Integer, nil] Request timeout in seconds (default: 30, nil for no timeout)

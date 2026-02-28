@@ -291,15 +291,12 @@ pub fn run_server(
         )
     })?;
 
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .map_err(|e| {
-            Error::new(
-                ruby.exception_runtime_error(),
-                format!("Failed to create Tokio runtime: {}", e),
-            )
-        })?;
+    let runtime = spikard_http::build_server_runtime(&config).map_err(|e| {
+        Error::new(
+            ruby.exception_runtime_error(),
+            format!("Failed to create Tokio runtime: {}", e),
+        )
+    })?;
 
     let background_config = config.background_tasks.clone();
     let runtime_ref = &runtime;

@@ -172,7 +172,7 @@ class Spikard:
             config: Complete server configuration.
             host: Host to bind to
             port: Port to bind to
-            workers: Number of worker processes
+            workers: Number of Tokio worker threads
             reload: Enable auto-reload (not yet implemented)
 
         Raises:

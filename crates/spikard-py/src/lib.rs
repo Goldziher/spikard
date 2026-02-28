@@ -776,10 +776,6 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
 
     let mut config = extract_server_config(py, config)?;
 
-    if config.workers > 1 {
-        eprintln!("⚠️  Multi-worker mode not yet implemented, using single worker");
-    }
-
     init_python_event_loop()?;
 
     let routes_with_handlers = extract_routes_from_app(py, app)?;
@@ -873,11 +869,7 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     }
 
     py.detach(|| {
-        // Spikard-Python is fundamentally bound by the Python GIL. Running the HTTP runtime on a
-        // single Tokio thread significantly reduces cross-thread GIL handoff overhead under load.
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
+        spikard_http::build_server_runtime(&config)
             .map_err(|e| {
                 pyo3::Python::attach(|_py| {
                     PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {e}"))

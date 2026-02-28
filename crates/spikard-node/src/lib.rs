@@ -903,7 +903,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     let (startup_tx, startup_rx) = std::sync::mpsc::channel::<std::result::Result<u16, String>>();
 
     std::thread::spawn(move || {
-        let runtime = match tokio::runtime::Runtime::new() {
+        let runtime = match spikard_http::build_server_runtime(&server_config) {
             Ok(rt) => rt,
             Err(e) => {
                 error!("Failed to create Tokio runtime: {}", e);

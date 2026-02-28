@@ -17,7 +17,7 @@ final class ServerConfig
     /**
      * @param string $host Host to bind to
      * @param int $port Port to bind to
-     * @param int $workers Number of worker threads
+     * @param int $workers Number of Tokio worker threads
      * @param bool $enableRequestId Enable request ID generation and propagation
      * @param int|null $maxBodySize Maximum request body size in bytes (null = unlimited, not recommended)
      * @param int|null $requestTimeout Request timeout in seconds (null = no timeout)
@@ -52,6 +52,9 @@ final class ServerConfig
         public readonly ?JsonRpcConfig $jsonrpc = null,
         public readonly ?LifecycleHooks $hooks = null,
     ) {
+        if ($this->workers < 1) {
+            throw new \InvalidArgumentException('workers must be >= 1');
+        }
     }
 
     public static function builder(): ServerConfigBuilder
@@ -99,6 +102,10 @@ final class ServerConfigBuilder
 
     public function withWorkers(int $workers): self
     {
+        if ($workers < 1) {
+            throw new \InvalidArgumentException('workers must be >= 1');
+        }
+
         $this->workers = $workers;
         return $this;
     }
