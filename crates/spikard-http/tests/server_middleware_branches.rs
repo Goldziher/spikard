@@ -67,7 +67,7 @@ async fn request_id_is_generated_and_propagated() {
     )
     .expect("router");
 
-    let server = axum_test::TestServer::new(router).expect("server");
+    let server = axum_test::TestServer::new(router);
     let response = server.get("/rid").await;
     assert_eq!(response.status_code(), StatusCode::OK);
 
@@ -101,7 +101,7 @@ async fn default_body_limit_can_be_disabled() {
     )
     .expect("router");
 
-    let server = axum_test::TestServer::new(router).expect("server");
+    let server = axum_test::TestServer::new(router);
     let payload = vec![b'a'; 1024 * 128];
     let response = server.post("/upload").bytes(payload.into()).await;
     assert_eq!(response.status_code(), StatusCode::OK);
@@ -125,7 +125,7 @@ async fn default_body_limit_allows_payloads_within_limit() {
     )
     .expect("router");
 
-    let server = axum_test::TestServer::new(router).expect("server");
+    let server = axum_test::TestServer::new(router);
     let payload = vec![b'a'; 8];
     let response = server.post("/upload").bytes(payload.into()).await;
     assert_eq!(response.status_code(), StatusCode::OK);
@@ -158,7 +158,7 @@ async fn compression_br_is_applied_when_accepted() {
     )
     .expect("router");
 
-    let server = axum_test::TestServer::new(router).expect("server");
+    let server = axum_test::TestServer::new(router);
     let response = server.get("/compressed").add_header("accept-encoding", "br").await;
     assert_eq!(response.status_code(), StatusCode::OK);
     assert_eq!(response.header("content-encoding").to_str().expect("encoding"), "br");
@@ -185,8 +185,7 @@ async fn rate_limit_builder_covers_ip_and_global_key_extractors() {
     let router_ip =
         build_router_with_handlers_and_config(vec![(route.clone(), Arc::clone(&handler))], ip_config, Vec::new())
             .expect("router");
-    let server_ip = axum_test::TestServer::new(router_ip.into_make_service_with_connect_info::<std::net::SocketAddr>())
-        .expect("server");
+    let server_ip = axum_test::TestServer::new(router_ip.into_make_service_with_connect_info::<std::net::SocketAddr>());
     assert_eq!(server_ip.get("/rl").await.status_code(), StatusCode::OK);
 
     let global_config = ServerConfig {
@@ -200,7 +199,6 @@ async fn rate_limit_builder_covers_ip_and_global_key_extractors() {
     let router_global =
         build_router_with_handlers_and_config(vec![(route, handler)], global_config, Vec::new()).expect("router");
     let server_global =
-        axum_test::TestServer::new(router_global.into_make_service_with_connect_info::<std::net::SocketAddr>())
-            .expect("server");
+        axum_test::TestServer::new(router_global.into_make_service_with_connect_info::<std::net::SocketAddr>());
     assert_eq!(server_global.get("/rl").await.status_code(), StatusCode::OK);
 }

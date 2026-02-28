@@ -46,10 +46,9 @@ ahash = "0.8"
 bytes = "1.11"
 http-body-util = "0.1"
 http-body = "1.0"
-axum-test = { version = "18", features = ["ws"] }
+axum-test = { version = "19", features = ["ws"] }
 anyhow = "1.0"
 cookie = "0.18"
-base64 = "0.22.1"
 flate2.workspace = true
 brotli = "8.0"
 tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
@@ -67,4 +66,17 @@ di = ["spikard-core/di"]
 [dev-dependencies]
 chrono = "0.4"
 doc-comment = "0.3"
-tempfile = "3.25"
+tempfile = "3.26"
+
+[package.metadata.cargo-machete]
+ignored = [
+  "anyhow",
+  "h2",
+  "http-body",
+  "jiff",
+  "prost",
+  "prost-types",
+  "tokio-stream",
+  "utoipa-redoc",
+  "utoipa-swagger-ui",
+]

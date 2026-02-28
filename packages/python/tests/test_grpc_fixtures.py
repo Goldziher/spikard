@@ -25,18 +25,53 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import cast
 
 import grpc
 import pytest
 
 from .grpc_test_client import GrpcTestClient
 
+# Type alias for fixture dicts (JSON-loaded data)
+FixtureDict = dict[str, object]
+
 # Load all fixtures once
 FIXTURES_DIR = Path(__file__).parents[3] / "testing_data" / "protobuf" / "streaming"
 
 
-def load_fixtures_by_category(category: str) -> list[tuple[str, dict[str, object]]]:
+def _as_dict(value: object) -> dict[str, object]:
+    """Narrow an object to dict[str, object] with a runtime check."""
+    if not isinstance(value, dict):
+        msg = f"Expected dict, got {type(value)}"
+        raise TypeError(msg)
+    return value
+
+
+def _as_list(value: object) -> list[object]:
+    """Narrow an object to list[object] with a runtime check."""
+    if not isinstance(value, list):
+        msg = f"Expected list, got {type(value)}"
+        raise TypeError(msg)
+    return value
+
+
+def _as_str(value: object) -> str:
+    """Narrow an object to str with a runtime check."""
+    if not isinstance(value, str):
+        msg = f"Expected str, got {type(value)}"
+        raise TypeError(msg)
+    return value
+
+
+def _as_int(value: object) -> int:
+    """Narrow an object to int with a runtime check."""
+    if not isinstance(value, int):
+        msg = f"Expected int, got {type(value)}"
+        raise TypeError(msg)
+    return value
+
+
+def load_fixtures_by_category(category: str) -> list[tuple[str, FixtureDict]]:
     """
     Load all fixtures from a category directory.
 
@@ -50,19 +85,19 @@ def load_fixtures_by_category(category: str) -> list[tuple[str, dict[str, object
     if not category_dir.exists():
         return []
 
-    fixtures = []
+    fixtures: list[tuple[str, FixtureDict]] = []
     for fixture_file in sorted(category_dir.glob("*.json")):
         with fixture_file.open(encoding="utf-8") as f:
-            fixture = json.load(f)
+            fixture: FixtureDict = json.load(f)
             # Skip fixtures marked with "skip": true
             if fixture.get("skip"):
                 continue
-            fixtures.append((fixture["name"], fixture))
+            fixtures.append((_as_str(fixture["name"]), fixture))
 
     return fixtures
 
 
-def generate_stream(stream_generator: str, stream_size: int) -> list[dict[str, Any]]:
+def generate_stream(stream_generator: str, stream_size: int) -> list[dict[str, object]]:
     """
     Generate stream messages based on generator description.
 
@@ -96,9 +131,9 @@ def generate_stream(stream_generator: str, stream_size: int) -> list[dict[str, A
 
 
 def extract_service_method(
-    fixture: dict[str, object],
+    fixture: FixtureDict,
     streaming_mode: str | None = None,
-) -> tuple[str, str, dict[str, object]]:
+) -> tuple[str, str, FixtureDict]:
     """
     Extract service name, method name, and method definition from fixture.
 
@@ -113,27 +148,28 @@ def extract_service_method(
     """
     # Use handler.service for fully qualified service name (e.g., "example.v1.StreamService")
     # This matches the key format used in the server's fixture map
-    handler = fixture["handler"]
-    service_name = handler["service"]
+    handler = _as_dict(fixture["handler"])
+    service_name = _as_str(handler["service"])
 
     # Get method definition from protobuf for streaming mode validation
-    protobuf = fixture["protobuf"]
-    service = protobuf["services"][0]
+    protobuf = _as_dict(fixture["protobuf"])
+    services = _as_list(protobuf["services"])
+    service = _as_dict(services[0])
 
     # Find method matching streaming mode
-    methods = service["methods"]
+    methods = _as_list(service["methods"])
     if streaming_mode:
-        method = next((m for m in methods if m.get(streaming_mode)), methods[0])
+        method = _as_dict(next((_as_dict(m) for m in methods if _as_dict(m).get(streaming_mode)), _as_dict(methods[0])))
     else:
-        method = methods[0]
+        method = _as_dict(methods[0])
 
-    method_name = method["name"]
+    method_name = _as_str(method["name"])
 
     return service_name, method_name, method
 
 
 def extract_request_data(
-    fixture: dict[str, object], is_streaming: bool = False
+    fixture: FixtureDict, is_streaming: bool = False
 ) -> dict[str, object] | list[dict[str, object]]:
     """
     Extract and prepare request data from fixture.
@@ -147,20 +183,20 @@ def extract_request_data(
     Returns:
         Single message dict or list of messages for streaming
     """
-    request = fixture["request"]
+    request = _as_dict(fixture["request"])
 
     if not is_streaming:
         # Server streaming or unary: single message
-        return request["message"]
+        return _as_dict(request["message"])
 
     # Client or bidirectional streaming: stream of messages
     if "stream" in request:
-        return request["stream"]
+        return cast("list[dict[str, object]]", request["stream"])
 
     # Generate stream if using stream_generator
     if "stream_generator" in request:
-        stream_generator = request["stream_generator"]
-        stream_size = request["stream_size"]
+        stream_generator = _as_str(request["stream_generator"])
+        stream_size = _as_int(request["stream_size"])
         return generate_stream(stream_generator, stream_size)
 
     # Fallback: empty stream
@@ -169,7 +205,7 @@ def extract_request_data(
 
 def validate_stream_response(
     responses: list[dict[str, object]],
-    expected_response: dict[str, object],
+    expected_response: FixtureDict,
 ) -> None:
     """
     Validate streaming response against expected response.
@@ -188,17 +224,19 @@ def validate_stream_response(
         assert responses is not None
         return
 
+    expected_list = _as_list(expected_messages)
+
     # Validate stream length
-    assert len(responses) == len(expected_messages), f"Expected {len(expected_messages)} messages, got {len(responses)}"
+    assert len(responses) == len(expected_list), f"Expected {len(expected_list)} messages, got {len(responses)}"
 
     # Validate each message
-    for i, (actual, expected_msg) in enumerate(zip(responses, expected_messages, strict=False)):
+    for i, (actual, expected_msg) in enumerate(zip(responses, expected_list, strict=False)):
         assert actual == expected_msg, f"Message {i} mismatch: {actual} != {expected_msg}"
 
 
 def validate_single_response(
     response: dict[str, object],
-    expected_response: dict[str, object],
+    expected_response: FixtureDict,
 ) -> None:
     """
     Validate single response message against expected response.
@@ -227,7 +265,7 @@ def validate_single_response(
 
 def validate_error_response(
     exc_info: pytest.ExceptionInfo[grpc.RpcError],
-    expected_response: dict[str, object],
+    expected_response: FixtureDict,
 ) -> None:
     """
     Validate gRPC error against expected error.
@@ -239,7 +277,7 @@ def validate_error_response(
     Raises:
         AssertionError: If error doesn't match expectations
     """
-    expected_error = expected_response["error"]
+    expected_error = _as_dict(expected_response["error"])
     expected_code = expected_error.get("code")
     expected_message = expected_error.get("message")
 
@@ -261,11 +299,11 @@ def validate_error_response(
         )
 
 
-def expects_grpc_error(expected_response: dict[str, object]) -> bool:
+def expects_grpc_error(expected_response: FixtureDict) -> bool:
     return bool(expected_response.get("error"))
 
 
-def build_error_expectation(expected_response: dict[str, object]) -> dict[str, object]:
+def build_error_expectation(expected_response: FixtureDict) -> FixtureDict:
     if expected_response.get("error"):
         return expected_response
 
@@ -279,6 +317,24 @@ def build_error_expectation(expected_response: dict[str, object]) -> dict[str, o
             "message": error_message,
         }
     }
+
+
+def _extract_metadata_and_timeout(fixture: FixtureDict) -> tuple[dict[str, str], float | None]:
+    """Extract metadata and timeout from fixture, with proper type narrowing."""
+    request = _as_dict(fixture["request"])
+    raw_metadata = request.get("metadata", {})
+    metadata: dict[str, str] = {}
+    if isinstance(raw_metadata, dict):
+        metadata = {str(k): str(v) for k, v in raw_metadata.items()}
+
+    handler = fixture.get("handler", {})
+    timeout_ms: float | None = None
+    if isinstance(handler, dict):
+        raw_timeout = handler.get("timeout_ms")
+        if isinstance(raw_timeout, (int, float)):
+            timeout_ms = float(raw_timeout)
+
+    return metadata, timeout_ms
 
 
 # Parametrize tests by fixture category
@@ -296,7 +352,7 @@ error_fixtures = load_fixtures_by_category("errors")
 )
 async def test_server_streaming_fixture(
     fixture_name: str,
-    fixture: dict[str, object],
+    fixture: FixtureDict,
     grpc_server: object,
 ) -> None:
     """
@@ -313,20 +369,18 @@ async def test_server_streaming_fixture(
 
         # Extract request data
         request_message = extract_request_data(fixture, is_streaming=False)
+        assert isinstance(request_message, dict), "Server streaming expects a single message dict"
 
         # Extract metadata and timeout
-        request = fixture["request"]
-        metadata = request.get("metadata", {})
-        handler = fixture.get("handler", {})
-        timeout_ms = handler.get("timeout_ms")
+        metadata, timeout_ms = _extract_metadata_and_timeout(fixture)
 
         # Check if expecting mid-stream error
-        expected_response = fixture["expected_response"]
+        expected_response = _as_dict(fixture["expected_response"])
         has_error = "error" in expected_response and expected_response["error"]
 
         if has_error:
             # Mid-stream error case: expect error after partial stream
-            responses = []
+            responses: list[dict[str, object]] = []
             with pytest.raises(grpc.RpcError) as exc_info:
                 responses = await client.execute_server_streaming(
                     service_name,
@@ -341,11 +395,12 @@ async def test_server_streaming_fixture(
             # Validate partial messages if expected (before the error occurred)
             expected_stream = expected_response.get("stream")
             if expected_stream and responses:
+                expected_stream_list = _as_list(expected_stream)
                 # We got partial messages before the error
-                assert len(responses) == len(expected_stream), (
-                    f"Expected {len(expected_stream)} partial messages, got {len(responses)}"
+                assert len(responses) == len(expected_stream_list), (
+                    f"Expected {len(expected_stream_list)} partial messages, got {len(responses)}"
                 )
-                for i, (actual, expected_msg) in enumerate(zip(responses, expected_stream, strict=False)):
+                for i, (actual, expected_msg) in enumerate(zip(responses, expected_stream_list, strict=False)):
                     assert actual == expected_msg, f"Partial message {i} mismatch: {actual} != {expected_msg}"
         else:
             # Normal case: expect complete stream without error
@@ -369,7 +424,7 @@ async def test_server_streaming_fixture(
 )
 async def test_client_streaming_fixture(
     fixture_name: str,
-    fixture: dict[str, object],
+    fixture: FixtureDict,
     grpc_server: object,
 ) -> None:
     """
@@ -386,12 +441,10 @@ async def test_client_streaming_fixture(
 
         # Extract request data (stream of messages)
         request_messages = extract_request_data(fixture, is_streaming=True)
+        assert isinstance(request_messages, list), "Client streaming expects a list of messages"
 
         # Extract metadata and timeout
-        request = fixture["request"]
-        metadata = request.get("metadata", {})
-        handler = fixture.get("handler", {})
-        timeout_ms = handler.get("timeout_ms")
+        metadata, timeout_ms = _extract_metadata_and_timeout(fixture)
 
         # Execute RPC
         response = await client.execute_client_streaming(
@@ -403,7 +456,7 @@ async def test_client_streaming_fixture(
         )
 
         # Validate response
-        expected_response = fixture["expected_response"]
+        expected_response = _as_dict(fixture["expected_response"])
         validate_single_response(response, expected_response)
 
 
@@ -415,7 +468,7 @@ async def test_client_streaming_fixture(
 )
 async def test_bidirectional_fixture(
     fixture_name: str,
-    fixture: dict[str, object],
+    fixture: FixtureDict,
     grpc_server: object,
 ) -> None:
     """
@@ -432,17 +485,15 @@ async def test_bidirectional_fixture(
 
         # Extract request data (stream of messages)
         request_messages = extract_request_data(fixture, is_streaming=True)
+        assert isinstance(request_messages, list), "Bidirectional streaming expects a list of messages"
 
         # Extract metadata and timeout
-        request = fixture["request"]
-        metadata = request.get("metadata", {})
-        handler = fixture.get("handler", {})
-        timeout_ms = handler.get("timeout_ms")
+        metadata, timeout_ms = _extract_metadata_and_timeout(fixture)
 
-        expected_response = fixture["expected_response"]
-        expects_error = expects_grpc_error(expected_response)
+        expected_response = _as_dict(fixture["expected_response"])
+        error_expected = expects_grpc_error(expected_response)
 
-        if expects_error:
+        if error_expected:
             with pytest.raises(grpc.RpcError) as exc_info:
                 await client.execute_bidirectional(
                     service_name,
@@ -475,7 +526,7 @@ async def test_bidirectional_fixture(
 )
 async def test_error_handling_fixture(
     fixture_name: str,
-    fixture: dict[str, object],
+    fixture: FixtureDict,
     grpc_server: object,
 ) -> None:
     """
@@ -491,23 +542,21 @@ async def test_error_handling_fixture(
         service_name, method_name, method = extract_service_method(fixture)
 
         # Determine streaming mode from method
-        is_client_streaming = method.get("client_streaming", False)
-        is_server_streaming = method.get("server_streaming", False)
+        is_client_streaming = bool(method.get("client_streaming", False))
+        is_server_streaming = bool(method.get("server_streaming", False))
 
         # Extract request data
         is_streaming = is_client_streaming or (is_client_streaming and is_server_streaming)
         request_data = extract_request_data(fixture, is_streaming=is_streaming)
 
         # Extract metadata and timeout
-        request = fixture["request"]
-        metadata = request.get("metadata", {})
-        handler = fixture.get("handler", {})
-        timeout_ms = handler.get("timeout_ms")
+        metadata, timeout_ms = _extract_metadata_and_timeout(fixture)
 
         # Execute RPC and expect error
         async def execute_rpc() -> None:
             if is_server_streaming and not is_client_streaming:
                 # Server streaming
+                assert isinstance(request_data, dict), "Server streaming expects a single message dict"
                 await client.execute_server_streaming(
                     service_name,
                     method_name,
@@ -517,6 +566,7 @@ async def test_error_handling_fixture(
                 )
             elif is_client_streaming and not is_server_streaming:
                 # Client streaming
+                assert isinstance(request_data, list), "Client streaming expects a list of messages"
                 await client.execute_client_streaming(
                     service_name,
                     method_name,
@@ -526,6 +576,7 @@ async def test_error_handling_fixture(
                 )
             else:
                 # Bidirectional or unary
+                assert isinstance(request_data, list), "Bidirectional streaming expects a list of messages"
                 await client.execute_bidirectional(
                     service_name,
                     method_name,
@@ -538,5 +589,5 @@ async def test_error_handling_fixture(
             await execute_rpc()
 
         # Validate error
-        expected_response = fixture["expected_response"]
+        expected_response = _as_dict(fixture["expected_response"])
         validate_error_response(exc_info, expected_response)

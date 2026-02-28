@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Protocol, TypedDict
 
@@ -539,7 +540,9 @@ def grpc_server() -> object:
             # Fallback: echo request
             return request
 
-        async def handle_server_stream(self, request: dict[str, object], context: object, method_path: str):  # type: ignore[no-untyped-def]
+        async def handle_server_stream(
+            self, request: dict[str, object], context: object, method_path: str
+        ) -> AsyncIterator[dict[str, object]]:
             """Server streaming RPC: yield messages from fixture or raise error."""
             import asyncio
             import time
@@ -550,10 +553,12 @@ def grpc_server() -> object:
                 if isinstance(expected, dict):
                     # Check if this fixture has timeout behavior
                     handler_config = fixture.get("handler", {})
-                    timeout_ms = handler_config.get("timeout_ms") if isinstance(handler_config, dict) else None
+                    raw_timeout = handler_config.get("timeout_ms") if isinstance(handler_config, dict) else None
+                    timeout_ms = float(raw_timeout) if isinstance(raw_timeout, (int, float)) else None
 
                     # Check if request contains delay_ms for simulating slow streaming
-                    delay_ms = request.get("delay_ms", 0) if isinstance(request, dict) else 0
+                    raw_delay = request.get("delay_ms", 0) if isinstance(request, dict) else 0
+                    delay_ms = raw_delay if isinstance(raw_delay, (int, float)) else 0
 
                     # Track elapsed time to enforce timeout
                     start_time = time.time()
@@ -602,7 +607,9 @@ def grpc_server() -> object:
             return
             yield  # unreachable, but needed for async generator syntax
 
-        async def handle_client_stream(self, request_iterator, context, method_path: str) -> dict:
+        async def handle_client_stream(
+            self, request_iterator: AsyncIterator[dict[str, object]], context: object, method_path: str
+        ) -> dict[str, object]:
             """Client streaming RPC: aggregate messages and return fixture response or raise error."""
             # Consume the stream
             messages = [msg async for msg in request_iterator]
@@ -634,7 +641,9 @@ def grpc_server() -> object:
                 }
             return {"message_count": 0}
 
-        async def handle_bidi_stream(self, request_iterator, context, method_path: str):
+        async def handle_bidi_stream(
+            self, request_iterator: AsyncIterator[dict[str, object]], context: object, method_path: str
+        ) -> AsyncIterator[dict[str, object]]:
             """Bidirectional streaming RPC: yield fixture responses or raise error."""
             fixture = self.get_fixture_for_method(method_path)
             expected_messages = []
@@ -670,10 +679,10 @@ def grpc_server() -> object:
                     yield message
                 # After yielding messages, check for error (mid-stream error)
                 if should_error:
-                    await context.abort(error_status, error_message)
+                    await context.abort(error_status, error_message)  # type: ignore[attr-defined]
                     return
             elif should_error:
-                await context.abort(error_status, error_message)
+                await context.abort(error_status, error_message)  # type: ignore[attr-defined]
                 return
             else:
                 # Fallback: echo each message
@@ -696,7 +705,7 @@ def grpc_server() -> object:
     class GenericHandler(grpc.GenericRpcHandler):
         """Route RPC calls to appropriate handler based on streaming mode."""
 
-        def service(self, handler_call_details: object) -> object:  # type: ignore[override]
+        def service(self, handler_call_details: object) -> object:
             method = getattr(handler_call_details, "method", "")
             # Extract service and method names from full method path
             # Format: /service.package.ServiceName/MethodName
@@ -714,14 +723,20 @@ def grpc_server() -> object:
             async def adaptive_unary_handler(request: dict[str, object], context: object) -> dict[str, object]:
                 return await servicer.handle_unary(request, context, method)
 
-            async def adaptive_server_stream_handler(request: dict[str, object], context: object):  # type: ignore[no-untyped-def,misc]
+            async def adaptive_server_stream_handler(
+                request: dict[str, object], context: object
+            ) -> AsyncIterator[dict[str, object]]:
                 async for msg in servicer.handle_server_stream(request, context, method):
                     yield msg
 
-            async def adaptive_client_stream_handler(request_iterator: object, context: object) -> dict[str, object]:  # type: ignore[no-untyped-def,misc]
+            async def adaptive_client_stream_handler(
+                request_iterator: AsyncIterator[dict[str, object]], context: object
+            ) -> dict[str, object]:
                 return await servicer.handle_client_stream(request_iterator, context, method)
 
-            async def adaptive_bidi_stream_handler(request_iterator: object, context: object):  # type: ignore[no-untyped-def,misc]
+            async def adaptive_bidi_stream_handler(
+                request_iterator: AsyncIterator[dict[str, object]], context: object
+            ) -> AsyncIterator[dict[str, object]]:
                 async for msg in servicer.handle_bidi_stream(request_iterator, context, method):
                     yield msg
 

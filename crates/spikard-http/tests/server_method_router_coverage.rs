@@ -87,7 +87,7 @@ async fn router_covers_all_http_methods_with_and_without_path_params() {
 
     let app_router =
         build_router_with_handlers_and_config(route_entries, ServerConfig::default(), Vec::new()).expect("router");
-    let server = axum_test::TestServer::new(app_router).expect("server");
+    let server = axum_test::TestServer::new(app_router);
 
     assert_method(&server, AxumMethod::GET, "/m").await;
     assert_method(&server, AxumMethod::DELETE, "/m").await;

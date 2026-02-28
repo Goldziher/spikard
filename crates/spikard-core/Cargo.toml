@@ -50,3 +50,6 @@ di = ["dep:tokio", "dep:bytes"]
 
 [dev-dependencies]
 tokio-test = "0.4"
+
+[package.metadata.cargo-machete]
+ignored = ["base64", "serde_qs", "tracing", "url"]

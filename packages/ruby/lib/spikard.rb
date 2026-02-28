@@ -45,10 +45,6 @@ if defined?(Spikard::Native::TestClient) && !Spikard::Native::TestClient.method_
   end
 end
 
-# Convenience aliases and methods at top level
-module Spikard
-  TestClient = Testing::TestClient
-
-  # Handler wrapper utilities
-  extend HandlerWrapper
-end
+# Convenience aliases and methods
+Spikard::TestClient = Spikard::Testing::TestClient
+Spikard.extend Spikard::HandlerWrapper

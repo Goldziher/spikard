@@ -8,7 +8,7 @@
 		"start": "bun run server.ts"
 	},
 	"dependencies": {
-		"elysia": "^1.4.25"
+		"elysia": "^1.4.26"
 	},
 	"devDependencies": {
 		"@types/bun": "^1.3.9"

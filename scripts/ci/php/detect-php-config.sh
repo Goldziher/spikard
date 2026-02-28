@@ -3,44 +3,44 @@ set -euo pipefail
 
 # Detect if running on Windows
 is_windows() {
-	[[ -n "${MSYSTEM:-}" ]] || [[ -n "${MINGW_PREFIX:-}" ]] || [[ "${OS:-}" == "Windows_NT" ]] || [[ -n "${ProgramFiles:-}" ]]
+  [[ -n "${MSYSTEM:-}" ]] || [[ -n "${MINGW_PREFIX:-}" ]] || [[ "${OS:-}" == "Windows_NT" ]] || [[ -n "${ProgramFiles:-}" ]]
 }
 
 # Extract PHP configuration from php -i on Windows
 php_info_extract() {
-	local key="$1"
-	php -i 2>/dev/null | grep -i "^$key" | head -1 | awk -F' => ' '{print $2}' | xargs
+  local key="$1"
+  php -i 2>/dev/null | grep -i "^$key" | head -1 | awk -F' => ' '{print $2}' | xargs
 }
 
 if is_windows; then
-	echo "Detected Windows environment"
+  echo "Detected Windows environment"
 
-	# On Windows, create a wrapper script since php-config may not exist
-	php_version="$(php -r 'echo phpversion();')" || {
-		echo "php-config not found; skipping PHP extension build on this platform"
-		exit 0
-	}
+  # On Windows, create a wrapper script since php-config may not exist
+  php_version="$(php -r 'echo phpversion();')" || {
+    echo "php-config not found; skipping PHP extension build on this platform"
+    exit 0
+  }
 
-	echo "Detected PHP version: $php_version"
+  echo "Detected PHP version: $php_version"
 
-	# Extract PHP paths from php -i
-	php_prefix="$(php_info_extract 'extension_dir' | sed 's|/ext$||')" || php_prefix="$(php -r 'echo dirname(PHP_EXECUTABLE);' 2>/dev/null || true)"
+  # Extract PHP paths from php -i
+  php_prefix="$(php_info_extract 'extension_dir' | sed 's|/ext$||')" || php_prefix="$(php -r 'echo dirname(PHP_EXECUTABLE);' 2>/dev/null || true)"
 
-	if [[ -z "${php_prefix:-}" ]]; then
-		echo "Warning: Could not detect PHP installation directory"
-		exit 0
-	fi
+  if [[ -z "${php_prefix:-}" ]]; then
+    echo "Warning: Could not detect PHP installation directory"
+    exit 0
+  fi
 
-	# Normalize Windows paths to use forward slashes for consistency
-	php_prefix="${php_prefix//\\//}"
+  # Normalize Windows paths to use forward slashes for consistency
+  php_prefix="${php_prefix//\\//}"
 
-	echo "Detected PHP prefix: $php_prefix"
+  echo "Detected PHP prefix: $php_prefix"
 
-	# Create a temporary php-config wrapper script
-	php_config_wrapper="/tmp/php-config"
-	mkdir -p "$(dirname "$php_config_wrapper")"
+  # Create a temporary php-config wrapper script
+  php_config_wrapper="/tmp/php-config"
+  mkdir -p "$(dirname "$php_config_wrapper")"
 
-	cat >"$php_config_wrapper" <<'PHPCONFIG'
+  cat >"$php_config_wrapper" <<'PHPCONFIG'
 #!/usr/bin/env bash
 # Wrapper script for php-config on Windows
 # Extracts PHP configuration from php -i since php-config is not available
@@ -74,37 +74,37 @@ case "$1" in
 esac
 PHPCONFIG
 
-	chmod +x "$php_config_wrapper"
-	php_config="$php_config_wrapper"
+  chmod +x "$php_config_wrapper"
+  php_config="$php_config_wrapper"
 
 else
-	# Unix-like systems: use native php-config
-	php_config="$(command -v php-config || true)"
-	if [[ -z "${php_config:-}" ]]; then
-		echo "php-config not found; skipping PHP extension build on this platform"
-		exit 0
-	fi
+  # Unix-like systems: use native php-config
+  php_config="$(command -v php-config || true)"
+  if [[ -z "${php_config:-}" ]]; then
+    echo "php-config not found; skipping PHP extension build on this platform"
+    exit 0
+  fi
 
-	# Verify that php-config matches the active php version
-	php_version="$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
-	php_config_version="$("${php_config}" --version | grep -oP 'PHP \K[^.]*\.[^.]*' || echo 'unknown')"
+  # Verify that php-config matches the active php version
+  php_version="$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')"
+  php_config_version="$("${php_config}" --version | grep -oP 'PHP \K[^.]*\.[^.]*' || echo 'unknown')"
 
-	echo "Active PHP version: ${php_version}"
-	echo "PHP config version: ${php_config_version}"
+  echo "Active PHP version: ${php_version}"
+  echo "PHP config version: ${php_config_version}"
 
-	if [[ "${php_version}" != "${php_config_version}" ]]; then
-		echo "Warning: PHP version mismatch between php (${php_version}) and php-config (${php_config_version})"
-		echo "Attempting to find correct php-config${php_version}..."
+  if [[ "${php_version}" != "${php_config_version}" ]]; then
+    echo "Warning: PHP version mismatch between php (${php_version}) and php-config (${php_config_version})"
+    echo "Attempting to find correct php-config${php_version}..."
 
-		versioned_config="/usr/bin/php-config${php_version}"
-		if [[ -f "${versioned_config}" ]]; then
-			php_config="${versioned_config}"
-			echo "Using versioned php-config: ${php_config}"
-		else
-			echo "Error: Could not find php-config${php_version}"
-			exit 1
-		fi
-	fi
+    versioned_config="/usr/bin/php-config${php_version}"
+    if [[ -f "${versioned_config}" ]]; then
+      php_config="${versioned_config}"
+      echo "Using versioned php-config: ${php_config}"
+    else
+      echo "Error: Could not find php-config${php_version}"
+      exit 1
+    fi
+  fi
 fi
 
 echo "PHP_CONFIG=${php_config}" >>"${GITHUB_ENV}"

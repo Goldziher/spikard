@@ -6,7 +6,7 @@ Tests the PyO3 bridge between Python gRPC handlers and Rust's gRPC runtime.
 import pytest
 
 
-def test_grpc_request_creation():
+def test_grpc_request_creation() -> None:
     """Test creating a GrpcRequest from Python."""
     from spikard import GrpcRequest
 
@@ -23,7 +23,7 @@ def test_grpc_request_creation():
     assert request.get_metadata("authorization") == "Bearer token"
 
 
-def test_grpc_request_no_metadata():
+def test_grpc_request_no_metadata() -> None:
     """Test creating a GrpcRequest without metadata."""
     from spikard import GrpcRequest
 
@@ -39,7 +39,7 @@ def test_grpc_request_no_metadata():
     assert request.get_metadata("nonexistent") is None
 
 
-def test_grpc_response_creation():
+def test_grpc_response_creation() -> None:
     """Test creating a GrpcResponse from Python."""
     from spikard import GrpcResponse
 
@@ -51,7 +51,7 @@ def test_grpc_response_creation():
     assert response.payload == b"response data"
 
 
-def test_grpc_response_set_metadata():
+def test_grpc_response_set_metadata() -> None:
     """Test setting metadata on a GrpcResponse."""
     from spikard import GrpcResponse
 
@@ -64,7 +64,7 @@ def test_grpc_response_set_metadata():
     assert response.metadata["custom-header"] == "custom-value"
 
 
-def test_grpc_handler_protocol():
+def test_grpc_handler_protocol() -> None:
     """Test that GrpcHandler is a protocol."""
     from spikard import GrpcHandler, GrpcRequest, GrpcResponse
 
@@ -76,7 +76,7 @@ def test_grpc_handler_protocol():
     assert isinstance(handler, GrpcHandler)
 
 
-def test_grpc_service_register_handler():
+def test_grpc_service_register_handler() -> None:
     """Test registering a handler with GrpcService."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -93,7 +93,7 @@ def test_grpc_service_register_handler():
     assert "test.TestService" in service.list_services()
 
 
-def test_grpc_service_unregister_handler():
+def test_grpc_service_unregister_handler() -> None:
     """Test unregistering a handler from GrpcService."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -111,7 +111,7 @@ def test_grpc_service_unregister_handler():
     assert "test.Service" not in service.list_services()
 
 
-def test_grpc_service_duplicate_registration():
+def test_grpc_service_duplicate_registration() -> None:
     """Test that duplicate service registration raises an error."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -128,21 +128,23 @@ def test_grpc_service_duplicate_registration():
         service.register_handler("test.Service", handler)
 
 
-def test_grpc_service_invalid_handler():
+def test_grpc_service_invalid_handler() -> None:
     """Test that registering an invalid handler raises an error."""
-    from spikard import GrpcService
+    from typing import cast
+
+    from spikard import GrpcHandler, GrpcService
 
     service = GrpcService()
 
-    # Not a valid handler (no handle_request method)
-    invalid_handler = object()
+    # Not a valid handler (no handle_request method) - cast to bypass static checks
+    invalid_handler = cast("GrpcHandler", object())
 
     with pytest.raises(TypeError, match="implement GrpcHandler protocol"):
         service.register_handler("test.Service", invalid_handler)
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_routing():
+async def test_grpc_service_routing() -> None:
     """Test that GrpcService routes requests to the correct handler."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -166,7 +168,7 @@ async def test_grpc_service_routing():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_no_handler():
+async def test_grpc_service_no_handler() -> None:
     """Test that GrpcService raises an error for unregistered services."""
     from spikard import GrpcRequest, GrpcService
 
@@ -182,7 +184,7 @@ async def test_grpc_service_no_handler():
         await service.handle_request(request)
 
 
-def test_grpc_request_repr():
+def test_grpc_request_repr() -> None:
     """Test the string representation of GrpcRequest."""
     from spikard import GrpcRequest
 
@@ -198,7 +200,7 @@ def test_grpc_request_repr():
     assert "payload_size=3" in repr_str
 
 
-def test_grpc_response_repr():
+def test_grpc_response_repr() -> None:
     """Test the string representation of GrpcResponse."""
     from spikard import GrpcResponse
 
@@ -209,7 +211,7 @@ def test_grpc_response_repr():
 
 
 @pytest.mark.asyncio
-async def test_grpc_handler_with_protobuf():
+async def test_grpc_handler_with_protobuf() -> None:
     """Test gRPC handler with actual protobuf serialization.
 
     This test demonstrates the expected usage pattern with google.protobuf.
@@ -261,7 +263,7 @@ async def test_grpc_handler_with_protobuf():
 
 
 @pytest.mark.asyncio
-async def test_grpc_handler_error_handling():
+async def test_grpc_handler_error_handling() -> None:
     """Test that exceptions in handlers are properly propagated."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -281,12 +283,12 @@ async def test_grpc_handler_error_handling():
 
 
 @pytest.mark.asyncio
-async def test_grpc_handler_different_exceptions():
+async def test_grpc_handler_different_exceptions() -> None:
     """Test different exception types."""
     from spikard import GrpcRequest, GrpcResponse
 
     class ExceptionHandler:
-        def __init__(self, exception_type, message):
+        def __init__(self, exception_type: type[Exception], message: str) -> None:
             self.exception_type = exception_type
             self.message = message
 
@@ -310,7 +312,7 @@ async def test_grpc_handler_different_exceptions():
         await handler.handle_request(request)
 
 
-def test_grpc_request_empty_payload():
+def test_grpc_request_empty_payload() -> None:
     """Test creating a GrpcRequest with empty payload."""
     from spikard import GrpcRequest
 
@@ -325,7 +327,7 @@ def test_grpc_request_empty_payload():
     assert request.payload == b""
 
 
-def test_grpc_request_large_payload():
+def test_grpc_request_large_payload() -> None:
     """Test creating a GrpcRequest with large payload."""
     from spikard import GrpcRequest
 
@@ -341,7 +343,7 @@ def test_grpc_request_large_payload():
     assert request.payload == large_payload
 
 
-def test_grpc_request_metadata_special_chars():
+def test_grpc_request_metadata_special_chars() -> None:
     """Test metadata with special characters."""
     from spikard import GrpcRequest
 
@@ -359,7 +361,7 @@ def test_grpc_request_metadata_special_chars():
     assert request.get_metadata("content-type") == "application/grpc+proto"
 
 
-def test_grpc_response_empty_metadata():
+def test_grpc_response_empty_metadata() -> None:
     """Test creating GrpcResponse without metadata."""
     from spikard import GrpcResponse
 
@@ -367,7 +369,7 @@ def test_grpc_response_empty_metadata():
     assert len(response.metadata) == 0
 
 
-def test_grpc_response_multiple_metadata():
+def test_grpc_response_multiple_metadata() -> None:
     """Test GrpcResponse with multiple metadata entries."""
     from spikard import GrpcResponse
 
@@ -386,7 +388,7 @@ def test_grpc_response_multiple_metadata():
 
 
 @pytest.mark.asyncio
-async def test_grpc_handler_modifies_metadata():
+async def test_grpc_handler_modifies_metadata() -> None:
     """Test that handlers can add metadata to responses."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -406,7 +408,7 @@ async def test_grpc_handler_modifies_metadata():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_method_routing():
+async def test_grpc_service_method_routing() -> None:
     """Test that handlers can route based on method name."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -436,7 +438,7 @@ async def test_grpc_service_method_routing():
         await handler.handle_request(request)
 
 
-def test_grpc_request_metadata_case_sensitivity():
+def test_grpc_request_metadata_case_sensitivity() -> None:
     """Test that metadata keys are case-sensitive."""
     from spikard import GrpcRequest
 
@@ -456,7 +458,7 @@ def test_grpc_request_metadata_case_sensitivity():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_ok():
+async def test_grpc_status_ok() -> None:
     """Test handler returning OK status code for successful responses."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -472,7 +474,7 @@ async def test_grpc_status_ok():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_cancelled():
+async def test_grpc_status_cancelled() -> None:
     """Test handler returning CANCELLED status for cancelled operations."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -492,7 +494,7 @@ async def test_grpc_status_cancelled():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_unknown():
+async def test_grpc_status_unknown() -> None:
     """Test handler returning UNKNOWN status for unknown errors."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -508,7 +510,7 @@ async def test_grpc_status_unknown():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_invalid_argument():
+async def test_grpc_status_invalid_argument() -> None:
     """Test handler returning error for invalid arguments."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -530,7 +532,7 @@ async def test_grpc_status_invalid_argument():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_deadline_exceeded():
+async def test_grpc_status_deadline_exceeded() -> None:
     """Test handler returning DEADLINE_EXCEEDED status code for timeouts."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -548,7 +550,7 @@ async def test_grpc_status_deadline_exceeded():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_not_found():
+async def test_grpc_status_not_found() -> None:
     """Test handler returning NOT_FOUND status code for missing resources."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -564,7 +566,7 @@ async def test_grpc_status_not_found():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_already_exists():
+async def test_grpc_status_already_exists() -> None:
     """Test handler returning ALREADY_EXISTS status code for duplicates."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -585,7 +587,7 @@ async def test_grpc_status_already_exists():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_permission_denied():
+async def test_grpc_status_permission_denied() -> None:
     """Test handler returning PERMISSION_DENIED status code for access denied."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -604,7 +606,7 @@ async def test_grpc_status_permission_denied():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_resource_exhausted():
+async def test_grpc_status_resource_exhausted() -> None:
     """Test handler returning RESOURCE_EXHAUSTED status code for quota exceeded."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -625,7 +627,7 @@ async def test_grpc_status_resource_exhausted():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_failed_precondition():
+async def test_grpc_status_failed_precondition() -> None:
     """Test handler returning FAILED_PRECONDITION status code for system state."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -646,7 +648,7 @@ async def test_grpc_status_failed_precondition():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_aborted():
+async def test_grpc_status_aborted() -> None:
     """Test handler returning ABORTED status code for transaction abort."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -665,7 +667,7 @@ async def test_grpc_status_aborted():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_out_of_range():
+async def test_grpc_status_out_of_range() -> None:
     """Test handler returning OUT_OF_RANGE status code for parameter range errors."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -686,7 +688,7 @@ async def test_grpc_status_out_of_range():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_unimplemented():
+async def test_grpc_status_unimplemented() -> None:
     """Test handler returning UNIMPLEMENTED status code for not implemented methods."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -707,7 +709,7 @@ async def test_grpc_status_unimplemented():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_internal():
+async def test_grpc_status_internal() -> None:
     """Test handler returning INTERNAL status code for server errors."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -724,7 +726,7 @@ async def test_grpc_status_internal():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_unavailable():
+async def test_grpc_status_unavailable() -> None:
     """Test handler returning UNAVAILABLE status code for service unavailable."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -741,7 +743,7 @@ async def test_grpc_status_unavailable():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_data_loss():
+async def test_grpc_status_data_loss() -> None:
     """Test handler returning DATA_LOSS status code for data corruption."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -762,7 +764,7 @@ async def test_grpc_status_data_loss():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_unauthenticated():
+async def test_grpc_status_unauthenticated() -> None:
     """Test handler returning UNAUTHENTICATED status code for missing credentials."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -783,7 +785,7 @@ async def test_grpc_status_unauthenticated():
 
 
 @pytest.mark.asyncio
-async def test_grpc_streaming_support_placeholder():
+async def test_grpc_streaming_support_placeholder() -> None:
     """Test placeholder for streaming request support."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -805,7 +807,7 @@ async def test_grpc_streaming_support_placeholder():
 
 
 @pytest.mark.asyncio
-async def test_grpc_response_streaming_placeholder():
+async def test_grpc_response_streaming_placeholder() -> None:
     """Test placeholder for streaming response support."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -826,7 +828,7 @@ async def test_grpc_response_streaming_placeholder():
 
 
 @pytest.mark.asyncio
-async def test_grpc_async_iterator_pattern():
+async def test_grpc_async_iterator_pattern() -> None:
     """Test async iterator patterns with responses."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -850,7 +852,7 @@ async def test_grpc_async_iterator_pattern():
 
 
 @pytest.mark.asyncio
-async def test_grpc_stream_error_handling():
+async def test_grpc_stream_error_handling() -> None:
     """Test error handling in stream-like scenarios."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -884,12 +886,12 @@ async def test_grpc_stream_error_handling():
 
 
 @pytest.mark.asyncio
-async def test_grpc_stream_cancellation_placeholder():
+async def test_grpc_stream_cancellation_placeholder() -> None:
     """Test placeholder for stream cancellation support."""
     from spikard import GrpcRequest, GrpcResponse
 
     class CancellableHandler:
-        def __init__(self):
+        def __init__(self) -> None:
             self.cancelled = False
 
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
@@ -917,12 +919,12 @@ async def test_grpc_stream_cancellation_placeholder():
 
 
 @pytest.mark.asyncio
-async def test_grpc_backpressure_scenario():
+async def test_grpc_backpressure_scenario() -> None:
     """Test backpressure handling in high-volume scenarios."""
     from spikard import GrpcRequest, GrpcResponse
 
     class BackpressureHandler:
-        def __init__(self):
+        def __init__(self) -> None:
             self.request_count = 0
 
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
@@ -951,7 +953,7 @@ async def test_grpc_backpressure_scenario():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_multiple_registration():
+async def test_grpc_service_multiple_registration() -> None:
     """Test registering multiple services with a single service."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -976,7 +978,7 @@ async def test_grpc_service_multiple_registration():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_unregister_multiple():
+async def test_grpc_service_unregister_multiple() -> None:
     """Test unregistering multiple services."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -1004,7 +1006,7 @@ async def test_grpc_service_unregister_multiple():
 
 
 @pytest.mark.asyncio
-async def test_grpc_routing_by_service_and_method():
+async def test_grpc_routing_by_service_and_method() -> None:
     """Test routing requests based on both service and method name."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -1040,7 +1042,7 @@ async def test_grpc_routing_by_service_and_method():
 
 
 @pytest.mark.asyncio
-async def test_grpc_handler_not_found():
+async def test_grpc_handler_not_found() -> None:
     """Test handling of requests to non-existent handlers."""
     from spikard import GrpcRequest, GrpcService
 
@@ -1057,7 +1059,7 @@ async def test_grpc_handler_not_found():
 
 
 @pytest.mark.asyncio
-async def test_grpc_duplicate_registration_error():
+async def test_grpc_duplicate_registration_error() -> None:
     """Test that duplicate service registration raises error."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -1075,7 +1077,7 @@ async def test_grpc_duplicate_registration_error():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_name_pattern_matching():
+async def test_grpc_service_name_pattern_matching() -> None:
     """Test pattern matching for service names."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -1100,7 +1102,7 @@ async def test_grpc_service_name_pattern_matching():
 
 
 @pytest.mark.asyncio
-async def test_grpc_payload_10mb():
+async def test_grpc_payload_10mb() -> None:
     """Test handler with 10MB payload."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -1125,7 +1127,7 @@ async def test_grpc_payload_10mb():
 
 
 @pytest.mark.asyncio
-async def test_grpc_binary_payload_with_null_bytes():
+async def test_grpc_binary_payload_with_null_bytes() -> None:
     """Test handler with binary payload containing null bytes."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -1150,7 +1152,7 @@ async def test_grpc_binary_payload_with_null_bytes():
 
 
 @pytest.mark.asyncio
-async def test_grpc_unicode_payload_cjk():
+async def test_grpc_unicode_payload_cjk() -> None:
     """Test handler with Unicode payload containing CJK characters."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -1176,7 +1178,7 @@ async def test_grpc_unicode_payload_cjk():
 
 
 @pytest.mark.asyncio
-async def test_grpc_unicode_payload_arabic():
+async def test_grpc_unicode_payload_arabic() -> None:
     """Test handler with Unicode payload containing Arabic characters."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -1200,7 +1202,7 @@ async def test_grpc_unicode_payload_arabic():
 
 
 @pytest.mark.asyncio
-async def test_grpc_unicode_emoji_payload():
+async def test_grpc_unicode_emoji_payload() -> None:
     """Test handler with emoji and special Unicode characters."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -1224,7 +1226,7 @@ async def test_grpc_unicode_emoji_payload():
 
 
 @pytest.mark.asyncio
-async def test_grpc_deeply_nested_json():
+async def test_grpc_deeply_nested_json() -> None:
     """Test handler with deeply nested JSON (10+ levels)."""
     import json
 
@@ -1239,7 +1241,7 @@ async def test_grpc_deeply_nested_json():
     handler = NestedJsonHandler()
 
     # Create deeply nested JSON
-    nested = {"value": 1}
+    nested: dict[str, object] = {"value": 1}
     for _ in range(10):
         nested = {"level": nested}
 
@@ -1257,7 +1259,7 @@ async def test_grpc_deeply_nested_json():
 
 
 @pytest.mark.asyncio
-async def test_grpc_very_long_string_field():
+async def test_grpc_very_long_string_field() -> None:
     """Test handler with very long strings (1MB+ in a single field)."""
     import json
 
@@ -1286,14 +1288,14 @@ async def test_grpc_very_long_string_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_concurrent_request_handling():
+async def test_grpc_concurrent_request_handling() -> None:
     """Test handler's ability to handle concurrent requests."""
     import asyncio
 
     from spikard import GrpcRequest, GrpcResponse
 
     class ConcurrentHandler:
-        def __init__(self):
+        def __init__(self) -> None:
             self.call_count = 0
 
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
@@ -1305,7 +1307,7 @@ async def test_grpc_concurrent_request_handling():
     handler = ConcurrentHandler()
 
     # Create multiple concurrent requests
-    async def make_request(i):
+    async def make_request(i: int) -> GrpcResponse:
         request = GrpcRequest(
             service_name="test.ConcurrentService",
             method_name="Process",
@@ -1323,7 +1325,7 @@ async def test_grpc_concurrent_request_handling():
 
 
 @pytest.mark.asyncio
-async def test_grpc_memory_efficiency_large_payload():
+async def test_grpc_memory_efficiency_large_payload() -> None:
     """Test memory efficiency when handling large payloads."""
 
     from spikard import GrpcRequest, GrpcResponse
@@ -1349,7 +1351,7 @@ async def test_grpc_memory_efficiency_large_payload():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_int32_field():
+async def test_grpc_protobuf_int32_field() -> None:
     """Test handler with protobuf int32 field type."""
     pytest.importorskip("google.protobuf")
 
@@ -1388,7 +1390,7 @@ async def test_grpc_protobuf_int32_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_int64_field():
+async def test_grpc_protobuf_int64_field() -> None:
     """Test handler with protobuf int64 field type."""
     pytest.importorskip("google.protobuf")
 
@@ -1427,7 +1429,7 @@ async def test_grpc_protobuf_int64_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_string_field():
+async def test_grpc_protobuf_string_field() -> None:
     """Test handler with protobuf string field type."""
     pytest.importorskip("google.protobuf")
 
@@ -1465,7 +1467,7 @@ async def test_grpc_protobuf_string_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_bool_field():
+async def test_grpc_protobuf_bool_field() -> None:
     """Test handler with protobuf bool field type."""
     pytest.importorskip("google.protobuf")
 
@@ -1503,7 +1505,7 @@ async def test_grpc_protobuf_bool_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_bytes_field():
+async def test_grpc_protobuf_bytes_field() -> None:
     """Test handler with protobuf bytes field type."""
     pytest.importorskip("google.protobuf")
 
@@ -1540,7 +1542,7 @@ async def test_grpc_protobuf_bytes_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_float_field():
+async def test_grpc_protobuf_float_field() -> None:
     """Test handler with protobuf float field type."""
     pytest.importorskip("google.protobuf")
 
@@ -1578,7 +1580,7 @@ async def test_grpc_protobuf_float_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_double_field():
+async def test_grpc_protobuf_double_field() -> None:
     """Test handler with protobuf double field type."""
     pytest.importorskip("google.protobuf")
 
@@ -1616,7 +1618,7 @@ async def test_grpc_protobuf_double_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_repeated_field():
+async def test_grpc_protobuf_repeated_field() -> None:
     """Test handler with protobuf repeated field."""
     pytest.importorskip("google.protobuf")
 
@@ -1658,7 +1660,7 @@ async def test_grpc_protobuf_repeated_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_optional_field():
+async def test_grpc_protobuf_optional_field() -> None:
     """Test handler with protobuf optional field."""
     pytest.importorskip("google.protobuf")
 
@@ -1710,7 +1712,7 @@ async def test_grpc_protobuf_optional_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_enum_field():
+async def test_grpc_protobuf_enum_field() -> None:
     """Test handler with protobuf enum field type."""
     pytest.importorskip("google.protobuf")
 
@@ -1748,7 +1750,7 @@ async def test_grpc_protobuf_enum_field():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_nested_message():
+async def test_grpc_protobuf_nested_message() -> None:
     """Test handler with protobuf nested message."""
     pytest.importorskip("google.protobuf")
 
@@ -1788,7 +1790,7 @@ async def test_grpc_protobuf_nested_message():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_serialization_deserialization():
+async def test_grpc_protobuf_serialization_deserialization() -> None:
     """Test protobuf serialization and deserialization roundtrip."""
     pytest.importorskip("google.protobuf")
 
@@ -1833,7 +1835,7 @@ async def test_grpc_protobuf_serialization_deserialization():
 
 
 @pytest.mark.asyncio
-async def test_grpc_protobuf_message_validation():
+async def test_grpc_protobuf_message_validation() -> None:
     """Test protobuf message validation."""
     pytest.importorskip("google.protobuf")
 
@@ -1883,7 +1885,7 @@ async def test_grpc_protobuf_message_validation():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_cancelled_with_metadata():
+async def test_grpc_status_cancelled_with_metadata() -> None:
     """Test CANCELLED status code with error metadata."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -1908,7 +1910,7 @@ async def test_grpc_status_cancelled_with_metadata():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_unknown_with_trace_id():
+async def test_grpc_status_unknown_with_trace_id() -> None:
     """Test UNKNOWN status code with trace information."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -1932,7 +1934,7 @@ async def test_grpc_status_unknown_with_trace_id():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_invalid_argument_with_details():
+async def test_grpc_status_invalid_argument_with_details() -> None:
     """Test INVALID_ARGUMENT status code with detailed error info."""
     import json
 
@@ -1984,7 +1986,7 @@ async def test_grpc_status_invalid_argument_with_details():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_deadline_exceeded_with_elapsed_time():
+async def test_grpc_status_deadline_exceeded_with_elapsed_time() -> None:
     """Test DEADLINE_EXCEEDED status code with time information."""
     import json
 
@@ -2016,7 +2018,7 @@ async def test_grpc_status_deadline_exceeded_with_elapsed_time():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_not_found_with_resource_id():
+async def test_grpc_status_not_found_with_resource_id() -> None:
     """Test NOT_FOUND status code with resource identifier."""
     import json
 
@@ -2050,7 +2052,7 @@ async def test_grpc_status_not_found_with_resource_id():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_permission_denied_with_scope():
+async def test_grpc_status_permission_denied_with_scope() -> None:
     """Test PERMISSION_DENIED status code with required scopes."""
     import json
 
@@ -2080,7 +2082,7 @@ async def test_grpc_status_permission_denied_with_scope():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_resource_exhausted_with_quota_info():
+async def test_grpc_status_resource_exhausted_with_quota_info() -> None:
     """Test RESOURCE_EXHAUSTED status code with quota details."""
     import json
 
@@ -2113,7 +2115,7 @@ async def test_grpc_status_resource_exhausted_with_quota_info():
 
 
 @pytest.mark.asyncio
-async def test_grpc_status_unauthenticated_with_required_auth():
+async def test_grpc_status_unauthenticated_with_required_auth() -> None:
     """Test UNAUTHENTICATED status code with auth requirements."""
     import json
 
@@ -2148,7 +2150,7 @@ async def test_grpc_status_unauthenticated_with_required_auth():
 
 
 @pytest.mark.asyncio
-async def test_grpc_metadata_special_characters_extended():
+async def test_grpc_metadata_special_characters_extended() -> None:
     """Test metadata with extended special characters."""
     from spikard import GrpcRequest
 
@@ -2169,7 +2171,7 @@ async def test_grpc_metadata_special_characters_extended():
 
 
 @pytest.mark.asyncio
-async def test_grpc_metadata_very_long_values():
+async def test_grpc_metadata_very_long_values() -> None:
     """Test metadata with very long values (10KB+)."""
     from spikard import GrpcRequest
 
@@ -2187,7 +2189,7 @@ async def test_grpc_metadata_very_long_values():
 
 
 @pytest.mark.asyncio
-async def test_grpc_metadata_numeric_values():
+async def test_grpc_metadata_numeric_values() -> None:
     """Test metadata with various numeric formats."""
     from spikard import GrpcRequest
 
@@ -2210,7 +2212,7 @@ async def test_grpc_metadata_numeric_values():
 
 
 @pytest.mark.asyncio
-async def test_grpc_response_metadata_modification_sequence():
+async def test_grpc_response_metadata_modification_sequence() -> None:
     """Test sequential modification of response metadata."""
     from spikard import GrpcResponse
 
@@ -2234,7 +2236,7 @@ async def test_grpc_response_metadata_modification_sequence():
 
 
 @pytest.mark.asyncio
-async def test_grpc_metadata_unicode_values():
+async def test_grpc_metadata_unicode_values() -> None:
     """Test metadata with Unicode values in various languages."""
     from spikard import GrpcRequest
 
@@ -2260,7 +2262,7 @@ async def test_grpc_metadata_unicode_values():
 
 
 @pytest.mark.asyncio
-async def test_grpc_payload_empty_with_metadata():
+async def test_grpc_payload_empty_with_metadata() -> None:
     """Test empty payload with metadata headers."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -2285,7 +2287,7 @@ async def test_grpc_payload_empty_with_metadata():
 
 
 @pytest.mark.asyncio
-async def test_grpc_invalid_json_error_handling():
+async def test_grpc_invalid_json_error_handling() -> None:
     """Test handler error recovery with invalid JSON."""
     import json
 
@@ -2317,7 +2319,7 @@ async def test_grpc_invalid_json_error_handling():
 
 
 @pytest.mark.asyncio
-async def test_grpc_deeply_nested_json_manipulation():
+async def test_grpc_deeply_nested_json_manipulation() -> None:
     """Test handler manipulation of deeply nested JSON structures."""
     import json
 
@@ -2346,7 +2348,7 @@ async def test_grpc_deeply_nested_json_manipulation():
     handler = DeepNestedHandler()
 
     # Create structure with 15 levels
-    nested = {"value": 999}
+    nested: dict[str, object] = {"value": 999}
     for _ in range(15):
         nested = {"level": nested}
 
@@ -2363,7 +2365,7 @@ async def test_grpc_deeply_nested_json_manipulation():
 
 
 @pytest.mark.asyncio
-async def test_grpc_mixed_binary_and_text_payload():
+async def test_grpc_mixed_binary_and_text_payload() -> None:
     """Test handler with mixed binary and text data."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -2391,7 +2393,7 @@ async def test_grpc_mixed_binary_and_text_payload():
 
 
 @pytest.mark.asyncio
-async def test_grpc_payload_all_bytes_values():
+async def test_grpc_payload_all_bytes_values() -> None:
     """Test payload with all possible byte values (0-255)."""
     from spikard import GrpcRequest, GrpcResponse
 
@@ -2415,7 +2417,7 @@ async def test_grpc_payload_all_bytes_values():
 
 
 @pytest.mark.asyncio
-async def test_grpc_payload_large_json_array():
+async def test_grpc_payload_large_json_array() -> None:
     """Test handler with large JSON array (1000+ items)."""
     import json
 
@@ -2446,7 +2448,7 @@ async def test_grpc_payload_large_json_array():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_route_by_exact_service_name():
+async def test_grpc_service_route_by_exact_service_name() -> None:
     """Test that routing requires exact service name match."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -2479,7 +2481,7 @@ async def test_grpc_service_route_by_exact_service_name():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_method_routing_independence():
+async def test_grpc_service_method_routing_independence() -> None:
     """Test that method name doesn't affect service routing."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -2503,12 +2505,12 @@ async def test_grpc_service_method_routing_independence():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_handler_isolation():
+async def test_grpc_service_handler_isolation() -> None:
     """Test that handlers are properly isolated."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
     class StatefulHandler:
-        def __init__(self, name):
+        def __init__(self, name: str) -> None:
             self.name = name
             self.call_count = 0
 
@@ -2547,7 +2549,7 @@ async def test_grpc_service_handler_isolation():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_get_handler_for_routing():
+async def test_grpc_service_get_handler_for_routing() -> None:
     """Test get_handler for manual routing decisions."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -2575,7 +2577,7 @@ async def test_grpc_service_get_handler_for_routing():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_unregister_and_reregister():
+async def test_grpc_service_unregister_and_reregister() -> None:
     """Test unregistering and re-registering a service."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -2612,7 +2614,7 @@ async def test_grpc_service_unregister_and_reregister():
 
 
 @pytest.mark.asyncio
-async def test_grpc_service_versioned_endpoints():
+async def test_grpc_service_versioned_endpoints() -> None:
     """Test routing different versions of the same service."""
     from spikard import GrpcRequest, GrpcResponse, GrpcService
 
@@ -2655,15 +2657,15 @@ async def test_grpc_service_versioned_endpoints():
 
 
 @pytest.mark.asyncio
-async def test_grpc_concurrent_large_payload_handling():
+async def test_grpc_concurrent_large_payload_handling() -> None:
     """Test concurrent handling of multiple large payloads."""
     import asyncio
 
     from spikard import GrpcRequest, GrpcResponse
 
     class LargeConcurrentHandler:
-        def __init__(self):
-            self.processed = []
+        def __init__(self) -> None:
+            self.processed: list[int] = []
 
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             # Simulate processing
@@ -2674,7 +2676,7 @@ async def test_grpc_concurrent_large_payload_handling():
 
     handler = LargeConcurrentHandler()
 
-    async def send_large_request(i):
+    async def send_large_request(i: int) -> GrpcResponse:
         payload = b"x" * (100 * 1024)  # 100KB each
         request = GrpcRequest(
             service_name="test.LargeService",
@@ -2692,14 +2694,14 @@ async def test_grpc_concurrent_large_payload_handling():
 
 
 @pytest.mark.asyncio
-async def test_grpc_handler_state_consistency_under_concurrency():
+async def test_grpc_handler_state_consistency_under_concurrency() -> None:
     """Test that handler state remains consistent under concurrent load."""
     import asyncio
 
     from spikard import GrpcRequest, GrpcResponse
 
     class ConsistencyHandler:
-        def __init__(self):
+        def __init__(self) -> None:
             self.counter = 0
 
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
@@ -2711,7 +2713,7 @@ async def test_grpc_handler_state_consistency_under_concurrency():
 
     handler = ConsistencyHandler()
 
-    async def concurrent_request(i):
+    async def concurrent_request(i: int) -> GrpcResponse:
         request = GrpcRequest(
             service_name="test.CounterService",
             method_name="Increment",
@@ -2728,13 +2730,13 @@ async def test_grpc_handler_state_consistency_under_concurrency():
 
 
 @pytest.mark.asyncio
-async def test_grpc_handler_rapid_fire_requests():
+async def test_grpc_handler_rapid_fire_requests() -> None:
     """Test handler performance with rapid sequential requests."""
     from spikard import GrpcRequest, GrpcResponse
 
     class RapidHandler:
-        def __init__(self):
-            self.request_times = []
+        def __init__(self) -> None:
+            self.request_times: list[float] = []
             self.count = 0
 
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:

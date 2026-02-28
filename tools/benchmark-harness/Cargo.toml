@@ -62,3 +62,6 @@ inferno = "0.12"
 tempfile = "3"
 tokio = { version = "1", features = ["test-util", "macros", "rt-multi-thread"] }
 axum = "0.8"
+
+[package.metadata.cargo-machete]
+ignored = ["anyhow", "rand"]

@@ -381,7 +381,8 @@ class CoverageVerifier:
                 total = data["total"]
                 # Use line coverage
                 if "lines" in total and "pct" in total["lines"]:
-                    return total["lines"]["pct"]
+                    pct: float = total["lines"]["pct"]
+                    return pct
 
             return None
         except Exception:

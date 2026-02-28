@@ -7,33 +7,33 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../../.." && pwd -P)"
 shopt -s nullglob
 first=true
 for pkg in "${REPO_ROOT}"/crates/spikard-node/npm/*.tgz; do
-	pkg_name="$(tar -xOf "${pkg}" package/package.json | jq -r '.name')"
-	pkg_version="$(tar -xOf "${pkg}" package/package.json | jq -r '.version')"
+  pkg_name="$(tar -xOf "${pkg}" package/package.json | jq -r '.name')"
+  pkg_version="$(tar -xOf "${pkg}" package/package.json | jq -r '.version')"
 
-	if npm view "${pkg_name}@${pkg_version}" version >/dev/null 2>&1; then
-		echo "::notice::Package ${pkg_name}@${pkg_version} already published; skipping."
-		echo "Package ${pkg_name}@${pkg_version} already published; skipping." >>"${GITHUB_STEP_SUMMARY}"
-		continue
-	fi
+  if npm view "${pkg_name}@${pkg_version}" version >/dev/null 2>&1; then
+    echo "::notice::Package ${pkg_name}@${pkg_version} already published; skipping."
+    echo "Package ${pkg_name}@${pkg_version} already published; skipping." >>"${GITHUB_STEP_SUMMARY}"
+    continue
+  fi
 
-	if [ "${first}" = false ]; then
-		echo "Waiting 30s to avoid spam detection..."
-		sleep 30
-	fi
-	first=false
+  if [ "${first}" = false ]; then
+    echo "Waiting 30s to avoid spam detection..."
+    sleep 30
+  fi
+  first=false
 
-	echo "Publishing ${pkg}"
-	publish_log="$(mktemp)"
-	set +e
-	npm publish "${pkg}" --access public --ignore-scripts 2>&1 | tee "${publish_log}"
-	status=${PIPESTATUS[0]}
-	set -e
-	if [ "${status}" -ne 0 ]; then
-		if grep -q "previously published versions" "${publish_log}"; then
-			echo "::notice::Package ${pkg} already published; skipping."
-			echo "Package $(basename "${pkg}") already published; skipping." >>"${GITHUB_STEP_SUMMARY}"
-		else
-			exit "${status}"
-		fi
-	fi
+  echo "Publishing ${pkg}"
+  publish_log="$(mktemp)"
+  set +e
+  npm publish "${pkg}" --access public --ignore-scripts 2>&1 | tee "${publish_log}"
+  status=${PIPESTATUS[0]}
+  set -e
+  if [ "${status}" -ne 0 ]; then
+    if grep -q "previously published versions" "${publish_log}"; then
+      echo "::notice::Package ${pkg} already published; skipping."
+      echo "Package $(basename "${pkg}") already published; skipping." >>"${GITHUB_STEP_SUMMARY}"
+    else
+      exit "${status}"
+    fi
+  fi
 done

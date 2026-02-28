@@ -257,7 +257,7 @@ async fn router_supports_openapi_jsonrpc_and_static_files_in_one_config() {
     let config = build_config(dir.path());
 
     let app_router = build_router_with_handlers_and_config(route_entries, config, route_metadata).expect("router");
-    let server = axum_test::TestServer::new(app_router).expect("test server");
+    let server = axum_test::TestServer::new(app_router);
 
     assert_openapi_docs_and_redoc(&server).await;
     assert_static_files(&server).await;
@@ -338,7 +338,7 @@ async fn static_response_route_serves_pre_built_response() {
 
     let config = ServerConfig::default();
     let app = build_router_with_handlers_and_config(routes, config, vec![route_meta]).expect("router");
-    let server = axum_test::TestServer::new(app).expect("test server");
+    let server = axum_test::TestServer::new(app);
 
     let resp = server.get("/health").await;
     assert_eq!(resp.status_code(), StatusCode::OK);
@@ -406,7 +406,7 @@ async fn static_and_dynamic_routes_coexist() {
 
     let config = ServerConfig::default();
     let app = build_router_with_handlers_and_config(routes, config, vec![static_meta, dynamic_meta]).expect("router");
-    let server = axum_test::TestServer::new(app).expect("test server");
+    let server = axum_test::TestServer::new(app);
 
     // Static route
     let resp = server.get("/health").await;

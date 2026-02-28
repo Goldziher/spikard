@@ -6,9 +6,9 @@ version="${2:?version required}"
 url="https://github.com/Goldziher/spikard/archive/${tag}.tar.gz"
 
 {
-	echo "tag=${tag}"
-	echo "version=${version}"
-	echo "url=${url}"
+  echo "tag=${tag}"
+  echo "version=${version}"
+  echo "url=${url}"
 } >>"${GITHUB_OUTPUT}"
 
 echo "Release info:"

@@ -1,9 +1,10 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
-exclude: ^docs/snippets/|vendor/|node_modules/|target/|v3/|invalid*|dist/|artifacts/
+exclude: vendor/|node_modules/|target/|dist/|artifacts/
 
 repos:
+  # Commit message linting
   - repo: https://github.com/Goldziher/gitfluff
     rev: v0.8.0
     hooks:
@@ -11,17 +12,15 @@ repos:
         args: ["--write"]
         stages: [commit-msg]
 
+  # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-        # These files are used as byte-for-byte fixtures in e2e tests; enforcing a trailing newline
-        # changes semantics and breaks cross-language parity assertions.
-        exclude: ^e2e/.*/static_assets/
       - id: check-merge-conflict
       - id: check-added-large-files
-        exclude: uv.lock|docs/assets/benchmarks/|test_documents/
+        exclude: uv.lock
       - id: detect-private-key
       - id: check-json
       - id: check-yaml
@@ -29,136 +28,187 @@ repos:
       - id: check-toml
       - id: check-case-conflict
 
+  # TOML formatting
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: v2.16.2
+    hooks:
+      - id: pyproject-fmt
+
   - repo: https://github.com/ComPWA/taplo-pre-commit
     rev: v0.9.3
     hooks:
       - id: taplo-format
-        exclude: (^|/)pyproject\.toml$
+        exclude: "pyproject.toml"
 
-  - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.16.1
-    hooks:
-      - id: pyproject-fmt
-
+  # Python: ruff (linting + formatting) + mypy (type checking)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.1
+    rev: v0.15.4
     hooks:
       - id: ruff
-        args: ["--fix", "--unsafe-fixes"]
+        args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.1
     hooks:
-      - id: fmt
-        files: ^(crates|packages/ruby/ext/spikard_rb/native)/.*\.rs$|^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|packages/ruby/ext/spikard_rb/native/Cargo\.toml)$
-      - id: cargo-check
-        files: ^(crates|packages/ruby/ext/spikard_rb/native)/.*\.rs$|^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|packages/ruby/ext/spikard_rb/native/Cargo\.toml)$
-        args: ["--workspace"]
-        pass_filenames: false
-      - id: clippy
-        files: ^(crates|packages/ruby/ext/spikard_rb/native)/.*\.rs$|^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|packages/ruby/ext/spikard_rb/native/Cargo\.toml)$
-        args: ["--workspace", "--all-features", "--all-targets", "--", "-D", "warnings"]
-        pass_filenames: false
+      - id: mypy
+        exclude: "e2e/|scripts/|examples/|tests/test_apps/|benchmarks/|tools/"
+
+  # Rust: formatting, linting, and license checking
+  - repo: https://github.com/AndrejOrsula/pre-commit-cargo
+    rev: 0.5.0
+    hooks:
+      - id: cargo-fmt
+        args: ["--all"]
+      - id: cargo-clippy
+        args: [
+          "--fix",
+          "--allow-dirty",
+          "--allow-staged",
+          "--workspace",
+          "--exclude=spikard-php",
+          "--exclude=spikard-py",
+          "--exclude=spikard-node",
+          "--exclude=spikard-rb",
+          "--exclude=spikard-rb-macros",
+          "--exclude=spikard-elixir",
+          "--exclude=benchmark-harness",
+          "--all-features",
+          "--all-targets",
+          "--",
+          "-D",
+          "warnings",
+        ]
+      - id: cargo-doc
+        args: [
+          "--no-deps",
+          "--document-private-items",
+          "--workspace",
+          "--exclude=spikard-php",
+          "--exclude=spikard-py",
+          "--exclude=spikard-node",
+          "--exclude=spikard-rb",
+          "--exclude=spikard-rb-macros",
+          "--exclude=spikard-elixir",
+          "--exclude=benchmark-harness",
+        ]
+      - id: cargo-fix
+        args: [
+          "--allow-dirty",
+          "--allow-staged",
+          "--workspace",
+          "--exclude=spikard-php",
+          "--exclude=spikard-py",
+          "--exclude=spikard-node",
+          "--exclude=spikard-rb",
+          "--exclude=spikard-rb-macros",
+          "--exclude=spikard-elixir",
+          "--exclude=benchmark-harness",
+        ]
+
+  - repo: https://github.com/bnjbvr/cargo-machete
+    rev: v0.9.1
+    hooks:
+      - id: cargo-machete
 
   - repo: https://github.com/EmbarkStudios/cargo-deny
     rev: 0.19.0
     hooks:
       - id: cargo-deny
-        args: ["check", "licenses"]
-        files: ^(Cargo\.toml|Cargo\.lock|crates/.*/Cargo\.toml|deny\.toml)$
+        args: ["check"]
 
+  # JavaScript/TypeScript/JSON/CSS: biome (formatting + linting with autofixes)
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.4.2
+    rev: v2.4.4
     hooks:
       - id: biome-format
-        exclude: ^docs/assets/benchmarks/aggregated\.json$
+        exclude: ^tools/benchmark-harness/fixtures/
       - id: biome-lint
 
-  - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.48.0
-    hooks:
-      - id: oxlint
-        args: ["--fix"]
-
+  # Shell scripts: formatting and linting
   - repo: https://github.com/scop/pre-commit-shfmt
     rev: v3.12.0-2
     hooks:
       - id: shfmt
+        args: ["-w", "-i", "2"]
 
   - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.11.0
     hooks:
       - id: shellcheck
 
+  # GitHub Actions: linting
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.11
     hooks:
       - id: actionlint
 
+  # Local hooks for languages not covered by prek
   - repo: local
     hooks:
-      - id: mypy
-        name: mypy
-        entry: uv run mypy
-        language: system
-        require_serial: true
-        types: [python]
-        pass_filenames: false
-        args: ["tools", "packages/python"]
-
-      - id: ruby-format-check
-        name: Ruby format check
-        entry: task ruby:format:check
+      # Ruby
+      - id: ruby-format
+        name: Ruby formatting (rubocop)
+        entry: task ruby:format
         language: system
         files: ^packages/ruby/.*\.(rb|rbs)$|^packages/ruby/spikard\.gemspec$
         pass_filenames: false
         require_serial: true
+        stages: [commit]
 
-      - id: ruby-lint-check
-        name: Ruby lint check
-        entry: task ruby:lint:check
+      - id: ruby-lint
+        name: Ruby linting (rubocop + steep)
+        entry: task ruby:lint
         language: system
         files: ^packages/ruby/.*\.(rb|rbs)$|^packages/ruby/spikard\.gemspec$
         pass_filenames: false
         require_serial: true
+        stages: [commit]
 
+      # PHP
+      - id: php-format
+        name: PHP formatting (php-cs-fixer)
+        entry: task php:format
+        language: system
+        files: ^packages/php/.*\.php$
+        pass_filenames: false
+        require_serial: true
+        stages: [commit]
+
+      - id: php-lint
+        name: PHP linting (phpstan + php-cs-fixer)
+        entry: task php:lint
+        language: system
+        files: ^packages/php/.*\.php$
+        pass_filenames: false
+        require_serial: true
+        stages: [commit]
+
+      # Elixir
+      - id: elixir-format
+        name: Elixir formatting (mix format)
+        entry: task elixir:format
+        language: system
+        files: ^packages/elixir/.*\.(ex|exs|heex)$|^packages/elixir/mix\.exs$
+        pass_filenames: false
+        require_serial: true
+        stages: [commit]
+
+      - id: elixir-lint
+        name: Elixir linting (credo)
+        entry: task elixir:lint
+        language: system
+        files: ^packages/elixir/.*\.(ex|exs|heex)$|^packages/elixir/mix\.exs$
+        pass_filenames: false
+        require_serial: true
+        stages: [commit]
+
+      # TypeScript - type checking
       - id: typescript-typecheck
-        name: TypeScript typecheck
+        name: Check TypeScript types
         entry: pnpm --filter @spikard/node run typecheck
         language: system
         files: ^(packages/node|crates/spikard-node|e2e/node|examples/node|examples/node-simple|examples/graphql-node|tests/test_apps/node)/.*\.(ts|tsx)$
         pass_filenames: false
         require_serial: true
-
-      - id: php-format-check
-        name: PHP format check
-        entry: task php:format:check
-        language: system
-        files: ^packages/php/.*\.php$
-        pass_filenames: false
-        require_serial: true
-
-      - id: php-lint-check
-        name: PHP lint check
-        entry: task php:lint:check
-        language: system
-        files: ^packages/php/.*\.php$
-        pass_filenames: false
-        require_serial: true
-
-      - id: elixir-format-check
-        name: Elixir format check
-        entry: task elixir:format:check
-        language: system
-        files: ^packages/elixir/.*\.(ex|exs|heex)$|^packages/elixir/mix\.exs$
-        pass_filenames: false
-        require_serial: true
-
-      - id: elixir-lint-check
-        name: Elixir lint check
-        entry: task elixir:lint:check
-        language: system
-        files: ^packages/elixir/.*\.(ex|exs|heex)$|^packages/elixir/mix\.exs$
-        pass_filenames: false
-        require_serial: true
+        stages: [commit]

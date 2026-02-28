@@ -24,7 +24,7 @@ async fn call_test_server_preserves_method_headers_query_and_body() {
         }),
     );
 
-    let server = axum_test::TestServer::new(app).expect("server");
+    let server = axum_test::TestServer::new(app);
     let request = Request::builder()
         .method("GET")
         .uri("/echo?q=1")
@@ -65,7 +65,7 @@ async fn snapshot_response_reports_invalid_headers_and_decompression_errors() {
             }),
         );
 
-    let server = axum_test::TestServer::new(app).expect("server");
+    let server = axum_test::TestServer::new(app);
 
     let err = snapshot_response(server.get("/bad-header").await)
         .await
@@ -109,8 +109,7 @@ async fn websocket_testing_wrappers_roundtrip_and_message_helpers() {
             transport: Some(axum_test::Transport::HttpRandomPort),
             ..axum_test::TestServerConfig::default()
         },
-    )
-    .expect("server");
+    );
 
     let mut ws = connect_websocket(&server, "/ws").await;
 
@@ -150,7 +149,7 @@ async fn snapshot_response_decodes_gzip_body() {
         }),
     );
 
-    let server = axum_test::TestServer::new(app).expect("server");
+    let server = axum_test::TestServer::new(app);
     let snapshot = snapshot_response(server.get("/gzip").await).await.expect("snapshot");
     assert_eq!(snapshot.text().expect("text"), "hello gzip");
 }

@@ -53,3 +53,17 @@ mimalloc-rust = "0.2"
 
 [build-dependencies]
 napi-build = "2.3"
+
+[package.metadata.cargo-machete]
+ignored = [
+  "async-trait",
+  "cookie",
+  "http-body-util",
+  "rustc-hash",
+  "serde",
+  "serde_qs",
+  "spikard",
+  "tower",
+  "url",
+  "urlencoding",
+]

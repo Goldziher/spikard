@@ -7,14 +7,14 @@ REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
 cd "${REPO_ROOT}"
 
 run_with_timeout() {
-	local timeout_seconds="$1"
-	shift
-	if command -v timeout >/dev/null 2>&1; then
-		timeout "${timeout_seconds}" "$@"
-	elif command -v gtimeout >/dev/null 2>&1; then
-		gtimeout "${timeout_seconds}" "$@"
-	elif command -v python3 >/dev/null 2>&1; then
-		python3 - "$timeout_seconds" "$@" <<'PY'
+  local timeout_seconds="$1"
+  shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${timeout_seconds}" "$@"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    gtimeout "${timeout_seconds}" "$@"
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 - "$timeout_seconds" "$@" <<'PY'
 import subprocess
 import sys
 
@@ -26,8 +26,8 @@ except subprocess.TimeoutExpired:
     print(f"Command timed out after {timeout}s: {' '.join(cmd)}", file=sys.stderr)
     sys.exit(124)
 PY
-	elif command -v python >/dev/null 2>&1; then
-		python - "$timeout_seconds" "$@" <<'PY'
+  elif command -v python >/dev/null 2>&1; then
+    python - "$timeout_seconds" "$@" <<'PY'
 import subprocess
 import sys
 
@@ -39,22 +39,22 @@ except subprocess.TimeoutExpired:
     print(f"Command timed out after {timeout}s: {' '.join(cmd)}", file=sys.stderr)
     sys.exit(124)
 PY
-	else
-		"$@"
-	fi
+  else
+    "$@"
+  fi
 }
 
 COMPOSER_UPDATE_TIMEOUT="${COMPOSER_UPDATE_TIMEOUT:-300}"
 
 for app in phalcon trongate spikard-php; do
-	echo "Updating $app..."
-	app_dir="tools/benchmark-harness/apps/$app"
+  echo "Updating $app..."
+  app_dir="tools/benchmark-harness/apps/$app"
 
-	if [[ ! -f "$app_dir/composer.json" ]]; then
-		echo "  Skipping $app (no composer.json)"
-		continue
-	fi
+  if [[ ! -f "$app_dir/composer.json" ]]; then
+    echo "  Skipping $app (no composer.json)"
+    continue
+  fi
 
-	cd "$app_dir" && run_with_timeout "$COMPOSER_UPDATE_TIMEOUT" composer update --no-interaction --no-progress
-	cd - >/dev/null
+  cd "$app_dir" && run_with_timeout "$COMPOSER_UPDATE_TIMEOUT" composer update --no-interaction --no-progress
+  cd - >/dev/null
 done

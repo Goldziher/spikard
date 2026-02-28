@@ -22,3 +22,6 @@ cookie = "0.18"
 urlencoding = "2.1"
 heck = "0.5"
 base64 = "0.22"
+
+[package.metadata.cargo-machete]
+ignored = ["cookie", "heck", "regex"]

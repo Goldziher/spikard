@@ -245,8 +245,8 @@ async fn test_jwt_auth_middleware_rejects_wrong_issuer() {
         )
         .layer(middleware::from_fn_with_state(config_state, auth_layer));
 
-    let response = axum_test::TestServer::new(app)
-        .unwrap()
+    let server = axum_test::TestServer::new(app);
+    let response = server
         .get("/protected")
         .add_header("Authorization", &format!("Bearer {token}"))
         .await;
@@ -289,10 +289,8 @@ async fn test_api_key_auth_middleware_query_fallback() {
         )
         .layer(middleware::from_fn_with_state(config_state, api_key_layer));
 
-    let response = axum_test::TestServer::new(app)
-        .unwrap()
-        .get("/data?api_key=top-secret")
-        .await;
+    let server = axum_test::TestServer::new(app);
+    let response = server.get("/data?api_key=top-secret").await;
 
     assert_eq!(response.status_code(), StatusCode::NO_CONTENT);
 }

@@ -55,7 +55,7 @@ async fn router_generates_cors_preflight_when_missing_options_handler() {
     let router =
         build_router_with_handlers_and_config(vec![(route, Arc::new(OkHandler))], config, Vec::new()).expect("router");
 
-    let server = axum_test::TestServer::new(router).unwrap();
+    let server = axum_test::TestServer::new(router);
 
     let preflight = server
         .method(axum::http::Method::OPTIONS, "/cors")

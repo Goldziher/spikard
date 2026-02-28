@@ -52,10 +52,10 @@ impl TestClient {
         let server = if tokio::runtime::Handle::try_current().is_ok() {
             TestServer::builder()
                 .http_transport()
-                .build(router)
+                .try_build(router)
                 .map_err(|e| format!("Failed to create test server: {}", e))?
         } else {
-            TestServer::new(router).map_err(|e| format!("Failed to create test server: {}", e))?
+            TestServer::try_new(router).map_err(|e| format!("Failed to create test server: {}", e))?
         };
 
         Ok(Self {

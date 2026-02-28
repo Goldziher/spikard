@@ -546,7 +546,7 @@ fn trace_step(message: &str) {
 fn init_test_server(router: Router, _timeout: Duration, label: &str, ruby: &Ruby) -> Result<TestServer, Error> {
     let runtime = crate::server::global_runtime(ruby)?;
     let _guard = runtime.enter();
-    TestServer::new(router).map_err(|err| {
+    TestServer::try_new(router).map_err(|err| {
         Error::new(
             ruby.exception_runtime_error(),
             format!("Failed to initialise {label}: {err}"),
@@ -563,7 +563,7 @@ fn init_test_server_with_config(
 ) -> Result<TestServer, Error> {
     let runtime = crate::server::global_runtime(ruby)?;
     let _guard = runtime.enter();
-    TestServer::new_with_config(router, config).map_err(|err| {
+    TestServer::try_new_with_config(router, config).map_err(|err| {
         Error::new(
             ruby.exception_runtime_error(),
             format!("Failed to initialise {label}: {err}"),

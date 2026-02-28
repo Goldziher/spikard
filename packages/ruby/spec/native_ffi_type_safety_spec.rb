@@ -926,12 +926,12 @@ RSpec.describe 'Spikard Native FFI Type Safety' do
     context 'for header values' do
       it 'validates header names as strings' do
         headers = { 'Content-Type' => 'application/json' }
-        expect(headers.keys.all? { |k| k.is_a?(String) }).to be true
+        expect(headers.keys.all?(String)).to be true
       end
 
       it 'validates header values as strings' do
         headers = { 'Content-Type' => 'application/json' }
-        expect(headers.values.all? { |v| v.is_a?(String) }).to be true
+        expect(headers.values.all?(String)).to be true
       end
     end
   end

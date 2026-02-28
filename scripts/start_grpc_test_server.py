@@ -62,7 +62,8 @@ def discover_protobuf_fixtures() -> dict[str, list[Path]]:
 def load_fixture(fixture_path: Path) -> dict[str, Any]:
     """Load a single fixture JSON file."""
     with fixture_path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+        result: dict[str, Any] = json.load(f)
+        return result
 
 
 def parse_expected_error(expected: dict[str, Any]) -> tuple[grpc.StatusCode | None, str | None]:
@@ -137,7 +138,7 @@ class FixtureDrivenServicer:
             return self.fixtures.get(key)
         return None
 
-    async def handle_unary(self, request: dict, context: Any, method_path: str) -> dict:
+    async def handle_unary(self, request: dict[str, Any], context: Any, method_path: str) -> dict[str, Any]:
         """Unary RPC: return expected response from fixture or raise error."""
         fixture = self.get_fixture_for_method(method_path)
         if fixture:
@@ -153,7 +154,9 @@ class FixtureDrivenServicer:
                     return message
         return request
 
-    async def handle_server_stream(self, request: dict, context: Any, method_path: str) -> AsyncIterator[dict]:
+    async def handle_server_stream(
+        self, request: dict[str, Any], context: Any, method_path: str
+    ) -> AsyncIterator[dict[str, Any]]:
         """Server streaming RPC: yield messages from fixture or raise error."""
         fixture = self.get_fixture_for_method(method_path)
         if fixture:
@@ -188,7 +191,7 @@ class FixtureDrivenServicer:
         return
         yield  # unreachable
 
-    async def handle_client_stream(self, request_iterator: Any, context: Any, method_path: str) -> dict:
+    async def handle_client_stream(self, request_iterator: Any, context: Any, method_path: str) -> dict[str, Any]:
         """Client streaming RPC: aggregate messages and return fixture response or raise error."""
         messages = [msg async for msg in request_iterator]
 
@@ -206,10 +209,12 @@ class FixtureDrivenServicer:
                     return message
         return {"count": len(messages)}
 
-    async def handle_bidi_stream(self, request_iterator: Any, context: Any, method_path: str) -> AsyncIterator[dict]:
+    async def handle_bidi_stream(
+        self, request_iterator: Any, context: Any, method_path: str
+    ) -> AsyncIterator[dict[str, Any]]:
         """Bidirectional streaming RPC: yield fixture responses or raise error."""
         fixture = self.get_fixture_for_method(method_path)
-        expected_messages: list[dict] = []
+        expected_messages: list[dict[str, Any]] = []
         should_error = False
         error_status = grpc.StatusCode.UNKNOWN
         error_message = "Unknown error"
@@ -229,13 +234,13 @@ class FixtureDrivenServicer:
 
         # Drain the request stream up-front. If we never read from the client stream,
         # grpc aio can return opaque INTERNAL errors (e.g., execute_batch failures).
-        received_messages: list[dict] = []
+        received_messages: list[dict[str, Any]] = []
         with contextlib.suppress(Exception):
             received_messages.extend([msg async for msg in request_iterator if isinstance(msg, dict)])
 
         if expected_messages:
-            for message in expected_messages:
-                yield message
+            for expected_msg in expected_messages:
+                yield expected_msg
             if should_error:
                 await context.abort(error_status, error_message)
                 return
@@ -247,7 +252,7 @@ class FixtureDrivenServicer:
                 yield msg
 
 
-class GenericHandler(grpc.GenericRpcHandler):
+class GenericHandler(grpc.GenericRpcHandler):  # type: ignore[misc]
     """Generic RPC handler that routes all methods to the fixture servicer."""
 
     def __init__(self, servicer: FixtureDrivenServicer) -> None:
@@ -258,10 +263,11 @@ class GenericHandler(grpc.GenericRpcHandler):
         method_path = handler_call_details.method
 
         # Parse request/response as JSON
-        def json_deserializer(raw_bytes: bytes) -> dict:
-            return json.loads(raw_bytes.decode("utf-8"))
+        def json_deserializer(raw_bytes: bytes) -> dict[str, Any]:
+            result: dict[str, Any] = json.loads(raw_bytes.decode("utf-8"))
+            return result
 
-        def json_serializer(obj: dict) -> bytes:
+        def json_serializer(obj: dict[str, Any]) -> bytes:
             return json.dumps(obj).encode("utf-8")
 
         # Determine streaming mode from fixture
@@ -282,7 +288,7 @@ class GenericHandler(grpc.GenericRpcHandler):
 
                                 if not client_streaming and not server_streaming:
                                     # Unary
-                                    async def unary_handler(request: dict, context: Any) -> dict:
+                                    async def unary_handler(request: dict[str, Any], context: Any) -> dict[str, Any]:
                                         return await self.servicer.handle_unary(request, context, method_path)
 
                                     return grpc.unary_unary_rpc_method_handler(
@@ -294,9 +300,9 @@ class GenericHandler(grpc.GenericRpcHandler):
                                 if not client_streaming and server_streaming:
                                     # Server streaming
                                     async def server_stream_handler(
-                                        request: dict,
+                                        request: dict[str, Any],
                                         context: Any,
-                                    ) -> AsyncIterator[dict]:
+                                    ) -> AsyncIterator[dict[str, Any]]:
                                         async for msg in self.servicer.handle_server_stream(
                                             request, context, method_path
                                         ):
@@ -310,7 +316,9 @@ class GenericHandler(grpc.GenericRpcHandler):
 
                                 if client_streaming and not server_streaming:
                                     # Client streaming
-                                    async def client_stream_handler(request_iterator: Any, context: Any) -> dict:
+                                    async def client_stream_handler(
+                                        request_iterator: Any, context: Any
+                                    ) -> dict[str, Any]:
                                         return await self.servicer.handle_client_stream(
                                             request_iterator, context, method_path
                                         )
@@ -326,7 +334,7 @@ class GenericHandler(grpc.GenericRpcHandler):
                                     async def bidi_handler(
                                         request_iterator: Any,
                                         context: Any,
-                                    ) -> AsyncIterator[dict]:
+                                    ) -> AsyncIterator[dict[str, Any]]:
                                         async for msg in self.servicer.handle_bidi_stream(
                                             request_iterator, context, method_path
                                         ):

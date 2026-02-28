@@ -40,7 +40,7 @@ async fn urlencoded_body_is_transformed_to_json() {
     let app = build_router(RouteInfo {
         expects_json_body: true,
     });
-    let server = axum_test::TestServer::new(app).expect("start test server");
+    let server = axum_test::TestServer::new(app);
 
     let response = server
         .post("/forms")
@@ -65,7 +65,7 @@ async fn invalid_charset_on_json_returns_unsupported_media_type() {
     let app = build_router(RouteInfo {
         expects_json_body: true,
     });
-    let server = axum_test::TestServer::new(app).expect("start test server");
+    let server = axum_test::TestServer::new(app);
 
     let response = server
         .post("/forms")

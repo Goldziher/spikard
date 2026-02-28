@@ -59,8 +59,7 @@ defmodule Spikard.MixProject do
   defp package do
     [
       name: "spikard",
-      files:
-        ~w(
+      files: ~w(
           lib
           native/spikard_elixir/src
           native/spikard_elixir/Cargo.toml

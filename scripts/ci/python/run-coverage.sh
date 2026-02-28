@@ -27,10 +27,10 @@ uv run maturin develop --release --features extension-module
 
 echo "Running tests with coverage..."
 uv run pytest \
-	--cov=_spikard \
-	--cov-report=html:htmlcov \
-	--cov-report=lcov:coverage.lcov \
-	-v
+  --cov=_spikard \
+  --cov-report=html:htmlcov \
+  --cov-report=lcov:coverage.lcov \
+  -v
 
 echo "Coverage reports generated:"
 echo "  - HTML: $(pwd)/htmlcov/index.html"

@@ -3,6 +3,8 @@
 Tests the PUBLISHED spikard package from PyPI (0.10.1).
 """
 
+from typing import Annotated
+
 from spikard import Cookie, Header, Path, Query, Spikard
 from spikard.config import ServerConfig
 
@@ -17,57 +19,59 @@ def health() -> dict[str, str]:
 
 @app.get("/query")
 def query_params(
-    name: str = Query(),
-    age: int = Query(),
+    name: Annotated[str, Query()],
+    age: Annotated[int, Query()],
 ) -> dict[str, str | int]:
     """Query parameter endpoint - tests required query params."""
     return {"name": name, "age": age}
 
 
 @app.post("/echo")
-async def echo(body: dict) -> dict:
+async def echo(body: dict[str, object]) -> dict[str, object]:
     """Echo endpoint - tests JSON body parsing."""
     return {"received": body, "method": "POST"}
 
 
 @app.get("/users/{user_id}")
-def user(user_id: str = Path()) -> dict[str, str]:
+def user(user_id: Annotated[str, Path()]) -> dict[str, str]:
     """Path parameter endpoint - tests path extraction."""
     return {"userId": user_id, "type": "string"}
 
 
 @app.put("/items/{item_id}")
-def update_item(item_id: str = Path(), body: dict | None = None) -> dict:
+def update_item(item_id: Annotated[str, Path()], body: dict[str, object] | None = None) -> dict[str, object]:
     """PUT endpoint - tests PUT method and path parameters."""
     return {"itemId": item_id, "updated": body, "method": "PUT"}
 
 
 @app.delete("/items/{item_id}")
-def delete_item(item_id: str = Path()) -> dict:
+def delete_item(item_id: Annotated[str, Path()]) -> dict[str, object]:
     """DELETE endpoint - tests DELETE method and path parameters."""
     return {"itemId": item_id, "deleted": True, "method": "DELETE"}
 
 
 @app.patch("/items/{item_id}")
-def patch_item(item_id: str = Path(), body: dict | None = None) -> dict:
+def patch_item(item_id: Annotated[str, Path()], body: dict[str, object] | None = None) -> dict[str, object]:
     """PATCH endpoint - tests PATCH method and path parameters."""
     return {"itemId": item_id, "patched": body, "method": "PATCH"}
 
 
 @app.get("/headers")
-def extract_headers(x_custom_header: str = Header(alias="X-Custom-Header")) -> dict[str, str]:
+def extract_headers(
+    x_custom_header: Annotated[str, Header(alias="X-Custom-Header")],
+) -> dict[str, str]:
     """Header extraction endpoint - tests custom header extraction."""
     return {"x-custom-header": x_custom_header}
 
 
 @app.get("/cookies")
-def extract_cookies(session: str = Cookie()) -> dict[str, str]:
+def extract_cookies(session: Annotated[str, Cookie()]) -> dict[str, str]:
     """Cookie extraction endpoint - tests session cookie extraction."""
     return {"session": session}
 
 
 @app.get("/error")
-def trigger_error() -> dict:
+def trigger_error() -> dict[str, str]:
     """Error endpoint - tests 500 error handling."""
     raise RuntimeError("Intentional error")
 

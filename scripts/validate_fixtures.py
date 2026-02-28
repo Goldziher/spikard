@@ -8,20 +8,22 @@ against the schema defined in testing_data/protobuf/streaming/schema.json.
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 try:
     from jsonschema import Draft7Validator
 except ImportError:
-    Draft7Validator = None  # type: ignore[assignment]
+    Draft7Validator = None  # type: ignore[assignment,unused-ignore]
 
 
-def load_schema(schema_path: Path) -> dict:
+def load_schema(schema_path: Path) -> dict[str, Any]:
     """Load the JSON schema from file."""
     with schema_path.open(encoding="utf-8") as f:
-        return json.load(f)
+        result: dict[str, Any] = json.load(f)
+        return result
 
 
-def validate_semantic(fixture_data: dict, fixture_path: Path) -> list[str]:
+def validate_semantic(fixture_data: dict[str, Any], fixture_path: Path) -> list[str]:
     """Validate semantic correctness beyond JSON Schema capabilities.
 
     Checks:
@@ -116,7 +118,7 @@ def validate_semantic(fixture_data: dict, fixture_path: Path) -> list[str]:
     return errors
 
 
-def validate_fixture(fixture_data: dict, schema: dict, fixture_path: Path) -> list[str]:
+def validate_fixture(fixture_data: dict[str, Any], schema: dict[str, Any], fixture_path: Path) -> list[str]:
     """Validate a single fixture against the schema and semantic rules.
 
     Returns a list of validation error messages (empty if valid).

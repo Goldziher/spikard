@@ -32,7 +32,7 @@ from spikard._internal.utils import (
 try:
     import annotated_types
 except ImportError:
-    annotated_types = None  # type: ignore[assignment]
+    annotated_types = None  # type: ignore[assignment,unused-ignore]
 
 
 __all__ = ("FieldDefinition",)

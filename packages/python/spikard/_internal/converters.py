@@ -567,13 +567,12 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                     and isinstance(args[0], type)
                     and issubclass(args[0], BaseModel)
                 ):
-                    model_cls = args[0]
+                    item_cls = typing.cast("typing.Any", args[0])
                     converted[key] = [
-                        model_cls.model_validate(item) if isinstance(item, dict) else item for item in value
+                        item_cls.model_validate(item) if isinstance(item, dict) else item for item in value
                     ]
                 elif isinstance(value, dict):
-                    model_cls = target_type
-                    converted[key] = model_cls.model_validate(value)
+                    converted[key] = typing.cast("typing.Any", target_type).model_validate(value)
                 else:
                     converted[key] = value
                 continue

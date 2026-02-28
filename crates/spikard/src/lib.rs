@@ -77,13 +77,14 @@ pub mod testing {
         ///
         /// Returns an error if test server construction fails.
         pub fn from_router(router: AxumRouter) -> Result<Self, AppError> {
-            let mock_server = AxumTestServer::new(router.clone()).map_err(|err| AppError::Server(err.to_string()))?;
+            let mock_server =
+                AxumTestServer::try_new(router.clone()).map_err(|err| AppError::Server(err.to_string()))?;
             let config = TestServerConfig {
                 transport: Some(Transport::HttpRandomPort),
                 ..Default::default()
             };
             let http_server =
-                AxumTestServer::new_with_config(router, config).map_err(|err| AppError::Server(err.to_string()))?;
+                AxumTestServer::try_new_with_config(router, config).map_err(|err| AppError::Server(err.to_string()))?;
             Ok(Self {
                 mock_server,
                 http_server,

@@ -37,3 +37,6 @@ subscription = []
 [dev-dependencies]
 doc-comment = "0.3"
 tokio-test = "0.4"
+
+[package.metadata.cargo-machete]
+ignored = ["bytes", "futures", "spikard-core", "tower", "tracing"]

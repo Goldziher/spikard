@@ -36,7 +36,7 @@ import * as messageservice from './messageservice_pb';
 
 /**
  * Handle client streaming: receive multiple messages, send single response
- * 
+ *
  * Pattern: Collect all input messages, process together, return aggregated response
  */
 async function handleBatchCreate(
@@ -158,7 +158,7 @@ import * as transformservice from './transformservice_pb';
 
 /**
  * Handle bidirectional streaming: receive multiple messages, send multiple messages
- * 
+ *
  * Pattern: Collect all input messages, process, generate output messages, return array
  */
 async function handleTransformStream(

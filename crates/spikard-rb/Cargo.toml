@@ -28,7 +28,7 @@ spikard-http = { path = "../spikard-http", features = ["di"] }
 spikard-bindings-shared = { path = "../spikard-bindings-shared" }
 spikard-rb-macros = { path = "../spikard-rb-macros" }
 axum = { workspace = true }
-axum-test = "18"
+axum-test = "19"
 bytes = "1.11"
 cookie = "0.18"
 tokio = { workspace = true }
@@ -52,3 +52,12 @@ di = ["spikard-core/di", "spikard-http/di"]
 
 [build-dependencies]
 rb-sys-build = "0.9"
+
+[package.metadata.cargo-machete]
+ignored = [
+  "futures-util",
+  "serde",
+  "serde_qs",
+  "spikard-rb-macros",
+  "urlencoding",
+]

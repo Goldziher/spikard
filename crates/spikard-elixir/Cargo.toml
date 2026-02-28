@@ -39,3 +39,6 @@ tracing-subscriber = { version = "0.3", default-features = false, features = [
   "std",
 ] }
 urlencoding = "2.1"
+
+[package.metadata.cargo-machete]
+ignored = ["bytes", "serde", "tracing-subscriber"]

@@ -18,12 +18,12 @@ mkdir -p "$NATIVE_DIR"
 
 # Copy src directory
 if [ -d "$SOURCE_CRATE/src" ]; then
-	rm -rf "$NATIVE_DIR/src"
-	cp -r "$SOURCE_CRATE/src" "$NATIVE_DIR/src"
-	echo "  Copied src/"
+  rm -rf "$NATIVE_DIR/src"
+  cp -r "$SOURCE_CRATE/src" "$NATIVE_DIR/src"
+  echo "  Copied src/"
 else
-	echo "ERROR: Source directory $SOURCE_CRATE/src not found"
-	exit 1
+  echo "ERROR: Source directory $SOURCE_CRATE/src not found"
+  exit 1
 fi
 
 # Generate standalone Cargo.toml (no workspace inheritance)
@@ -61,14 +61,17 @@ tokio = { version = "1", features = ["full"] }
 tower = { version = "0.5", features = ["util"] }
 tracing = "0.1"
 urlencoding = "2.1"
+
+[package.metadata.cargo-machete]
+ignored = ["bytes", "serde"]
 EOF
 
 echo "  Generated Cargo.toml (version: $VERSION)"
 
 # Copy Cargo.lock if it exists (for reproducible builds)
 if [ -f "$SOURCE_CRATE/Cargo.lock" ]; then
-	cp "$SOURCE_CRATE/Cargo.lock" "$NATIVE_DIR/Cargo.lock"
-	echo "  Copied Cargo.lock"
+  cp "$SOURCE_CRATE/Cargo.lock" "$NATIVE_DIR/Cargo.lock"
+  echo "  Copied Cargo.lock"
 fi
 
 echo "Done! NIF source vendored to $NATIVE_DIR"

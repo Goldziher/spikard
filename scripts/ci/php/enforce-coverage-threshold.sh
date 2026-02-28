@@ -10,8 +10,8 @@ THRESHOLD="${2:-85}"
 
 # Validate that coverage file exists
 if [[ ! -f "${REPO_ROOT}/${COVERAGE_FILE}" ]]; then
-	echo "Error: Coverage file not found at ${REPO_ROOT}/${COVERAGE_FILE}"
-	exit 1
+  echo "Error: Coverage file not found at ${REPO_ROOT}/${COVERAGE_FILE}"
+  exit 1
 fi
 
 # Extract coverage percentage from Clover XML
@@ -48,8 +48,8 @@ COVERAGE=$(php -r "
 ")
 
 if [[ -z "${COVERAGE}" ]]; then
-	echo "Error: Failed to extract coverage percentage"
-	exit 1
+  echo "Error: Failed to extract coverage percentage"
+  exit 1
 fi
 
 echo "Code coverage: ${COVERAGE}%"
@@ -58,9 +58,9 @@ echo "Code coverage: ${COVERAGE}%"
 BELOW_THRESHOLD=$(echo "${COVERAGE} < ${THRESHOLD}" | bc -l)
 
 if [[ "${BELOW_THRESHOLD}" == "1" ]]; then
-	echo "Error: Code coverage ${COVERAGE}% is below the minimum threshold of ${THRESHOLD}%"
-	exit 1
+  echo "Error: Code coverage ${COVERAGE}% is below the minimum threshold of ${THRESHOLD}%"
+  exit 1
 else
-	echo "Success: Code coverage ${COVERAGE}% meets the minimum threshold of ${THRESHOLD}%"
-	exit 0
+  echo "Success: Code coverage ${COVERAGE}% meets the minimum threshold of ${THRESHOLD}%"
+  exit 0
 fi

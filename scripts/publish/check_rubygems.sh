@@ -24,8 +24,8 @@
 set -uo pipefail
 
 if [[ $# -lt 1 ]]; then
-	echo "Usage: $0 <version>" >&2
-	exit 2
+  echo "Usage: $0 <version>" >&2
+  exit 2
 fi
 
 version="$1"
@@ -37,19 +37,19 @@ exit_code=$?
 
 case $exit_code in
 0)
-	echo "::notice::Ruby gem spikard==${version} already exists on RubyGems"
-	exit 0
-	;;
+  echo "::notice::Ruby gem spikard==${version} already exists on RubyGems"
+  exit 0
+  ;;
 1)
-	echo "::notice::Ruby gem spikard==${version} not found on RubyGems, will publish"
-	exit 1
-	;;
+  echo "::notice::Ruby gem spikard==${version} not found on RubyGems, will publish"
+  exit 1
+  ;;
 2)
-	echo "::error::Failed to check RubyGems - transient error, job will be retried"
-	exit 2
-	;;
+  echo "::error::Failed to check RubyGems - transient error, job will be retried"
+  exit 2
+  ;;
 *)
-	echo "::error::Unexpected exit code from check_rubygems_version.py: $exit_code"
-	exit 2
-	;;
+  echo "::error::Unexpected exit code from check_rubygems_version.py: $exit_code"
+  exit 2
+  ;;
 esac

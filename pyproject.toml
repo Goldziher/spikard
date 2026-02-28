@@ -1,14 +1,14 @@
 [dependency-groups]
 dev = [
   "annotated-types>=0.7.0",
-  "fastapi>=0.129.0",
+  "fastapi>=0.134.0",
   "httpx-sse>=0.4.3",
   "jsonschema>=4.26.0",
-  "maturin>=1.12.2",
+  "maturin>=1.12.4",
   "msgspec>=0.19.0",
   "mypy>=1.19.1",
   "orjson>=3.11.7",
-  "prek>=0.3.3",
+  "prek>=0.3.4",
   "pydantic>=2.12.5",
   "pyjwt>=2.11.0",
   "pytest>=9.0.2",
@@ -16,7 +16,7 @@ dev = [
   "pytest-cov>=7.0.0",
   "pytest-mock>=3.15.1",
   "pytest-timeout>=2.4.0",
-  "ruff>=0.15.1",
+  "ruff>=0.15.4",
   "uv-bump",
   "uvicorn>=0.41.0",
   "websockets>=16.0",
@@ -24,14 +24,14 @@ dev = [
 docs = [
   "mkdocs>=1.6.1",
   "mkdocs-git-revision-date-localized-plugin>=1.5.1",
-  "mkdocs-material>=9.7.2",
+  "mkdocs-material>=9.7.3",
   "mkdocs-minify-plugin>=0.8.0",
   "mkdocstrings>=1.0.3",
-  "mkdocstrings-python>=2.0.2",
+  "mkdocstrings-python>=2.0.3",
 ]
 benchmarks = [
   # FastAPI + servers
-  "fastapi>=0.129.0",
+  "fastapi>=0.134.0",
   "granian",
   # Litestar + dependencies
   "litestar[standard]",
@@ -50,7 +50,7 @@ doc = [
   "mkdocs-gen-files>=0.6.0",
   "mkdocs-git-revision-date-localized-plugin>=1.5.1",
   "mkdocs-literate-nav>=0.6.2",
-  "mkdocs-material[imaging]>=9.7.2",
+  "mkdocs-material[imaging]>=9.7.3",
   "mkdocs-minify-plugin>=0.8.0",
   "mkdocstrings[python]>=1.0.3",
 ]
@@ -224,13 +224,15 @@ html.directory = "htmlcov"
 lcov.output = "coverage.lcov"
 
 [tool.mypy]
-mypy_path = "packages/python"
+mypy_path = "packages/python:tests/test_apps/python"
 exclude = [
   "examples",
   "testing_data",
   "e2e",
   "tools/benchmark-harness",
   "tools/app-generator",
+  "tests/test_apps/php/vendor",
+  "scripts/ci/python/select-and-install-wheel.py",
 ]
 python_version = "3.14"
 disable_error_code = "import-untyped"
@@ -247,11 +249,6 @@ overrides = [
     "jsonschema",
   ], ignore_missing_imports = true },
   { module = [
-    "tests.grpc_test",
-    "tests.test_grpc_fixtures",
-    "tests.conftest",
-  ], ignore_errors = true },
-  { module = [
     "tests.*",
-  ], disallow_any_explicit = true, disallow_any_expr = false },
+  ], disallow_any_explicit = true, disallow_any_expr = false, disable_error_code = [ "untyped-decorator", "misc" ] },
 ]

@@ -30,7 +30,7 @@ pyo3.workspace = true
 pyo3-async-runtimes.workspace = true
 serde_json.workspace = true
 axum.workspace = true
-axum-test = "18"
+axum-test = "19"
 bytes = "1.11"
 http-body-util = "0.1"
 urlencoding = "2.1"
@@ -50,3 +50,6 @@ default = ["di"]
 extension-module = ["pyo3/extension-module"]
 di = ["spikard-core/di", "spikard-http/di"]
 graphql = ["spikard-graphql"]
+
+[package.metadata.cargo-machete]
+ignored = ["spikard-graphql", "urlencoding"]

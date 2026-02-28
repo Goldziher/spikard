@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "maturin"
-requires = [ "maturin>=1.12.2,<2" ]
+requires = [ "maturin>=1.12.4,<2" ]
 
 [project]
 name = "spikard"
@@ -55,7 +55,7 @@ classifiers = [
 ]
 dependencies = [
   "cloudpickle>=3.1.2",
-  "granian>=2.7.1",
+  "granian>=2.7.2",
   "grpcio>=1.78",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
@@ -82,3 +82,6 @@ python-source = "../../packages/python"
 python-packages = [ "spikard", "_spikard" ]
 manifest-path = "../../crates/spikard-py/Cargo.toml"
 features = [ "extension-module" ]
+include = [
+  { path = "spikard/_spikard.pyi", format = "wheel" },
+]

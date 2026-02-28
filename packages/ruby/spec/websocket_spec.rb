@@ -266,7 +266,7 @@ RSpec.describe Spikard::WebSocketHandler do
       handler.on_disconnect
       handler.on_disconnect
       expect(handler.disconnect_times.length).to eq(2)
-      expect(handler.disconnect_times.all? { |t| t.is_a?(Time) }).to be true
+      expect(handler.disconnect_times.all?(Time)).to be true
     end
 
     it 'returns nil by default' do

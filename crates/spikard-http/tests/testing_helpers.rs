@@ -55,7 +55,7 @@ async fn snapshot_response_decodes_gzip_body() {
         }),
     );
 
-    let server = axum_test::TestServer::new(app).unwrap();
+    let server = axum_test::TestServer::new(app);
     let response = server.get("/gzip").await;
 
     let snapshot = snapshot_response(response).await.expect("snapshot failed");
@@ -78,7 +78,7 @@ async fn snapshot_response_decodes_brotli_body() {
         }),
     );
 
-    let server = axum_test::TestServer::new(app).unwrap();
+    let server = axum_test::TestServer::new(app);
     let response = server.get("/br").await;
 
     let snapshot = snapshot_response(response).await.expect("snapshot failed");

@@ -2,13 +2,13 @@
 set -euo pipefail
 
 if ! command -v brew >/dev/null 2>&1; then
-	echo "::error::Homebrew not found"
-	exit 1
+  echo "::error::Homebrew not found"
+  exit 1
 fi
 
 if ! brew --prefix openssl@3 >/dev/null 2>&1; then
-	echo "::error::OpenSSL 3 not found via Homebrew"
-	exit 1
+  echo "::error::OpenSSL 3 not found via Homebrew"
+  exit 1
 fi
 
 OPENSSL_PREFIX=$(brew --prefix openssl@3)

@@ -18,13 +18,13 @@ artifact_name="php-extension-${os_label}-${php_version}"
 mkdir -p "${artifact_name}"
 
 if [ -f "${REPO_ROOT}/target/release/libspikard_php.so" ]; then
-	cp "${REPO_ROOT}/target/release/libspikard_php.so" "${artifact_name}/" || true
+  cp "${REPO_ROOT}/target/release/libspikard_php.so" "${artifact_name}/" || true
 fi
 if [ -f "${REPO_ROOT}/target/release/spikard_php.dll" ]; then
-	cp "${REPO_ROOT}/target/release/spikard_php.dll" "${artifact_name}/" || true
+  cp "${REPO_ROOT}/target/release/spikard_php.dll" "${artifact_name}/" || true
 fi
 if [ -f "${REPO_ROOT}/target/release/libspikard_php.dylib" ]; then
-	cp "${REPO_ROOT}/target/release/libspikard_php.dylib" "${artifact_name}/" || true
+  cp "${REPO_ROOT}/target/release/libspikard_php.dylib" "${artifact_name}/" || true
 fi
 
 tar -czf "${artifact_name}.tar.gz" "${artifact_name}"

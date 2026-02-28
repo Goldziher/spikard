@@ -2,6 +2,8 @@
 
 require 'spec_helper'
 
+# rubocop:disable Style/OneClassPerFile
+
 # Minimal Dry::Schema/Dry::Struct stubs so we can exercise the extraction helpers
 module Dry
   module Schema
@@ -57,6 +59,8 @@ class FakeType
     @optional
   end
 end
+
+# rubocop:enable Style/OneClassPerFile
 
 RSpec.describe Spikard::Schema do
   describe '.extract_json_schema' do

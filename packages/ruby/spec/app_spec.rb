@@ -363,7 +363,7 @@ RSpec.describe Spikard::App do
 
       metadata = app.route_metadata
       expect(metadata.length).to eq(3)
-      expect(metadata.all? { |m| m.is_a?(Hash) }).to be true
+      expect(metadata.all?(Hash)).to be true
     end
 
     it 'includes method and path in metadata' do

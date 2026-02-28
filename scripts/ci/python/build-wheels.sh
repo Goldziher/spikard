@@ -31,11 +31,11 @@ rm -f _spikard/_spikard.*
 # Build wheels with maturin
 echo "Building Python wheels..."
 if [ -n "$PYTHON_VERSION" ]; then
-	echo "Building for Python $PYTHON_VERSION..."
-	uv tool run maturin build --release --features extension-module -i "$PYTHON_VERSION"
+  echo "Building for Python $PYTHON_VERSION..."
+  uv tool run maturin build --release --features extension-module -i "$PYTHON_VERSION"
 else
-	echo "Building with auto-detected Python version..."
-	uv tool run maturin build --release --features extension-module
+  echo "Building with auto-detected Python version..."
+  uv tool run maturin build --release --features extension-module
 fi
 
 echo "Wheels built successfully at ${REPO_ROOT}/target/wheels/"

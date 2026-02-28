@@ -67,8 +67,7 @@ async fn websocket_handles_json_validation_invalid_json_binary_and_close() {
             transport: Some(axum_test::Transport::HttpRandomPort),
             ..axum_test::TestServerConfig::default()
         },
-    )
-    .expect("server");
+    );
     let mut socket = server.get_websocket("/ws").await.into_websocket().await;
 
     assert_eq!(connects.load(Ordering::SeqCst), 1);
@@ -136,8 +135,7 @@ async fn websocket_suppresses_responses_that_fail_response_schema_validation() {
             transport: Some(axum_test::Transport::HttpRandomPort),
             ..axum_test::TestServerConfig::default()
         },
-    )
-    .expect("server");
+    );
     let mut socket = server.get_websocket("/ws").await.into_websocket().await;
 
     socket.send_json(&serde_json::json!({"any": "thing"})).await;

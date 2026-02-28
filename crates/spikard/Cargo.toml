@@ -26,7 +26,7 @@ di = ["spikard-http/di", "spikard-core/di"]
 [dependencies]
 anyhow = "1.0"
 axum.workspace = true
-axum-test = "18"
+axum-test = "19"
 base64 = "0.22"
 bytes = "1.11"
 schemars = { version = "1.2", features = ["derive"] }
@@ -39,3 +39,6 @@ thiserror.workspace = true
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt", "macros"] }
 tower = { workspace = true, features = ["util"] }
+
+[package.metadata.cargo-machete]
+ignored = ["anyhow"]

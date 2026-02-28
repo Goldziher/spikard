@@ -17,91 +17,91 @@ ref_name="${GITHUB_REF_NAME:-}"
 
 case "${event}" in
 workflow_dispatch)
-	tag="${input_tag}"
-	dry_run_input="${input_dry_run:-false}"
-	ref_input="${input_ref}"
-	targets_input="${input_targets}"
-	force_republish_input="${input_force_republish:-false}"
-	;;
+  tag="${input_tag}"
+  dry_run_input="${input_dry_run:-false}"
+  ref_input="${input_ref}"
+  targets_input="${input_targets}"
+  force_republish_input="${input_force_republish:-false}"
+  ;;
 release)
-	tag="${release_tag}"
-	dry_run_input="false"
-	ref_input="refs/tags/${tag}"
-	targets_input=""
-	force_republish_input="false"
-	;;
+  tag="${release_tag}"
+  dry_run_input="false"
+  ref_input="refs/tags/${tag}"
+  targets_input=""
+  force_republish_input="false"
+  ;;
 repository_dispatch)
-	tag="${dispatch_tag}"
-	dry_run_input="${dispatch_dry_run}"
-	ref_input="${dispatch_ref}"
-	targets_input="${dispatch_targets}"
-	force_republish_input="${dispatch_force_republish:-false}"
-	;;
+  tag="${dispatch_tag}"
+  dry_run_input="${dispatch_dry_run}"
+  ref_input="${dispatch_ref}"
+  targets_input="${dispatch_targets}"
+  force_republish_input="${dispatch_force_republish:-false}"
+  ;;
 *)
-	tag="${ref_name}"
-	dry_run_input="false"
-	ref_input=""
-	targets_input=""
-	force_republish_input="false"
-	if [[ "${tag}" == *-pre* || "${tag}" == *-rc* ]]; then
-		dry_run_input="true"
-	fi
-	;;
+  tag="${ref_name}"
+  dry_run_input="false"
+  ref_input=""
+  targets_input=""
+  force_republish_input="false"
+  if [[ "${tag}" == *-pre* || "${tag}" == *-rc* ]]; then
+    dry_run_input="true"
+  fi
+  ;;
 esac
 
 if [[ -z "${tag}" ]]; then
-	echo "Release tag could not be determined" >&2
-	exit 1
+  echo "Release tag could not be determined" >&2
+  exit 1
 fi
 if [[ "${tag}" != v* ]]; then
-	echo "Tag must start with 'v' (e.g., v0.5.0)" >&2
-	exit 1
+  echo "Tag must start with 'v' (e.g., v0.5.0)" >&2
+  exit 1
 fi
 
 version="${tag#v}"
 
 if [[ -n "${ref_input}" ]]; then
-	ref="${ref_input}"
+  ref="${ref_input}"
 else
-	ref="refs/tags/${tag}"
+  ref="refs/tags/${tag}"
 fi
 
 if [[ "${ref}" =~ ^[0-9a-f]{40}$ ]]; then
-	checkout_ref="refs/heads/main"
-	target_sha="${ref}"
+  checkout_ref="refs/heads/main"
+  target_sha="${ref}"
 elif [[ "${ref}" =~ ^refs/ ]]; then
-	checkout_ref="${ref}"
-	target_sha=""
+  checkout_ref="${ref}"
+  target_sha=""
 else
-	checkout_ref="refs/heads/${ref}"
-	target_sha=""
+  checkout_ref="refs/heads/${ref}"
+  target_sha=""
 fi
 
 if [[ "${ref}" =~ ^[0-9a-f]{40}$ ]]; then
-	matrix_ref="main"
+  matrix_ref="main"
 elif [[ "${ref}" =~ ^refs/heads/(.+)$ ]]; then
-	matrix_ref="${BASH_REMATCH[1]}"
+  matrix_ref="${BASH_REMATCH[1]}"
 elif [[ "${ref}" =~ ^refs/tags/(.+)$ ]]; then
-	matrix_ref="${BASH_REMATCH[1]}"
+  matrix_ref="${BASH_REMATCH[1]}"
 else
-	matrix_ref="${ref}"
+  matrix_ref="${ref}"
 fi
 
 dry_run="${dry_run_input}"
 if [[ "${ref}" =~ ^refs/tags/ ]]; then
-	is_tag="true"
+  is_tag="true"
 else
-	is_tag="false"
+  is_tag="false"
 fi
 
 normalize_target_list() {
-	local raw="$1"
-	raw="${raw:-all}"
-	if [[ -z "${raw}" ]]; then
-		echo "all"
-	else
-		echo "${raw}"
-	fi
+  local raw="$1"
+  raw="${raw:-all}"
+  if [[ -z "${raw}" ]]; then
+    echo "all"
+  else
+    echo "${raw}"
+  fi
 }
 
 targets_value="$(normalize_target_list "${targets_input}")"
@@ -116,61 +116,61 @@ release_homebrew=false
 release_elixir=false
 
 set_all_targets() {
-	release_python=true
-	release_node=true
-	release_ruby=true
-	release_php=true
-	release_cli=true
-	release_crates=true
-	release_wasm=true
-	release_homebrew=true
-	release_elixir=true
+  release_python=true
+  release_node=true
+  release_ruby=true
+  release_php=true
+  release_cli=true
+  release_crates=true
+  release_wasm=true
+  release_homebrew=true
+  release_elixir=true
 }
 
 mapfile -t requested_targets < <(echo "${targets_value}" | tr ',' '\n')
 
 processed_any=false
 for raw_target in "${requested_targets[@]}"; do
-	trimmed="$(echo "${raw_target}" | tr '[:upper:]' '[:lower:]' | xargs)"
-	if [[ -z "${trimmed}" ]]; then
-		continue
-	fi
-	processed_any=true
-	case "${trimmed}" in
-	all | "*" | "default")
-		set_all_targets
-		break
-		;;
-	python) release_python=true ;;
-	node) release_node=true ;;
-	ruby) release_ruby=true ;;
-	php) release_php=true ;;
-	cli) release_cli=true ;;
-	crates) release_crates=true ;;
-	wasm) release_wasm=true ;;
-	homebrew) release_homebrew=true ;;
-	elixir) release_elixir=true ;;
-	none)
-		release_python=false
-		release_node=false
-		release_ruby=false
-		release_php=false
-		release_cli=false
-		release_crates=false
-		release_wasm=false
-		release_homebrew=false
-		release_elixir=false
-		;;
-	*)
-		echo "Unknown release target '${trimmed}'. Allowed: all, python, node, ruby, php, cli, crates, wasm, homebrew, elixir." >&2
-		exit 1
-		;;
-	esac
+  trimmed="$(echo "${raw_target}" | tr '[:upper:]' '[:lower:]' | xargs)"
+  if [[ -z "${trimmed}" ]]; then
+    continue
+  fi
+  processed_any=true
+  case "${trimmed}" in
+  all | "*" | "default")
+    set_all_targets
+    break
+    ;;
+  python) release_python=true ;;
+  node) release_node=true ;;
+  ruby) release_ruby=true ;;
+  php) release_php=true ;;
+  cli) release_cli=true ;;
+  crates) release_crates=true ;;
+  wasm) release_wasm=true ;;
+  homebrew) release_homebrew=true ;;
+  elixir) release_elixir=true ;;
+  none)
+    release_python=false
+    release_node=false
+    release_ruby=false
+    release_php=false
+    release_cli=false
+    release_crates=false
+    release_wasm=false
+    release_homebrew=false
+    release_elixir=false
+    ;;
+  *)
+    echo "Unknown release target '${trimmed}'. Allowed: all, python, node, ruby, php, cli, crates, wasm, homebrew, elixir." >&2
+    exit 1
+    ;;
+  esac
 done
 
 if [[ "${processed_any}" == "false" ]]; then
-	set_all_targets
-	requested_targets=("all")
+  set_all_targets
+  requested_targets=("all")
 fi
 
 enabled_targets=()
@@ -185,19 +185,19 @@ if [[ "${release_homebrew}" == "true" ]]; then enabled_targets+=("homebrew"); fi
 if [[ "${release_elixir}" == "true" ]]; then enabled_targets+=("elixir"); fi
 
 if [[ ${#enabled_targets[@]} -eq 9 ]]; then
-	release_targets_summary="all"
+  release_targets_summary="all"
 elif [[ ${#enabled_targets[@]} -eq 0 ]]; then
-	release_targets_summary="none"
+  release_targets_summary="none"
 else
-	release_targets_summary="$(
-		IFS=','
-		echo "${enabled_targets[*]}"
-	)"
+  release_targets_summary="$(
+    IFS=','
+    echo "${enabled_targets[*]}"
+  )"
 fi
 
 release_any="false"
 if [[ ${#enabled_targets[@]} -gt 0 ]]; then
-	release_any="true"
+  release_any="true"
 fi
 
 cat <<JSON >release-metadata.json
@@ -225,12 +225,12 @@ cat <<JSON >release-metadata.json
 JSON
 
 append_output() {
-	local key="$1"
-	local value="$2"
-	if [[ -z "${GITHUB_OUTPUT:-}" ]]; then
-		return
-	fi
-	echo "${key}=${value}" >>"${GITHUB_OUTPUT}"
+  local key="$1"
+  local value="$2"
+  if [[ -z "${GITHUB_OUTPUT:-}" ]]; then
+    return
+  fi
+  echo "${key}=${value}" >>"${GITHUB_OUTPUT}"
 }
 
 append_output "tag" "${tag}"

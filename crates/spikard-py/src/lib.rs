@@ -364,7 +364,7 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
         spikard_http::ServerConfig::default()
     };
     #[cfg(not(feature = "di"))]
-    let config = if let Ok(py_config) = app.getattr("_config") {
+    let mut config = if let Ok(py_config) = app.getattr("_config") {
         if !py_config.is_none() {
             extract_server_config(py, &py_config)?
         } else {
