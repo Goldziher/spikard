@@ -2,14 +2,14 @@
 
 A Rust-centric multi-language toolkit for building and validating typed web services. Generate type-safe API handlers from OpenAPI, GraphQL, gRPC/Protobuf, AsyncAPI, or JSON-RPC specifications and deploy to Python, TypeScript, Ruby, PHP, or Elixir.
 
-[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
-[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
-[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=blue)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
-[![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
-[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-spikard.dev-007ec6)](https://spikard.dev)
+[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=007ec6)](https://crates.io/crates/spikard)
+[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=007ec6)](https://pypi.org/project/spikard/)
+[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=007ec6)](https://www.npmjs.com/package/@spikard/node)
+[![Gem](https://img.shields.io/gem/v/spikard.svg?color=007ec6)](https://rubygems.org/gems/spikard)
+[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=007ec6)](https://packagist.org/packages/spikard/spikard)
+[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=007ec6)](https://hex.pm/packages/spikard)
+[![License](https://img.shields.io/badge/license-MIT-007ec6.svg)](LICENSE)
 
 ## Features
 

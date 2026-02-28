@@ -1,52 +1,51 @@
+<!-- GENERATED FILE — DO NOT EDIT DIRECTLY. Run: task readme:generate -->
+
 # spikard-core
 
 Shared transport-agnostic primitives and types for building Spikard runtimes across multiple languages and frameworks.
 
-## Status & Badges
-
-[![Crates.io](https://img.shields.io/crates/v/spikard-core.svg)](https://crates.io/crates/spikard-core)
-[![Downloads](https://img.shields.io/crates/d/spikard-core.svg)](https://crates.io/crates/spikard-core)
-[![Documentation](https://docs.rs/spikard-core/badge.svg)](https://docs.rs/spikard-core)
-[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg)](https://hex.pm/packages/spikard)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-## Overview
-
-`spikard-core` provides the foundational types and traits that enable Spikard to work across multiple language bindings:
-
-- **Request/Response models** - HTTP-agnostic request and response types
-- **Validation primitives** - JSON Schema validation and header/cookie checking
-- **Middleware interfaces** - Traits for composable middleware stacks
-- **Serialization support** - Efficient serialization via serde
-- **Error handling** - Structured error types for cross-language error translation
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
+  <a href="https://spikard.dev">
+    <img src="https://img.shields.io/badge/docs-spikard.dev-007ec6" alt="Documentation">
+  </a>
+  <a href="https://crates.io/crates/spikard">
+    <img src="https://img.shields.io/crates/v/spikard.svg?color=007ec6" alt="Crates.io">
+  </a>
+  <a href="https://pypi.org/project/spikard/">
+    <img src="https://img.shields.io/pypi/v/spikard.svg?color=007ec6" alt="PyPI">
+  </a>
+  <a href="https://www.npmjs.com/package/@spikard/node">
+    <img src="https://img.shields.io/npm/v/@spikard/node.svg?color=007ec6" alt="npm">
+  </a>
+  <a href="https://rubygems.org/gems/spikard">
+    <img src="https://img.shields.io/gem/v/spikard.svg?color=007ec6" alt="RubyGems">
+  </a>
+  <a href="https://packagist.org/packages/spikard/spikard">
+    <img src="https://img.shields.io/packagist/v/spikard/spikard.svg?color=007ec6" alt="Packagist">
+  </a>
+  <a href="https://hex.pm/packages/spikard">
+    <img src="https://img.shields.io/hexpm/v/spikard.svg?color=007ec6" alt="Hex.pm">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-007ec6" alt="License">
+  </a>
+</div>
 
 ## Features
-
-- **Transport-agnostic** - Works with Axum, Hyper, or any HTTP framework
-- **Schema validation** - Built-in JSON Schema support via jsonschema crate
-- **Compression** - Gzip and Brotli compression/decompression
-- **Header/Cookie handling** - RFC-compliant header and cookie parsing
-- **URL encoding** - Query string parsing and URL handling
-- **Zero-copy design** - Efficient memory usage with minimal allocations
-- **Type safety** - Strongly-typed request and response structures
+- **Transport-agnostic** request/response models
+- **JSON Schema validation** via jsonschema crate
+- **Gzip and Brotli** compression/decompression
+- **RFC-compliant** header and cookie parsing
+- **Query string** parsing and URL handling
+- **Zero-copy design** with minimal allocations
+- **Strongly-typed** request and response structures
 
 ## Installation
 
 ```toml
 [dependencies]
 spikard-core = "0.12.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 ```
-
-### Optional Features
-
-```toml
-[dependencies]
-spikard-core = { version = "0.12.0", features = ["di"] }
-```
-
-- `di` - Enables dependency injection support with Tokio async runtime
 
 ## Quick Start
 
@@ -102,66 +101,17 @@ let body = json!({
 validate_body(&body, &schema)?;
 ```
 
-### Compression Support
+## Related Crates
 
-```rust
-use spikard_core::compression;
-
-let original = b"This is a long string that will be compressed";
-
-// Gzip compression
-let compressed = compression::gzip_encode(original)?;
-let decompressed = compression::gzip_decode(&compressed)?;
-
-// Brotli compression
-let compressed = compression::brotli_encode(original)?;
-let decompressed = compression::brotli_decode(&compressed)?;
-```
-
-## Core Types
-
-- `Request` - HTTP request model with headers, cookies, body, and path parameters
-- `Response` - HTTP response model with status, headers, and body
-- `HandlerResult` - Standard result type for handlers
-- `ValidationError` - Structured validation errors with field-level details
-- `RequestContext` - Request execution context with metadata
-- `RouteConfig` - Route configuration with validation schemas
-
-## Architecture
-
-`spikard-core` sits at the foundation of the Spikard architecture:
-
-```
-┌─────────────────────────────────────┐
-│  Language Bindings                  │
-│  (Python, Node, Ruby, PHP, Elixir)  │
-└──────────────┬──────────────────────┘
-               │ implements
-┌──────────────▼──────────────────────┐
-│  spikard-http (Axum Runtime)        │
-└──────────────┬──────────────────────┘
-               │ uses
-┌──────────────▼──────────────────────┐
-│  spikard-core (Primitives)          │
-└─────────────────────────────────────┘
-```
-
-All language bindings depend on `spikard-core` to ensure consistent request/response handling across platforms.
+- [spikard](../spikard/README.md) - High-level HTTP framework
+- [spikard-http](../spikard-http/README.md) - HTTP server implementation
 
 ## Documentation
 
 - [Main Project README](../../README.md)
 - [Full API Documentation](https://docs.rs/spikard-core)
-- [Architecture Decision Records](../../docs/adr/)
-
-## Related Crates
-
-- [spikard](../spikard/README.md) - High-level HTTP framework
-- [spikard-http](../spikard-http/README.md) - HTTP server implementation
-- [spikard-py](../spikard-py/README.md) - Python bindings
-- [spikard-node](../spikard-node/README.md) - Node.js bindings
-- [spikard-elixir](../spikard-elixir/README.md) - Elixir bindings
+- [spikard.dev](https://spikard.dev)
 
 ## License
 
-MIT
+MIT - See [LICENSE](LICENSE) for details

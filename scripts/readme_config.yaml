@@ -1,0 +1,425 @@
+# Spikard README generation configuration
+# All generated READMEs share the same badge set (all blue, shields.io #007ec6).
+# Root README.md is NOT generated — it is manually maintained.
+
+project:
+  name: spikard
+  license: MIT
+  docs_url: https://spikard.dev
+  repository: https://github.com/Goldziher/spikard
+
+targets:
+  # ── Core Crates ────────────────────────────────────────────────────────
+
+  - id: crate-spikard
+    template: crate_readme.md.jinja
+    output_path: crates/spikard/README.md
+    title: Spikard
+    crate_name: spikard
+    description: >-
+      High-performance HTTP framework built on Axum and Tower-HTTP with type-safe
+      routing, validation, WebSocket/SSE support, and lifecycle hooks.
+    install_type: cargo_dependency
+    docs_rs_url: https://docs.rs/spikard
+    license_path: LICENSE
+    features:
+      - "**Type-safe routing** with path parameter extraction and compile-time validation"
+      - "**JSON Schema validation** via schemars with automatic OpenAPI generation"
+      - "**WebSocket and SSE** (Server-Sent Events) support"
+      - "**Lifecycle hooks** with zero-cost abstraction (onRequest, preValidation, preHandler, onResponse, onError)"
+      - "**Tower middleware** stack (compression, rate limiting, auth, CORS, request IDs, timeouts)"
+      - "**OpenAPI 3.1** and AsyncAPI generation with Swagger UI and ReDoc"
+      - "**Testing utilities** with in-memory test server"
+      - "**File upload** handling with multipart form support"
+      - "**Streaming responses** with native async/await"
+      - "**Multi-language bindings** (Python, Node.js, Ruby, PHP, Elixir)"
+    quick_start_file: crate_spikard_quickstart.md
+    extra_sections_file: crate_spikard_extra.md
+    benchmark_data:
+      entries:
+        - { framework: spikard-rust, rps: 55755, p50: 1.00, p99: 1.00, highlight: true }
+        - { framework: spikard-node, rps: 24283, p50: 2.22, p99: 2.22 }
+        - { framework: spikard-php, rps: 20176, p50: 2.66, p99: 2.66 }
+        - { framework: spikard-python, rps: 11902, p50: 4.41, p99: 4.41 }
+        - { framework: spikard-ruby, rps: 8271, p50: 6.50, p99: 6.50 }
+      comparison: "the fastest binding, delivering native Rust performance as the reference implementation"
+    benchmark_methodology_path: ../../docs/benchmarks/methodology.md
+    related_crates:
+      - { name: spikard-http, path: "../spikard-http/README.md", description: "HTTP runtime" }
+      - { name: spikard-core, path: "../spikard-core/README.md", description: "Core primitives" }
+      - { name: spikard-cli, path: "../spikard-cli/README.md", description: "Command-line interface" }
+
+  - id: crate-spikard-core
+    template: crate_readme.md.jinja
+    output_path: crates/spikard-core/README.md
+    title: spikard-core
+    crate_name: spikard-core
+    description: >-
+      Shared transport-agnostic primitives and types for building Spikard runtimes
+      across multiple languages and frameworks.
+    install_type: cargo_dependency
+    docs_rs_url: https://docs.rs/spikard-core
+    license_path: LICENSE
+    features:
+      - "**Transport-agnostic** request/response models"
+      - "**JSON Schema validation** via jsonschema crate"
+      - "**Gzip and Brotli** compression/decompression"
+      - "**RFC-compliant** header and cookie parsing"
+      - "**Query string** parsing and URL handling"
+      - "**Zero-copy design** with minimal allocations"
+      - "**Strongly-typed** request and response structures"
+    quick_start_file: crate_spikard_core_quickstart.md
+    extra_sections_file: crate_spikard_core_extra.md
+    related_crates:
+      - { name: spikard, path: "../spikard/README.md", description: "High-level HTTP framework" }
+      - { name: spikard-http, path: "../spikard-http/README.md", description: "HTTP server implementation" }
+
+  - id: crate-spikard-http
+    template: crate_readme.md.jinja
+    output_path: crates/spikard-http/README.md
+    title: spikard-http
+    crate_name: spikard-http
+    description: >-
+      High-performance HTTP server for Spikard with a complete tower-http middleware
+      stack, JSON Schema validation, and cross-language handler execution.
+    install_type: cargo_dependency
+    docs_rs_url: https://docs.rs/spikard-http
+    license_path: LICENSE
+    features:
+      - "**Axum-based routing** with zero-allocation path matching"
+      - "**Tower middleware stack**: compression, rate limiting, timeouts, CORS, request IDs, auth"
+      - "**JSON Schema validation** for request/response"
+      - "**Cross-language handlers** via the Handler trait (Python, Node.js, Ruby, PHP, Elixir)"
+      - "**OpenAPI 3.1** and AsyncAPI spec generation"
+      - "**WebSocket and SSE** support"
+      - "**Graceful shutdown** with in-flight request completion"
+      - "**Static file serving** with caching"
+    quick_start_file: crate_spikard_http_quickstart.md
+    extra_sections_file: crate_spikard_http_extra.md
+    related_crates:
+      - { name: spikard, path: "../spikard/README.md", description: "High-level HTTP framework" }
+      - { name: spikard-core, path: "../spikard-core/README.md", description: "Core primitives" }
+
+  - id: crate-spikard-cli
+    template: crate_readme.md.jinja
+    output_path: crates/spikard-cli/README.md
+    title: spikard-cli
+    crate_name: spikard-cli
+    description: >-
+      CLI for Spikard applications: code generation, project scaffolding, and schema
+      validation.
+    install_type: cargo_install
+    docs_rs_url: https://docs.rs/spikard-cli
+    license_path: LICENSE
+    features:
+      - "**Project scaffolding** with `spikard init`"
+      - "**Code generation** from OpenAPI, GraphQL, gRPC/Protobuf, AsyncAPI, OpenRPC"
+      - "**Schema validation** for AsyncAPI specifications"
+      - "**Multi-language targets**: Python, TypeScript, Rust, Ruby, PHP"
+    quick_start_file: crate_spikard_cli_quickstart.md
+
+  - id: crate-spikard-graphql
+    template: crate_readme.md.jinja
+    output_path: crates/spikard-graphql/README.md
+    title: spikard-graphql
+    crate_name: spikard-graphql
+    description: >-
+      GraphQL support for Spikard with async-graphql integration, schema building,
+      and HTTP handler integration.
+    install_type: cargo_dependency
+    docs_rs_url: https://docs.rs/spikard-graphql
+    license_path: LICENSE
+    features:
+      - "**GraphQL execution**: queries, mutations, and optional subscriptions"
+      - "**Fluent schema builder** API with Query, Mutation, and Subscription types"
+      - "**HTTP integration** via Spikard's Handler trait"
+      - "**Structured error responses** compatible with GraphQL and HTTP specs"
+      - "**Apollo Federation** support (optional feature flag)"
+      - "**Subscriptions** support (optional feature flag)"
+    quick_start_file: crate_spikard_graphql_quickstart.md
+
+  # ── Binding Crates ─────────────────────────────────────────────────────
+
+  - id: crate-spikard-py
+    template: crate_binding_readme.md.jinja
+    output_path: crates/spikard-py/README.md
+    title: spikard-py
+    crate_name: spikard-py
+    description: >-
+      High-performance Python bindings for Spikard HTTP framework via PyO3.
+    binding_language: Python
+    binding_technology: PyO3
+    docs_rs_url: https://docs.rs/spikard-py
+    license_path: LICENSE
+    package_readme_link: "Spikard Python"
+    package_readme_path: "../../packages/python/README.md"
+    build_command: "maturin develop --manifest-path crates/spikard-py/Cargo.toml"
+    features_heading: "Architecture Highlights"
+    features:
+      - "**Async handler execution** via `pyo3_async_runtimes` (25-30x faster than spawn_blocking)"
+      - "**Zero-copy JSON conversion** (30-40% faster than json.loads)"
+      - "**GIL-efficient**: released before async awaits"
+      - "**Rust-side validation** before entering Python"
+      - "**Event loop reuse** via OnceCell TaskLocals"
+
+  - id: crate-spikard-node
+    template: crate_binding_readme.md.jinja
+    output_path: crates/spikard-node/README.md
+    title: spikard-node
+    crate_name: spikard-node
+    description: >-
+      High-performance Node.js bindings for Spikard HTTP framework via napi-rs.
+    binding_language: TypeScript/Node.js
+    binding_technology: napi-rs
+    docs_rs_url: https://docs.rs/spikard-node
+    license_path: LICENSE
+    package_readme_link: "Spikard for Node.js"
+    package_readme_path: "../../packages/node/README.md"
+    build_command: "cd crates/spikard-node && pnpm build"
+    features_heading: "Architecture Highlights"
+    features:
+      - "**Zero-copy FFI** via napi-rs"
+      - "**ThreadsafeFunction** for async JavaScript callbacks"
+      - "**Dedicated Tokio runtime** (does not block Node event loop)"
+      - "**Direct type conversion** without JSON serialization overhead"
+
+  - id: crate-spikard-rb
+    template: crate_binding_readme.md.jinja
+    output_path: crates/spikard-rb/README.md
+    title: spikard-rb
+    crate_name: spikard-rb
+    description: >-
+      High-performance Ruby bindings for Spikard HTTP framework via Magnus.
+    binding_language: Ruby
+    binding_technology: Magnus
+    docs_rs_url: https://docs.rs/spikard-rb
+    license_path: LICENSE
+    package_readme_link: "Spikard Ruby"
+    package_readme_path: "../../packages/ruby/README.md"
+    build_command: "cd packages/ruby && bundle exec rake ext:build"
+    features_heading: "Architecture Highlights"
+    features:
+      - "**Zero-overhead FFI** via Magnus"
+      - "**rb-sys** for modern Ruby 3.2-4.x integration"
+      - "**Idiomatic Ruby** blocks and procs"
+      - "**GC-safe handler storage**"
+
+  - id: crate-spikard-elixir
+    template: crate_binding_readme.md.jinja
+    output_path: crates/spikard-elixir/README.md
+    title: spikard-elixir
+    crate_name: spikard-elixir
+    description: >-
+      Rustler NIF crate for Spikard's Elixir bindings.
+    binding_language: Elixir
+    binding_technology: Rustler
+    docs_rs_url: https://docs.rs/spikard-elixir
+    license_path: LICENSE
+    package_readme_link: "Spikard Elixir"
+    package_readme_path: "../../packages/elixir/README.md"
+    build_command: "cd packages/elixir && mix compile"
+    features_heading: "Architecture Highlights"
+    features:
+      - "**Zero-copy NIFs** via Rustler"
+      - "**Safe FFI**: all NIF functions return Result types"
+      - "**Compile-time** NIF module validation"
+
+  # ── Package READMEs ────────────────────────────────────────────────────
+
+  - id: pkg-python
+    template: package_readme.md.jinja
+    output_path: packages/python/README.md
+    title: Spikard Python
+    description: >-
+      High-performance Python web framework backed by a Rust core. Build REST APIs,
+      WebSockets, and SSE services with FastAPI/Litestar-style decorators powered by
+      Tokio, Hyper, and Tower middleware.
+    install_type: pip
+    install_command: "pip install spikard"
+    dev_install: "cd packages/python && uv sync"
+    requirements: "Python 3.10+"
+    license_path: "../../LICENSE"
+    features_heading: Features
+    features:
+      - "**Multiple route styles:** FastAPI-style (`@app.get()`) or Litestar-style (`@get()`)"
+      - "**Automatic validation:** msgspec (default), Pydantic v2, dataclasses, TypedDict, NamedTuple"
+      - "**Request/response streaming:** WebSockets, Server-Sent Events, multipart uploads"
+      - "**Middleware stack:** Compression, rate limiting, request IDs, authentication, CORS"
+      - "**Async-first:** Full async/await with `pyo3_async_runtimes`"
+      - "**OpenAPI generation:** Automatic type introspection and documentation"
+      - "**Dependency injection:** Configurable container with singleton and factory support"
+    quick_start_file: pkg_python_quickstart.md
+    extra_sections_file: pkg_python_extra.md
+    benchmark_data:
+      entries:
+        - { framework: spikard, rps: 12623, p50: 5.55, p99: 38.39, highlight: true }
+        - { framework: litestar, rps: 8032, p50: 14.62, p99: 19.18 }
+        - { framework: fastapi, rps: 6418, p50: 16.43, p99: 21.72 }
+        - { framework: robyn, rps: 6012, p50: 16.85, p99: 24.18 }
+      comparison: >-
+        1.6x faster than Litestar (throughput-based; see full results for latency
+        breakdown), 2.0x faster than FastAPI, and 2.1x faster than Robyn (also Rust-backed)
+      optimizations:
+        - "Zero-copy PyO3 type conversion (no JSON round-trips)"
+        - "Rust-powered HTTP server (Tokio + Hyper)"
+        - "GIL-friendly async design with `pyo3_async_runtimes`"
+    benchmark_methodology_path: "../../docs/benchmarks/methodology.md"
+    testing_content_file: pkg_python_testing.md
+    examples_content: |-
+      Runnable examples with dependency injection and database integration:
+      - [Python examples](../../examples/python/)
+      - [GraphQL schema support](../../examples/schemas/chat-service.asyncapi.yaml)
+      - [OpenAPI code generation](../../examples/schemas/todo-api.openapi.yaml)
+
+      See [examples/README.md](../../examples/README.md) for all languages and code generation.
+
+  - id: pkg-node
+    template: package_readme.md.jinja
+    output_path: packages/node/README.md
+    title: Spikard for Node.js
+    description: >-
+      High-performance HTTP framework for Node.js powered by a Rust core. Provides
+      type-safe routing, validation, middleware, and testing via napi-rs bindings with
+      zero-copy JSON conversion.
+    install_type: npm
+    install_command: "npm install @spikard/node"
+    alt_install: "pnpm add @spikard/node"
+    requirements: "Node.js 20+"
+    license_path: "../../LICENSE"
+    features_heading: Features
+    features:
+      - "**Rust-Powered Performance**: Native speed via Tokio with dedicated thread pool"
+      - "**Full TypeScript Support**: Auto-generated types from napi-rs FFI bindings"
+      - "**Zero-Copy JSON**: Direct conversion without serialization overhead"
+      - "**Tower-HTTP Middleware**: Compression, rate limiting, timeouts, auth, CORS, request IDs"
+      - "**Schema Validation**: Zod integration for request/response validation"
+      - "**Lifecycle Hooks**: onRequest, preValidation, preHandler, onResponse, onError"
+      - "**Testing**: TestClient for HTTP, WebSocket, and SSE assertions"
+    quick_start_file: pkg_node_quickstart.md
+    extra_sections_file: pkg_node_extra.md
+    benchmark_data:
+      entries:
+        - { framework: "spikard (Bun)", rps: 49460, p50: 2.18, p99: 4.21, highlight: true }
+        - { framework: "spikard (Node)", rps: 46160, p50: 2.18, p99: 3.35, highlight: true }
+        - { framework: elysia, rps: 44326, p50: 2.41, p99: 4.68 }
+        - { framework: kito, rps: 36958, p50: 4.94, p99: 12.86 }
+        - { framework: fastify, rps: 19167, p50: 6.74, p99: 14.76 }
+        - { framework: morojs, rps: 14196, p50: 6.44, p99: 12.61 }
+        - { framework: hono, rps: 10928, p50: 10.91, p99: 18.62 }
+      comparison: "1.2x faster than Kito and 2.4x faster than Fastify"
+      optimizations:
+        - "**napi-rs** zero-copy FFI bindings"
+        - "**Dedicated Tokio runtime** without blocking Node event loop"
+        - "**Zero-copy JSON** conversion (30-40% faster than JSON.parse)"
+        - "**ThreadsafeFunction** for async JavaScript callbacks"
+    benchmark_methodology_path: "../../docs/benchmarks/methodology.md"
+    testing_content_file: pkg_node_testing.md
+    examples_content: |-
+      See [examples/](../../examples/) for runnable projects. Code generation is supported for OpenAPI, GraphQL, AsyncAPI, and JSON-RPC specifications.
+
+  - id: pkg-ruby
+    template: package_readme.md.jinja
+    output_path: packages/ruby/README.md
+    title: Spikard Ruby
+    description: >-
+      Ruby bindings for Spikard: a Rust-centric web framework with type-safe code
+      generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage
+      Sinatra-style routing with zero-copy FFI performance.
+    install_type: gem
+    install_command: "gem install spikard"
+    dev_install: "bundle install && bundle exec rake ext:build"
+    requirements: "Ruby 3.2-4.x, Bundler, and Rust toolchain (for building from source)"
+    license_path: "../../LICENSE"
+    features_heading: Key Features
+    features:
+      - "**Type-safe with RBS**: Full RBS type definitions for Steep type checking"
+      - "**Zero-copy FFI**: Magnus/rb-sys bindings eliminate serialization overhead"
+      - "**Sinatra-style routing**: Familiar `get`, `post`, `put`, `patch`, `delete` DSL"
+      - "**Code generation**: Generate type-safe handlers from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specs"
+      - "**Full async support**: Non-blocking handlers with complete async/await integration"
+      - "**Tower-HTTP middleware**: Compression, rate limiting, authentication, CORS, request IDs"
+      - "**Real-time**: WebSockets and Server-Sent Events (SSE)"
+      - "**Production-ready**: Dependency injection, validation schemas, lifecycle hooks"
+    quick_start_file: pkg_ruby_quickstart.md
+    extra_sections_file: pkg_ruby_extra.md
+    benchmark_data:
+      entries:
+        - { framework: spikard, rps: 7151, p50: 14.62, p99: 18.98, highlight: true }
+        - { framework: roda, rps: 5038, p50: 26.89, p99: 35.61 }
+        - { framework: hanami-api, rps: 5032, p50: 76.10, p99: 414.35 }
+      comparison: "1.4x faster than Roda with significantly lower tail latency"
+    benchmark_methodology_path: "../../docs/benchmarks/methodology.md"
+    testing_content_file: pkg_ruby_testing.md
+    examples_content: |-
+      **Examples & Code Generation:**
+      - [Runnable Examples](../../examples/) - Ruby, Python, TypeScript, PHP, Elixir, and Rust
+      - [Code Generation Guide](../../examples/README.md) - Generate from OpenAPI, GraphQL, AsyncAPI, OpenRPC
+
+  - id: pkg-php
+    template: package_readme.md.jinja
+    output_path: packages/php/README.md
+    title: Spikard PHP
+    description: >-
+      High-performance PHP bindings for Spikard. Build REST APIs, WebSockets, and SSE
+      services with modern PHP 8.2+ patterns backed by a Rust core via ext-php-rs.
+    install_type: composer
+    install_command: "composer require spikard/spikard"
+    dev_install: |-
+      cd packages/php
+      composer install
+      cargo build --release --manifest-path ../../crates/spikard-php/Cargo.toml
+    requirements: |-
+      - PHP 8.2+
+      - Composer 2.0+
+      - Rust stable (for building the native extension)
+    license_path: "../../LICENSE"
+    features_heading: Key Features
+    features:
+      - "**ext-php-rs FFI**: Zero-copy data exchange between PHP and Rust"
+      - "**Type-safe**: PHP 8.2+ with strict types and PHPStan level max"
+      - "**Multiple protocols**: HTTP/1.1, WebSockets, Server-Sent Events"
+      - "**Middleware stack**: Compression, rate limiting, auth, CORS, timeouts"
+      - "**Zero-copy serialization**: Direct type conversion without JSON overhead"
+      - "**Lifecycle hooks**: onRequest, preValidation, preHandler, onResponse, onError"
+      - "**Built-in testing**: TestClient for unit and integration tests"
+      - "**OpenAPI/GraphQL support**: Full spec compatibility"
+    quick_start_file: pkg_php_quickstart.md
+    extra_sections_file: pkg_php_extra.md
+    benchmark_data:
+      entries:
+        - { framework: trongate, rps: 45339, p50: 3.81, p99: 7.10 }
+        - { framework: spikard, rps: 16942, p50: 5.82, p99: 9.10, highlight: true }
+        - { framework: phalcon, rps: 12367, p50: 10.17, p99: 17.20 }
+      comparison: "1.4x faster than Phalcon with lower latency across all percentiles"
+    benchmark_methodology_path: "../../docs/benchmarks/methodology.md"
+    testing_content_file: pkg_php_testing.md
+    examples_content: |-
+      See [examples/php/](../../examples/php/) for runnable PHP examples and [examples/README.md](../../examples/README.md) for code generation from OpenAPI/GraphQL schemas.
+
+  - id: pkg-elixir
+    template: package_readme.md.jinja
+    output_path: packages/elixir/README.md
+    title: Spikard Elixir
+    description: >-
+      Elixir bindings for Spikard: a Rust-centric web framework with type-safe code
+      generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage
+      Phoenix-style routing with zero-copy Rustler NIF performance.
+    install_type: hex
+    requirements: "Elixir 1.18+ with OTP 27+, and a Rust toolchain (for compiling NIFs from source)."
+    license_path: LICENSE
+    features_heading: Key Features
+    features:
+      - "**Phoenix-style routing**: Compile-time `get`, `post`, `put`, `patch`, `delete` macros with scopes"
+      - "**Zero-copy NIFs**: Rustler bindings eliminate serialization overhead"
+      - "**Full typespecs**: `@spec` annotations on all public functions for Dialyzer type checking"
+      - "**Code generation**: Generate type-safe handlers from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specs"
+      - "**Tower-HTTP middleware**: Compression, rate limiting, authentication, CORS, request IDs"
+      - "**Real-time**: WebSockets and Server-Sent Events (SSE)"
+      - "**Production-ready**: Dependency injection, validation schemas, lifecycle hooks, background tasks"
+    quick_start_file: pkg_elixir_quickstart.md
+    extra_sections_file: pkg_elixir_extra.md
+    testing_content_file: pkg_elixir_testing.md
+    examples_content: |-
+      **Examples & Code Generation:**
+      - [Runnable Examples](../../examples/) - Elixir, Python, TypeScript, Ruby, PHP, and Rust
+      - [Code Generation Guide](../../examples/README.md) - Generate from OpenAPI, GraphQL, AsyncAPI, OpenRPC

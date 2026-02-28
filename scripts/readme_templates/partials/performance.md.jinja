@@ -1,0 +1,20 @@
+{% if benchmark_data %}
+## Performance
+
+Benchmarked across 34 workloads at 100 concurrency ([methodology]({{ benchmark_methodology_path }})):
+
+| Framework | Avg RPS | P50 (ms) | P99 (ms) |
+|-----------|--------:|----------:|----------:|
+{% for entry in benchmark_data.entries %}
+| {% if entry.highlight %}**{{ entry.framework }}**{% else %}{{ entry.framework }}{% endif %} | {{ "{:,}".format(entry.rps) }} | {{ entry.p50 }} | {{ entry.p99 }} |
+{% endfor %}
+
+Spikard is **{{ benchmark_data.comparison }}**.
+{% if benchmark_data.optimizations %}
+
+Key optimizations:
+{% for opt in benchmark_data.optimizations %}
+- {{ opt }}
+{% endfor %}
+{% endif %}
+{% endif %}

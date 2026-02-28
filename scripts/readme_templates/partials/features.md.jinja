@@ -1,0 +1,7 @@
+{% if features %}
+## {% if features_heading %}{{ features_heading }}{% else %}Features{% endif %}
+
+{% for feature in features %}
+- {{ feature }}
+{% endfor %}
+{% endif %}

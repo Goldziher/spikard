@@ -1,0 +1,36 @@
+<!-- GENERATED FILE — DO NOT EDIT DIRECTLY. Run: task readme:generate -->
+
+# {{ title }}
+
+{{ description }}
+
+{% include 'partials/badges.md.jinja' %}
+
+> **User-facing documentation:** See [{{ package_readme_link }}]({{ package_readme_path }}) for the full API, examples, and usage guide.
+
+## Architecture
+
+This crate provides the Rust-side {{ binding_technology }} bindings that power the {{ binding_language }} package. All HTTP handling, middleware, and validation runs in Rust; this crate translates between the {{ binding_language }} runtime and the Spikard core.
+
+{% include 'partials/features.md.jinja' %}
+
+## Building
+
+```bash
+{{ build_command }}
+```
+
+**Requirements:** Rust stable toolchain
+{% if extra_sections %}
+
+{{ extra_sections }}
+{% endif %}
+
+## Documentation
+
+- [{{ binding_language }} Package README]({{ package_readme_path }})
+- [Rust API Documentation]({{ docs_rs_url }})
+- [Main Project README](../../README.md)
+- [spikard.dev](https://spikard.dev)
+
+{% include 'partials/footer.md.jinja' %}

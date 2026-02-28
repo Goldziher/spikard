@@ -1,18 +1,37 @@
+<!-- GENERATED FILE — DO NOT EDIT DIRECTLY. Run: task readme:generate -->
+
 # Spikard for Node.js
 
-[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
-[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
-[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=blue)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
-[![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
-[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
+  <a href="https://spikard.dev">
+    <img src="https://img.shields.io/badge/docs-spikard.dev-007ec6" alt="Documentation">
+  </a>
+  <a href="https://crates.io/crates/spikard">
+    <img src="https://img.shields.io/crates/v/spikard.svg?color=007ec6" alt="Crates.io">
+  </a>
+  <a href="https://pypi.org/project/spikard/">
+    <img src="https://img.shields.io/pypi/v/spikard.svg?color=007ec6" alt="PyPI">
+  </a>
+  <a href="https://www.npmjs.com/package/@spikard/node">
+    <img src="https://img.shields.io/npm/v/@spikard/node.svg?color=007ec6" alt="npm">
+  </a>
+  <a href="https://rubygems.org/gems/spikard">
+    <img src="https://img.shields.io/gem/v/spikard.svg?color=007ec6" alt="RubyGems">
+  </a>
+  <a href="https://packagist.org/packages/spikard/spikard">
+    <img src="https://img.shields.io/packagist/v/spikard/spikard.svg?color=007ec6" alt="Packagist">
+  </a>
+  <a href="https://hex.pm/packages/spikard">
+    <img src="https://img.shields.io/hexpm/v/spikard.svg?color=007ec6" alt="Hex.pm">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-007ec6" alt="License">
+  </a>
+</div>
 
-High-performance HTTP framework for Node.js powered by a Rust core. Provides type-safe routing, validation, middleware, and testing via **napi-rs** bindings with zero-copy JSON conversion.
+High-performance HTTP framework for Node.js powered by a Rust core. Provides type-safe routing, validation, middleware, and testing via napi-rs bindings with zero-copy JSON conversion.
 
 ## Features
-
 - **Rust-Powered Performance**: Native speed via Tokio with dedicated thread pool
 - **Full TypeScript Support**: Auto-generated types from napi-rs FFI bindings
 - **Zero-Copy JSON**: Direct conversion without serialization overhead
@@ -78,142 +97,27 @@ app.addRoute(
 app.run({ port: 8000 });
 ```
 
-## Routing & Schemas
+## Performance
 
-Routes support Zod validation (recommended) or raw JSON Schema:
+Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/benchmarks/methodology.md)):
 
-```typescript
-import { Spikard, type Request } from "@spikard/node";
-import { z } from "zod";
+| Framework | Avg RPS | P50 (ms) | P99 (ms) |
+|-----------|--------:|----------:|----------:|
+| **spikard (Bun)** | 49,460 | 2.18 | 4.21 |
+| **spikard (Node)** | 46,160 | 2.18 | 3.35 |
+| elysia | 44,326 | 2.41 | 4.68 |
+| kito | 36,958 | 4.94 | 12.86 |
+| fastify | 19,167 | 6.74 | 14.76 |
+| morojs | 14,196 | 6.44 | 12.61 |
+| hono | 10,928 | 10.91 | 18.62 |
 
-const app = new Spikard();
+Spikard is **1.2x faster than Kito and 2.4x faster than Fastify**.
 
-const UserSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-});
-
-const createUser = async (req: Request) => {
-  const user = req.json();
-  return { id: 1, ...user };
-};
-
-app.addRoute(
-  {
-    method: "POST",
-    path: "/users",
-    handler_name: "createUser",
-    request_schema: UserSchema,
-    response_schema: UserSchema,
-    is_async: true,
-  },
-  createUser,
-);
-```
-
-Supported HTTP methods: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS, TRACE.
-
-## Dependency Injection
-
-Register values or factories and access them via `request.dependencies`:
-
-```typescript
-const app = new Spikard();
-
-app.provide("config", { dbUrl: "postgresql://localhost/app" });
-app.provide(
-  "dbPool",
-  async ({ config }) => ({ url: config.dbUrl, driver: "pool" }),
-  { dependsOn: ["config"], singleton: true },
-);
-
-app.addRoute(
-  { method: "GET", path: "/stats", handler_name: "stats", is_async: true },
-  async (req) => {
-    const deps = req.dependencies ?? {};
-    return { db: deps.dbPool?.url, env: deps.config?.dbUrl };
-  },
-);
-```
-
-## Request Handling
-
-Access query, path params, headers, cookies, and body:
-
-```typescript
-get("/search")(async (req) => {
-  const q = req.query.q;
-  const id = req.params.id;
-  const auth = req.headers.authorization;
-  const session = req.cookies.session_id;
-  const body = req.json<{ name: string }>();
-  const form = req.form();
-  return { query: q, id };
-});
-```
-
-## Advanced Features
-
-**File Uploads:**
-```typescript
-post("/upload")(async (req) => {
-  const body = req.json<{ file: UploadFile }>();
-  return { filename: body.file.filename, size: body.file.size };
-});
-```
-
-**Streaming Responses:**
-```typescript
-get("/stream")(async function* () {
-  for (let i = 0; i < 10; i++) {
-    yield JSON.stringify({ count: i }) + "\n";
-    await new Promise(r => setTimeout(r, 100));
-  }
-});
-```
-
-## Configuration
-
-Configure middleware, compression, rate limiting, and authentication:
-
-```typescript
-const config: ServerConfig = {
-  port: 8080,
-  workers: 4,
-  maxBodySize: 10 * 1024 * 1024,
-  requestTimeout: 30,
-  compression: { gzip: true, brotli: true, minSize: 1024 },
-  rateLimit: { perSecond: 100, burst: 200 },
-  jwtAuth: { secret: "key", algorithm: "HS256" },
-};
-
-app.run(config);
-```
-
-See [ServerConfig](../../docs/adr/0002-runtime-and-middleware.md) for all options.
-
-## Lifecycle Hooks
-
-Execute code at key request/response stages:
-
-```typescript
-app.onRequest(async (request) => {
-  console.log(`${request.method} ${request.path}`);
-  return request;
-});
-
-app.preValidation(async (request) => {
-  if (!request.headers["authorization"]) {
-    return { status: 401, body: { error: "Unauthorized" } };
-  }
-  return request;
-});
-
-app.onResponse(async (response) => {
-  response.headers["X-Frame-Options"] = "DENY";
-  return response;
-});
-```
+Key optimizations:
+- **napi-rs** zero-copy FFI bindings
+- **Dedicated Tokio runtime** without blocking Node event loop
+- **Zero-copy JSON** conversion (30-40% faster than JSON.parse)
+- **ThreadsafeFunction** for async JavaScript callbacks
 
 ## Testing
 
@@ -237,28 +141,6 @@ await ws.sendJson({ message: "hello" });
 const sse = await client.get("/events");
 ```
 
-## Performance
-
-Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/benchmarks/methodology.md)):
-
-| Framework | Avg RPS | P50 (ms) | P99 (ms) |
-|-----------|--------:|----------:|----------:|
-| **spikard (Bun)** | 49,460 | 2.18 | 4.21 |
-| **spikard (Node)** | 46,160 | 2.18 | 3.35 |
-| elysia | 44,326 | 2.41 | 4.68 |
-| kito | 36,958 | 4.94 | 12.86 |
-| fastify | 19,167 | 6.74 | 14.76 |
-| morojs | 14,196 | 6.44 | 12.61 |
-| hono | 10,928 | 10.91 | 18.62 |
-
-Spikard Node is **1.2x faster** than Kito and **2.4x faster** than Fastify.
-
-Key optimizations:
-- **napi-rs** zero-copy FFI bindings
-- **Dedicated Tokio runtime** without blocking Node event loop
-- **Zero-copy JSON** conversion (30-40% faster than JSON.parse)
-- **ThreadsafeFunction** for async JavaScript callbacks
-
 ## Examples
 
 See [examples/](../../examples/) for runnable projects. Code generation is supported for OpenAPI, GraphQL, AsyncAPI, and JSON-RPC specifications.
@@ -267,18 +149,14 @@ See [examples/](../../examples/) for runnable projects. Code generation is suppo
 
 Full documentation at [spikard.dev](https://spikard.dev). See also [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
-## Ecosystem
+## Other Languages
 
-Spikard is available across multiple languages:
-
-| Platform | Package | Status |
-|----------|---------|--------|
-| **Node.js** | [@spikard/node](https://www.npmjs.com/package/@spikard/node) | Stable |
-| **Python** | [spikard](https://pypi.org/project/spikard/) | Stable |
-| **Rust** | [spikard](https://crates.io/crates/spikard) | Stable |
-| **Ruby** | [spikard](https://rubygems.org/gems/spikard) | Stable |
-| **PHP** | [spikard/spikard](https://packagist.org/packages/spikard/spikard) | Stable |
-| **Elixir** | [spikard](https://hex.pm/packages/spikard) | Stable |
+- **Rust:** [Crates.io](https://crates.io/crates/spikard)
+- **Python:** [PyPI](https://pypi.org/project/spikard/)
+- **TypeScript:** [npm (@spikard/node)](https://www.npmjs.com/package/@spikard/node)
+- **Ruby:** [RubyGems](https://rubygems.org/gems/spikard)
+- **PHP:** [Packagist](https://packagist.org/packages/spikard/spikard)
+- **Elixir:** [Hex.pm](https://hex.pm/packages/spikard)
 
 ## License
 

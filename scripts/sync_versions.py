@@ -51,8 +51,19 @@ MIX_EXS_PATHS = [
 
 README_PATHS = [
     Path("crates/spikard/README.md"),
-    Path("crates/spikard-http/README.md"),
     Path("crates/spikard-core/README.md"),
+    Path("crates/spikard-http/README.md"),
+    Path("crates/spikard-cli/README.md"),
+    Path("crates/spikard-graphql/README.md"),
+    Path("crates/spikard-py/README.md"),
+    Path("crates/spikard-node/README.md"),
+    Path("crates/spikard-rb/README.md"),
+    Path("crates/spikard-elixir/README.md"),
+    Path("packages/python/README.md"),
+    Path("packages/node/README.md"),
+    Path("packages/ruby/README.md"),
+    Path("packages/php/README.md"),
+    Path("packages/elixir/README.md"),
     Path("crates/spikard-bindings-shared/README.md"),
     Path("tests/test_apps/README.md"),
     Path("tests/test_apps/python/README.md"),
@@ -60,7 +71,6 @@ README_PATHS = [
     Path("tests/test_apps/php/README.md"),
     Path("tests/test_apps/node/README.md"),
     Path("tests/test_apps/ruby/README.md"),
-    Path("packages/elixir/README.md"),
 ]
 
 

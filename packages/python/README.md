@@ -1,15 +1,44 @@
+<!-- GENERATED FILE — DO NOT EDIT DIRECTLY. Run: task readme:generate -->
+
 # Spikard Python
+
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
+  <a href="https://spikard.dev">
+    <img src="https://img.shields.io/badge/docs-spikard.dev-007ec6" alt="Documentation">
+  </a>
+  <a href="https://crates.io/crates/spikard">
+    <img src="https://img.shields.io/crates/v/spikard.svg?color=007ec6" alt="Crates.io">
+  </a>
+  <a href="https://pypi.org/project/spikard/">
+    <img src="https://img.shields.io/pypi/v/spikard.svg?color=007ec6" alt="PyPI">
+  </a>
+  <a href="https://www.npmjs.com/package/@spikard/node">
+    <img src="https://img.shields.io/npm/v/@spikard/node.svg?color=007ec6" alt="npm">
+  </a>
+  <a href="https://rubygems.org/gems/spikard">
+    <img src="https://img.shields.io/gem/v/spikard.svg?color=007ec6" alt="RubyGems">
+  </a>
+  <a href="https://packagist.org/packages/spikard/spikard">
+    <img src="https://img.shields.io/packagist/v/spikard/spikard.svg?color=007ec6" alt="Packagist">
+  </a>
+  <a href="https://hex.pm/packages/spikard">
+    <img src="https://img.shields.io/hexpm/v/spikard.svg?color=007ec6" alt="Hex.pm">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-007ec6" alt="License">
+  </a>
+</div>
 
 High-performance Python web framework backed by a Rust core. Build REST APIs, WebSockets, and SSE services with FastAPI/Litestar-style decorators powered by Tokio, Hyper, and Tower middleware.
 
-[![Documentation](https://img.shields.io/badge/docs-spikard.dev-blue)](https://spikard.dev)
-[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=blue)](https://crates.io/crates/spikard)
-[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=blue)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=blue)](https://www.npmjs.com/package/@spikard/node)
-[![Gem](https://img.shields.io/gem/v/spikard.svg?color=blue)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=blue)](https://packagist.org/packages/spikard/spikard)
-[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=blue)](https://hex.pm/packages/spikard)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](../../LICENSE)
+## Features
+- **Multiple route styles:** FastAPI-style (`@app.get()`) or Litestar-style (`@get()`)
+- **Automatic validation:** msgspec (default), Pydantic v2, dataclasses, TypedDict, NamedTuple
+- **Request/response streaming:** WebSockets, Server-Sent Events, multipart uploads
+- **Middleware stack:** Compression, rate limiting, request IDs, authentication, CORS
+- **Async-first:** Full async/await with `pyo3_async_runtimes`
+- **OpenAPI generation:** Automatic type introspection and documentation
+- **Dependency injection:** Configurable container with singleton and factory support
 
 ## Installation
 
@@ -21,8 +50,7 @@ Pre-built wheels available for macOS, Linux, Windows. Building from source requi
 
 **Development:**
 ```bash
-cd packages/python
-uv sync
+cd packages/python && uv sync
 ```
 
 **Requirements:** Python 3.10+
@@ -52,16 +80,6 @@ async def create_user(user: User) -> User:
 if __name__ == "__main__":
     app.run(port=8000)
 ```
-
-## Features
-
-- **Multiple route styles:** FastAPI-style (`@app.get()`) or Litestar-style (`@get()`)
-- **Automatic validation:** msgspec (default), Pydantic v2, dataclasses, TypedDict, NamedTuple
-- **Request/response streaming:** WebSockets, Server-Sent Events, multipart uploads
-- **Middleware stack:** Compression, rate limiting, request IDs, authentication, CORS
-- **Async-first:** Full async/await with `pyo3_async_runtimes`
-- **OpenAPI generation:** Automatic type introspection and documentation
-- **Dependency injection:** Configurable container with singleton and factory support
 
 ## Core Concepts
 
@@ -139,25 +157,6 @@ async def check_auth(request):
     return request
 ```
 
-## Configuration
-
-```python
-from spikard import Spikard, ServerConfig, CompressionConfig, RateLimitConfig, JwtConfig
-
-config = ServerConfig(
-    host="0.0.0.0",
-    port=8080,
-    workers=4,
-    compression=CompressionConfig(gzip=True, brotli=True),
-    rate_limit=RateLimitConfig(per_second=100, burst=200),
-    jwt=JwtConfig(secret="key", algorithm="HS256")
-)
-
-app = Spikard(config=config)
-```
-
-See the documentation for all options.
-
 ## Performance
 
 Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/benchmarks/methodology.md)):
@@ -169,7 +168,7 @@ Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/ben
 | fastapi | 6,418 | 16.43 | 21.72 |
 | robyn | 6,012 | 16.85 | 24.18 |
 
-Spikard is **1.6x faster** than Litestar (throughput-based; see full results for latency breakdown), **2.0x faster** than FastAPI, and **2.1x faster** than Robyn (also Rust-backed).
+Spikard is **1.6x faster than Litestar (throughput-based; see full results for latency breakdown), 2.0x faster than FastAPI, and 2.1x faster than Robyn (also Rust-backed)**.
 
 Key optimizations:
 - Zero-copy PyO3 type conversion (no JSON round-trips)
@@ -177,6 +176,7 @@ Key optimizations:
 - GIL-friendly async design with `pyo3_async_runtimes`
 
 ## Testing
+
 ```python
 from spikard.testing import TestClient
 
@@ -190,6 +190,7 @@ async def test_users():
 `TestClient` uses in-process Rust testing for speed. `LiveTestClient` starts a real subprocess server for WebSocket/SSE tests.
 
 See the main documentation for WebSocket and SSE testing.
+
 ## Examples
 
 Runnable examples with dependency injection and database integration:
@@ -206,6 +207,7 @@ Full documentation at [spikard.dev](https://spikard.dev). See also [CONTRIBUTING
 ## Other Languages
 
 - **Rust:** [Crates.io](https://crates.io/crates/spikard)
+- **Python:** [PyPI](https://pypi.org/project/spikard/)
 - **TypeScript:** [npm (@spikard/node)](https://www.npmjs.com/package/@spikard/node)
 - **Ruby:** [RubyGems](https://rubygems.org/gems/spikard)
 - **PHP:** [Packagist](https://packagist.org/packages/spikard/spikard)
@@ -213,4 +215,4 @@ Full documentation at [spikard.dev](https://spikard.dev). See also [CONTRIBUTING
 
 ## License
 
-MIT
+MIT - See [LICENSE](../../LICENSE) for details
