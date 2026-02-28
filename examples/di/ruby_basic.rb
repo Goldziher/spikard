@@ -52,4 +52,4 @@ puts '  curl http://localhost:8000/config'
 puts '  curl http://localhost:8000/stats'
 puts '  curl http://localhost:8000/all'
 
-app.run(port: 8000)
+app.run(config: { port: 8000 })

@@ -245,7 +245,7 @@ Register your GraphQL endpoint with the Spikard router. The handler implements t
     )
 
     # Start server
-    app.run(host: '127.0.0.1', port: 8000)
+    app.run(config: { host: '127.0.0.1', port: 8000 })
     ```
 
 === "PHP"

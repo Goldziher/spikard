@@ -109,7 +109,7 @@ app.get "/users/:user_id" do |user_id:|
   { id: user_id, name: "Alice" }
 end
 
-app.run(port: 8000)
+app.run(config: { port: 8000 })
 ```
 
 **PHP:**

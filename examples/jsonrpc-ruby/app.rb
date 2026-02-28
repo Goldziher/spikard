@@ -169,4 +169,4 @@ puts ''
 puts 'Press Ctrl+C to stop'
 puts ''
 
-app.run(host: '0.0.0.0', port: 8000)
+app.run(config: { host: '0.0.0.0', port: 8000 })

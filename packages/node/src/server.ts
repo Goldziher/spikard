@@ -8,7 +8,7 @@ import { isNativeHandler, wrapHandler } from "./handler-wrapper";
 import type { HandlerFunction, NativeHandlerFunction, SpikardApp } from "./index";
 
 interface NativeServerBinding {
-	runServer(app: SpikardApp, config: ServerConfig | ServerOptions): void;
+	runServer(app: SpikardApp, config: ServerConfig): void;
 }
 
 let nativeBinding: NativeServerBinding;
@@ -30,18 +30,10 @@ function loadBinding(): NativeServerBinding {
 nativeBinding = loadBinding();
 
 /**
- * @deprecated Use ServerConfig instead
- */
-export interface ServerOptions {
-	host?: string;
-	port?: number;
-}
-
-/**
  * Run the Spikard server
  *
  * @param app - The Spikard application instance
- * @param config - Server configuration options (supports full ServerConfig or legacy ServerOptions)
+ * @param config - Server configuration
  *
  * @example
  * ```typescript
@@ -51,7 +43,7 @@ export interface ServerOptions {
  * const app = new Spikard();
  * // Register routes...
  *
- * // Simple usage (backwards compatible)
+ * // Simple usage
  * runServer(app, { host: '0.0.0.0', port: 8000 });
  *
  * // Full configuration with middleware
@@ -67,7 +59,7 @@ export interface ServerOptions {
  * runServer(app, config);
  * ```
  */
-export function runServer(app: SpikardApp, config: ServerConfig | ServerOptions = {}): void {
+export function runServer(app: SpikardApp, config: ServerConfig = {}): void {
 	const handlers: Record<string, NativeHandlerFunction> = {};
 	const routes = (app.routes || []).map((route) => {
 		const handler = app.handlers?.[route.handler_name];

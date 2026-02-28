@@ -13,7 +13,7 @@ app.get '/health' do |_params, _query, _body|
   { status: 'ok' }
 end
 
-app.run(port: 8000)
+app.run(config: { port: 8000 })
 ```
 
 ## Routes & Handlers
@@ -560,7 +560,7 @@ Response methods:
 Run the server:
 
 ```ruby
-app.run(port: 8000)
+app.run(config: { port: 8000 })
 # or with config
 config = Spikard::ServerConfig.new(host: '0.0.0.0', port: 8080)
 app.run(config: config)

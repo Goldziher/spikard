@@ -12,5 +12,5 @@ app.post("/users") do |_params, _query, body|
   { id: user["id"], name: user["name"] }
 end
 
-app.run(port: 8000)
+app.run(config: { port: 8000 })
 ```

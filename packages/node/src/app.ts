@@ -3,8 +3,9 @@
  */
 
 import type { HandlerFunction, NativeHandlerFunction, RouteMetadata, SpikardApp } from "./index";
+import type { ServerConfig } from "./config";
 import type { Request } from "./request";
-import { runServer, type ServerOptions } from "./server";
+import { runServer } from "./server";
 import type { MaybePromise, StructuredHandlerResponse, WebSocketHandler, WebSocketOptions } from "./types";
 
 /**
@@ -220,10 +221,10 @@ export class Spikard implements SpikardApp {
 	/**
 	 * Run the server
 	 *
-	 * @param options - Server configuration
+	 * @param config - Server configuration
 	 */
-	run(options: ServerOptions = {}): void {
-		runServer(this, options);
+	run(config: ServerConfig = {}): void {
+		runServer(this, config);
 	}
 
 	/**

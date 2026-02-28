@@ -12,8 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Binding route metadata preservation**: Python, Ruby, and Elixir server startup paths now build routers with explicit route metadata so OpenAPI generation and other metadata-driven runtime features keep request/response/parameter schemas instead of silently dropping them.
 - **Rust `Server::with_handlers(...)` metadata preservation**: The public Rust helper now reconstructs route metadata from compiled validators so direct Rust consumers keep OpenAPI request/response/parameter schemas instead of dropping them.
 - **gRPC streaming terminal status propagation**: Server-streaming and bidirectional gRPC responses now terminate with real `grpc-status` / `grpc-message` trailers on both success and mid-stream failure instead of silently dropping the terminal status.
+- **Node/Ruby startup API cleanup**: Removed the Node `ServerOptions` compatibility type and Ruby `app.run(host:, port:)` fallback. Both bindings now use explicit server configuration objects only.
 - **GraphQL server API docs**: Updated GraphQL documentation to match the breaking removal of `Server::new(...)/run()` and point to `Server::with_handlers_and_metadata(...)/run_with_config(...)`.
 - **JSON-RPC OpenRPC runtime docs**: The JSON-RPC runtime now serves `/openrpc.json` from registered method metadata, and the examples have been updated to match the implemented endpoint.
+- **OpenRPC CLI docs**: The init/codegen reference now reflects that OpenRPC 1.x schemas are supported instead of documenting them as a future enhancement.
 
 ## [0.12.0] - 2026-02-28
 

@@ -125,4 +125,4 @@ puts '- Database pool is created once (singleton)'
 puts '- Cache is shared across requests (singleton)'
 puts '- Request IDs are unique per request (non-cacheable)'
 
-app.run(port: 8000)
+app.run(config: { port: 8000 })

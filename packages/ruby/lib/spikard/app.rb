@@ -255,7 +255,6 @@ module Spikard
     # @param config [ServerConfig, Hash, nil] Server configuration
     #   Can be a ServerConfig object, a Hash with configuration keys, or nil to use defaults.
     #   If a Hash is provided, it will be converted to a ServerConfig.
-    #   For backward compatibility, also accepts host: and port: keyword arguments.
     #
     # @example With ServerConfig
     #   config = Spikard::ServerConfig.new(
@@ -268,19 +267,13 @@ module Spikard
     # @example With Hash
     #   app.run(config: { host: '0.0.0.0', port: 8080 })
     #
-    # @example Backward compatible (deprecated)
-    #   app.run(host: '0.0.0.0', port: 8000)
+    # @example With Hash shorthand
+    #   app.run(config: { host: '0.0.0.0', port: 8000 })
     # rubocop:disable Metrics/MethodLength
-    def run(config: nil, host: nil, port: nil)
+    def run(config: nil)
       require 'json'
 
-      # Backward compatibility: if host/port are provided directly, create a config
-      if config.nil? && (host || port)
-        config = ServerConfig.new(
-          host: host || '127.0.0.1',
-          port: port || 8000
-        )
-      elsif config.nil?
+      if config.nil?
         config = ServerConfig.new
       elsif config.is_a?(Hash)
         config = ServerConfig.new(**config)

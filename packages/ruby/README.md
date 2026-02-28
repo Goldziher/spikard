@@ -59,7 +59,7 @@ app.post "/users" do |request|
   { id: 1, name: request[:body]["name"] }
 end
 
-app.run(port: 8000)
+app.run(config: { port: 8000 })
 ```
 
 The `request` hash provides access to:

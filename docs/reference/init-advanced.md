@@ -321,7 +321,7 @@ When a schema is provided:
 - OpenAPI 3.0.x (JSON or YAML)
 - GraphQL SDL (`.graphql` files)
 - AsyncAPI 2.x (future enhancement)
-- OpenRPC 1.x (future enhancement)
+- OpenRPC 1.x
 
 **Generated Files:**
 ```
