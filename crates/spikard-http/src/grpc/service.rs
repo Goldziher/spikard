@@ -6,8 +6,12 @@
 
 use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use crate::grpc::streaming::MessageStream;
+use axum::http::{HeaderMap, HeaderValue};
 use bytes::Bytes;
 use futures_util::StreamExt;
+use http_body::Frame;
+use http_body_util::StreamBody;
+use std::convert::Infallible;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 
@@ -94,26 +98,20 @@ impl GenericGrpcService {
     ///
     /// A Response with a streaming body containing the message stream
     ///
-    /// # Error Propagation Limitations
+    /// # Error Propagation
     ///
     /// When a stream returns an error mid-stream (after messages have begun
-    /// being sent), the error may not be perfectly transmitted to the client
-    /// as a gRPC trailer. This is due to limitations in Axum's `Body::from_stream`:
+    /// being sent), Spikard preserves the partial messages that were already
+    /// produced and terminates the stream with gRPC trailers:
     ///
     /// - **Pre-stream errors** (before any messages): Properly converted to
     ///   HTTP status codes and returned to the client
     /// - **Mid-stream errors** (after messages have begun): The error is converted
-    ///   to a generic `BoxError`, and the stream terminates. The connection is
-    ///   properly closed, but the gRPC status code metadata is lost.
+    ///   into terminal `grpc-status` / `grpc-message` trailers
+    /// - **Successful completion**: The stream ends with `grpc-status: 0`
     ///
-    /// For robust error handling in streaming RPCs:
-    /// - Prefer detecting errors early (before sending messages) when possible
-    /// - Include error information in the message stream itself if critical
-    ///   (application-level error messages in the protobuf)
-    /// - For true gRPC trailer support, consider implementing a custom Axum
-    ///   body type that wraps the stream and can inject trailers on error
-    ///
-    /// See: <https://github.com/tokio-rs/axum/discussions/2043>
+    /// This preserves the gRPC terminal status contract without discarding
+    /// already-delivered stream data.
     pub async fn handle_server_stream(
         &self,
         service_name: String,
@@ -134,31 +132,7 @@ impl GenericGrpcService {
         // Call the handler's server streaming method
         let message_stream: MessageStream = self.handler.call_server_stream(grpc_request).await?;
 
-        // Convert MessageStream to axum Body
-        //
-        // LIMITATION: When converting tonic::Status errors from the stream,
-        // we lose the gRPC status metadata. The Status is converted to a
-        // generic Box<dyn Error>, and Axum's Body::from_stream doesn't have
-        // special handling for gRPC error semantics.
-        //
-        // Current behavior:
-        // - Stream errors are converted to BoxError
-        // - Body stream terminates on the first error
-        // - Connection is properly closed
-        // - Error metadata (status code, message) is not transmitted to client
-        //
-        // TODO: Implement custom Body wrapper that can:
-        // 1. Capture tonic::Status errors
-        // 2. Extract status code and message
-        // 3. Inject gRPC trailers (grpc-status, grpc-message) when stream ends
-        // 4. Properly signal error to client while preserving partial messages
-        //
-        // This would require implementing a custom StreamBody or similar that
-        // understands gRPC error semantics.
-        let byte_stream =
-            message_stream.map(|result| result.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
-
-        let body = axum::body::Body::from_stream(byte_stream);
+        let body = grpc_stream_body(message_stream);
 
         // Create response with streaming body
         let response = Response::new(body);
@@ -268,9 +242,9 @@ impl GenericGrpcService {
     ///
     /// # Error Propagation
     ///
-    /// Similar to server streaming, mid-stream errors in the response may not be
-    /// perfectly transmitted as gRPC trailers due to Axum Body::from_stream limitations.
-    /// See handle_server_stream() documentation for details.
+    /// Bidirectional responses use the same terminal-trailer handling as
+    /// server-streaming responses. Partial messages are preserved, and the
+    /// final gRPC status is emitted in trailers.
     pub async fn handle_bidi_stream(
         &self,
         service_name: String,
@@ -295,11 +269,7 @@ impl GenericGrpcService {
         // Call the handler's bidirectional streaming method
         let response_stream: MessageStream = self.handler.call_bidi_stream(streaming_request).await?;
 
-        // Convert MessageStream to axum Body (same as server streaming)
-        let byte_stream =
-            response_stream.map(|result| result.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
-
-        let body = axum::body::Body::from_stream(byte_stream);
+        let body = grpc_stream_body(response_stream);
         let response = Response::new(body);
 
         Ok(response)
@@ -308,6 +278,89 @@ impl GenericGrpcService {
     /// Get the service name from the handler
     pub fn service_name(&self) -> &str {
         self.handler.service_name()
+    }
+}
+
+fn grpc_stream_body(message_stream: MessageStream) -> axum::body::Body {
+    let frame_stream = futures_util::stream::unfold(
+        GrpcFrameStreamState {
+            stream: message_stream,
+            finished: false,
+        },
+        |mut state| async move {
+            if state.finished {
+                return None;
+            }
+
+            match state.stream.next().await {
+                Some(Ok(bytes)) => Some((Ok::<Frame<Bytes>, Infallible>(Frame::data(bytes)), state)),
+                Some(Err(status)) => {
+                    state.finished = true;
+                    Some((Ok(Frame::trailers(grpc_status_trailers(&status))), state))
+                }
+                None => {
+                    state.finished = true;
+                    Some((Ok(Frame::trailers(grpc_success_trailers())), state))
+                }
+            }
+        },
+    );
+
+    axum::body::Body::new(StreamBody::new(frame_stream))
+}
+
+struct GrpcFrameStreamState {
+    stream: MessageStream,
+    finished: bool,
+}
+
+fn grpc_success_trailers() -> HeaderMap {
+    let mut trailers = HeaderMap::new();
+    trailers.insert("grpc-status", HeaderValue::from_static("0"));
+    trailers.insert("grpc-message", HeaderValue::from_static("OK"));
+    trailers
+}
+
+fn grpc_status_trailers(status: &Status) -> HeaderMap {
+    let mut trailers = HeaderMap::new();
+    let code = grpc_code_number(status.code());
+    trailers.insert(
+        "grpc-status",
+        HeaderValue::from_str(code).unwrap_or_else(|_| HeaderValue::from_static("2")),
+    );
+
+    let encoded_message = if status.message().is_empty() {
+        "unknown".to_string()
+    } else {
+        urlencoding::encode(status.message()).into_owned()
+    };
+    trailers.insert(
+        "grpc-message",
+        HeaderValue::from_str(&encoded_message).unwrap_or_else(|_| HeaderValue::from_static("unknown")),
+    );
+
+    trailers
+}
+
+fn grpc_code_number(code: tonic::Code) -> &'static str {
+    match code {
+        tonic::Code::Ok => "0",
+        tonic::Code::Cancelled => "1",
+        tonic::Code::Unknown => "2",
+        tonic::Code::InvalidArgument => "3",
+        tonic::Code::DeadlineExceeded => "4",
+        tonic::Code::NotFound => "5",
+        tonic::Code::AlreadyExists => "6",
+        tonic::Code::PermissionDenied => "7",
+        tonic::Code::ResourceExhausted => "8",
+        tonic::Code::FailedPrecondition => "9",
+        tonic::Code::Aborted => "10",
+        tonic::Code::OutOfRange => "11",
+        tonic::Code::Unimplemented => "12",
+        tonic::Code::Internal => "13",
+        tonic::Code::Unavailable => "14",
+        tonic::Code::DataLoss => "15",
+        tonic::Code::Unauthenticated => "16",
     }
 }
 

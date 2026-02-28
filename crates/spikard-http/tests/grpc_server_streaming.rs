@@ -19,6 +19,7 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use bytes::Bytes;
 use futures_util::StreamExt;
+use http_body_util::BodyExt;
 use spikard_http::grpc::streaming::{empty_message_stream, message_stream_from_vec};
 use spikard_http::grpc::{
     GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData, MessageStream, RpcMode,
@@ -651,7 +652,7 @@ async fn test_message_order_preserved() {
 // ============================================================================
 // These tests verify error propagation through the full HTTP/gRPC stack
 
-/// Handler that fails with specific error code after 3 messages
+/// Handler that fails with specific error code after 5 messages
 struct ErrorAfterMessagesHandler;
 
 impl GrpcHandler for ErrorAfterMessagesHandler {
@@ -671,19 +672,7 @@ impl GrpcHandler for ErrorAfterMessagesHandler {
         &self,
         _request: GrpcRequestData,
     ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
-        Box::pin(async {
-            let messages: Vec<Bytes> = vec![
-                Bytes::from("message_0"),
-                Bytes::from("message_1"),
-                Bytes::from("message_2"),
-            ];
-            let stream = message_stream_from_vec(messages);
-
-            // We can't easily inject an error mid-stream with the current API,
-            // so just return a stream that will end. The test will check that
-            // the response is properly formed for streaming.
-            Ok(stream)
-        })
+        Box::pin(async { Ok(create_error_mid_stream()) })
     }
 }
 
@@ -692,9 +681,8 @@ impl GrpcHandler for ErrorAfterMessagesHandler {
 /// Verifies that when a stream returns an error mid-way, the HTTP
 /// connection is properly closed and the client receives a response.
 ///
-/// Note: Due to Axum's Body::from_stream limitations, the exact gRPC
-/// status code may not be perfectly transmitted to the client in the
-/// trailer, but the connection should still be properly closed.
+/// The stream should end with gRPC error trailers while preserving
+/// the partial payload that was already emitted.
 #[tokio::test]
 async fn test_http_layer_mid_stream_error_closes_connection() {
     let mut registry = GrpcRegistry::new();
@@ -728,6 +716,10 @@ async fn test_http_layer_mid_stream_error_closes_connection() {
         response.headers().get("content-type").and_then(|v| v.to_str().ok()),
         Some("application/grpc+proto")
     );
+    let collected = response.into_body().collect().await.unwrap();
+    let trailers = collected.trailers().expect("grpc trailers");
+    assert_eq!(trailers.get("grpc-status").unwrap(), "13");
+    assert_eq!(trailers.get("grpc-message").unwrap(), "Stream%20processing%20error");
 }
 
 /// Test: Partial messages delivered before error
@@ -736,8 +728,6 @@ async fn test_http_layer_mid_stream_error_closes_connection() {
 /// to the client before the connection closes.
 #[tokio::test]
 async fn test_http_layer_partial_messages_before_error() {
-    use axum::body::to_bytes;
-
     let mut registry = GrpcRegistry::new();
     registry.register(
         "test.ErrorAfterService",
@@ -757,18 +747,16 @@ async fn test_http_layer_partial_messages_before_error() {
     assert!(result.is_ok());
 
     let response = result.unwrap();
-    let body = response.into_body();
+    let collected = response.into_body().collect().await.unwrap();
+    let trailers = collected.trailers().expect("grpc trailers");
+    let grpc_status = trailers.get("grpc-status").unwrap().to_str().unwrap().to_string();
+    let grpc_message = trailers.get("grpc-message").unwrap().to_str().unwrap().to_string();
+    let body = String::from_utf8_lossy(&collected.to_bytes()).to_string();
 
-    // Collect the body bytes
-    let bytes = to_bytes(body, usize::MAX).await;
-
-    // We should get some response data (the partial messages or error indication)
-    // The exact behavior depends on how Axum handles stream errors,
-    // but the connection should have been initiated and transferred data
-    assert!(
-        bytes.is_ok() || bytes.is_err(),
-        "Body collection should complete (success or error)"
-    );
+    assert!(body.contains("message_0"));
+    assert!(body.contains("message_4"));
+    assert_eq!(grpc_status, "13");
+    assert_eq!(grpc_message, "Stream%20processing%20error");
 }
 
 /// Test: Connection cleanup after mid-stream error
@@ -936,10 +924,6 @@ async fn test_http_layer_large_payload_then_error() {
 /// properly closed/terminated, signaling to the client that the stream
 /// has ended abnormally.
 ///
-/// LIMITATION NOTE: Due to Axum's Body::from_stream design, mid-stream
-/// errors may not be perfectly transmitted as gRPC trailers. The body
-/// will be terminated, but the client may not receive the exact gRPC
-/// status code. This is a known limitation of the current architecture.
 #[tokio::test]
 async fn test_http_layer_stream_termination_on_error() {
     let mut registry = GrpcRegistry::new();
@@ -969,6 +953,8 @@ async fn test_http_layer_stream_termination_on_error() {
         "streaming responses should not predeclare grpc-status"
     );
 
-    // The response body can be consumed
-    let _body = response.into_body();
+    let collected = response.into_body().collect().await.unwrap();
+    let trailers = collected.trailers().expect("grpc trailers");
+    assert_eq!(trailers.get("grpc-status").unwrap(), "13");
+    assert_eq!(trailers.get("grpc-message").unwrap(), "Stream%20processing%20error");
 }

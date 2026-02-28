@@ -408,6 +408,7 @@ mod tests {
     use crate::grpc::streaming::{MessageStream, StreamingRequest, message_stream_from_vec};
     use bytes::Bytes;
     use futures_util::StreamExt;
+    use http_body_util::BodyExt;
     use std::future::Future;
     use std::pin::Pin;
     use tonic::metadata::MetadataMap;
@@ -669,9 +670,14 @@ mod tests {
             "server-streaming responses must not predeclare grpc-status"
         );
 
-        // The body is a stream. For test purposes, just ensure we can read it.
-        let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
+        let collected = response.into_body().collect().await.unwrap();
+        let trailers = collected.trailers().expect("grpc trailers");
+        let grpc_status = trailers.get("grpc-status").unwrap().to_str().unwrap().to_string();
+        let grpc_message = trailers.get("grpc-message").unwrap().to_str().unwrap().to_string();
+        let body = collected.to_bytes();
         assert!(!body.is_empty());
+        assert_eq!(grpc_status, "0");
+        assert_eq!(grpc_message, "OK");
     }
 
     #[tokio::test]
@@ -798,8 +804,14 @@ mod tests {
             "bidi-streaming responses must not predeclare grpc-status"
         );
 
-        let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
+        let collected = response.into_body().collect().await.unwrap();
+        let trailers = collected.trailers().expect("grpc trailers");
+        let grpc_status = trailers.get("grpc-status").unwrap().to_str().unwrap().to_string();
+        let grpc_message = trailers.get("grpc-message").unwrap().to_str().unwrap().to_string();
+        let body = collected.to_bytes();
         assert!(!body.is_empty());
+        assert_eq!(grpc_status, "0");
+        assert_eq!(grpc_message, "OK");
     }
 
     #[tokio::test]
