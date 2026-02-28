@@ -56,6 +56,68 @@ fn looks_like_json(body: &str) -> bool {
     trimmed.starts_with('{') || trimmed.starts_with('[')
 }
 
+fn route_to_metadata(route: &crate::Route) -> crate::RouteMetadata {
+    #[cfg(feature = "di")]
+    {
+        crate::RouteMetadata {
+            method: route.method.to_string(),
+            path: route.path.clone(),
+            handler_name: route.handler_name.clone(),
+            request_schema: route
+                .request_validator
+                .as_ref()
+                .map(|validator| validator.schema().clone()),
+            response_schema: route
+                .response_validator
+                .as_ref()
+                .map(|validator| validator.schema().clone()),
+            parameter_schema: route
+                .parameter_validator
+                .as_ref()
+                .map(|validator| validator.schema().clone()),
+            file_params: route.file_params.clone(),
+            is_async: route.is_async,
+            cors: route.cors.clone(),
+            body_param_name: route.expects_json_body.then(|| "body".to_string()),
+            handler_dependencies: Some(route.handler_dependencies.clone()),
+            jsonrpc_method: route
+                .jsonrpc_method
+                .as_ref()
+                .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
+            static_response: None,
+        }
+    }
+    #[cfg(not(feature = "di"))]
+    {
+        crate::RouteMetadata {
+            method: route.method.to_string(),
+            path: route.path.clone(),
+            handler_name: route.handler_name.clone(),
+            request_schema: route
+                .request_validator
+                .as_ref()
+                .map(|validator| validator.schema().clone()),
+            response_schema: route
+                .response_validator
+                .as_ref()
+                .map(|validator| validator.schema().clone()),
+            parameter_schema: route
+                .parameter_validator
+                .as_ref()
+                .map(|validator| validator.schema().clone()),
+            file_params: route.file_params.clone(),
+            is_async: route.is_async,
+            cors: route.cors.clone(),
+            body_param_name: route.expects_json_body.then(|| "body".to_string()),
+            jsonrpc_method: route
+                .jsonrpc_method
+                .as_ref()
+                .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
+            static_response: None,
+        }
+    }
+}
+
 fn error_to_response(status: StatusCode, body: String) -> axum::response::Response {
     let content_type = if looks_like_json(&body) {
         "application/json"
@@ -976,8 +1038,10 @@ pub fn build_router_with_handlers_and_config(
         && jsonrpc_config.enabled
         && let Some(registry) = jsonrpc_registry
     {
+        use axum::response::Json;
+
         let jsonrpc_router = Arc::new(crate::jsonrpc::JsonRpcRouter::new(
-            registry,
+            Arc::clone(&registry),
             jsonrpc_config.enable_batch,
             jsonrpc_config.max_batch_size,
         ));
@@ -986,13 +1050,11 @@ pub fn build_router_with_handlers_and_config(
 
         let endpoint_path = jsonrpc_config.endpoint_path.clone();
         app = app.route(&endpoint_path, post(crate::jsonrpc::handle_jsonrpc).with_state(state));
-
-        // TODO: Add per-method routes if enabled
-        // TODO: Add WebSocket endpoint if enabled
-        // TODO: Add SSE endpoint if enabled
-        // TODO: Add OpenRPC spec endpoint if enabled
+        let openrpc_spec = crate::jsonrpc::generate_openrpc_spec(&registry, &config)?;
+        app = app.route("/openrpc.json", get(move || async move { Json(openrpc_spec) }));
 
         tracing::info!("JSON-RPC endpoint enabled at {}", endpoint_path);
+        tracing::info!("OpenRPC documentation enabled at /openrpc.json");
     }
 
     Ok(app)
@@ -1012,52 +1074,7 @@ impl Server {
         config: ServerConfig,
         routes: Vec<(crate::Route, Arc<dyn Handler>)>,
     ) -> Result<AxumRouter, String> {
-        let metadata: Vec<crate::RouteMetadata> = routes
-            .iter()
-            .map(|(route, _)| {
-                #[cfg(feature = "di")]
-                {
-                    crate::RouteMetadata {
-                        method: route.method.to_string(),
-                        path: route.path.clone(),
-                        handler_name: route.handler_name.clone(),
-                        request_schema: None,
-                        response_schema: None,
-                        parameter_schema: None,
-                        file_params: route.file_params.clone(),
-                        is_async: route.is_async,
-                        cors: route.cors.clone(),
-                        body_param_name: None,
-                        handler_dependencies: Some(route.handler_dependencies.clone()),
-                        jsonrpc_method: route
-                            .jsonrpc_method
-                            .as_ref()
-                            .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
-                        static_response: None,
-                    }
-                }
-                #[cfg(not(feature = "di"))]
-                {
-                    crate::RouteMetadata {
-                        method: route.method.to_string(),
-                        path: route.path.clone(),
-                        handler_name: route.handler_name.clone(),
-                        request_schema: None,
-                        response_schema: None,
-                        parameter_schema: None,
-                        file_params: route.file_params.clone(),
-                        is_async: route.is_async,
-                        cors: route.cors.clone(),
-                        body_param_name: None,
-                        jsonrpc_method: route
-                            .jsonrpc_method
-                            .as_ref()
-                            .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
-                        static_response: None,
-                    }
-                }
-            })
-            .collect();
+        let metadata: Vec<crate::RouteMetadata> = routes.iter().map(|(route, _)| route_to_metadata(route)).collect();
         build_router_with_handlers_and_config(routes, config, metadata)
     }
 

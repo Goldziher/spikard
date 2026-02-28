@@ -176,7 +176,7 @@ Invalid requests will receive a JSON-RPC 2.0 error response:
 
 ## Documentation
 
-OpenRPC document serving is not exposed automatically yet. The current runtime only serves the configured JSON-RPC HTTP endpoint.
+The runtime serves an OpenRPC document at `/openrpc.json`, generated from the registered JSON-RPC method metadata.
 
 ## See Also
 

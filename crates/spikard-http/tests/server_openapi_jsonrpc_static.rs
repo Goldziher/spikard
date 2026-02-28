@@ -231,6 +231,12 @@ async fn assert_jsonrpc_and_http_routes(server: &axum_test::TestServer) {
     assert_eq!(rpc_json["result"]["path"], "/rpc");
     assert_eq!(rpc_json["result"]["method"], "POST");
 
+    let openrpc_response = server.get("/openrpc.json").await;
+    assert_eq!(openrpc_response.status_code(), StatusCode::OK);
+    let openrpc: Value = serde_json::from_str(&openrpc_response.text()).expect("openrpc json");
+    assert_eq!(openrpc["openrpc"], "1.3.2");
+    assert_eq!(openrpc["methods"][0]["name"], "spikard.test.echo");
+
     let ok_get = server.get("/api/items/550e8400-e29b-41d4-a716-446655440000").await;
     assert_eq!(ok_get.status_code(), StatusCode::OK);
     let ok_get_json: Value = serde_json::from_str(&ok_get.text()).expect("get json");

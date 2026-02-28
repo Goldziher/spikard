@@ -4,7 +4,7 @@ use spikard_core::JsonRpcMethodInfo;
 use spikard_http::handler_trait::{Handler, HandlerResult, RequestData};
 use spikard_http::jsonrpc::JsonRpcConfig;
 use spikard_http::openapi::OpenApiConfig;
-use spikard_http::{Method, Route, Server, ServerConfig, StaticFilesConfig};
+use spikard_http::{Method, ParameterValidator, Route, SchemaValidator, Server, ServerConfig, StaticFilesConfig};
 use std::pin::Pin;
 use std::sync::Arc;
 use tempfile::tempdir;
@@ -175,6 +175,7 @@ async fn server_registers_jsonrpc_endpoint_when_method_metadata_present() {
     let app = Server::with_handlers(config, vec![(rpc_route, handler)]).unwrap();
 
     let response = app
+        .clone()
         .oneshot(
             axum::http::Request::builder()
                 .method("POST")
@@ -197,4 +198,113 @@ async fn server_registers_jsonrpc_endpoint_when_method_metadata_present() {
     assert_eq!(json.get("jsonrpc").and_then(|v| v.as_str()), Some("2.0"));
     assert_eq!(json.get("id").and_then(serde_json::Value::as_i64), Some(1));
     assert_eq!(json.get("result"), Some(&serde_json::json!({"ok": true})));
+
+    let openrpc_response = app
+        .oneshot(
+            axum::http::Request::builder()
+                .method("GET")
+                .uri("/openrpc.json")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(openrpc_response.status(), 200);
+    let openrpc_bytes = openrpc_response.into_body().collect().await.unwrap().to_bytes();
+    let openrpc_json: serde_json::Value = serde_json::from_slice(&openrpc_bytes).unwrap();
+    assert_eq!(openrpc_json.get("openrpc").and_then(|v| v.as_str()), Some("1.3.2"));
+    assert_eq!(openrpc_json["methods"][0]["name"], "math.ping");
+    assert_eq!(openrpc_json["methods"][0]["tags"][0]["name"], "math");
+}
+
+#[tokio::test]
+async fn server_with_handlers_preserves_route_schema_metadata_for_openapi() {
+    let openapi = OpenApiConfig {
+        enabled: true,
+        title: "Metadata".to_string(),
+        version: "0.1.0".to_string(),
+        openapi_json_path: "/openapi.json".to_string(),
+        ..Default::default()
+    };
+
+    let config = ServerConfig {
+        openapi: Some(openapi),
+        ..Default::default()
+    };
+
+    let request_schema = serde_json::json!({
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"}
+        },
+        "required": ["name"]
+    });
+    let response_schema = serde_json::json!({
+        "type": "object",
+        "properties": {
+            "ok": {"type": "boolean"}
+        },
+        "required": ["ok"]
+    });
+    let parameter_schema = serde_json::json!({
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string",
+                "source": "path",
+                "format": "uuid"
+            }
+        },
+        "required": ["id"]
+    });
+
+    let handler: Arc<dyn Handler> = Arc::new(JsonOkHandler);
+    let app = Server::with_handlers(
+        config,
+        vec![(
+            Route {
+                path: "/items/{id}".to_string(),
+                method: Method::Post,
+                handler_name: "create_item".to_string(),
+                expects_json_body: true,
+                cors: None,
+                is_async: true,
+                file_params: None,
+                request_validator: Some(Arc::new(SchemaValidator::new(request_schema).unwrap())),
+                response_validator: Some(Arc::new(SchemaValidator::new(response_schema).unwrap())),
+                parameter_validator: Some(ParameterValidator::new(parameter_schema).unwrap()),
+                jsonrpc_method: None,
+                #[cfg(feature = "di")]
+                handler_dependencies: vec![],
+            },
+            handler,
+        )],
+    )
+    .unwrap();
+
+    let openapi_response = app
+        .oneshot(
+            axum::http::Request::builder()
+                .method("GET")
+                .uri("/openapi.json")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(openapi_response.status(), 200);
+    let openapi_bytes = openapi_response.into_body().collect().await.unwrap().to_bytes();
+    let openapi_json: serde_json::Value = serde_json::from_slice(&openapi_bytes).unwrap();
+    let operation = &openapi_json["paths"]["/items/{id}"]["post"];
+    assert_eq!(operation["parameters"][0]["name"].as_str(), Some("id"));
+    assert_eq!(
+        operation["requestBody"]["content"]["application/json"]["schema"]["properties"]["name"]["type"].as_str(),
+        Some("string")
+    );
+    assert_eq!(
+        operation["responses"]["200"]["content"]["application/json"]["schema"]["properties"]["ok"]["type"].as_str(),
+        Some("boolean")
+    );
 }

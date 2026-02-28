@@ -5,6 +5,7 @@
 
 pub mod http_handler;
 pub mod method_registry;
+pub mod openrpc;
 pub mod protocol;
 pub mod router;
 
@@ -12,6 +13,7 @@ use serde::{Deserialize, Serialize};
 
 pub use http_handler::{JsonRpcState, handle_jsonrpc};
 pub use method_registry::{JsonRpcMethodRegistry, MethodExample, MethodMetadata};
+pub use openrpc::generate_openrpc_spec;
 pub use protocol::{
     JsonRpcErrorResponse, JsonRpcRequest, JsonRpcResponse, JsonRpcResponseType, error_codes, validate_method_name,
 };
