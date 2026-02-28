@@ -354,7 +354,7 @@ mod tests {
 
         assert!(content.contains("#[tokio::main]"));
         assert!(content.contains("async fn main()"));
-        assert!(content.contains("Server::new"));
+        assert!(content.contains("Server::with_handlers_and_metadata"));
         assert!(content.contains("127.0.0.1"));
         assert!(content.contains("8000"));
     }

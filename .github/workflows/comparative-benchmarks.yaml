@@ -223,6 +223,31 @@ jobs:
           duration: ${{ inputs.duration || '10' }}
           concurrency: ${{ inputs.concurrency || '100' }}
 
+  # Elixir frameworks
+  elixir:
+    name: "Benchmark: ${{ matrix.framework }}"
+    needs: build-harness
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - spikard-elixir
+          - phoenix
+          - plug-bandit
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-benchmark-tools
+      - uses: ./.github/actions/benchmark-framework
+        with:
+          framework: ${{ matrix.framework }}
+          suite: ${{ inputs.suite || 'all' }}
+          duration: ${{ inputs.duration || '10' }}
+          concurrency: ${{ inputs.concurrency || '100' }}
+
   aggregate-results:
     name: Aggregate Benchmark Results
     runs-on: ubuntu-24.04
@@ -235,6 +260,7 @@ jobs:
       - nodejs
       - ruby
       - php
+      - elixir
     permissions:
       contents: read
     steps:

@@ -57,6 +57,8 @@ runs:
           echo "language=node" >> $GITHUB_OUTPUT
         elif [[ "$framework" == "spikard-ruby" ]] || [[ "$framework" == "hanami-api" ]] || [[ "$framework" == "roda" ]]; then
           echo "language=ruby" >> $GITHUB_OUTPUT
+        elif [[ "$framework" == "spikard-elixir" ]] || [[ "$framework" == "phoenix" ]] || [[ "$framework" == "plug-bandit" ]]; then
+          echo "language=elixir" >> $GITHUB_OUTPUT
         else
           echo "language=unknown" >> $GITHUB_OUTPUT
         fi
@@ -251,6 +253,40 @@ runs:
         if [ -f composer.json ]; then
           composer install --no-dev --optimize-autoloader
         fi
+
+    - name: Setup Elixir and OTP
+      if: steps.detect.outputs.language == 'elixir'
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: "1.18"
+        otp-version: "27"
+
+    - name: Setup LLVM/Clang for spikard-elixir NIF
+      if: steps.detect.outputs.language == 'elixir' && inputs.framework == 'spikard-elixir'
+      uses: ./.github/actions/setup-llvm-clang
+
+    - name: Cache Mix dependencies
+      if: steps.detect.outputs.language == 'elixir'
+      uses: actions/cache@v4
+      with:
+        path: |
+          tools/benchmark-harness/apps/${{ inputs.framework }}/deps
+          tools/benchmark-harness/apps/${{ inputs.framework }}/_build
+        key: mix-${{ runner.os }}-${{ inputs.framework }}-${{ hashFiles(format('tools/benchmark-harness/apps/{0}/mix.lock', inputs.framework)) }}
+        restore-keys: |
+          mix-${{ runner.os }}-${{ inputs.framework }}-
+
+    - name: Install Elixir benchmark app dependencies
+      if: steps.detect.outputs.language == 'elixir'
+      shell: bash
+      working-directory: tools/benchmark-harness/apps/${{ inputs.framework }}
+      env:
+        SPIKARD_BUILD: "1"
+      run: |
+        mix local.hex --force
+        mix local.rebar --force
+        mix deps.get
+        mix compile
 
     - name: Create results directory
       shell: bash

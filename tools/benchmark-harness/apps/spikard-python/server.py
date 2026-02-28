@@ -16,6 +16,7 @@ import threading
 from datetime import date as DateType
 from functools import wraps
 from pathlib import Path as PathLib
+from collections.abc import Coroutine
 from typing import Any, Callable, ParamSpec, TypeVar
 from uuid import UUID
 

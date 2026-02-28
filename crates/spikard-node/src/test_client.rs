@@ -629,9 +629,7 @@ impl TestClient {
             Transport::HttpRandomPort
         };
         let router = axum_router.clone();
-        let server = TestServer::builder()
-            .transport(transport)
-            .build(axum_router);
+        let server = TestServer::builder().transport(transport).build(axum_router);
         drop(_guard);
 
         Ok(Self {
