@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test application that validates the published `spikard` Ruby gem (v0.11.0) works correctly in a real Ruby environment.
+Test application that validates the published `spikard` Ruby gem (v0.12.0) works correctly in a real Ruby environment.
 
 ## Setup
 

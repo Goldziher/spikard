@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-02-28
+
+### Added
+
+- **Elixir benchmark apps**: Added 3 Elixir benchmark applications to the benchmark harness — spikard-elixir, plug-bandit (Plug + Bandit), and phoenix (Phoenix API-only) — bringing the total to 21 benchmarked frameworks.
+- **Benchmark Taskfile integration**: New `bench:update:elixir`, `bench:build:elixir`, `bench:run:spikard-elixir`, `bench:run:plug-bandit`, and `bench:run:phoenix` tasks.
+- **GraphQL testing parity across bindings**: Unified GraphQL testing interface across Python, Node.js, Ruby, PHP, and Elixir with dedicated helper methods for queries, mutations, and subscriptions.
+- **Elixir test client**: New `Spikard.TestClient` module with full GraphQL helper parity matching other bindings.
+- **PHP JsonRpcConfig tests**: Comprehensive test coverage for `JsonRpcConfig` and `JsonRpcConfigBuilder` classes.
+- **Python type stubs**: Shipped `_spikard.pyi` in wheels for IDE/type-checker support (mypy, pyright, Pylance).
+
+### Fixed
+
+- **axum-test v19 API migration**: Updated `spikard-rb` and `spikard-node` test clients after `TestServer::new()` stopped returning `Result` in axum-test v19.
+- **gRPC test fixture streaming detection**: Fixed incorrect routing of unary RPCs through the bidirectional streaming path in Python and PHP gRPC fixture tests.
+- **Python lint compliance**: Resolved ruff PYI021 (docstrings in stubs), PYI044 (`__future__` annotations in stubs), and RUF022 (unsorted `__all__`) in `_spikard.pyi`.
+- **Biome lint/format**: Fixed import ordering and unused imports in Node.js examples and test apps.
+- **PHP coverage threshold**: Brought PHP test coverage above the 85% CI gate.
+- **CI pipeline stability**: All 6 CI workflows (Rust, Python, Node, Ruby, PHP, Validate) now pass on main.
+
+### Changed
+
+- **Dependency updates**: Updated workspace dependencies including jsonschema 0.42→0.43, maturin 1.12.4→1.12.5, and refreshed lock files across all ecosystems.
+- **CI actions**: Bumped `actions/upload-artifact` to v7, `actions/download-artifact` to v8, `dawidd6/action-download-artifact` to v16.
+- **Pre-commit alignment**: Aligned `.pre-commit-config.yaml` with latest hook versions (shfmt, cargo-deny, cargo-machete, mypy mirrors).
+- **Release publishing**: Added idempotent publish checks across all package registries.
+
 ## [0.11.0] - 2026-02-16
 
 ### Added
