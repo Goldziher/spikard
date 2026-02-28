@@ -230,12 +230,9 @@ async fn handle_server_streaming_request(
 
     // Convert Tonic response to Axum response
     let body = tonic_response.into_inner();
-    let mut response = Response::builder()
+    let response = Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/grpc+proto");
-
-    // Add gRPC status trailer (success)
-    response = response.header("grpc-status", "0");
 
     let response = response.body(body).map_err(|e| {
         (
@@ -378,12 +375,9 @@ async fn handle_bidirectional_streaming_request(
 
     // Convert Tonic response to Axum response with streaming body
     let body = tonic_response.into_inner();
-    let mut response = Response::builder()
+    let response = Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/grpc+proto");
-
-    // Add gRPC status trailer (success)
-    response = response.header("grpc-status", "0");
 
     let response = response.body(body).map_err(|e| {
         (
@@ -670,7 +664,10 @@ mod tests {
             response.headers().get("content-type").unwrap(),
             "application/grpc+proto"
         );
-        assert_eq!(response.headers().get("grpc-status").unwrap(), "0");
+        assert!(
+            response.headers().get("grpc-status").is_none(),
+            "server-streaming responses must not predeclare grpc-status"
+        );
 
         // The body is a stream. For test purposes, just ensure we can read it.
         let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
@@ -738,7 +735,10 @@ mod tests {
 
         let response = route_grpc_request(registry, &config, request).await.unwrap();
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.headers().get("grpc-status").unwrap(), "0");
+        assert!(
+            response.headers().get("grpc-status").is_none(),
+            "bidi-streaming responses must not predeclare grpc-status"
+        );
         assert_eq!(response.headers().get("x-response-id").unwrap(), "resp-123");
 
         let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
@@ -793,7 +793,10 @@ mod tests {
 
         let response = route_grpc_request(registry, &config, request).await.unwrap();
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.headers().get("grpc-status").unwrap(), "0");
+        assert!(
+            response.headers().get("grpc-status").is_none(),
+            "bidi-streaming responses must not predeclare grpc-status"
+        );
 
         let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
         assert!(!body.is_empty());

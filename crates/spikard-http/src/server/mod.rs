@@ -10,7 +10,7 @@ pub mod lifecycle_execution;
 pub mod request_extraction;
 
 use crate::handler_trait::{Handler, HandlerResult, RequestData};
-use crate::{CorsConfig, Router, ServerConfig};
+use crate::{CorsConfig, ServerConfig};
 use axum::Router as AxumRouter;
 use axum::body::Body;
 use axum::extract::{DefaultBodyLimit, Path};
@@ -90,6 +90,18 @@ async fn call_with_optional_hooks(
     handler: Arc<dyn Handler>,
     hooks: Option<Arc<crate::LifecycleHooks>>,
 ) -> HandlerResult {
+    let request_data = if let Some(claims) = req.extensions().get::<crate::auth::Claims>() {
+        let mut request_data = request_data;
+        if let Ok(serialized_claims) = serde_json::to_string(claims) {
+            let mut headers = (*request_data.headers).clone();
+            headers.insert(crate::auth::INTERNAL_JWT_CLAIMS_HEADER.to_string(), serialized_claims);
+            request_data.headers = Arc::new(headers);
+        }
+        request_data
+    } else {
+        request_data
+    };
+
     if hooks.as_ref().is_some_and(|h| !h.is_empty()) {
         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
     } else {
@@ -987,18 +999,10 @@ pub fn build_router_with_handlers_and_config(
 }
 
 /// HTTP Server
-pub struct Server {
-    config: ServerConfig,
-    router: Router,
-}
+pub struct Server;
 
 impl Server {
-    /// Create a new server with configuration
-    pub fn new(config: ServerConfig, router: Router) -> Self {
-        Self { config, router }
-    }
-
-    /// Create a new server with Python handlers
+    /// Build a server router with runtime handlers.
     ///
     /// Build router with trait-based handlers
     /// Routes are grouped by path before registration to support multiple HTTP methods
@@ -1057,7 +1061,7 @@ impl Server {
         build_router_with_handlers_and_config(routes, config, metadata)
     }
 
-    /// Create a new server with Python handlers and metadata for OpenAPI
+    /// Build a server router with runtime handlers and explicit metadata for OpenAPI.
     pub fn with_handlers_and_metadata(
         config: ServerConfig,
         routes: Vec<(crate::Route, Arc<dyn Handler>)>,
@@ -1102,41 +1106,6 @@ impl Server {
             )
             .with(tracing_subscriber::fmt::layer())
             .try_init();
-    }
-
-    /// Start the server
-    ///
-    /// Coverage: Production-only, tested via integration tests
-    #[cfg(not(tarpaulin_include))]
-    pub async fn serve(self) -> Result<(), Box<dyn std::error::Error>> {
-        tracing::info!("Starting server with {} routes", self.router.route_count());
-
-        let app = self.build_axum_router();
-
-        let addr = format!("{}:{}", self.config.host, self.config.port);
-        let socket_addr: SocketAddr = addr.parse()?;
-        let listener = TcpListener::bind(socket_addr).await?;
-
-        tracing::info!("Listening on http://{}", socket_addr);
-
-        axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
-
-        Ok(())
-    }
-
-    /// Build Axum router from our router
-    fn build_axum_router(&self) -> AxumRouter {
-        let mut app = AxumRouter::new();
-
-        app = app.route("/health", get(|| async { "OK" }));
-
-        // TODO: Add routes from self.router
-
-        if self.config.enable_http_trace {
-            app = app.layer(TraceLayer::new_for_http());
-        }
-
-        app
     }
 }
 
@@ -1311,26 +1280,6 @@ mod tests {
         let id1_str = id1.header_value().to_str().expect("valid utf8");
         let id2_str = id2.header_value().to_str().expect("valid utf8");
         assert_ne!(id1_str, id2_str);
-    }
-
-    #[test]
-    fn test_server_creation() {
-        let config = ServerConfig::default();
-        let router = Router::new();
-        let _server = Server::new(config, router);
-    }
-
-    #[test]
-    fn test_server_creation_with_custom_host_port() {
-        let mut config = ServerConfig::default();
-        config.host = "0.0.0.0".to_string();
-        config.port = 3000;
-
-        let router = Router::new();
-        let server = Server::new(config.clone(), router);
-
-        assert_eq!(server.config.host, "0.0.0.0");
-        assert_eq!(server.config.port, 3000);
     }
 
     #[test]

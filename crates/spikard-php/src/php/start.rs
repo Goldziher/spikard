@@ -68,8 +68,8 @@ impl RegisteredRoutePayload {
 /// JSON deserialization which fails on non-serializable fields like lifecycle_hooks and di_container.
 pub fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http::ServerConfig, String> {
     use spikard_http::{
-        ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
-        SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
+        ApiKeyConfig, CompressionConfig, ContactInfo, JsonRpcConfig, JwtConfig, LicenseInfo, OpenApiConfig,
+        RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
     };
 
     let config_array = config_zval
@@ -403,6 +403,34 @@ pub fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http
         })
         .transpose()?;
 
+    let jsonrpc_config = get_optional_field("jsonrpc")
+        .and_then(|v| v.array())
+        .map(|jsonrpc_arr| -> Result<JsonRpcConfig, String> {
+            let enabled = jsonrpc_arr.get("enabled").and_then(|v| v.bool()).unwrap_or(true);
+
+            let endpoint_path = jsonrpc_arr
+                .get("endpoint_path")
+                .and_then(|v| v.string())
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| "/rpc".to_string());
+
+            let enable_batch = jsonrpc_arr.get("enable_batch").and_then(|v| v.bool()).unwrap_or(true);
+
+            let max_batch_size = jsonrpc_arr
+                .get("max_batch_size")
+                .and_then(|v| v.long())
+                .map(|n| n as usize)
+                .unwrap_or(100);
+
+            Ok(JsonRpcConfig {
+                enabled,
+                endpoint_path,
+                enable_batch,
+                max_batch_size,
+            })
+        })
+        .transpose()?;
+
     Ok(ServerConfig {
         host,
         port,
@@ -420,7 +448,7 @@ pub fn extract_server_config_from_php(config_zval: &Zval) -> Result<spikard_http
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         enable_http_trace: false,
         openapi: openapi_config,
-        jsonrpc: None,
+        jsonrpc: jsonrpc_config,
         grpc: None,
         lifecycle_hooks: None,
         di_container: None,

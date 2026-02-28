@@ -6,7 +6,7 @@
 use anyhow::{Context, Result};
 use asyncapiv3::spec::{AsyncApiSpec, AsyncApiV3Spec};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 
@@ -60,21 +60,32 @@ pub fn parse_asyncapi_schema(path: &Path) -> Result<AsyncApiV3Spec> {
 /// Returns a map of message name -> JSON Schema for generating test fixtures
 pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, MessageDefinition>> {
     use asyncapiv3::spec::common::Either;
+    use asyncapiv3::spec::{channel::Channel, message::Message};
 
     let mut schemas = HashMap::new();
+    let spec_doc = serde_json::to_value(spec).context("Failed to serialize AsyncAPI spec for $ref resolution")?;
 
     for (message_name, message_ref_or) in &spec.components.messages {
         tracing::debug!("Processing message: {}", message_name);
 
         match message_ref_or {
             Either::Right(message) => {
-                if let Some(definition) = build_message_definition(message, message_name)? {
+                if let Some(definition) = build_message_definition(message, message_name, &spec_doc)? {
                     schemas.insert(message_name.clone(), definition);
                 }
             }
             Either::Left(reference) => {
-                // TODO: Implement reference resolution
-                tracing::debug!("Skipping message reference: {}", reference.reference);
+                if let Some(message) = resolve_ref_as::<Message>(&spec_doc, &reference.reference) {
+                    if let Some(definition) = build_message_definition(&message, message_name, &spec_doc)? {
+                        schemas.insert(message_name.clone(), definition);
+                    }
+                } else {
+                    tracing::debug!(
+                        "Skipping unresolved message reference: {} -> {}",
+                        message_name,
+                        reference.reference
+                    );
+                }
             }
         }
     }
@@ -84,22 +95,14 @@ pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, 
 
         match channel_ref_or {
             Either::Right(channel) => {
-                for (msg_name, msg_ref_or) in &channel.messages {
-                    match msg_ref_or {
-                        Either::Right(message) => {
-                            let full_name = format!("{}_{}", channel_name.trim_start_matches('/'), msg_name);
-                            if let Some(definition) = build_message_definition(message, &full_name)? {
-                                schemas.insert(full_name, definition);
-                            }
-                        }
-                        Either::Left(_reference) => {
-                            tracing::debug!("Channel {} references message {}", channel_name, msg_name);
-                        }
-                    }
-                }
+                process_channel_messages(channel_name, channel, &spec_doc, &mut schemas)?;
             }
             Either::Left(reference) => {
-                tracing::debug!("Skipping channel reference: {}", reference.reference);
+                if let Some(channel) = resolve_ref_as::<Channel>(&spec_doc, &reference.reference) {
+                    process_channel_messages(channel_name, &channel, &spec_doc, &mut schemas)?;
+                } else {
+                    tracing::debug!("Skipping unresolved channel reference: {}", reference.reference);
+                }
             }
         }
     }
@@ -107,11 +110,49 @@ pub fn extract_message_schemas(spec: &AsyncApiV3Spec) -> Result<HashMap<String, 
     Ok(schemas)
 }
 
+fn process_channel_messages(
+    channel_name: &str,
+    channel: &asyncapiv3::spec::channel::Channel,
+    spec_doc: &Value,
+    schemas: &mut HashMap<String, MessageDefinition>,
+) -> Result<()> {
+    use asyncapiv3::spec::common::Either;
+    use asyncapiv3::spec::message::Message;
+
+    for (msg_name, msg_ref_or) in &channel.messages {
+        let full_name = format!("{}_{}", channel_name.trim_start_matches('/'), msg_name);
+        match msg_ref_or {
+            Either::Right(message) => {
+                if let Some(definition) = build_message_definition(message, &full_name, spec_doc)? {
+                    schemas.insert(full_name, definition);
+                }
+            }
+            Either::Left(reference) => {
+                if let Some(message) = resolve_ref_as::<Message>(spec_doc, &reference.reference) {
+                    if let Some(definition) = build_message_definition(&message, &full_name, spec_doc)? {
+                        schemas.insert(full_name, definition);
+                    }
+                } else {
+                    tracing::debug!(
+                        "Channel {} message {} unresolved reference: {}",
+                        channel_name,
+                        msg_name,
+                        reference.reference
+                    );
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn build_message_definition(
     message: &asyncapiv3::spec::message::Message,
     message_name: &str,
+    spec_doc: &Value,
 ) -> Result<Option<MessageDefinition>> {
-    let schema = match extract_schema_from_message(message, message_name)? {
+    let schema = match extract_schema_from_message(message, message_name, spec_doc)? {
         Some(schema) => schema,
         None => return Ok(None),
     };
@@ -136,6 +177,7 @@ fn build_message_definition(
 fn extract_schema_from_message(
     message: &asyncapiv3::spec::message::Message,
     message_name: &str,
+    spec_doc: &Value,
 ) -> Result<Option<Value>> {
     use asyncapiv3::spec::common::Either;
 
@@ -156,13 +198,16 @@ fn extract_schema_from_message(
             Either::Right(multi_format) => Ok(Some(multi_format.schema.clone())),
         },
         Either::Left(reference) => {
-            tracing::debug!(
-                "Message {} payload is a reference: {}",
-                message_name,
-                reference.reference
-            );
-            // TODO: Implement reference resolution
-            Ok(None)
+            if let Some(resolved) = resolve_ref_value(spec_doc, &reference.reference) {
+                Ok(Some(normalize_schema_ref_value(resolved)))
+            } else {
+                tracing::debug!(
+                    "Message {} payload has unresolved reference: {}",
+                    message_name,
+                    reference.reference
+                );
+                Ok(None)
+            }
         }
     }
 }
@@ -305,6 +350,10 @@ impl std::fmt::Display for Protocol {
 /// Determine primary protocol from `AsyncAPI` spec
 pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
     use asyncapiv3::spec::common::Either;
+    use asyncapiv3::spec::server::Server;
+
+    let spec_doc =
+        serde_json::to_value(spec).context("Failed to serialize AsyncAPI spec for server $ref resolution")?;
 
     for server_or_ref in spec.servers.values() {
         match server_or_ref {
@@ -313,9 +362,17 @@ pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
                 tracing::debug!("Detected protocol: {:?} from '{}'", protocol, server.protocol);
                 return Ok(protocol);
             }
-            Either::Left(_reference) => {
-                // TODO: Implement reference resolution
-                tracing::debug!("Skipping server reference");
+            Either::Left(reference) => {
+                if let Some(server) = resolve_ref_as::<Server>(&spec_doc, &reference.reference) {
+                    let protocol = Protocol::from_protocol_string(&server.protocol);
+                    tracing::debug!(
+                        "Detected protocol: {:?} from referenced '{}'",
+                        protocol,
+                        server.protocol
+                    );
+                    return Ok(protocol);
+                }
+                tracing::debug!("Skipping unresolved server reference: {}", reference.reference);
             }
         }
     }
@@ -327,6 +384,57 @@ pub fn detect_primary_protocol(spec: &AsyncApiV3Spec) -> Result<Protocol> {
 /// Decode JSON pointer segments
 pub fn decode_pointer_segment(segment: &str) -> String {
     segment.replace("~1", "/").replace("~0", "~")
+}
+
+fn reference_to_pointer(reference: &str) -> Option<String> {
+    let raw = reference.strip_prefix("#/")?;
+    let mut pointer = String::new();
+    for segment in raw.split('/') {
+        pointer.push('/');
+        pointer.push_str(&decode_pointer_segment(segment));
+    }
+    Some(pointer)
+}
+
+fn resolve_ref_value(document: &Value, reference: &str) -> Option<Value> {
+    let mut current = reference.to_string();
+    let mut visited = HashSet::new();
+
+    for _ in 0..32 {
+        if !visited.insert(current.clone()) {
+            return None;
+        }
+
+        let pointer = reference_to_pointer(&current)?;
+        let value = document.pointer(&pointer)?;
+
+        if let Some(next_ref) = value.get("$ref").and_then(Value::as_str) {
+            current = next_ref.to_string();
+            continue;
+        }
+
+        return Some(value.clone());
+    }
+
+    None
+}
+
+fn resolve_ref_as<T>(document: &Value, reference: &str) -> Option<T>
+where
+    T: serde::de::DeserializeOwned,
+{
+    let value = resolve_ref_value(document, reference)?;
+    serde_json::from_value(value).ok()
+}
+
+fn normalize_schema_ref_value(value: Value) -> Value {
+    if let Some(obj) = value.as_object()
+        && obj.get("schemaFormat").is_some()
+        && let Some(schema) = obj.get("schema")
+    {
+        return schema.clone();
+    }
+    value
 }
 
 /// Resolve channel reference to channel path
@@ -525,5 +633,58 @@ mod tests {
     fn test_resolve_message_from_ref_components() {
         let result = resolve_message_from_ref("#/components/messages/UserMessage");
         assert_eq!(result, Some("UserMessage".to_string()));
+    }
+
+    #[test]
+    fn test_reference_to_pointer_decodes_json_pointer_segments() {
+        let pointer = reference_to_pointer("#/channels/user~1signedup/messages/user~0created");
+        assert_eq!(
+            pointer,
+            Some("/channels/user/signedup/messages/user~created".to_string())
+        );
+    }
+
+    #[test]
+    fn test_resolve_ref_value_follows_nested_local_refs() {
+        let doc = serde_json::json!({
+            "components": {
+                "schemas": {
+                    "A": { "$ref": "#/components/schemas/B" },
+                    "B": { "type": "object", "properties": { "id": { "type": "string" } } }
+                }
+            }
+        });
+
+        let resolved = resolve_ref_value(&doc, "#/components/schemas/A").expect("resolved schema");
+        assert_eq!(resolved["type"], "object");
+        assert!(resolved["properties"].get("id").is_some());
+    }
+
+    #[test]
+    fn test_detect_primary_protocol_resolves_server_refs() {
+        let spec_value = serde_json::json!({
+            "asyncapi": "3.0.0",
+            "info": { "title": "Test", "version": "1.0.0" },
+            "servers": {
+                "default": { "$ref": "#/components/servers/wsServer" }
+            },
+            "channels": {},
+            "operations": {},
+            "components": {
+                "servers": {
+                    "wsServer": {
+                        "host": "example.com",
+                        "protocol": "wss"
+                    }
+                }
+            }
+        });
+
+        let spec = match serde_json::from_value::<AsyncApiSpec>(spec_value).expect("valid asyncapi spec") {
+            AsyncApiSpec::V3_0_0(v3) => v3,
+        };
+
+        let protocol = detect_primary_protocol(&spec).expect("protocol detection");
+        assert_eq!(protocol, Protocol::WebSocket);
     }
 }

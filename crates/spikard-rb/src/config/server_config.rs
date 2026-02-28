@@ -4,10 +4,10 @@
 //! spikard_http::ServerConfig type.
 
 use magnus::prelude::*;
-use magnus::{Error, RArray, RHash, Ruby, TryConvert, Value};
+use magnus::{Error, RArray, RHash, Ruby, TryConvert, Value, r_hash::ForEach};
 use spikard_http::{
-    ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig, ServerInfo,
-    StaticFilesConfig,
+    ApiKeyConfig, CompressionConfig, ContactInfo, JsonRpcConfig, JwtConfig, LicenseInfo, OpenApiConfig,
+    RateLimitConfig, ServerInfo, StaticFilesConfig,
 };
 use std::collections::HashMap;
 
@@ -222,7 +222,28 @@ pub fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard
             servers.push(ServerInfo { url, description });
         }
 
-        let security_schemes = HashMap::new();
+        let security_schemes_value: Value = openapi_value.funcall("security_schemes", ())?;
+        let mut security_schemes = HashMap::new();
+        if !security_schemes_value.is_nil() {
+            let schemes_hash = RHash::from_value(security_schemes_value).ok_or_else(|| {
+                Error::new(
+                    ruby.exception_type_error(),
+                    "security_schemes must be a Hash<String, SecuritySchemeInfo>",
+                )
+            })?;
+
+            schemes_hash.foreach(|key: Value, scheme_value: Value| -> Result<ForEach, Error> {
+                let key_str = if let Ok(sym) = magnus::Symbol::try_convert(key) {
+                    sym.name().map(|c| c.to_string()).unwrap_or_default()
+                } else {
+                    String::try_convert(key)?
+                };
+
+                let scheme_info = parse_security_scheme_from_value(ruby, scheme_value)?;
+                security_schemes.insert(key_str, scheme_info);
+                Ok(ForEach::Continue)
+            })?;
+        }
 
         Some(OpenApiConfig {
             enabled,
@@ -236,6 +257,23 @@ pub fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard
             license,
             servers,
             security_schemes,
+        })
+    };
+
+    let jsonrpc_value: Value = config_value.funcall("jsonrpc", ())?;
+    let jsonrpc = if jsonrpc_value.is_nil() {
+        None
+    } else {
+        let enabled: bool = jsonrpc_value.funcall("enabled", ())?;
+        let endpoint_path: String = jsonrpc_value.funcall("endpoint_path", ())?;
+        let enable_batch: bool = jsonrpc_value.funcall("enable_batch", ())?;
+        let max_batch_size: usize = jsonrpc_value.funcall("max_batch_size", ())?;
+
+        Some(JsonRpcConfig {
+            enabled,
+            endpoint_path,
+            enable_batch,
+            max_batch_size,
         })
     };
 
@@ -256,11 +294,88 @@ pub fn extract_server_config(ruby: &Ruby, config_value: Value) -> Result<spikard
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         enable_http_trace: false,
         openapi,
-        jsonrpc: None,
+        jsonrpc,
         grpc: None,
         lifecycle_hooks: None,
         di_container: None,
     })
+}
+
+fn parse_security_scheme_from_value(
+    ruby: &Ruby,
+    scheme_value: Value,
+) -> Result<spikard_http::SecuritySchemeInfo, Error> {
+    let (scheme_type, scheme, bearer_format, location, name) =
+        if let Some(scheme_hash) = RHash::from_value(scheme_value) {
+            (
+                get_required_string_from_hash(scheme_hash, "type", ruby)?,
+                get_optional_string_from_hash(scheme_hash, "scheme")?,
+                get_optional_string_from_hash(scheme_hash, "bearer_format")?,
+                get_optional_string_from_hash(scheme_hash, "location")?,
+                get_optional_string_from_hash(scheme_hash, "name")?,
+            )
+        } else {
+            let scheme_obj = scheme_value;
+            let scheme_type: String = scheme_obj.funcall("type", ())?;
+            let scheme_value: Value = scheme_obj.funcall("scheme", ())?;
+            let bearer_format_value: Value = scheme_obj.funcall("bearer_format", ())?;
+            let location_value: Value = scheme_obj.funcall("location", ())?;
+            let name_value: Value = scheme_obj.funcall("name", ())?;
+            (
+                scheme_type,
+                if scheme_value.is_nil() {
+                    None
+                } else {
+                    Some(String::try_convert(scheme_value)?)
+                },
+                if bearer_format_value.is_nil() {
+                    None
+                } else {
+                    Some(String::try_convert(bearer_format_value)?)
+                },
+                if location_value.is_nil() {
+                    None
+                } else {
+                    Some(String::try_convert(location_value)?)
+                },
+                if name_value.is_nil() {
+                    None
+                } else {
+                    Some(String::try_convert(name_value)?)
+                },
+            )
+        };
+
+    match scheme_type.as_str() {
+        "http" => {
+            let scheme = scheme.ok_or_else(|| {
+                Error::new(
+                    ruby.exception_arg_error(),
+                    "HTTP security scheme requires 'scheme' field",
+                )
+            })?;
+            Ok(spikard_http::SecuritySchemeInfo::Http { scheme, bearer_format })
+        }
+        "apiKey" => {
+            let location = location.ok_or_else(|| {
+                Error::new(
+                    ruby.exception_arg_error(),
+                    "API key security scheme requires 'location' field",
+                )
+            })?;
+            let name = name.ok_or_else(|| {
+                Error::new(
+                    ruby.exception_arg_error(),
+                    "API key security scheme requires 'name' field",
+                )
+            })?;
+            Ok(spikard_http::SecuritySchemeInfo::ApiKey { location, name })
+        }
+        _ => Err(Error::new(
+            ruby.exception_arg_error(),
+            format!("Unsupported security scheme type '{}'", scheme_type),
+        )),
+    }
 }
 
 /// Helper to extract an optional string from a Ruby Hash

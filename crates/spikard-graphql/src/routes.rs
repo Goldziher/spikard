@@ -17,8 +17,9 @@
 //! # Example: Basic Setup
 //!
 //! ```ignore
+//! use serde_json::json;
 //! use spikard_graphql::{GraphQLHandler, GraphQLExecutor, QueryOnlyConfig, SchemaBuilder};
-//! use spikard_http::{Handler, Route, Router, Server, ServerConfig};
+//! use spikard_http::{Handler, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig};
 //! use std::sync::Arc;
 //!
 //! // 1. Create GraphQL schema
@@ -31,21 +32,24 @@
 //! let handler = Arc::new(GraphQLHandler::new(executor));
 //!
 //! // 3. Register route with Spikard
-//! let route = Route::new(
-//!     "/graphql".to_string(),
-//!     spikard_http::Method::Post,
-//!     handler as Arc<dyn Handler>,
-//! );
-//!
-//! let mut router = Router::new();
-//! router.register_route(route);
+//! let route_metadata: RouteMetadata = serde_json::from_value(json!({
+//!     "method": "POST",
+//!     "path": "/graphql",
+//!     "handler_name": "graphql_handler",
+//!     "is_async": true
+//! }))?;
+//! let route = Route::from_metadata(route_metadata.clone(), &SchemaRegistry::new())?;
 //!
 //! // 4. Start server
 //! let config = ServerConfig::builder()
 //!     .port(8000)
 //!     .build();
-//! let server = Server::new(config, router);
-//! server.run().await?;
+//! let app = Server::with_handlers_and_metadata(
+//!     config.clone(),
+//!     vec![(route, handler as Arc<dyn Handler>)],
+//!     vec![route_metadata],
+//! )?;
+//! Server::run_with_config(app, config).await?;
 //! ```
 //!
 //! # Example: With Route Configuration
@@ -127,7 +131,7 @@
 /// Configuration for GraphQL routes
 ///
 /// Provides a builder pattern for configuring GraphQL route parameters
-/// while maintaining compatibility with the Spikard HTTP server's routing system.
+/// for the Spikard HTTP server's routing system.
 ///
 /// # Example
 ///

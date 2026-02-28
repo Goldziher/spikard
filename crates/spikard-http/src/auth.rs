@@ -23,8 +23,11 @@ const TYPE_AUTH_ERROR: &str = "https://spikard.dev/errors/unauthorized";
 /// Standard type URI for configuration errors (500)
 const TYPE_CONFIG_ERROR: &str = "https://spikard.dev/errors/configuration-error";
 
+/// Internal header key used to expose validated JWT claims to handlers.
+pub const INTERNAL_JWT_CLAIMS_HEADER: &str = "x-spikard-jwt-claims";
+
 /// JWT claims structure - can be extended based on needs
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,
     pub exp: usize,
@@ -110,7 +113,7 @@ pub async fn jwt_auth_middleware(
     validation.validate_nbf = true;
 
     let decoding_key = DecodingKey::from_secret(config.secret.as_bytes());
-    let _token_data = decode::<Claims>(token, &decoding_key, &validation).map_err(|e| {
+    let token_data = decode::<Claims>(token, &decoding_key, &validation).map_err(|e| {
         let detail = match e.kind() {
             jsonwebtoken::errors::ErrorKind::ExpiredSignature => "Token has expired".to_string(),
             jsonwebtoken::errors::ErrorKind::InvalidToken => "Token is invalid".to_string(),
@@ -133,7 +136,9 @@ pub async fn jwt_auth_middleware(
         (StatusCode::UNAUTHORIZED, axum::Json(problem)).into_response()
     })?;
 
-    // TODO: Attach claims to request extensions for handlers to access
+    let mut request = request;
+    request.extensions_mut().insert(token_data.claims);
+
     Ok(next.run(request).await)
 }
 

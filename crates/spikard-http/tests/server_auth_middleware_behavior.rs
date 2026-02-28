@@ -1,8 +1,12 @@
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
+use http_body_util::BodyExt;
 use jsonwebtoken::{EncodingKey, Header, encode};
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::{ApiKeyConfig, Claims, Handler, HandlerResult, JwtConfig, Method, RequestData, Route, ServerConfig};
+use spikard_http::{
+    ApiKeyConfig, Claims, Handler, HandlerResult, JwtConfig, Method, RequestData, Route, ServerConfig,
+    auth::INTERNAL_JWT_CLAIMS_HEADER,
+};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -21,6 +25,29 @@ impl Handler for OkHandler {
             Ok(axum::http::Response::builder()
                 .status(StatusCode::OK)
                 .body(Body::from("ok"))
+                .expect("response"))
+        })
+    }
+}
+
+struct ClaimsHeaderEchoHandler;
+
+impl Handler for ClaimsHeaderEchoHandler {
+    fn call(
+        &self,
+        _request: Request<Body>,
+        request_data: RequestData,
+    ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+        Box::pin(async move {
+            let claims = request_data
+                .headers
+                .get(INTERNAL_JWT_CLAIMS_HEADER)
+                .cloned()
+                .unwrap_or_else(|| "{}".to_string());
+            Ok(axum::http::Response::builder()
+                .status(StatusCode::OK)
+                .header("content-type", "application/json")
+                .body(Body::from(claims))
                 .expect("response"))
         })
     }
@@ -138,6 +165,63 @@ async fn jwt_auth_layer_accepts_valid_bearer_token() {
         .expect("response");
 
     assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
+async fn jwt_auth_layer_exposes_claims_to_handler() {
+    let secret = "secret";
+    let config = ServerConfig {
+        jwt_auth: Some(JwtConfig {
+            secret: secret.to_string(),
+            algorithm: "HS256".to_string(),
+            audience: None,
+            issuer: None,
+            leeway: 0,
+        }),
+        ..Default::default()
+    };
+
+    let claims = Claims {
+        sub: "claims-user".to_string(),
+        exp: now_plus(60),
+        iat: None,
+        nbf: None,
+        aud: None,
+        iss: None,
+    };
+    let token = encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_bytes()),
+    )
+    .expect("token");
+
+    let router = build_router_with_handlers_and_config(
+        vec![(
+            route(Method::Get, "/protected", "claims"),
+            Arc::new(ClaimsHeaderEchoHandler) as Arc<dyn Handler>,
+        )],
+        config,
+        Vec::new(),
+    )
+    .expect("router");
+
+    let response = router
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri("/protected")
+                .header("authorization", format!("Bearer {token}"))
+                .body(Body::empty())
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = response.into_body().collect().await.expect("collect").to_bytes();
+    let claims_json: serde_json::Value = serde_json::from_slice(&body).expect("valid claims json");
+    assert_eq!(claims_json["sub"], "claims-user");
 }
 
 #[tokio::test]

@@ -30,6 +30,7 @@ final class ServerConfig
      * @param JwtConfig|null $jwtAuth JWT authentication configuration
      * @param ApiKeyConfig|null $apiKeyAuth API Key authentication configuration
      * @param OpenApiConfig|null $openapi OpenAPI documentation configuration
+     * @param JsonRpcConfig|null $jsonrpc JSON-RPC endpoint configuration
      * @param LifecycleHooks|null $hooks Lifecycle hooks for request/response processing
      */
     public function __construct(
@@ -48,6 +49,7 @@ final class ServerConfig
         public readonly ?JwtConfig $jwtAuth = null,
         public readonly ?ApiKeyConfig $apiKeyAuth = null,
         public readonly ?OpenApiConfig $openapi = null,
+        public readonly ?JsonRpcConfig $jsonrpc = null,
         public readonly ?LifecycleHooks $hooks = null,
     ) {
     }
@@ -80,6 +82,7 @@ final class ServerConfigBuilder
     private ?JwtConfig $jwtAuth = null;
     private ?ApiKeyConfig $apiKeyAuth = null;
     private ?OpenApiConfig $openapi = null;
+    private ?JsonRpcConfig $jsonrpc = null;
     private ?LifecycleHooks $hooks = null;
 
     public function withHost(string $host): self
@@ -172,6 +175,12 @@ final class ServerConfigBuilder
         return $this;
     }
 
+    public function withJsonRpc(JsonRpcConfig $config): self
+    {
+        $this->jsonrpc = $config;
+        return $this;
+    }
+
     public function withLifecycleHooks(LifecycleHooks $hooks): self
     {
         $this->hooks = $hooks;
@@ -196,6 +205,7 @@ final class ServerConfigBuilder
             jwtAuth: $this->jwtAuth,
             apiKeyAuth: $this->apiKeyAuth,
             openapi: $this->openapi,
+            jsonrpc: $this->jsonrpc,
             hooks: $this->hooks,
         );
     }

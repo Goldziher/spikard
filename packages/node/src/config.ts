@@ -272,6 +272,20 @@ export interface OpenApiConfig {
 }
 
 /**
+ * JSON-RPC 2.0 endpoint configuration.
+ */
+export interface JsonRpcConfig {
+	/** Enable JSON-RPC endpoint registration (default: true) */
+	enabled?: boolean;
+	/** HTTP path for JSON-RPC requests (default: "/rpc") */
+	endpointPath?: string;
+	/** Allow batch requests (default: true) */
+	enableBatch?: boolean;
+	/** Maximum requests per batch (default: 100) */
+	maxBatchSize?: number;
+}
+
+/**
  * Configuration for serving static files.
  *
  * Serves files from a directory at a given route prefix.
@@ -392,4 +406,6 @@ export interface ServerConfig {
 
 	/** OpenAPI documentation configuration */
 	openapi?: OpenApiConfig | null;
+	/** JSON-RPC endpoint configuration */
+	jsonrpc?: JsonRpcConfig | null;
 }

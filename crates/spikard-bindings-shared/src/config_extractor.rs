@@ -50,6 +50,16 @@ pub trait ConfigSource {
         None
     }
 
+    /// Get keys from a map/object field
+    fn get_map_keys(&self, _key: &str) -> Option<Vec<String>> {
+        None
+    }
+
+    /// Get map/object entry as nested `ConfigSource`
+    fn get_map_entry(&self, _key: &str, _entry_key: &str) -> Option<Box<dyn ConfigSource + '_>> {
+        None
+    }
+
     /// Get u32 value from the source (helper for common case)
     fn get_u32(&self, key: &str) -> Option<u32> {
         self.get_u64(key).and_then(|v| u32::try_from(v).ok())
@@ -356,9 +366,63 @@ impl ConfigExtractor {
     }
 
     /// Extract security schemes from `OpenAPI` config
-    fn extract_security_schemes_config(_source: &dyn ConfigSource) -> HashMap<String, SecuritySchemeInfo> {
-        // TODO: Implement when bindings support iterating HashMap-like structures
-        HashMap::new()
+    fn extract_security_schemes_config(source: &dyn ConfigSource) -> HashMap<String, SecuritySchemeInfo> {
+        let key = if source.has_key("security_schemes") {
+            "security_schemes"
+        } else if source.has_key("securitySchemes") {
+            "securitySchemes"
+        } else {
+            return HashMap::new();
+        };
+
+        let mut schemes = HashMap::new();
+        let scheme_names = source.get_map_keys(key).unwrap_or_default();
+
+        for name in scheme_names {
+            let Some(scheme) = source.get_map_entry(key, &name) else {
+                continue;
+            };
+
+            let Some(scheme_type) = scheme.get_string("type") else {
+                continue;
+            };
+
+            match scheme_type.as_str() {
+                "http" => {
+                    let Some(http_scheme) = scheme.get_string("scheme") else {
+                        continue;
+                    };
+                    let bearer_format = scheme
+                        .get_string("bearer_format")
+                        .or_else(|| scheme.get_string("bearerFormat"));
+                    schemes.insert(
+                        name,
+                        SecuritySchemeInfo::Http {
+                            scheme: http_scheme,
+                            bearer_format,
+                        },
+                    );
+                }
+                "apiKey" => {
+                    let Some(location) = scheme.get_string("location") else {
+                        continue;
+                    };
+                    let Some(param_name) = scheme.get_string("name") else {
+                        continue;
+                    };
+                    schemes.insert(
+                        name,
+                        SecuritySchemeInfo::ApiKey {
+                            location,
+                            name: param_name,
+                        },
+                    );
+                }
+                _ => {}
+            }
+        }
+
+        schemes
     }
 
     /// Extract `JsonRpcConfig` from a `ConfigSource`
@@ -679,6 +743,19 @@ mod tests {
             elem.is_object()
                 .then(|| Box::new(JsonConfigSource::new(elem)) as Box<dyn ConfigSource>)
         }
+
+        fn get_map_keys(&self, key: &str) -> Option<Vec<String>> {
+            let map = self.value.get(key)?.as_object()?;
+            Some(map.keys().cloned().collect())
+        }
+
+        fn get_map_entry(&self, key: &str, entry_key: &str) -> Option<Box<dyn ConfigSource + '_>> {
+            let map = self.value.get(key)?.as_object()?;
+            let entry = map.get(entry_key)?;
+            entry
+                .is_object()
+                .then(|| Box::new(JsonConfigSource::new(entry)) as Box<dyn ConfigSource>)
+        }
     }
 
     #[test]
@@ -700,6 +777,44 @@ mod tests {
         assert_eq!(configs[0].route_prefix, "/assets");
         assert!(configs[0].index_file);
         assert_eq!(configs[0].cache_control.as_deref(), Some("public, max-age=3600"));
+    }
+
+    #[test]
+    fn test_security_schemes_config_extracts_http_and_api_key() {
+        let value = serde_json::json!({
+            "security_schemes": {
+                "bearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "bearer_format": "JWT"
+                },
+                "apiKeyAuth": {
+                    "type": "apiKey",
+                    "location": "header",
+                    "name": "X-API-Key"
+                }
+            }
+        });
+        let source = JsonConfigSource::new(&value);
+
+        let schemes = ConfigExtractor::extract_security_schemes_config(&source);
+        assert_eq!(schemes.len(), 2);
+
+        match schemes.get("bearerAuth") {
+            Some(SecuritySchemeInfo::Http { scheme, bearer_format }) => {
+                assert_eq!(scheme, "bearer");
+                assert_eq!(bearer_format.as_deref(), Some("JWT"));
+            }
+            _ => panic!("expected bearerAuth HTTP security scheme"),
+        }
+
+        match schemes.get("apiKeyAuth") {
+            Some(SecuritySchemeInfo::ApiKey { location, name }) => {
+                assert_eq!(location, "header");
+                assert_eq!(name, "X-API-Key");
+            }
+            _ => panic!("expected apiKeyAuth API key security scheme"),
+        }
     }
 
     #[test]

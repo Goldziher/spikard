@@ -468,8 +468,8 @@ fn create_test_client(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResult<testin
 /// Convert Python ServerConfig to Rust ServerConfig
 fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyResult<spikard_http::ServerConfig> {
     use spikard_http::{
-        ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
-        SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
+        ApiKeyConfig, CompressionConfig, ContactInfo, JsonRpcConfig, JwtConfig, LicenseInfo, OpenApiConfig,
+        RateLimitConfig, SecuritySchemeInfo, ServerConfig, ServerInfo, StaticFilesConfig,
     };
     use std::collections::HashMap;
 
@@ -643,6 +643,23 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         })
     };
 
+    let jsonrpc_py = py_config.getattr("jsonrpc")?;
+    let jsonrpc_config = if jsonrpc_py.is_none() {
+        None
+    } else {
+        let enabled: bool = jsonrpc_py.getattr("enabled")?.extract()?;
+        let endpoint_path: String = jsonrpc_py.getattr("endpoint_path")?.extract()?;
+        let enable_batch: bool = jsonrpc_py.getattr("enable_batch")?.extract()?;
+        let max_batch_size: usize = jsonrpc_py.getattr("max_batch_size")?.extract()?;
+
+        Some(JsonRpcConfig {
+            enabled,
+            endpoint_path,
+            enable_batch,
+            max_batch_size,
+        })
+    };
+
     Ok(ServerConfig {
         host,
         port,
@@ -660,7 +677,7 @@ fn extract_server_config(_py: Python<'_>, py_config: &Bound<'_, PyAny>) -> PyRes
         background_tasks: spikard_http::BackgroundTaskConfig::default(),
         enable_http_trace: false,
         openapi: openapi_config,
-        jsonrpc: None,
+        jsonrpc: jsonrpc_config,
         grpc: None,
         lifecycle_hooks: None,
         di_container: None,

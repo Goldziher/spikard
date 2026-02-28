@@ -509,6 +509,15 @@ final class App
             ];
         }
 
+        if ($config->jsonrpc !== null) {
+            $payload['jsonrpc'] = [
+                'enabled' => $config->jsonrpc->enabled,
+                'endpoint_path' => $config->jsonrpc->endpointPath,
+                'enable_batch' => $config->jsonrpc->enableBatch,
+                'max_batch_size' => $config->jsonrpc->maxBatchSize,
+            ];
+        }
+
         // Background tasks configuration uses default
         // (BackgroundTaskConfig::default() in Rust)
 

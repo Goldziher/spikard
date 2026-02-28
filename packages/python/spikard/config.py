@@ -436,6 +436,23 @@ class OpenApiConfig:
 
 
 @dataclass
+class JsonRpcConfig:
+    """JSON-RPC endpoint configuration."""
+
+    enabled: bool = True
+    endpoint_path: str = "/rpc"
+    enable_batch: bool = True
+    max_batch_size: int = 100
+
+    def __post_init__(self) -> None:
+        """Validate JSON-RPC settings."""
+        if self.max_batch_size <= 0:
+            raise ValueError("max_batch_size must be > 0")
+        if not self.endpoint_path.startswith("/"):
+            raise ValueError("endpoint_path must start with '/'")
+
+
+@dataclass
 class StaticFilesConfig:
     """Configuration for serving static files.
 
@@ -502,6 +519,7 @@ class ServerConfig:
 
     OpenAPI/Documentation:
         openapi: OpenAPI configuration (default: None/disabled)
+        jsonrpc: JSON-RPC endpoint configuration (default: None/disabled)
 
     Example:
         ```python
@@ -563,6 +581,7 @@ class ServerConfig:
     shutdown_timeout: int = 30
 
     openapi: OpenApiConfig | None = None
+    jsonrpc: JsonRpcConfig | None = None
 
     def __post_init__(self) -> None:
         """Validate configuration after initialization."""

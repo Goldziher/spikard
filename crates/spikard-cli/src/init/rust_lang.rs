@@ -99,6 +99,8 @@ spikard-http = "0.6"
 tokio = {{ version = "1", features = ["full"] }}
 serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
 
 [dev-dependencies]
 "#
@@ -110,7 +112,8 @@ serde_json = "1"
 //!
 //! This is the binary target for running the Spikard HTTP server.
 
-use spikard_http::{Handler, Route, Router, Server, ServerConfig};
+use serde_json::json;
+use spikard_http::{Handler, Route, RouteMetadata, SchemaRegistry, Server, ServerConfig, StaticResponseHandler};
 use std::sync::Arc;
 
 #[tokio::main]
@@ -120,16 +123,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    // Create a simple router
-    let mut router = Router::new();
-
-    // Register routes here
-    // Example:
-    // router.register_route(Route::new(
-    //     "/".to_string(),
-    //     spikard_http::Method::Get,
-    //     Arc::new(my_handler),
-    // ));
+    // Register a health route (GET /) with a static response.
+    let route_metadata: RouteMetadata = serde_json::from_value(json!({
+        "method": "GET",
+        "path": "/",
+        "handler_name": "health",
+        "is_async": false
+    }))?;
+    let registry = SchemaRegistry::new();
+    let route = Route::from_metadata(route_metadata.clone(), &registry).map_err(std::io::Error::other)?;
+    let handler = Arc::new(StaticResponseHandler::from_parts(
+        200,
+        "{\"status\":\"healthy\",\"message\":\"Server is running\"}",
+        Some("application/json"),
+        vec![],
+    )) as Arc<dyn Handler>;
 
     // Create server configuration
     let config = ServerConfig::builder()
@@ -138,13 +146,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .enable_http_trace(true)
         .build();
 
-    // Create and start the HTTP server
-    let server = Server::new(config, router);
+    let app = Server::with_handlers_and_metadata(config.clone(), vec![(route, handler)], vec![route_metadata])
+        .map_err(std::io::Error::other)?;
 
     println!("Server starting on http://127.0.0.1:8000");
     println!("Press Ctrl+C to stop");
 
-    server.run().await?;
+    Server::run_with_config(app, config).await?;
 
     Ok(())
 }

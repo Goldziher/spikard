@@ -964,9 +964,9 @@ async fn test_http_layer_stream_termination_on_error() {
 
     // Verify response is properly constructed
     assert_eq!(response.status(), StatusCode::OK);
-    assert_eq!(
-        response.headers().get("grpc-status").and_then(|v| v.to_str().ok()),
-        Some("0")
+    assert!(
+        response.headers().get("grpc-status").is_none(),
+        "streaming responses should not predeclare grpc-status"
     );
 
     // The response body can be consumed

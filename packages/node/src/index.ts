@@ -19,6 +19,7 @@ export type {
 	ApiKeyConfig,
 	CompressionConfig,
 	ContactInfo,
+	JsonRpcConfig,
 	JwtConfig,
 	LicenseInfo,
 	OpenApiConfig,

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from spikard.app import Spikard as Spikard
     from spikard.config import ApiKeyConfig as ApiKeyConfig
     from spikard.config import CompressionConfig as CompressionConfig
+    from spikard.config import JsonRpcConfig as JsonRpcConfig
     from spikard.config import JwtConfig as JwtConfig
     from spikard.config import OpenApiConfig as OpenApiConfig
     from spikard.config import RateLimitConfig as RateLimitConfig
@@ -69,6 +70,7 @@ __all__ = [
     "Header",
     "HttpMethod",
     "JsonRpcMethodInfo",
+    "JsonRpcConfig",
     "JwtConfig",
     "LiveTestClient",
     "OpenApiConfig",
@@ -109,6 +111,7 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     "ApiKeyConfig": ("spikard.config", "ApiKeyConfig"),
     "Body": ("spikard.params", "Body"),
     "CompressionConfig": ("spikard.config", "CompressionConfig"),
+    "JsonRpcConfig": ("spikard.config", "JsonRpcConfig"),
     "Cookie": ("spikard.params", "Cookie"),
     "GrpcHandler": ("spikard.grpc", "GrpcHandler"),
     "GrpcService": ("spikard.grpc", "GrpcService"),

@@ -340,6 +340,37 @@ module Spikard
     end
   end
 
+  # JSON-RPC endpoint configuration.
+  class JsonRpcConfig
+    attr_accessor :enabled, :endpoint_path, :enable_batch, :max_batch_size
+
+    # @param enabled [Boolean] Enable JSON-RPC endpoint registration (default: true)
+    # @param endpoint_path [String] JSON-RPC endpoint path (default: "/rpc")
+    # @param enable_batch [Boolean] Enable JSON-RPC batch support (default: true)
+    # @param max_batch_size [Integer] Maximum batch size (default: 100)
+    def initialize(enabled: true, endpoint_path: '/rpc', enable_batch: true, max_batch_size: 100)
+      @enabled = normalize_boolean('enabled', enabled)
+      @endpoint_path = endpoint_path
+      @enable_batch = normalize_boolean('enable_batch', enable_batch)
+      @max_batch_size = normalize_positive_integer('max_batch_size', max_batch_size)
+    end
+
+    private
+
+    def normalize_boolean(name, value)
+      return value if [true, false].include?(value)
+
+      raise ArgumentError, "#{name} must be a boolean"
+    end
+
+    def normalize_positive_integer(name, value)
+      raise ArgumentError, "#{name} must be an Integer" unless value.is_a?(Integer)
+      return value if value.positive?
+
+      raise ArgumentError, "#{name} must be > 0"
+    end
+  end
+
   # Complete server configuration for Spikard.
   #
   # This is the main configuration object that controls all aspects of the server
@@ -369,7 +400,7 @@ module Spikard
                   :enable_request_id, :max_body_size, :request_timeout,
                   :compression, :rate_limit, :jwt_auth, :api_key_auth,
                   :static_files, :graceful_shutdown, :shutdown_timeout,
-                  :openapi
+                  :openapi, :jsonrpc
 
     # @param host [String] Host address to bind to (default: "127.0.0.1")
     # @param port [Integer] Port number to listen on (default: 8000, range: 1-65535)
@@ -385,6 +416,7 @@ module Spikard
     # @param graceful_shutdown [Boolean] Enable graceful shutdown (default: true)
     # @param shutdown_timeout [Integer] Graceful shutdown timeout in seconds (default: 30)
     # @param openapi [OpenApiConfig, nil] OpenAPI configuration (default: nil/disabled)
+    # @param jsonrpc [JsonRpcConfig, nil] JSON-RPC configuration (default: nil/disabled)
     def initialize(
       host: '127.0.0.1',
       port: 8000,
@@ -399,7 +431,8 @@ module Spikard
       static_files: [],
       graceful_shutdown: true,
       shutdown_timeout: 30,
-      openapi: nil
+      openapi: nil,
+      jsonrpc: nil
     )
       @host = host
       @port = normalize_port(port)
@@ -415,6 +448,7 @@ module Spikard
       @graceful_shutdown = normalize_boolean('graceful_shutdown', graceful_shutdown)
       @shutdown_timeout = normalize_timeout('shutdown_timeout', shutdown_timeout)
       @openapi = openapi
+      @jsonrpc = jsonrpc
     end
 
     private

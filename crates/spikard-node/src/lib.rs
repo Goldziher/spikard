@@ -160,10 +160,9 @@ fn normalize_route_path(path: &str) -> String {
 /// Complete extraction of all middleware configurations following the Python pattern in spikard-py
 fn extract_server_config(config: &Object) -> Result<ServerConfig> {
     use spikard_http::{
-        ApiKeyConfig, CompressionConfig, ContactInfo, JwtConfig, LicenseInfo, OpenApiConfig, RateLimitConfig,
-        ServerInfo, StaticFilesConfig,
+        ApiKeyConfig, CompressionConfig, ContactInfo, JsonRpcConfig, JwtConfig, LicenseInfo, OpenApiConfig,
+        RateLimitConfig, ServerInfo, StaticFilesConfig,
     };
-    use std::collections::HashMap;
 
     let mut server_config = ServerConfig::default();
 
@@ -335,7 +334,12 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
             })
             .unwrap_or_default();
 
-        let security_schemes = HashMap::new();
+        let security_schemes = api
+            .get::<Object>("securitySchemes")
+            .ok()
+            .flatten()
+            .map(|obj| extract_openapi_security_schemes(&obj))
+            .unwrap_or_default();
 
         Some(OpenApiConfig {
             enabled,
@@ -352,12 +356,36 @@ fn extract_server_config(config: &Object) -> Result<ServerConfig> {
         })
     });
 
+    let jsonrpc = config.get::<Object>("jsonrpc")?.map(|rpc| {
+        let enabled = rpc.get::<bool>("enabled").ok().flatten().unwrap_or(true);
+        let endpoint_path = rpc
+            .get::<String>("endpointPath")
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| "/rpc".to_string());
+        let enable_batch = rpc.get::<bool>("enableBatch").ok().flatten().unwrap_or(true);
+        let max_batch_size = rpc
+            .get::<u32>("maxBatchSize")
+            .ok()
+            .flatten()
+            .map(|n| n as usize)
+            .unwrap_or(100);
+
+        JsonRpcConfig {
+            enabled,
+            endpoint_path,
+            enable_batch,
+            max_batch_size,
+        }
+    });
+
     server_config.compression = compression;
     server_config.rate_limit = rate_limit;
     server_config.jwt_auth = jwt_auth;
     server_config.api_key_auth = api_key_auth;
     server_config.static_files = static_files;
     server_config.openapi = openapi;
+    server_config.jsonrpc = jsonrpc;
 
     Ok(server_config)
 }
@@ -402,6 +430,96 @@ fn extract_optional_cors(route_obj: &Object) -> Option<spikard_core::CorsConfig>
             None
         }
     }
+}
+
+fn extract_openapi_security_schemes(
+    schemes_obj: &Object,
+) -> std::collections::HashMap<String, spikard_http::SecuritySchemeInfo> {
+    let mut schemes = std::collections::HashMap::new();
+
+    let keys = match Object::keys(schemes_obj) {
+        Ok(keys) => keys,
+        Err(e) => {
+            warn!("Failed to enumerate OpenAPI securitySchemes: {}", e);
+            return schemes;
+        }
+    };
+
+    for key in keys {
+        let scheme_obj = match schemes_obj.get::<Object>(&key) {
+            Ok(Some(obj)) => obj,
+            Ok(None) => continue,
+            Err(e) => {
+                warn!("Failed to read OpenAPI securitySchemes.{}: {}", key, e);
+                continue;
+            }
+        };
+
+        let scheme_type = match scheme_obj.get::<String>("type") {
+            Ok(Some(value)) => value,
+            Ok(None) => {
+                warn!("OpenAPI securitySchemes.{} is missing type", key);
+                continue;
+            }
+            Err(e) => {
+                warn!("Failed to read OpenAPI securitySchemes.{}.type: {}", key, e);
+                continue;
+            }
+        };
+
+        let parsed = match scheme_type.as_str() {
+            "http" => {
+                let scheme = match scheme_obj.get::<String>("scheme") {
+                    Ok(Some(value)) => value,
+                    Ok(None) => {
+                        warn!("HTTP security scheme '{}' is missing scheme", key);
+                        continue;
+                    }
+                    Err(e) => {
+                        warn!("Failed to read OpenAPI securitySchemes.{}.scheme: {}", key, e);
+                        continue;
+                    }
+                };
+                let bearer_format = scheme_obj.get::<String>("bearerFormat").ok().flatten();
+                Some(spikard_http::SecuritySchemeInfo::Http { scheme, bearer_format })
+            }
+            "apiKey" => {
+                let location = match scheme_obj.get::<String>("location") {
+                    Ok(Some(value)) => value,
+                    Ok(None) => {
+                        warn!("API key security scheme '{}' is missing location", key);
+                        continue;
+                    }
+                    Err(e) => {
+                        warn!("Failed to read OpenAPI securitySchemes.{}.location: {}", key, e);
+                        continue;
+                    }
+                };
+                let name = match scheme_obj.get::<String>("name") {
+                    Ok(Some(value)) => value,
+                    Ok(None) => {
+                        warn!("API key security scheme '{}' is missing name", key);
+                        continue;
+                    }
+                    Err(e) => {
+                        warn!("Failed to read OpenAPI securitySchemes.{}.name: {}", key, e);
+                        continue;
+                    }
+                };
+                Some(spikard_http::SecuritySchemeInfo::ApiKey { location, name })
+            }
+            other => {
+                warn!("Unsupported OpenAPI security scheme type '{}': {}", key, other);
+                None
+            }
+        };
+
+        if let Some(parsed) = parsed {
+            schemes.insert(key, parsed);
+        }
+    }
+
+    schemes
 }
 
 /// Convert a Node.js object to a serde_json::Value
@@ -782,22 +900,33 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         .parse()
         .map_err(|e| Error::from_reason(format!("Invalid socket address {}: {}", addr, e)))?;
 
+    let (startup_tx, startup_rx) = std::sync::mpsc::channel::<std::result::Result<u16, String>>();
+
     std::thread::spawn(move || {
         let runtime = match tokio::runtime::Runtime::new() {
             Ok(rt) => rt,
             Err(e) => {
                 error!("Failed to create Tokio runtime: {}", e);
+                let _ = startup_tx.send(Err(format!("Failed to create Tokio runtime: {}", e)));
                 return;
             }
         };
 
         runtime.block_on(async move {
-            let listener = tokio::net::TcpListener::bind(socket_addr)
-                .await
-                .unwrap_or_else(|_| panic!("Failed to bind to {}", socket_addr));
+            let listener = match tokio::net::TcpListener::bind(socket_addr).await {
+                Ok(listener) => listener,
+                Err(e) => {
+                    error!("Failed to bind to {}: {}", socket_addr, e);
+                    let _ = startup_tx.send(Err(format!("Failed to bind to {}: {}", socket_addr, e)));
+                    return;
+                }
+            };
 
-            info!("Server listening on {}", socket_addr);
-            println!("SPIKARD_TEST_SERVER_READY:{}", socket_addr.port());
+            let bound_addr = listener.local_addr().unwrap_or(socket_addr);
+            let _ = startup_tx.send(Ok(bound_addr.port()));
+
+            info!("Server listening on {}", bound_addr);
+            println!("SPIKARD_TEST_SERVER_READY:{}", bound_addr.port());
             let _ = std::io::stdout().flush();
 
             let background_runtime = BackgroundRuntime::start(background_config.clone()).await;
@@ -816,5 +945,14 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         });
     });
 
-    Ok(())
+    match startup_rx.recv_timeout(std::time::Duration::from_secs(5)) {
+        Ok(Ok(_bound_port)) => Ok(()),
+        Ok(Err(msg)) => Err(Error::from_reason(msg)),
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+            Err(Error::from_reason("Timed out waiting for server startup"))
+        }
+        Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+            Err(Error::from_reason("Server startup thread exited unexpectedly"))
+        }
+    }
 }
