@@ -30,9 +30,9 @@ fn codegen_engine_rejects_unsupported_schema_target_combinations() {
 }
 
 #[test]
-fn codegen_engine_reports_asyncapi_unsupported_languages() {
+fn codegen_engine_generates_php_asyncapi_test_apps() {
     let output_dir = tempdir().unwrap();
-    let out_file = output_dir.path().join("out.txt");
+    let out_file = output_dir.path().join("chat-service-asyncapi.php");
 
     let request = CodegenRequest {
         schema_path: workspace_root().join("examples/schemas/chat-service.asyncapi.yaml"),
@@ -44,8 +44,16 @@ fn codegen_engine_reports_asyncapi_unsupported_languages() {
         dto: None,
     };
 
-    let err = CodegenEngine::execute(request).unwrap_err().to_string();
-    assert!(err.contains("AsyncAPI test apps"), "{err}");
+    let outcome = CodegenEngine::execute(request).expect("engine run");
+    let asset = match outcome {
+        spikard_cli::codegen::CodegenOutcome::Files(mut files) => files.pop().expect("asset"),
+        other @ spikard_cli::codegen::CodegenOutcome::InMemory(_) => panic!("expected files, got {other:?}"),
+    };
+
+    assert!(asset.path.exists(), "missing asset {}", asset.path.display());
+    let contents = std::fs::read_to_string(&asset.path).expect("read generated app");
+    assert!(contents.contains("Testing WebSocket endpoints"));
+    assert!(contents.contains("loadFixture"));
 }
 
 #[test]
@@ -69,6 +77,11 @@ fn codegen_engine_asyncapi_all_writes_fixtures_and_apps() {
 
     assert!(assets.iter().any(|a| a.description.contains("fixture")));
     assert!(assets.iter().any(|a| a.description.contains("AsyncAPI test app")));
+    assert!(
+        assets
+            .iter()
+            .any(|a| a.description.contains("AsyncAPI test app") && a.path.extension().is_some_and(|ext| ext == "php"))
+    );
 
     for asset in assets {
         assert!(asset.path.exists(), "missing asset {}", asset.path.display());

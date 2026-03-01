@@ -161,6 +161,19 @@ pub fn generate_ruby_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Resu
     generator.generate_test_app(&channels, protocol_str)
 }
 
+/// Generate PHP test application from `AsyncAPI` spec
+pub fn generate_php_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
+    let channels = extract_channel_info(spec)?;
+    let protocol_str = match protocol {
+        Protocol::WebSocket => "websocket",
+        Protocol::Sse => "sse",
+        other => bail!("Unsupported protocol for PHP test app: {other:?}"),
+    };
+
+    let generator = PhpAsyncApiGenerator;
+    generator.generate_test_app(&channels, protocol_str)
+}
+
 /// Generate Python handler scaffolding from `AsyncAPI` spec
 pub fn generate_python_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;

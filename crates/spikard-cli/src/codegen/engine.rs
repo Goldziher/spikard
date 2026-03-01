@@ -1,7 +1,8 @@
 use super::asyncapi::{Protocol, parse_asyncapi_schema};
 use super::asyncapi::{
     generate_nodejs_handler_app, generate_nodejs_test_app, generate_php_handler_app, generate_python_handler_app,
-    generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app, generate_rust_handler_app,
+    generate_php_test_app, generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app,
+    generate_rust_handler_app,
 };
 use super::openrpc::{
     generate_php_handler_app as generate_openrpc_php_handler,
@@ -217,6 +218,7 @@ impl CodegenEngine {
             TargetLanguage::Python => generate_python_test_app(spec, protocol)?,
             TargetLanguage::TypeScript => generate_nodejs_test_app(spec, protocol)?,
             TargetLanguage::Ruby => generate_ruby_test_app(spec, protocol)?,
+            TargetLanguage::Php => generate_php_test_app(spec, protocol)?,
             other => {
                 bail!("{other:?} is not supported for AsyncAPI test apps");
             }
@@ -279,6 +281,14 @@ impl CodegenEngine {
             &app_dir.join(format!("{base_name}-asyncapi.rb")),
         )?;
         assets.push(ruby_asset);
+
+        let php_asset = Self::generate_asyncapi_app(
+            spec,
+            protocol,
+            TargetLanguage::Php,
+            &app_dir.join(format!("{base_name}-asyncapi.php")),
+        )?;
+        assets.push(php_asset);
 
         Ok(assets)
     }
