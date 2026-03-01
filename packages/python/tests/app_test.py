@@ -18,6 +18,7 @@ import spikard.routing as routing_module
 from spikard import app as app_module
 from spikard import Spikard
 from spikard.config import ServerConfig
+from spikard.grpc import GrpcService
 from spikard.params import Query
 
 Schema = dict[str, object]
@@ -239,6 +240,43 @@ def test_run_config_default_config_when_none_provided(monkeypatch: pytest.Monkey
 
     called_config = mock_run.call_args[1]["config"]
     assert isinstance(called_config, ServerConfig)
+
+
+def test_add_grpc_service_registers_handler() -> None:
+    """Application stores gRPC handlers by service name."""
+    app = Spikard()
+
+    class Handler:
+        async def handle_request(self, request: object) -> object:
+            return request
+
+    handler = Handler()
+    app.add_grpc_service("example.UserService", handler)
+
+    services = app.get_grpc_services()
+    assert services["example.UserService"] is handler
+
+
+def test_use_grpc_mounts_registry_handlers() -> None:
+    """Application mounts all handlers from a GrpcService registry."""
+    app = Spikard()
+    registry = GrpcService()
+
+    class UserHandler:
+        async def handle_request(self, request: object) -> object:
+            return request
+
+    class AdminHandler:
+        async def handle_request(self, request: object) -> object:
+            return request
+
+    registry.register_handler("example.UserService", UserHandler())
+    registry.register_handler("example.AdminService", AdminHandler())
+
+    app.use_grpc(registry)
+
+    services = app.get_grpc_services()
+    assert sorted(services) == ["example.AdminService", "example.UserService"]
 
 
 def test_run_config_reload_uses_reloader(monkeypatch: pytest.MonkeyPatch) -> None:

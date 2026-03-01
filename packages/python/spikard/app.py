@@ -12,6 +12,7 @@ from spikard.routing import HttpMethod, Router
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from spikard.grpc import GrpcHandler, GrpcService
     from spikard.sse import SseEventProducer
     from spikard.types import Route
 
@@ -47,6 +48,7 @@ class Spikard:
         self._router = Router()
         self._websocket_handlers: dict[str, Callable[[], Any]] = {}
         self._sse_producers: dict[str, Callable[[], SseEventProducer]] = {}
+        self._grpc_services: dict[str, GrpcHandler] = {}
         self._config = config
         self._lifecycle_hooks: dict[str, list[Callable[..., Any]]] = {
             "on_request": [],
@@ -299,6 +301,33 @@ class Spikard:
     def get_dependencies(self) -> dict[str, Any]:
         """Get all registered dependencies."""
         return self._dependencies.copy()
+
+    # -- gRPC ---------------------------------------------------------------------
+
+    def add_grpc_service(self, service_name: str, handler: GrpcHandler) -> Spikard:
+        """Register a unary gRPC service handler on the application."""
+        if not service_name:
+            msg = "Service name cannot be empty."
+            raise ValueError(msg)
+
+        if not hasattr(handler, "handle_request"):
+            msg = "Handler must implement handle_request(request)."
+            raise TypeError(msg)
+
+        self._grpc_services[service_name] = handler
+        return self
+
+    def use_grpc(self, service: GrpcService) -> Spikard:
+        """Mount all handlers from a GrpcService registry on the application."""
+        for service_name in service.list_services():
+            handler = service.get_handler(service_name)
+            if handler is not None:
+                self.add_grpc_service(service_name, handler)
+        return self
+
+    def get_grpc_services(self) -> dict[str, GrpcHandler]:
+        """Get all registered gRPC service handlers."""
+        return self._grpc_services.copy()
 
     # -- WebSocket / SSE -----------------------------------------------------------
 

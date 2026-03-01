@@ -144,6 +144,25 @@ pub fn extract_routes_from_app(py: Python<'_>, app: &Bound<'_, PyAny>) -> PyResu
     Ok(routes)
 }
 
+fn extract_grpc_registry_from_app(
+    app: &Bound<'_, PyAny>,
+) -> PyResult<Option<std::sync::Arc<spikard_http::grpc::GrpcRegistry>>> {
+    let grpc_services = app.call_method0("get_grpc_services")?;
+    let grpc_dict = grpc_services.cast::<PyDict>()?;
+    if grpc_dict.is_empty() {
+        return Ok(None);
+    }
+
+    let mut registry = spikard_http::grpc::GrpcRegistry::new();
+    for (service_name, handler) in grpc_dict.iter() {
+        let service_name: String = service_name.extract()?;
+        let grpc_handler = std::sync::Arc::new(crate::grpc::PyGrpcHandler::new(handler.unbind(), service_name.clone()));
+        registry.register(service_name, grpc_handler, spikard_http::grpc::RpcMode::Unary);
+    }
+
+    Ok(Some(std::sync::Arc::new(registry)))
+}
+
 /// Extract route metadata from a Python Route object
 fn extract_route_metadata(py: Python<'_>, route: &Bound<'_, PyAny>) -> PyResult<RouteMetadata> {
     let method: String = route.getattr("method")?.extract()?;
@@ -837,8 +856,14 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     eprintln!("[spikard] Registered {} routes", routes.len());
     eprintln!("[spikard] Listening on http://{}:{}", config.host, config.port);
 
-    let mut app_router = Server::with_handlers_and_metadata(config.clone(), routes, route_metadata)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {e}")))?;
+    let grpc_registry = extract_grpc_registry_from_app(app)?;
+
+    let mut app_router = if let Some(registry) = grpc_registry {
+        Server::with_handlers_metadata_and_grpc(config.clone(), routes, route_metadata, registry)
+    } else {
+        Server::with_handlers_and_metadata(config.clone(), routes, route_metadata)
+    }
+    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to build Axum router: {e}")))?;
 
     let websocket_handlers = app.call_method0("get_websocket_handlers")?;
     let ws_dict = websocket_handlers.cast::<pyo3::types::PyDict>()?;
