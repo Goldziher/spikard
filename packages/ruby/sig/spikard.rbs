@@ -355,7 +355,22 @@ module Spikard
   # Dependency injection handler wrapper
   module DIHandlerWrapper
     def self.wrap_handler: (Proc, Hash[String, untyped]) -> Proc
-    def self.resolve_dependency: (Hash[Symbol, untyped], untyped) -> untyped
+    def self.resolve_dependency: (
+      Hash[Symbol, untyped],
+      untyped,
+      ?Hash[String, untyped],
+      ?Hash[String, untyped],
+      ?Hash[String, untyped],
+      ?Array[String]
+    ) -> untyped
+    def self.resolve_dependency_by_key: (
+      String,
+      Hash[String, untyped],
+      untyped,
+      Hash[String, untyped],
+      Hash[String, untyped],
+      Array[String]
+    ) -> untyped
   end
 
   # Handler wrapper utilities

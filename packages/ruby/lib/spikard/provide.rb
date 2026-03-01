@@ -159,6 +159,7 @@ module Spikard
     def self.wrap_handler(handler, dependencies)
       # Extract parameter names from the handler
       params = handler.parameters.map { |_type, name| name.to_s }
+      singleton_cache = {}
 
       # Find which parameters match registered dependencies
       injectable_params = params & dependencies.keys
@@ -172,10 +173,17 @@ module Spikard
       lambda do |request|
         # Build kwargs with injected dependencies
         kwargs = {}
+        request_cache = {}
 
         injectable_params.each do |param_name|
-          dep_def = dependencies[param_name]
-          kwargs[param_name.to_sym] = resolve_dependency(dep_def, request)
+          kwargs[param_name.to_sym] = resolve_dependency_by_key(
+            param_name,
+            dependencies,
+            request,
+            request_cache,
+            singleton_cache,
+            []
+          )
         end
 
         # Call original handler with injected dependencies
@@ -199,15 +207,78 @@ module Spikard
     # @param request [Hash] Request context (unused for now, future: per-request deps)
     # @return [Object] Resolved dependency value
     # @api private
-    def self.resolve_dependency(dep_def, _request)
+    def self.resolve_dependency(dep_def, request, dependencies = nil, request_cache = nil, singleton_cache = nil, stack = [])
+      request_cache ||= {}
+      singleton_cache ||= {}
+
       case dep_def[:type]
       when :value
         dep_def[:value]
       when :factory
         factory = dep_def[:factory]
-        dep_def[:depends_on]
-        # TODO: Implement nested dependency resolution when dependencies are provided
-        factory.call
+        depends_on = Array(dep_def[:depends_on]).map(&:to_s)
+        resolved_kwargs = resolve_factory_dependencies(
+          depends_on,
+          dependencies,
+          request,
+          request_cache,
+          singleton_cache,
+          stack
+        )
+        invoke_factory(factory, depends_on, resolved_kwargs)
+      else
+        raise ArgumentError, "Unknown dependency type: #{dep_def[:type].inspect}"
+      end
+    end
+
+    def self.resolve_dependency_by_key(key, dependencies, request, request_cache, singleton_cache, stack)
+      key = key.to_s
+      dep_def = dependencies[key]
+      raise KeyError, "Missing dependency: #{key}" unless dep_def
+      raise ArgumentError, "Circular dependency detected: #{(stack + [key]).join(' -> ')}" if stack.include?(key)
+
+      if dep_def[:singleton] && singleton_cache.key?(key)
+        return singleton_cache[key]
+      end
+
+      if dep_def.fetch(:cacheable, true) && request_cache.key?(key)
+        return request_cache[key]
+      end
+
+      value = resolve_dependency(dep_def, request, dependencies, request_cache, singleton_cache, stack + [key])
+
+      singleton_cache[key] = value if dep_def[:singleton]
+      request_cache[key] = value if dep_def.fetch(:cacheable, true)
+      value
+    end
+
+    def self.resolve_factory_dependencies(depends_on, dependencies, request, request_cache, singleton_cache, stack)
+      return {} if depends_on.empty?
+
+      raise ArgumentError, 'Dependency registry is required for nested dependency resolution' unless dependencies
+
+      depends_on.each_with_object({}) do |dependency_key, resolved|
+        resolved[dependency_key.to_sym] = resolve_dependency_by_key(
+          dependency_key,
+          dependencies,
+          request,
+          request_cache,
+          singleton_cache,
+          stack
+        )
+      end
+    end
+
+    def self.invoke_factory(factory, depends_on, resolved_kwargs)
+      return factory.call if depends_on.empty?
+
+      parameters = factory.parameters
+      ordered_values = depends_on.map { |dependency_key| resolved_kwargs.fetch(dependency_key.to_sym) }
+
+      if parameters.any? { |type, _name| %i[key keyreq keyrest].include?(type) }
+        factory.call(**resolved_kwargs)
+      else
+        factory.call(*ordered_values)
       end
     end
   end

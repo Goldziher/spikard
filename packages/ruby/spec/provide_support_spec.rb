@@ -96,6 +96,90 @@ RSpec.describe Spikard::ProvideSupport do
     expect(calls).to eq(1)
   end
 
+  it 'resolves nested factory dependencies with keyword arguments' do
+    deps = {
+      'config' => { type: :value, value: { 'db_url' => 'postgresql://localhost/app' } },
+      'db_pool' => {
+        type: :factory,
+        depends_on: ['config'],
+        factory: ->(config:) { "pool:#{config['db_url']}" }
+      }
+    }
+    handler = ->(db_pool:) { db_pool }
+
+    wrapped = Spikard::DIHandlerWrapper.wrap_handler(handler, deps)
+
+    expect(wrapped.call(:request)).to eq('pool:postgresql://localhost/app')
+  end
+
+  it 'resolves nested factory dependencies with positional arguments' do
+    deps = {
+      'db_url' => { type: :value, value: 'postgresql://localhost/app' },
+      'db_pool' => {
+        type: :factory,
+        depends_on: ['db_url'],
+        factory: ->(db_url) { "pool:#{db_url}" }
+      }
+    }
+
+    expect(
+      Spikard::DIHandlerWrapper.resolve_dependency_by_key('db_pool', deps, nil, {}, {}, [])
+    ).to eq('pool:postgresql://localhost/app')
+  end
+
+  it 'caches singleton factory dependencies across calls' do
+    calls = 0
+    deps = {
+      'counter' => {
+        type: :factory,
+        singleton: true,
+        depends_on: [],
+        factory: lambda {
+          calls += 1
+          calls
+        }
+      }
+    }
+    handler = ->(counter:) { counter }
+
+    wrapped = Spikard::DIHandlerWrapper.wrap_handler(handler, deps)
+
+    expect(wrapped.call(:request)).to eq(1)
+    expect(wrapped.call(:request)).to eq(1)
+    expect(calls).to eq(1)
+  end
+
+  it 'raises on missing nested dependencies' do
+    dep_def = {
+      type: :factory,
+      depends_on: ['config'],
+      factory: ->(config:) { config }
+    }
+
+    expect do
+      Spikard::DIHandlerWrapper.resolve_dependency(dep_def, nil, {})
+    end.to raise_error(KeyError, /Missing dependency: config/)
+  end
+
+  it 'raises on circular dependencies' do
+    deps = {
+      'a' => {
+        type: :factory,
+        depends_on: ['b'],
+        factory: ->(b:) { b }
+      },
+      'b' => {
+        type: :factory,
+        depends_on: ['a'],
+        factory: ->(a:) { a }
+      }
+    }
+
+    expect do
+      Spikard::DIHandlerWrapper.resolve_dependency_by_key('a', deps, nil, {}, {}, [])
+    end.to raise_error(ArgumentError, /Circular dependency detected: a -> b -> a/)
+  end
+
   it 'marks Provide helpers as sync primitives' do
     provider = Spikard::Provide.new(proc {})
 
