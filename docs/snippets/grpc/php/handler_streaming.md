@@ -62,7 +62,7 @@ class MessageServiceHandler implements HandlerInterface
             if (!$authToken) {
                 return Response::error(
                     'Authentication required',
-                    ['grpc-status' => 'UNAUTHENTICATED']
+                    'UNAUTHENTICATED'
                 );
             }
 

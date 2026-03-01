@@ -34,5 +34,9 @@ final class Grpc
     /**
      * @param array<string, string> $metadata
      */
-    public static function createErrorResponse(string $message, array $metadata = []): Response;
+    public static function createErrorResponse(
+        string $message,
+        int|string|array $statusOrMetadata = [],
+        array $metadata = []
+    ): Response;
 }

@@ -29,6 +29,26 @@ module Spikard
   #     end
   #   end
   module Grpc
+    STATUS_CODES = {
+      'OK' => '0',
+      'CANCELLED' => '1',
+      'UNKNOWN' => '2',
+      'INVALID_ARGUMENT' => '3',
+      'DEADLINE_EXCEEDED' => '4',
+      'NOT_FOUND' => '5',
+      'ALREADY_EXISTS' => '6',
+      'PERMISSION_DENIED' => '7',
+      'RESOURCE_EXHAUSTED' => '8',
+      'FAILED_PRECONDITION' => '9',
+      'ABORTED' => '10',
+      'OUT_OF_RANGE' => '11',
+      'UNIMPLEMENTED' => '12',
+      'INTERNAL' => '13',
+      'UNAVAILABLE' => '14',
+      'DATA_LOSS' => '15',
+      'UNAUTHENTICATED' => '16'
+    }.freeze
+
     # gRPC request object
     #
     # Represents an incoming gRPC request with service/method information
@@ -76,20 +96,50 @@ module Spikard
       # Create an error response
       #
       # @param message [String] Error message
-      # @param metadata [Hash<String, String>] Optional gRPC metadata
+      # @param status_or_metadata [String, Integer, Hash<String, String>] Optional gRPC
+      #   status alias/code or metadata hash
+      # @param metadata [Hash<String, String>] Optional gRPC metadata when a status is provided
       # @return [Response] A response with error status
       #
       # @example
       #   response = Spikard::Grpc::Response.error('Method not implemented')
-      def self.error(message, metadata = {})
-        error_metadata = metadata.merge(
-          'grpc-status' => 'INTERNAL',
-          'grpc-message' => message
-        )
+      def self.error(message, status_or_metadata = {}, metadata = {})
+        status = nil
+
+        if status_or_metadata.is_a?(Hash)
+          metadata = status_or_metadata.merge(metadata)
+        else
+          status = status_or_metadata
+        end
+
+        error_metadata = metadata.transform_keys(&:to_s)
+        error_metadata['grpc-status'] =
+          normalize_status(status || error_metadata['grpc-status'] || 'INTERNAL')
+        error_metadata['grpc-message'] = message
+
         response = new(payload: '')
         response.metadata = error_metadata
         response
       end
+
+      def self.normalize_status(status)
+        case status
+        when Integer
+          status.to_s
+        when Symbol
+          normalize_status(status.to_s)
+        when String
+          normalized = status.strip
+          return normalized if /\A\d+\z/.match?(normalized)
+
+          STATUS_CODES.fetch(normalized.upcase) do
+            raise ArgumentError, "Unknown gRPC status: #{status}"
+          end
+        else
+          raise ArgumentError, "gRPC status must be a String, Symbol, or Integer (got #{status.class})"
+        end
+      end
+      private_class_method :normalize_status
     end
 
     # Base class for gRPC handlers

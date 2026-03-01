@@ -1955,9 +1955,16 @@ RSpec.describe Spikard::Grpc do
         response = Spikard::Grpc::Response.error('Something went wrong', { 'x-error-id' => 'ERR001' })
 
         expect(response).to be_a(Spikard::Grpc::Response)
-        expect(response.metadata['grpc-status']).to eq('INTERNAL')
+        expect(response.metadata['grpc-status']).to eq('13')
         expect(response.metadata['grpc-message']).to eq('Something went wrong')
         expect(response.metadata['x-error-id']).to eq('ERR001')
+      end
+
+      it 'normalizes named error status aliases to numeric metadata' do
+        response = Spikard::Grpc::Response.error('Authentication required', 'UNAUTHENTICATED')
+
+        expect(response.metadata['grpc-status']).to eq('16')
+        expect(response.metadata['grpc-message']).to eq('Authentication required')
       end
 
       it 'chains multiple response building operations' do

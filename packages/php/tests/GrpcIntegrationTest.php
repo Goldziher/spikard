@@ -146,7 +146,7 @@ final class GrpcIntegrationTest extends TestCase
         $errorRequest = Grpc::createRequest('example.Service', 'InvalidMethod', '');
         $errorResponse = $service->handleRequest($errorRequest);
         self::assertSame('', $errorResponse->payload);
-        self::assertSame('INTERNAL', $errorResponse->getMetadata('grpc-status'));
+        self::assertSame('13', $errorResponse->getMetadata('grpc-status'));
         self::assertSame('Method not implemented', $errorResponse->getMetadata('grpc-message'));
     }
 

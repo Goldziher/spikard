@@ -7,7 +7,7 @@ return Response::error('Error message');
 // With status code in metadata
 return Response::error(
     'Error message',
-    ['grpc-status' => 'INVALID_ARGUMENT']
+    'INVALID_ARGUMENT'
 );
 
 // Try-catch pattern

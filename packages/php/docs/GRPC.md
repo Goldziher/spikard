@@ -226,7 +226,11 @@ final class Grpc
         array $metadata = []
     ): Request;
     public static function createResponse(string $payload, array $metadata = []): Response;
-    public static function createErrorResponse(string $message, array $metadata = []): Response;
+    public static function createErrorResponse(
+        string $message,
+        int|string|array $statusOrMetadata = [],
+        array $metadata = []
+    ): Response;
 }
 ```
 
@@ -280,7 +284,7 @@ class AuthorizedServiceHandler implements HandlerInterface
         if (!$token || !$this->validateToken($token)) {
             return Response::error(
                 'Unauthorized',
-                ['grpc-status' => 'UNAUTHENTICATED']
+                'UNAUTHENTICATED'
             );
         }
 

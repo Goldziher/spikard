@@ -71,11 +71,17 @@ final class Grpc
      * Create an error response.
      *
      * @param string $message Error message
-     * @param array<string, string> $metadata Optional gRPC metadata
+     * @param int|string|array<string, string> $statusOrMetadata Optional gRPC status alias/code
+     *     or metadata array
+     * @param array<string, string> $metadata Optional gRPC metadata when a status is provided
      *
      */
-    public static function createErrorResponse(string $message, array $metadata = []): Response
+    public static function createErrorResponse(
+        string $message,
+        int|string|array $statusOrMetadata = [],
+        array $metadata = []
+    ): Response
     {
-        return Response::error($message, $metadata);
+        return Response::error($message, $statusOrMetadata, $metadata);
     }
 }

@@ -70,7 +70,7 @@ final class GrpcFacadeTest extends TestCase
 
         self::assertInstanceOf(Response::class, $response);
         self::assertSame('', $response->payload);
-        self::assertSame('INTERNAL', $response->getMetadata('grpc-status'));
+        self::assertSame('13', $response->getMetadata('grpc-status'));
         self::assertSame('Something went wrong', $response->getMetadata('grpc-message'));
     }
 
@@ -80,9 +80,17 @@ final class GrpcFacadeTest extends TestCase
 
         $response = Grpc::createErrorResponse('Error message', $customMetadata);
 
-        self::assertSame('INTERNAL', $response->getMetadata('grpc-status'));
+        self::assertSame('13', $response->getMetadata('grpc-status'));
         self::assertSame('Error message', $response->getMetadata('grpc-message'));
         self::assertSame('123', $response->getMetadata('request-id'));
+    }
+
+    public function testCreateErrorResponseWithNamedStatus(): void
+    {
+        $response = Grpc::createErrorResponse('Authentication required', 'UNAUTHENTICATED');
+
+        self::assertSame('16', $response->getMetadata('grpc-status'));
+        self::assertSame('Authentication required', $response->getMetadata('grpc-message'));
     }
 
     public function testFacadeCreatesNewInstances(): void

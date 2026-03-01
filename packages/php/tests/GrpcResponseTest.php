@@ -82,7 +82,7 @@ final class GrpcResponseTest extends TestCase
         $response = Response::error('Something went wrong');
 
         self::assertSame('', $response->payload);
-        self::assertSame('INTERNAL', $response->getMetadata('grpc-status'));
+        self::assertSame('13', $response->getMetadata('grpc-status'));
         self::assertSame('Something went wrong', $response->getMetadata('grpc-message'));
     }
 
@@ -92,9 +92,17 @@ final class GrpcResponseTest extends TestCase
         $response = Response::error('Error occurred', $customMetadata);
 
         self::assertSame('', $response->payload);
-        self::assertSame('INTERNAL', $response->getMetadata('grpc-status'));
+        self::assertSame('13', $response->getMetadata('grpc-status'));
         self::assertSame('Error occurred', $response->getMetadata('grpc-message'));
         self::assertSame('123', $response->getMetadata('request-id'));
+    }
+
+    public function testErrorResponseNormalizesNamedStatus(): void
+    {
+        $response = Response::error('Unauthenticated', 'UNAUTHENTICATED');
+
+        self::assertSame('16', $response->getMetadata('grpc-status'));
+        self::assertSame('Unauthenticated', $response->getMetadata('grpc-message'));
     }
 
     public function testToString(): void

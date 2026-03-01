@@ -119,10 +119,10 @@ class UserServiceHandler < Spikard::Grpc::Handler
     end
   rescue ArgumentError => e
     # Invalid argument error
-    Spikard::Grpc::Response.error(e.message, { 'grpc-status' => 'INVALID_ARGUMENT' })
+    Spikard::Grpc::Response.error(e.message, 'INVALID_ARGUMENT')
   rescue SecurityError => e
     # Authentication error
-    Spikard::Grpc::Response.error(e.message, { 'grpc-status' => 'UNAUTHENTICATED' })
+    Spikard::Grpc::Response.error(e.message, 'UNAUTHENTICATED')
   rescue StandardError => e
     # Internal error
     Spikard::Grpc::Response.error("Internal error: #{e.message}")

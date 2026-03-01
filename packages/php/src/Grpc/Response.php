@@ -14,6 +14,26 @@ namespace Spikard\Grpc;
  */
 final class Response
 {
+    private const STATUS_CODES = [
+        'OK' => '0',
+        'CANCELLED' => '1',
+        'UNKNOWN' => '2',
+        'INVALID_ARGUMENT' => '3',
+        'DEADLINE_EXCEEDED' => '4',
+        'NOT_FOUND' => '5',
+        'ALREADY_EXISTS' => '6',
+        'PERMISSION_DENIED' => '7',
+        'RESOURCE_EXHAUSTED' => '8',
+        'FAILED_PRECONDITION' => '9',
+        'ABORTED' => '10',
+        'OUT_OF_RANGE' => '11',
+        'UNIMPLEMENTED' => '12',
+        'INTERNAL' => '13',
+        'UNAVAILABLE' => '14',
+        'DATA_LOSS' => '15',
+        'UNAUTHENTICATED' => '16',
+    ];
+
     /**
      * @param string $payload Serialized protobuf message as binary string
      * @param array<string, string> $metadata gRPC metadata (headers) to include in response
@@ -28,15 +48,43 @@ final class Response
      * Create a response with error status.
      *
      * @param string $message Error message
-     * @param array<string, string> $metadata Optional metadata
+     * @param int|string|array<string, string> $statusOrMetadata Optional gRPC status alias/code
+     *     or metadata array
+     * @param array<string, string> $metadata Optional metadata when a status is provided
      *
      * @return static
      */
-    public static function error(string $message, array $metadata = []): self
+    public static function error(string $message, int|string|array $statusOrMetadata = [], array $metadata = []): self
     {
-        $metadata['grpc-status'] = 'INTERNAL';
+        $status = null;
+        if (\is_array($statusOrMetadata)) {
+            $metadata = [...$statusOrMetadata, ...$metadata];
+        } else {
+            $status = $statusOrMetadata;
+        }
+
+        $metadata['grpc-status'] = self::normalizeStatus($status ?? ($metadata['grpc-status'] ?? 'INTERNAL'));
         $metadata['grpc-message'] = $message;
         return new self('', $metadata);
+    }
+
+    private static function normalizeStatus(int|string $status): string
+    {
+        if (\is_int($status)) {
+            return (string) $status;
+        }
+
+        $normalized = \trim($status);
+        if (\ctype_digit($normalized)) {
+            return $normalized;
+        }
+
+        $upper = \strtoupper($normalized);
+        if (isset(self::STATUS_CODES[$upper])) {
+            return self::STATUS_CODES[$upper];
+        }
+
+        throw new \InvalidArgumentException(\sprintf('Unknown gRPC status: %s', $status));
     }
 
     /**
