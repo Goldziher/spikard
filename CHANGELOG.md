@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **gRPC testing ADR docs**: Updated the testing infrastructure ADR to reflect the existing multi-language `e2e/` gRPC coverage instead of documenting end-to-end coverage as future work.
 - **PHP AsyncAPI test app generation**: The CLI now exposes PHP for AsyncAPI test-app generation and `asyncapi --all` bundles, matching the existing PHP AsyncAPI generator support already advertised in the docs.
 - **Architecture/runtime docs**: Updated stale architecture and feature docs to reflect current OpenRPC/Protobuf code generation, Python auto-reload support, and Ruby WebSocket support.
+- **AsyncAPI PHP protocol errors**: The PHP AsyncAPI generator now rejects unsupported test-app protocols during generation instead of emitting a runtime stub that fails later.
 - **GraphQL server API docs**: Updated GraphQL documentation to match the breaking removal of `Server::new(...)/run()` and point to `Server::with_handlers_and_metadata(...)/run_with_config(...)`.
 - **JSON-RPC OpenRPC runtime docs**: The JSON-RPC runtime now serves `/openrpc.json` from registered method metadata, and the examples have been updated to match the implemented endpoint.
 - **OpenRPC CLI docs**: The init/codegen reference now reflects that OpenRPC 1.x schemas are supported instead of documenting them as a future enhancement.

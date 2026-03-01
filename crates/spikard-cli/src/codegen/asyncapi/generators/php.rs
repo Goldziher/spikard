@@ -116,8 +116,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                 code.push_str("echo \"SSE tests complete\\n\";\n");
             }
             _ => {
-                code.push_str(&format!("// Unsupported protocol: {protocol}\n"));
-                code.push_str("throw new RuntimeException('Protocol not implemented');\n");
+                return Err(anyhow::anyhow!("Unsupported protocol for PHP test app: {protocol}"));
             }
         }
 
@@ -344,5 +343,18 @@ mod tests {
         let code = generator.generate_handler_app(&channels, "websocket").unwrap();
         assert!(code.contains("AsyncApiHandlers"));
         assert!(code.contains("public static function"));
+    }
+
+    #[test]
+    fn test_php_generator_rejects_unsupported_test_app_protocol() {
+        let generator = PhpAsyncApiGenerator;
+        let channels = vec![ChannelInfo {
+            name: "chat".to_string(),
+            path: "/chat".to_string(),
+            messages: vec!["message".to_string()],
+        }];
+
+        let err = generator.generate_test_app(&channels, "mqtt").unwrap_err().to_string();
+        assert!(err.contains("Unsupported protocol for PHP test app"));
     }
 }
