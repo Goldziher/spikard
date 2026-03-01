@@ -5,6 +5,7 @@ from __future__ import annotations
 import inspect
 from typing import TYPE_CHECKING, Any
 
+from spikard._internal.reload import run_with_reload
 from spikard.config import ServerConfig
 from spikard.routing import HttpMethod, Router
 
@@ -167,13 +168,16 @@ class Spikard:
 
         Args:
             config: Complete server configuration.
-            reload: Enable auto-reload (not yet implemented)
+            reload: Enable process-based auto-reload for Python source changes.
 
         Raises:
             RuntimeError: If _spikard extension module not available
         """
+        resolved_config = config or self._config or ServerConfig()
+
         if reload:  # pragma: no cover
-            pass
+            run_with_reload(self, resolved_config)
+            return
 
         try:
             from _spikard import run_server  # type: ignore[attr-defined] # noqa: PLC0415
@@ -184,7 +188,7 @@ class Spikard:
                 "Or: cd packages/python && maturin develop"
             ) from e
 
-        run_server(self, config=config or self._config or ServerConfig())
+        run_server(self, config=resolved_config)
 
     async def serve(
         self,

@@ -15,6 +15,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import spikard.routing as routing_module
+from spikard import app as app_module
 from spikard import Spikard
 from spikard.config import ServerConfig
 from spikard.params import Query
@@ -237,6 +238,18 @@ def test_run_config_default_config_when_none_provided(monkeypatch: pytest.Monkey
     app.run()
 
     called_config = mock_run.call_args[1]["config"]
+    assert isinstance(called_config, ServerConfig)
+
+
+def test_run_config_reload_uses_reloader(monkeypatch: pytest.MonkeyPatch) -> None:
+    """reload=True delegates to the Python reloader helper."""
+    app = Spikard()
+    mock_reload = MagicMock()
+    monkeypatch.setattr(app_module, "run_with_reload", mock_reload)
+
+    app.run(reload=True)
+
+    called_config = mock_reload.call_args[0][1]
     assert isinstance(called_config, ServerConfig)
 
 
