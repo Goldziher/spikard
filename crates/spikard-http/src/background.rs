@@ -782,7 +782,6 @@ mod tests {
         );
     }
 
-    // TODO: FAILING TEST - Architectural Issue
     #[tokio::test]
     async fn test_shutdown_drains_queued_tasks() {
         let config = BackgroundTaskConfig {

@@ -16,7 +16,6 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use serde_json::{Map as JsonMap, Value, json};
 use tower::ServiceExt;
-// TODO: Update to use current handler trait API
 #[cfg(feature = "di")]
 use crate::di::NO_DI_DEP_KEY;
 use crate::test_sse;
