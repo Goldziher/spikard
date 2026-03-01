@@ -31,6 +31,7 @@ export type {
 } from "./config";
 export {
 	createServiceHandler,
+	GrpcService,
 	createUnaryHandler,
 	GrpcError,
 	type GrpcHandler,

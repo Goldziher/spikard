@@ -183,7 +183,7 @@ if __name__ == "__main__":
 === "TypeScript"
 
 ```typescript
-import { Spikard, runServer, GrpcHandler } from "spikard";
+import { Spikard, runServer, GrpcHandler, GrpcService } from "spikard";
 
 const config = {
   host: "0.0.0.0",
@@ -201,14 +201,13 @@ app.addRoute(
 
 // gRPC service
 class UserServiceHandler implements GrpcHandler {
-  serviceName = "com.example.UserService";
-
   async handleRequest(request) {
     // Handle gRPC request
   }
 }
 
-app.registerGrpcService(new UserServiceHandler());
+const grpcService = new GrpcService();
+grpcService.registerHandler("com.example.UserService", new UserServiceHandler());
 
 runServer(app, config);
 ```

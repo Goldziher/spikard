@@ -131,13 +131,9 @@ class UserServiceHandler implements GrpcHandler {
 ## Registration
 
 ```typescript
-import { createApp } from 'spikard';
+import { GrpcService } from 'spikard';
 
-const app = createApp();
+const grpcService = new GrpcService();
 
-// Register gRPC handler
-app.registerGrpcHandler('userservice.UserService', userServiceHandler);
-
-// Server ready
-await app.listen(50051);
+grpcService.registerHandler('userservice.UserService', userServiceHandler);
 ```

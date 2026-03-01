@@ -13,14 +13,14 @@
  *
  * # Current Limitations
  *
- * - Only unary (request-response) calls are currently supported
- * - Streaming (client, server, or bidirectional) is not yet implemented
+ * - Public TypeScript helpers currently cover unary request-response handlers and service routing
+ * - Streaming helper types are not yet exposed in the TypeScript package
  * - Binary metadata values are not accessible (only ASCII string metadata)
  *
  * # Example
  *
  * ```typescript
- * import { GrpcHandler, GrpcRequest, GrpcResponse } from 'spikard';
+ * import { GrpcHandler, GrpcRequest, GrpcResponse, GrpcService } from 'spikard';
  * import * as $protobuf from 'protobufjs';
  *
  * // Generated protobuf types (using protobufjs)
@@ -58,9 +58,9 @@
  *   }
  * }
  *
- * // Register handler with Spikard
- * const handler = new UserServiceHandler();
- * app.registerGrpcHandler('mypackage.UserService', handler);
+ * // Register handler in a service registry
+ * const service = new GrpcService();
+ * service.registerHandler('mypackage.UserService', new UserServiceHandler());
  * ```
  */
 
@@ -300,6 +300,94 @@ export interface GrpcServiceConfig {
 	 * An object implementing the GrpcHandler interface.
 	 */
 	handler: GrpcHandler;
+}
+
+/**
+ * Service registry for gRPC handlers
+ *
+ * Mirrors the registry helpers exposed by the other language bindings.
+ * A single registry can route requests for multiple fully-qualified gRPC services.
+ */
+export class GrpcService implements GrpcHandler {
+	private readonly handlers = new Map<string, GrpcHandler>();
+
+	/**
+	 * Register a handler for a fully-qualified service name.
+	 *
+	 * @param serviceName - Service name such as `mypackage.UserService`
+	 * @param handler - Handler implementation for that service
+	 * @returns The registry for chaining
+	 */
+	registerHandler(serviceName: string, handler: GrpcHandler): this {
+		if (!serviceName) {
+			throw new Error("Service name cannot be empty");
+		}
+		if (typeof handler?.handleRequest !== "function") {
+			throw new TypeError("Handler must implement handleRequest(request)");
+		}
+
+		this.handlers.set(serviceName, handler);
+		return this;
+	}
+
+	/**
+	 * Remove a handler from the registry.
+	 *
+	 * @param serviceName - Fully-qualified service name
+	 */
+	unregisterHandler(serviceName: string): void {
+		if (!this.handlers.delete(serviceName)) {
+			throw new Error(`No handler registered for service: ${serviceName}`);
+		}
+	}
+
+	/**
+	 * Get the handler for a service name.
+	 *
+	 * @param serviceName - Fully-qualified service name
+	 * @returns The registered handler, if present
+	 */
+	getHandler(serviceName: string): GrpcHandler | undefined {
+		return this.handlers.get(serviceName);
+	}
+
+	/**
+	 * List all registered service names.
+	 *
+	 * @returns Fully-qualified service names
+	 */
+	serviceNames(): string[] {
+		return Array.from(this.handlers.keys());
+	}
+
+	/**
+	 * Check whether a service is registered.
+	 *
+	 * @param serviceName - Fully-qualified service name
+	 * @returns True when a handler is registered for the service
+	 */
+	hasHandler(serviceName: string): boolean {
+		return this.handlers.has(serviceName);
+	}
+
+	/**
+	 * Route a request to the registered service handler.
+	 *
+	 * @param request - Incoming gRPC request
+	 * @returns Promise resolving to the handler response
+	 * @throws GrpcError when no service is registered
+	 */
+	async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
+		const handler = this.getHandler(request.serviceName);
+		if (!handler) {
+			throw new GrpcError(
+				GrpcStatusCode.UNIMPLEMENTED,
+				`No handler registered for service: ${request.serviceName}`,
+			);
+		}
+
+		return handler.handleRequest(request);
+	}
 }
 
 /**

@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	createServiceHandler,
+	GrpcService,
 	createUnaryHandler,
 	GrpcError,
 	type GrpcHandler,
@@ -133,6 +134,77 @@ describe("GrpcHandler", () => {
 
 		await expect(handler.handleRequest(request)).rejects.toThrow(GrpcError);
 		await expect(handler.handleRequest(request)).rejects.toThrow("Not found");
+	});
+});
+
+describe("GrpcService", () => {
+	it("should register and route handlers by service name", async () => {
+		const service = new GrpcService();
+		const handler: GrpcHandler = {
+			async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
+				return {
+					payload: Buffer.from(`handled:${request.serviceName}:${request.methodName}`),
+				};
+			},
+		};
+
+		service.registerHandler("test.UserService", handler);
+
+		const response = await service.handleRequest({
+			serviceName: "test.UserService",
+			methodName: "GetUser",
+			payload: Buffer.from([]),
+			metadata: {},
+		});
+
+		expect(response.payload.toString()).toBe("handled:test.UserService:GetUser");
+		expect(service.hasHandler("test.UserService")).toBe(true);
+		expect(service.serviceNames()).toEqual(["test.UserService"]);
+		expect(service.getHandler("test.UserService")).toBe(handler);
+	});
+
+	it("should reject missing service registrations", async () => {
+		const service = new GrpcService();
+
+		await expect(
+			service.handleRequest({
+				serviceName: "missing.Service",
+				methodName: "GetUser",
+				payload: Buffer.from([]),
+				metadata: {},
+			}),
+		).rejects.toThrow(GrpcError);
+	});
+
+	it("should validate registrations", () => {
+		const service = new GrpcService();
+		const handler = {
+			async handleRequest(_request: GrpcRequest): Promise<GrpcResponse> {
+				return { payload: Buffer.from([]) };
+			},
+		};
+
+		expect(() => service.registerHandler("", handler)).toThrow("Service name cannot be empty");
+		expect(() => service.registerHandler("test.UserService", {} as GrpcHandler)).toThrow(
+			"Handler must implement handleRequest(request)",
+		);
+	});
+
+	it("should unregister handlers", () => {
+		const service = new GrpcService();
+		const handler: GrpcHandler = {
+			async handleRequest(_request: GrpcRequest): Promise<GrpcResponse> {
+				return { payload: Buffer.from([]) };
+			},
+		};
+
+		service.registerHandler("test.UserService", handler);
+		service.unregisterHandler("test.UserService");
+
+		expect(service.hasHandler("test.UserService")).toBe(false);
+		expect(() => service.unregisterHandler("test.UserService")).toThrow(
+			"No handler registered for service: test.UserService",
+		);
 	});
 });
 

@@ -118,13 +118,13 @@ await ws.close();
 
 ## gRPC Support
 
-Register gRPC services with `addGrpcService`:
+Register gRPC services with `GrpcService`:
 
 ```typescript
-import { GrpcRequest, GrpcResponse } from "@spikard/node";
+import { GrpcRequest, GrpcResponse, GrpcService } from "@spikard/node";
 
 const userService = {
-  GetUser: async (request: GrpcRequest): Promise<GrpcResponse> => {
+  async handleRequest(request: GrpcRequest): Promise<GrpcResponse> => {
     // Deserialize request using protobufjs
     const req = UserService.GetUserRequest.decode(request.payload);
 
@@ -136,16 +136,14 @@ const userService = {
       payload: Buffer.from(UserService.User.encode(user).finish()),
       metadata: { "x-user-id": String(user.id) }
     };
-  }
+  },
 };
 
-app.addGrpcService("mypackage.UserService", userService);
+const grpcService = new GrpcService();
+grpcService.registerHandler("mypackage.UserService", userService);
 ```
 
-gRPC streaming types available:
-- `GrpcClientStreamRequest`: Collect client stream messages before returning response
-- `GrpcBidiStreamRequest/GrpcBidiStreamResponse`: Bidirectional streaming with message arrays
-- `GrpcMessageStream`: Async iterator for server streaming (async next())
+Current TypeScript gRPC helpers cover unary handlers and service routing. Streaming helper types are not yet part of the public package surface.
 
 ## Server Configuration
 
