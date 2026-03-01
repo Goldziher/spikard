@@ -174,7 +174,7 @@ impl CodegenEngine {
                     }
                     TargetLanguage::Ruby => super::protobuf::generate_ruby_protobuf(&schema, &proto_target)?,
                     TargetLanguage::Php => super::protobuf::generate_php_protobuf(&schema, &proto_target)?,
-                    TargetLanguage::Rust => bail!("Rust protobuf generation not yet implemented"),
+                    TargetLanguage::Rust => super::protobuf::generate_rust_protobuf(&schema, &proto_target)?,
                 };
 
                 Ok(CodegenOutcome::Files(vec![Self::write_asset(

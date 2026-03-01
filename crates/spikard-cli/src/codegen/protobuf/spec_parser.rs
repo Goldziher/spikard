@@ -221,6 +221,9 @@ pub fn parse_proto_schema_string(content: &str) -> Result<ProtobufSchema> {
     // Extract imports
     schema.imports = extract_imports(content);
 
+    // Extract top-level definitions
+    parse_top_level_definitions(content, &mut schema)?;
+
     Ok(schema)
 }
 
@@ -274,6 +277,337 @@ fn extract_imports(content: &str) -> Vec<String> {
     imports
 }
 
+fn parse_top_level_definitions(content: &str, schema: &mut ProtobufSchema) -> Result<()> {
+    let lines: Vec<&str> = content.lines().collect();
+    let mut index = 0;
+    let mut pending_comment: Vec<String> = Vec::new();
+
+    while index < lines.len() {
+        let trimmed = strip_inline_comment(lines[index]).trim();
+
+        if trimmed.is_empty() {
+            if !pending_comment.is_empty() {
+                pending_comment.clear();
+            }
+            index += 1;
+            continue;
+        }
+
+        if let Some(comment) = lines[index].trim().strip_prefix("//") {
+            pending_comment.push(comment.trim().to_string());
+            index += 1;
+            continue;
+        }
+
+        if trimmed.starts_with("message ") {
+            let (message, next_index) = parse_message_block(&lines, index, take_comment(&mut pending_comment))?;
+            schema.messages.insert(message.name.clone(), message);
+            index = next_index;
+            continue;
+        }
+
+        if trimmed.starts_with("enum ") {
+            let (enum_def, next_index) = parse_enum_block(&lines, index, take_comment(&mut pending_comment))?;
+            schema.enums.insert(enum_def.name.clone(), enum_def);
+            index = next_index;
+            continue;
+        }
+
+        if trimmed.starts_with("service ") {
+            let (service, next_index) = parse_service_block(&lines, index, take_comment(&mut pending_comment))?;
+            schema.services.insert(service.name.clone(), service);
+            index = next_index;
+            continue;
+        }
+
+        pending_comment.clear();
+        index += 1;
+    }
+
+    Ok(())
+}
+
+fn parse_message_block(lines: &[&str], start: usize, description: Option<String>) -> Result<(MessageDef, usize)> {
+    let header = strip_inline_comment(lines[start]).trim();
+    let name = extract_block_name(header, "message")
+        .ok_or_else(|| anyhow!("Invalid message declaration: {}", lines[start].trim()))?;
+
+    let mut message = MessageDef {
+        name,
+        fields: Vec::new(),
+        nested_messages: HashMap::new(),
+        nested_enums: HashMap::new(),
+        description,
+    };
+
+    let mut index = start + 1;
+    let mut depth = usize::from(header.contains('{'));
+    let mut pending_comment: Vec<String> = Vec::new();
+
+    while index < lines.len() {
+        let raw_line = lines[index];
+        let line = strip_inline_comment(raw_line);
+        let trimmed = line.trim();
+
+        if trimmed.starts_with("//") {
+            if let Some(comment) = raw_line.trim().strip_prefix("//") {
+                pending_comment.push(comment.trim().to_string());
+            }
+            index += 1;
+            continue;
+        }
+
+        let opens = trimmed.matches('{').count();
+        let closes = trimmed.matches('}').count();
+
+        if depth == 1 && !trimmed.is_empty() && !trimmed.starts_with("message ") && !trimmed.starts_with("enum ") {
+            if let Some(field) = parse_field(trimmed, take_comment(&mut pending_comment))? {
+                message.fields.push(field);
+            }
+        }
+
+        depth += opens;
+        depth = depth.saturating_sub(closes);
+        index += 1;
+
+        if depth == 0 {
+            break;
+        }
+    }
+
+    Ok((message, index))
+}
+
+fn parse_enum_block(lines: &[&str], start: usize, description: Option<String>) -> Result<(EnumDef, usize)> {
+    let header = strip_inline_comment(lines[start]).trim();
+    let name = extract_block_name(header, "enum")
+        .ok_or_else(|| anyhow!("Invalid enum declaration: {}", lines[start].trim()))?;
+
+    let mut enum_def = EnumDef {
+        name,
+        values: Vec::new(),
+        description,
+    };
+
+    let mut index = start + 1;
+    let mut depth = usize::from(header.contains('{'));
+    let mut pending_comment: Vec<String> = Vec::new();
+
+    while index < lines.len() {
+        let raw_line = lines[index];
+        let line = strip_inline_comment(raw_line);
+        let trimmed = line.trim();
+
+        if trimmed.starts_with("//") {
+            if let Some(comment) = raw_line.trim().strip_prefix("//") {
+                pending_comment.push(comment.trim().to_string());
+            }
+            index += 1;
+            continue;
+        }
+
+        let opens = trimmed.matches('{').count();
+        let closes = trimmed.matches('}').count();
+
+        if depth == 1 && trimmed.contains('=') && trimmed.ends_with(';') {
+            if let Some(value) = parse_enum_value(trimmed, take_comment(&mut pending_comment))? {
+                enum_def.values.push(value);
+            }
+        }
+
+        depth += opens;
+        depth = depth.saturating_sub(closes);
+        index += 1;
+
+        if depth == 0 {
+            break;
+        }
+    }
+
+    Ok((enum_def, index))
+}
+
+fn parse_service_block(lines: &[&str], start: usize, description: Option<String>) -> Result<(ServiceDef, usize)> {
+    let header = strip_inline_comment(lines[start]).trim();
+    let name = extract_block_name(header, "service")
+        .ok_or_else(|| anyhow!("Invalid service declaration: {}", lines[start].trim()))?;
+
+    let mut service = ServiceDef {
+        name,
+        methods: Vec::new(),
+        description,
+    };
+
+    let mut index = start + 1;
+    let mut depth = usize::from(header.contains('{'));
+    let mut pending_comment: Vec<String> = Vec::new();
+
+    while index < lines.len() {
+        let raw_line = lines[index];
+        let line = strip_inline_comment(raw_line);
+        let trimmed = line.trim();
+
+        if trimmed.starts_with("//") {
+            if let Some(comment) = raw_line.trim().strip_prefix("//") {
+                pending_comment.push(comment.trim().to_string());
+            }
+            index += 1;
+            continue;
+        }
+
+        let opens = trimmed.matches('{').count();
+        let closes = trimmed.matches('}').count();
+
+        if depth == 1 && trimmed.starts_with("rpc ") {
+            if let Some(method) = parse_rpc_method(trimmed, take_comment(&mut pending_comment))? {
+                service.methods.push(method);
+            }
+        }
+
+        depth += opens;
+        depth = depth.saturating_sub(closes);
+        index += 1;
+
+        if depth == 0 {
+            break;
+        }
+    }
+
+    Ok((service, index))
+}
+
+fn parse_field(line: &str, description: Option<String>) -> Result<Option<FieldDef>> {
+    if !line.ends_with(';') || line.starts_with("option ") || line.starts_with("reserved ") {
+        return Ok(None);
+    }
+
+    let without_semicolon = line.trim_end_matches(';');
+    let declaration = without_semicolon.split('[').next().unwrap_or(without_semicolon).trim();
+    let parts: Vec<&str> = declaration.split_whitespace().collect();
+
+    if parts.len() < 4 {
+        return Ok(None);
+    }
+
+    let (label, type_index) = match parts[0] {
+        "repeated" => (FieldLabel::Repeated, 1),
+        "optional" => (FieldLabel::Optional, 1),
+        _ => (FieldLabel::None, 0),
+    };
+
+    if parts.len() <= type_index + 2 {
+        return Ok(None);
+    }
+
+    let field_type = parse_proto_type(parts[type_index]);
+    let field_name = parts[type_index + 1].to_string();
+    let number = parts[type_index + 3]
+        .parse::<u32>()
+        .with_context(|| format!("Invalid field number in line: {line}"))?;
+
+    Ok(Some(FieldDef {
+        name: field_name,
+        number,
+        field_type,
+        label,
+        default_value: None,
+        description,
+    }))
+}
+
+fn parse_enum_value(line: &str, description: Option<String>) -> Result<Option<EnumValue>> {
+    let without_semicolon = line.trim_end_matches(';').trim();
+    let (name, number) = without_semicolon
+        .split_once('=')
+        .ok_or_else(|| anyhow!("Invalid enum value declaration: {line}"))?;
+
+    Ok(Some(EnumValue {
+        name: name.trim().to_string(),
+        number: number
+            .trim()
+            .parse::<i32>()
+            .with_context(|| format!("Invalid enum value number in line: {line}"))?,
+        description,
+    }))
+}
+
+fn parse_rpc_method(line: &str, description: Option<String>) -> Result<Option<MethodDef>> {
+    let without_semicolon = line.trim_end_matches(';').trim();
+    let after_rpc = without_semicolon
+        .strip_prefix("rpc ")
+        .ok_or_else(|| anyhow!("Invalid RPC declaration: {line}"))?;
+    let method_name_end = after_rpc
+        .find('(')
+        .ok_or_else(|| anyhow!("Invalid RPC declaration: {line}"))?;
+    let method_name = after_rpc[..method_name_end].trim().to_string();
+    let rest = &after_rpc[method_name_end + 1..];
+    let request_end = rest
+        .find(')')
+        .ok_or_else(|| anyhow!("Invalid RPC request declaration: {line}"))?;
+    let request_decl = rest[..request_end].trim();
+    let after_request = rest[request_end + 1..].trim();
+    let returns_decl = after_request
+        .strip_prefix("returns")
+        .ok_or_else(|| anyhow!("Invalid RPC returns declaration: {line}"))?
+        .trim();
+    let returns_decl = returns_decl
+        .strip_prefix('(')
+        .ok_or_else(|| anyhow!("Invalid RPC returns declaration: {line}"))?;
+    let response_end = returns_decl
+        .find(')')
+        .ok_or_else(|| anyhow!("Invalid RPC returns declaration: {line}"))?;
+    let response_decl = returns_decl[..response_end].trim();
+
+    let (input_streaming, input_type) = parse_streaming_type(request_decl);
+    let (output_streaming, output_type) = parse_streaming_type(response_decl);
+
+    Ok(Some(MethodDef {
+        name: method_name,
+        input_type,
+        output_type,
+        input_streaming,
+        output_streaming,
+        description,
+    }))
+}
+
+fn parse_streaming_type(declaration: &str) -> (bool, String) {
+    if let Some(rest) = declaration.strip_prefix("stream ") {
+        (true, rest.trim().to_string())
+    } else {
+        (false, declaration.trim().to_string())
+    }
+}
+
+fn extract_block_name(header: &str, keyword: &str) -> Option<String> {
+    header
+        .strip_prefix(keyword)?
+        .trim()
+        .strip_suffix('{')
+        .unwrap_or_else(|| header.strip_prefix(keyword).unwrap().trim())
+        .split_whitespace()
+        .next()
+        .map(std::string::ToString::to_string)
+}
+
+fn strip_inline_comment(line: &str) -> &str {
+    if let Some((before, _)) = line.split_once("//") {
+        before
+    } else {
+        line
+    }
+}
+
+fn take_comment(pending_comment: &mut Vec<String>) -> Option<String> {
+    if pending_comment.is_empty() {
+        None
+    } else {
+        let comment = pending_comment.join(" ");
+        pending_comment.clear();
+        Some(comment)
+    }
+}
+
 /// Helper function to parse type name from proto syntax
 #[allow(dead_code)]
 fn parse_proto_type(type_str: &str) -> ProtoType {
@@ -320,6 +654,9 @@ message User {
         let schema = parse_proto_schema_string(proto).expect("Failed to parse proto");
         assert_eq!(schema.syntax, "proto3");
         assert_eq!(schema.package, Some("example".to_string()));
+        let user = schema.messages.get("User").expect("message should be parsed");
+        assert_eq!(user.fields.len(), 3);
+        assert_eq!(user.fields[0].name, "id");
     }
 
     #[test]
@@ -373,6 +710,33 @@ message User {
             ProtoType::Message(name) => assert_eq!(name, "User"),
             _ => panic!("Expected Message type"),
         }
+    }
+
+    #[test]
+    fn test_parse_service_and_enum() {
+        let proto = r#"syntax = "proto3";
+
+package example;
+
+enum Status {
+  STATUS_UNKNOWN = 0;
+  STATUS_ACTIVE = 1;
+}
+
+service UserService {
+  rpc GetUser (GetUserRequest) returns (User);
+  rpc ListUsers (ListUsersRequest) returns (stream User);
+}
+"#;
+
+        let schema = parse_proto_schema_string(proto).expect("Failed to parse proto");
+        let status = schema.enums.get("Status").expect("enum should be parsed");
+        assert_eq!(status.values.len(), 2);
+
+        let service = schema.services.get("UserService").expect("service should be parsed");
+        assert_eq!(service.methods.len(), 2);
+        assert_eq!(service.methods[0].name, "GetUser");
+        assert!(service.methods[1].output_streaming);
     }
 
     #[test]
