@@ -109,6 +109,10 @@ $service->registerHandler('example.CommentService', new CommentServiceHandler())
 
 // Check registered services
 echo "Registered services: " . implode(', ', $service->getServiceNames());
+
+// Mount them on the server application
+$app = new \Spikard\App();
+$app = $app->useGrpc($service);
 ```
 
 ### 3. Handle Requests

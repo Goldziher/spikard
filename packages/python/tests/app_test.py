@@ -10,7 +10,7 @@ Tests cover:
 from __future__ import annotations
 
 import builtins
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -32,6 +32,22 @@ def _mock_run_server_import(monkeypatch: pytest.MonkeyPatch, mock_run: MagicMock
         if name == "_spikard":
             mock_module = MagicMock()
             mock_module.run_server = mock_run
+            return mock_module
+        if callable(original_import):
+            return original_import(name, *args, **kwargs)
+        return None
+
+    monkeypatch.setattr(builtins, "__import__", custom_import)
+
+
+def _mock_run_server_async_import(monkeypatch: pytest.MonkeyPatch, mock_run: MagicMock) -> None:
+    """Patch the import of run_server_async inside the serve() method."""
+    original_import: object = builtins.__import__
+
+    def custom_import(name: str, *args: object, **kwargs: object) -> object:
+        if name == "_spikard":
+            mock_module = MagicMock()
+            mock_module.run_server_async = mock_run
             return mock_module
         if callable(original_import):
             return original_import(name, *args, **kwargs)
@@ -289,6 +305,20 @@ def test_run_config_reload_uses_reloader(monkeypatch: pytest.MonkeyPatch) -> Non
 
     called_config = mock_reload.call_args[0][1]
     assert isinstance(called_config, ServerConfig)
+
+
+@pytest.mark.anyio
+async def test_serve_uses_extension_async_runner(monkeypatch: pytest.MonkeyPatch) -> None:
+    """serve() awaits the extension async runner with the resolved config."""
+    app = Spikard(config=ServerConfig(port=7000))
+    mock_run = AsyncMock()
+    _mock_run_server_async_import(monkeypatch, mock_run)
+
+    await app.serve()
+
+    called_config = mock_run.call_args[1]["config"]
+    assert isinstance(called_config, ServerConfig)
+    assert called_config.port == 7000
 
 
 def test_run_config_app_config_used_when_no_explicit_config(monkeypatch: pytest.MonkeyPatch) -> None:

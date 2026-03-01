@@ -790,18 +790,47 @@ fn build_dependency_container(
 #[pyfunction]
 #[pyo3(signature = (app, config))]
 fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>) -> PyResult<()> {
+    let mut config = extract_server_config(py, config)?;
+    init_python_event_loop()?;
+    let app_router = build_python_server_router(py, app, &mut config)?;
+
+    py.detach(|| {
+        spikard_http::build_server_runtime(&config)
+            .map_err(|e| {
+                pyo3::Python::attach(|_py| {
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {e}"))
+                })
+            })?
+            .block_on(serve_python_server(config, app_router))
+    })
+}
+
+#[pyfunction]
+#[pyo3(signature = (app, config))]
+fn run_server_async(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    let mut config = extract_server_config(py, config)?;
+    init_python_event_loop()?;
+    let app_router = build_python_server_router(py, app, &mut config)?;
+
+    pyo3_async_runtimes::tokio::future_into_py(py, async move {
+        serve_python_server(config, app_router).await?;
+        Python::attach(|py| Ok(py.None()))
+    })
+    .map(|bound| bound.unbind())
+}
+
+fn build_python_server_router(
+    py: Python<'_>,
+    app: &Bound<'_, PyAny>,
+    config: &mut spikard_http::ServerConfig,
+) -> PyResult<axum::Router> {
     use spikard_http::{Route, Server};
     use std::sync::Arc;
-
-    let mut config = extract_server_config(py, config)?;
-
-    init_python_event_loop()?;
 
     let routes_with_handlers = extract_routes_from_app(py, app)?;
 
     let hooks_dict = app.call_method0("get_lifecycle_hooks")?;
     let lifecycle_hooks = crate::lifecycle::build_lifecycle_hooks(py, &hooks_dict)?;
-
     config.lifecycle_hooks = Some(Arc::new(lifecycle_hooks));
 
     #[cfg(feature = "di")]
@@ -813,7 +842,6 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     }
 
     let schema_registry = spikard_http::SchemaRegistry::new();
-
     let route_metadata: Vec<RouteMetadata> = routes_with_handlers
         .iter()
         .map(|route| route.metadata.clone())
@@ -857,7 +885,6 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
     eprintln!("[spikard] Listening on http://{}:{}", config.host, config.port);
 
     let grpc_registry = extract_grpc_registry_from_app(app)?;
-
     let mut app_router = if let Some(registry) = grpc_registry {
         Server::with_handlers_metadata_and_grpc(config.clone(), routes, route_metadata, registry)
     } else {
@@ -893,54 +920,37 @@ fn run_server(py: Python<'_>, app: &Bound<'_, PyAny>, config: &Bound<'_, PyAny>)
         );
     }
 
-    py.detach(|| {
-        spikard_http::build_server_runtime(&config)
-            .map_err(|e| {
-                pyo3::Python::attach(|_py| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to create Tokio runtime: {e}"))
-                })
-            })?
-            .block_on(async {
-                let addr = format!("{}:{}", config.host, config.port);
-                let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
-                    pyo3::Python::attach(|_py| {
-                        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid socket address {addr}: {e}"))
-                    })
-                })?;
+    Ok(app_router)
+}
 
-                let listener = tokio::net::TcpListener::bind(socket_addr).await.map_err(|e| {
-                    pyo3::Python::attach(|_py| {
-                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
-                            "Failed to bind to {}:{}: {}",
-                            config.host, config.port, e
-                        ))
-                    })
-                })?;
+async fn serve_python_server(config: spikard_http::ServerConfig, app_router: axum::Router) -> PyResult<()> {
+    let addr = format!("{}:{}", config.host, config.port);
+    let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid socket address {addr}: {e}"))
+    })?;
 
-                eprintln!("[spikard] Server listening on {socket_addr}");
+    let listener = tokio::net::TcpListener::bind(socket_addr).await.map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Failed to bind to {}:{}: {}",
+            config.host, config.port, e
+        ))
+    })?;
 
-                let background_runtime = spikard_http::BackgroundRuntime::start(config.background_tasks.clone()).await;
-                crate::background::install_handle(background_runtime.handle());
+    eprintln!("[spikard] Server listening on {socket_addr}");
 
-                let serve_result = axum::serve(listener, app_router).await;
+    let background_runtime = spikard_http::BackgroundRuntime::start(config.background_tasks.clone()).await;
+    crate::background::install_handle(background_runtime.handle());
 
-                crate::background::clear_handle();
-                let shutdown_result = background_runtime.shutdown().await;
+    let serve_result = axum::serve(listener, app_router).await;
 
-                serve_result.map_err(|e| {
-                    pyo3::Python::attach(|_py| {
-                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {e}"))
-                    })
-                })?;
+    crate::background::clear_handle();
+    let shutdown_result = background_runtime.shutdown().await;
 
-                shutdown_result.map_err(|_| {
-                    pyo3::Python::attach(|_py| {
-                        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-                            "Failed to drain background tasks during shutdown",
-                        )
-                    })
-                })
-            })
+    serve_result
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {e}")))?;
+
+    shutdown_result.map_err(|_| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Failed to drain background tasks during shutdown")
     })
 }
 
@@ -961,6 +971,7 @@ pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(create_test_client, m)?)?;
     m.add_function(wrap_pyfunction!(process, m)?)?;
     m.add_function(wrap_pyfunction!(run_server, m)?)?;
+    m.add_function(wrap_pyfunction!(run_server_async, m)?)?;
 
     #[cfg(feature = "graphql")]
     {

@@ -187,7 +187,7 @@ class UserServiceHandlerTest extends TestCase
 
         $this->assertTrue($response->isError());
         $this->assertStringContainsString('Authentication required', $response->errorMessage);
-        $this->assertEquals('UNAUTHENTICATED', $response->getMetadata('grpc-status'));
+        $this->assertEquals('16', $response->getMetadata('grpc-status'));
     }
 
     public function testUnknownMethod(): void

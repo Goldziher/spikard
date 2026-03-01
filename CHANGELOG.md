@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Rust protobuf code generation**: The CLI now generates Rust message structs, enums, and tonic-style service traits for `spikard generate protobuf --lang rust` instead of failing at runtime.
 - **Python auto-reload runtime**: `Spikard.run(reload=True)` now starts a parent reloader process that watches Python source files and restarts the child server on changes instead of silently ignoring the flag.
+- **Python async server startup**: `Spikard.serve()` now calls a real `_spikard.run_server_async(...)` implementation instead of importing a missing extension symbol.
 - **Node gRPC app registration**: Node applications can now mount unary gRPC service handlers through `app.addGrpcService(...)` / `app.useGrpc(...)`, and the Rust HTTP runtime now routes registered gRPC traffic through the shared server stack.
 - **Python gRPC app registration**: Python applications can now mount unary gRPC service handlers through `app.add_grpc_service(...)` / `app.use_grpc(...)`, and the Rust HTTP runtime now routes registered gRPC traffic through the shared server stack.
 - **Ruby gRPC app registration**: Ruby applications can now mount unary gRPC service handlers through `app.add_grpc_service(...)` / `app.use_grpc(...)`, and the Rust HTTP runtime now routes registered gRPC traffic through the shared server stack.

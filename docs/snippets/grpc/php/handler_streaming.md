@@ -548,7 +548,7 @@ class ClientStreamHandlerTest extends TestCase
         // Should return auth error
         $this->assertTrue($response->isError());
         $this->assertStringContainsString('Authentication required', $response->errorMessage);
-        $this->assertEquals('UNAUTHENTICATED', $response->getMetadata('grpc-status'));
+        $this->assertEquals('16', $response->getMetadata('grpc-status'));
     }
 
     public function testClientStreamValidatesItems(): void

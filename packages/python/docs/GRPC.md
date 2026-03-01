@@ -129,6 +129,10 @@ service.register_handler("example.CommentService", CommentServiceHandler())
 # Check registered services
 print(f"Registered services: {service.list_services()}")
 # Output: ['example.UserService', 'example.PostService', 'example.CommentService']
+
+# Mount them on the server application
+app = Spikard()
+app.use_grpc(service)
 ```
 
 ### 3. Handle Requests
