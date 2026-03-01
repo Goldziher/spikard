@@ -13,7 +13,7 @@ A Rust-centric multi-language toolkit for building and validating typed web serv
 
 ## Features
 
-- **Multi-Language Code Generation**: Generate type-safe handlers from OpenAPI 3.0.x, GraphQL SDL, gRPC/Protobuf, AsyncAPI 2.x, or OpenRPC 1.x specifications
+- **Multi-Language Code Generation**: Generate type-safe handlers from OpenAPI 3.0.x, GraphQL SDL, gRPC/Protobuf, AsyncAPI 3.0.0, or OpenRPC 1.x specifications
 - **Project Scaffolding**: `spikard init` bootstraps starter projects with language-specific tooling
 - **Automatic Quality Validation**: Syntax, type checking, and linting automatically applied to generated code
 - **Zero-Copy Bindings**: Performance-optimized FFI layers (PyO3, napi-rs, magnus, ext-php-rs, Rustler)
@@ -186,7 +186,7 @@ Spikard generates type-safe handlers from multiple API specifications:
 | OpenAPI 3.0.x | ✅ | Python, TypeScript, Ruby, PHP |
 | GraphQL SDL | ✅ | Python, TypeScript, Ruby, PHP, Rust |
 | gRPC/Protobuf | ✅ | Python, TypeScript, Ruby, PHP, Rust |
-| AsyncAPI 2.x | ✅ | Python, TypeScript, Ruby, PHP |
+| AsyncAPI 3.0.0 | ✅ | Python, TypeScript, Ruby, PHP |
 | OpenRPC 1.x | ✅ | Python, TypeScript, Ruby, PHP |
 
 All generated code is automatically validated for syntax, types, and style before output.

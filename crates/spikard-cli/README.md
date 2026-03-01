@@ -63,7 +63,7 @@ Generate code from API specifications:
 # OpenAPI 3.0+
 spikard generate openapi ./openapi.json --lang python --output ./generated
 
-# AsyncAPI 2.0+
+# AsyncAPI 3.0.0
 spikard generate asyncapi ./asyncapi.json --lang python --output ./generated
 
 # GraphQL

@@ -320,7 +320,7 @@ When a schema is provided:
 **Supported Schema Formats:**
 - OpenAPI 3.0.x (JSON or YAML)
 - GraphQL SDL (`.graphql` files)
-- AsyncAPI 2.x
+- AsyncAPI 3.0.0
 - OpenRPC 1.x
 
 **Generated Files:**

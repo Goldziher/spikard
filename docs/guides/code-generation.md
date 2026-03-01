@@ -46,7 +46,7 @@ Output Files
 ### Supported Protocols
 
 - **OpenAPI 3.0+**: REST APIs with request/response validation
-- **AsyncAPI 2.0+**: WebSocket and Server-Sent Events
+- **AsyncAPI 3.0.0**: WebSocket and Server-Sent Events
 - **GraphQL**: Schema-first GraphQL APIs with resolvers
 - **OpenRPC**: JSON-RPC 2.0 APIs
 - **Protobuf**: gRPC services with binary serialization
@@ -285,7 +285,7 @@ export async function createTodoHandler(
 
 ## AsyncAPI Code Generation
 
-Generate handlers for WebSocket and Server-Sent Events (SSE) from AsyncAPI 2.0+ specs.
+Generate handlers for WebSocket and Server-Sent Events (SSE) from AsyncAPI 3.0.0 specs.
 
 ### WebSocket Example
 
@@ -1462,7 +1462,7 @@ Error: Failed to parse OpenAPI schema: Invalid reference #/components/schemas/Us
 **Solution:**
 - Validate schema with online tools (swagger.io, asyncapi.com)
 - Check that all `$ref` paths exist
-- Ensure schema version matches (OpenAPI 3.0+, AsyncAPI 2.0+)
+- Ensure schema version matches (OpenAPI 3.0+, AsyncAPI 3.0.0)
 - Use absolute references within the same file
 
 #### 2. Type Mapping Issues

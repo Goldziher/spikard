@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Node gRPC service registry parity**: The TypeScript package now exposes a `GrpcService` registry helper, and the gRPC docs/snippets have been corrected to use the real Node public API instead of nonexistent `app.registerGrpcHandler(...)` / `addGrpcService(...)` methods.
 - **Node mixed-mode gRPC registration**: The TypeScript package and Node runtime now register gRPC handlers per service method and RPC mode, so a single gRPC service can mix unary, server-streaming, client-streaming, and bidirectional-streaming methods in one `GrpcService`.
 - **Node/Ruby startup API cleanup**: Removed the Node `ServerOptions` compatibility type and Ruby `app.run(host:, port:)` fallback. Both bindings now use explicit server configuration objects only.
+- **AsyncAPI support docs**: Corrected the README, init reference, and code generation guide to document the implemented AsyncAPI 3.0.0 support instead of stale AsyncAPI 2.x wording.
 - **GraphQL server API docs**: Updated GraphQL documentation to match the breaking removal of `Server::new(...)/run()` and point to `Server::with_handlers_and_metadata(...)/run_with_config(...)`.
 - **JSON-RPC OpenRPC runtime docs**: The JSON-RPC runtime now serves `/openrpc.json` from registered method metadata, and the examples have been updated to match the implemented endpoint.
 - **OpenRPC CLI docs**: The init/codegen reference now reflects that OpenRPC 1.x schemas are supported instead of documenting them as a future enhancement.
