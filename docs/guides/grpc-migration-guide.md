@@ -280,7 +280,8 @@ class UserServiceHandler implements HandlerInterface
     }
 }
 
-$app->registerGrpcService(new UserServiceHandler());
+$grpcService = \Spikard\Grpc::createService();
+$grpcService->registerHandler('com.example.UserService', new UserServiceHandler());
 
 $app->run();
 ```
