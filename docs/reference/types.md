@@ -29,5 +29,5 @@ See [Errors](errors.md) for the canonical response body and RFC 9457 mapping.
 |---------|----------|------------|-----------|-----------|
 | Python | `ctx` with params/query/headers/body, msgspec structs | msgspec (default), Pydantic/dataclasses | return objects/Structs | SSE/WebSockets via bridge |
 | TypeScript | `Request` with `path`, `params`, `query`, `headers`, `cookies`, `json()` | Zod (`bodySchema`/`responseSchema`), JSON Schema | object or `{ statusCode, body }` | `StreamingResponse`, WS route |
-| Ruby | request hash (`:path_params`, `:query`, `:headers`, `:body`) | dry-schema/JSON Schema | hashes/arrays | SSE via bridge; WS planned |
+| Ruby | request hash (`:path_params`, `:query`, `:headers`, `:body`) | dry-schema/JSON Schema | hashes/arrays | SSE/WebSockets via bridge |
 | Rust | `Context` with getters (`path_param`, `query`, `json`) | `JsonSchema` derive, raw schema | `Json<T>`, `Response` builders | `StreamingBody`, SSE, WS |
