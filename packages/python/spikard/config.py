@@ -555,12 +555,6 @@ class ServerConfig:
         app = Spikard()
         app.run(config=config)
         ```
-
-        Or use backwards-compatible individual parameters:
-        ```python
-        app = Spikard()
-        app.run(host="0.0.0.0", port=8080)
-        ```
     """
 
     host: str = "127.0.0.1"

@@ -1,5 +1,6 @@
 ```python
 from spikard import Spikard
+from spikard.config import ServerConfig
 from msgspec import Struct
 
 class User(Struct):
@@ -13,5 +14,5 @@ async def get_user(id: int) -> User:
     return User(id=id, name="Alice")
 
 if __name__ == "__main__":
-    app.run(port=8000)
+    app.run(config=ServerConfig(port=8000))
 ```

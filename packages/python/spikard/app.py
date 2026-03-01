@@ -161,18 +161,12 @@ class Spikard:
         self,
         *,
         config: ServerConfig | None = None,
-        host: str | None = None,
-        port: int | None = None,
-        workers: int | None = None,
         reload: bool = False,
     ) -> None:
         """Run the application server.
 
         Args:
             config: Complete server configuration.
-            host: Host to bind to
-            port: Port to bind to
-            workers: Number of Tokio worker threads
             reload: Enable auto-reload (not yet implemented)
 
         Raises:
@@ -190,23 +184,12 @@ class Spikard:
                 "Or: cd packages/python && maturin develop"
             ) from e
 
-        final_config = config or self._config or ServerConfig()
-
-        if host is not None:
-            final_config = final_config.copy(host=host)
-        if port is not None:
-            final_config = final_config.copy(port=port)
-        if workers is not None:
-            final_config = final_config.copy(workers=workers)
-
-        run_server(self, config=final_config)
+        run_server(self, config=config or self._config or ServerConfig())
 
     async def serve(
         self,
         *,
         config: ServerConfig | None = None,
-        host: str | None = None,
-        port: int | None = None,
     ) -> None:
         """Run the application server asynchronously.
 
@@ -214,8 +197,6 @@ class Spikard:
 
         Args:
             config: Complete server configuration.
-            host: Host to bind to
-            port: Port to bind to
 
         Raises:
             RuntimeError: If _spikard extension module not available
@@ -223,7 +204,7 @@ class Spikard:
         Example::
 
             async def main():
-                await app.serve(host="0.0.0.0", port=8080)
+                await app.serve(config=ServerConfig(host="0.0.0.0", port=8080))
         """
         try:
             from _spikard import run_server_async  # type: ignore[attr-defined] # noqa: PLC0415
@@ -234,14 +215,7 @@ class Spikard:
                 "Or: cd packages/python && maturin develop"
             ) from e
 
-        final_config = config or self._config or ServerConfig()
-
-        if host is not None:
-            final_config = final_config.copy(host=host)
-        if port is not None:
-            final_config = final_config.copy(port=port)
-
-        await run_server_async(self, config=final_config)
+        await run_server_async(self, config=config or self._config or ServerConfig())
 
     # -- Lifecycle hooks -----------------------------------------------------------
 

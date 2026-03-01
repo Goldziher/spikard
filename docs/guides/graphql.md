@@ -186,6 +186,7 @@ Register your GraphQL endpoint with the Spikard router. The handler implements t
 
     ```python
     from spikard import Spikard, GraphQLHandler
+    from spikard.config import ServerConfig
 
     app = Spikard()
 
@@ -200,7 +201,7 @@ Register your GraphQL endpoint with the Spikard router. The handler implements t
     )
 
     # Start server
-    app.run(host="127.0.0.1", port=8000)
+    app.run(config=ServerConfig(host="127.0.0.1", port=8000))
     ```
 
 === "TypeScript"

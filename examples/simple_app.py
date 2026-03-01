@@ -3,6 +3,7 @@
 from typing import Any
 
 from spikard import Spikard
+from spikard.config import ServerConfig
 
 app = Spikard()
 
@@ -26,4 +27,4 @@ async def get_user(user_id: int) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8000)
+    app.run(config=ServerConfig(host="127.0.0.1", port=8000))

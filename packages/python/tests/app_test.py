@@ -206,33 +206,26 @@ def test_async_handler_without_param_defaults_not_wrapped(monkeypatch: pytest.Mo
 
 
 def test_run_config_explicit_config_takes_precedence(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Explicit config parameter takes precedence over individual parameters."""
-    app = Spikard()
+    """Explicit config parameter takes precedence over app config."""
+    app = Spikard(config=ServerConfig(port=7000, host="app.example.com"))
     mock_run = MagicMock()
     _mock_run_server_import(monkeypatch, mock_run)
 
     config = ServerConfig(port=9000, host="192.168.1.1")
-    app.run(config=config, host="0.0.0.0", port=8000)
+    app.run(config=config)
 
     called_config = mock_run.call_args[1]["config"]
     assert isinstance(called_config, ServerConfig)
-    assert called_config.host == "0.0.0.0"
-    assert called_config.port == 8000
-
-
-def test_run_config_individual_params_override_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Individual parameters override default ServerConfig."""
-    app = Spikard()
-    mock_run = MagicMock()
-    _mock_run_server_import(monkeypatch, mock_run)
-
-    app.run(host="127.0.0.1", port=9000, workers=4)
-
-    called_config = mock_run.call_args[1]["config"]
-    assert isinstance(called_config, ServerConfig)
-    assert called_config.host == "127.0.0.1"
+    assert called_config.host == "192.168.1.1"
     assert called_config.port == 9000
-    assert called_config.workers == 4
+
+
+def test_run_config_rejects_removed_keyword_overrides() -> None:
+    """run() no longer accepts host/port/workers keyword overrides."""
+    app = Spikard()
+
+    with pytest.raises(TypeError):
+        app.run(host="127.0.0.1")  # type: ignore[call-arg]
 
 
 def test_run_config_default_config_when_none_provided(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -261,15 +254,15 @@ def test_run_config_app_config_used_when_no_explicit_config(monkeypatch: pytest.
     assert called_config.host == "app.example.com"
 
 
-def test_run_config_precedence_order(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Config precedence: explicit param > individual param > app config > default."""
+def test_run_config_explicit_config_overrides_app_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Explicit config overrides app config."""
     app_config = ServerConfig(port=7000, host="app.example.com", workers=2)
     app = Spikard(config=app_config)
     mock_run = MagicMock()
     _mock_run_server_import(monkeypatch, mock_run)
 
     new_config = ServerConfig(port=8000)
-    app.run(config=new_config, host="127.0.0.1")
+    app.run(config=new_config)
 
     called_config = mock_run.call_args[1]["config"]
     assert called_config.host == "127.0.0.1"

@@ -779,13 +779,14 @@ class LiveTestClient:
 import sys
 import base64
 import cloudpickle
+from spikard.config import ServerConfig
 
 # Load the pickled app
 app_data = base64.b64decode({app_b64!r})
 app = cloudpickle.loads(app_data)
 
 # Start the server
-app.run(host="127.0.0.1", port={self._port})
+app.run(config=ServerConfig(host="127.0.0.1", port={self._port}))
 """
             )
 

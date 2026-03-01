@@ -3,6 +3,7 @@
 from typing import Any, NoReturn
 
 from spikard import Spikard
+from spikard.config import ServerConfig
 
 app = Spikard()
 
@@ -49,4 +50,4 @@ async def deep_error(user_id: int, debug: bool = False) -> NoReturn:
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8000)
+    app.run(config=ServerConfig(host="127.0.0.1", port=8000))

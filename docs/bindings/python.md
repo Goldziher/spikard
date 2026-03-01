@@ -6,6 +6,7 @@ Spikard's Python binding uses PyO3 with msgspec-first validation. Decorators fee
 
 ```python
 from spikard import Spikard
+from spikard.config import ServerConfig
 from msgspec import Struct
 
 class User(Struct):
@@ -19,7 +20,7 @@ async def get_user(id: int) -> User:
     return User(id=id, name="Alice")
 
 if __name__ == "__main__":
-    app.run(port=8000)
+    app.run(config=ServerConfig(port=8000))
 ```
 
 ## Router
@@ -85,9 +86,10 @@ async def logging_hook(request: dict[str, object]):
 
 ```python
 import asyncio
+from spikard.config import ServerConfig
 
 async def main():
-    await app.serve(host="0.0.0.0", port=8080)
+    await app.serve(config=ServerConfig(host="0.0.0.0", port=8080))
 
 asyncio.run(main())
 ```

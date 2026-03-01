@@ -70,6 +70,7 @@ Generated handler patterns vary by language. See [examples/](examples/) for comp
 **Python:**
 ```python
 from spikard import Spikard
+from spikard.config import ServerConfig
 
 app = Spikard()
 
@@ -78,7 +79,7 @@ async def get_user(user_id: int) -> dict:
     return {"id": user_id, "name": "Alice"}
 
 if __name__ == "__main__":
-    app.run(port=8000)
+    app.run(config=ServerConfig(port=8000))
 ```
 
 **TypeScript:**
