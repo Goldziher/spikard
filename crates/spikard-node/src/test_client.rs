@@ -5,7 +5,11 @@
 
 #![allow(unused_imports)]
 
+#[cfg(feature = "di")]
+use crate::di::NO_DI_DEP_KEY;
 use crate::response::{HandlerReturnValue, TestResponse};
+use crate::test_sse;
+use crate::test_websocket;
 use axum::body::Body;
 use axum::extract::Request;
 use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, header};
@@ -15,11 +19,6 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use serde_json::{Map as JsonMap, Value, json};
-use tower::ServiceExt;
-#[cfg(feature = "di")]
-use crate::di::NO_DI_DEP_KEY;
-use crate::test_sse;
-use crate::test_websocket;
 use spikard_http::ProblemDetails;
 use spikard_http::testing::{
     MultipartFilePart, SnapshotError, build_multipart_body, encode_urlencoded_body,
@@ -29,6 +28,7 @@ use spikard_http::{HandlerResult, RequestData, ResponseBodySize, Server};
 use spikard_http::{Route, RouteMetadata, SchemaValidator};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+use tower::ServiceExt;
 
 fn is_debug_mode() -> bool {
     std::env::var("DEBUG")
