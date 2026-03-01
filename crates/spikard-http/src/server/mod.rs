@@ -38,6 +38,12 @@ use uuid::Uuid;
 /// Type alias for route handler pairs
 type RouteHandlerPair = (crate::Route, Arc<dyn Handler>);
 
+#[derive(Clone)]
+struct GrpcMiddlewareState {
+    registry: Arc<crate::grpc::GrpcRegistry>,
+    config: crate::grpc::GrpcConfig,
+}
+
 /// Extract required dependencies from route metadata
 ///
 /// Placeholder implementation until routes can declare dependencies via metadata.
@@ -143,6 +149,21 @@ fn handler_result_to_response(result: HandlerResult) -> axum::response::Response
         Ok(response) => response,
         Err((status, body)) => error_to_response(status, body),
     }
+}
+
+async fn grpc_routing_middleware(
+    axum::extract::State(state): axum::extract::State<GrpcMiddlewareState>,
+    request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    if grpc_routing::is_grpc_request(&request) {
+        return match grpc_routing::route_grpc_request(Arc::clone(&state.registry), &state.config, request).await {
+            Ok(response) => response,
+            Err((status, body)) => error_to_response(status, body),
+        };
+    }
+
+    next.run(request).await
 }
 
 #[inline]
@@ -790,6 +811,16 @@ pub fn build_router_with_handlers_and_config(
     config: ServerConfig,
     route_metadata: Vec<crate::RouteMetadata>,
 ) -> Result<AxumRouter, String> {
+    build_router_with_handlers_and_config_and_grpc(routes, config, route_metadata, None)
+}
+
+/// Build router with handlers, config, and an optional gRPC service registry.
+pub fn build_router_with_handlers_and_config_and_grpc(
+    routes: Vec<RouteHandlerPair>,
+    config: ServerConfig,
+    route_metadata: Vec<crate::RouteMetadata>,
+    grpc_registry: Option<Arc<crate::grpc::GrpcRegistry>>,
+) -> Result<AxumRouter, String> {
     #[cfg(all(feature = "di", debug_assertions))]
     if let Some(di_container) = config.di_container.as_ref() {
         eprintln!(
@@ -862,6 +893,16 @@ pub fn build_router_with_handlers_and_config(
         build_router_with_handlers_inner(routes, hooks, config.di_container.clone(), config.enable_http_trace)?;
     #[cfg(not(feature = "di"))]
     let mut app = build_router_with_handlers_inner(routes, hooks, None, config.enable_http_trace)?;
+
+    if let (Some(grpc_config), Some(registry)) = (config.grpc.clone(), grpc_registry)
+        && !registry.is_empty()
+    {
+        let state = GrpcMiddlewareState {
+            registry,
+            config: grpc_config,
+        };
+        app = app.layer(axum::middleware::from_fn_with_state(state, grpc_routing_middleware));
+    }
 
     // Only add the sensitive-header redaction layer when auth middleware is
     // configured — without auth there is nothing to redact, and the layer
@@ -1085,6 +1126,16 @@ impl Server {
         metadata: Vec<crate::RouteMetadata>,
     ) -> Result<AxumRouter, String> {
         build_router_with_handlers_and_config(routes, config, metadata)
+    }
+
+    /// Build a server router with runtime handlers, explicit metadata, and gRPC services.
+    pub fn with_handlers_metadata_and_grpc(
+        config: ServerConfig,
+        routes: Vec<(crate::Route, Arc<dyn Handler>)>,
+        metadata: Vec<crate::RouteMetadata>,
+        grpc_registry: Arc<crate::grpc::GrpcRegistry>,
+    ) -> Result<AxumRouter, String> {
+        build_router_with_handlers_and_config_and_grpc(routes, config, metadata, Some(grpc_registry))
     }
 
     /// Run the server with the Axum router and config

@@ -675,6 +675,54 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         .get_named_property("handlers")
         .map_err(|e| Error::from_reason(format!("Failed to get handlers from app: {}", e)))?;
 
+    let grpc_registry = if let Ok(grpc_services_obj) = app.get_named_property::<Object>("grpcServices") {
+        let grpc_handlers_obj: Object = app
+            .get_named_property("grpcHandlers")
+            .map_err(|e| Error::from_reason(format!("Failed to get grpcHandlers from app: {}", e)))?;
+        let grpc_services_length = grpc_services_obj.get_array_length()?;
+        let mut registry = spikard_http::grpc::GrpcRegistry::new();
+
+        for i in 0..grpc_services_length {
+            let service_obj: Object = grpc_services_obj.get_element(i)?;
+            let service_name: String = service_obj.get_named_property("serviceName")?;
+            let handler_name: String = service_obj.get_named_property("handlerName")?;
+            let handler_obj: Object = grpc_handlers_obj.get_named_property(&handler_name).map_err(|e| {
+                Error::from_reason(format!(
+                    "Failed to get gRPC handler '{}' for service '{}': {}",
+                    handler_name, service_name, e
+                ))
+            })?;
+            let js_handler: Function<grpc::GrpcRequest, Promise<grpc::GrpcResponse>> =
+                handler_obj.get_named_property("handleRequest").map_err(|e| {
+                    Error::from_reason(format!(
+                        "Failed to get handleRequest for gRPC service '{}': {}",
+                        service_name, e
+                    ))
+                })?;
+
+            let tsfn = js_handler
+                .build_threadsafe_function()
+                .build_callback(|ctx| Ok(ctx.value))
+                .map_err(|e| {
+                    Error::from_reason(format!(
+                        "Failed to build ThreadsafeFunction for gRPC service '{}': {}",
+                        service_name, e
+                    ))
+                })?;
+
+            let handler = Arc::new(grpc::NodeGrpcHandler::new(Arc::from(service_name.clone()), tsfn));
+            registry.register(service_name, handler, spikard_http::grpc::RpcMode::Unary);
+        }
+
+        if registry.is_empty() {
+            None
+        } else {
+            Some(Arc::new(registry))
+        }
+    } else {
+        None
+    };
+
     let websocket_routes: Vec<RouteMetadata> = app
         .get_named_property::<Object>("websocketRoutes")
         .ok()
@@ -831,6 +879,9 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     };
 
     let mut server_config = server_config;
+    if grpc_registry.is_some() && server_config.grpc.is_none() {
+        server_config.grpc = Some(spikard_http::grpc::GrpcConfig::default());
+    }
     server_config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
     server_config.di_container = dependency_container;
 
@@ -861,9 +912,13 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
     info!("Starting Spikard server on {}:{}", host, port);
     info!("Registered {} HTTP routes", routes_with_handlers.len());
 
-    let mut app_router =
+    let mut app_router = if let Some(registry) = grpc_registry {
+        Server::with_handlers_metadata_and_grpc(server_config.clone(), routes_with_handlers, regular_routes, registry)
+            .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?
+    } else {
         Server::with_handlers_and_metadata(server_config.clone(), routes_with_handlers, regular_routes)
-            .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?;
+            .map_err(|e| Error::from_reason(format!("Failed to build router: {}", e)))?
+    };
 
     for ws_metadata in websocket_routes {
         let path = ws_metadata.path.clone();

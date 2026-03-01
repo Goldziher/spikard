@@ -141,6 +141,9 @@ const userService = {
 
 const grpcService = new GrpcService();
 grpcService.registerHandler("mypackage.UserService", userService);
+
+const app = new Spikard();
+app.useGrpc(grpcService);
 ```
 
 Current TypeScript gRPC helpers cover unary handlers and service routing. Streaming helper types are not yet part of the public package surface.

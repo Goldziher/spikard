@@ -61,6 +61,9 @@
  * // Register handler in a service registry
  * const service = new GrpcService();
  * service.registerHandler('mypackage.UserService', new UserServiceHandler());
+ *
+ * const app = new Spikard();
+ * app.useGrpc(service);
  * ```
  */
 

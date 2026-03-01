@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Rust protobuf code generation**: The CLI now generates Rust message structs, enums, and tonic-style service traits for `spikard generate protobuf --lang rust` instead of failing at runtime.
 - **Python auto-reload runtime**: `Spikard.run(reload=True)` now starts a parent reloader process that watches Python source files and restarts the child server on changes instead of silently ignoring the flag.
+- **Node gRPC app registration**: Node applications can now mount unary gRPC service handlers through `app.addGrpcService(...)` / `app.useGrpc(...)`, and the Rust HTTP runtime now routes registered gRPC traffic through the shared server stack.
 - **Binding route metadata preservation**: Python, Ruby, and Elixir server startup paths now build routers with explicit route metadata so OpenAPI generation and other metadata-driven runtime features keep request/response/parameter schemas instead of silently dropping them.
 - **Rust `Server::with_handlers(...)` metadata preservation**: The public Rust helper now reconstructs route metadata from compiled validators so direct Rust consumers keep OpenAPI request/response/parameter schemas instead of dropping them.
 - **gRPC streaming terminal status propagation**: Server-streaming and bidirectional gRPC responses now terminate with real `grpc-status` / `grpc-message` trailers on both success and mid-stream failure instead of silently dropping the terminal status.

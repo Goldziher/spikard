@@ -123,6 +123,11 @@ export interface RouteMetadata {
 	cors?: CorsConfig | undefined;
 }
 
+export interface GrpcServiceRegistration {
+	serviceName: string;
+	handlerName: string;
+}
+
 /**
  * Spikard application interface
  */
@@ -135,6 +140,10 @@ export interface SpikardApp {
 	websocketRoutes?: RouteMetadata[];
 	/** WebSocket handlers mapped by handler_name */
 	websocketHandlers?: Record<string, Record<string, unknown>>;
+	/** gRPC service registrations */
+	grpcServices?: GrpcServiceRegistration[];
+	/** gRPC handlers mapped by internal handler name */
+	grpcHandlers?: Record<string, Record<string, unknown>>;
 	/** Optional server configuration (for middleware, auth, etc.) */
 	config?: import("./config").ServerConfig;
 	/** Optional lifecycle hooks */

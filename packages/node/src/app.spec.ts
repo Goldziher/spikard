@@ -4,6 +4,7 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { Spikard } from "./app";
+import { GrpcService } from "./grpc";
 import type { RouteMetadata } from "./index";
 
 describe("Spikard", () => {
@@ -110,5 +111,34 @@ describe("Spikard", () => {
 		app.addRoute(metadata2, handler2);
 
 		expect(app.handlers.shared).toBe(handler2);
+	});
+
+	it("should register a gRPC service handler", async () => {
+		const handler = {
+			handleRequest: async () => ({ payload: Buffer.from("ok") }),
+		};
+
+		app.addGrpcService("example.UserService", handler);
+
+		expect(app.grpcServices).toHaveLength(1);
+		expect(app.grpcServices[0]?.serviceName).toBe("example.UserService");
+		expect(app.grpcHandlers[app.grpcServices[0]!.handlerName]).toBeDefined();
+	});
+
+	it("should mount a gRPC registry onto the application", () => {
+		const registry = new GrpcService();
+		registry.registerHandler("example.UserService", {
+			handleRequest: async () => ({ payload: Buffer.from("one") }),
+		});
+		registry.registerHandler("example.AdminService", {
+			handleRequest: async () => ({ payload: Buffer.from("two") }),
+		});
+
+		app.useGrpc(registry);
+
+		expect(app.grpcServices.map((entry) => entry.serviceName)).toEqual([
+			"example.UserService",
+			"example.AdminService",
+		]);
 	});
 });

@@ -1,6 +1,7 @@
 use axum::body::Body;
 use http_body_util::BodyExt;
 use spikard_core::JsonRpcMethodInfo;
+use spikard_http::grpc::{GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData};
 use spikard_http::handler_trait::{Handler, HandlerResult, RequestData};
 use spikard_http::jsonrpc::JsonRpcConfig;
 use spikard_http::openapi::OpenApiConfig;
@@ -28,6 +29,25 @@ impl Handler for JsonOkHandler {
     }
 }
 
+struct UnaryGrpcHandler;
+
+impl GrpcHandler for UnaryGrpcHandler {
+    fn service_name(&self) -> &str {
+        "example.UserService"
+    }
+
+    fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn std::future::Future<Output = GrpcHandlerResult> + Send>> {
+        Box::pin(async move {
+            let mut metadata = tonic::metadata::MetadataMap::new();
+            metadata.insert("x-service", "users".parse().unwrap());
+            Ok(GrpcResponseData {
+                payload: request.payload,
+                metadata,
+            })
+        })
+    }
+}
+
 fn route(path: &str, method: Method) -> Route {
     Route {
         path: path.to_string(),
@@ -44,6 +64,46 @@ fn route(path: &str, method: Method) -> Route {
         #[cfg(feature = "di")]
         handler_dependencies: vec![],
     }
+}
+
+#[tokio::test]
+async fn server_routes_grpc_requests_when_registry_is_registered() {
+    let mut grpc_registry = GrpcRegistry::new();
+    grpc_registry.register(
+        "example.UserService",
+        Arc::new(UnaryGrpcHandler),
+        spikard_http::grpc::RpcMode::Unary,
+    );
+
+    let config = ServerConfig {
+        grpc: Some(GrpcConfig::default()),
+        ..Default::default()
+    };
+
+    let app = Server::with_handlers_metadata_and_grpc(config, Vec::new(), Vec::new(), Arc::new(grpc_registry)).unwrap();
+
+    let response = app
+        .oneshot(
+            axum::http::Request::builder()
+                .method("POST")
+                .uri("/example.UserService/GetUser")
+                .header("content-type", "application/grpc")
+                .body(Body::from(bytes::Bytes::from_static(b"hello")))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), 200);
+    assert_eq!(
+        response.headers().get("content-type").unwrap().to_str().unwrap(),
+        "application/grpc+proto"
+    );
+    assert_eq!(response.headers().get("grpc-status").unwrap(), "0");
+    assert_eq!(response.headers().get("x-service").unwrap(), "users");
+
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    assert_eq!(bytes, bytes::Bytes::from_static(b"hello"));
 }
 
 #[tokio::test]

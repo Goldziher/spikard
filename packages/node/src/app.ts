@@ -2,7 +2,9 @@
  * Spikard application class
  */
 
+import type { GrpcHandler, GrpcService } from "./grpc";
 import type { HandlerFunction, NativeHandlerFunction, RouteMetadata, SpikardApp } from "./index";
+import type { GrpcServiceRegistration } from "./index";
 import type { ServerConfig } from "./config";
 import type { Request } from "./request";
 import { runServer } from "./server";
@@ -169,6 +171,8 @@ export class Spikard implements SpikardApp {
 	handlers: Record<string, HandlerFunction | NativeHandlerFunction> = {};
 	websocketRoutes: RouteMetadata[] = [];
 	websocketHandlers: Record<string, Record<string, unknown>> = {};
+	grpcServices: GrpcServiceRegistration[] = [];
+	grpcHandlers: Record<string, Record<string, unknown>> = {};
 	lifecycleHooks: LifecycleHooks = {
 		onRequest: [],
 		preValidation: [],
@@ -216,6 +220,52 @@ export class Spikard implements SpikardApp {
 
 		this.websocketRoutes.push(route);
 		this.websocketHandlers[handlerName] = handlerWrapper;
+	}
+
+	/**
+	 * Register a gRPC service handler on the application.
+	 *
+	 * @param serviceName - Fully-qualified service name
+	 * @param handler - gRPC handler implementation
+	 * @returns The application for chaining
+	 */
+	addGrpcService(serviceName: string, handler: GrpcHandler): this {
+		if (!serviceName) {
+			throw new Error("Service name cannot be empty");
+		}
+		if (typeof handler?.handleRequest !== "function") {
+			throw new TypeError("Handler must implement handleRequest(request)");
+		}
+
+		const previous = this.grpcServices.find((entry) => entry.serviceName === serviceName);
+		if (previous) {
+			delete this.grpcHandlers[previous.handlerName];
+		}
+
+		const handlerName = `grpc_${this.grpcServices.length}_${serviceName}`.replace(/[^a-zA-Z0-9_]/g, "_");
+		this.grpcHandlers[handlerName] = {
+			handleRequest: (request: Parameters<GrpcHandler["handleRequest"]>[0]) => handler.handleRequest(request),
+		};
+
+		this.grpcServices = this.grpcServices.filter((entry) => entry.serviceName !== serviceName);
+		this.grpcServices.push({ serviceName, handlerName });
+		return this;
+	}
+
+	/**
+	 * Mount all handlers from a gRPC service registry on the application.
+	 *
+	 * @param service - Registry containing one or more service handlers
+	 * @returns The application for chaining
+	 */
+	useGrpc(service: GrpcService): this {
+		for (const serviceName of service.serviceNames()) {
+			const handler = service.getHandler(serviceName);
+			if (handler) {
+				this.addGrpcService(serviceName, handler);
+			}
+		}
+		return this;
 	}
 
 	/**

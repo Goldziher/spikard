@@ -200,23 +200,25 @@ async function runClient() {
 }
 
 /**
- * Server: Start the gRPC server (when Spikard supports it)
+ * Server: Start the gRPC server
  */
 async function runServer() {
 	console.log("=== Starting Stock Price Service ===\n");
 
-	// Note: This is a conceptual example. Actual server implementation
-	// depends on Spikard's gRPC server API being finalized.
+	// Unary gRPC app-level registration is available, but the public TypeScript
+	// package still does not expose server-streaming registration helpers.
 	//
 	// Expected registration:
 	// const grpcService = new GrpcService();
 	// grpcService.registerHandler('stock.v1.StockService', new StockPriceServiceHandler());
+	// const app = new Spikard();
+	// app.useGrpc(grpcService);
 
 	console.log("Server would run on port 50051");
 	console.log("Service: stock.v1.StockService");
 	console.log("Methods: GetPrice (unary), StreamPrices (server streaming)\n");
 
-	console.log("⚠️  Server implementation pending Spikard gRPC server API");
+	console.log("⚠️  Streaming server registration is not yet exposed in the TypeScript package");
 }
 
 /**
