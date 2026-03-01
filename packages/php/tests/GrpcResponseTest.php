@@ -105,6 +105,17 @@ final class GrpcResponseTest extends TestCase
         self::assertSame('Unauthenticated', $response->getMetadata('grpc-message'));
     }
 
+    public function testConstructorNormalizesNamedGrpcStatus(): void
+    {
+        $response = new Response('payload', [
+            'grpc-status' => 'INVALID_ARGUMENT',
+            'grpc-message' => 'Bad input',
+        ]);
+
+        self::assertSame('3', $response->getMetadata('grpc-status'));
+        self::assertSame('Bad input', $response->getMetadata('grpc-message'));
+    }
+
     public function testToString(): void
     {
         $response = new Response('12345');

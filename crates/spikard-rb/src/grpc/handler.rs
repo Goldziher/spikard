@@ -265,6 +265,41 @@ fn get_kw(hash: RHash, ruby: &Ruby, key: &str) -> Option<Value> {
     hash.get(ruby.to_symbol(key)).or_else(|| hash.get(ruby.str_new(key)))
 }
 
+fn normalize_grpc_status(value: &str) -> Result<String, Error> {
+    let normalized = value.trim();
+    if normalized.chars().all(|c| c.is_ascii_digit()) {
+        return Ok(normalized.to_string());
+    }
+
+    let code = match normalized.to_ascii_uppercase().as_str() {
+        "OK" => "0",
+        "CANCELLED" => "1",
+        "UNKNOWN" => "2",
+        "INVALID_ARGUMENT" => "3",
+        "DEADLINE_EXCEEDED" => "4",
+        "NOT_FOUND" => "5",
+        "ALREADY_EXISTS" => "6",
+        "PERMISSION_DENIED" => "7",
+        "RESOURCE_EXHAUSTED" => "8",
+        "FAILED_PRECONDITION" => "9",
+        "ABORTED" => "10",
+        "OUT_OF_RANGE" => "11",
+        "UNIMPLEMENTED" => "12",
+        "INTERNAL" => "13",
+        "UNAVAILABLE" => "14",
+        "DATA_LOSS" => "15",
+        "UNAUTHENTICATED" => "16",
+        _ => {
+            return Err(Error::new(
+                magnus::exception::arg_error(),
+                format!("Unknown gRPC status: {}", value),
+            ));
+        }
+    };
+
+    Ok(code.to_string())
+}
+
 /// Convert Ruby hash to HashMap<String, String>
 fn ruby_hash_to_string_map(hash: &RHash) -> Result<HashMap<String, String>, Error> {
     let mut map = HashMap::new();
@@ -285,7 +320,13 @@ fn ruby_hash_to_string_map(hash: &RHash) -> Result<HashMap<String, String>, Erro
             ));
         }
 
-        map.insert(key_str, value_str);
+        let final_value = if key_str.eq_ignore_ascii_case("grpc-status") {
+            normalize_grpc_status(&value_str)?
+        } else {
+            value_str
+        };
+
+        map.insert(key_str, final_value);
         Ok(magnus::r_hash::ForEach::Continue)
     })?;
     Ok(map)

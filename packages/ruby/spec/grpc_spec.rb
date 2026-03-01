@@ -563,21 +563,21 @@ RSpec.describe Spikard::Grpc do
         response = Spikard::Grpc::Response.new(payload: 'success'.b)
         response.metadata = { 'grpc-status' => 'OK' }
 
-        expect(response.metadata).to include('grpc-status' => 'OK')
+        expect(response.metadata).to include('grpc-status' => '0')
       end
 
       it 'handles CANCELLED status code' do
         response = Spikard::Grpc::Response.new(payload: ''.b)
         response.metadata = { 'grpc-status' => 'CANCELLED' }
 
-        expect(response.metadata).to include('grpc-status' => 'CANCELLED')
+        expect(response.metadata).to include('grpc-status' => '1')
       end
 
       it 'handles UNKNOWN status code' do
         response = Spikard::Grpc::Response.new(payload: ''.b)
         response.metadata = { 'grpc-status' => 'UNKNOWN' }
 
-        expect(response.metadata).to include('grpc-status' => 'UNKNOWN')
+        expect(response.metadata).to include('grpc-status' => '2')
       end
 
       it 'handles INVALID_ARGUMENT status code' do
@@ -587,7 +587,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Missing required field: name'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'INVALID_ARGUMENT')
+        expect(response.metadata).to include('grpc-status' => '3')
       end
 
       it 'handles DEADLINE_EXCEEDED status code' do
@@ -597,7 +597,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'RPC timeout'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'DEADLINE_EXCEEDED')
+        expect(response.metadata).to include('grpc-status' => '4')
       end
 
       it 'handles NOT_FOUND status code' do
@@ -607,7 +607,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'User not found'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'NOT_FOUND')
+        expect(response.metadata).to include('grpc-status' => '5')
       end
 
       it 'handles ALREADY_EXISTS status code' do
@@ -617,7 +617,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'User already registered'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'ALREADY_EXISTS')
+        expect(response.metadata).to include('grpc-status' => '6')
       end
 
       it 'handles PERMISSION_DENIED status code' do
@@ -627,7 +627,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Access denied'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'PERMISSION_DENIED')
+        expect(response.metadata).to include('grpc-status' => '7')
       end
 
       it 'handles RESOURCE_EXHAUSTED status code for rate limiting' do
@@ -637,7 +637,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Rate limit exceeded: 100 requests per minute'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'RESOURCE_EXHAUSTED')
+        expect(response.metadata).to include('grpc-status' => '8')
         expect(response.metadata['grpc-message']).to include('Rate limit')
       end
 
@@ -648,7 +648,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'User must be verified before payment'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'FAILED_PRECONDITION')
+        expect(response.metadata).to include('grpc-status' => '9')
       end
 
       it 'handles ABORTED status code for transaction rollback' do
@@ -658,7 +658,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Transaction aborted due to conflict'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'ABORTED')
+        expect(response.metadata).to include('grpc-status' => '10')
       end
 
       it 'handles OUT_OF_RANGE status code for bounds checking' do
@@ -668,7 +668,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Page number 999 exceeds max pages 10'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'OUT_OF_RANGE')
+        expect(response.metadata).to include('grpc-status' => '11')
       end
 
       it 'handles UNIMPLEMENTED status code' do
@@ -678,7 +678,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Method not implemented'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'UNIMPLEMENTED')
+        expect(response.metadata).to include('grpc-status' => '12')
       end
 
       it 'handles INTERNAL status code' do
@@ -688,7 +688,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Internal server error'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'INTERNAL')
+        expect(response.metadata).to include('grpc-status' => '13')
       end
 
       it 'handles UNAVAILABLE status code' do
@@ -698,7 +698,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Service temporarily unavailable'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'UNAVAILABLE')
+        expect(response.metadata).to include('grpc-status' => '14')
       end
 
       it 'handles DATA_LOSS status code for corruption' do
@@ -709,7 +709,7 @@ RSpec.describe Spikard::Grpc do
           'x-error-detail' => 'checksum mismatch'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'DATA_LOSS')
+        expect(response.metadata).to include('grpc-status' => '15')
         expect(response.metadata).to have_key('x-error-detail')
       end
 
@@ -720,7 +720,7 @@ RSpec.describe Spikard::Grpc do
           'grpc-message' => 'Authentication required'
         }
 
-        expect(response.metadata).to include('grpc-status' => 'UNAUTHENTICATED')
+        expect(response.metadata).to include('grpc-status' => '16')
       end
     end
 
@@ -730,7 +730,7 @@ RSpec.describe Spikard::Grpc do
         response.metadata = { 'grpc-status' => 'NOT_FOUND' }
 
         expect(response.metadata['grpc-status']).to be_a(String)
-        expect(response.metadata['grpc-status']).to eq('NOT_FOUND')
+        expect(response.metadata['grpc-status']).to eq('5')
       end
 
       it 'supports custom status messages' do
@@ -1529,7 +1529,7 @@ RSpec.describe Spikard::Grpc do
           'www-authenticate' => 'Bearer realm="api"'
         }
 
-        expect(response.metadata['grpc-status']).to eq('UNAUTHENTICATED')
+        expect(response.metadata['grpc-status']).to eq('16')
         expect(response.metadata).to have_key('www-authenticate')
       end
 
@@ -1542,7 +1542,7 @@ RSpec.describe Spikard::Grpc do
           'x-backup-timestamp' => '2024-01-15T10:30:00Z'
         }
 
-        expect(response.metadata['grpc-status']).to eq('DATA_LOSS')
+        expect(response.metadata['grpc-status']).to eq('15')
         expect(response.metadata['x-backup-available']).to eq('true')
       end
 
@@ -1556,7 +1556,7 @@ RSpec.describe Spikard::Grpc do
           'x-quota-reset-time' => '3600'
         }
 
-        expect(response.metadata['grpc-status']).to eq('RESOURCE_EXHAUSTED')
+        expect(response.metadata['grpc-status']).to eq('8')
         expect(response.metadata['x-quota-limit']).to eq('1000')
       end
 
@@ -1569,7 +1569,7 @@ RSpec.describe Spikard::Grpc do
           'x-current-state' => 'unverified'
         }
 
-        expect(response.metadata['grpc-status']).to eq('FAILED_PRECONDITION')
+        expect(response.metadata['grpc-status']).to eq('9')
         expect(response.metadata['x-current-state']).to eq('unverified')
       end
 
@@ -1583,7 +1583,7 @@ RSpec.describe Spikard::Grpc do
           'x-conflict-field' => 'balance'
         }
 
-        expect(response.metadata['grpc-status']).to eq('ABORTED')
+        expect(response.metadata['grpc-status']).to eq('10')
         expect(response.metadata['x-conflict-version']).to eq('5')
       end
 
@@ -1597,7 +1597,7 @@ RSpec.describe Spikard::Grpc do
           'x-requested-value' => '15'
         }
 
-        expect(response.metadata['grpc-status']).to eq('OUT_OF_RANGE')
+        expect(response.metadata['grpc-status']).to eq('11')
         expect(response.metadata['x-max-value']).to eq('10')
       end
 
@@ -1622,7 +1622,7 @@ RSpec.describe Spikard::Grpc do
         status_key = 'grpc-status'
         response.metadata = { status_key => 'NOT_FOUND' }
 
-        expect(response.metadata['grpc-status']).to eq('NOT_FOUND')
+        expect(response.metadata['grpc-status']).to eq('5')
       end
 
       it 'handles custom status metadata with consistent string types' do
@@ -2006,12 +2006,12 @@ RSpec.describe Spikard::Grpc do
         # Valid request
         valid_req = double('request', method_name: 'Validate', payload: 'data'.b)
         valid_resp = handler.call(valid_req)
-        expect(valid_resp.metadata['grpc-status']).to eq('OK')
+        expect(valid_resp.metadata['grpc-status']).to eq('0')
 
         # Invalid request
         invalid_req = double('request', method_name: 'Validate', payload: ''.b)
         invalid_resp = handler.call(invalid_req)
-        expect(invalid_resp.metadata['grpc-status']).to eq('INVALID_ARGUMENT')
+        expect(invalid_resp.metadata['grpc-status']).to eq('3')
       end
 
       it 'simulates multi-step processing pipeline' do

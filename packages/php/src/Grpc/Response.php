@@ -14,6 +14,10 @@ namespace Spikard\Grpc;
  */
 final class Response
 {
+    public readonly string $payload;
+    /** @var array<string, string> */
+    public readonly array $metadata;
+
     private const STATUS_CODES = [
         'OK' => '0',
         'CANCELLED' => '1',
@@ -38,10 +42,14 @@ final class Response
      * @param string $payload Serialized protobuf message as binary string
      * @param array<string, string> $metadata gRPC metadata (headers) to include in response
      */
-    public function __construct(
-        public readonly string $payload,
-        public readonly array $metadata = []
-    ) {
+    public function __construct(string $payload, array $metadata = [])
+    {
+        if (isset($metadata['grpc-status'])) {
+            $metadata['grpc-status'] = self::normalizeStatus($metadata['grpc-status']);
+        }
+
+        $this->payload = $payload;
+        $this->metadata = $metadata;
     }
 
     /**
