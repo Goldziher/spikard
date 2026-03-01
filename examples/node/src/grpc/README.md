@@ -56,7 +56,7 @@ Log aggregation service that collects logs from clients and returns summary stat
 
 **Use cases**: Data uploads, batch processing, telemetry collection
 
-**Current Implementation**: Shows how to consume client streams using GrpcMessageStream async iterator.
+**Current Implementation**: Shows the current collection-oriented client streaming pattern used by the Node binding.
 
 ```bash
 pnpm tsx examples/node/src/grpc/client-streaming.ts
@@ -68,7 +68,7 @@ Real-time chat application with concurrent message streaming.
 
 **Use cases**: Chat, multiplayer games, collaborative editing
 
-**Current Implementation**: Combines client stream consumption with server-side message collection.
+**Current Implementation**: Demonstrates the current collection-oriented bidirectional streaming pattern used by the Node binding.
 
 ```bash
 pnpm tsx examples/node/src/grpc/bidirectional-streaming.ts

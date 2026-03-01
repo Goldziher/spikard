@@ -5,9 +5,9 @@
  * log entries to the server, and the server returns aggregated statistics.
  *
  * Current Implementation Note:
- * The Node.js implementation supports consuming client streams via async
- * iteration using GrpcMessageStream. The handler collects all messages
- * and returns a single aggregated response.
+ * The current Node binding models client streaming through a collection-oriented
+ * pattern. The handler receives the collected messages and returns a single
+ * aggregated response.
  *
  * @see crates/spikard-node/src/grpc/handler.rs for implementation details
  */
@@ -247,10 +247,9 @@ async function runServer() {
 	// Note: This is a conceptual example. Actual server implementation
 	// depends on Spikard's gRPC server API being finalized.
 	//
-	// Expected usage:
-	// const app = new Spikard();
-	// app.registerGrpcHandler('logs.v1.LogAggregationService', new LogAggregationServiceHandler());
-	// await app.listen(50051);
+	// Expected registration:
+	// const grpcService = new GrpcService();
+	// grpcService.registerHandler('logs.v1.LogAggregationService', new LogAggregationServiceHandler());
 
 	console.log("Server would run on port 50051");
 	console.log("Service: logs.v1.LogAggregationService");

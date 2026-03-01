@@ -307,10 +307,9 @@ async function runServer() {
 	// Note: This is a conceptual example. Actual server implementation
 	// depends on Spikard's gRPC server API being finalized.
 	//
-	// Expected usage:
-	// const app = new Spikard();
-	// app.registerGrpcHandler('chat.v1.ChatService', new ChatServiceHandler());
-	// await app.listen(50051);
+	// Expected registration:
+	// const grpcService = new GrpcService();
+	// grpcService.registerHandler('chat.v1.ChatService', new ChatServiceHandler());
 
 	console.log("Server would run on port 50051");
 	console.log("Service: chat.v1.ChatService");
