@@ -4,6 +4,7 @@
 //! middleware configuration, and lifecycle hooks.
 
 use crate::RubyHandler;
+use crate::grpc::RubyGrpcHandler;
 use crate::config::server_config::extract_server_config;
 use crate::di::build_dependency_container;
 use axum::routing::get;
@@ -66,13 +67,14 @@ fn start_server_without_gvl(
 /// * `hooks_value` - Lifecycle hooks
 /// * `ws_handlers` - WebSocket handlers
 /// * `sse_producers` - SSE producers
+/// * `grpc_services` - gRPC service handlers
 /// * `dependencies` - Dependency injection container
 ///
 /// # Example (Ruby)
 ///
 /// ```ruby
 /// config = Spikard::ServerConfig.new(host: '0.0.0.0', port: 8000)
-/// Spikard::Native.run_server(routes_json, handlers, config, hooks, ws, sse, deps)
+/// Spikard::Native.run_server(routes_json, handlers, config, hooks, ws, sse, grpc, deps)
 /// ```
 #[allow(clippy::too_many_arguments)]
 pub fn run_server(
@@ -83,6 +85,7 @@ pub fn run_server(
     hooks_value: Value,
     ws_handlers: Value,
     sse_producers: Value,
+    grpc_services: Value,
     dependencies: Value,
 ) -> Result<(), Error> {
     let mut config = extract_server_config(ruby, config_value)?;
@@ -205,6 +208,26 @@ pub fn run_server(
 
     config.lifecycle_hooks = lifecycle_hooks.map(Arc::new);
 
+    let grpc_registry = if !grpc_services.is_nil() {
+        let grpc_hash = RHash::from_value(grpc_services)
+            .ok_or_else(|| Error::new(ruby.exception_arg_error(), "gRPC services must be a Hash"))?;
+        let mut registry = spikard_http::grpc::GrpcRegistry::new();
+
+        grpc_hash.foreach(|service_name: String, handler: Value| -> Result<ForEach, Error> {
+            let grpc_handler = Arc::new(RubyGrpcHandler::new(handler, service_name.clone()));
+            registry.register(service_name, grpc_handler, spikard_http::grpc::RpcMode::Unary);
+            Ok(ForEach::Continue)
+        })?;
+
+        if registry.is_empty() {
+            None
+        } else {
+            Some(Arc::new(registry))
+        }
+    } else {
+        None
+    };
+
     #[cfg(feature = "di")]
     {
         if let Ok(registry) = <&crate::NativeDependencyRegistry>::try_convert(dependencies) {
@@ -229,8 +252,12 @@ pub fn run_server(
     info!("Starting Spikard server on {}:{}", host, port);
     info!("Registered {} routes", routes_with_handlers.len());
 
-    let mut app_router = Server::with_handlers_and_metadata(config.clone(), routes_with_handlers, metadata)
-        .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {}", e)))?;
+    let mut app_router = if let Some(registry) = grpc_registry {
+        Server::with_handlers_metadata_and_grpc(config.clone(), routes_with_handlers, metadata, registry)
+    } else {
+        Server::with_handlers_and_metadata(config.clone(), routes_with_handlers, metadata)
+    }
+    .map_err(|e| Error::new(ruby.exception_runtime_error(), format!("Failed to build router: {}", e)))?;
 
     let mut ws_endpoints = Vec::new();
     if !ws_handlers.is_nil() {

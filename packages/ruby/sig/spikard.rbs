@@ -381,6 +381,7 @@ module Spikard
     @routes: Array[RouteEntry]
     @websocket_handlers: Hash[String, Proc]
     @sse_producers: Hash[String, Proc]
+    @grpc_services: Hash[String, untyped]
     @native_hooks: Native::LifecycleRegistry
     @native_dependencies: Native::DependencyRegistry?
     @named_handlers: Hash[String, Proc]
@@ -406,7 +407,10 @@ module Spikard
     def sse: (String, ?_handler_name: String?, **untyped) { () -> SseEventProducer } -> Proc
     def websocket_handlers: () -> Hash[String, Proc]
     def sse_producers: () -> Hash[String, Proc]
-    def run: (?config: ServerConfig | Hash[Symbol, untyped]?, ?host: String?, ?port: Integer?) -> void
+    def add_grpc_service: (String, untyped) -> self
+    def use_grpc: (Grpc::Service) -> self
+    def grpc_services: () -> Hash[String, untyped]
+    def run: (?config: ServerConfig | Hash[Symbol, untyped]?) -> void
 
     private
 
@@ -502,6 +506,7 @@ module Spikard
       LifecycleRegistry,
       Hash[String, Proc],
       Hash[String, Proc],
+      Hash[String, untyped],
       DependencyRegistry
     ) -> void
     def self.normalize_route_metadata: (String) -> String

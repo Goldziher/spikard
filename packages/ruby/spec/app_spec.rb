@@ -33,6 +33,11 @@ RSpec.describe Spikard::App do
       expect(app.sse_producers).to eq({})
     end
 
+    it 'initializes gRPC services as empty hash' do
+      app = described_class.new
+      expect(app.grpc_services).to eq({})
+    end
+
     it 'initializes dependency registry' do
       app = described_class.new
       # Should not raise
@@ -346,6 +351,47 @@ RSpec.describe Spikard::App do
 
       stored_factory = app.sse_producers['/custom']
       expect(stored_factory).to be_a(Proc)
+    end
+  end
+
+  describe '#add_grpc_service' do
+    let(:app) { described_class.new }
+
+    it 'registers a unary gRPC handler by service name' do
+      handler = double('grpc_handler', handle_request: nil)
+
+      result = app.add_grpc_service('example.UserService', handler)
+
+      expect(result).to eq(app)
+      expect(app.grpc_services).to eq('example.UserService' => handler)
+    end
+
+    it 'rejects blank service names' do
+      handler = double('grpc_handler', handle_request: nil)
+
+      expect { app.add_grpc_service('', handler) }.to raise_error(ArgumentError, /service_name required/)
+    end
+
+    it 'rejects handlers without gRPC entrypoints' do
+      expect { app.add_grpc_service('example.UserService', Object.new) }
+        .to raise_error(ArgumentError, /handler must respond to #handle_request or #call/)
+    end
+  end
+
+  describe '#use_grpc' do
+    let(:app) { described_class.new }
+
+    it 'mounts all handlers from a gRPC service registry' do
+      registry = Spikard::Grpc::Service.new
+      user_handler = double('user_handler', handle_request: nil)
+      admin_handler = double('admin_handler', handle_request: nil)
+      registry.register_handler('example.UserService', user_handler)
+      registry.register_handler('example.AdminService', admin_handler)
+
+      result = app.use_grpc(registry)
+
+      expect(result).to eq(app)
+      expect(app.grpc_services.keys).to contain_exactly('example.UserService', 'example.AdminService')
     end
   end
 

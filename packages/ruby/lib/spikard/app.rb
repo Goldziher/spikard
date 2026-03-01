@@ -127,6 +127,7 @@ module Spikard
       @routes = []
       @websocket_handlers = {}
       @sse_producers = {}
+      @grpc_services = {}
       @native_hooks = Spikard::Native::LifecycleRegistry.new
       @native_dependencies = Spikard::Native::DependencyRegistry.new
       @named_handlers = {}
@@ -250,6 +251,40 @@ module Spikard
       @sse_producers.dup
     end
 
+    # Register a unary gRPC service handler
+    #
+    # @param service_name [String] Fully qualified service name
+    # @param handler [#handle_request, #call] gRPC handler implementation
+    # @return [self]
+    def add_grpc_service(service_name, handler)
+      raise ArgumentError, 'service_name required' if service_name.nil? || service_name.empty?
+      unless handler.respond_to?(:handle_request) || handler.respond_to?(:call)
+        raise ArgumentError, 'handler must respond to #handle_request or #call'
+      end
+
+      @grpc_services[service_name] = handler
+      self
+    end
+
+    # Mount all unary gRPC handlers from a registry
+    #
+    # @param service [Spikard::Grpc::Service] service registry
+    # @return [self]
+    def use_grpc(service)
+      service.service_names.each do |service_name|
+        handler = service.get_handler(service_name)
+        add_grpc_service(service_name, handler) if handler
+      end
+      self
+    end
+
+    # Get all registered gRPC service handlers
+    #
+    # @return [Hash<String, Object>]
+    def grpc_services
+      @grpc_services.dup
+    end
+
     # Run the Spikard server with the given configuration
     #
     # @param config [ServerConfig, Hash, nil] Server configuration
@@ -291,11 +326,13 @@ module Spikard
       ws_handlers = websocket_handlers
       sse_prods = sse_producers
 
+      grpc_services = @grpc_services
+
       # Get dependencies for DI
       deps = @native_dependencies
 
       # Call the Rust extension's run_server function
-      Spikard::Native.run_server(routes_json, handlers, config, hooks, ws_handlers, sse_prods, deps)
+      Spikard::Native.run_server(routes_json, handlers, config, hooks, ws_handlers, sse_prods, grpc_services, deps)
 
       # Keep Ruby process alive while server runs
       sleep

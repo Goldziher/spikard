@@ -2007,7 +2007,7 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
         Err(_) => spikard.define_module("Native")?,
     };
 
-    native.define_singleton_method("run_server", function!(run_server, 7))?;
+    native.define_singleton_method("run_server", function!(run_server, 8))?;
     native.define_singleton_method("normalize_route_metadata", function!(normalize_route_metadata, 1))?;
     native.define_singleton_method("background_run", function!(background::background_run, 1))?;
     native.define_singleton_method("build_route_metadata", function!(build_route_metadata, 12))?;
