@@ -193,15 +193,15 @@ end
   - PHP: 85%+ (66 tests)
   - Rust: 80%+ (275+ tests)
 
-### Layer 5: E2E Integration Tests (Future)
+### Layer 5: E2E Integration Tests
 
-**Reserved for Future Implementation**:
-- Full gRPC client/server communication
-- Protobuf schema → server → client roundtrip
-- Streaming RPC modes (server, client, bidirectional)
-- Load testing with realistic traffic patterns
+**Implemented Coverage**:
+- Full client/server communication through per-language E2E apps
+- Protobuf schema → generated code → server → client roundtrip
+- Unary and streaming RPC coverage in language-specific E2E suites
+- Cross-binding smoke coverage for Python, Node, Ruby, PHP, Rust, and Elixir
 
-**Location**: `e2e/grpc/` (not yet implemented)
+**Location**: `e2e/`
 
 ## Testing Infrastructure
 

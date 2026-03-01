@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Node/Ruby startup API cleanup**: Removed the Node `ServerOptions` compatibility type and Ruby `app.run(host:, port:)` fallback. Both bindings now use explicit server configuration objects only.
 - **AsyncAPI support docs**: Corrected the README, init reference, and code generation guide to document the implemented AsyncAPI 3.0.0 support instead of stale AsyncAPI 2.x wording.
 - **Ruby nested dependency resolution**: The Ruby DI handler wrapper now resolves `depends_on` chains recursively, detects missing and circular dependencies, and honors singleton/request caching when invoking factory dependencies.
+- **gRPC testing ADR docs**: Updated the testing infrastructure ADR to reflect the existing multi-language `e2e/` gRPC coverage instead of documenting end-to-end coverage as future work.
 - **GraphQL server API docs**: Updated GraphQL documentation to match the breaking removal of `Server::new(...)/run()` and point to `Server::with_handlers_and_metadata(...)/run_with_config(...)`.
 - **JSON-RPC OpenRPC runtime docs**: The JSON-RPC runtime now serves `/openrpc.json` from registered method metadata, and the examples have been updated to match the implemented endpoint.
 - **OpenRPC CLI docs**: The init/codegen reference now reflects that OpenRPC 1.x schemas are supported instead of documenting them as a future enhancement.
