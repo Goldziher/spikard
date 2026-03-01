@@ -570,7 +570,7 @@ pub fn spikard_start_server_impl(
             };
             let handler = PhpGrpcHandler::register_from_zval(&handler_value, service_name.clone())
                 .map_err(|e| PhpException::default(format!("Failed to register gRPC handler: {}", e)))?;
-            registry.register(service_name, Arc::new(handler), spikard_http::grpc::RpcMode::Unary);
+            registry.register_service(service_name, Arc::new(handler), spikard_http::grpc::RpcMode::Unary);
         }
 
         if registry.is_empty() {
@@ -653,7 +653,7 @@ pub fn spikard_start_server_impl(
         route_metadata,
         grpc_registry,
     )
-        .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
+    .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
     let runtime = spikard_http::build_server_runtime(&server_config)
         .map_err(|e| PhpException::default(format!("Failed to start Tokio runtime: {}", e)))?;

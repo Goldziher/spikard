@@ -304,20 +304,17 @@ async function runClient() {
 async function runServer() {
 	console.log("=== Starting Chat Service ===\n");
 
-	// Unary gRPC app-level registration is available, but the public TypeScript
-	// package still does not expose bidirectional-streaming registration helpers.
+	// Method-level gRPC registration is available on the public TypeScript package.
 	//
-	// Expected registration:
+	// Example registration:
 	// const grpcService = new GrpcService();
-	// grpcService.registerHandler('chat.v1.ChatService', new ChatServiceHandler());
+	// grpcService.registerBidirectionalStreaming('chat.v1.ChatService', 'StreamChat', new ChatServiceHandler());
 	// const app = new Spikard();
 	// app.useGrpc(grpcService);
 
 	console.log("Server would run on port 50051");
 	console.log("Service: chat.v1.ChatService");
 	console.log("Methods: StreamChat (bidirectional streaming)\n");
-
-	console.log("⚠️  Streaming server registration is not yet exposed in the TypeScript package");
 }
 
 /**

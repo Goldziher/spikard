@@ -104,11 +104,11 @@ fn test_grpc_registry_register_handler() {
     let mut registry = GrpcRegistry::new();
     let handler = Arc::new(EchoGrpcHandler);
 
-    registry.register("test.EchoService", handler, RpcMode::Unary);
+    registry.register_service("test.EchoService", handler, RpcMode::Unary);
 
     assert!(!registry.is_empty());
     assert_eq!(registry.len(), 1);
-    assert!(registry.contains("test.EchoService"));
+    assert!(registry.contains_service("test.EchoService"));
 }
 
 #[test]
@@ -116,9 +116,9 @@ fn test_grpc_registry_get_handler() {
     let mut registry = GrpcRegistry::new();
     let handler = Arc::new(EchoGrpcHandler);
 
-    registry.register("test.EchoService", handler, RpcMode::Unary);
+    registry.register_service("test.EchoService", handler, RpcMode::Unary);
 
-    let retrieved = registry.get("test.EchoService");
+    let retrieved = registry.get("test.EchoService", "Echo");
     assert!(retrieved.is_some());
     let (handler, mode) = retrieved.unwrap();
     assert_eq!(handler.service_name(), "test.EchoService");
@@ -129,20 +129,20 @@ fn test_grpc_registry_get_handler() {
 fn test_grpc_registry_multiple_handlers() {
     let mut registry = GrpcRegistry::new();
 
-    registry.register("test.EchoService", Arc::new(EchoGrpcHandler), RpcMode::Unary);
-    registry.register(
+    registry.register_service("test.EchoService", Arc::new(EchoGrpcHandler), RpcMode::Unary);
+    registry.register_service(
         "test.FixedService",
         Arc::new(FixedResponseHandler {
             response: Bytes::from("fixed"),
         }),
         RpcMode::Unary,
     );
-    registry.register("test.ErrorService", Arc::new(ErrorGrpcHandler), RpcMode::Unary);
+    registry.register_service("test.ErrorService", Arc::new(ErrorGrpcHandler), RpcMode::Unary);
 
     assert_eq!(registry.len(), 3);
-    assert!(registry.contains("test.EchoService"));
-    assert!(registry.contains("test.FixedService"));
-    assert!(registry.contains("test.ErrorService"));
+    assert!(registry.contains_service("test.EchoService"));
+    assert!(registry.contains_service("test.FixedService"));
+    assert!(registry.contains_service("test.ErrorService"));
 
     let names = registry.service_names();
     assert_eq!(names.len(), 3);

@@ -67,11 +67,16 @@ pub async fn route_grpc_request(
         }
     };
 
-    // Look up the handler for this service
-    let (handler, rpc_mode) = match registry.get(&service_name) {
+    // Look up the handler for this service and method
+    let (handler, rpc_mode) = match registry.get(&service_name, &method_name) {
         Some((h, mode)) => (h, mode),
         None => {
-            return Err((StatusCode::NOT_FOUND, format!("Service not found: {}", service_name)));
+            let message = if registry.contains_service(&service_name) {
+                format!("Method not found: {service_name}/{method_name}")
+            } else {
+                format!("Service not found: {service_name}")
+            };
+            return Err((StatusCode::NOT_FOUND, message));
         }
     };
 
@@ -433,7 +438,7 @@ mod tests {
     #[tokio::test]
     async fn test_route_grpc_request_success() {
         let mut registry = GrpcRegistry::new();
-        registry.register("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
+        registry.register_service("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
         let registry = Arc::new(registry);
         let config = GrpcConfig::default();
 
@@ -445,6 +450,87 @@ mod tests {
 
         let result = route_grpc_request(registry, &config, request).await;
         assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_supports_mixed_rpc_modes_per_service() {
+        struct MixedUnaryHandler;
+
+        impl GrpcHandler for MixedUnaryHandler {
+            fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async move {
+                    Ok(GrpcResponseData {
+                        payload: request.payload,
+                        metadata: tonic::metadata::MetadataMap::new(),
+                    })
+                })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.MixedService"
+            }
+        }
+
+        struct MixedStreamHandler;
+
+        impl GrpcHandler for MixedStreamHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async { Err(tonic::Status::unimplemented("Use server streaming")) })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.MixedService"
+            }
+
+            fn call_server_stream(
+                &self,
+                _request: GrpcRequestData,
+            ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
+                Box::pin(async { Ok(message_stream_from_vec(vec![Bytes::from_static(b"streamed")])) })
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register(
+            "test.MixedService",
+            "GetUser",
+            Arc::new(MixedUnaryHandler),
+            RpcMode::Unary,
+        );
+        registry.register(
+            "test.MixedService",
+            "ListUsers",
+            Arc::new(MixedStreamHandler),
+            RpcMode::ServerStreaming,
+        );
+        let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
+
+        let unary_response = route_grpc_request(
+            Arc::clone(&registry),
+            &config,
+            Request::builder()
+                .uri("/test.MixedService/GetUser")
+                .header("content-type", "application/grpc")
+                .body(Body::from(Bytes::from_static(b"user")))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(unary_response.headers().get("grpc-status").unwrap(), "0");
+
+        let streaming_response = route_grpc_request(
+            registry,
+            &config,
+            Request::builder()
+                .uri("/test.MixedService/ListUsers")
+                .header("content-type", "application/grpc")
+                .body(Body::from(Bytes::from_static(b"ignored")))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+        assert!(streaming_response.headers().get("grpc-status").is_none());
     }
 
     #[tokio::test]
@@ -464,6 +550,27 @@ mod tests {
         let (status, message) = result.unwrap_err();
         assert_eq!(status, StatusCode::NOT_FOUND);
         assert!(message.contains("Service not found"));
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_method_not_found() {
+        let mut registry = GrpcRegistry::new();
+        registry.register("test.EchoService", "Echo", Arc::new(EchoHandler), RpcMode::Unary);
+        let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
+
+        let request = Request::builder()
+            .uri("/test.EchoService/Missing")
+            .header("content-type", "application/grpc")
+            .body(Body::from(Bytes::new()))
+            .unwrap();
+
+        let result = route_grpc_request(registry, &config, request).await;
+        assert!(result.is_err());
+
+        let (status, message) = result.unwrap_err();
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert!(message.contains("Method not found"));
     }
 
     #[tokio::test]
@@ -582,7 +689,7 @@ mod tests {
     #[tokio::test]
     async fn test_route_grpc_request_with_custom_max_message_size() {
         let mut registry = GrpcRegistry::new();
-        registry.register("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
+        registry.register_service("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
         let registry = Arc::new(registry);
 
         let mut config = GrpcConfig::default();
@@ -602,7 +709,7 @@ mod tests {
     #[tokio::test]
     async fn test_route_grpc_request_exceeds_max_message_size() {
         let mut registry = GrpcRegistry::new();
-        registry.register("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
+        registry.register_service("test.EchoService", Arc::new(EchoHandler), RpcMode::Unary);
         let registry = Arc::new(registry);
 
         let mut config = GrpcConfig::default();
@@ -649,7 +756,7 @@ mod tests {
         }
 
         let mut registry = GrpcRegistry::new();
-        registry.register("test.StreamService", Arc::new(StreamHandler), RpcMode::ServerStreaming);
+        registry.register_service("test.StreamService", Arc::new(StreamHandler), RpcMode::ServerStreaming);
         let registry = Arc::new(registry);
         let config = GrpcConfig::default();
 
@@ -717,7 +824,7 @@ mod tests {
         }
 
         let mut registry = GrpcRegistry::new();
-        registry.register(
+        registry.register_service(
             "test.ClientStreamService",
             Arc::new(ClientStreamHandler),
             RpcMode::ClientStreaming,
@@ -776,7 +883,7 @@ mod tests {
         }
 
         let mut registry = GrpcRegistry::new();
-        registry.register(
+        registry.register_service(
             "test.BidiService",
             Arc::new(BidiHandler),
             RpcMode::BidirectionalStreaming,
@@ -842,7 +949,7 @@ mod tests {
         }
 
         let mut registry = GrpcRegistry::new();
-        registry.register(
+        registry.register_service(
             "test.BadClientStreamService",
             Arc::new(NeverCalledHandler),
             RpcMode::ClientStreaming,

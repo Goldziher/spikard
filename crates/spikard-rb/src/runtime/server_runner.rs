@@ -4,9 +4,9 @@
 //! middleware configuration, and lifecycle hooks.
 
 use crate::RubyHandler;
-use crate::grpc::RubyGrpcHandler;
 use crate::config::server_config::extract_server_config;
 use crate::di::build_dependency_container;
+use crate::grpc::RubyGrpcHandler;
 use axum::routing::get;
 use magnus::prelude::*;
 use magnus::{Error, RHash, Ruby, TryConvert, Value, r_hash::ForEach};
@@ -215,7 +215,7 @@ pub fn run_server(
 
         grpc_hash.foreach(|service_name: String, handler: Value| -> Result<ForEach, Error> {
             let grpc_handler = Arc::new(RubyGrpcHandler::new(handler, service_name.clone()));
-            registry.register(service_name, grpc_handler, spikard_http::grpc::RpcMode::Unary);
+            registry.register_service(service_name, grpc_handler, spikard_http::grpc::RpcMode::Unary);
             Ok(ForEach::Continue)
         })?;
 

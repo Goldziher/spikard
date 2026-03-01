@@ -686,7 +686,7 @@ impl GrpcHandler for ErrorAfterMessagesHandler {
 #[tokio::test]
 async fn test_http_layer_mid_stream_error_closes_connection() {
     let mut registry = GrpcRegistry::new();
-    registry.register(
+    registry.register_service(
         "test.ErrorAfterService",
         Arc::new(ErrorAfterMessagesHandler),
         RpcMode::ServerStreaming,
@@ -729,7 +729,7 @@ async fn test_http_layer_mid_stream_error_closes_connection() {
 #[tokio::test]
 async fn test_http_layer_partial_messages_before_error() {
     let mut registry = GrpcRegistry::new();
-    registry.register(
+    registry.register_service(
         "test.ErrorAfterService",
         Arc::new(ErrorAfterMessagesHandler),
         RpcMode::ServerStreaming,
@@ -767,7 +767,7 @@ async fn test_http_layer_partial_messages_before_error() {
 #[tokio::test]
 async fn test_http_layer_connection_cleanup() {
     let mut registry = GrpcRegistry::new();
-    registry.register(
+    registry.register_service(
         "test.ErrorAfterService",
         Arc::new(ErrorAfterMessagesHandler),
         RpcMode::ServerStreaming,
@@ -836,7 +836,7 @@ async fn test_http_layer_pre_stream_error_status_mapping() {
     }
 
     let mut registry = GrpcRegistry::new();
-    registry.register(
+    registry.register_service(
         "test.PreErrorService",
         Arc::new(PreStreamErrorHandler),
         RpcMode::ServerStreaming,
@@ -900,7 +900,7 @@ async fn test_http_layer_large_payload_then_error() {
     }
 
     let mut registry = GrpcRegistry::new();
-    registry.register(
+    registry.register_service(
         "test.LargePayloadErrorService",
         Arc::new(LargePayloadErrorHandler),
         RpcMode::ServerStreaming,
@@ -927,7 +927,7 @@ async fn test_http_layer_large_payload_then_error() {
 #[tokio::test]
 async fn test_http_layer_stream_termination_on_error() {
     let mut registry = GrpcRegistry::new();
-    registry.register(
+    registry.register_service(
         "test.ErrorAfterService",
         Arc::new(ErrorAfterMessagesHandler),
         RpcMode::ServerStreaming,

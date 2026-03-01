@@ -54,7 +54,7 @@ pub use service::{GenericGrpcService, copy_metadata, is_grpc_request, parse_grpc
 pub use streaming::{MessageStream, StreamingRequest, StreamingResponse};
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 /// Configuration for gRPC support
@@ -193,8 +193,9 @@ const fn default_keepalive_timeout() -> u64 {
 
 /// Registry for gRPC handlers
 ///
-/// Maps service names to their handlers and RPC modes. Used by the server to route
-/// incoming gRPC requests to the appropriate handler method based on RPC mode.
+/// Maps service and method names to their handlers and RPC modes. Used by the
+/// server to route incoming gRPC requests to the appropriate handler method based
+/// on the parsed gRPC path.
 ///
 /// # Example
 ///
@@ -203,14 +204,20 @@ const fn default_keepalive_timeout() -> u64 {
 /// use std::sync::Arc;
 ///
 /// let mut registry = GrpcRegistry::new();
-/// registry.register("mypackage.UserService", Arc::new(user_handler), RpcMode::Unary);
-/// registry.register("mypackage.StreamService", Arc::new(stream_handler), RpcMode::ServerStreaming);
+/// registry.register("mypackage.UserService", "GetUser", Arc::new(user_handler), RpcMode::Unary);
+/// registry.register(
+///     "mypackage.StreamService",
+///     "StreamUsers",
+///     Arc::new(stream_handler),
+///     RpcMode::ServerStreaming,
+/// );
 /// ```
 type GrpcHandlerEntry = (Arc<dyn GrpcHandler>, RpcMode);
+const WILDCARD_METHOD: &str = "*";
 
 #[derive(Clone)]
 pub struct GrpcRegistry {
-    handlers: Arc<HashMap<String, GrpcHandlerEntry>>,
+    handlers: Arc<HashMap<(String, String), GrpcHandlerEntry>>,
 }
 
 impl GrpcRegistry {
@@ -221,34 +228,85 @@ impl GrpcRegistry {
         }
     }
 
-    /// Register a gRPC handler for a service
+    /// Register a gRPC handler for a specific service method
     ///
     /// # Arguments
     ///
     /// * `service_name` - Fully qualified service name (e.g., "mypackage.MyService")
+    /// * `method_name` - Method name (e.g., "GetUser")
     /// * `handler` - Handler implementation for this service
     /// * `rpc_mode` - The RPC mode this handler supports (Unary, ServerStreaming, etc.)
-    pub fn register(&mut self, service_name: impl Into<String>, handler: Arc<dyn GrpcHandler>, rpc_mode: RpcMode) {
+    pub fn register(
+        &mut self,
+        service_name: impl Into<String>,
+        method_name: impl Into<String>,
+        handler: Arc<dyn GrpcHandler>,
+        rpc_mode: RpcMode,
+    ) {
         let handlers = Arc::make_mut(&mut self.handlers);
-        handlers.insert(service_name.into(), (handler, rpc_mode));
+        handlers.insert((service_name.into(), method_name.into()), (handler, rpc_mode));
     }
 
-    /// Get a handler and its RPC mode by service name
+    /// Register a gRPC handler for an entire service.
     ///
-    /// Returns both the handler and the RPC mode it was registered with,
-    /// allowing the router to dispatch to the appropriate handler method.
-    pub fn get(&self, service_name: &str) -> Option<(Arc<dyn GrpcHandler>, RpcMode)> {
-        self.handlers.get(service_name).cloned()
+    /// This is a service-level fallback for bindings that route methods inside a
+    /// single handler object. Method-specific registrations take precedence over
+    /// these wildcard entries during request dispatch.
+    pub fn register_service(
+        &mut self,
+        service_name: impl Into<String>,
+        handler: Arc<dyn GrpcHandler>,
+        rpc_mode: RpcMode,
+    ) {
+        self.register(service_name, WILDCARD_METHOD, handler, rpc_mode);
+    }
+
+    /// Get a handler and its RPC mode by service and method name
+    ///
+    /// Returns both the handler and the RPC mode it was registered with. Exact
+    /// method matches take precedence over service-level wildcard handlers.
+    pub fn get(&self, service_name: &str, method_name: &str) -> Option<(Arc<dyn GrpcHandler>, RpcMode)> {
+        self.handlers
+            .get(&(service_name.to_owned(), method_name.to_owned()))
+            .or_else(|| {
+                self.handlers
+                    .get(&(service_name.to_owned(), WILDCARD_METHOD.to_owned()))
+            })
+            .cloned()
     }
 
     /// Get all registered service names
     pub fn service_names(&self) -> Vec<String> {
-        self.handlers.keys().cloned().collect()
+        self.handlers
+            .keys()
+            .map(|(service_name, _)| service_name.clone())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect()
     }
 
-    /// Check if a service is registered
-    pub fn contains(&self, service_name: &str) -> bool {
-        self.handlers.contains_key(service_name)
+    /// Get all explicitly registered method names for a service.
+    pub fn method_names(&self, service_name: &str) -> Vec<String> {
+        self.handlers
+            .keys()
+            .filter(|(registered_service, method_name)| {
+                registered_service == service_name && method_name.as_str() != WILDCARD_METHOD
+            })
+            .map(|(_, method_name)| method_name.clone())
+            .collect()
+    }
+
+    /// Check if a specific service method is registered.
+    pub fn contains(&self, service_name: &str, method_name: &str) -> bool {
+        self.handlers
+            .contains_key(&(service_name.to_owned(), method_name.to_owned()))
+    }
+
+    /// Check if a service has any registered handlers.
+    pub fn contains_service(&self, service_name: &str) -> bool {
+        self.handlers
+            .keys()
+            .any(|(registered_service, _)| registered_service == service_name)
     }
 
     /// Get the number of registered services
@@ -330,11 +388,11 @@ mod tests {
         let mut registry = GrpcRegistry::new();
         let handler = Arc::new(TestHandler);
 
-        registry.register("test.Service", handler, RpcMode::Unary);
+        registry.register("test.Service", "TestMethod", handler, RpcMode::Unary);
 
         assert!(!registry.is_empty());
         assert_eq!(registry.len(), 1);
-        assert!(registry.contains("test.Service"));
+        assert!(registry.contains("test.Service", "TestMethod"));
     }
 
     #[test]
@@ -342,9 +400,9 @@ mod tests {
         let mut registry = GrpcRegistry::new();
         let handler = Arc::new(TestHandler);
 
-        registry.register("test.Service", handler, RpcMode::Unary);
+        registry.register("test.Service", "TestMethod", handler, RpcMode::Unary);
 
-        let retrieved = registry.get("test.Service");
+        let retrieved = registry.get("test.Service", "TestMethod");
         assert!(retrieved.is_some());
         let (handler, rpc_mode) = retrieved.unwrap();
         assert_eq!(handler.service_name(), "test.Service");
@@ -354,7 +412,7 @@ mod tests {
     #[test]
     fn test_grpc_registry_get_nonexistent() {
         let registry = GrpcRegistry::new();
-        let result = registry.get("nonexistent.Service");
+        let result = registry.get("nonexistent.Service", "MissingMethod");
         assert!(result.is_none());
     }
 
@@ -362,9 +420,9 @@ mod tests {
     fn test_grpc_registry_service_names() {
         let mut registry = GrpcRegistry::new();
 
-        registry.register("service1", Arc::new(TestHandler), RpcMode::Unary);
-        registry.register("service2", Arc::new(TestHandler), RpcMode::ServerStreaming);
-        registry.register("service3", Arc::new(TestHandler), RpcMode::Unary);
+        registry.register("service1", "Method1", Arc::new(TestHandler), RpcMode::Unary);
+        registry.register("service2", "Method2", Arc::new(TestHandler), RpcMode::ServerStreaming);
+        registry.register("service3", "Method3", Arc::new(TestHandler), RpcMode::Unary);
 
         let mut names = registry.service_names();
         names.sort();
@@ -375,33 +433,38 @@ mod tests {
     #[test]
     fn test_grpc_registry_contains() {
         let mut registry = GrpcRegistry::new();
-        registry.register("test.Service", Arc::new(TestHandler), RpcMode::Unary);
+        registry.register("test.Service", "TestMethod", Arc::new(TestHandler), RpcMode::Unary);
 
-        assert!(registry.contains("test.Service"));
-        assert!(!registry.contains("other.Service"));
+        assert!(registry.contains("test.Service", "TestMethod"));
+        assert!(!registry.contains("other.Service", "TestMethod"));
     }
 
     #[test]
     fn test_grpc_registry_multiple_services() {
         let mut registry = GrpcRegistry::new();
 
-        registry.register("user.Service", Arc::new(TestHandler), RpcMode::Unary);
-        registry.register("post.Service", Arc::new(TestHandler), RpcMode::ServerStreaming);
+        registry.register("user.Service", "GetUser", Arc::new(TestHandler), RpcMode::Unary);
+        registry.register(
+            "post.Service",
+            "ListPosts",
+            Arc::new(TestHandler),
+            RpcMode::ServerStreaming,
+        );
 
         assert_eq!(registry.len(), 2);
-        assert!(registry.contains("user.Service"));
-        assert!(registry.contains("post.Service"));
+        assert!(registry.contains("user.Service", "GetUser"));
+        assert!(registry.contains("post.Service", "ListPosts"));
     }
 
     #[test]
     fn test_grpc_registry_clone() {
         let mut registry = GrpcRegistry::new();
-        registry.register("test.Service", Arc::new(TestHandler), RpcMode::Unary);
+        registry.register("test.Service", "TestMethod", Arc::new(TestHandler), RpcMode::Unary);
 
         let cloned = registry.clone();
 
         assert_eq!(cloned.len(), 1);
-        assert!(cloned.contains("test.Service"));
+        assert!(cloned.contains("test.Service", "TestMethod"));
     }
 
     #[test]
@@ -414,21 +477,80 @@ mod tests {
     fn test_grpc_registry_rpc_mode_storage() {
         let mut registry = GrpcRegistry::new();
 
-        registry.register("unary.Service", Arc::new(TestHandler), RpcMode::Unary);
-        registry.register("server_stream.Service", Arc::new(TestHandler), RpcMode::ServerStreaming);
-        registry.register("client_stream.Service", Arc::new(TestHandler), RpcMode::ClientStreaming);
-        registry.register("bidi.Service", Arc::new(TestHandler), RpcMode::BidirectionalStreaming);
+        registry.register("unary.Service", "UnaryMethod", Arc::new(TestHandler), RpcMode::Unary);
+        registry.register(
+            "server_stream.Service",
+            "StreamMethod",
+            Arc::new(TestHandler),
+            RpcMode::ServerStreaming,
+        );
+        registry.register(
+            "client_stream.Service",
+            "UploadMethod",
+            Arc::new(TestHandler),
+            RpcMode::ClientStreaming,
+        );
+        registry.register(
+            "bidi.Service",
+            "ChatMethod",
+            Arc::new(TestHandler),
+            RpcMode::BidirectionalStreaming,
+        );
 
-        let (_, mode) = registry.get("unary.Service").unwrap();
+        let (_, mode) = registry.get("unary.Service", "UnaryMethod").unwrap();
         assert_eq!(mode, RpcMode::Unary);
 
-        let (_, mode) = registry.get("server_stream.Service").unwrap();
+        let (_, mode) = registry.get("server_stream.Service", "StreamMethod").unwrap();
         assert_eq!(mode, RpcMode::ServerStreaming);
 
-        let (_, mode) = registry.get("client_stream.Service").unwrap();
+        let (_, mode) = registry.get("client_stream.Service", "UploadMethod").unwrap();
         assert_eq!(mode, RpcMode::ClientStreaming);
 
-        let (_, mode) = registry.get("bidi.Service").unwrap();
+        let (_, mode) = registry.get("bidi.Service", "ChatMethod").unwrap();
         assert_eq!(mode, RpcMode::BidirectionalStreaming);
+    }
+
+    #[test]
+    fn test_grpc_registry_service_fallback() {
+        let mut registry = GrpcRegistry::new();
+        registry.register_service("test.Service", Arc::new(TestHandler), RpcMode::Unary);
+
+        assert!(registry.contains_service("test.Service"));
+        assert!(registry.get("test.Service", "AnyMethod").is_some());
+        assert!(registry.method_names("test.Service").is_empty());
+    }
+
+    #[test]
+    fn test_grpc_registry_prefers_method_specific_handler() {
+        struct MethodSpecificHandler;
+
+        impl GrpcHandler for MethodSpecificHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async {
+                    Ok(GrpcResponseData {
+                        payload: bytes::Bytes::from("method-specific"),
+                        metadata: tonic::metadata::MetadataMap::new(),
+                    })
+                })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.Service"
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register_service("test.Service", Arc::new(TestHandler), RpcMode::Unary);
+        registry.register(
+            "test.Service",
+            "GetThing",
+            Arc::new(MethodSpecificHandler),
+            RpcMode::ServerStreaming,
+        );
+
+        let (_, mode) = registry.get("test.Service", "GetThing").unwrap();
+        assert_eq!(mode, RpcMode::ServerStreaming);
+        let (_, fallback_mode) = registry.get("test.Service", "OtherThing").unwrap();
+        assert_eq!(fallback_mode, RpcMode::Unary);
     }
 }

@@ -244,20 +244,17 @@ async function runClient() {
 async function runServer() {
 	console.log("=== Starting Log Aggregation Service ===\n");
 
-	// Unary gRPC app-level registration is available, but the public TypeScript
-	// package still does not expose client-streaming registration helpers.
+	// Method-level gRPC registration is available on the public TypeScript package.
 	//
-	// Expected registration:
+	// Example registration:
 	// const grpcService = new GrpcService();
-	// grpcService.registerHandler('logs.v1.LogAggregationService', new LogAggregationServiceHandler());
+	// grpcService.registerClientStreaming('logs.v1.LogAggregationService', 'AggregateLogs', new LogAggregationServiceHandler());
 	// const app = new Spikard();
 	// app.useGrpc(grpcService);
 
 	console.log("Server would run on port 50051");
 	console.log("Service: logs.v1.LogAggregationService");
 	console.log("Methods: AggregateLogs (client streaming)\n");
-
-	console.log("⚠️  Streaming server registration is not yet exposed in the TypeScript package");
 }
 
 /**

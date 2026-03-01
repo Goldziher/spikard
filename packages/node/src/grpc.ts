@@ -13,14 +13,20 @@
  *
  * # Current Limitations
  *
- * - Public TypeScript helpers currently cover unary request-response handlers and service routing
- * - Streaming helper types are not yet exposed in the TypeScript package
+ * - Public TypeScript helpers cover unary, server-streaming, client-streaming,
+ *   and bidirectional-streaming registration
  * - Binary metadata values are not accessible (only ASCII string metadata)
  *
  * # Example
  *
  * ```typescript
- * import { GrpcHandler, GrpcRequest, GrpcResponse, GrpcService } from 'spikard';
+ * import {
+ *   GrpcHandler,
+ *   GrpcRequest,
+ *   GrpcResponse,
+ *   GrpcService,
+ *   GrpcServerStreamingHandler,
+ * } from 'spikard';
  * import * as $protobuf from 'protobufjs';
  *
  * // Generated protobuf types (using protobufjs)
@@ -58,9 +64,14 @@
  *   }
  * }
  *
- * // Register handler in a service registry
+ * // Register handlers in a service registry
  * const service = new GrpcService();
- * service.registerHandler('mypackage.UserService', new UserServiceHandler());
+ * service.registerUnary('mypackage.UserService', 'GetUser', new UserServiceHandler());
+ * service.registerServerStreaming('mypackage.UserService', 'ListUsers', {
+ *   async handleServerStream(request) {
+ *     return { payload: Buffer.from([]) };
+ *   }
+ * } satisfies GrpcServerStreamingHandler);
  *
  * const app = new Spikard();
  * app.useGrpc(service);
@@ -144,6 +155,25 @@ export interface GrpcResponse {
 	metadata?: GrpcMetadata;
 }
 
+export interface GrpcClientStreamRequest {
+	serviceName: string;
+	methodName: string;
+	metadata: GrpcMetadata;
+	messages: Buffer[];
+}
+
+export interface GrpcBidiStreamRequest {
+	serviceName: string;
+	methodName: string;
+	metadata: GrpcMetadata;
+	messages: Buffer[];
+}
+
+export interface GrpcBidiStreamResponse {
+	messages: Buffer[];
+	metadata?: GrpcMetadata;
+}
+
 /**
  * gRPC handler interface
  *
@@ -198,6 +228,18 @@ export interface GrpcHandler {
 	 * @throws Error for internal server errors (code 13)
 	 */
 	handleRequest(request: GrpcRequest): Promise<GrpcResponse>;
+}
+
+export interface GrpcServerStreamingHandler {
+	handleServerStream(request: GrpcRequest): Promise<GrpcResponse>;
+}
+
+export interface GrpcClientStreamingHandler {
+	handleClientStream(request: GrpcClientStreamRequest): Promise<GrpcResponse>;
+}
+
+export interface GrpcBidirectionalStreamingHandler {
+	handleBidiStream(request: GrpcBidiStreamRequest): Promise<GrpcBidiStreamResponse>;
 }
 
 /**
@@ -287,22 +329,19 @@ export class GrpcError extends Error {
  *
  * Configuration for a gRPC service registration.
  */
-export interface GrpcServiceConfig {
-	/**
-	 * Fully qualified service name
-	 *
-	 * This must match the service name in your .proto file.
-	 *
-	 * Example: "mypackage.UserService"
-	 */
-	serviceName: string;
+export type GrpcRpcMode = "unary" | "serverStreaming" | "clientStreaming" | "bidirectionalStreaming";
 
-	/**
-	 * Handler implementation
-	 *
-	 * An object implementing the GrpcHandler interface.
-	 */
-	handler: GrpcHandler;
+export type GrpcMethodHandler =
+	| GrpcHandler
+	| GrpcServerStreamingHandler
+	| GrpcClientStreamingHandler
+	| GrpcBidirectionalStreamingHandler;
+
+export interface GrpcMethodConfig {
+	serviceName: string;
+	methodName: string;
+	rpcMode: GrpcRpcMode;
+	handler: GrpcMethodHandler;
 }
 
 /**
@@ -311,47 +350,105 @@ export interface GrpcServiceConfig {
  * Mirrors the registry helpers exposed by the other language bindings.
  * A single registry can route requests for multiple fully-qualified gRPC services.
  */
-export class GrpcService implements GrpcHandler {
-	private readonly handlers = new Map<string, GrpcHandler>();
+export class GrpcService {
+	private readonly methods = new Map<string, GrpcMethodConfig>();
 
-	/**
-	 * Register a handler for a fully-qualified service name.
-	 *
-	 * @param serviceName - Service name such as `mypackage.UserService`
-	 * @param handler - Handler implementation for that service
-	 * @returns The registry for chaining
-	 */
-	registerHandler(serviceName: string, handler: GrpcHandler): this {
-		if (!serviceName) {
+	private methodKey(serviceName: string, methodName: string): string {
+		return `${serviceName}/${methodName}`;
+	}
+
+	private registerMethod(config: GrpcMethodConfig): this {
+		if (!config.serviceName) {
 			throw new Error("Service name cannot be empty");
 		}
-		if (typeof handler?.handleRequest !== "function") {
-			throw new TypeError("Handler must implement handleRequest(request)");
+		if (!config.methodName) {
+			throw new Error("Method name cannot be empty");
 		}
 
-		this.handlers.set(serviceName, handler);
+		switch (config.rpcMode) {
+			case "unary":
+				if (typeof (config.handler as GrpcHandler)?.handleRequest !== "function") {
+					throw new TypeError("Unary handler must implement handleRequest(request)");
+				}
+				break;
+			case "serverStreaming":
+				if (typeof (config.handler as GrpcServerStreamingHandler)?.handleServerStream !== "function") {
+					throw new TypeError("Server-streaming handler must implement handleServerStream(request)");
+				}
+				break;
+			case "clientStreaming":
+				if (typeof (config.handler as GrpcClientStreamingHandler)?.handleClientStream !== "function") {
+					throw new TypeError("Client-streaming handler must implement handleClientStream(request)");
+				}
+				break;
+			case "bidirectionalStreaming":
+				if (typeof (config.handler as GrpcBidirectionalStreamingHandler)?.handleBidiStream !== "function") {
+					throw new TypeError("Bidirectional-streaming handler must implement handleBidiStream(request)");
+				}
+				break;
+		}
+
+		this.methods.set(this.methodKey(config.serviceName, config.methodName), config);
 		return this;
+	}
+
+	/**
+	 * Register a unary handler for a fully-qualified service method.
+	 *
+	 * @param serviceName - Service name such as `mypackage.UserService`
+	 * @param methodName - Method name such as `GetUser`
+	 * @param handler - Handler implementation for that method
+	 * @returns The registry for chaining
+	 */
+	registerUnary(serviceName: string, methodName: string, handler: GrpcHandler): this {
+		return this.registerMethod({ serviceName, methodName, rpcMode: "unary", handler });
+	}
+
+	registerServerStreaming(
+		serviceName: string,
+		methodName: string,
+		handler: GrpcServerStreamingHandler,
+	): this {
+		return this.registerMethod({ serviceName, methodName, rpcMode: "serverStreaming", handler });
+	}
+
+	registerClientStreaming(
+		serviceName: string,
+		methodName: string,
+		handler: GrpcClientStreamingHandler,
+	): this {
+		return this.registerMethod({ serviceName, methodName, rpcMode: "clientStreaming", handler });
+	}
+
+	registerBidirectionalStreaming(
+		serviceName: string,
+		methodName: string,
+		handler: GrpcBidirectionalStreamingHandler,
+	): this {
+		return this.registerMethod({ serviceName, methodName, rpcMode: "bidirectionalStreaming", handler });
 	}
 
 	/**
 	 * Remove a handler from the registry.
 	 *
 	 * @param serviceName - Fully-qualified service name
+	 * @param methodName - Method name
 	 */
-	unregisterHandler(serviceName: string): void {
-		if (!this.handlers.delete(serviceName)) {
-			throw new Error(`No handler registered for service: ${serviceName}`);
+	unregister(serviceName: string, methodName: string): void {
+		if (!this.methods.delete(this.methodKey(serviceName, methodName))) {
+			throw new Error(`No handler registered for method: ${serviceName}/${methodName}`);
 		}
 	}
 
 	/**
-	 * Get the handler for a service name.
+	 * Get the registration for a service method.
 	 *
 	 * @param serviceName - Fully-qualified service name
-	 * @returns The registered handler, if present
+	 * @param methodName - Method name
+	 * @returns The registered method configuration, if present
 	 */
-	getHandler(serviceName: string): GrpcHandler | undefined {
-		return this.handlers.get(serviceName);
+	getMethod(serviceName: string, methodName: string): GrpcMethodConfig | undefined {
+		return this.methods.get(this.methodKey(serviceName, methodName));
 	}
 
 	/**
@@ -360,36 +457,56 @@ export class GrpcService implements GrpcHandler {
 	 * @returns Fully-qualified service names
 	 */
 	serviceNames(): string[] {
-		return Array.from(this.handlers.keys());
+		return Array.from(new Set(Array.from(this.methods.values(), (entry) => entry.serviceName)));
+	}
+
+	methodNames(serviceName: string): string[] {
+		return Array.from(this.methods.values())
+			.filter((entry) => entry.serviceName === serviceName)
+			.map((entry) => entry.methodName);
 	}
 
 	/**
-	 * Check whether a service is registered.
+	 * Check whether a specific service method is registered.
 	 *
 	 * @param serviceName - Fully-qualified service name
-	 * @returns True when a handler is registered for the service
+	 * @param methodName - Method name
+	 * @returns True when a handler is registered for the method
 	 */
-	hasHandler(serviceName: string): boolean {
-		return this.handlers.has(serviceName);
+	hasMethod(serviceName: string, methodName: string): boolean {
+		return this.methods.has(this.methodKey(serviceName, methodName));
 	}
 
 	/**
-	 * Route a request to the registered service handler.
+	 * Return registered method entries.
+	 */
+	entries(): GrpcMethodConfig[] {
+		return Array.from(this.methods.values());
+	}
+
+	/**
+	 * Route a unary request to the registered method handler.
 	 *
 	 * @param request - Incoming gRPC request
 	 * @returns Promise resolving to the handler response
 	 * @throws GrpcError when no service is registered
 	 */
 	async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
-		const handler = this.getHandler(request.serviceName);
-		if (!handler) {
+		const method = this.getMethod(request.serviceName, request.methodName);
+		if (!method) {
 			throw new GrpcError(
 				GrpcStatusCode.UNIMPLEMENTED,
-				`No handler registered for service: ${request.serviceName}`,
+				`No handler registered for method: ${request.serviceName}/${request.methodName}`,
+			);
+		}
+		if (method.rpcMode !== "unary") {
+			throw new GrpcError(
+				GrpcStatusCode.UNIMPLEMENTED,
+				`Method ${request.serviceName}/${request.methodName} is registered as ${method.rpcMode}`,
 			);
 		}
 
-		return handler.handleRequest(request);
+		return (method.handler as GrpcHandler).handleRequest(request);
 	}
 }
 

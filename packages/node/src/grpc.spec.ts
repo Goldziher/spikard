@@ -11,9 +11,12 @@ import {
 	GrpcService,
 	createUnaryHandler,
 	GrpcError,
+	type GrpcBidirectionalStreamingHandler,
+	type GrpcClientStreamingHandler,
 	type GrpcHandler,
 	type GrpcRequest,
 	type GrpcResponse,
+	type GrpcServerStreamingHandler,
 	GrpcStatusCode,
 } from "./grpc";
 
@@ -138,7 +141,7 @@ describe("GrpcHandler", () => {
 });
 
 describe("GrpcService", () => {
-	it("should register and route handlers by service name", async () => {
+	it("should register and route unary handlers by service and method", async () => {
 		const service = new GrpcService();
 		const handler: GrpcHandler = {
 			async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
@@ -148,7 +151,7 @@ describe("GrpcService", () => {
 			},
 		};
 
-		service.registerHandler("test.UserService", handler);
+		service.registerUnary("test.UserService", "GetUser", handler);
 
 		const response = await service.handleRequest({
 			serviceName: "test.UserService",
@@ -158,9 +161,10 @@ describe("GrpcService", () => {
 		});
 
 		expect(response.payload.toString()).toBe("handled:test.UserService:GetUser");
-		expect(service.hasHandler("test.UserService")).toBe(true);
+		expect(service.hasMethod("test.UserService", "GetUser")).toBe(true);
 		expect(service.serviceNames()).toEqual(["test.UserService"]);
-		expect(service.getHandler("test.UserService")).toBe(handler);
+		expect(service.methodNames("test.UserService")).toEqual(["GetUser"]);
+		expect(service.getMethod("test.UserService", "GetUser")?.handler).toBe(handler);
 	});
 
 	it("should reject missing service registrations", async () => {
@@ -184,9 +188,10 @@ describe("GrpcService", () => {
 			},
 		};
 
-		expect(() => service.registerHandler("", handler)).toThrow("Service name cannot be empty");
-		expect(() => service.registerHandler("test.UserService", {} as GrpcHandler)).toThrow(
-			"Handler must implement handleRequest(request)",
+		expect(() => service.registerUnary("", "GetUser", handler)).toThrow("Service name cannot be empty");
+		expect(() => service.registerUnary("test.UserService", "", handler)).toThrow("Method name cannot be empty");
+		expect(() => service.registerUnary("test.UserService", "GetUser", {} as GrpcHandler)).toThrow(
+			"Unary handler must implement handleRequest(request)",
 		);
 	});
 
@@ -198,13 +203,70 @@ describe("GrpcService", () => {
 			},
 		};
 
-		service.registerHandler("test.UserService", handler);
-		service.unregisterHandler("test.UserService");
+		service.registerUnary("test.UserService", "GetUser", handler);
+		service.unregister("test.UserService", "GetUser");
 
-		expect(service.hasHandler("test.UserService")).toBe(false);
-		expect(() => service.unregisterHandler("test.UserService")).toThrow(
-			"No handler registered for service: test.UserService",
+		expect(service.hasMethod("test.UserService", "GetUser")).toBe(false);
+		expect(() => service.unregister("test.UserService", "GetUser")).toThrow(
+			"No handler registered for method: test.UserService/GetUser",
 		);
+	});
+
+	it("should register streaming methods alongside unary methods", () => {
+		const service = new GrpcService();
+		const unary: GrpcHandler = {
+			async handleRequest(): Promise<GrpcResponse> {
+				return { payload: Buffer.from("ok") };
+			},
+		};
+		const serverStreaming: GrpcServerStreamingHandler = {
+			async handleServerStream(): Promise<GrpcResponse> {
+				return { payload: Buffer.from("stream") };
+			},
+		};
+		const clientStreaming: GrpcClientStreamingHandler = {
+			async handleClientStream(): Promise<GrpcResponse> {
+				return { payload: Buffer.from("client-stream") };
+			},
+		};
+		const bidiStreaming: GrpcBidirectionalStreamingHandler = {
+			async handleBidiStream() {
+				return { messages: [Buffer.from("bidi")] };
+			},
+		};
+
+		service.registerUnary("test.UserService", "GetUser", unary);
+		service.registerServerStreaming("test.UserService", "ListUsers", serverStreaming);
+		service.registerClientStreaming("test.UserService", "UploadUsers", clientStreaming);
+		service.registerBidirectionalStreaming("test.UserService", "WatchUsers", bidiStreaming);
+
+		expect(service.methodNames("test.UserService").sort()).toEqual([
+			"GetUser",
+			"ListUsers",
+			"UploadUsers",
+			"WatchUsers",
+		]);
+		expect(service.getMethod("test.UserService", "ListUsers")?.rpcMode).toBe("serverStreaming");
+		expect(service.getMethod("test.UserService", "UploadUsers")?.rpcMode).toBe("clientStreaming");
+		expect(service.getMethod("test.UserService", "WatchUsers")?.rpcMode).toBe("bidirectionalStreaming");
+	});
+
+	it("should reject unary dispatch to a streaming registration", async () => {
+		const service = new GrpcService();
+		service.registerServerStreaming("test.UserService", "ListUsers", {
+			async handleServerStream(): Promise<GrpcResponse> {
+				return { payload: Buffer.from("stream") };
+			},
+		});
+
+		await expect(
+			service.handleRequest({
+				serviceName: "test.UserService",
+				methodName: "ListUsers",
+				payload: Buffer.from([]),
+				metadata: {},
+			}),
+		).rejects.toThrow("registered as serverStreaming");
 	});
 });
 

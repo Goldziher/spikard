@@ -157,7 +157,7 @@ fn extract_grpc_registry_from_app(
     for (service_name, handler) in grpc_dict.iter() {
         let service_name: String = service_name.extract()?;
         let grpc_handler = std::sync::Arc::new(crate::grpc::PyGrpcHandler::new(handler.unbind(), service_name.clone()));
-        registry.register(service_name, grpc_handler, spikard_http::grpc::RpcMode::Unary);
+        registry.register_service(service_name, grpc_handler, spikard_http::grpc::RpcMode::Unary);
     }
 
     Ok(Some(std::sync::Arc::new(registry)))
@@ -925,9 +925,9 @@ fn build_python_server_router(
 
 async fn serve_python_server(config: spikard_http::ServerConfig, app_router: axum::Router) -> PyResult<()> {
     let addr = format!("{}:{}", config.host, config.port);
-    let socket_addr: std::net::SocketAddr = addr.parse().map_err(|e| {
-        PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid socket address {addr}: {e}"))
-    })?;
+    let socket_addr: std::net::SocketAddr = addr
+        .parse()
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid socket address {addr}: {e}")))?;
 
     let listener = tokio::net::TcpListener::bind(socket_addr).await.map_err(|e| {
         PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
@@ -946,8 +946,7 @@ async fn serve_python_server(config: spikard_http::ServerConfig, app_router: axu
     crate::background::clear_handle();
     let shutdown_result = background_runtime.shutdown().await;
 
-    serve_result
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {e}")))?;
+    serve_result.map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Server error: {e}")))?;
 
     shutdown_result.map_err(|_| {
         PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Failed to drain background tasks during shutdown")

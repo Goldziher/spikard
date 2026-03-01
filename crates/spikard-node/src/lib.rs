@@ -675,43 +675,139 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
         .get_named_property("handlers")
         .map_err(|e| Error::from_reason(format!("Failed to get handlers from app: {}", e)))?;
 
-    let grpc_registry = if let Ok(grpc_services_obj) = app.get_named_property::<Object>("grpcServices") {
+    let grpc_registry = if let Ok(grpc_methods_obj) = app.get_named_property::<Object>("grpcMethods") {
         let grpc_handlers_obj: Object = app
             .get_named_property("grpcHandlers")
             .map_err(|e| Error::from_reason(format!("Failed to get grpcHandlers from app: {}", e)))?;
-        let grpc_services_length = grpc_services_obj.get_array_length()?;
+        let grpc_methods_length = grpc_methods_obj.get_array_length()?;
         let mut registry = spikard_http::grpc::GrpcRegistry::new();
 
-        for i in 0..grpc_services_length {
-            let service_obj: Object = grpc_services_obj.get_element(i)?;
+        for i in 0..grpc_methods_length {
+            let service_obj: Object = grpc_methods_obj.get_element(i)?;
             let service_name: String = service_obj.get_named_property("serviceName")?;
+            let method_name: String = service_obj.get_named_property("methodName")?;
+            let rpc_mode: String = service_obj.get_named_property("rpcMode")?;
             let handler_name: String = service_obj.get_named_property("handlerName")?;
             let handler_obj: Object = grpc_handlers_obj.get_named_property(&handler_name).map_err(|e| {
                 Error::from_reason(format!(
-                    "Failed to get gRPC handler '{}' for service '{}': {}",
-                    handler_name, service_name, e
+                    "Failed to get gRPC handler '{}' for method '{}/{}': {}",
+                    handler_name, service_name, method_name, e
                 ))
             })?;
-            let js_handler: Function<grpc::GrpcRequest, Promise<grpc::GrpcResponse>> =
-                handler_obj.get_named_property("handleRequest").map_err(|e| {
-                    Error::from_reason(format!(
-                        "Failed to get handleRequest for gRPC service '{}': {}",
-                        service_name, e
-                    ))
-                })?;
 
-            let tsfn = js_handler
-                .build_threadsafe_function()
-                .build_callback(|ctx| Ok(ctx.value))
-                .map_err(|e| {
-                    Error::from_reason(format!(
-                        "Failed to build ThreadsafeFunction for gRPC service '{}': {}",
-                        service_name, e
-                    ))
-                })?;
+            let service_name_arc: Arc<str> = Arc::from(service_name.clone());
 
-            let handler = Arc::new(grpc::NodeGrpcHandler::new(Arc::from(service_name.clone()), tsfn));
-            registry.register(service_name, handler, spikard_http::grpc::RpcMode::Unary);
+            match rpc_mode.as_str() {
+                "unary" => {
+                    let js_handler: Function<grpc::GrpcRequest, Promise<grpc::GrpcResponse>> =
+                        handler_obj.get_named_property("handleRequest").map_err(|e| {
+                            Error::from_reason(format!(
+                                "Failed to get handleRequest for gRPC method '{}/{}': {}",
+                                service_name, method_name, e
+                            ))
+                        })?;
+
+                    let tsfn = js_handler
+                        .build_threadsafe_function()
+                        .build_callback(|ctx| Ok(ctx.value))
+                        .map_err(|e| {
+                            Error::from_reason(format!(
+                                "Failed to build ThreadsafeFunction for gRPC method '{}/{}': {}",
+                                service_name, method_name, e
+                            ))
+                        })?;
+
+                    let handler = Arc::new(grpc::NodeGrpcHandler::new(service_name_arc).with_request_handler(tsfn));
+                    registry.register(service_name, method_name, handler, spikard_http::grpc::RpcMode::Unary);
+                }
+                "serverStreaming" => {
+                    let js_handler: Function<grpc::GrpcRequest, Promise<grpc::GrpcResponse>> =
+                        handler_obj.get_named_property("handleServerStream").map_err(|e| {
+                            Error::from_reason(format!(
+                                "Failed to get handleServerStream for gRPC method '{}/{}': {}",
+                                service_name, method_name, e
+                            ))
+                        })?;
+
+                    let tsfn = js_handler
+                        .build_threadsafe_function()
+                        .build_callback(|ctx| Ok(ctx.value))
+                        .map_err(|e| {
+                            Error::from_reason(format!(
+                                "Failed to build ThreadsafeFunction for gRPC method '{}/{}': {}",
+                                service_name, method_name, e
+                            ))
+                        })?;
+
+                    let handler = Arc::new(grpc::NodeGrpcHandler::new(service_name_arc).with_request_handler(tsfn));
+                    registry.register(
+                        service_name,
+                        method_name,
+                        handler,
+                        spikard_http::grpc::RpcMode::ServerStreaming,
+                    );
+                }
+                "clientStreaming" => {
+                    let js_handler: Function<grpc::GrpcClientStreamRequest, Promise<grpc::GrpcResponse>> =
+                        handler_obj.get_named_property("handleClientStream").map_err(|e| {
+                            Error::from_reason(format!(
+                                "Failed to get handleClientStream for gRPC method '{}/{}': {}",
+                                service_name, method_name, e
+                            ))
+                        })?;
+
+                    let tsfn = js_handler
+                        .build_threadsafe_function()
+                        .build_callback(|ctx| Ok(ctx.value))
+                        .map_err(|e| {
+                            Error::from_reason(format!(
+                                "Failed to build ThreadsafeFunction for gRPC method '{}/{}': {}",
+                                service_name, method_name, e
+                            ))
+                        })?;
+
+                    let handler = Arc::new(grpc::NodeGrpcHandler::new(service_name_arc).with_client_stream(tsfn));
+                    registry.register(
+                        service_name,
+                        method_name,
+                        handler,
+                        spikard_http::grpc::RpcMode::ClientStreaming,
+                    );
+                }
+                "bidirectionalStreaming" => {
+                    let js_handler: Function<grpc::GrpcBidiStreamRequest, Promise<grpc::GrpcBidiStreamResponse>> =
+                        handler_obj.get_named_property("handleBidiStream").map_err(|e| {
+                            Error::from_reason(format!(
+                                "Failed to get handleBidiStream for gRPC method '{}/{}': {}",
+                                service_name, method_name, e
+                            ))
+                        })?;
+
+                    let tsfn = js_handler
+                        .build_threadsafe_function()
+                        .build_callback(|ctx| Ok(ctx.value))
+                        .map_err(|e| {
+                            Error::from_reason(format!(
+                                "Failed to build ThreadsafeFunction for gRPC method '{}/{}': {}",
+                                service_name, method_name, e
+                            ))
+                        })?;
+
+                    let handler = Arc::new(grpc::NodeGrpcHandler::new(service_name_arc).with_bidi_stream(tsfn));
+                    registry.register(
+                        service_name,
+                        method_name,
+                        handler,
+                        spikard_http::grpc::RpcMode::BidirectionalStreaming,
+                    );
+                }
+                other => {
+                    return Err(Error::from_reason(format!(
+                        "Unsupported gRPC rpcMode '{}' for method '{}/{}'",
+                        other, service_name, method_name
+                    )));
+                }
+            }
         }
 
         if registry.is_empty() {

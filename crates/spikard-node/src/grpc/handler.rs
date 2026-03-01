@@ -224,7 +224,7 @@ type BidiStreamHandler = ThreadsafeFunction<
 /// Supports unary, server streaming, client streaming, and bidirectional streaming RPC modes.
 pub struct NodeGrpcHandler {
     service_name: Arc<str>,
-    handler_fn: Arc<ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>>,
+    request_fn: Option<Arc<ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>>>,
     client_stream_fn: Option<Arc<ClientStreamHandler>>,
     bidi_stream_fn: Option<Arc<BidiStreamHandler>>,
 }
@@ -233,22 +233,28 @@ unsafe impl Send for NodeGrpcHandler {}
 unsafe impl Sync for NodeGrpcHandler {}
 
 impl NodeGrpcHandler {
-    /// Create a new Node gRPC handler wrapper with a JavaScript function
+    /// Create a new empty Node gRPC handler wrapper.
     ///
     /// # Arguments
     ///
     /// * `service_name` - Fully qualified service name (must be 'static)
-    /// * `handler_fn` - ThreadsafeFunction that calls JavaScript handler for unary requests
-    pub fn new(
-        service_name: Arc<str>,
-        handler_fn: ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>,
-    ) -> Self {
+    pub fn new(service_name: Arc<str>) -> Self {
         Self {
             service_name,
-            handler_fn: Arc::new(handler_fn),
+            request_fn: None,
             client_stream_fn: None,
             bidi_stream_fn: None,
         }
+    }
+
+    /// Add a unary or server-streaming handler to this gRPC handler.
+    #[must_use]
+    pub fn with_request_handler(
+        mut self,
+        handler_fn: ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>,
+    ) -> Self {
+        self.request_fn = Some(Arc::new(handler_fn));
+        self
     }
 
     /// Add a client streaming handler to this gRPC handler
@@ -276,10 +282,17 @@ impl NodeGrpcHandler {
 
 impl GrpcHandler for NodeGrpcHandler {
     fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
-        let handler_fn = self.handler_fn.clone();
+        let handler_fn = self.request_fn.clone();
         let service_name = self.service_name.clone();
 
         Box::pin(async move {
+            let Some(handler_fn) = handler_fn else {
+                return Err(tonic::Status::unimplemented(format!(
+                    "Unary handler not implemented for service '{}'",
+                    service_name
+                )));
+            };
+
             // Convert Rust types to JavaScript-friendly types
             let js_request = GrpcRequest {
                 service_name: request.service_name.clone(),
@@ -335,10 +348,17 @@ impl GrpcHandler for NodeGrpcHandler {
         &self,
         request: GrpcRequestData,
     ) -> Pin<Box<dyn Future<Output = std::result::Result<MessageStream, tonic::Status>> + Send>> {
-        let handler_fn = self.handler_fn.clone();
+        let handler_fn = self.request_fn.clone();
         let service_name = self.service_name.clone();
 
         Box::pin(async move {
+            let Some(handler_fn) = handler_fn else {
+                return Err(tonic::Status::unimplemented(format!(
+                    "Server streaming not implemented for service '{}'",
+                    service_name
+                )));
+            };
+
             // Convert Rust request to JavaScript request
             let js_request = GrpcRequest {
                 service_name: request.service_name.clone(),
@@ -578,7 +598,7 @@ impl Clone for NodeGrpcHandler {
     fn clone(&self) -> Self {
         Self {
             service_name: self.service_name.clone(),
-            handler_fn: self.handler_fn.clone(),
+            request_fn: self.request_fn.clone(),
             client_stream_fn: self.client_stream_fn.clone(),
             bidi_stream_fn: self.bidi_stream_fn.clone(),
         }

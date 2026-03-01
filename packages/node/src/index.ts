@@ -34,11 +34,19 @@ export {
 	GrpcService,
 	createUnaryHandler,
 	GrpcError,
+	type GrpcBidiStreamRequest,
+	type GrpcBidiStreamResponse,
+	type GrpcBidirectionalStreamingHandler,
+	type GrpcClientStreamRequest,
+	type GrpcClientStreamingHandler,
 	type GrpcHandler,
+	type GrpcMethodConfig,
+	type GrpcMethodHandler,
 	type GrpcMetadata,
 	type GrpcRequest,
 	type GrpcResponse,
-	type GrpcServiceConfig,
+	type GrpcRpcMode,
+	type GrpcServerStreamingHandler,
 	GrpcStatusCode,
 } from "./grpc";
 export {
@@ -123,8 +131,10 @@ export interface RouteMetadata {
 	cors?: CorsConfig | undefined;
 }
 
-export interface GrpcServiceRegistration {
+export interface GrpcMethodRegistration {
 	serviceName: string;
+	methodName: string;
+	rpcMode: import("./grpc").GrpcRpcMode;
 	handlerName: string;
 }
 
@@ -140,8 +150,8 @@ export interface SpikardApp {
 	websocketRoutes?: RouteMetadata[];
 	/** WebSocket handlers mapped by handler_name */
 	websocketHandlers?: Record<string, Record<string, unknown>>;
-	/** gRPC service registrations */
-	grpcServices?: GrpcServiceRegistration[];
+	/** gRPC method registrations */
+	grpcMethods?: GrpcMethodRegistration[];
 	/** gRPC handlers mapped by internal handler name */
 	grpcHandlers?: Record<string, Record<string, unknown>>;
 	/** Optional server configuration (for middleware, auth, etc.) */

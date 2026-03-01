@@ -69,7 +69,7 @@ fn route(path: &str, method: Method) -> Route {
 #[tokio::test]
 async fn server_routes_grpc_requests_when_registry_is_registered() {
     let mut grpc_registry = GrpcRegistry::new();
-    grpc_registry.register(
+    grpc_registry.register_service(
         "example.UserService",
         Arc::new(UnaryGrpcHandler),
         spikard_http::grpc::RpcMode::Unary,

@@ -207,7 +207,7 @@ class UserServiceHandler implements GrpcHandler {
 }
 
 const grpcService = new GrpcService();
-grpcService.registerHandler("com.example.UserService", new UserServiceHandler());
+grpcService.registerUnary("com.example.UserService", "GetUser", new UserServiceHandler());
 app.useGrpc(grpcService);
 
 runServer(app, config);

@@ -2,9 +2,16 @@
  * Spikard application class
  */
 
-import type { GrpcHandler, GrpcService } from "./grpc";
+import type {
+	GrpcBidirectionalStreamingHandler,
+	GrpcClientStreamingHandler,
+	GrpcHandler,
+	GrpcRpcMode,
+	GrpcServerStreamingHandler,
+	GrpcService,
+} from "./grpc";
 import type { HandlerFunction, NativeHandlerFunction, RouteMetadata, SpikardApp } from "./index";
-import type { GrpcServiceRegistration } from "./index";
+import type { GrpcMethodRegistration } from "./index";
 import type { ServerConfig } from "./config";
 import type { Request } from "./request";
 import { runServer } from "./server";
@@ -171,7 +178,7 @@ export class Spikard implements SpikardApp {
 	handlers: Record<string, HandlerFunction | NativeHandlerFunction> = {};
 	websocketRoutes: RouteMetadata[] = [];
 	websocketHandlers: Record<string, Record<string, unknown>> = {};
-	grpcServices: GrpcServiceRegistration[] = [];
+	grpcMethods: GrpcMethodRegistration[] = [];
 	grpcHandlers: Record<string, Record<string, unknown>> = {};
 	lifecycleHooks: LifecycleHooks = {
 		onRequest: [],
@@ -223,46 +230,130 @@ export class Spikard implements SpikardApp {
 	}
 
 	/**
-	 * Register a gRPC service handler on the application.
+	 * Register a unary gRPC method on the application.
 	 *
 	 * @param serviceName - Fully-qualified service name
+	 * @param methodName - gRPC method name
 	 * @param handler - gRPC handler implementation
 	 * @returns The application for chaining
 	 */
-	addGrpcService(serviceName: string, handler: GrpcHandler): this {
+	addGrpcUnary(serviceName: string, methodName: string, handler: GrpcHandler): this {
+		if (typeof handler?.handleRequest !== "function") {
+			throw new TypeError("Unary handler must implement handleRequest(request)");
+		}
+
+		return this.registerGrpcMethod(serviceName, methodName, "unary", {
+			handleRequest: (request: Parameters<GrpcHandler["handleRequest"]>[0]) => handler.handleRequest(request),
+		});
+	}
+
+	addGrpcServerStreaming(
+		serviceName: string,
+		methodName: string,
+		handler: GrpcServerStreamingHandler,
+	): this {
+		if (typeof handler?.handleServerStream !== "function") {
+			throw new TypeError("Server-streaming handler must implement handleServerStream(request)");
+		}
+
+		return this.registerGrpcMethod(serviceName, methodName, "serverStreaming", {
+			handleServerStream: (request: Parameters<GrpcServerStreamingHandler["handleServerStream"]>[0]) =>
+				handler.handleServerStream(request),
+		});
+	}
+
+	addGrpcClientStreaming(
+		serviceName: string,
+		methodName: string,
+		handler: GrpcClientStreamingHandler,
+	): this {
+		if (typeof handler?.handleClientStream !== "function") {
+			throw new TypeError("Client-streaming handler must implement handleClientStream(request)");
+		}
+
+		return this.registerGrpcMethod(serviceName, methodName, "clientStreaming", {
+			handleClientStream: (request: Parameters<GrpcClientStreamingHandler["handleClientStream"]>[0]) =>
+				handler.handleClientStream(request),
+		});
+	}
+
+	addGrpcBidirectionalStreaming(
+		serviceName: string,
+		methodName: string,
+		handler: GrpcBidirectionalStreamingHandler,
+	): this {
+		if (typeof handler?.handleBidiStream !== "function") {
+			throw new TypeError("Bidirectional-streaming handler must implement handleBidiStream(request)");
+		}
+
+		return this.registerGrpcMethod(serviceName, methodName, "bidirectionalStreaming", {
+			handleBidiStream: (request: Parameters<GrpcBidirectionalStreamingHandler["handleBidiStream"]>[0]) =>
+				handler.handleBidiStream(request),
+		});
+	}
+
+	private registerGrpcMethod(
+		serviceName: string,
+		methodName: string,
+		rpcMode: GrpcRpcMode,
+		handlerWrapper: Record<string, unknown>,
+	): this {
 		if (!serviceName) {
 			throw new Error("Service name cannot be empty");
 		}
-		if (typeof handler?.handleRequest !== "function") {
-			throw new TypeError("Handler must implement handleRequest(request)");
+		if (!methodName) {
+			throw new Error("Method name cannot be empty");
 		}
 
-		const previous = this.grpcServices.find((entry) => entry.serviceName === serviceName);
+		const previous = this.grpcMethods.find(
+			(entry) => entry.serviceName === serviceName && entry.methodName === methodName,
+		);
 		if (previous) {
 			delete this.grpcHandlers[previous.handlerName];
 		}
 
-		const handlerName = `grpc_${this.grpcServices.length}_${serviceName}`.replace(/[^a-zA-Z0-9_]/g, "_");
-		this.grpcHandlers[handlerName] = {
-			handleRequest: (request: Parameters<GrpcHandler["handleRequest"]>[0]) => handler.handleRequest(request),
-		};
-
-		this.grpcServices = this.grpcServices.filter((entry) => entry.serviceName !== serviceName);
-		this.grpcServices.push({ serviceName, handlerName });
+		const handlerName = `grpc_${this.grpcMethods.length}_${serviceName}_${methodName}`.replace(/[^a-zA-Z0-9_]/g, "_");
+		this.grpcHandlers[handlerName] = handlerWrapper;
+		this.grpcMethods = this.grpcMethods.filter(
+			(entry) => !(entry.serviceName === serviceName && entry.methodName === methodName),
+		);
+		this.grpcMethods.push({ serviceName, methodName, rpcMode, handlerName });
 		return this;
 	}
 
 	/**
 	 * Mount all handlers from a gRPC service registry on the application.
 	 *
-	 * @param service - Registry containing one or more service handlers
+	 * @param service - Registry containing one or more service methods
 	 * @returns The application for chaining
 	 */
 	useGrpc(service: GrpcService): this {
-		for (const serviceName of service.serviceNames()) {
-			const handler = service.getHandler(serviceName);
-			if (handler) {
-				this.addGrpcService(serviceName, handler);
+		for (const method of service.entries()) {
+			switch (method.rpcMode) {
+				case "unary":
+					this.addGrpcUnary(method.serviceName, method.methodName, method.handler as GrpcHandler);
+					break;
+				case "serverStreaming":
+					this.addGrpcServerStreaming(
+						method.serviceName,
+						method.methodName,
+						method.handler as GrpcServerStreamingHandler,
+					);
+					break;
+				case "clientStreaming":
+					this.addGrpcClientStreaming(
+						method.serviceName,
+						method.methodName,
+						method.handler as GrpcClientStreamingHandler,
+					);
+					break;
+				case "bidirectionalStreaming":
+					this.addGrpcBidirectionalStreaming(
+						method.serviceName,
+						method.methodName,
+						method.handler as GrpcBidirectionalStreamingHandler,
+					);
+					break;
 			}
 		}
 		return this;
