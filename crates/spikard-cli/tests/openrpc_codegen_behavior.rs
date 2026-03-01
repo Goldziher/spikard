@@ -82,6 +82,8 @@ methods:
 
     let python = generate_openrpc_python_handler_app(&spec).expect("python generator");
     assert!(python.contains("math.add"));
+    assert!(python.contains("from spikard.config import ServerConfig"));
+    assert!(python.contains("# app.run(config=ServerConfig(host=\"0.0.0.0\", port=8000))"));
 
     let ts = generate_openrpc_typescript_handler_app(&spec).expect("ts generator");
     assert!(ts.contains("math.add"));

@@ -93,6 +93,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("if __name__ == \"__main__\":\n");
         code.push_str("    import asyncio\n");
         code.push_str("    from spikard import Spikard\n\n");
+        code.push_str("    from spikard.config import ServerConfig\n\n");
 
         code.push_str("    app = Spikard()\n\n");
 
@@ -104,7 +105,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("        request_id = request.get(\"id\")\n");
         code.push_str("        return await handle_jsonrpc_call(method, params, request_id)\n\n");
 
-        code.push_str("    # app.run(host=\"0.0.0.0\", port=8000)\n");
+        code.push_str("    # app.run(config=ServerConfig(host=\"0.0.0.0\", port=8000))\n");
 
         Ok(code)
     }

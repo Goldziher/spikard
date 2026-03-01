@@ -420,7 +420,9 @@ app = Spikard()
         r#"
 # Run the application
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    from spikard.config import ServerConfig
+
+    app.run(config=ServerConfig(host="0.0.0.0", port=8000))
 "#
         .to_string()
     }

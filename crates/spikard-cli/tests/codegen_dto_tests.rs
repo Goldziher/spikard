@@ -139,6 +139,28 @@ fn python_nullable_properties_emit_optional_union() -> Result<()> {
 }
 
 #[test]
+fn python_openapi_generation_uses_server_config_startup() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
+
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
+    assert!(
+        code.contains("from spikard.config import ServerConfig"),
+        "expected ServerConfig import in generated startup"
+    );
+    assert!(
+        code.contains("app.run(config=ServerConfig(host=\"0.0.0.0\", port=8000))"),
+        "expected ServerConfig-based startup in generated python app"
+    );
+    Ok(())
+}
+
+#[test]
 fn node_generation_uses_zod_schemas() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);

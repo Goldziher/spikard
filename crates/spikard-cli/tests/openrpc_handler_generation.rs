@@ -22,6 +22,8 @@ fn openrpc_generators_produce_handlers_for_example_spec() {
 
     let python = generate_openrpc_python_handler_app(&spec).expect("python generation");
     assert!(python.contains("user.getById") || python.contains("user_get_by_id"));
+    assert!(python.contains("from spikard.config import ServerConfig"));
+    assert!(python.contains("# app.run(config=ServerConfig(host=\"0.0.0.0\", port=8000))"));
 
     let typescript = generate_openrpc_typescript_handler_app(&spec).expect("ts generation");
     assert!(typescript.contains("user.getById") || typescript.contains("userGetById"));
