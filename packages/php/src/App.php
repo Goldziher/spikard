@@ -15,6 +15,8 @@ use Spikard\Attributes\SchemaRef;
 use Spikard\Config\LifecycleHooks;
 use Spikard\Config\ServerConfig;
 use Spikard\DI\DependencyContainer;
+use Spikard\Grpc\HandlerInterface as GrpcHandlerInterface;
+use Spikard\Grpc\Service as GrpcService;
 use Spikard\Handlers\ControllerMethodHandler;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Handlers\SseEventProducerInterface;
@@ -52,6 +54,9 @@ final class App
 
     /** @var array<string, SseEventProducerInterface> */
     private array $sseProducers = [];
+
+    /** @var array<string, GrpcHandlerInterface> */
+    private array $grpcServices = [];
 
     public function __construct(?ServerConfig $config = null)
     {
@@ -106,6 +111,22 @@ final class App
     {
         $clone = clone $this;
         $clone->sseProducers[$path] = $producer;
+        return $clone;
+    }
+
+    public function addGrpcService(string $serviceName, GrpcHandlerInterface $handler): self
+    {
+        $clone = clone $this;
+        $clone->grpcServices[$serviceName] = $handler;
+        return $clone;
+    }
+
+    public function useGrpc(GrpcService $service): self
+    {
+        $clone = clone $this;
+        foreach ($service->getAllHandlers() as $serviceName => $handler) {
+            $clone->grpcServices[$serviceName] = $handler;
+        }
         return $clone;
     }
 
@@ -355,6 +376,12 @@ final class App
         return $this->sseProducers;
     }
 
+    /** @return array<string, GrpcHandlerInterface> */
+    public function grpcServices(): array
+    {
+        return $this->grpcServices;
+    }
+
     /**
      * Start the server using the native extension (background).
      *
@@ -385,6 +412,7 @@ final class App
         $lifecyclePayload = $this->hooks ? $this->hooksToNative($this->hooks) : [];
         /** @var DependencyContainer|null $dependenciesPayload */
         $dependenciesPayload = $this->dependencies;
+        $grpcPayload = $this->grpcToNative();
 
         // Extension entrypoint is guaranteed by the guard above; call directly.
         $routes = $this->nativeRoutes();
@@ -394,7 +422,13 @@ final class App
             $routes
         );
         /** @var int $handle */
-        $handle = spikard_start_server($normalizedRoutes, $configPayload, $lifecyclePayload, $dependenciesPayload);
+        $handle = spikard_start_server(
+            $normalizedRoutes,
+            $configPayload,
+            $lifecyclePayload,
+            $dependenciesPayload,
+            $grpcPayload
+        );
         $this->serverHandle = $handle;
     }
 
@@ -521,6 +555,20 @@ final class App
         // Background tasks configuration uses default
         // (BackgroundTaskConfig::default() in Rust)
 
+        return $payload;
+    }
+
+    /**
+     * Convert registered gRPC handlers to native unary callables.
+     *
+     * @return array<string, callable>
+     */
+    private function grpcToNative(): array
+    {
+        $payload = [];
+        foreach ($this->grpcServices as $serviceName => $handler) {
+            $payload[$serviceName] = [$handler, 'handleRequest'];
+        }
         return $payload;
     }
 

@@ -20,8 +20,15 @@ namespace {
          * @param array<string, mixed> $config Server configuration
          * @param array<string, callable> $lifecycle Lifecycle hooks
          * @param object|array<string, mixed>|null $dependencies Handler dependencies (DependencyContainer|array|null)
+         * @param array<string, callable> $grpc Unary gRPC service handlers keyed by service name
          */
-        function spikard_start_server(array $routes, array $config, array $lifecycle, object|array|null $dependencies): int
+        function spikard_start_server(
+            array $routes,
+            array $config,
+            array $lifecycle,
+            object|array|null $dependencies,
+            array $grpc = []
+        ): int
         {
             return 1;
         }

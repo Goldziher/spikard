@@ -22,6 +22,10 @@ use Spikard\Config\RateLimitConfig;
 use Spikard\Config\ServerConfig;
 use Spikard\Config\StaticFilesConfig;
 use Spikard\DI\DependencyContainer;
+use Spikard\Grpc\HandlerInterface as GrpcHandlerInterface;
+use Spikard\Grpc\Request as GrpcRequest;
+use Spikard\Grpc\Response as GrpcResponse;
+use Spikard\Grpc\Service as GrpcService;
 use Spikard\Handlers\HandlerInterface;
 use Spikard\Handlers\SseEventProducerInterface;
 use Spikard\Handlers\WebSocketHandlerInterface;
@@ -232,6 +236,50 @@ final class AppTest extends TestCase
         $this->assertCount(1, $producers);
         $this->assertArrayHasKey('/events', $producers);
         $this->assertSame($sseProducer, $producers['/events']);
+    }
+
+    public function testAppAddGrpcService(): void
+    {
+        $handler = new class () implements GrpcHandlerInterface {
+            public function handleRequest(GrpcRequest $request): GrpcResponse
+            {
+                return new GrpcResponse('');
+            }
+        };
+
+        $app = (new App())->addGrpcService('example.UserService', $handler);
+
+        $services = $app->grpcServices();
+        $this->assertCount(1, $services);
+        $this->assertArrayHasKey('example.UserService', $services);
+        $this->assertSame($handler, $services['example.UserService']);
+    }
+
+    public function testAppUseGrpc(): void
+    {
+        $service = new GrpcService();
+        $userHandler = new class () implements GrpcHandlerInterface {
+            public function handleRequest(GrpcRequest $request): GrpcResponse
+            {
+                return new GrpcResponse('');
+            }
+        };
+        $adminHandler = new class () implements GrpcHandlerInterface {
+            public function handleRequest(GrpcRequest $request): GrpcResponse
+            {
+                return new GrpcResponse('');
+            }
+        };
+
+        $service->registerHandler('example.UserService', $userHandler);
+        $service->registerHandler('example.AdminService', $adminHandler);
+
+        $app = (new App())->useGrpc($service);
+
+        $services = $app->grpcServices();
+        $this->assertCount(2, $services);
+        $this->assertSame($userHandler, $services['example.UserService']);
+        $this->assertSame($adminHandler, $services['example.AdminService']);
     }
 
     public function testAppFindHandlerMatching(): void

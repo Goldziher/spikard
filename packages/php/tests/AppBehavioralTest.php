@@ -376,6 +376,26 @@ final class AppBehavioralTest extends TestCase
     }
 
     /**
+     * Test addGrpcService is immutable.
+     */
+    public function testAddGrpcServiceIsImmutable(): void
+    {
+        $handler = new class () implements \Spikard\Grpc\HandlerInterface {
+            public function handleRequest(\Spikard\Grpc\Request $request): \Spikard\Grpc\Response
+            {
+                return new \Spikard\Grpc\Response('');
+            }
+        };
+
+        $original = new App();
+        $modified = $original->addGrpcService('example.UserService', $handler);
+
+        $this->assertNotSame($original, $modified);
+        $this->assertCount(0, $original->grpcServices());
+        $this->assertCount(1, $modified->grpcServices());
+    }
+
+    /**
      * Test schema-backed routes preserve all schema fields.
      */
     public function testAddRouteWithSchemasPreservesAllSchemas(): void

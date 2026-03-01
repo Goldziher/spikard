@@ -2,11 +2,12 @@
 
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
-use spikard_http::server::build_router_with_handlers_and_config;
+use spikard_http::server::build_router_with_handlers_and_config_and_grpc;
 use spikard_http::{LifecycleHooks, Route};
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use crate::php::PhpGrpcHandler;
 use crate::php::handler::PhpHandler;
 use crate::php::hooks::{PhpErrorHook, PhpRequestHook, PhpResponseHook};
 
@@ -539,6 +540,7 @@ pub fn spikard_start_server_impl(
     config: &Zval,
     hooks: &Zval,
     dependencies: &Zval,
+    grpc_services: &Zval,
 ) -> PhpResult<i64> {
     let mut server_config = extract_server_config_from_php(config)
         .map_err(|e| PhpException::default(format!("Invalid server config: {}", e)))?;
@@ -557,6 +559,28 @@ pub fn spikard_start_server_impl(
     let routes_array = routes_zval
         .array()
         .ok_or_else(|| PhpException::default("Routes must be an array".to_string()))?;
+
+    let grpc_registry = if let Some(grpc_array) = grpc_services.array() {
+        let mut registry = spikard_http::grpc::GrpcRegistry::new();
+        for (service_key, handler_value) in grpc_array.iter() {
+            let service_name = match service_key {
+                ext_php_rs::types::ArrayKey::String(s) => s.to_string(),
+                ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
+                ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
+            };
+            let handler = PhpGrpcHandler::register_from_zval(&handler_value, service_name.clone())
+                .map_err(|e| PhpException::default(format!("Failed to register gRPC handler: {}", e)))?;
+            registry.register(service_name, Arc::new(handler), spikard_http::grpc::RpcMode::Unary);
+        }
+
+        if registry.is_empty() {
+            None
+        } else {
+            Some(Arc::new(registry))
+        }
+    } else {
+        None
+    };
 
     let mut route_pairs: Vec<(spikard_http::Route, Arc<dyn spikard_http::Handler>)> = Vec::new();
     let mut route_metadata: Vec<spikard_core::RouteMetadata> = Vec::new();
@@ -623,7 +647,12 @@ pub fn spikard_start_server_impl(
         route_pairs.push((route, Arc::new(handler) as Arc<dyn spikard_http::Handler>));
     }
 
-    let app = build_router_with_handlers_and_config(route_pairs, server_config.clone(), route_metadata)
+    let app = build_router_with_handlers_and_config_and_grpc(
+        route_pairs,
+        server_config.clone(),
+        route_metadata,
+        grpc_registry,
+    )
         .map_err(|e| PhpException::default(format!("Failed to build router: {}", e)))?;
 
     let runtime = spikard_http::build_server_runtime(&server_config)

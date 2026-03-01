@@ -79,10 +79,13 @@ pub fn spikard_start_server(
     config: &Zval,
     hooks: &Zval,
     dependencies: Option<&Zval>,
+    grpc_services: Option<&Zval>,
 ) -> PhpResult<i64> {
     let default_deps = Zval::new();
     let deps = dependencies.unwrap_or(&default_deps);
-    start::spikard_start_server_impl(routes_zval, config, hooks, deps)
+    let default_grpc = Zval::new();
+    let grpc = grpc_services.unwrap_or(&default_grpc);
+    start::spikard_start_server_impl(routes_zval, config, hooks, deps, grpc)
 }
 
 /// Stop server wrapper for PHP.
