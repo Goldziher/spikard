@@ -1,9 +1,15 @@
 use super::asyncapi::{Protocol, parse_asyncapi_schema};
 use super::asyncapi::{
-    generate_nodejs_handler_app, generate_nodejs_test_app, generate_php_handler_app, generate_python_handler_app,
-    generate_php_test_app, generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app,
+    generate_nodejs_handler_app, generate_nodejs_test_app, generate_php_handler_app, generate_php_test_app,
+    generate_python_handler_app, generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app,
     generate_rust_handler_app,
 };
+use super::graphql::generators::GraphQLGenerator;
+use super::graphql::generators::php::PhpGenerator;
+use super::graphql::generators::python::PythonGenerator;
+use super::graphql::generators::ruby::RubyGenerator;
+use super::graphql::generators::typescript::TypeScriptGenerator;
+use super::graphql::{RustGenerator, parse_graphql_schema};
 use super::openrpc::{
     generate_php_handler_app as generate_openrpc_php_handler,
     generate_python_handler_app as generate_openrpc_python_handler,
@@ -317,17 +323,62 @@ impl CodegenEngine {
         output: &Path,
         target: &str,
     ) -> Result<Vec<GeneratedAsset>> {
-        // Read the GraphQL schema file
-        let schema_content = fs::read_to_string(schema_path)
-            .with_context(|| format!("Failed to read GraphQL schema: {}", schema_path.display()))?;
+        let parsed_schema =
+            parse_graphql_schema(schema_path).with_context(|| format!("Failed to parse {}", schema_path.display()))?;
 
         // Generate code based on language
         let code = match language {
-            TargetLanguage::Python => super::graphql::generate_python_graphql(&schema_content, target)?,
-            TargetLanguage::TypeScript => super::graphql::generate_typescript_graphql(&schema_content, target)?,
-            TargetLanguage::Rust => super::graphql::generate_rust_graphql(&schema_content, target)?,
-            TargetLanguage::Ruby => super::graphql::generate_ruby_graphql(&schema_content, target)?,
-            TargetLanguage::Php => super::graphql::generate_php_graphql(&schema_content, target)?,
+            TargetLanguage::Python => {
+                let generator = PythonGenerator;
+                match target {
+                    "types" => generator.generate_types(&parsed_schema)?,
+                    "resolvers" => generator.generate_resolvers(&parsed_schema)?,
+                    "schema" => generator.generate_schema_definition(&parsed_schema)?,
+                    "all" => generator.generate_complete(&parsed_schema)?,
+                    _ => generator.generate_complete(&parsed_schema)?,
+                }
+            }
+            TargetLanguage::TypeScript => {
+                let generator = TypeScriptGenerator;
+                match target {
+                    "types" => generator.generate_types(&parsed_schema)?,
+                    "resolvers" => generator.generate_resolvers(&parsed_schema)?,
+                    "schema" => generator.generate_schema_definition(&parsed_schema)?,
+                    "all" => generator.generate_complete(&parsed_schema)?,
+                    _ => generator.generate_complete(&parsed_schema)?,
+                }
+            }
+            TargetLanguage::Rust => {
+                let generator = RustGenerator::new();
+                match target {
+                    "types" => generator.generate_types(&parsed_schema)?,
+                    "resolvers" => generator.generate_resolvers(&parsed_schema)?,
+                    "schema" => generator.generate_schema_definition(&parsed_schema)?,
+                    "all" => generator.generate_complete(&parsed_schema)?,
+                    _ => generator.generate_complete(&parsed_schema)?,
+                }
+            }
+            TargetLanguage::Ruby => {
+                let generator = RubyGenerator;
+                match target {
+                    "types" => generator.generate_types(&parsed_schema)?,
+                    "resolvers" => generator.generate_resolvers(&parsed_schema)?,
+                    "schema" => generator.generate_schema_definition(&parsed_schema)?,
+                    "rbs" => generator.generate_type_signatures(&parsed_schema)?,
+                    "all" => generator.generate_complete(&parsed_schema)?,
+                    _ => generator.generate_complete(&parsed_schema)?,
+                }
+            }
+            TargetLanguage::Php => {
+                let generator = PhpGenerator;
+                match target {
+                    "types" => generator.generate_types(&parsed_schema)?,
+                    "resolvers" => generator.generate_resolvers(&parsed_schema)?,
+                    "schema" => generator.generate_schema_definition(&parsed_schema)?,
+                    "all" => generator.generate_complete(&parsed_schema)?,
+                    _ => generator.generate_complete(&parsed_schema)?,
+                }
+            }
         };
 
         // For Ruby, also generate RBS type signatures when appropriate
@@ -338,11 +389,6 @@ impl CodegenEngine {
         )?];
 
         if language == TargetLanguage::Ruby && (target == "all" || target == "types" || target == "schema") {
-            use super::graphql::generators::GraphQLGenerator;
-            use super::graphql::generators::ruby::RubyGenerator;
-            use super::graphql::parse_graphql_sdl_string;
-
-            let parsed_schema = parse_graphql_sdl_string(&schema_content)?;
             let generator = RubyGenerator;
             let rbs_code = generator.generate_type_signatures(&parsed_schema)?;
 

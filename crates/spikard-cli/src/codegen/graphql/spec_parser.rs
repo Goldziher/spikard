@@ -154,6 +154,100 @@ pub struct GraphQLInputField {
     pub description: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+struct IntrospectionEnvelope {
+    #[serde(rename = "__schema")]
+    schema: Option<IntrospectionSchemaDoc>,
+    data: Option<IntrospectionData>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IntrospectionData {
+    #[serde(rename = "__schema")]
+    schema: IntrospectionSchemaDoc,
+}
+
+#[derive(Debug, Deserialize)]
+struct IntrospectionSchemaDoc {
+    description: Option<String>,
+    #[serde(rename = "queryType")]
+    query_type: Option<IntrospectionNamedTypeRef>,
+    #[serde(rename = "mutationType")]
+    mutation_type: Option<IntrospectionNamedTypeRef>,
+    #[serde(rename = "subscriptionType")]
+    subscription_type: Option<IntrospectionNamedTypeRef>,
+    types: Vec<IntrospectionTypeDef>,
+    directives: Vec<IntrospectionDirectiveDef>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IntrospectionNamedTypeRef {
+    name: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct IntrospectionTypeDef {
+    kind: String,
+    name: Option<String>,
+    description: Option<String>,
+    fields: Option<Vec<IntrospectionFieldDef>>,
+    #[serde(rename = "inputFields")]
+    input_fields: Option<Vec<IntrospectionInputValueDef>>,
+    #[serde(rename = "enumValues")]
+    enum_values: Option<Vec<IntrospectionEnumValueDef>>,
+    #[serde(rename = "possibleTypes")]
+    possible_types: Option<Vec<IntrospectionNamedTypeRef>>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IntrospectionFieldDef {
+    name: String,
+    description: Option<String>,
+    args: Vec<IntrospectionInputValueDef>,
+    #[serde(rename = "type")]
+    field_type: IntrospectionTypeRef,
+    #[serde(rename = "isDeprecated", default)]
+    is_deprecated: bool,
+    #[serde(rename = "deprecationReason")]
+    deprecation_reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IntrospectionInputValueDef {
+    name: String,
+    description: Option<String>,
+    #[serde(rename = "type")]
+    value_type: IntrospectionTypeRef,
+    #[serde(rename = "defaultValue")]
+    default_value: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IntrospectionEnumValueDef {
+    name: String,
+    description: Option<String>,
+    #[serde(rename = "isDeprecated", default)]
+    is_deprecated: bool,
+    #[serde(rename = "deprecationReason")]
+    deprecation_reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct IntrospectionDirectiveDef {
+    name: String,
+    description: Option<String>,
+    locations: Vec<String>,
+    args: Vec<IntrospectionInputValueDef>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct IntrospectionTypeRef {
+    kind: String,
+    name: Option<String>,
+    #[serde(rename = "ofType")]
+    of_type: Option<Box<IntrospectionTypeRef>>,
+}
+
 /// Parse GraphQL SDL from a file
 ///
 /// # Arguments
@@ -449,11 +543,208 @@ fn parse_graphql_introspection(path: &Path) -> Result<GraphQLSchema> {
 
 /// Parse GraphQL introspection from a `serde_json` Value (internal - not exposed in mod.rs)
 fn parse_graphql_introspection_value(_value: &Value) -> Result<GraphQLSchema> {
-    // For now, return a placeholder schema from introspection
-    // Full introspection support would require mapping __schema to our types
+    let envelope: IntrospectionEnvelope =
+        serde_json::from_value(_value.clone()).context("Failed to deserialize GraphQL introspection JSON")?;
+
+    let introspection = envelope
+        .schema
+        .or(envelope.data.map(|data| data.schema))
+        .ok_or_else(|| anyhow!("GraphQL introspection JSON must contain '__schema' or 'data.__schema'"))?;
+
+    let query_type_name = introspection.query_type.as_ref().map(|t| t.name.as_str());
+    let mutation_type_name = introspection.mutation_type.as_ref().map(|t| t.name.as_str());
+    let subscription_type_name = introspection.subscription_type.as_ref().map(|t| t.name.as_str());
+
+    let mut schema = GraphQLSchema {
+        types: HashMap::new(),
+        queries: Vec::new(),
+        mutations: Vec::new(),
+        subscriptions: Vec::new(),
+        directives: introspection
+            .directives
+            .into_iter()
+            .map(|directive| {
+                Ok(GraphQLDirective {
+                    name: directive.name,
+                    locations: directive.locations,
+                    arguments: directive
+                        .args
+                        .into_iter()
+                        .map(introspection_argument_to_graphql)
+                        .collect::<Result<Vec<_>>>()?,
+                    description: directive.description,
+                })
+            })
+            .collect::<Result<Vec<_>>>()?,
+        description: introspection.description,
+    };
+
+    for type_def in introspection.types {
+        let Some(name) = type_def.name.clone() else {
+            continue;
+        };
+
+        if name.starts_with("__") {
+            continue;
+        }
+
+        let kind = introspection_kind_to_type_kind(&type_def.kind)?;
+        let gql_type = GraphQLType {
+            name: name.clone(),
+            kind,
+            fields: type_def
+                .fields
+                .unwrap_or_default()
+                .into_iter()
+                .map(introspection_field_to_graphql)
+                .collect::<Result<Vec<_>>>()?,
+            description: type_def.description,
+            possible_types: type_def
+                .possible_types
+                .unwrap_or_default()
+                .into_iter()
+                .map(|possible| possible.name)
+                .collect(),
+            enum_values: type_def
+                .enum_values
+                .unwrap_or_default()
+                .into_iter()
+                .map(|value| GraphQLEnumValue {
+                    name: value.name,
+                    description: value.description,
+                    is_deprecated: value.is_deprecated,
+                    deprecation_reason: value.deprecation_reason,
+                })
+                .collect(),
+            input_fields: type_def
+                .input_fields
+                .unwrap_or_default()
+                .into_iter()
+                .map(introspection_input_field_to_graphql)
+                .collect::<Result<Vec<_>>>()?,
+        };
+
+        if query_type_name == Some(name.as_str()) {
+            schema.queries = gql_type.fields;
+        } else if mutation_type_name == Some(name.as_str()) {
+            schema.mutations = gql_type.fields;
+        } else if subscription_type_name == Some(name.as_str()) {
+            schema.subscriptions = gql_type.fields;
+        } else if schema.types.insert(name.clone(), gql_type).is_some() {
+            return Err(anyhow!(
+                "Duplicate type definition: '{}' is defined more than once in the schema",
+                name
+            ));
+        }
+    }
+
+    if schema.types.is_empty() && schema.queries.is_empty() {
+        return Err(anyhow!("Empty GraphQL schema - no types or queries defined"));
+    }
+
+    if schema.queries.is_empty() {
+        return Err(anyhow!(
+            "Invalid GraphQL schema - Query type is required by the GraphQL specification.\n\
+             Add a Query type to your schema:\n\
+             type Query {{\n  hello: String!\n}}"
+        ));
+    }
+
+    Ok(schema)
+}
+
+fn introspection_kind_to_type_kind(kind: &str) -> Result<TypeKind> {
+    match kind {
+        "OBJECT" => Ok(TypeKind::Object),
+        "INTERFACE" => Ok(TypeKind::Interface),
+        "UNION" => Ok(TypeKind::Union),
+        "ENUM" => Ok(TypeKind::Enum),
+        "INPUT_OBJECT" => Ok(TypeKind::InputObject),
+        "SCALAR" => Ok(TypeKind::Scalar),
+        other => Err(anyhow!("Unsupported GraphQL introspection type kind: {other}")),
+    }
+}
+
+fn introspection_field_to_graphql(field: IntrospectionFieldDef) -> Result<GraphQLField> {
+    Ok(GraphQLField {
+        name: field.name,
+        type_name: introspection_bare_type_name(&field.field_type)?,
+        is_list: introspection_is_list_type(&field.field_type),
+        list_item_nullable: introspection_list_item_nullable(&field.field_type),
+        is_nullable: introspection_is_nullable_type(&field.field_type),
+        arguments: field
+            .args
+            .into_iter()
+            .map(introspection_argument_to_graphql)
+            .collect::<Result<Vec<_>>>()?,
+        description: field.description,
+        deprecation_reason: if field.is_deprecated {
+            field.deprecation_reason.or_else(|| Some("Deprecated".to_string()))
+        } else {
+            field.deprecation_reason
+        },
+    })
+}
+
+fn introspection_argument_to_graphql(arg: IntrospectionInputValueDef) -> Result<GraphQLArgument> {
+    Ok(GraphQLArgument {
+        name: arg.name,
+        type_name: introspection_bare_type_name(&arg.value_type)?,
+        is_nullable: introspection_is_nullable_type(&arg.value_type),
+        is_list: introspection_is_list_type(&arg.value_type),
+        list_item_nullable: introspection_list_item_nullable(&arg.value_type),
+        default_value: arg.default_value,
+        description: arg.description,
+    })
+}
+
+fn introspection_input_field_to_graphql(field: IntrospectionInputValueDef) -> Result<GraphQLInputField> {
+    Ok(GraphQLInputField {
+        name: field.name,
+        type_name: introspection_bare_type_name(&field.value_type)?,
+        is_nullable: introspection_is_nullable_type(&field.value_type),
+        is_list: introspection_is_list_type(&field.value_type),
+        list_item_nullable: introspection_list_item_nullable(&field.value_type),
+        default_value: field.default_value,
+        description: field.description,
+    })
+}
+
+fn introspection_bare_type_name(type_ref: &IntrospectionTypeRef) -> Result<String> {
+    if let Some(name) = &type_ref.name {
+        return Ok(name.clone());
+    }
+
+    if let Some(inner) = &type_ref.of_type {
+        return introspection_bare_type_name(inner);
+    }
+
     Err(anyhow!(
-        "Introspection JSON parsing not yet fully implemented - use SDL format for now"
+        "Invalid GraphQL introspection type reference: missing terminal named type"
     ))
+}
+
+fn introspection_is_nullable_type(type_ref: &IntrospectionTypeRef) -> bool {
+    type_ref.kind != "NON_NULL"
+}
+
+fn introspection_is_list_type(type_ref: &IntrospectionTypeRef) -> bool {
+    match type_ref.kind.as_str() {
+        "LIST" => true,
+        "NON_NULL" => type_ref.of_type.as_deref().is_some_and(introspection_is_list_type),
+        _ => false,
+    }
+}
+
+fn introspection_list_item_nullable(type_ref: &IntrospectionTypeRef) -> bool {
+    match type_ref.kind.as_str() {
+        "NON_NULL" => type_ref
+            .of_type
+            .as_deref()
+            .map_or(true, introspection_list_item_nullable),
+        "LIST" => type_ref.of_type.as_deref().map_or(true, introspection_is_nullable_type),
+        _ => true,
+    }
 }
 
 // Helper functions
@@ -622,6 +913,9 @@ fn extract_list_item_nullability(type_def: &graphql_parser::schema::Type<String>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
+    use std::fs;
+    use tempfile::tempdir;
 
     #[test]
     fn test_parse_simple_sdl() {
@@ -1286,5 +1580,256 @@ mod tests {
         assert_eq!(query.arguments.len(), 2);
         assert_eq!(query.arguments[0].default_value, Some("10".to_string()));
         assert_eq!(query.arguments[1].default_value, Some("0".to_string()));
+    }
+
+    #[test]
+    fn test_parse_graphql_introspection_value() {
+        let introspection = json!({
+            "__schema": {
+                "description": "Test schema",
+                "queryType": { "name": "Query" },
+                "mutationType": { "name": "Mutation" },
+                "subscriptionType": null,
+                "directives": [
+                    {
+                        "name": "deprecated",
+                        "description": "Marks deprecated fields",
+                        "locations": ["FIELD_DEFINITION", "ENUM_VALUE"],
+                        "args": [
+                            {
+                                "name": "reason",
+                                "description": "Reason text",
+                                "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+                                "defaultValue": "\"Deprecated\""
+                            }
+                        ]
+                    }
+                ],
+                "types": [
+                    {
+                        "kind": "OBJECT",
+                        "name": "Query",
+                        "description": "Root query",
+                        "fields": [
+                            {
+                                "name": "user",
+                                "description": "Lookup a user",
+                                "args": [
+                                    {
+                                        "name": "id",
+                                        "description": "User ID",
+                                        "type": {
+                                            "kind": "NON_NULL",
+                                            "name": null,
+                                            "ofType": { "kind": "SCALAR", "name": "ID", "ofType": null }
+                                        },
+                                        "defaultValue": null
+                                    }
+                                ],
+                                "type": { "kind": "OBJECT", "name": "User", "ofType": null },
+                                "isDeprecated": false,
+                                "deprecationReason": null
+                            }
+                        ],
+                        "inputFields": null,
+                        "enumValues": null,
+                        "possibleTypes": null
+                    },
+                    {
+                        "kind": "OBJECT",
+                        "name": "Mutation",
+                        "description": "Root mutation",
+                        "fields": [
+                            {
+                                "name": "createUser",
+                                "description": null,
+                                "args": [],
+                                "type": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": { "kind": "OBJECT", "name": "User", "ofType": null }
+                                },
+                                "isDeprecated": false,
+                                "deprecationReason": null
+                            }
+                        ],
+                        "inputFields": null,
+                        "enumValues": null,
+                        "possibleTypes": null
+                    },
+                    {
+                        "kind": "OBJECT",
+                        "name": "User",
+                        "description": "A user",
+                        "fields": [
+                            {
+                                "name": "id",
+                                "description": null,
+                                "args": [],
+                                "type": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": { "kind": "SCALAR", "name": "ID", "ofType": null }
+                                },
+                                "isDeprecated": false,
+                                "deprecationReason": null
+                            },
+                            {
+                                "name": "emails",
+                                "description": null,
+                                "args": [],
+                                "type": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": {
+                                        "kind": "LIST",
+                                        "name": null,
+                                        "ofType": {
+                                            "kind": "NON_NULL",
+                                            "name": null,
+                                            "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+                                        }
+                                    }
+                                },
+                                "isDeprecated": false,
+                                "deprecationReason": null
+                            }
+                        ],
+                        "inputFields": null,
+                        "enumValues": null,
+                        "possibleTypes": null
+                    },
+                    {
+                        "kind": "INPUT_OBJECT",
+                        "name": "CreateUserInput",
+                        "description": "User input",
+                        "fields": null,
+                        "inputFields": [
+                            {
+                                "name": "email",
+                                "description": null,
+                                "type": { "kind": "SCALAR", "name": "String", "ofType": null },
+                                "defaultValue": "\"test@example.com\""
+                            }
+                        ],
+                        "enumValues": null,
+                        "possibleTypes": null
+                    },
+                    {
+                        "kind": "ENUM",
+                        "name": "Status",
+                        "description": null,
+                        "fields": null,
+                        "inputFields": null,
+                        "enumValues": [
+                            {
+                                "name": "ACTIVE",
+                                "description": null,
+                                "isDeprecated": false,
+                                "deprecationReason": null
+                            }
+                        ],
+                        "possibleTypes": null
+                    },
+                    {
+                        "kind": "SCALAR",
+                        "name": "ID",
+                        "description": null,
+                        "fields": null,
+                        "inputFields": null,
+                        "enumValues": null,
+                        "possibleTypes": null
+                    },
+                    {
+                        "kind": "SCALAR",
+                        "name": "String",
+                        "description": null,
+                        "fields": null,
+                        "inputFields": null,
+                        "enumValues": null,
+                        "possibleTypes": null
+                    }
+                ]
+            }
+        });
+
+        let schema = parse_graphql_introspection_value(&introspection).expect("Failed to parse introspection");
+
+        assert_eq!(schema.description, Some("Test schema".to_string()));
+        assert_eq!(schema.queries.len(), 1);
+        assert_eq!(schema.queries[0].name, "user");
+        assert_eq!(schema.mutations.len(), 1);
+        assert!(schema.types.contains_key("User"));
+        assert!(schema.types.contains_key("CreateUserInput"));
+        assert!(schema.types.contains_key("Status"));
+        assert_eq!(schema.directives.len(), 1);
+
+        let user = &schema.types["User"];
+        assert_eq!(user.fields[1].name, "emails");
+        assert!(user.fields[1].is_list);
+        assert!(!user.fields[1].list_item_nullable);
+        assert!(!user.fields[1].is_nullable);
+
+        let input = &schema.types["CreateUserInput"];
+        assert_eq!(
+            input.input_fields[0].default_value,
+            Some("\"test@example.com\"".to_string())
+        );
+    }
+
+    #[test]
+    fn test_parse_graphql_schema_from_introspection_json_file() {
+        let dir = tempdir().expect("temp dir");
+        let path = dir.path().join("schema.json");
+        let introspection = json!({
+            "data": {
+                "__schema": {
+                    "description": null,
+                    "queryType": { "name": "Query" },
+                    "mutationType": null,
+                    "subscriptionType": null,
+                    "directives": [],
+                    "types": [
+                        {
+                            "kind": "OBJECT",
+                            "name": "Query",
+                            "description": null,
+                            "fields": [
+                                {
+                                    "name": "hello",
+                                    "description": null,
+                                    "args": [],
+                                    "type": {
+                                        "kind": "NON_NULL",
+                                        "name": null,
+                                        "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+                                    },
+                                    "isDeprecated": false,
+                                    "deprecationReason": null
+                                }
+                            ],
+                            "inputFields": null,
+                            "enumValues": null,
+                            "possibleTypes": null
+                        },
+                        {
+                            "kind": "SCALAR",
+                            "name": "String",
+                            "description": null,
+                            "fields": null,
+                            "inputFields": null,
+                            "enumValues": null,
+                            "possibleTypes": null
+                        }
+                    ]
+                }
+            }
+        });
+
+        fs::write(&path, introspection.to_string()).expect("write introspection file");
+        let schema = parse_graphql_schema(&path).expect("parse introspection file");
+
+        assert_eq!(schema.queries.len(), 1);
+        assert_eq!(schema.queries[0].name, "hello");
     }
 }

@@ -4,6 +4,7 @@
     reason = "Test file with code generation"
 )]
 
+use serde_json::json;
 use spikard_cli::codegen::{
     CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, SchemaKind, TargetLanguage,
 };
@@ -104,4 +105,105 @@ fn unsupported_schema_target_pair_is_rejected() {
 
     let err = CodegenEngine::execute(request).expect_err("unsupported combo should be rejected");
     assert!(err.to_string().contains("Unsupported schema/target combination"));
+}
+
+#[test]
+fn codegen_engine_graphql_accepts_introspection_json() {
+    let temp_dir = tempfile::tempdir().expect("temp dir");
+    let schema_path = temp_dir.path().join("schema.json");
+    let output_path = temp_dir.path().join("generated.py");
+
+    let introspection = json!({
+        "data": {
+            "__schema": {
+                "description": "Introspection schema",
+                "queryType": { "name": "Query" },
+                "mutationType": null,
+                "subscriptionType": null,
+                "directives": [],
+                "types": [
+                    {
+                        "kind": "OBJECT",
+                        "name": "Query",
+                        "description": null,
+                        "fields": [
+                            {
+                                "name": "hello",
+                                "description": "Greeting",
+                                "args": [],
+                                "type": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": { "kind": "OBJECT", "name": "User", "ofType": null }
+                                },
+                                "isDeprecated": false,
+                                "deprecationReason": null
+                            }
+                        ],
+                        "inputFields": null,
+                        "enumValues": null,
+                        "possibleTypes": null
+                    },
+                    {
+                        "kind": "OBJECT",
+                        "name": "User",
+                        "description": "User record",
+                        "fields": [
+                            {
+                                "name": "name",
+                                "description": "Display name",
+                                "args": [],
+                                "type": {
+                                    "kind": "NON_NULL",
+                                    "name": null,
+                                    "ofType": { "kind": "SCALAR", "name": "String", "ofType": null }
+                                },
+                                "isDeprecated": false,
+                                "deprecationReason": null
+                            }
+                        ],
+                        "inputFields": null,
+                        "enumValues": null,
+                        "possibleTypes": null
+                    },
+                    {
+                        "kind": "SCALAR",
+                        "name": "String",
+                        "description": null,
+                        "fields": null,
+                        "inputFields": null,
+                        "enumValues": null,
+                        "possibleTypes": null
+                    }
+                ]
+            }
+        }
+    });
+
+    std::fs::write(&schema_path, introspection.to_string()).expect("write schema");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::GraphQL,
+        target: CodegenTargetKind::GraphQL {
+            language: TargetLanguage::Python,
+            output: output_path.clone(),
+            target: "types".to_string(),
+        },
+        dto: None,
+    };
+
+    let outcome = CodegenEngine::execute(request).expect("graphql introspection codegen should succeed");
+    match outcome {
+        CodegenOutcome::Files(files) => {
+            assert_eq!(files.len(), 1);
+            assert_eq!(files[0].path, output_path);
+        }
+        CodegenOutcome::InMemory(_) => panic!("expected file outcome"),
+    }
+
+    let generated = std::fs::read_to_string(&output_path).expect("generated output");
+    assert!(generated.contains("GraphQL types generated from schema."));
+    assert!(generated.contains("class User(Struct, frozen=True, kw_only=True):"));
+    assert!(generated.contains("name: str"));
 }
