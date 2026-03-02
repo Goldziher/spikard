@@ -4,11 +4,11 @@
 //! and extracting structured data for code generation, including messages, services,
 //! enums, and field definitions.
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Parsed Protobuf schema representation
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -185,6 +185,15 @@ pub fn parse_proto_schema(path: &Path) -> Result<ProtobufSchema> {
     parse_proto_schema_string(&content).with_context(|| format!("Failed to parse proto schema from {}", path.display()))
 }
 
+/// Parse a Protobuf schema from a .proto file and recursively merge import dependencies.
+///
+/// Imported files are resolved relative to the source file first and then against
+/// any additional include paths supplied by the caller.
+pub fn parse_proto_schema_with_includes(path: &Path, include_paths: &[PathBuf]) -> Result<ProtobufSchema> {
+    let mut visited = HashSet::new();
+    parse_proto_schema_recursive(path, include_paths, &mut visited)
+}
+
 /// Parse a Protobuf schema from a string
 pub fn parse_proto_schema_string(content: &str) -> Result<ProtobufSchema> {
     // For Phase 1, we implement a basic parser that validates proto3 syntax
@@ -225,6 +234,79 @@ pub fn parse_proto_schema_string(content: &str) -> Result<ProtobufSchema> {
     parse_top_level_definitions(content, &mut schema)?;
 
     Ok(schema)
+}
+
+fn parse_proto_schema_recursive(
+    path: &Path,
+    include_paths: &[PathBuf],
+    visited: &mut HashSet<PathBuf>,
+) -> Result<ProtobufSchema> {
+    let visit_key = canonical_or_original(path);
+    if !visited.insert(visit_key) {
+        return Ok(ProtobufSchema {
+            package: None,
+            messages: HashMap::new(),
+            services: HashMap::new(),
+            enums: HashMap::new(),
+            imports: Vec::new(),
+            syntax: "proto3".to_string(),
+            description: None,
+        });
+    }
+
+    let content = fs::read_to_string(path).with_context(|| format!("Failed to read proto file: {}", path.display()))?;
+    let mut schema = parse_proto_schema_string(&content)
+        .with_context(|| format!("Failed to parse proto schema from {}", path.display()))?;
+
+    for import in schema.imports.clone() {
+        let Some(import_path) = resolve_import_path(path, &import, include_paths) else {
+            continue;
+        };
+        let imported_schema = parse_proto_schema_recursive(&import_path, include_paths, visited)?;
+        merge_schema(&mut schema, imported_schema)?;
+    }
+
+    Ok(schema)
+}
+
+fn resolve_import_path(path: &Path, import: &str, include_paths: &[PathBuf]) -> Option<PathBuf> {
+    let mut relative_candidates = path
+        .parent()
+        .into_iter()
+        .map(|parent| parent.join(import))
+        .chain(include_paths.iter().map(|include| include.join(import)));
+
+    relative_candidates
+        .find(|candidate| candidate.is_file())
+        .map(|candidate| canonical_or_original(&candidate))
+}
+
+fn canonical_or_original(path: &Path) -> PathBuf {
+    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+}
+
+fn merge_schema(target: &mut ProtobufSchema, imported: ProtobufSchema) -> Result<()> {
+    merge_named_defs("message", &mut target.messages, imported.messages)?;
+    merge_named_defs("enum", &mut target.enums, imported.enums)?;
+    merge_named_defs("service", &mut target.services, imported.services)?;
+
+    for import in imported.imports {
+        if !target.imports.contains(&import) {
+            target.imports.push(import);
+        }
+    }
+
+    Ok(())
+}
+
+fn merge_named_defs<T>(kind: &str, target: &mut HashMap<String, T>, source: HashMap<String, T>) -> Result<()> {
+    for (name, def) in source {
+        if target.contains_key(&name) {
+            bail!("Duplicate {kind} definition found while resolving imports: {name}");
+        }
+        target.insert(name, def);
+    }
+    Ok(())
 }
 
 /// Helper function to extract syntax declaration from proto content
@@ -637,6 +719,7 @@ fn parse_proto_type(type_str: &str) -> ProtoType {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_parse_simple_proto3_schema() {
@@ -673,6 +756,50 @@ package example;
         assert_eq!(schema.imports.len(), 2);
         assert!(schema.imports.contains(&"google/protobuf/timestamp.proto".to_string()));
         assert!(schema.imports.contains(&"other.proto".to_string()));
+    }
+
+    #[test]
+    fn test_parse_proto_schema_with_includes_merges_imported_messages() {
+        let temp_dir = tempdir().expect("temp dir");
+        let shared_dir = temp_dir.path().join("common");
+        fs::create_dir_all(&shared_dir).expect("create include dir");
+
+        let shared_proto = shared_dir.join("types.proto");
+        fs::write(
+            &shared_proto,
+            r#"syntax = "proto3";
+
+package common;
+
+message SharedType {
+  string id = 1;
+}
+"#,
+        )
+        .expect("write shared proto");
+
+        let root_proto = temp_dir.path().join("service.proto");
+        fs::write(
+            &root_proto,
+            r#"syntax = "proto3";
+
+import "common/types.proto";
+
+package example;
+
+message UsesShared {
+  SharedType shared = 1;
+}
+"#,
+        )
+        .expect("write root proto");
+
+        let schema = parse_proto_schema_with_includes(&root_proto, &[temp_dir.path().to_path_buf()])
+            .expect("schema should resolve imports");
+
+        assert!(schema.messages.contains_key("UsesShared"));
+        assert!(schema.messages.contains_key("SharedType"));
+        assert!(schema.imports.contains(&"common/types.proto".to_string()));
     }
 
     #[test]

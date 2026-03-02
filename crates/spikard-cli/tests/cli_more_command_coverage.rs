@@ -177,3 +177,58 @@ fn cli_generate_php_dto_writes_files() -> Result<()> {
     assert!(response.exists());
     Ok(())
 }
+
+#[test]
+fn cli_generate_protobuf_resolves_imports_from_include_paths() -> Result<()> {
+    let tmp = TempDir::new()?;
+    let shared_dir = tmp.path().join("common");
+    std::fs::create_dir_all(&shared_dir)?;
+
+    let shared_proto = shared_dir.join("types.proto");
+    std::fs::write(
+        &shared_proto,
+        r#"syntax = "proto3";
+
+package common;
+
+message SharedType {
+  string id = 1;
+}
+"#,
+    )?;
+
+    let root_proto = tmp.path().join("service.proto");
+    std::fs::write(
+        &root_proto,
+        r#"syntax = "proto3";
+
+import "common/types.proto";
+
+package example;
+
+message UsesShared {
+  SharedType shared = 1;
+}
+"#,
+    )?;
+
+    let output = tmp.path().join("generated.py");
+
+    spikard_cli::cli::run_from([
+        "spikard",
+        "generate",
+        "protobuf",
+        root_proto.to_string_lossy().as_ref(),
+        "-l",
+        "python",
+        "-o",
+        output.to_string_lossy().as_ref(),
+        "--include",
+        tmp.path().to_string_lossy().as_ref(),
+    ])?;
+
+    let generated = std::fs::read_to_string(&output)?;
+    assert!(generated.contains("class SharedType"));
+    assert!(generated.contains("class UsesShared"));
+    Ok(())
+}

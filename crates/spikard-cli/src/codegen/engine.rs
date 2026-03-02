@@ -63,6 +63,7 @@ pub enum CodegenTargetKind {
         language: TargetLanguage,
         output: PathBuf,
         target: String,
+        include_paths: Vec<PathBuf>,
     },
 }
 
@@ -162,9 +163,10 @@ impl CodegenEngine {
                     language,
                     output,
                     target,
+                    include_paths,
                 },
             ) => {
-                let schema = super::protobuf::parse_proto_schema(&request.schema_path)?;
+                let schema = super::protobuf::parse_proto_schema_with_includes(&request.schema_path, include_paths)?;
 
                 // Parse target string to ProtobufTarget enum
                 let proto_target = match target.as_str() {
@@ -469,11 +471,13 @@ impl std::fmt::Debug for CodegenTargetKind {
                 language,
                 output,
                 target,
+                include_paths,
             } => f
                 .debug_struct("Protobuf")
                 .field("language", language)
                 .field("output", output)
                 .field("target", target)
+                .field("include_paths", include_paths)
                 .finish(),
         }
     }
@@ -647,6 +651,7 @@ message TestMessage {
                 language: TargetLanguage::Python,
                 output: output_path.clone(),
                 target: "all".to_string(),
+                include_paths: Vec::new(),
             },
             dto: None,
         })

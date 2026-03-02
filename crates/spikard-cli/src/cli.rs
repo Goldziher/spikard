@@ -182,6 +182,10 @@ struct ProtobufArgs {
     /// Target: all, messages, or services
     #[arg(long, default_value = "all")]
     target: String,
+
+    /// Additional import directories used to resolve imported .proto files
+    #[arg(long = "include")]
+    include: Vec<PathBuf>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -499,6 +503,7 @@ fn run(cli: Cli) -> Result<()> {
                         language: args.lang.into(),
                         output: args.output.clone(),
                         target: args.target,
+                        include_paths: args.include,
                     },
                     dto: None,
                 };
