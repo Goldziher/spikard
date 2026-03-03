@@ -37,7 +37,11 @@ Install via Composer:
 composer require spikard/spikard
 ```
 
-Requires PHP 8.2+ and Rust toolchain (for ext-php-rs native extension build).
+Normal installs require PHP 8.2+ and Composer 2.x. The package auto-installs its native extension through a
+Composer plugin; in CI or other non-interactive environments, allow it first with
+`composer config allow-plugins.spikard/spikard true`.
+
+Rust is only required if you are building the extension from source.
 
 ## Configuration
 

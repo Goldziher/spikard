@@ -30,6 +30,13 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, PHP, 
     composer require spikard/spikard
     ```
 
+    For CI or other non-interactive Composer runs, allow the package plugin first:
+
+    ```bash
+    composer config allow-plugins.spikard/spikard true
+    composer require spikard/spikard
+    ```
+
 === "Elixir"
 
     Add to your `mix.exs` dependencies:
