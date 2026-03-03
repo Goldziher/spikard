@@ -420,7 +420,12 @@ impl TestClient {
         let path = path.to_string();
         let client = Arc::clone(&self.client);
 
-        let fut = async move { websocket::connect_websocket_for_test(client.server(), &path).await };
+        let fut = async move {
+            let server = client
+                .http_server()
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+            websocket::connect_websocket_for_test(&server, &path).await
+        };
 
         pyo3_async_runtimes::tokio::future_into_py(py, fut)
     }
@@ -431,8 +436,8 @@ impl TestClient {
         let client = Arc::clone(&self.client);
 
         let fut = async move {
-            let axum_response = client.server().get(&path).await;
-            let snapshot = spikard_http::testing::snapshot_response(axum_response)
+            let snapshot = client
+                .get(&path, None, None)
                 .await
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
 

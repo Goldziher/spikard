@@ -12,7 +12,7 @@ use axum::http::{HeaderName, HeaderValue, Method};
 use axum_test::TestServer;
 use bytes::Bytes;
 use serde_json::Value;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::time::timeout;
 use urlencoding::encode;
@@ -43,29 +43,49 @@ pub struct GraphQLSubscriptionSnapshot {
 /// handling Server-Sent Events. Language bindings wrap this to provide
 /// native API surfaces.
 pub struct TestClient {
-    server: Arc<TestServer>,
+    mock_server: Arc<TestServer>,
+    router: axum::Router,
+    http_server: Mutex<Option<Arc<TestServer>>>,
 }
 
 impl TestClient {
     /// Create a new test client from an Axum router
     pub fn from_router(router: axum::Router) -> Result<Self, String> {
-        let server = if tokio::runtime::Handle::try_current().is_ok() {
-            TestServer::builder()
-                .http_transport()
-                .try_build(router)
-                .map_err(|e| format!("Failed to create test server: {}", e))?
-        } else {
-            TestServer::try_new(router).map_err(|e| format!("Failed to create test server: {}", e))?
-        };
+        let mock_server =
+            TestServer::try_new(router.clone()).map_err(|e| format!("Failed to create test server: {}", e))?;
 
         Ok(Self {
-            server: Arc::new(server),
+            mock_server: Arc::new(mock_server),
+            router,
+            http_server: Mutex::new(None),
         })
     }
 
-    /// Get the underlying test server (for WebSocket and SSE connections)
-    pub fn server(&self) -> &TestServer {
-        &self.server
+    /// Get or initialize the underlying socket-backed test server for WebSocket traffic.
+    pub fn http_server(&self) -> Result<Arc<TestServer>, SnapshotError> {
+        let mut guard = self
+            .http_server
+            .lock()
+            .map_err(|_| SnapshotError::Decompression("Failed to lock HTTP test server state".to_string()))?;
+
+        if let Some(server) = guard.as_ref() {
+            return Ok(Arc::clone(server));
+        }
+
+        if tokio::runtime::Handle::try_current().is_err() {
+            return Err(SnapshotError::Decompression(
+                "WebSocket test transport requires an active Tokio runtime".to_string(),
+            ));
+        }
+
+        let server = Arc::new(
+            TestServer::builder()
+                .http_transport()
+                .try_build(self.router.clone())
+                .map_err(|e| SnapshotError::Decompression(format!("Failed to create test server: {}", e)))?,
+        );
+        *guard = Some(Arc::clone(&server));
+        Ok(server)
     }
 
     /// Make a GET request
@@ -76,7 +96,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.get(&full_path);
+        let mut request = self.mock_server.get(&full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -97,7 +117,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.post(&full_path);
+        let mut request = self.mock_server.post(&full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -133,7 +153,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.method(method, &full_path);
+        let mut request = self.mock_server.method(method, &full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -153,7 +173,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.put(&full_path);
+        let mut request = self.mock_server.put(&full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -176,7 +196,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.patch(&full_path);
+        let mut request = self.mock_server.patch(&full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -198,7 +218,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.delete(&full_path);
+        let mut request = self.mock_server.delete(&full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -216,7 +236,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.method(Method::OPTIONS, &full_path);
+        let mut request = self.mock_server.method(Method::OPTIONS, &full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -234,7 +254,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.method(Method::HEAD, &full_path);
+        let mut request = self.mock_server.method(Method::HEAD, &full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -252,7 +272,7 @@ impl TestClient {
         headers: Option<Vec<(String, String)>>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let full_path = build_full_path(path, query_params.as_deref());
-        let mut request = self.server.method(Method::TRACE, &full_path);
+        let mut request = self.mock_server.method(Method::TRACE, &full_path);
 
         if let Some(headers_vec) = headers {
             request = self.add_headers(request, headers_vec)?;
@@ -322,8 +342,8 @@ impl TestClient {
         operation_name: Option<&str>,
     ) -> Result<GraphQLSubscriptionSnapshot, SnapshotError> {
         let operation_id = "spikard-subscription-1".to_string();
-        let upgrade = self
-            .server
+        let http_server = self.http_server()?;
+        let upgrade = http_server
             .get_websocket(endpoint)
             .add_header("sec-websocket-protocol", "graphql-transport-ws")
             .await;
@@ -733,6 +753,8 @@ mod tests {
         );
 
         let client = TestClient::from_router(app).expect("client");
+        assert!(client.http_server.lock().expect("lock").is_none());
+
         let snapshot = client
             .graphql_subscription("subscription { ticker }", None, None)
             .await
@@ -742,6 +764,7 @@ mod tests {
         assert_eq!(snapshot.errors, Vec::<Value>::new());
         assert_eq!(snapshot.event, Some(serde_json::json!({"data": {"ticker": "AAPL"}})));
         assert!(snapshot.complete_received);
+        assert!(client.http_server.lock().expect("lock").is_some());
     }
 
     #[tokio::test]
@@ -777,11 +800,28 @@ mod tests {
         );
 
         let client = TestClient::from_router(app).expect("client");
+        assert!(client.http_server.lock().expect("lock").is_none());
+
         let error = client
             .graphql_subscription("subscription { privateFeed }", None, None)
             .await
             .expect_err("expected connection error");
 
         assert!(error.to_string().contains("connection_error"));
+        assert!(client.http_server.lock().expect("lock").is_some());
+    }
+
+    #[tokio::test]
+    async fn http_requests_do_not_initialize_socket_transport() {
+        let app = Router::new().route("/health", get(|| async { "ok" }));
+
+        let client = TestClient::from_router(app).expect("client");
+        assert!(client.http_server.lock().expect("lock").is_none());
+
+        let snapshot = client.get("/health", None, None).await.expect("response snapshot");
+
+        assert_eq!(snapshot.status, 200);
+        assert_eq!(snapshot.text().expect("body"), "ok");
+        assert!(client.http_server.lock().expect("lock").is_none());
     }
 }
