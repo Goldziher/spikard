@@ -52,7 +52,7 @@ def deps do
 end
 ```
 
-**Requirements:** Elixir 1.18+ with OTP 27+, and a Rust toolchain (for compiling NIFs from source).
+**Requirements:** Elixir 1.18+ with OTP 27+. Normal installs use precompiled NIFs; Rust is only required when forcing a source build (for example with SPIKARD_BUILD=1).
 
 ## Quick Start
 

@@ -405,7 +405,7 @@ targets:
       generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage
       Phoenix-style routing with zero-copy Rustler NIF performance.
     install_type: hex
-    requirements: "Elixir 1.18+ with OTP 27+, and a Rust toolchain (for compiling NIFs from source)."
+    requirements: "Elixir 1.18+ with OTP 27+. Normal installs use precompiled NIFs; Rust is only required when forcing a source build (for example with SPIKARD_BUILD=1)."
     license_path: LICENSE
     features_heading: Key Features
     features:

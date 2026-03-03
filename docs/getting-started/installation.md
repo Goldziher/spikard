@@ -45,6 +45,8 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, PHP, 
     {:spikard, "~> 0.10"}
     ```
 
+    Normal installs use precompiled NIFs. You only need a Rust toolchain when forcing a source build, for example with `SPIKARD_BUILD=1`.
+
 === "Rust"
 
     ```bash

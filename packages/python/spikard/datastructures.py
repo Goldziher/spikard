@@ -8,6 +8,7 @@ request processing.
 
 from __future__ import annotations
 
+import asyncio
 import io
 from tempfile import SpooledTemporaryFile
 from typing import Annotated, Any
@@ -130,11 +131,13 @@ class UploadFile:
         """
         return self._file.read(size)
 
+    async def _run_async_file_op(self, operation: str, *args: object) -> object:
+        if not self.rolled_to_disk:
+            return getattr(self._file, operation)(*args)
+        return await asyncio.to_thread(getattr(self._file, operation), *args)
+
     async def aread(self, size: int = -1) -> bytes:
         """Read file contents asynchronously.
-
-        For files in memory, this is a simple wrapper. For files spooled to disk,
-        this would ideally use anyio/trio file I/O, but for now returns synchronously.
 
         Args:
             size: Number of bytes to read (-1 for all)
@@ -142,8 +145,7 @@ class UploadFile:
         Returns:
             File contents as bytes
         """
-        # TODO: For true async file I/O when rolled_to_disk, integrate with anyio/trio
-        return self.read(size)
+        return await self._run_async_file_op("read", size)
 
     def seek(self, offset: int, whence: int = 0) -> int:
         """Seek to a position in the file synchronously.
@@ -167,8 +169,7 @@ class UploadFile:
         Returns:
             New absolute position
         """
-        # TODO: Async version for disk-spooled files
-        return self.seek(offset, whence)
+        return await self._run_async_file_op("seek", offset, whence)
 
     def write(self, data: bytes) -> int:
         """Write data to the file synchronously.
@@ -195,8 +196,12 @@ class UploadFile:
         Returns:
             Number of bytes written
         """
-        # TODO: Async version for disk-spooled files
-        return self.write(data)
+        current_pos = self._file.tell()
+        bytes_written = await self._run_async_file_op("write", data)
+        end_pos = self._file.tell()
+        self.size = max(self.size, end_pos)
+        self._file.seek(current_pos + bytes_written)
+        return bytes_written
 
     def close(self) -> None:
         """Close the file synchronously."""
@@ -205,8 +210,8 @@ class UploadFile:
 
     async def aclose(self) -> None:
         """Close the file asynchronously."""
-        # TODO: Async version for disk-spooled files
-        self.close()
+        if not self._file.closed:
+            await self._run_async_file_op("close")
 
     @property
     def file(self) -> SpooledTemporaryFile[bytes]:

@@ -2,6 +2,8 @@
 
 Elixir binding built on Rustler for fast NIF integration. Handlers receive a `Spikard.Request` struct and return response maps or `Spikard.Response` structs. The binding provides type safety through `@spec` typespecs and supports all Spikard features: HTTP routing, WebSockets, Server-Sent Events, file uploads, middleware configuration, and test clients.
 
+Normal installs use precompiled NIFs through `RustlerPrecompiled`. A Rust toolchain is only needed when forcing a source build, such as `SPIKARD_BUILD=1`.
+
 ## Quickstart
 
 ```elixir

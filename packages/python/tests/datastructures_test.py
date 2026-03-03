@@ -11,6 +11,7 @@ This module provides comprehensive coverage for:
 from __future__ import annotations
 
 import io
+from collections.abc import Callable
 
 import pytest
 
@@ -147,6 +148,54 @@ async def test_upload_file_async_awrite_variants() -> None:
 
     upload.seek(0)
     assert upload.read() == b"initialchunk1"
+
+
+@pytest.mark.asyncio
+async def test_upload_file_async_disk_backed_operations_use_thread_offload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test disk-backed async operations offload to a worker thread."""
+    upload = UploadFile(
+        filename="large.bin",
+        content=b"x" * 2048,
+        max_spool_size=1024,
+    )
+    calls: list[str] = []
+
+    async def fake_to_thread(func: Callable[..., object], *args: object) -> object:
+        calls.append(func.__name__)
+        return func(*args)
+
+    monkeypatch.setattr("spikard.datastructures.asyncio.to_thread", fake_to_thread)
+
+    await upload.aseek(0)
+    assert await upload.aread(4) == b"xxxx"
+
+    await upload.aseek(0, 2)
+    assert await upload.awrite(b"yz") == 2
+
+    await upload.aclose()
+
+    assert calls == ["seek", "read", "seek", "write", "close"]
+
+
+@pytest.mark.asyncio
+async def test_upload_file_async_in_memory_operations_skip_thread_offload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test in-memory async operations keep the zero-overhead direct path."""
+    upload = UploadFile(filename="small.txt", content=b"content", max_spool_size=1024)
+
+    async def fail_to_thread(*args: object, **kwargs: object) -> object:
+        raise AssertionError("in-memory upload should not offload to a worker thread")
+
+    monkeypatch.setattr("spikard.datastructures.asyncio.to_thread", fail_to_thread)
+
+    await upload.aseek(0)
+    assert await upload.aread() == b"content"
+    await upload.aseek(0, 2)
+    assert await upload.awrite(b"!") == 1
+    await upload.aclose()
 
 
 # TestUploadFileClosing tests
