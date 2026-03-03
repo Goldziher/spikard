@@ -4,9 +4,11 @@
 
 use crate::codegen::TargetLanguage;
 use std::fmt;
+use std::fs;
 use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::process::Command;
-use tempfile::NamedTempFile;
+use tempfile::{NamedTempFile, TempDir, tempdir};
 
 /// Error types for quality validation operations
 #[derive(Debug)]
@@ -184,10 +186,11 @@ impl QualityValidator {
                     .map(|_| ())
             }
             TargetLanguage::Rust => {
-                let file = self.write_temp_file(code, "rs")?;
-                self.run_tool(
+                let project = self.write_temp_rust_project(code)?;
+                self.run_tool_in_dir(
                     "cargo",
-                    &["check", "--manifest-path", file.path().to_str().unwrap()],
+                    &["check", "--manifest-path", project.manifest_path.to_str().unwrap()],
+                    project.workdir.path(),
                     code,
                 )
                 .map(|_| ())
@@ -251,10 +254,11 @@ impl QualityValidator {
                     .map(|_| ())
             }
             TargetLanguage::Rust => {
-                let file = self.write_temp_file(code, "rs")?;
-                self.run_tool(
+                let project = self.write_temp_rust_project(code)?;
+                self.run_tool_in_dir(
                     "cargo",
-                    &["check", "--manifest-path", file.path().to_str().unwrap()],
+                    &["check", "--manifest-path", project.manifest_path.to_str().unwrap()],
+                    project.workdir.path(),
                     code,
                 )
                 .map(|_| ())
@@ -319,17 +323,18 @@ impl QualityValidator {
                 .map(|_| ())
             }
             TargetLanguage::Rust => {
-                let file = self.write_temp_file(code, "rs")?;
-                self.run_tool(
+                let project = self.write_temp_rust_project(code)?;
+                self.run_tool_in_dir(
                     "cargo",
                     &[
                         "clippy",
                         "--manifest-path",
-                        file.path().to_str().unwrap(),
+                        project.manifest_path.to_str().unwrap(),
                         "--",
                         "-D",
                         "warnings",
                     ],
+                    project.workdir.path(),
                     code,
                 )
                 .map(|_| ())
@@ -417,6 +422,20 @@ impl QualityValidator {
         Ok(file)
     }
 
+    fn write_temp_rust_project(&self, code: &str) -> Result<RustTempProject, QualityError> {
+        let workdir = tempdir().map_err(|e| QualityError::IoError(e.to_string()))?;
+        let src_dir = workdir.path().join("src");
+        fs::create_dir_all(&src_dir).map_err(|e| QualityError::IoError(e.to_string()))?;
+
+        let manifest_path = workdir.path().join("Cargo.toml");
+        let lib_path = src_dir.join("lib.rs");
+
+        fs::write(&manifest_path, rust_temp_manifest()).map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(&lib_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
+
+        Ok(RustTempProject { workdir, manifest_path })
+    }
+
     /// Executes a validation tool and captures its output
     ///
     /// This method runs an external command with the given arguments and interprets
@@ -436,7 +455,11 @@ impl QualityValidator {
     /// - `Err(QualityError::ValidationFailed)` - If the tool exits with non-zero status
     /// - `Err(QualityError::IoError)` - If execution fails
     fn run_tool(&self, tool: &str, args: &[&str], _code: &str) -> Result<String, QualityError> {
-        let output = Command::new(tool).args(args).output().map_err(|e| {
+        self.run_tool_in_dir(tool, args, Path::new("."), _code)
+    }
+
+    fn run_tool_in_dir(&self, tool: &str, args: &[&str], cwd: &Path, _code: &str) -> Result<String, QualityError> {
+        let output = Command::new(tool).args(args).current_dir(cwd).output().map_err(|e| {
             if e.kind() == std::io::ErrorKind::NotFound {
                 QualityError::ToolNotFound(tool.to_string())
             } else {
@@ -457,6 +480,30 @@ impl QualityValidator {
             Err(QualityError::ValidationFailed(message))
         }
     }
+}
+
+struct RustTempProject {
+    workdir: TempDir,
+    manifest_path: PathBuf,
+}
+
+fn rust_temp_manifest() -> &'static str {
+    r#"[package]
+name = "spikard_codegen_validation"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+async-trait = "0.1"
+bytes = "1"
+futures-core = "0.3"
+prost = "0.14"
+serde = { version = "1", features = ["derive"] }
+tonic = "0.14"
+"#
 }
 
 #[cfg(test)]
@@ -519,5 +566,16 @@ mod tests {
         assert!(display.contains("Syntax: PASS"));
         assert!(display.contains("Types:  FAIL"));
         assert!(display.contains("type mismatch"));
+    }
+
+    #[test]
+    fn test_rust_quality_validator_accepts_valid_code() {
+        let validator = QualityValidator::new(TargetLanguage::Rust);
+        validator
+            .validate_syntax("pub fn add(a: i32, b: i32) -> i32 { a + b }")
+            .expect("rust syntax validation should pass");
+        validator
+            .validate_types("pub fn add(a: i32, b: i32) -> i32 { a + b }")
+            .expect("rust type validation should pass");
     }
 }
