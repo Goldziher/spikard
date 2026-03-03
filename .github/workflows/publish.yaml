@@ -1307,6 +1307,36 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bash scripts/publish/cli/upload-release-assets.sh "${{ needs.prepare.outputs.tag }}"
 
+  publish-php-release:
+    name: Upload PHP extension to GitHub release
+    needs: [prepare, build-php-extension]
+    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_php == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Ensure GitHub release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/publish/cli/ensure-release.sh "${{ needs.prepare.outputs.tag }}"
+
+      - name: Download PHP extension artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: php-extension-*
+          path: dist/php
+          merge-multiple: true
+
+      - name: Upload PHP extension artifacts to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/publish/php/upload-release-assets.sh "${{ needs.prepare.outputs.tag }}"
+
   upload-homebrew-bottles:
     name: Upload Homebrew bottles to GitHub Release
     needs: [prepare, check-homebrew, homebrew-bottles]
