@@ -14,7 +14,11 @@ The gRPC binding provides:
 
 ## Installation
 
-The gRPC module is included with Spikard. Ensure you have the Spikard extension installed and the `google/protobuf` package:
+The gRPC module is included with Spikard. `composer require spikard/spikard` now auto-runs the packaged
+extension installer through the package's Composer plugin. In CI or other non-interactive environments,
+allow the plugin first with `composer config allow-plugins.spikard/spikard true`.
+
+Ensure you also have the `google/protobuf` package:
 
 ```bash
 composer require google/protobuf:^4.33

@@ -43,6 +43,21 @@ final class ExtensionInstallerTest extends TestCase
         $this->assertStringContainsString('/spikard.so"', $iniContents);
     }
 
+    public function testInstallerUsesExplicitPackageVersionOverride(): void
+    {
+        $root = sys_get_temp_dir() . '/spikard-installer-version-' . bin2hex(random_bytes(8));
+        mkdir($root, 0777, true);
+        file_put_contents($root . '/composer.json', json_encode(['name' => 'consumer/app'], JSON_THROW_ON_ERROR));
+
+        $installer = new ExtensionInstaller($root, [], '0.12.0');
+        $assetFile = $installer->assetFileName();
+
+        $this->assertStringContainsString('/v0.12.0/', $installer->releaseAssetUrl());
+        $this->assertNotSame('', $assetFile);
+        /** @var non-empty-string $assetFile */
+        $this->assertStringEndsWith($assetFile, $installer->releaseAssetUrl());
+    }
+
     private function createReleaseArchive(string $archivePath): void
     {
         $archiveDir = dirname($archivePath);

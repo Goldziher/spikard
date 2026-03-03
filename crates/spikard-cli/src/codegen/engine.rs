@@ -16,6 +16,7 @@ use super::openrpc::{
     generate_ruby_handler_app as generate_openrpc_ruby_handler,
     generate_typescript_handler_app as generate_openrpc_typescript_handler, parse_openrpc_schema,
 };
+use super::quality::QualityValidator;
 use super::{DtoConfig, TargetLanguage, detect_primary_protocol, generate_fixtures};
 use crate::codegen::generate_from_openapi;
 use anyhow::{Context, Result, bail};
@@ -97,16 +98,28 @@ pub struct CodegenEngine;
 
 impl CodegenEngine {
     pub fn execute(request: CodegenRequest) -> Result<CodegenOutcome> {
+        Self::execute_impl(request, false)
+    }
+
+    pub fn execute_validated(request: CodegenRequest) -> Result<CodegenOutcome> {
+        Self::execute_impl(request, true)
+    }
+
+    fn execute_impl(request: CodegenRequest, validate: bool) -> Result<CodegenOutcome> {
         match (&request.schema_kind, &request.target) {
             (SchemaKind::OpenApi, CodegenTargetKind::Server { language, output }) => {
                 let dto = request.dto.clone().unwrap_or_default();
-                let code = generate_from_openapi(&request.schema_path, *language, &dto, output.as_deref())?;
+                let code = generate_from_openapi(&request.schema_path, *language, &dto)?;
+                if validate {
+                    Self::validate_generated_code(*language, &code)?;
+                }
 
                 if let Some(path) = output {
-                    Ok(CodegenOutcome::Files(vec![GeneratedAsset {
-                        path: path.clone(),
-                        description: format!("{} server handlers", language_name(*language)),
-                    }]))
+                    Ok(CodegenOutcome::Files(vec![Self::write_asset(
+                        path,
+                        format!("{} server handlers", language_name(*language)),
+                        &code,
+                    )?]))
                 } else {
                     Ok(CodegenOutcome::InMemory(code))
                 }
@@ -122,27 +135,27 @@ impl CodegenEngine {
                 let spec = parse_asyncapi_schema(&request.schema_path)
                     .context("Failed to parse AsyncAPI schema for test app generation")?;
                 let protocol = detect_primary_protocol(&spec)?;
-                let asset = Self::generate_asyncapi_app(&spec, protocol, *language, output)?;
+                let asset = Self::generate_asyncapi_app(&spec, protocol, *language, output, validate)?;
                 Ok(CodegenOutcome::Files(vec![asset]))
             }
             (SchemaKind::AsyncApi, CodegenTargetKind::AsyncHandlers { language, output }) => {
                 let spec = parse_asyncapi_schema(&request.schema_path)
                     .context("Failed to parse AsyncAPI schema for handler generation")?;
                 let protocol = detect_primary_protocol(&spec)?;
-                let asset = Self::generate_asyncapi_handler(&spec, protocol, *language, output)?;
+                let asset = Self::generate_asyncapi_handler(&spec, protocol, *language, output, validate)?;
                 Ok(CodegenOutcome::Files(vec![asset]))
             }
             (SchemaKind::AsyncApi, CodegenTargetKind::AsyncAll { output }) => {
                 let spec = parse_asyncapi_schema(&request.schema_path)
                     .context("Failed to parse AsyncAPI schema for all-assets generation")?;
                 let protocol = detect_primary_protocol(&spec)?;
-                let assets = Self::generate_asyncapi_bundle(&spec, protocol, output)?;
+                let assets = Self::generate_asyncapi_bundle(&spec, protocol, output, validate)?;
                 Ok(CodegenOutcome::Files(assets))
             }
             (SchemaKind::OpenRpc, CodegenTargetKind::JsonRpcHandlers { language, output }) => {
                 let spec = parse_openrpc_schema(&request.schema_path)
                     .context("Failed to parse OpenRPC schema for handler generation")?;
-                let asset = Self::generate_openrpc_handler(&spec, *language, output)?;
+                let asset = Self::generate_openrpc_handler(&spec, *language, output, validate)?;
                 Ok(CodegenOutcome::Files(vec![asset]))
             }
             (
@@ -153,7 +166,7 @@ impl CodegenEngine {
                     target,
                 },
             ) => {
-                let assets = Self::generate_graphql_code(&request.schema_path, *language, output, target)
+                let assets = Self::generate_graphql_code(&request.schema_path, *language, output, target, validate)
                     .context("Failed to generate code from GraphQL schema")?;
                 Ok(CodegenOutcome::Files(assets))
             }
@@ -185,6 +198,9 @@ impl CodegenEngine {
                     TargetLanguage::Php => super::protobuf::generate_php_protobuf(&schema, &proto_target)?,
                     TargetLanguage::Rust => super::protobuf::generate_rust_protobuf(&schema, &proto_target)?,
                 };
+                if validate {
+                    Self::validate_generated_code(*language, &code)?;
+                }
 
                 Ok(CodegenOutcome::Files(vec![Self::write_asset(
                     output,
@@ -221,6 +237,7 @@ impl CodegenEngine {
         protocol: Protocol,
         language: TargetLanguage,
         output: &Path,
+        validate: bool,
     ) -> Result<GeneratedAsset> {
         let code = match language {
             TargetLanguage::Python => generate_python_test_app(spec, protocol)?,
@@ -231,6 +248,9 @@ impl CodegenEngine {
                 bail!("{other:?} is not supported for AsyncAPI test apps");
             }
         };
+        if validate {
+            Self::validate_generated_code(language, &code)?;
+        }
 
         Self::write_asset(output, format!("{} AsyncAPI test app", language_name(language)), code)
     }
@@ -240,6 +260,7 @@ impl CodegenEngine {
         protocol: Protocol,
         language: TargetLanguage,
         output: &Path,
+        validate: bool,
     ) -> Result<GeneratedAsset> {
         let code = match language {
             TargetLanguage::Python => generate_python_handler_app(spec, protocol)?,
@@ -248,6 +269,9 @@ impl CodegenEngine {
             TargetLanguage::Rust => generate_rust_handler_app(spec, protocol)?,
             TargetLanguage::Php => generate_php_handler_app(spec, protocol)?,
         };
+        if validate {
+            Self::validate_generated_code(language, &code)?;
+        }
 
         Self::write_asset(output, format!("{} AsyncAPI handler", language_name(language)), code)
     }
@@ -256,6 +280,7 @@ impl CodegenEngine {
         spec: &AsyncApiV3Spec,
         protocol: Protocol,
         output: &Path,
+        validate: bool,
     ) -> Result<Vec<GeneratedAsset>> {
         let mut assets = Vec::new();
 
@@ -271,6 +296,7 @@ impl CodegenEngine {
             protocol,
             TargetLanguage::Python,
             &app_dir.join(format!("{base_name}-asyncapi.py")),
+            validate,
         )?;
         assets.push(python_asset);
 
@@ -279,6 +305,7 @@ impl CodegenEngine {
             protocol,
             TargetLanguage::TypeScript,
             &app_dir.join(format!("{base_name}-asyncapi.ts")),
+            validate,
         )?;
         assets.push(node_asset);
 
@@ -287,6 +314,7 @@ impl CodegenEngine {
             protocol,
             TargetLanguage::Ruby,
             &app_dir.join(format!("{base_name}-asyncapi.rb")),
+            validate,
         )?;
         assets.push(ruby_asset);
 
@@ -295,6 +323,7 @@ impl CodegenEngine {
             protocol,
             TargetLanguage::Php,
             &app_dir.join(format!("{base_name}-asyncapi.php")),
+            validate,
         )?;
         assets.push(php_asset);
 
@@ -305,6 +334,7 @@ impl CodegenEngine {
         spec: &super::openrpc::spec_parser::OpenRpcSpec,
         language: TargetLanguage,
         output: &Path,
+        validate: bool,
     ) -> Result<GeneratedAsset> {
         let code = match language {
             TargetLanguage::Python => generate_openrpc_python_handler(spec)?,
@@ -315,6 +345,9 @@ impl CodegenEngine {
                 bail!("{other:?} is not supported for OpenRPC handler generation");
             }
         };
+        if validate {
+            Self::validate_generated_code(language, &code)?;
+        }
 
         Self::write_asset(output, format!("{} JSON-RPC handlers", language_name(language)), code)
     }
@@ -324,6 +357,7 @@ impl CodegenEngine {
         language: TargetLanguage,
         output: &Path,
         target: &str,
+        validate: bool,
     ) -> Result<Vec<GeneratedAsset>> {
         let parsed_schema =
             parse_graphql_schema(schema_path).with_context(|| format!("Failed to parse {}", schema_path.display()))?;
@@ -382,6 +416,9 @@ impl CodegenEngine {
                 }
             }
         };
+        if validate {
+            Self::validate_generated_code(language, &code)?;
+        }
 
         // For Ruby, also generate RBS type signatures when appropriate
         let mut assets = vec![Self::write_asset(
@@ -405,6 +442,22 @@ impl CodegenEngine {
         }
 
         Ok(assets)
+    }
+
+    fn validate_generated_code(language: TargetLanguage, code: &str) -> Result<()> {
+        let report = QualityValidator::new(language)
+            .validate_all(code)
+            .map_err(|err| anyhow::anyhow!("Failed to run quality validation: {err}"))?;
+
+        if report.is_valid() {
+            return Ok(());
+        }
+
+        bail!(
+            "{} generated code failed quality validation:\n{}",
+            language_name(language),
+            report
+        );
     }
 
     fn write_asset(path: &Path, description: impl Into<String>, content: impl AsRef<[u8]>) -> Result<GeneratedAsset> {
@@ -665,6 +718,56 @@ message TestMessage {
                 assert!(contents.contains("DO NOT EDIT - Auto-generated by Spikard CLI"));
                 assert!(contents.contains("from google.protobuf import message"));
                 assert!(contents.contains("Package: test"));
+            }
+            other => panic!("expected file output, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn validates_generated_rust_protobuf_before_writing() {
+        let dir = tempdir().unwrap();
+        let schema_path = dir.path().join("service.proto");
+        fs::write(
+            &schema_path,
+            r#"syntax = "proto3";
+
+package example;
+
+message User {
+  string id = 1;
+  string name = 2;
+}
+
+service UserService {
+  rpc GetUser (User) returns (User);
+}
+"#,
+        )
+        .unwrap();
+
+        let output_path = dir.path().join("generated.rs");
+        let outcome = CodegenEngine::execute_validated(CodegenRequest {
+            schema_path,
+            schema_kind: SchemaKind::Protobuf,
+            target: CodegenTargetKind::Protobuf {
+                language: TargetLanguage::Rust,
+                output: output_path.clone(),
+                target: "all".to_string(),
+                include_paths: Vec::new(),
+            },
+            dto: None,
+        })
+        .unwrap();
+
+        match outcome {
+            CodegenOutcome::Files(assets) => {
+                assert_eq!(assets.len(), 1);
+                assert_eq!(assets[0].path, output_path);
+                assert!(
+                    fs::read_to_string(&assets[0].path)
+                        .unwrap()
+                        .contains("pub trait UserService")
+                );
             }
             other => panic!("expected file output, got {other:?}"),
         }

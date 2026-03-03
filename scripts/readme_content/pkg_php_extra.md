@@ -1,5 +1,13 @@
 ## Usage
 
+Composer installs Spikard as a Composer plugin and runs the bundled native extension installer automatically.
+In CI or other non-interactive environments, allow the plugin explicitly first:
+
+```bash
+composer config allow-plugins.spikard/spikard true
+composer require spikard/spikard
+```
+
 Routes are defined with attributes on controller methods:
 
 ```php

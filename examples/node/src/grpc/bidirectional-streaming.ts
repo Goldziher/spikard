@@ -13,7 +13,7 @@
  * For true bidirectional streaming in production, consider:
  * 1. WebSocket connections for real-time bidirectional communication
  * 2. Server-Sent Events (SSE) with HTTP/2 for unidirectional streaming
- * 3. Callback-based patterns (future enhancement)
+ * 3. Callback-based patterns outside the current handler contract
  *
  * @see crates/spikard-node/src/grpc/handler.rs for implementation details
  */

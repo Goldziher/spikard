@@ -38,7 +38,7 @@ cargo run --manifest-path tools/test-generator/Cargo.toml -- tests \
   --fixtures testing_data \
   --output e2e/python
 
-# TypeScript
+# TypeScript (Node/Vitest target)
 cargo run --manifest-path tools/test-generator/Cargo.toml -- tests \
   --lang typescript \
   --fixtures testing_data \

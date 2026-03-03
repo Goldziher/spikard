@@ -388,7 +388,9 @@ fn run(cli: Cli) -> Result<()> {
                     dto: Some(dto_config),
                 };
 
-                match CodegenEngine::execute(request).context("Failed to generate code from OpenAPI schema")? {
+                match CodegenEngine::execute_validated(request)
+                    .context("Failed to generate code from OpenAPI schema")?
+                {
                     CodegenOutcome::InMemory(code) => println!("{code}"),
                     CodegenOutcome::Files(files) => {
                         for asset in files {
@@ -415,7 +417,7 @@ fn run(cli: Cli) -> Result<()> {
                     },
                     dto: Some(dto_config),
                 };
-                match CodegenEngine::execute(request)? {
+                match CodegenEngine::execute_validated(request)? {
                     CodegenOutcome::Files(files) => {
                         for asset in files {
                             println!("✓ Generated {} at {}", asset.description, asset.path.display());
@@ -441,7 +443,9 @@ fn run(cli: Cli) -> Result<()> {
                     dto: None,
                 };
 
-                match CodegenEngine::execute(request).context("Failed to generate code from OpenRPC schema")? {
+                match CodegenEngine::execute_validated(request)
+                    .context("Failed to generate code from OpenRPC schema")?
+                {
                     CodegenOutcome::InMemory(code) => println!("{code}"),
                     CodegenOutcome::Files(files) => {
                         for asset in files {
@@ -480,7 +484,9 @@ fn run(cli: Cli) -> Result<()> {
                     dto: None,
                 };
 
-                match CodegenEngine::execute(request).context("Failed to generate code from GraphQL schema")? {
+                match CodegenEngine::execute_validated(request)
+                    .context("Failed to generate code from GraphQL schema")?
+                {
                     CodegenOutcome::InMemory(code) => println!("{code}"),
                     CodegenOutcome::Files(files) => {
                         for asset in files {
@@ -508,7 +514,7 @@ fn run(cli: Cli) -> Result<()> {
                     dto: None,
                 };
 
-                match CodegenEngine::execute(request).context("Failed to generate protobuf code")? {
+                match CodegenEngine::execute_validated(request).context("Failed to generate protobuf code")? {
                     CodegenOutcome::InMemory(code) => println!("{code}"),
                     CodegenOutcome::Files(files) => {
                         for asset in files {

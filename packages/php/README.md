@@ -61,7 +61,7 @@ cargo build --release --manifest-path ../../crates/spikard-php/Cargo.toml
 
 - PHP 8.2+
 - Composer 2.0+
-- Rust stable (for building the native extension)
+- Interactive Composer plugin approval, or `composer config allow-plugins.spikard/spikard true` in CI/non-interactive installs
 
 ## Quick Start
 

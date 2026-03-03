@@ -25,3 +25,10 @@ pub const NODE_TARGET: TypeScriptTarget = TypeScriptTarget {
     e2e_package_name: "spikard-e2e-node",
     runtime: Runtime::Node,
 };
+
+pub const TYPESCRIPT_TARGET: TypeScriptTarget = TypeScriptTarget {
+    binding_package: "@spikard/node",
+    dependency_package: "@spikard/node",
+    e2e_package_name: "spikard-e2e-typescript",
+    runtime: Runtime::Node,
+};

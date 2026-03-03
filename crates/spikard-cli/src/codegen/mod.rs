@@ -114,12 +114,7 @@ pub enum PhpDtoStyle {
 }
 
 /// Generate server code from an `OpenAPI` schema file
-pub fn generate_from_openapi(
-    schema_path: &Path,
-    target_lang: TargetLanguage,
-    dto: &DtoConfig,
-    output_path: Option<&Path>,
-) -> Result<String> {
+pub fn generate_from_openapi(schema_path: &Path, target_lang: TargetLanguage, dto: &DtoConfig) -> Result<String> {
     let spec = parse_openapi_schema(schema_path)?;
 
     let code = match target_lang {
@@ -144,10 +139,6 @@ pub fn generate_from_openapi(
             generator.generate()?
         }
     };
-
-    if let Some(out_path) = output_path {
-        std::fs::write(out_path, &code)?;
-    }
 
     Ok(code)
 }

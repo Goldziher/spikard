@@ -168,7 +168,9 @@ fn generate_tests(lang: &str, fixtures: PathBuf, output: PathBuf) -> Result<()> 
             }
         }
         "typescript" => {
-            println!("TODO: Generate TypeScript/Vitest test suite");
+            node_app::generate_node_app(&fixtures, &output, &ts_target::TYPESCRIPT_TARGET)?;
+            node_tests::generate_node_tests(&fixtures, &output, &ts_target::TYPESCRIPT_TARGET)?;
+            graphql_tests::generate_graphql_tests(&fixtures, &output, &ts_target::TYPESCRIPT_TARGET)?;
         }
         "node" => {
             node_app::generate_node_app(&fixtures, &output, &ts_target::NODE_TARGET)?;

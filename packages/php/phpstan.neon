@@ -10,4 +10,5 @@ parameters:
         - tests/bootstrap.php
     stubFiles:
         - stubs/ext.php
+        - stubs/composer_plugin.php
     treatPhpDocTypesAsCertain: true

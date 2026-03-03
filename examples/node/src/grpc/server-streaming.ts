@@ -9,9 +9,9 @@
  * the recommended "pre-collection" pattern where the handler collects all
  * messages and returns them in a single response.
  *
- * For true streaming in production, consider:
- * 1. Using callback-based patterns (future enhancement)
- * 2. Implementing stream registry with getter/setter functions
+ * For truly incremental delivery from JavaScript handlers, consider:
+ * 1. Callback-based patterns outside the current handler contract
+ * 2. A custom stream registry layer
  * 3. WebSocket or SSE for true real-time updates
  *
  * @see crates/spikard-node/src/grpc/handler.rs for implementation details
@@ -77,7 +77,7 @@ class StockPriceServiceHandler {
 	 *
 	 * In production:
 	 * - Use repeated fields in protobuf
-	 * - Or implement callback-based streaming (future enhancement)
+	 * - Or move to a callback-oriented streaming design
 	 */
 	async handleServerStream(request: GrpcRequest): Promise<GrpcResponse> {
 		console.log(`[Server Streaming] ${request.methodName} called`);

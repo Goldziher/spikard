@@ -15,6 +15,7 @@ final class ExtensionInstaller
 
     /** @var array<string, string> */
     private array $env;
+    private ?string $packageVersionOverride;
     private string $projectRoot;
     private string $composerVersion;
     private string $osName;
@@ -24,10 +25,11 @@ final class ExtensionInstaller
     /**
      * @param array<string, string>|null $env
      */
-    public function __construct(string $projectRoot, ?array $env = null)
+    public function __construct(string $projectRoot, ?array $env = null, ?string $packageVersion = null)
     {
         $this->projectRoot = rtrim($projectRoot, '/');
         $this->env = $env ?? $_ENV + $_SERVER;
+        $this->packageVersionOverride = $packageVersion;
         $this->composerVersion = $this->detectComposerVersion();
         $this->osName = PHP_OS_FAMILY;
         $this->phpVersion = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
@@ -86,6 +88,10 @@ final class ExtensionInstaller
 
     private function detectComposerVersion(): string
     {
+        if (is_string($this->packageVersionOverride) && $this->packageVersionOverride !== '') {
+            return $this->packageVersionOverride;
+        }
+
         $composerJsonPath = $this->projectRoot . '/composer.json';
         if (!is_file($composerJsonPath)) {
             return 'unknown';

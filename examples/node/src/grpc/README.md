@@ -246,12 +246,14 @@ The current Node.js implementation uses napi-rs, which has known limitations wit
 2. **Callback-based patterns**: Use separate ThreadsafeFunction for yielding messages
 3. **Stream registry**: Store streams in thread-local storage, pass stream ID to handlers
 
-### Future Enhancements
+### Current Runtime Tradeoffs
 
-See `crates/spikard-node/src/grpc/handler.rs` for planned improvements:
-- Advanced stream registry implementation
-- Callback API for true streaming
-- Custom napi module extensions
+Spikard's Node runtime now supports method-level gRPC registration on the app/server side.
+The remaining gap is transport behavior inside napi-rs for truly incremental JavaScript-driven
+stream emission. The practical options today are:
+- Pre-collect stream messages and return a single batched response
+- Use callback-oriented designs outside the current handler interface
+- Use WebSockets when you need fully interactive bidirectional messaging
 
 ## Performance Tips
 

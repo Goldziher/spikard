@@ -92,7 +92,7 @@ fn python_dataclass_generation_emits_dataclasses() -> Result<()> {
         ..Default::default()
     };
 
-    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
     assert!(code.contains("@dataclass"), "expected dataclass annotation");
     assert!(code.contains("class HelloResponse"), "expected response class");
     assert!(code.contains("slots=True"), "dataclasses should enable slots");
@@ -110,7 +110,7 @@ fn python_msgspec_generation_emits_structs() -> Result<()> {
         ..Default::default()
     };
 
-    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
     assert!(
         code.contains("class HelloResponse(msgspec.Struct)"),
         "msgspec struct not generated"
@@ -130,7 +130,7 @@ fn python_nullable_properties_emit_optional_union() -> Result<()> {
         ..Default::default()
     };
 
-    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
     assert!(
         code.contains("count: int | None = None"),
         "expected nullable optional dataclass field"
@@ -148,7 +148,7 @@ fn python_openapi_generation_uses_server_config_startup() -> Result<()> {
         ..Default::default()
     };
 
-    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto, None)?;
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
     assert!(
         code.contains("from spikard.config import ServerConfig"),
         "expected ServerConfig import in generated startup"
@@ -170,7 +170,7 @@ fn node_generation_uses_zod_schemas() -> Result<()> {
         ..Default::default()
     };
 
-    let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto, None)?;
+    let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto)?;
     assert!(
         code.contains("import { z } from \"zod\""),
         "expected Zod import in generated code"
@@ -192,7 +192,7 @@ fn typescript_nullable_properties_emit_nullable_optional_schemas() -> Result<()>
         ..Default::default()
     };
 
-    let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto, None)?;
+    let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto)?;
     assert!(
         code.contains("\tcount: z.number().int().nullable().optional(),"),
         "expected nullable + optional zod chain"
@@ -210,7 +210,7 @@ fn ruby_generation_uses_dry_structs() -> Result<()> {
         ..Default::default()
     };
 
-    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto, None)?;
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto)?;
     assert!(
         code.contains("class HelloResponse < Dry::Struct"),
         "expected Dry::Struct model"
@@ -224,7 +224,7 @@ fn rust_generation_uses_spikard_app() -> Result<()> {
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
 
     let dto = DtoConfig::default();
-    let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &dto, None)?;
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &dto)?;
     assert!(
         code.contains("use spikard::{App, AppError"),
         "expected Spikard App import in Rust output"
