@@ -241,16 +241,22 @@ pub fn init_python_event_loop() -> PyResult<()> {
 
         let asyncio = py.import("asyncio")?;
 
-        // Prefer uvloop when available for faster asyncio primitives (notably call_soon_threadsafe),
-        // while remaining fully compatible with standard asyncio when uvloop isn't installed.
-        if let Ok(uvloop) = py.import("uvloop")
-            && let Ok(policy_type) = uvloop.getattr("EventLoopPolicy")
-            && let Ok(policy) = policy_type.call0()
-        {
-            let _ = asyncio.call_method1("set_event_loop_policy", (policy,));
-        }
-
-        let event_loop = asyncio.call_method0("new_event_loop")?;
+        // Prefer a uvloop-backed event loop when available on Python < 3.14, but avoid the
+        // deprecated policy API and skip uvloop entirely on Python 3.14+ until the upstream
+        // package removes its own policy-related deprecation warnings.
+        let version_info = py.version_info();
+        let event_loop = if version_info.major == 3 && version_info.minor < 14 {
+            if let Ok(uvloop) = py.import("uvloop") {
+                match uvloop.getattr("new_event_loop").and_then(|factory| factory.call0()) {
+                    Ok(loop_obj) => loop_obj,
+                    Err(_) => asyncio.call_method0("new_event_loop")?,
+                }
+            } else {
+                asyncio.call_method0("new_event_loop")?
+            }
+        } else {
+            asyncio.call_method0("new_event_loop")?
+        };
 
         let task_locals = TaskLocals::new(event_loop.clone()).copy_context(py)?;
         PYTHON_TASK_LOCALS

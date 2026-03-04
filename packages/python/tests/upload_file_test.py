@@ -1,5 +1,6 @@
 """Tests for UploadFile datastructure and multipart handling."""
 
+import warnings
 from dataclasses import dataclass
 
 import pytest
@@ -85,6 +86,26 @@ async def test_upload_file_api_async_context_manager() -> None:
     async with upload as f:
         data = await f.aread()
         assert data == content
+
+
+@pytest.mark.asyncio
+async def test_test_client_startup_emits_no_deprecation_warnings() -> None:
+    """Test client startup should not rely on deprecated asyncio policy APIs."""
+    app = Spikard()
+
+    @app.get("/health")
+    def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    with warnings.catch_warnings(record=True) as captured:
+        warnings.simplefilter("always", DeprecationWarning)
+
+        async with TestClient(app) as client:
+            response = await client.get("/health")
+            assert response.status_code == 200
+
+    deprecations = [warning for warning in captured if issubclass(warning.category, DeprecationWarning)]
+    assert deprecations == []
 
 
 @pytest.mark.asyncio
