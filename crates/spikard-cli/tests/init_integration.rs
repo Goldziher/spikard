@@ -440,6 +440,61 @@ fn test_init_rust_next_steps() -> anyhow::Result<()> {
 }
 
 // ============================================================================
+// RUBY LANGUAGE SCAFFOLDER TESTS
+// ============================================================================
+
+#[test]
+fn test_init_ruby_creates_all_files() -> anyhow::Result<()> {
+    let temp_dir = TempDir::new()?;
+    let project_dir = temp_dir.path().join("my_api");
+
+    let request = InitRequest {
+        project_name: "my_api".to_string(),
+        language: TargetLanguage::Ruby,
+        project_dir: project_dir.clone(),
+        schema_path: None,
+    };
+
+    let response = InitEngine::execute(request)?;
+
+    assert!(response.files_created.len() >= 10);
+    assert!(project_dir.join("Gemfile").exists());
+    assert!(project_dir.join("Gemfile.lock").exists());
+    assert!(project_dir.join(".ruby-version").exists());
+    assert!(project_dir.join(".gitignore").exists());
+    assert!(project_dir.join("README.md").exists());
+    assert!(project_dir.join("lib/my_api.rb").exists());
+    assert!(project_dir.join("sig/my_api.rbs").exists());
+    assert!(project_dir.join("spec/my_api_spec.rb").exists());
+    assert!(project_dir.join(".rspec").exists());
+    assert!(project_dir.join("Rakefile").exists());
+
+    Ok(())
+}
+
+#[test]
+fn test_init_ruby_next_steps() -> anyhow::Result<()> {
+    let temp_dir = TempDir::new()?;
+    let project_dir = temp_dir.path().join("ruby_steps");
+
+    let request = InitRequest {
+        project_name: "ruby_steps".to_string(),
+        language: TargetLanguage::Ruby,
+        project_dir: project_dir.clone(),
+        schema_path: None,
+    };
+
+    let response = InitEngine::execute(request)?;
+
+    assert!(response.next_steps.len() >= 3);
+    assert!(response.next_steps[0].contains("cd ruby_steps"));
+    assert!(response.next_steps.iter().any(|s| s.contains("bundle install")));
+    assert!(response.next_steps.iter().any(|s| s.contains("bundle exec ruby lib/ruby_steps.rb")));
+
+    Ok(())
+}
+
+// ============================================================================
 // PHP LANGUAGE SCAFFOLDER TESTS
 // ============================================================================
 

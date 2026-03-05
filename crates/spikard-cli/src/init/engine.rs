@@ -18,7 +18,6 @@ use super::scaffolder::ScaffoldedFile;
 /// - `InvalidProjectName`: The project name does not conform to naming rules
 /// - `DirectoryAlreadyExists`: The target directory already exists
 /// - `SchemaPathNotFound`: A schema path was specified but does not exist
-/// - `LanguageNotSupported`: The target language is not yet supported for initialization
 /// - `ScaffoldingFailed`: An error occurred during file generation or writing
 #[derive(Debug, Error)]
 pub enum InitError {
@@ -33,10 +32,6 @@ pub enum InitError {
     /// The provided schema path does not exist or cannot be read
     #[error("Schema file not found: {path}")]
     SchemaPathNotFound { path: PathBuf },
-
-    /// Project initialization is not yet supported for this language
-    #[error("Project initialization is not yet supported for {language:?}")]
-    LanguageNotSupported { language: TargetLanguage },
 
     /// An error occurred during scaffolding or file creation
     #[error("Scaffolding failed: {reason}")]
@@ -173,7 +168,6 @@ impl InitEngine {
     /// - `InvalidProjectName`: If the project name is not valid for the target language
     /// - `DirectoryAlreadyExists`: If the project directory already exists
     /// - `SchemaPathNotFound`: If a schema path was provided but doesn't exist
-    /// - `LanguageNotSupported`: If the target language is not yet supported
     /// - `ScaffoldingFailed`: If file creation or writing fails
     ///
     /// # Side Effects
@@ -200,7 +194,7 @@ impl InitEngine {
         Self::validate_request(&request).context("Project initialization request validation failed")?;
 
         // Get the appropriate scaffolder for the language
-        let scaffolder = Self::get_scaffolder(request.language)?;
+        let scaffolder = Self::get_scaffolder(request.language);
 
         // Generate files via scaffolder
         let files = scaffolder
@@ -240,15 +234,13 @@ impl InitEngine {
     }
 
     /// Get the appropriate scaffolder for a language
-    fn get_scaffolder(language: TargetLanguage) -> Result<Box<dyn super::scaffolder::ProjectScaffolder>> {
+    fn get_scaffolder(language: TargetLanguage) -> Box<dyn super::scaffolder::ProjectScaffolder> {
         match language {
-            TargetLanguage::Python => Ok(Box::new(super::python::PythonScaffolder)),
-            TargetLanguage::TypeScript => Ok(Box::new(super::typescript::TypeScriptScaffolder)),
-            TargetLanguage::Rust => Ok(Box::new(super::rust_lang::RustScaffolder)),
-            TargetLanguage::Ruby => Err(anyhow::anyhow!(InitError::LanguageNotSupported {
-                language: TargetLanguage::Ruby,
-            })),
-            TargetLanguage::Php => Ok(Box::new(super::php::PhpScaffolder)),
+            TargetLanguage::Python => Box::new(super::python::PythonScaffolder),
+            TargetLanguage::TypeScript => Box::new(super::typescript::TypeScriptScaffolder),
+            TargetLanguage::Rust => Box::new(super::rust_lang::RustScaffolder),
+            TargetLanguage::Ruby => Box::new(super::ruby::RubyScaffolder),
+            TargetLanguage::Php => Box::new(super::php::PhpScaffolder),
         }
     }
 
