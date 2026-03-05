@@ -498,5 +498,7 @@ The binding uses `pyo3_async_runtimes` to convert Python coroutines directly to 
 
 ## Troubleshooting
 
-- Ensure Python 3.10+ and Rust toolchain are installed.
-- If you see import errors, rebuild with `maturin develop` or `task build:py`.
+- Ensure Python 3.10+ is installed.
+- Normal installs use prebuilt wheels on macOS, Linux, and Windows.
+- Rust is only required when building the extension from source.
+- If you see import errors while developing from source, rebuild with `maturin develop` or `task build:py`.
