@@ -11,7 +11,7 @@ use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{
-    Handler, HandlerResult, LifecycleHooks, Method, ParameterValidator, Route, Router, SchemaRegistry, ServerConfig,
+    Handler, HandlerResult, Method, ParameterValidator, Route, Router, SchemaRegistry, ServerConfig,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -49,8 +49,6 @@ pub struct PhpServer {
     handlers: Vec<ext_php_rs::types::Zval>,
     /// Optional server configuration (populated via setters)
     config: ServerConfig,
-    /// Lifecycle hooks (not yet exposed to PHP; placeholder for parity)
-    lifecycle_hooks: Option<LifecycleHooks>,
     /// Global CORS configuration to apply to all routes
     global_cors: Option<spikard_core::CorsConfig>,
 }
@@ -66,7 +64,6 @@ impl PhpServer {
             port: port.map(|p| p as u16).unwrap_or(8000),
             handlers: Vec::new(),
             config: ServerConfig::default(),
-            lifecycle_hooks: None,
             global_cors: None,
         }
     }
@@ -379,7 +376,7 @@ impl PhpServer {
     /// Set lifecycle hooks (onRequest/onResponse). Short-circuit supported.
     #[php(name = "setLifecycleHooks")]
     pub fn set_lifecycle_hooks(&mut self, hooks: &PhpLifecycleHooks) {
-        self.lifecycle_hooks = Some(hooks.build());
+        self.config.lifecycle_hooks = Some(Arc::new(hooks.build()));
     }
 
     /// Configure rate limiting
@@ -569,6 +566,35 @@ impl PhpServer {
             .collect();
 
         build_router_with_handlers_and_config(routes, self.config.clone(), metadata)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PhpLifecycleHooks, PhpServer};
+
+    #[test]
+    fn lifecycle_hooks_are_disabled_by_default() {
+        let server = PhpServer::new(None, None);
+        let config = server.config();
+        assert!(config.lifecycle_hooks.is_none());
+    }
+
+    #[test]
+    fn set_lifecycle_hooks_updates_server_config() {
+        let mut server = PhpServer::new(None, None);
+        let hooks = PhpLifecycleHooks::new();
+
+        server.set_lifecycle_hooks(&hooks);
+
+        let config = server.config();
+        let lifecycle_hooks = config
+            .lifecycle_hooks
+            .expect("setLifecycleHooks should populate ServerConfig.lifecycle_hooks");
+        assert!(
+            lifecycle_hooks.is_empty(),
+            "newly created hook container should be empty when no callables are registered"
+        );
     }
 }
 

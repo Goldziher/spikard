@@ -531,7 +531,7 @@ fn extract_lifecycle_hooks_from_php(hooks_zval: &Zval) -> Result<Option<Arc<Life
 /// This function now accepts PHP objects directly instead of JSON:
 /// - `routes`: Array of route payload arrays (still JSON for now, to be refactored)
 /// - `config`: PHP associative array from App::configToNative()
-/// - `hooks`: PHP associative array (currently unused, hooks not yet supported)
+/// - `hooks`: PHP associative array with lifecycle hook callables
 ///
 /// The config is extracted manually using extract_server_config_from_php() to avoid
 /// JSON deserialization issues with non-serializable fields like lifecycle_hooks.
