@@ -355,7 +355,9 @@ app.addRoute(
 - Containers: build native module ahead of time (`pnpm build:native`) to avoid runtime compilation.
 
 ## Troubleshooting
-- Requires Node 20+; ensure Rust toolchain for native builds.
+- Requires Node 20+.
+- Normal installs use prebuilt native binaries for supported targets.
+- Rust is only required when building the native module from source.
 - If params aren't parsed, double-check `path` pattern (`/users/:id`) and handler names.
 - For streaming responses, ensure iterator yields `Buffer` or string chunks.
 - WebSocket handlers must return Promise<string> (JSON serialized).

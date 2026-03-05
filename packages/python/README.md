@@ -196,7 +196,7 @@ See the main documentation for WebSocket and SSE testing.
 
 Runnable examples with dependency injection and database integration:
 - [Python examples](../../examples/python/)
-- [GraphQL schema support](../../examples/schemas/chat-service.asyncapi.yaml)
+- [GraphQL schema support](../../examples/schemas/social.graphql)
 - [OpenAPI code generation](../../examples/schemas/todo-api.openapi.yaml)
 
 See [examples/README.md](../../examples/README.md) for all languages and code generation.
