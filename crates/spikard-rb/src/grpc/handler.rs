@@ -3,7 +3,7 @@
 //! This module provides Magnus bindings for gRPC request/response handling,
 //! enabling Ruby code to implement gRPC service handlers with full streaming support.
 
-// Allow dead code - these types are exported but not yet integrated into the main Ruby API
+// Keep dead-code allowance for helper internals used by magnus entrypoints/tests.
 #![allow(dead_code)]
 
 use bytes::Bytes;
