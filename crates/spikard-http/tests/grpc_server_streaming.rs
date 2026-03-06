@@ -457,9 +457,9 @@ async fn test_large_payload_stream() {
     assert!(total_bytes > 3 * 1024 * 1024);
 }
 
-/// Test: Unary handler rejects server streaming mode
+/// Test: Unary handler defaults server streaming to a single unary response
 #[tokio::test]
-async fn test_unary_handler_rejects_streaming() {
+async fn test_unary_handler_server_stream_fallback() {
     let handler = Arc::new(UnaryOnlyHandler);
 
     // Verify the handler is registered as Unary
@@ -473,9 +473,13 @@ async fn test_unary_handler_rejects_streaming() {
         metadata: MetadataMap::new(),
     };
 
-    // Calling call_server_stream on a unary-only handler should fail
+    // Calling call_server_stream on a unary-only handler uses unary fallback.
     let result = handler.call_server_stream(request).await;
-    assert!(result.is_err());
+    assert!(result.is_ok());
+    let mut stream = result.unwrap();
+    let first = stream.next().await.unwrap().unwrap();
+    assert_eq!(first, Bytes::from_static(b"unary response"));
+    assert!(stream.next().await.is_none());
 }
 
 /// Test: Handler supports both RPC modes correctly
@@ -568,7 +572,7 @@ async fn test_handler_supports_streaming_responses() {
     // Streaming handler should report it supports streaming
     assert_eq!(streaming_handler.rpc_mode(), RpcMode::ServerStreaming);
 
-    // Unary handler should not support streaming
+    // Unary handler still reports unary mode for routing.
     assert_eq!(unary_handler.rpc_mode(), RpcMode::Unary);
 }
 

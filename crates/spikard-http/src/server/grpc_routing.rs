@@ -92,11 +92,26 @@ pub async fn route_grpc_request(
             handle_server_streaming_request(service, service_name, method_name, config.max_message_size, request).await
         }
         RpcMode::ClientStreaming => {
-            handle_client_streaming_request(service, service_name, method_name, config.max_message_size, request).await
+            handle_client_streaming_request(
+                service,
+                service_name,
+                method_name,
+                config.max_message_size,
+                config.enable_compression,
+                request,
+            )
+            .await
         }
         RpcMode::BidirectionalStreaming => {
-            handle_bidirectional_streaming_request(service, service_name, method_name, config.max_message_size, request)
-                .await
+            handle_bidirectional_streaming_request(
+                service,
+                service_name,
+                method_name,
+                config.max_message_size,
+                config.enable_compression,
+                request,
+            )
+            .await
         }
     }
 }
@@ -255,6 +270,7 @@ async fn handle_client_streaming_request(
     service_name: String,
     method_name: String,
     max_message_size: usize,
+    compression_enabled: bool,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     // Extract request parts - keep body as stream for frame parsing
@@ -279,7 +295,13 @@ async fn handle_client_streaming_request(
     // Use the service bridge to handle the client streaming request
     // Frame parsing and size validation happens in handle_client_stream
     let tonic_response = match service
-        .handle_client_stream(service_name, method_name, tonic_request, max_message_size)
+        .handle_client_stream(
+            service_name,
+            method_name,
+            tonic_request,
+            max_message_size,
+            compression_enabled,
+        )
         .await
     {
         Ok(resp) => resp,
@@ -335,6 +357,7 @@ async fn handle_client_streaming_request(
 /// * `service_name` - Fully qualified service name (e.g., "mypackage.ChatService")
 /// * `method_name` - Method name (e.g., "Chat")
 /// * `max_message_size` - Maximum size per message in bytes
+/// * `compression_enabled` - Whether compressed gRPC request frames are accepted
 /// * `request` - Axum HTTP request with streaming body
 ///
 /// # Returns
@@ -345,6 +368,7 @@ async fn handle_bidirectional_streaming_request(
     service_name: String,
     method_name: String,
     max_message_size: usize,
+    compression_enabled: bool,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     // Extract request parts - keep body as stream for frame parsing
@@ -368,7 +392,13 @@ async fn handle_bidirectional_streaming_request(
 
     // Call service handler - frame parsing and size validation happens inside
     let tonic_response = match service
-        .handle_bidi_stream(service_name, method_name, tonic_request, max_message_size)
+        .handle_bidi_stream(
+            service_name,
+            method_name,
+            tonic_request,
+            max_message_size,
+            compression_enabled,
+        )
         .await
     {
         Ok(response) => response,
@@ -412,9 +442,11 @@ mod tests {
     use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
     use crate::grpc::streaming::{MessageStream, StreamingRequest, message_stream_from_vec};
     use bytes::Bytes;
+    use flate2::{Compression, write::GzEncoder};
     use futures_util::StreamExt;
     use http_body_util::BodyExt;
     use std::future::Future;
+    use std::io::Write;
     use std::pin::Pin;
     use tonic::metadata::MetadataMap;
 
@@ -848,10 +880,7 @@ mod tests {
 
         let response = route_grpc_request(registry, &config, request).await.unwrap();
         assert_eq!(response.status(), StatusCode::OK);
-        assert!(
-            response.headers().get("grpc-status").is_none(),
-            "bidi-streaming responses must not predeclare grpc-status"
-        );
+        assert_eq!(response.headers().get("grpc-status").unwrap(), "0");
         assert_eq!(response.headers().get("x-response-id").unwrap(), "resp-123");
 
         let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
@@ -922,7 +951,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_route_grpc_request_client_streaming_invalid_compression_flag_maps_to_501() {
+    async fn test_route_grpc_request_client_streaming_unsupported_encoding_maps_to_501() {
         // Use a handler that would succeed, but the request is invalid before handler gets called.
         struct NeverCalledHandler;
 
@@ -957,9 +986,63 @@ mod tests {
         let registry = Arc::new(registry);
         let config = GrpcConfig::default();
 
-        // Compression flag = 1 => UNIMPLEMENTED per parser.
+        // Compression flag = 1 with unsupported grpc-encoding => UNIMPLEMENTED.
         let frame = vec![
-            0x01, // compression: yes (unsupported)
+            0x01, // compression: yes
+            0x00, 0x00, 0x00, 0x01, // length: 1 byte
+            b'x',
+        ];
+
+        let request = Request::builder()
+            .uri("/test.BadClientStreamService/ClientStream")
+            .header("content-type", "application/grpc")
+            .header("grpc-encoding", "br")
+            .body(Body::from(frame))
+            .unwrap();
+
+        let err = route_grpc_request(registry, &config, request).await.unwrap_err();
+        assert_eq!(err.0, StatusCode::NOT_IMPLEMENTED);
+        assert!(err.1.contains("Unsupported grpc-encoding"));
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_client_streaming_missing_encoding_header_maps_to_400() {
+        struct NeverCalledHandler;
+
+        impl GrpcHandler for NeverCalledHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async { Err(tonic::Status::unimplemented("not used")) })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.BadClientStreamService"
+            }
+
+            fn call_client_stream(
+                &self,
+                _request: StreamingRequest,
+            ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
+                Box::pin(async {
+                    Ok(GrpcResponseData {
+                        payload: Bytes::from_static(b"ok"),
+                        metadata: MetadataMap::new(),
+                    })
+                })
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register_service(
+            "test.BadClientStreamService",
+            Arc::new(NeverCalledHandler),
+            RpcMode::ClientStreaming,
+        );
+        let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
+
+        // Compression flag = 1 with no grpc-encoding => INVALID_ARGUMENT.
+        let frame = vec![
+            0x01, // compression: yes
             0x00, 0x00, 0x00, 0x01, // length: 1 byte
             b'x',
         ];
@@ -971,7 +1054,127 @@ mod tests {
             .unwrap();
 
         let err = route_grpc_request(registry, &config, request).await.unwrap_err();
+        assert_eq!(err.0, StatusCode::BAD_REQUEST);
+        assert!(err.1.contains("missing grpc-encoding"));
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_client_streaming_gzip_success() {
+        struct ClientStreamHandler;
+
+        impl GrpcHandler for ClientStreamHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async { Err(tonic::Status::unimplemented("Use client streaming")) })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.CompressedClientStreamService"
+            }
+
+            fn call_client_stream(
+                &self,
+                mut request: StreamingRequest,
+            ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
+                Box::pin(async move {
+                    let payload = request
+                        .message_stream
+                        .next()
+                        .await
+                        .transpose()?
+                        .unwrap_or_else(Bytes::new);
+                    Ok(GrpcResponseData {
+                        payload,
+                        metadata: MetadataMap::new(),
+                    })
+                })
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register_service(
+            "test.CompressedClientStreamService",
+            Arc::new(ClientStreamHandler),
+            RpcMode::ClientStreaming,
+        );
+        let registry = Arc::new(registry);
+        let config = GrpcConfig::default();
+
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(b"hello").unwrap();
+        let compressed_payload = encoder.finish().unwrap();
+
+        let mut frame = Vec::new();
+        frame.push(0x01); // compression: yes
+        frame.extend_from_slice(&(compressed_payload.len() as u32).to_be_bytes());
+        frame.extend_from_slice(&compressed_payload);
+
+        let request = Request::builder()
+            .uri("/test.CompressedClientStreamService/ClientStream")
+            .header("content-type", "application/grpc")
+            .header("grpc-encoding", "gzip")
+            .body(Body::from(frame))
+            .unwrap();
+
+        let response = route_grpc_request(registry, &config, request).await.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
+        assert_eq!(body, Bytes::from_static(b"hello"));
+    }
+
+    #[tokio::test]
+    async fn test_route_grpc_request_client_streaming_gzip_when_compression_disabled_maps_to_501() {
+        struct NeverCalledHandler;
+
+        impl GrpcHandler for NeverCalledHandler {
+            fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
+                Box::pin(async { Err(tonic::Status::unimplemented("not used")) })
+            }
+
+            fn service_name(&self) -> &str {
+                "test.DisabledCompressionService"
+            }
+
+            fn call_client_stream(
+                &self,
+                _request: StreamingRequest,
+            ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
+                Box::pin(async {
+                    Ok(GrpcResponseData {
+                        payload: Bytes::from_static(b"ok"),
+                        metadata: MetadataMap::new(),
+                    })
+                })
+            }
+        }
+
+        let mut registry = GrpcRegistry::new();
+        registry.register_service(
+            "test.DisabledCompressionService",
+            Arc::new(NeverCalledHandler),
+            RpcMode::ClientStreaming,
+        );
+        let registry = Arc::new(registry);
+        let mut config = GrpcConfig::default();
+        config.enable_compression = false;
+
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(b"hello").unwrap();
+        let compressed_payload = encoder.finish().unwrap();
+
+        let mut frame = Vec::new();
+        frame.push(0x01); // compression: yes
+        frame.extend_from_slice(&(compressed_payload.len() as u32).to_be_bytes());
+        frame.extend_from_slice(&compressed_payload);
+
+        let request = Request::builder()
+            .uri("/test.DisabledCompressionService/ClientStream")
+            .header("content-type", "application/grpc")
+            .header("grpc-encoding", "gzip")
+            .body(Body::from(frame))
+            .unwrap();
+
+        let err = route_grpc_request(registry, &config, request).await.unwrap_err();
         assert_eq!(err.0, StatusCode::NOT_IMPLEMENTED);
-        assert!(err.1.contains("compression") || err.1.contains("supported"));
+        assert!(err.1.contains("disabled"));
     }
 }

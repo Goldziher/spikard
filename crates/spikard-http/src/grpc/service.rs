@@ -153,6 +153,7 @@ impl GenericGrpcService {
     /// * `method_name` - Method name
     /// * `request` - Axum request with streaming body containing HTTP/2 framed protobuf messages
     /// * `max_message_size` - Maximum size per message (bytes)
+    /// * `compression_enabled` - Whether compressed gRPC messages are accepted
     ///
     /// # Returns
     ///
@@ -185,12 +186,23 @@ impl GenericGrpcService {
         method_name: String,
         request: Request<axum::body::Body>,
         max_message_size: usize,
+        compression_enabled: bool,
     ) -> Result<Response<Bytes>, Status> {
         // Extract metadata and body from Tonic request
         let (metadata, _extensions, body) = request.into_parts();
+        let request_encoding = metadata
+            .get("grpc-encoding")
+            .and_then(|value| value.to_str().ok())
+            .map(str::to_owned);
 
         // Parse HTTP/2 body into stream of gRPC frames with size validation
-        let message_stream = crate::grpc::framing::parse_grpc_client_stream(body, max_message_size).await?;
+        let message_stream = crate::grpc::framing::parse_grpc_client_stream(
+            body,
+            max_message_size,
+            request_encoding.as_deref(),
+            compression_enabled,
+        )
+        .await?;
 
         // Create our internal streaming request representation
         let streaming_request = crate::grpc::streaming::StreamingRequest {
@@ -228,6 +240,7 @@ impl GenericGrpcService {
     /// * `method_name` - Method name
     /// * `request` - Axum request with streaming body containing HTTP/2 framed protobuf messages
     /// * `max_message_size` - Maximum size per message (bytes)
+    /// * `compression_enabled` - Whether compressed gRPC messages are accepted
     ///
     /// # Returns
     ///
@@ -251,12 +264,23 @@ impl GenericGrpcService {
         method_name: String,
         request: Request<axum::body::Body>,
         max_message_size: usize,
+        compression_enabled: bool,
     ) -> Result<Response<axum::body::Body>, Status> {
         // Extract metadata and body from Tonic request
         let (metadata, _extensions, body) = request.into_parts();
+        let request_encoding = metadata
+            .get("grpc-encoding")
+            .and_then(|value| value.to_str().ok())
+            .map(str::to_owned);
 
         // Parse HTTP/2 body into stream of gRPC frames with size validation
-        let message_stream = crate::grpc::framing::parse_grpc_client_stream(body, max_message_size).await?;
+        let message_stream = crate::grpc::framing::parse_grpc_client_stream(
+            body,
+            max_message_size,
+            request_encoding.as_deref(),
+            compression_enabled,
+        )
+        .await?;
 
         // Create our internal streaming request representation
         let streaming_request = crate::grpc::streaming::StreamingRequest {

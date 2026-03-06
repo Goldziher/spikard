@@ -5,6 +5,7 @@
 //! specifically for gRPC's protobuf-based message format.
 
 use bytes::Bytes;
+use futures_util::StreamExt;
 use std::future::Future;
 use std::pin::Pin;
 use tonic::metadata::MetadataMap;
@@ -169,8 +170,8 @@ pub type GrpcHandlerResult = Result<GrpcResponseData, tonic::Status>;
 /// |---------|---|---|
 /// | `Unary` | `call()` | Single request, single response |
 /// | `ServerStreaming` | `call_server_stream()` | Single request, multiple responses |
-/// | `ClientStreaming` | Not yet implemented | Multiple requests, single response |
-/// | `BidirectionalStreaming` | Not yet implemented | Multiple requests, multiple responses |
+/// | `ClientStreaming` | `call_client_stream()` | Multiple requests, single response |
+/// | `BidirectionalStreaming` | `call_bidi_stream()` | Multiple requests, multiple responses |
 ///
 /// # Error Handling
 ///
@@ -203,7 +204,7 @@ pub trait GrpcHandler: Send + Sync {
     /// # Returns
     ///
     /// A future that resolves to a GrpcHandlerResult
-    fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>>;
+    fn call(&self, request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send + '_>>;
 
     /// Get the fully qualified service name this handler serves
     ///
@@ -234,7 +235,8 @@ pub trait GrpcHandler: Send + Sync {
     /// Handle a server streaming RPC request
     ///
     /// Takes a single request and returns a stream of response messages.
-    /// Default implementation returns `UNIMPLEMENTED` status.
+    /// Default implementation adapts the unary `call()` response into a
+    /// single-message stream.
     ///
     /// # Arguments
     ///
@@ -245,31 +247,76 @@ pub trait GrpcHandler: Send + Sync {
     /// A future that resolves to either a stream of messages or an error status
     fn call_server_stream(
         &self,
-        _request: GrpcRequestData,
-    ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
-        Box::pin(async { Err(tonic::Status::unimplemented("Server streaming not supported")) })
+        request: GrpcRequestData,
+    ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send + '_>> {
+        let unary_future = self.call(request);
+        Box::pin(async move {
+            let response = unary_future.await?;
+            Ok(crate::grpc::streaming::single_message_stream(response.payload))
+        })
     }
 
     /// Handle a client streaming RPC call
     ///
     /// Takes a stream of request messages and returns a single response message.
-    /// Default implementation returns `UNIMPLEMENTED` status.
+    /// Default implementation adapts to unary by requiring exactly one
+    /// request message in the stream.
     fn call_client_stream(
         &self,
-        _request: crate::grpc::streaming::StreamingRequest,
-    ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
-        Box::pin(async { Err(tonic::Status::unimplemented("Client streaming not supported")) })
+        request: crate::grpc::streaming::StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send + '_>> {
+        Box::pin(async move {
+            let crate::grpc::streaming::StreamingRequest {
+                service_name,
+                method_name,
+                mut message_stream,
+                metadata,
+            } = request;
+
+            let first_message = match message_stream.next().await {
+                Some(Ok(message)) => message,
+                Some(Err(status)) => return Err(status),
+                None => {
+                    return Err(tonic::Status::invalid_argument(
+                        "Client stream is empty; unary fallback requires exactly one request message",
+                    ));
+                }
+            };
+
+            if let Some(next_message) = message_stream.next().await {
+                match next_message {
+                    Ok(_) => {
+                        return Err(tonic::Status::invalid_argument(
+                            "Unary fallback requires exactly one request message",
+                        ));
+                    }
+                    Err(status) => return Err(status),
+                }
+            }
+
+            self.call(GrpcRequestData {
+                service_name,
+                method_name,
+                payload: first_message,
+                metadata,
+            })
+            .await
+        })
     }
 
     /// Handle a bidirectional streaming RPC call
     ///
     /// Takes a stream of request messages and returns a stream of response messages.
-    /// Default implementation returns `UNIMPLEMENTED` status.
+    /// Default implementation adapts to unary by requiring exactly one
+    /// request message and returning a single-message response stream.
     fn call_bidi_stream(
         &self,
-        _request: crate::grpc::streaming::StreamingRequest,
-    ) -> Pin<Box<dyn Future<Output = Result<crate::grpc::streaming::MessageStream, tonic::Status>> + Send>> {
-        Box::pin(async { Err(tonic::Status::unimplemented("Bidirectional streaming not supported")) })
+        request: crate::grpc::streaming::StreamingRequest,
+    ) -> Pin<Box<dyn Future<Output = Result<crate::grpc::streaming::MessageStream, tonic::Status>> + Send + '_>> {
+        Box::pin(async move {
+            let response = self.call_client_stream(request).await?;
+            Ok(crate::grpc::streaming::single_message_stream(response.payload))
+        })
     }
 }
 
@@ -324,7 +371,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_grpc_handler_default_server_stream_unimplemented() {
+    async fn test_grpc_handler_default_server_stream_falls_back_to_unary() {
         let handler = TestGrpcHandler;
         let request = GrpcRequestData {
             service_name: "test.TestService".to_string(),
@@ -333,16 +380,58 @@ mod tests {
             metadata: MetadataMap::new(),
         };
 
-        let result = handler.call_server_stream(request).await;
-        assert!(result.is_err());
+        let result = handler.call_server_stream(request).await.unwrap();
+        let collected: Vec<_> = result.collect().await;
+        assert_eq!(collected.len(), 1);
+        assert_eq!(collected[0].as_ref().unwrap(), &Bytes::from("test response"));
+    }
 
-        match result {
-            Err(error) => {
-                assert_eq!(error.code(), tonic::Code::Unimplemented);
-                assert_eq!(error.message(), "Server streaming not supported");
-            }
-            Ok(_) => panic!("Expected error, got Ok"),
-        }
+    #[tokio::test]
+    async fn test_grpc_handler_default_client_stream_falls_back_to_unary() {
+        let handler = TestGrpcHandler;
+        let request = crate::grpc::streaming::StreamingRequest {
+            service_name: "test.TestService".to_string(),
+            method_name: "ClientStreamMethod".to_string(),
+            message_stream: crate::grpc::streaming::message_stream_from_vec(vec![Bytes::from("one")]),
+            metadata: MetadataMap::new(),
+        };
+
+        let result = handler.call_client_stream(request).await.unwrap();
+        assert_eq!(result.payload, Bytes::from("test response"));
+    }
+
+    #[tokio::test]
+    async fn test_grpc_handler_default_client_stream_requires_single_message() {
+        let handler = TestGrpcHandler;
+        let request = crate::grpc::streaming::StreamingRequest {
+            service_name: "test.TestService".to_string(),
+            method_name: "ClientStreamMethod".to_string(),
+            message_stream: crate::grpc::streaming::message_stream_from_vec(vec![
+                Bytes::from("one"),
+                Bytes::from("two"),
+            ]),
+            metadata: MetadataMap::new(),
+        };
+
+        let error = handler.call_client_stream(request).await.unwrap_err();
+        assert_eq!(error.code(), tonic::Code::InvalidArgument);
+        assert!(error.message().contains("exactly one"));
+    }
+
+    #[tokio::test]
+    async fn test_grpc_handler_default_bidi_stream_falls_back_to_unary() {
+        let handler = TestGrpcHandler;
+        let request = crate::grpc::streaming::StreamingRequest {
+            service_name: "test.TestService".to_string(),
+            method_name: "BidiMethod".to_string(),
+            message_stream: crate::grpc::streaming::message_stream_from_vec(vec![Bytes::from("ping")]),
+            metadata: MetadataMap::new(),
+        };
+
+        let stream = handler.call_bidi_stream(request).await.unwrap();
+        let collected: Vec<_> = stream.collect().await;
+        assert_eq!(collected.len(), 1);
+        assert_eq!(collected[0].as_ref().unwrap(), &Bytes::from("test response"));
     }
 
     #[test]

@@ -38,7 +38,7 @@
 //! The parser returns gRPC status codes according to RFC 9110:
 //! - `INTERNAL`: Protocol parsing errors (incomplete frames, read errors)
 //! - `RESOURCE_EXHAUSTED`: Message size exceeds limit
-//! - `UNIMPLEMENTED`: Compression requested (not supported)
+//! - `UNIMPLEMENTED`: Unsupported compression algorithm or compression disabled
 //!
 //! # Example
 //!
@@ -50,7 +50,7 @@
 //!
 //! let body = Body::from("...");
 //! let max_size = 4 * 1024 * 1024; // 4MB
-//! let mut stream = parse_grpc_client_stream(body, max_size).await?;
+//! let mut stream = parse_grpc_client_stream(body, max_size, None, true).await?;
 //!
 //! while let Some(result) = stream.next().await {
 //!     match result {
@@ -61,7 +61,9 @@
 //! ```
 
 use bytes::{Buf, Bytes, BytesMut};
+use flate2::read::GzDecoder;
 use futures_util::stream;
+use std::io::Read;
 use tonic::Status;
 
 use super::streaming::MessageStream;
@@ -75,6 +77,8 @@ use super::streaming::MessageStream;
 ///
 /// * `body` - The HTTP/2 request body stream
 /// * `max_message_size` - Maximum allowed message size in bytes (validated per message)
+/// * `grpc_encoding` - Value of the request `grpc-encoding` header, if present
+/// * `compression_enabled` - Whether compressed gRPC payloads are allowed
 ///
 /// # Returns
 ///
@@ -88,7 +92,8 @@ use super::streaming::MessageStream;
 /// - Incomplete frame (EOF before 5-byte header): `INTERNAL`
 /// - Incomplete message (EOF before all message bytes): `INTERNAL`
 /// - Message size > max_message_size: `RESOURCE_EXHAUSTED`
-/// - Compression flag != 0: `UNIMPLEMENTED`
+/// - Compression flag set without valid `grpc-encoding`: `INVALID_ARGUMENT`
+/// - Unsupported or disabled compression: `UNIMPLEMENTED`
 /// - Read errors from the body stream: `INTERNAL`
 ///
 /// # Example
@@ -100,11 +105,13 @@ use super::streaming::MessageStream;
 ///     b'h', b'e', b'l', b'l', b'o',  // message
 /// ]);
 ///
-/// let stream = parse_grpc_client_stream(body, 1024).await?;
+/// let stream = parse_grpc_client_stream(body, 1024, None, true).await?;
 /// ```
 pub async fn parse_grpc_client_stream(
     body: axum::body::Body,
     max_message_size: usize,
+    grpc_encoding: Option<&str>,
+    compression_enabled: bool,
 ) -> Result<MessageStream, Status> {
     // Convert body into bytes
     let body_bytes = axum::body::to_bytes(body, usize::MAX)
@@ -115,14 +122,19 @@ pub async fn parse_grpc_client_stream(
     let buffer = BytesMut::from(&body_bytes[..]);
 
     // Parse frames from the buffer
-    let messages = parse_all_frames(buffer, max_message_size)?;
+    let messages = parse_all_frames(buffer, max_message_size, grpc_encoding, compression_enabled)?;
 
     // Convert to a MessageStream
     Ok(Box::pin(stream::iter(messages.into_iter().map(Ok))))
 }
 
 /// Internal: Parse all frames from a buffer
-fn parse_all_frames(mut buffer: BytesMut, max_message_size: usize) -> Result<Vec<Bytes>, Status> {
+fn parse_all_frames(
+    mut buffer: BytesMut,
+    max_message_size: usize,
+    grpc_encoding: Option<&str>,
+    compression_enabled: bool,
+) -> Result<Vec<Bytes>, Status> {
     let mut messages = Vec::new();
 
     while !buffer.is_empty() {
@@ -135,8 +147,11 @@ fn parse_all_frames(mut buffer: BytesMut, max_message_size: usize) -> Result<Vec
 
         // Read the compression flag (1 byte)
         let compression_flag = buffer[0];
-        if compression_flag != 0 {
-            return Err(Status::unimplemented("Message compression not supported"));
+        if compression_flag > 1 {
+            return Err(Status::invalid_argument(format!(
+                "Invalid gRPC compression flag: {}",
+                compression_flag
+            )));
         }
 
         // Read the message length (4 bytes, big-endian)
@@ -160,9 +175,14 @@ fn parse_all_frames(mut buffer: BytesMut, max_message_size: usize) -> Result<Vec
             ));
         }
 
-        // Extract the message bytes
-        let message = buffer[5..total_frame_size].to_vec();
-        messages.push(Bytes::from(message));
+        // Extract the message bytes and decompress if needed.
+        let message_bytes = &buffer[5..total_frame_size];
+        let message = if compression_flag == 0 {
+            Bytes::copy_from_slice(message_bytes)
+        } else {
+            decompress_message(message_bytes, grpc_encoding, compression_enabled, max_message_size)?
+        };
+        messages.push(message);
 
         // Advance the buffer
         buffer.advance(total_frame_size);
@@ -171,10 +191,58 @@ fn parse_all_frames(mut buffer: BytesMut, max_message_size: usize) -> Result<Vec
     Ok(messages)
 }
 
+fn decompress_message(
+    message_bytes: &[u8],
+    grpc_encoding: Option<&str>,
+    compression_enabled: bool,
+    max_message_size: usize,
+) -> Result<Bytes, Status> {
+    if !compression_enabled {
+        return Err(Status::unimplemented(
+            "gRPC message compression is disabled by server configuration",
+        ));
+    }
+
+    let encoding = grpc_encoding
+        .map(|value| value.trim().to_ascii_lowercase())
+        .ok_or_else(|| Status::invalid_argument("Compressed gRPC message missing grpc-encoding header"))?;
+
+    let decompressed = match encoding.as_str() {
+        "gzip" => {
+            let mut decoder = GzDecoder::new(message_bytes);
+            let mut out = Vec::new();
+            decoder
+                .read_to_end(&mut out)
+                .map_err(|e| Status::internal(format!("Failed to decompress gzip gRPC frame: {}", e)))?;
+            out
+        }
+        "identity" => {
+            return Err(Status::invalid_argument(
+                "Compressed gRPC frame cannot use grpc-encoding=identity",
+            ));
+        }
+        other => {
+            return Err(Status::unimplemented(format!("Unsupported grpc-encoding '{}'", other)));
+        }
+    };
+
+    if decompressed.len() > max_message_size {
+        return Err(Status::resource_exhausted(format!(
+            "Decompressed message size {} exceeds maximum allowed size of {}",
+            decompressed.len(),
+            max_message_size
+        )));
+    }
+
+    Ok(Bytes::from(decompressed))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use flate2::{Compression, write::GzEncoder};
     use futures_util::StreamExt;
+    use std::io::Write;
 
     #[tokio::test]
     async fn test_single_frame_parsing() {
@@ -186,7 +254,7 @@ mod tests {
         ];
 
         let body = axum::body::Body::from(frame);
-        let mut stream = parse_grpc_client_stream(body, 1024).await.unwrap();
+        let mut stream = parse_grpc_client_stream(body, 1024, None, true).await.unwrap();
         let msg = stream.next().await;
 
         assert!(msg.is_some());
@@ -211,7 +279,7 @@ mod tests {
         frame.extend_from_slice(b"world");
 
         let body = axum::body::Body::from(frame);
-        let mut stream = parse_grpc_client_stream(body, 1024).await.unwrap();
+        let mut stream = parse_grpc_client_stream(body, 1024, None, true).await.unwrap();
 
         let msg1 = stream.next().await;
         assert!(msg1.is_some());
@@ -228,7 +296,7 @@ mod tests {
     #[tokio::test]
     async fn test_empty_body() {
         let body = axum::body::Body::from(Vec::<u8>::new());
-        let mut stream = parse_grpc_client_stream(body, 1024).await.unwrap();
+        let mut stream = parse_grpc_client_stream(body, 1024, None, true).await.unwrap();
 
         let result = stream.next().await;
         assert!(result.is_none());
@@ -245,7 +313,7 @@ mod tests {
         frame.extend_from_slice(message);
 
         let body = axum::body::Body::from(frame);
-        let mut stream = parse_grpc_client_stream(body, max_size).await.unwrap();
+        let mut stream = parse_grpc_client_stream(body, max_size, None, true).await.unwrap();
 
         let msg = stream.next().await;
         assert!(msg.is_some());
@@ -263,7 +331,7 @@ mod tests {
         frame.extend_from_slice(message);
 
         let body = axum::body::Body::from(frame);
-        let result = parse_grpc_client_stream(body, max_size).await;
+        let result = parse_grpc_client_stream(body, max_size, None, true).await;
 
         assert!(result.is_err());
         if let Err(status) = result {
@@ -277,7 +345,7 @@ mod tests {
         let frame = vec![0x00, 0x00, 0x00];
 
         let body = axum::body::Body::from(frame);
-        let result = parse_grpc_client_stream(body, 1024).await;
+        let result = parse_grpc_client_stream(body, 1024, None, true).await;
 
         assert!(result.is_err());
         if let Err(status) = result {
@@ -294,7 +362,7 @@ mod tests {
         frame.extend_from_slice(b"short"); // only 5 bytes
 
         let body = axum::body::Body::from(frame);
-        let result = parse_grpc_client_stream(body, 1024).await;
+        let result = parse_grpc_client_stream(body, 1024, None, true).await;
 
         assert!(result.is_err());
         if let Err(status) = result {
@@ -303,20 +371,72 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_compression_flag_set() {
-        // Frame with compression flag = 1 (not supported)
+    async fn test_compression_flag_set_with_missing_encoding_header() {
         let mut frame = Vec::new();
-        frame.push(0x01); // compression: yes (unsupported)
+        frame.push(0x01); // compression: yes
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x05]);
         frame.extend_from_slice(b"hello");
 
         let body = axum::body::Body::from(frame);
-        let result = parse_grpc_client_stream(body, 1024).await;
+        let result = parse_grpc_client_stream(body, 1024, None, true).await;
+
+        assert!(result.is_err());
+        if let Err(status) = result {
+            assert_eq!(status.code(), tonic::Code::InvalidArgument);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_compression_flag_set_with_unsupported_encoding() {
+        let mut frame = Vec::new();
+        frame.push(0x01); // compression: yes
+        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x05]);
+        frame.extend_from_slice(b"hello");
+
+        let body = axum::body::Body::from(frame);
+        let result = parse_grpc_client_stream(body, 1024, Some("br"), true).await;
 
         assert!(result.is_err());
         if let Err(status) = result {
             assert_eq!(status.code(), tonic::Code::Unimplemented);
+            assert!(status.message().contains("Unsupported grpc-encoding"));
         }
+    }
+
+    #[tokio::test]
+    async fn test_compression_flag_set_when_compression_disabled() {
+        let mut frame = Vec::new();
+        frame.push(0x01); // compression: yes
+        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x05]);
+        frame.extend_from_slice(b"hello");
+
+        let body = axum::body::Body::from(frame);
+        let result = parse_grpc_client_stream(body, 1024, Some("gzip"), false).await;
+
+        assert!(result.is_err());
+        if let Err(status) = result {
+            assert_eq!(status.code(), tonic::Code::Unimplemented);
+            assert!(status.message().contains("disabled"));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_compression_flag_set_with_gzip_encoding_decompresses_message() {
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(b"hello").unwrap();
+        let compressed = encoder.finish().unwrap();
+
+        let mut frame = Vec::new();
+        frame.push(0x01); // compression: yes
+        frame.extend_from_slice(&(compressed.len() as u32).to_be_bytes());
+        frame.extend_from_slice(&compressed);
+
+        let body = axum::body::Body::from(frame);
+        let mut stream = parse_grpc_client_stream(body, 1024, Some("gzip"), true).await.unwrap();
+
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(msg, Bytes::from_static(b"hello"));
+        assert!(stream.next().await.is_none());
     }
 
     #[tokio::test]
@@ -329,7 +449,7 @@ mod tests {
         frame.extend_from_slice(&message);
 
         let body = axum::body::Body::from(frame);
-        let mut stream = parse_grpc_client_stream(body, 2000).await.unwrap();
+        let mut stream = parse_grpc_client_stream(body, 2000, None, true).await.unwrap();
 
         let msg = stream.next().await;
         assert!(msg.is_some());
@@ -344,7 +464,7 @@ mod tests {
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // length: 0
 
         let body = axum::body::Body::from(frame);
-        let mut stream = parse_grpc_client_stream(body, 1024).await.unwrap();
+        let mut stream = parse_grpc_client_stream(body, 1024, None, true).await.unwrap();
 
         let msg = stream.next().await;
         assert!(msg.is_some());
@@ -375,7 +495,7 @@ mod tests {
         frame.extend_from_slice(b"x");
 
         let body = axum::body::Body::from(frame);
-        let mut stream = parse_grpc_client_stream(body, 1024).await.unwrap();
+        let mut stream = parse_grpc_client_stream(body, 1024, None, true).await.unwrap();
 
         let msg1 = stream.next().await.unwrap().unwrap();
         assert_eq!(msg1, b"abc"[..]);
@@ -437,7 +557,7 @@ mod tests {
         frame.extend_from_slice(&message);
 
         let body = axum::body::Body::from(frame);
-        let result = parse_grpc_client_stream(body, max_size).await;
+        let result = parse_grpc_client_stream(body, max_size, None, true).await;
 
         assert!(result.is_err());
         if let Err(status) = result {
@@ -458,7 +578,7 @@ mod tests {
         }
 
         let body = axum::body::Body::from(frame);
-        let stream = parse_grpc_client_stream(body, 1024).await.unwrap();
+        let stream = parse_grpc_client_stream(body, 1024, None, true).await.unwrap();
         let messages: Vec<_> = futures_util::StreamExt::collect(stream).await;
 
         assert_eq!(messages.len(), 10);
