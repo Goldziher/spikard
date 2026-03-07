@@ -15,8 +15,29 @@ includes:
       - agents
     merge_strategy: local-override
 
+builtins:
+  - rust
+  - python
+  - pyo3
+  - typescript
+  - napi-rs
+  - ruby
+  - magnus
+  - go
+  - java
+  - csharp
+  - wasm
+  - security
+  - git-workflow
+  - code-quality
+  - testing
+  - token-efficiency
+  - default-commands
+
 presets:
   - claude
   - gemini
   - codex
+compression:
+  level: moderate
 version: "3.0"
