@@ -182,7 +182,7 @@ impl DependencyContainer {
     ///             Ok(Arc::new(db) as Arc<dyn std::any::Any + Send + Sync>)
     ///         })
     ///     })
-    ///     .build();
+    ///     .build().unwrap();
     /// container.register("database".to_string(), Arc::new(db)).unwrap();
     ///
     /// // Resolve for handler
@@ -433,12 +433,14 @@ mod tests {
         let dep_a = FactoryDependency::builder("a")
             .depends_on(vec!["b".to_string()])
             .factory(|_req, _data, _resolved| Box::pin(async { Ok(Arc::new(1i32) as Arc<dyn Any + Send + Sync>) }))
-            .build();
+            .build()
+            .unwrap();
 
         let dep_b = FactoryDependency::builder("b")
             .depends_on(vec!["a".to_string()])
             .factory(|_req, _data, _resolved| Box::pin(async { Ok(Arc::new(2i32) as Arc<dyn Any + Send + Sync>) }))
-            .build();
+            .build()
+            .unwrap();
 
         container.register("a".to_string(), Arc::new(dep_a)).unwrap();
         container.register("b".to_string(), Arc::new(dep_b)).unwrap();
@@ -476,7 +478,8 @@ mod tests {
 
         let factory = FactoryDependency::builder("computed")
             .factory(|_req, _data, _resolved| Box::pin(async { Ok(Arc::new(100i32) as Arc<dyn Any + Send + Sync>) }))
-            .build();
+            .build()
+            .unwrap();
 
         container.register("computed".to_string(), Arc::new(factory)).unwrap();
 
@@ -509,7 +512,8 @@ mod tests {
                     Ok(Arc::new(db) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
         container.register("database".to_string(), Arc::new(database)).unwrap();
 
         let request = make_request();
@@ -539,7 +543,8 @@ mod tests {
                     Ok(Arc::new(order) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
         container.register("config".to_string(), Arc::new(config)).unwrap();
 
         let counter2 = Arc::clone(&counter);
@@ -552,7 +557,8 @@ mod tests {
                     Ok(Arc::new(order) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
         container.register("database".to_string(), Arc::new(database)).unwrap();
 
         let counter3 = Arc::clone(&counter);
@@ -565,7 +571,8 @@ mod tests {
                     Ok(Arc::new(order) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
         container.register("cache".to_string(), Arc::new(cache)).unwrap();
 
         let request = make_request();
@@ -601,7 +608,8 @@ mod tests {
                     Ok(Arc::new(value) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
 
         container
             .register("singleton".to_string(), Arc::new(singleton))
@@ -639,7 +647,8 @@ mod tests {
                     Ok(Arc::new(value) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
 
         container
             .register("singleton".to_string(), Arc::new(singleton))

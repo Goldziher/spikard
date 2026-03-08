@@ -51,7 +51,7 @@
 //!         })
 //!     })
 //!     .singleton(true)  // Share across all requests
-//!     .build();
+//!     .build().unwrap();
 //! container.register("db_pool".to_string(), Arc::new(pool)).unwrap();
 //!
 //! // Resolve for a handler
@@ -101,7 +101,7 @@
 //!         })
 //!     })
 //!     .cacheable(true)  // Same ID throughout the request
-//!     .build();
+//!     .build().unwrap();
 //!
 //! container.register("request_id".to_string(), Arc::new(request_id)).unwrap();
 //! # });
@@ -128,7 +128,7 @@
 //!             Ok(Arc::new(ua) as Arc<dyn std::any::Any + Send + Sync>)
 //!         })
 //!     })
-//!     .build();
+//!     .build().unwrap();
 //!
 //! container.register("user_agent".to_string(), Arc::new(user_agent)).unwrap();
 //! # });

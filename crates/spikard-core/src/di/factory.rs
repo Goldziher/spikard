@@ -61,7 +61,7 @@ pub type FactoryFn = dyn Fn(
 ///             Ok(Arc::new(42i32) as Arc<dyn std::any::Any + Send + Sync>)
 ///         })
 ///     })
-///     .build();
+///     .build().unwrap();
 ///
 /// assert_eq!(factory.key(), "counter");
 /// # });
@@ -93,7 +93,7 @@ impl FactoryDependency {
     ///             Ok(Arc::new(100i32) as Arc<dyn std::any::Any + Send + Sync>)
     ///         })
     ///     })
-    ///     .build();
+    ///     .build().unwrap();
     /// ```
     pub fn builder(key: impl Into<String>) -> FactoryDependencyBuilder {
         FactoryDependencyBuilder::new(key)
@@ -162,7 +162,7 @@ impl std::fmt::Debug for FactoryDependency {
 ///         })
 ///     })
 ///     .cacheable(true)
-///     .build();
+///     .build().unwrap();
 /// ```
 pub struct FactoryDependencyBuilder {
     key: String,
@@ -207,7 +207,7 @@ impl FactoryDependencyBuilder {
     ///             Ok(Arc::new(now) as Arc<dyn std::any::Any + Send + Sync>)
     ///         })
     ///     })
-    ///     .build();
+    ///     .build().unwrap();
     /// ```
     #[must_use]
     pub fn factory<F>(mut self, factory: F) -> Self
@@ -244,7 +244,7 @@ impl FactoryDependencyBuilder {
     ///             Ok(Arc::new("service") as Arc<dyn std::any::Any + Send + Sync>)
     ///         })
     ///     })
-    ///     .build();
+    ///     .build().unwrap();
     /// ```
     #[must_use]
     pub fn depends_on(mut self, dependencies: Vec<String>) -> Self {
@@ -272,7 +272,7 @@ impl FactoryDependencyBuilder {
     ///         })
     ///     })
     ///     .cacheable(true)  // Same ID for all uses in one request
-    ///     .build();
+    ///     .build().unwrap();
     /// ```
     #[must_use]
     pub const fn cacheable(mut self, cacheable: bool) -> Self {
@@ -301,7 +301,7 @@ impl FactoryDependencyBuilder {
     ///         })
     ///     })
     ///     .singleton(true)  // Share across all requests
-    ///     .build();
+    ///     .build().unwrap();
     /// ```
     #[must_use]
     pub const fn singleton(mut self, singleton: bool) -> Self {
@@ -311,9 +311,9 @@ impl FactoryDependencyBuilder {
 
     /// Build the factory dependency
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if the factory function was not set.
+    /// Returns an error if the factory function was not set.
     ///
     /// # Examples
     ///
@@ -327,19 +327,20 @@ impl FactoryDependencyBuilder {
     ///             Ok(Arc::new(42i32) as Arc<dyn std::any::Any + Send + Sync>)
     ///         })
     ///     })
-    ///     .build();
+    ///     .build().unwrap();
     /// ```
-    #[must_use]
-    pub fn build(self) -> FactoryDependency {
-        FactoryDependency {
+    pub fn build(self) -> Result<FactoryDependency, DependencyError> {
+        let factory = self.factory.ok_or_else(|| DependencyError::ResolutionFailed {
+            message: format!("Factory function must be set for dependency '{}'", self.key),
+        })?;
+
+        Ok(FactoryDependency {
             key: self.key.clone(),
-            factory: self
-                .factory
-                .unwrap_or_else(|| panic!("Factory function must be set for dependency '{}'", self.key)),
+            factory,
             dependencies: self.dependencies,
             cacheable: self.cacheable,
             singleton: self.singleton,
-        }
+        })
     }
 }
 
@@ -370,7 +371,8 @@ mod tests {
     fn test_builder_key() {
         let factory = FactoryDependency::builder("test")
             .factory(|_req, _data, _resolved| Box::pin(async { Ok(Arc::new(42i32) as Arc<dyn Any + Send + Sync>) }))
-            .build();
+            .build()
+            .unwrap();
 
         assert_eq!(factory.key(), "test");
     }
@@ -380,7 +382,8 @@ mod tests {
         let factory = FactoryDependency::builder("test")
             .depends_on(vec!["dep1".to_string(), "dep2".to_string()])
             .factory(|_req, _data, _resolved| Box::pin(async { Ok(Arc::new(42i32) as Arc<dyn Any + Send + Sync>) }))
-            .build();
+            .build()
+            .unwrap();
 
         assert_eq!(factory.depends_on(), vec!["dep1", "dep2"]);
     }
@@ -390,7 +393,8 @@ mod tests {
         let factory = FactoryDependency::builder("test")
             .factory(|_req, _data, _resolved| Box::pin(async { Ok(Arc::new(42i32) as Arc<dyn Any + Send + Sync>) }))
             .cacheable(true)
-            .build();
+            .build()
+            .unwrap();
 
         assert!(factory.cacheable());
     }
@@ -400,7 +404,8 @@ mod tests {
         let factory = FactoryDependency::builder("test")
             .factory(|_req, _data, _resolved| Box::pin(async { Ok(Arc::new(42i32) as Arc<dyn Any + Send + Sync>) }))
             .singleton(true)
-            .build();
+            .build()
+            .unwrap();
 
         assert!(factory.singleton());
     }
@@ -414,7 +419,8 @@ mod tests {
                     Ok(Arc::new(100i32) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
 
         let request = Request::builder().body(()).unwrap();
         let request_data = make_request_data();
@@ -443,7 +449,8 @@ mod tests {
                     Ok(Arc::new(format!("Service using {config_value}")) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
 
         let request = Request::builder().body(()).unwrap();
         let request_data = make_request_data();
@@ -467,7 +474,8 @@ mod tests {
 
                 Box::pin(async move { Ok(Arc::new(ua) as Arc<dyn Any + Send + Sync>) })
             })
-            .build();
+            .build()
+            .unwrap();
 
         let mut headers = HashMap::new();
         headers.insert("user-agent".to_string(), "test-agent/1.0".to_string());
@@ -500,7 +508,8 @@ mod tests {
                     Ok(Arc::new(current) as Arc<dyn Any + Send + Sync>)
                 })
             })
-            .build();
+            .build()
+            .unwrap();
 
         let request = Request::builder().body(()).unwrap();
         let request_data = make_request_data();
@@ -522,7 +531,8 @@ mod tests {
             .factory(|_req, _data, _resolved| Box::pin(async { Ok(Arc::new(42i32) as Arc<dyn Any + Send + Sync>) }))
             .cacheable(true)
             .singleton(false)
-            .build();
+            .build()
+            .unwrap();
 
         let debug_str = format!("{factory:?}");
         assert!(debug_str.contains("FactoryDependency"));
@@ -531,8 +541,8 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Factory function must be set")]
-    fn test_builder_without_factory() {
-        let _factory = FactoryDependency::builder("test").build();
+    fn test_builder_without_factory_returns_error() {
+        let err = FactoryDependency::builder("test").build().unwrap_err();
+        assert!(err.to_string().contains("Factory function must be set"));
     }
 }

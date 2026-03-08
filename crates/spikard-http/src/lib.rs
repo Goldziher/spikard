@@ -483,7 +483,8 @@ impl ServerConfigBuilder {
                         as BoxFuture<'static, Result<Arc<dyn std::any::Any + Send + Sync>, DependencyError>>
                 },
             )
-            .build();
+            .build()
+            .expect("Factory dependency must have a configured factory function");
 
         container
             .register(key_str, Arc::new(dep))
