@@ -46,6 +46,8 @@ mod test_sse;
 mod test_websocket;
 mod websocket;
 
+#[cfg(feature = "di")]
+use crate::di::NO_DI_DEP_KEY;
 use crate::response::HandlerReturnValue;
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
@@ -313,6 +315,19 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
 
         let is_async: bool = route_obj.get_named_property("is_async")?;
 
+        #[cfg(feature = "di")]
+        let handler_dependencies = if route_obj.has_named_property("handler_dependencies").unwrap_or(false) {
+            Some(
+                route_obj
+                    .get_named_property::<Vec<String>>("handler_dependencies")
+                    .unwrap_or_default(),
+            )
+        } else {
+            Some(vec![NO_DI_DEP_KEY.to_string()])
+        };
+        #[cfg(not(feature = "di"))]
+        let handler_dependencies = None;
+
         let route_meta = RouteMetadata {
             method,
             path,
@@ -324,7 +339,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
             is_async,
             cors: extract_optional_json_property(&route_obj, "cors")?,
             body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
-            handler_dependencies: None, // TODO: Extract from route
+            handler_dependencies,
         };
 
         routes.push(route_meta);
@@ -349,6 +364,20 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         route_obj.get_named_property::<bool>("is_async"),
                     )
                 {
+                    #[cfg(feature = "di")]
+                    let handler_dependencies = if route_obj.has_named_property("handler_dependencies").unwrap_or(false)
+                    {
+                        Some(
+                            route_obj
+                                .get_named_property::<Vec<String>>("handler_dependencies")
+                                .unwrap_or_default(),
+                        )
+                    } else {
+                        Some(vec![NO_DI_DEP_KEY.to_string()])
+                    };
+                    #[cfg(not(feature = "di"))]
+                    let handler_dependencies = None;
+
                     result.push(RouteMetadata {
                         method,
                         path,
@@ -360,7 +389,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                         is_async,
                         cors: extract_optional_json_property(&route_obj, "cors")?,
                         body_param_name: route_obj.get_named_property::<String>("body_param_name").ok(),
-                        handler_dependencies: None,
+                        handler_dependencies,
                     });
                 }
             }
