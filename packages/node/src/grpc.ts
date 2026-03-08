@@ -69,7 +69,7 @@
  * service.registerUnary('mypackage.UserService', 'GetUser', new UserServiceHandler());
  * service.registerServerStreaming('mypackage.UserService', 'ListUsers', {
  *   async handleServerStream(request) {
- *     return { payload: Buffer.from([]) };
+ *     return { messages: [Buffer.from([])] };
  *   }
  * } satisfies GrpcServerStreamingHandler);
  *
@@ -162,6 +162,10 @@ export interface GrpcClientStreamRequest {
 	messages: Buffer[];
 }
 
+export interface GrpcServerStreamResponse {
+	messages: Buffer[];
+}
+
 export interface GrpcBidiStreamRequest {
 	serviceName: string;
 	methodName: string;
@@ -231,7 +235,12 @@ export interface GrpcHandler {
 }
 
 export interface GrpcServerStreamingHandler {
-	handleServerStream(request: GrpcRequest): Promise<GrpcResponse>;
+	/**
+	 * Handle a server-streaming request and return ordered response messages.
+	 *
+	 * Each Buffer in `messages` is emitted as one gRPC response frame.
+	 */
+	handleServerStream(request: GrpcRequest): Promise<GrpcServerStreamResponse>;
 }
 
 export interface GrpcClientStreamingHandler {
@@ -404,19 +413,11 @@ export class GrpcService {
 		return this.registerMethod({ serviceName, methodName, rpcMode: "unary", handler });
 	}
 
-	registerServerStreaming(
-		serviceName: string,
-		methodName: string,
-		handler: GrpcServerStreamingHandler,
-	): this {
+	registerServerStreaming(serviceName: string, methodName: string, handler: GrpcServerStreamingHandler): this {
 		return this.registerMethod({ serviceName, methodName, rpcMode: "serverStreaming", handler });
 	}
 
-	registerClientStreaming(
-		serviceName: string,
-		methodName: string,
-		handler: GrpcClientStreamingHandler,
-	): this {
+	registerClientStreaming(serviceName: string, methodName: string, handler: GrpcClientStreamingHandler): this {
 		return this.registerMethod({ serviceName, methodName, rpcMode: "clientStreaming", handler });
 	}
 

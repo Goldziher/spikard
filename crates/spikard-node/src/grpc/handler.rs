@@ -52,6 +52,17 @@ pub struct GrpcResponse {
     pub metadata: Option<HashMap<String, String>>,
 }
 
+/// Server-streaming response object returned by JavaScript handlers
+///
+/// Contains all serialized protobuf messages to emit in order for a
+/// server-streaming RPC.
+#[napi(object)]
+pub struct GrpcServerStreamResponse {
+    /// Ordered server-stream response messages as Buffers
+    #[napi(ts_type = "Buffer[]")]
+    pub messages: Vec<Buffer>,
+}
+
 /// Client streaming request: unary request with collected stream messages
 ///
 /// Used when calling JavaScript client streaming handlers.
@@ -208,6 +219,13 @@ fn create_js_stream_iterator(stream: MessageStream) -> GrpcMessageStream {
 type ClientStreamHandler =
     ThreadsafeFunction<GrpcClientStreamRequest, Promise<GrpcResponse>, GrpcClientStreamRequest, napi::Status, false>;
 
+/// Type alias for unary handler ThreadsafeFunction
+type UnaryHandler = ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>;
+
+/// Type alias for server stream handler ThreadsafeFunction
+type ServerStreamHandler =
+    ThreadsafeFunction<GrpcRequest, Promise<GrpcServerStreamResponse>, GrpcRequest, napi::Status, false>;
+
 /// Type alias for bidirectional stream handler ThreadsafeFunction
 type BidiStreamHandler = ThreadsafeFunction<
     GrpcBidiStreamRequest,
@@ -224,7 +242,8 @@ type BidiStreamHandler = ThreadsafeFunction<
 /// Supports unary, server streaming, client streaming, and bidirectional streaming RPC modes.
 pub struct NodeGrpcHandler {
     service_name: Arc<str>,
-    request_fn: Option<Arc<ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>>>,
+    request_fn: Option<Arc<UnaryHandler>>,
+    server_stream_fn: Option<Arc<ServerStreamHandler>>,
     client_stream_fn: Option<Arc<ClientStreamHandler>>,
     bidi_stream_fn: Option<Arc<BidiStreamHandler>>,
 }
@@ -242,18 +261,23 @@ impl NodeGrpcHandler {
         Self {
             service_name,
             request_fn: None,
+            server_stream_fn: None,
             client_stream_fn: None,
             bidi_stream_fn: None,
         }
     }
 
-    /// Add a unary or server-streaming handler to this gRPC handler.
+    /// Add a unary handler to this gRPC handler.
     #[must_use]
-    pub fn with_request_handler(
-        mut self,
-        handler_fn: ThreadsafeFunction<GrpcRequest, Promise<GrpcResponse>, GrpcRequest, napi::Status, false>,
-    ) -> Self {
+    pub fn with_request_handler(mut self, handler_fn: UnaryHandler) -> Self {
         self.request_fn = Some(Arc::new(handler_fn));
+        self
+    }
+
+    /// Add a server-streaming handler to this gRPC handler.
+    #[must_use]
+    pub fn with_server_stream(mut self, handler_fn: ServerStreamHandler) -> Self {
+        self.server_stream_fn = Some(Arc::new(handler_fn));
         self
     }
 
@@ -348,7 +372,7 @@ impl GrpcHandler for NodeGrpcHandler {
         &self,
         request: GrpcRequestData,
     ) -> Pin<Box<dyn Future<Output = std::result::Result<MessageStream, tonic::Status>> + Send>> {
-        let handler_fn = self.request_fn.clone();
+        let handler_fn = self.server_stream_fn.clone();
         let service_name = self.service_name.clone();
 
         Box::pin(async move {
@@ -367,44 +391,26 @@ impl GrpcHandler for NodeGrpcHandler {
                 metadata: metadata_to_hashmap(&request.metadata),
             };
 
-            // Create channel to collect messages from handler
-            let (tx, mut rx) = mpsc::channel::<std::result::Result<Bytes, tonic::Status>>(MAX_STREAM_MESSAGES);
+            let promise = handler_fn
+                .call_async(js_request)
+                .await
+                .map_err(|e| tonic::Status::internal(format!("Handler call failed for {}: {}", service_name, e)))?;
 
-            // Call JavaScript handler
-            match handler_fn.call_async(js_request).await {
-                Ok(promise) => {
-                    // Spawn task to handle response stream
-                    let service_name_clone = service_name.clone();
-                    tokio::spawn(async move {
-                        match promise.await {
-                            Ok(response) => {
-                                // For server streaming, the handler returns a GrpcResponse
-                                // containing the response payload. In JavaScript, handlers should
-                                // pre-collect stream messages or use async generators.
-                                // The payload here represents the streamed data.
-                                let _ = tx.try_send(Ok(response.payload.to_vec().into()));
-                            }
-                            Err(e) => {
-                                let _ = tx.try_send(Err(tonic::Status::internal(format!(
-                                    "Handler promise failed for {}: {}",
-                                    service_name_clone, e
-                                ))));
-                            }
-                        }
-                    });
-                }
-                Err(e) => {
-                    let _ = tx.try_send(Err(tonic::Status::internal(format!(
-                        "Handler call failed for {}: {}",
-                        service_name, e
-                    ))));
-                }
+            let response = promise.await.map_err(|e| {
+                tonic::Status::internal(format!("Handler promise failed for {}: {:?}", service_name, e))
+            })?;
+
+            if response.messages.len() > MAX_STREAM_MESSAGES {
+                return Err(tonic::Status::resource_exhausted(format!(
+                    "Server stream exceeded maximum messages: {} > {}",
+                    response.messages.len(),
+                    MAX_STREAM_MESSAGES
+                )));
             }
 
-            // Convert the channel receiver to a MessageStream
             let message_stream = stream! {
-                while let Some(result) = rx.recv().await {
-                    yield result;
+                for message in response.messages {
+                    yield Ok(message.to_vec().into());
                 }
             };
 
@@ -599,6 +605,7 @@ impl Clone for NodeGrpcHandler {
         Self {
             service_name: self.service_name.clone(),
             request_fn: self.request_fn.clone(),
+            server_stream_fn: self.server_stream_fn.clone(),
             client_stream_fn: self.client_stream_fn.clone(),
             bidi_stream_fn: self.bidi_stream_fn.clone(),
         }

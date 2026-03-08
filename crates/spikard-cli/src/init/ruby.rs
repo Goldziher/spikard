@@ -20,7 +20,7 @@ impl ProjectScaffolder for RubyScaffolder {
         // Gemfile
         files.push(ScaffoldedFile::new(PathBuf::from("Gemfile"), self.generate_gemfile()));
 
-        // Gemfile.lock (empty placeholder)
+        // Create an empty Gemfile.lock scaffold
         files.push(ScaffoldedFile::new(PathBuf::from("Gemfile.lock"), String::new()));
 
         // .ruby-version

@@ -152,7 +152,7 @@ pub struct GrpcConfig {
     /// HTTP/2 keepalive timeout in seconds
     #[serde(default = "default_keepalive_timeout")]
     pub keepalive_timeout: u64,
-    // TODO: Consider adding in future versions:
+    // Future extension point:
     // pub max_stream_response_bytes: Option<usize>,  // Total bytes per streaming response
 }
 

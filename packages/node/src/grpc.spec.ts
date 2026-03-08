@@ -8,15 +8,16 @@
 import { describe, expect, it } from "vitest";
 import {
 	createServiceHandler,
-	GrpcService,
 	createUnaryHandler,
-	GrpcError,
 	type GrpcBidirectionalStreamingHandler,
 	type GrpcClientStreamingHandler,
+	GrpcError,
 	type GrpcHandler,
 	type GrpcRequest,
 	type GrpcResponse,
 	type GrpcServerStreamingHandler,
+	type GrpcServerStreamResponse,
+	GrpcService,
 	GrpcStatusCode,
 } from "./grpc";
 
@@ -220,8 +221,8 @@ describe("GrpcService", () => {
 			},
 		};
 		const serverStreaming: GrpcServerStreamingHandler = {
-			async handleServerStream(): Promise<GrpcResponse> {
-				return { payload: Buffer.from("stream") };
+			async handleServerStream(): Promise<GrpcServerStreamResponse> {
+				return { messages: [Buffer.from("stream")] };
 			},
 		};
 		const clientStreaming: GrpcClientStreamingHandler = {
@@ -254,8 +255,8 @@ describe("GrpcService", () => {
 	it("should reject unary dispatch to a streaming registration", async () => {
 		const service = new GrpcService();
 		service.registerServerStreaming("test.UserService", "ListUsers", {
-			async handleServerStream(): Promise<GrpcResponse> {
-				return { payload: Buffer.from("stream") };
+			async handleServerStream(): Promise<GrpcServerStreamResponse> {
+				return { messages: [Buffer.from("stream")] };
 			},
 		});
 

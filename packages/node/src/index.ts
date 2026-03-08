@@ -31,22 +31,23 @@ export type {
 } from "./config";
 export {
 	createServiceHandler,
-	GrpcService,
 	createUnaryHandler,
-	GrpcError,
+	type GrpcBidirectionalStreamingHandler,
 	type GrpcBidiStreamRequest,
 	type GrpcBidiStreamResponse,
-	type GrpcBidirectionalStreamingHandler,
-	type GrpcClientStreamRequest,
 	type GrpcClientStreamingHandler,
+	type GrpcClientStreamRequest,
+	GrpcError,
 	type GrpcHandler,
+	type GrpcMetadata,
 	type GrpcMethodConfig,
 	type GrpcMethodHandler,
-	type GrpcMetadata,
 	type GrpcRequest,
 	type GrpcResponse,
 	type GrpcRpcMode,
 	type GrpcServerStreamingHandler,
+	type GrpcServerStreamResponse,
+	GrpcService,
 	GrpcStatusCode,
 } from "./grpc";
 export {

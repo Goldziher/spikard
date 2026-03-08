@@ -15,7 +15,7 @@ const MULTIPART_INLINE_CONTENT_LIMIT: usize = 8 * 1024;
 /// - File uploads → {"filename": "...", "size": N, "content": "...", "content_type": "..."}
 /// - Form fields → plain string values
 /// - Mixed files and data → combined in single JSON object
-/// - Large binary files → placeholder content
+/// - Large binary files → summarized content marker
 /// - Small files → content inlined into JSON
 /// - Multiple values with same field name → aggregated into arrays
 pub async fn parse_multipart_to_json(

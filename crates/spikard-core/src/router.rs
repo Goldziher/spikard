@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Handler function type (placeholder - will be enhanced with Python callbacks)
+/// Core in-process route handler callback type used by router metadata APIs.
 pub type RouteHandler = Arc<dyn Fn() -> String + Send + Sync>;
 
 /// JSON-RPC method metadata for routes that support JSON-RPC

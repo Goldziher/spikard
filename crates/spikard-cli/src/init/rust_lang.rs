@@ -22,7 +22,7 @@ impl ProjectScaffolder for RustScaffolder {
             self.generate_cargo_toml(&kebab_name),
         ));
 
-        // Create Cargo.lock (empty placeholder)
+        // Create an empty Cargo.lock scaffold
         files.push(ScaffoldedFile::new(PathBuf::from("Cargo.lock"), String::new()));
 
         // Create src/main.rs

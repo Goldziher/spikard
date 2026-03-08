@@ -21,7 +21,7 @@ impl ProjectScaffolder for PhpScaffolder {
             self.generate_composer_json(project_name),
         ));
 
-        // Create composer.lock (empty placeholder)
+        // Create an empty composer.lock scaffold
         files.push(ScaffoldedFile::new(PathBuf::from("composer.lock"), String::new()));
 
         // Create phpstan.neon

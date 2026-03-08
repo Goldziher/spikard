@@ -24,7 +24,7 @@ impl ProjectScaffolder for TypeScriptScaffolder {
             self.generate_package_json(&kebab_name),
         ));
 
-        // pnpm-lock.yaml (empty placeholder)
+        // Create an empty pnpm-lock.yaml scaffold
         files.push(ScaffoldedFile::new(PathBuf::from("pnpm-lock.yaml"), String::new()));
 
         // tsconfig.json

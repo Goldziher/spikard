@@ -46,5 +46,6 @@ mod test_grpc;
 
 // Re-export main types
 pub use handler::{
-    GrpcBidiStreamRequest, GrpcBidiStreamResponse, GrpcClientStreamRequest, GrpcRequest, GrpcResponse, NodeGrpcHandler,
+    GrpcBidiStreamRequest, GrpcBidiStreamResponse, GrpcClientStreamRequest, GrpcRequest, GrpcResponse,
+    GrpcServerStreamResponse, NodeGrpcHandler,
 };

@@ -721,7 +721,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                     registry.register(service_name, method_name, handler, spikard_http::grpc::RpcMode::Unary);
                 }
                 "serverStreaming" => {
-                    let js_handler: Function<grpc::GrpcRequest, Promise<grpc::GrpcResponse>> =
+                    let js_handler: Function<grpc::GrpcRequest, Promise<grpc::GrpcServerStreamResponse>> =
                         handler_obj.get_named_property("handleServerStream").map_err(|e| {
                             Error::from_reason(format!(
                                 "Failed to get handleServerStream for gRPC method '{}/{}': {}",
@@ -739,7 +739,7 @@ pub fn run_server(_env: Env, app: Object, config: Option<Object>) -> Result<()> 
                             ))
                         })?;
 
-                    let handler = Arc::new(grpc::NodeGrpcHandler::new(service_name_arc).with_request_handler(tsfn));
+                    let handler = Arc::new(grpc::NodeGrpcHandler::new(service_name_arc).with_server_stream(tsfn));
                     registry.register(
                         service_name,
                         method_name,
