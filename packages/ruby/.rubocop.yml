@@ -34,7 +34,7 @@ Lint/ConstantDefinitionInBlock:
   Exclude:
     - 'spec/**/*.rb'
 
-# TODO: Refactor to reduce complexity
+# Complexity thresholds for current generated and framework adapter code.
 Metrics/AbcSize:
   Max: 20
 

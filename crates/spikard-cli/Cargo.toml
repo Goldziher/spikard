@@ -54,8 +54,8 @@ _spikard = { package = "spikard-py", version = "0.12.0", path = "../spikard-py",
 [features]
 default = []
 python = ["dep:pyo3", "dep:_spikard", "pyo3/auto-initialize"]
-node = []                                                     # TODO: Add Node.js support
-ruby = []                                                     # TODO: Add Ruby support
+node = []                                                     # Reserved feature flag for Node CLI integrations
+ruby = []                                                     # Reserved feature flag for Ruby CLI integrations
 all = ["python", "node", "ruby"]
 
 [dev-dependencies]

@@ -7,7 +7,7 @@ use PhpCsFixer\Finder;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 return (new Config())
-    ->setParallelConfig(ParallelConfigFactory::detect()) // @TODO 4.0 no need to call this manually
+    ->setParallelConfig(ParallelConfigFactory::detect()) // Explicit parallel config for current php-cs-fixer release line
     ->setRiskyAllowed(false)
     ->setRules([
         '@auto' => true
