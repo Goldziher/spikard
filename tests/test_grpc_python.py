@@ -785,15 +785,17 @@ async def test_grpc_status_unauthenticated() -> None:
 
 
 @pytest.mark.asyncio
-async def test_grpc_streaming_support_placeholder() -> None:
-    """Test placeholder for streaming request support."""
+async def test_grpc_server_stream_handler_yields_multiple_responses() -> None:
+    """Optional server-stream method yields ordered gRPC responses."""
     from spikard import GrpcRequest, GrpcResponse
 
     class StreamingHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            # Handler currently does not support streaming
-            # This test serves as a placeholder for future streaming implementation
-            return GrpcResponse(payload=b'{"streaming": false}')
+            return GrpcResponse(payload=request.payload)
+
+        async def handle_server_stream(self, request: GrpcRequest):
+            for item in (b"item1", b"item2", b"item3"):
+                yield GrpcResponse(payload=item, metadata={"method": request.method_name})
 
     handler = StreamingHandler()
     request = GrpcRequest(
@@ -802,29 +804,33 @@ async def test_grpc_streaming_support_placeholder() -> None:
         payload=b"{}",
     )
 
-    response = await handler.handle_request(request)
-    assert response.payload == b'{"streaming": false}'
+    responses = [response async for response in handler.handle_server_stream(request)]
+    assert [response.payload for response in responses] == [b"item1", b"item2", b"item3"]
+    assert all(response.metadata["method"] == "StreamData" for response in responses)
 
 
 @pytest.mark.asyncio
-async def test_grpc_response_streaming_placeholder() -> None:
-    """Test placeholder for streaming response support."""
+async def test_grpc_client_stream_handler_consumes_request_stream() -> None:
+    """Optional client-stream method can aggregate streamed requests."""
     from spikard import GrpcRequest, GrpcResponse
 
-    class ResponseStreamHandler:
+    class ClientStreamHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            # Handler would return streaming responses in the future
-            return GrpcResponse(payload=b"[item1, item2, item3]")
+            return GrpcResponse(payload=request.payload)
 
-    handler = ResponseStreamHandler()
-    request = GrpcRequest(
-        service_name="test.ListService",
-        method_name="ListItems",
-        payload=b"{}",
-    )
+        async def handle_client_stream(self, request_stream):
+            payloads = []
+            async for request in request_stream:
+                payloads.append(request.payload.decode())
+            return GrpcResponse(payload=(",".join(payloads)).encode())
 
-    response = await handler.handle_request(request)
-    assert b"item1" in response.payload
+    async def request_stream():
+        for payload in (b"one", b"two", b"three"):
+            yield GrpcRequest(service_name="test.StreamService", method_name="Upload", payload=payload)
+
+    handler = ClientStreamHandler()
+    response = await handler.handle_client_stream(request_stream())
+    assert response.payload == b"one,two,three"
 
 
 @pytest.mark.asyncio
@@ -886,36 +892,29 @@ async def test_grpc_stream_error_handling() -> None:
 
 
 @pytest.mark.asyncio
-async def test_grpc_stream_cancellation_placeholder() -> None:
-    """Test placeholder for stream cancellation support."""
+async def test_grpc_bidi_stream_handler_can_stop_on_cancel_signal() -> None:
+    """Optional bidi-stream method can terminate early when cancellation is requested."""
     from spikard import GrpcRequest, GrpcResponse
 
-    class CancellableHandler:
-        def __init__(self) -> None:
-            self.cancelled = False
-
+    class BidiHandler:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
-            # Placeholder for future cancellation support
-            if self.cancelled:
-                return GrpcResponse(
-                    payload=b'{"status": "cancelled"}',
-                )
-            return GrpcResponse(payload=b'{"status": "processing"}')
+            return GrpcResponse(payload=request.payload)
 
-    handler = CancellableHandler()
-    request = GrpcRequest(
-        service_name="test.CancelService",
-        method_name="Process",
-        payload=b"{}",
-    )
+        async def handle_bidi_stream(self, request_stream):
+            async for request in request_stream:
+                if request.payload == b"cancel":
+                    yield GrpcResponse(payload=b"cancelled")
+                    return
+                yield GrpcResponse(payload=b"echo:" + request.payload)
 
-    response = await handler.handle_request(request)
-    assert b"processing" in response.payload
+    async def request_stream():
+        yield GrpcRequest(service_name="test.BidiService", method_name="Chat", payload=b"first")
+        yield GrpcRequest(service_name="test.BidiService", method_name="Chat", payload=b"cancel")
+        yield GrpcRequest(service_name="test.BidiService", method_name="Chat", payload=b"ignored")
 
-    # Simulate cancellation
-    handler.cancelled = True
-    response = await handler.handle_request(request)
-    assert b"cancelled" in response.payload
+    handler = BidiHandler()
+    responses = [response async for response in handler.handle_bidi_stream(request_stream())]
+    assert [response.payload for response in responses] == [b"echo:first", b"cancelled"]
 
 
 @pytest.mark.asyncio
