@@ -20,6 +20,7 @@ use axum::http::{Request, StatusCode};
 use bytes::Bytes;
 use futures_util::StreamExt;
 use http_body_util::BodyExt;
+use spikard_http::grpc::framing::{encode_grpc_message, parse_grpc_client_stream};
 use spikard_http::grpc::streaming::{empty_message_stream, message_stream_from_vec};
 use spikard_http::grpc::{
     GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData, MessageStream, RpcMode,
@@ -31,6 +32,10 @@ use std::sync::Arc;
 use tonic::metadata::MetadataMap;
 
 mod common;
+
+fn grpc_frame(payload: &[u8]) -> Bytes {
+    encode_grpc_message(Bytes::copy_from_slice(payload)).expect("test payload should frame")
+}
 
 // ============================================================================
 // Test Handlers
@@ -702,7 +707,7 @@ async fn test_http_layer_mid_stream_error_closes_connection() {
     let request = Request::builder()
         .uri("/test.ErrorAfterService/StreamThenError")
         .header("content-type", "application/grpc")
-        .body(Body::from(Bytes::new()))
+        .body(Body::from(grpc_frame(b"")))
         .unwrap();
 
     let result = route_grpc_request(registry, &config, request).await;
@@ -744,7 +749,7 @@ async fn test_http_layer_partial_messages_before_error() {
     let request = Request::builder()
         .uri("/test.ErrorAfterService/StreamThenError")
         .header("content-type", "application/grpc")
-        .body(Body::from(Bytes::new()))
+        .body(Body::from(grpc_frame(b"")))
         .unwrap();
 
     let result = route_grpc_request(registry, &config, request).await;
@@ -755,10 +760,16 @@ async fn test_http_layer_partial_messages_before_error() {
     let trailers = collected.trailers().expect("grpc trailers");
     let grpc_status = trailers.get("grpc-status").unwrap().to_str().unwrap().to_string();
     let grpc_message = trailers.get("grpc-message").unwrap().to_str().unwrap().to_string();
-    let body = String::from_utf8_lossy(&collected.to_bytes()).to_string();
+    let mut decoded_stream = parse_grpc_client_stream(Body::from(collected.to_bytes()), usize::MAX, None, true)
+        .await
+        .unwrap();
+    let mut messages = Vec::new();
+    while let Some(item) = decoded_stream.next().await {
+        messages.push(String::from_utf8_lossy(&item.unwrap()).to_string());
+    }
 
-    assert!(body.contains("message_0"));
-    assert!(body.contains("message_4"));
+    assert_eq!(messages.first().map(String::as_str), Some("message_0"));
+    assert_eq!(messages.last().map(String::as_str), Some("message_4"));
     assert_eq!(grpc_status, "13");
     assert_eq!(grpc_message, "Stream%20processing%20error");
 }
@@ -788,7 +799,7 @@ async fn test_http_layer_connection_cleanup() {
             let request = Request::builder()
                 .uri("/test.ErrorAfterService/StreamThenError")
                 .header("content-type", "application/grpc")
-                .body(Body::from(Bytes::new()))
+                .body(Body::from(grpc_frame(b"")))
                 .unwrap();
 
             let result = route_grpc_request(registry_clone, &config_clone, request).await;
@@ -851,7 +862,7 @@ async fn test_http_layer_pre_stream_error_status_mapping() {
     let request = Request::builder()
         .uri("/test.PreErrorService/StreamError")
         .header("content-type", "application/grpc")
-        .body(Body::from(Bytes::new()))
+        .body(Body::from(grpc_frame(b"")))
         .unwrap();
 
     let result = route_grpc_request(registry, &config, request).await;
@@ -915,7 +926,7 @@ async fn test_http_layer_large_payload_then_error() {
     let request = Request::builder()
         .uri("/test.LargePayloadErrorService/LargeError")
         .header("content-type", "application/grpc")
-        .body(Body::from(Bytes::new()))
+        .body(Body::from(grpc_frame(b"")))
         .unwrap();
 
     let result = route_grpc_request(registry, &config, request).await;
@@ -942,7 +953,7 @@ async fn test_http_layer_stream_termination_on_error() {
     let request = Request::builder()
         .uri("/test.ErrorAfterService/StreamThenError")
         .header("content-type", "application/grpc")
-        .body(Body::from(Bytes::new()))
+        .body(Body::from(grpc_frame(b"")))
         .unwrap();
 
     let result = route_grpc_request(registry, &config, request).await;

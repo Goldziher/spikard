@@ -3,6 +3,7 @@
 //! This module handles routing gRPC requests to the appropriate handlers
 //! and multiplexing between HTTP/1.1 REST and HTTP/2 gRPC traffic.
 
+use crate::grpc::framing::{GRPC_MESSAGE_HEADER_LEN, encode_grpc_message, parse_unary_grpc_message};
 use crate::grpc::{GrpcConfig, GrpcRegistry, RpcMode, parse_grpc_path};
 use axum::body::Body;
 use axum::http::{Request, Response, StatusCode};
@@ -86,10 +87,26 @@ pub async fn route_grpc_request(
     // Dispatch based on RPC mode
     match rpc_mode {
         RpcMode::Unary => {
-            handle_unary_request(service, service_name, method_name, config.max_message_size, request).await
+            handle_unary_request(
+                service,
+                service_name,
+                method_name,
+                config.max_message_size,
+                config.enable_compression,
+                request,
+            )
+            .await
         }
         RpcMode::ServerStreaming => {
-            handle_server_streaming_request(service, service_name, method_name, config.max_message_size, request).await
+            handle_server_streaming_request(
+                service,
+                service_name,
+                method_name,
+                config.max_message_size,
+                config.enable_compression,
+                request,
+            )
+            .await
         }
         RpcMode::ClientStreaming => {
             handle_client_streaming_request(
@@ -116,17 +133,23 @@ pub async fn route_grpc_request(
     }
 }
 
+fn unary_message_read_limit(max_message_size: usize) -> usize {
+    max_message_size.saturating_add(GRPC_MESSAGE_HEADER_LEN)
+}
+
 /// Handle a unary RPC request
 async fn handle_unary_request(
     service: crate::grpc::GenericGrpcService,
     service_name: String,
     method_name: String,
     max_message_size: usize,
+    compression_enabled: bool,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     // Convert the Axum request to bytes with the configured size limit
     let (parts, body) = request.into_parts();
-    let body_bytes = match axum::body::to_bytes(body, max_message_size).await {
+    let request_encoding = parts.headers.get("grpc-encoding").and_then(|value| value.to_str().ok());
+    let body_bytes = match axum::body::to_bytes(body, unary_message_read_limit(max_message_size)).await {
         Ok(bytes) => bytes,
         Err(e) => {
             // Check if error is due to size limit (axum returns "body size exceeded" or similar)
@@ -141,8 +164,16 @@ async fn handle_unary_request(
         }
     };
 
+    let payload = match parse_unary_grpc_message(&body_bytes, max_message_size, request_encoding, compression_enabled) {
+        Ok(message) => message,
+        Err(status) => {
+            let status_code = grpc_status_to_http(status.code());
+            return Err((status_code, status.message().to_string()));
+        }
+    };
+
     // Create a Tonic request
-    let mut tonic_request = tonic::Request::new(body_bytes);
+    let mut tonic_request = tonic::Request::new(payload);
 
     // Copy headers to Tonic metadata
     for (key, value) in parts.headers.iter() {
@@ -167,6 +198,13 @@ async fn handle_unary_request(
 
     // Convert Tonic response to Axum response
     let payload = tonic_response.get_ref().clone();
+    let framed_payload = match encode_grpc_message(payload) {
+        Ok(framed) => framed,
+        Err(status) => {
+            let status_code = grpc_status_to_http(status.code());
+            return Err((status_code, status.message().to_string()));
+        }
+    };
     let metadata = tonic_response.metadata();
 
     let mut response = Response::builder()
@@ -186,7 +224,7 @@ async fn handle_unary_request(
     response = response.header("grpc-status", "0");
 
     // Convert bytes::Bytes to Body
-    let response = response.body(Body::from(payload)).map_err(|e| {
+    let response = response.body(Body::from(framed_payload)).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Failed to build response: {}", e),
@@ -202,11 +240,13 @@ async fn handle_server_streaming_request(
     service_name: String,
     method_name: String,
     max_message_size: usize,
+    compression_enabled: bool,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     // Convert the Axum request to bytes with the configured size limit
     let (parts, body) = request.into_parts();
-    let body_bytes = match axum::body::to_bytes(body, max_message_size).await {
+    let request_encoding = parts.headers.get("grpc-encoding").and_then(|value| value.to_str().ok());
+    let body_bytes = match axum::body::to_bytes(body, unary_message_read_limit(max_message_size)).await {
         Ok(bytes) => bytes,
         Err(e) => {
             // Check if error is due to size limit (axum returns "body size exceeded" or similar)
@@ -221,8 +261,16 @@ async fn handle_server_streaming_request(
         }
     };
 
+    let payload = match parse_unary_grpc_message(&body_bytes, max_message_size, request_encoding, compression_enabled) {
+        Ok(message) => message,
+        Err(status) => {
+            let status_code = grpc_status_to_http(status.code());
+            return Err((status_code, status.message().to_string()));
+        }
+    };
+
     // Create a Tonic request
-    let mut tonic_request = tonic::Request::new(body_bytes);
+    let mut tonic_request = tonic::Request::new(payload);
 
     // Copy headers to Tonic metadata
     for (key, value) in parts.headers.iter() {
@@ -313,6 +361,13 @@ async fn handle_client_streaming_request(
 
     // Convert Tonic response to Axum response
     let payload = tonic_response.get_ref().clone();
+    let framed_payload = match encode_grpc_message(payload) {
+        Ok(framed) => framed,
+        Err(status) => {
+            let status_code = grpc_status_to_http(status.code());
+            return Err((status_code, status.message().to_string()));
+        }
+    };
     let metadata = tonic_response.metadata();
 
     let mut response = Response::builder()
@@ -332,7 +387,7 @@ async fn handle_client_streaming_request(
     response = response.header("grpc-status", "0");
 
     // Convert bytes::Bytes to Body
-    let response = response.body(Body::from(payload)).map_err(|e| {
+    let response = response.body(Body::from(framed_payload)).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Failed to build response: {}", e),
@@ -439,6 +494,7 @@ pub fn is_grpc_request(request: &Request<Body>) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::grpc::framing::{encode_grpc_message, parse_unary_grpc_message};
     use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
     use crate::grpc::streaming::{MessageStream, StreamingRequest, message_stream_from_vec};
     use bytes::Bytes;
@@ -449,6 +505,10 @@ mod tests {
     use std::io::Write;
     use std::pin::Pin;
     use tonic::metadata::MetadataMap;
+
+    fn framed_message(payload: &[u8]) -> Bytes {
+        encode_grpc_message(Bytes::copy_from_slice(payload)).expect("test payload should frame")
+    }
 
     struct EchoHandler;
 
@@ -477,7 +537,7 @@ mod tests {
         let request = Request::builder()
             .uri("/test.EchoService/Echo")
             .header("content-type", "application/grpc")
-            .body(Body::from(Bytes::from("test payload")))
+            .body(Body::from(framed_message(b"test payload")))
             .unwrap();
 
         let result = route_grpc_request(registry, &config, request).await;
@@ -544,7 +604,7 @@ mod tests {
             Request::builder()
                 .uri("/test.MixedService/GetUser")
                 .header("content-type", "application/grpc")
-                .body(Body::from(Bytes::from_static(b"user")))
+                .body(Body::from(framed_message(b"user")))
                 .unwrap(),
         )
         .await
@@ -557,7 +617,7 @@ mod tests {
             Request::builder()
                 .uri("/test.MixedService/ListUsers")
                 .header("content-type", "application/grpc")
-                .body(Body::from(Bytes::from_static(b"ignored")))
+                .body(Body::from(framed_message(b"ignored")))
                 .unwrap(),
         )
         .await
@@ -730,7 +790,7 @@ mod tests {
         let request = Request::builder()
             .uri("/test.EchoService/Echo")
             .header("content-type", "application/grpc")
-            .body(Body::from(Bytes::from("test payload")))
+            .body(Body::from(framed_message(b"test payload")))
             .unwrap();
 
         // This should succeed since payload is small
@@ -749,10 +809,11 @@ mod tests {
 
         // Create a large payload that exceeds the limit
         let large_payload = vec![b'x'; 1000];
+        let framed_payload = encode_grpc_message(Bytes::from(large_payload)).unwrap();
         let request = Request::builder()
             .uri("/test.EchoService/Echo")
             .header("content-type", "application/grpc")
-            .body(Body::from(Bytes::from(large_payload)))
+            .body(Body::from(framed_payload))
             .unwrap();
 
         let result = route_grpc_request(registry, &config, request).await;
@@ -795,7 +856,7 @@ mod tests {
         let request = Request::builder()
             .uri("/test.StreamService/Stream")
             .header("content-type", "application/grpc")
-            .body(Body::from(Bytes::from("ignored")))
+            .body(Body::from(framed_message(b"ignored")))
             .unwrap();
 
         let response = route_grpc_request(registry, &config, request).await.unwrap();
@@ -884,7 +945,8 @@ mod tests {
         assert_eq!(response.headers().get("x-response-id").unwrap(), "resp-123");
 
         let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
-        assert_eq!(body, Bytes::from_static(b"hello"));
+        let payload = parse_unary_grpc_message(&body, 1024, None, true).unwrap();
+        assert_eq!(payload, Bytes::from_static(b"hello"));
     }
 
     #[tokio::test]
@@ -1118,7 +1180,8 @@ mod tests {
         let response = route_grpc_request(registry, &config, request).await.unwrap();
         assert_eq!(response.status(), StatusCode::OK);
         let body = axum::body::to_bytes(response.into_body(), 1024).await.unwrap();
-        assert_eq!(body, Bytes::from_static(b"hello"));
+        let payload = parse_unary_grpc_message(&body, 1024, None, true).unwrap();
+        assert_eq!(payload, Bytes::from_static(b"hello"));
     }
 
     #[tokio::test]

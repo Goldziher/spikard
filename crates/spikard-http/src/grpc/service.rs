@@ -4,6 +4,7 @@
 //! It handles the conversion between Tonic's types and our internal representation,
 //! enabling language-agnostic gRPC handling.
 
+use crate::grpc::framing::encode_grpc_message;
 use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 use crate::grpc::streaming::MessageStream;
 use axum::http::{HeaderMap, HeaderValue};
@@ -317,7 +318,13 @@ fn grpc_stream_body(message_stream: MessageStream) -> axum::body::Body {
             }
 
             match state.stream.next().await {
-                Some(Ok(bytes)) => Some((Ok::<Frame<Bytes>, Infallible>(Frame::data(bytes)), state)),
+                Some(Ok(bytes)) => match encode_grpc_message(bytes) {
+                    Ok(framed) => Some((Ok::<Frame<Bytes>, Infallible>(Frame::data(framed)), state)),
+                    Err(status) => {
+                        state.finished = true;
+                        Some((Ok(Frame::trailers(grpc_status_trailers(&status))), state))
+                    }
+                },
                 Some(Err(status)) => {
                     state.finished = true;
                     Some((Ok(Frame::trailers(grpc_status_trailers(&status))), state))

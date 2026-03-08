@@ -60,13 +60,58 @@
 //! }
 //! ```
 
-use bytes::{Buf, Bytes, BytesMut};
+use bytes::{Buf, BufMut, Bytes, BytesMut};
 use flate2::read::GzDecoder;
 use futures_util::stream;
 use std::io::Read;
 use tonic::Status;
 
 use super::streaming::MessageStream;
+
+/// Size of the gRPC message header in bytes.
+///
+/// The header consists of:
+/// - 1 byte compression flag
+/// - 4 bytes big-endian message length
+pub const GRPC_MESSAGE_HEADER_LEN: usize = 5;
+
+/// Parses a unary gRPC payload from framed HTTP/2 body bytes.
+///
+/// Unary and server-streaming requests must carry exactly one framed message.
+pub fn parse_unary_grpc_message(
+    framed_body: &[u8],
+    max_message_size: usize,
+    grpc_encoding: Option<&str>,
+    compression_enabled: bool,
+) -> Result<Bytes, Status> {
+    let messages = parse_all_frames(
+        BytesMut::from(framed_body),
+        max_message_size,
+        grpc_encoding,
+        compression_enabled,
+    )?;
+
+    match messages.len() {
+        1 => Ok(messages.into_iter().next().expect("single message exists")),
+        count => Err(Status::invalid_argument(format!(
+            "Unary gRPC request must contain exactly one message frame, got {}",
+            count
+        ))),
+    }
+}
+
+/// Encodes a protobuf payload into a single gRPC message frame.
+pub fn encode_grpc_message(payload: Bytes) -> Result<Bytes, Status> {
+    let message_length = u32::try_from(payload.len())
+        .map_err(|_| Status::resource_exhausted("gRPC message exceeds 4GB frame length limit"))?;
+
+    let mut framed = BytesMut::with_capacity(GRPC_MESSAGE_HEADER_LEN + payload.len());
+    framed.put_u8(0); // compression flag: uncompressed
+    framed.put_u32(message_length);
+    framed.extend_from_slice(&payload);
+
+    Ok(framed.freeze())
+}
 
 /// Parses an HTTP/2 gRPC request body as a stream of messages
 ///
@@ -139,7 +184,7 @@ fn parse_all_frames(
 
     while !buffer.is_empty() {
         // Check if we have enough bytes for the frame header
-        if buffer.len() < 5 {
+        if buffer.len() < GRPC_MESSAGE_HEADER_LEN {
             return Err(Status::internal(
                 "Incomplete gRPC frame header: expected 5 bytes, got less",
             ));
@@ -155,7 +200,7 @@ fn parse_all_frames(
         }
 
         // Read the message length (4 bytes, big-endian)
-        let length_bytes = &buffer[1..5];
+        let length_bytes = &buffer[1..GRPC_MESSAGE_HEADER_LEN];
         let message_length =
             u32::from_be_bytes([length_bytes[0], length_bytes[1], length_bytes[2], length_bytes[3]]) as usize;
 
@@ -168,7 +213,7 @@ fn parse_all_frames(
         }
 
         // Check if we have the complete message
-        let total_frame_size = 5 + message_length;
+        let total_frame_size = GRPC_MESSAGE_HEADER_LEN + message_length;
         if buffer.len() < total_frame_size {
             return Err(Status::internal(
                 "Incomplete gRPC message: expected more bytes than available",
@@ -176,7 +221,7 @@ fn parse_all_frames(
         }
 
         // Extract the message bytes and decompress if needed.
-        let message_bytes = &buffer[5..total_frame_size];
+        let message_bytes = &buffer[GRPC_MESSAGE_HEADER_LEN..total_frame_size];
         let message = if compression_flag == 0 {
             Bytes::copy_from_slice(message_bytes)
         } else {
@@ -261,6 +306,25 @@ mod tests {
         assert!(msg.unwrap().is_ok());
         let result = stream.next().await;
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_encode_grpc_message_adds_framing_header() {
+        let framed = encode_grpc_message(Bytes::from_static(b"hello")).unwrap();
+
+        assert_eq!(framed[0], 0x00);
+        assert_eq!(&framed[1..5], &[0x00, 0x00, 0x00, 0x05]);
+        assert_eq!(&framed[5..], b"hello");
+    }
+
+    #[test]
+    fn test_parse_unary_grpc_message_requires_exactly_one_frame() {
+        let mut body = Vec::new();
+        body.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x01, b'a']);
+        body.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x01, b'b']);
+
+        let err = parse_unary_grpc_message(&body, 1024, None, true).unwrap_err();
+        assert_eq!(err.code(), tonic::Code::InvalidArgument);
     }
 
     #[tokio::test]
