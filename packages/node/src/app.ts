@@ -2,6 +2,7 @@
  * Spikard application class
  */
 
+import type { ServerConfig } from "./config";
 import type {
 	GrpcBidirectionalStreamingHandler,
 	GrpcClientStreamingHandler,
@@ -10,9 +11,13 @@ import type {
 	GrpcServerStreamingHandler,
 	GrpcService,
 } from "./grpc";
-import type { HandlerFunction, NativeHandlerFunction, RouteMetadata, SpikardApp } from "./index";
-import type { GrpcMethodRegistration } from "./index";
-import type { ServerConfig } from "./config";
+import type {
+	GrpcMethodRegistration,
+	HandlerFunction,
+	NativeHandlerFunction,
+	RouteMetadata,
+	SpikardApp,
+} from "./index";
 import type { Request } from "./request";
 import { runServer } from "./server";
 import type { MaybePromise, StructuredHandlerResponse, WebSocketHandler, WebSocketOptions } from "./types";
@@ -247,11 +252,7 @@ export class Spikard implements SpikardApp {
 		});
 	}
 
-	addGrpcServerStreaming(
-		serviceName: string,
-		methodName: string,
-		handler: GrpcServerStreamingHandler,
-	): this {
+	addGrpcServerStreaming(serviceName: string, methodName: string, handler: GrpcServerStreamingHandler): this {
 		if (typeof handler?.handleServerStream !== "function") {
 			throw new TypeError("Server-streaming handler must implement handleServerStream(request)");
 		}
@@ -262,11 +263,7 @@ export class Spikard implements SpikardApp {
 		});
 	}
 
-	addGrpcClientStreaming(
-		serviceName: string,
-		methodName: string,
-		handler: GrpcClientStreamingHandler,
-	): this {
+	addGrpcClientStreaming(serviceName: string, methodName: string, handler: GrpcClientStreamingHandler): this {
 		if (typeof handler?.handleClientStream !== "function") {
 			throw new TypeError("Client-streaming handler must implement handleClientStream(request)");
 		}

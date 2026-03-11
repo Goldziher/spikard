@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Core placeholder comment cleanup**: Removed stale placeholder/TODO wording from core router and gRPC config comments so implementation notes reflect the current runtime behavior.
 - **Gap-scan signal cleanup**: Removed stale TODO/placeholder comments from CLI feature-flag notes and binding lint configs so repo-wide implementation gap scans only surface actionable runtime/codegen work.
 - **Node task wiring**: Fixed `Taskfile.yaml` so `build:node` targets the real `crates/spikard-node` NAPI package, and Node lint/format tasks no longer try to run TypeScript tooling against the unrelated Rust-only `packages/node/native/src` tree.
+- **Node app lint compatibility**: Cleaned up the active Node app gRPC registration tests and method signatures so the `node:lint:check` task passes its `Biome` phase against the current TypeScript sources.
 - **Node/Ruby startup API cleanup**: Removed the Node `ServerOptions` compatibility type and Ruby `app.run(host:, port:)` fallback. Both bindings now use explicit server configuration objects only.
 - **AsyncAPI support docs**: Corrected the README, init reference, and code generation guide to document the implemented AsyncAPI 3.0.0 support instead of stale AsyncAPI 2.x wording.
 - **Ruby nested dependency resolution**: The Ruby DI handler wrapper now resolves `depends_on` chains recursively, detects missing and circular dependencies, and honors singleton/request caching when invoking factory dependencies.

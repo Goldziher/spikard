@@ -124,7 +124,9 @@ describe("Spikard", () => {
 		expect(app.grpcMethods[0]?.serviceName).toBe("example.UserService");
 		expect(app.grpcMethods[0]?.methodName).toBe("GetUser");
 		expect(app.grpcMethods[0]?.rpcMode).toBe("unary");
-		expect(app.grpcHandlers[app.grpcMethods[0]!.handlerName]).toBeDefined();
+		const registration = app.grpcMethods[0];
+		expect(registration).toBeDefined();
+		expect(app.grpcHandlers[registration?.handlerName ?? ""]).toBeDefined();
 	});
 
 	it("should mount a gRPC registry onto the application", () => {
@@ -133,7 +135,7 @@ describe("Spikard", () => {
 			handleRequest: async () => ({ payload: Buffer.from("one") }),
 		});
 		registry.registerServerStreaming("example.UserService", "ListUsers", {
-			handleServerStream: async () => ({ payload: Buffer.from("two") }),
+			handleServerStream: async () => ({ messages: [Buffer.from("two")] }),
 		});
 
 		app.useGrpc(registry);
@@ -142,9 +144,6 @@ describe("Spikard", () => {
 			"example.UserService/GetUser:unary",
 			"example.UserService/ListUsers:serverStreaming",
 		]);
-		expect(app.grpcMethods.map((entry) => entry.serviceName)).toEqual([
-			"example.UserService",
-			"example.UserService",
-		]);
+		expect(app.grpcMethods.map((entry) => entry.serviceName)).toEqual(["example.UserService", "example.UserService"]);
 	});
 });
