@@ -1,6 +1,7 @@
 use axum::body::Body;
 use http_body_util::BodyExt;
 use spikard_core::JsonRpcMethodInfo;
+use spikard_http::grpc::framing::{encode_grpc_message, parse_unary_grpc_message};
 use spikard_http::grpc::{GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData};
 use spikard_http::handler_trait::{Handler, HandlerResult, RequestData};
 use spikard_http::jsonrpc::JsonRpcConfig;
@@ -88,7 +89,9 @@ async fn server_routes_grpc_requests_when_registry_is_registered() {
                 .method("POST")
                 .uri("/example.UserService/GetUser")
                 .header("content-type", "application/grpc")
-                .body(Body::from(bytes::Bytes::from_static(b"hello")))
+                .body(Body::from(
+                    encode_grpc_message(bytes::Bytes::from_static(b"hello")).unwrap(),
+                ))
                 .unwrap(),
         )
         .await
@@ -103,7 +106,8 @@ async fn server_routes_grpc_requests_when_registry_is_registered() {
     assert_eq!(response.headers().get("x-service").unwrap(), "users");
 
     let bytes = response.into_body().collect().await.unwrap().to_bytes();
-    assert_eq!(bytes, bytes::Bytes::from_static(b"hello"));
+    let payload = parse_unary_grpc_message(&bytes, 1024, None, true).unwrap();
+    assert_eq!(payload, bytes::Bytes::from_static(b"hello"));
 }
 
 #[tokio::test]

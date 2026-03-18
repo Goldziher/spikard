@@ -454,11 +454,11 @@ def fixture_validator(testing_data_root: Path) -> FixtureValidator:
 
 
 @pytest.fixture(scope="session")
-def grpc_server() -> object:
+def grpc_server() -> str:
     """
     Start fixture-driven test gRPC server.
 
-    Implements a gRPC server on localhost:50051 supporting all four streaming modes.
+    Implements a gRPC server on a dynamically assigned loopback port supporting all four streaming modes.
     The server loads fixture data and returns expected responses based on the
     service/method being called, enabling real fixture-driven testing.
 
@@ -805,6 +805,7 @@ def grpc_server() -> object:
 
     # Server lifecycle management
     server = None
+    server_address = ""
     server_ready = threading.Event()
     server_stop = threading.Event()
     server_error = None
@@ -812,11 +813,14 @@ def grpc_server() -> object:
 
     async def run_server() -> None:
         """Run the server in its own async event loop."""
-        nonlocal server, server_error
+        nonlocal server, server_address, server_error
         try:
             server = aio.server()
             server.add_generic_rpc_handlers([GenericHandler()])
-            server.add_insecure_port("[::]:50051")
+            port = server.add_insecure_port("127.0.0.1:0")
+            if port == 0:
+                raise RuntimeError("Failed to allocate a gRPC test port")
+            server_address = f"127.0.0.1:{port}"
             await server.start()
             server_ready.set()
 
@@ -850,7 +854,7 @@ def grpc_server() -> object:
     if server_error:
         pytest.fail(f"Failed to start gRPC server: {server_error}")
 
-    yield server
+    yield server_address
 
     # Cleanup: signal the server to stop and wait for thread
     server_stop.set()

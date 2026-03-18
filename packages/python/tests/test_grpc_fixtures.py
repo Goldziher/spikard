@@ -353,7 +353,7 @@ error_fixtures = load_fixtures_by_category("errors")
 async def test_server_streaming_fixture(
     fixture_name: str,
     fixture: FixtureDict,
-    grpc_server: object,
+    grpc_server: str,
 ) -> None:
     """
     Test server streaming RPC against fixture.
@@ -363,7 +363,7 @@ async def test_server_streaming_fixture(
         fixture: Fixture data (schema-validated)
         grpc_server: Running gRPC server fixture
     """
-    async with GrpcTestClient() as client:
+    async with GrpcTestClient(grpc_server) as client:
         # Extract service and method
         service_name, method_name, _method = extract_service_method(fixture, "server_streaming")
 
@@ -425,7 +425,7 @@ async def test_server_streaming_fixture(
 async def test_client_streaming_fixture(
     fixture_name: str,
     fixture: FixtureDict,
-    grpc_server: object,
+    grpc_server: str,
 ) -> None:
     """
     Test client streaming RPC against fixture.
@@ -435,7 +435,7 @@ async def test_client_streaming_fixture(
         fixture: Fixture data (schema-validated)
         grpc_server: Running gRPC server fixture
     """
-    async with GrpcTestClient() as client:
+    async with GrpcTestClient(grpc_server) as client:
         # Extract service and method
         service_name, method_name, _method = extract_service_method(fixture, "client_streaming")
 
@@ -469,7 +469,7 @@ async def test_client_streaming_fixture(
 async def test_bidirectional_fixture(
     fixture_name: str,
     fixture: FixtureDict,
-    grpc_server: object,
+    grpc_server: str,
 ) -> None:
     """
     Test bidirectional streaming RPC against fixture.
@@ -479,7 +479,7 @@ async def test_bidirectional_fixture(
         fixture: Fixture data (schema-validated)
         grpc_server: Running gRPC server fixture
     """
-    async with GrpcTestClient() as client:
+    async with GrpcTestClient(grpc_server) as client:
         # Extract service and method
         service_name, method_name, _method = extract_service_method(fixture)
 
@@ -527,7 +527,7 @@ async def test_bidirectional_fixture(
 async def test_error_handling_fixture(
     fixture_name: str,
     fixture: FixtureDict,
-    grpc_server: object,
+    grpc_server: str,
 ) -> None:
     """
     Test error cases from fixtures.
@@ -537,7 +537,7 @@ async def test_error_handling_fixture(
         fixture: Fixture data (schema-validated)
         grpc_server: Running gRPC server fixture
     """
-    async with GrpcTestClient() as client:
+    async with GrpcTestClient(grpc_server) as client:
         # Extract service and method
         service_name, method_name, method = extract_service_method(fixture)
 

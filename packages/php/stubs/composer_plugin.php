@@ -34,8 +34,14 @@ namespace Composer\IO;
 
 interface IOInterface
 {
+    /**
+     * @param array<int, string>|string $messages
+     */
     public function write(array|string $messages, bool $newline = true, int $verbosity = 0): void;
 
+    /**
+     * @param array<int, string>|string $messages
+     */
     public function writeError(array|string $messages, bool $newline = true, int $verbosity = 0): void;
 }
 
