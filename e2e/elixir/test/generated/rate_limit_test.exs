@@ -37,8 +37,8 @@ defmodule E2EElixirApp.RateLimitTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["status"] == "ok"
       assert parsed_body["request"] == "under-limit"
+      assert parsed_body["status"] == "ok"
     after
       Spikard.stop(server)
     end

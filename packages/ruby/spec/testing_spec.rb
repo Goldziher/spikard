@@ -48,6 +48,24 @@ RSpec.describe Spikard::Testing do
       client = Spikard::Testing.create_test_client(app)
       expect(client).to be_a(Spikard::Testing::TestClient)
     end
+
+    it 'resolves keyword dependency factories through the native test client' do
+      app = Spikard::App.new
+      app.provide('config', { 'db_url' => 'postgresql://localhost/app' })
+      app.provide('db_pool', depends_on: ['config']) do |config:|
+        { 'pool' => "pool:#{config['db_url']}" }
+      end
+      app.get('/db') do |_request, db_pool:|
+        { pool: db_pool['pool'] }
+      end
+
+      client = Spikard::Testing.create_test_client(app)
+      response = client.get('/db')
+
+      expect(response.status_code).to eq(200)
+      expect(response.json).to eq({ 'pool' => 'pool:postgresql://localhost/app' })
+      client.close
+    end
   end
 end
 

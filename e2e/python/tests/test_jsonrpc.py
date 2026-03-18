@@ -17,8 +17,8 @@ async def test_user_create_success_1():
                 "method": "user.create",
                 "params": {
                     "userData": {
-                        "name": "Charlie Brown",
                         "email": "charlie@example.com",
+                        "name": "Charlie Brown",
                         "password": "SecurePass123!",
                         "role": "user",
                     }
@@ -47,7 +47,7 @@ async def test_user_create_email_already_exists_error():
                 "jsonrpc": "2.0",
                 "method": "user.create",
                 "params": {
-                    "userData": {"name": "Duplicate User", "email": "alice@example.com", "password": "SecurePass123!"}
+                    "userData": {"email": "alice@example.com", "name": "Duplicate User", "password": "SecurePass123!"}
                 },
                 "id": 1,
             },
@@ -71,7 +71,7 @@ async def test_user_create_invalid_email_error():
             json={
                 "jsonrpc": "2.0",
                 "method": "user.create",
-                "params": {"userData": {"name": "Test User", "email": "not-an-email", "password": "SecurePass123!"}},
+                "params": {"userData": {"email": "not-an-email", "name": "Test User", "password": "SecurePass123!"}},
                 "id": 1,
             },
         )
@@ -94,7 +94,7 @@ async def test_user_create_password_too_short_error():
             json={
                 "jsonrpc": "2.0",
                 "method": "user.create",
-                "params": {"userData": {"name": "Test User", "email": "test@example.com", "password": "short"}},
+                "params": {"userData": {"email": "test@example.com", "name": "Test User", "password": "short"}},
                 "id": 1,
             },
         )
@@ -429,7 +429,7 @@ async def test_user_update_success_1():
             json={
                 "jsonrpc": "2.0",
                 "method": "user.update",
-                "params": {"userId": "550e8400-e29b-41d4-a716-446655440000", "updates": {"role": "admin"}},
+                "params": {"updates": {"role": "admin"}, "userId": "550e8400-e29b-41d4-a716-446655440000"},
                 "id": 1,
             },
         )
@@ -454,8 +454,8 @@ async def test_user_update_success_2():
                 "jsonrpc": "2.0",
                 "method": "user.update",
                 "params": {
+                    "updates": {"email": "robert@example.com", "name": "Robert Smith"},
                     "userId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
-                    "updates": {"name": "Robert Smith", "email": "robert@example.com"},
                 },
                 "id": 1,
             },
@@ -480,7 +480,7 @@ async def test_user_update_user_not_found_error():
             json={
                 "jsonrpc": "2.0",
                 "method": "user.update",
-                "params": {"userId": "00000000-0000-0000-0000-000000000000", "updates": {"name": "New Name"}},
+                "params": {"updates": {"name": "New Name"}, "userId": "00000000-0000-0000-0000-000000000000"},
                 "id": 1,
             },
         )
@@ -503,7 +503,7 @@ async def test_user_update_invalid_role_error():
             json={
                 "jsonrpc": "2.0",
                 "method": "user.update",
-                "params": {"userId": "550e8400-e29b-41d4-a716-446655440000", "updates": {"role": "superuser"}},
+                "params": {"updates": {"role": "superuser"}, "userId": "550e8400-e29b-41d4-a716-446655440000"},
                 "id": 1,
             },
         )
@@ -525,15 +525,15 @@ async def test_user_update_batch_request():
             {
                 "jsonrpc": "2.0",
                 "method": "user.update",
-                "params": {"userId": "550e8400-e29b-41d4-a716-446655440000", "updates": {"role": "admin"}},
+                "params": {"updates": {"role": "admin"}, "userId": "550e8400-e29b-41d4-a716-446655440000"},
                 "id": 1,
             },
             {
                 "jsonrpc": "2.0",
                 "method": "user.update",
                 "params": {
+                    "updates": {"email": "robert@example.com", "name": "Robert Smith"},
                     "userId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
-                    "updates": {"name": "Robert Smith", "email": "robert@example.com"},
                 },
                 "id": 2,
             },

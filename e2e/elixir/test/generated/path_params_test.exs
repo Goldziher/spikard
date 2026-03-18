@@ -109,11 +109,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -241,11 +241,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -271,11 +271,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -324,11 +324,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -452,11 +452,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -530,11 +530,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -638,11 +638,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -746,10 +746,10 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["version"] == 1.0
+      assert parsed_body["order_id"] == "c892496f-b1fd-4b91-bdb8-b46f92df1716"
       assert parsed_body["service_id"] == 1
       assert parsed_body["user_id"] == "abc"
-      assert parsed_body["order_id"] == "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+      assert parsed_body["version"] == 1.0
     after
       Spikard.stop(server)
     end
@@ -775,11 +775,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -935,11 +935,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -965,11 +965,11 @@ defmodule E2EElixirApp.PathParamsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end

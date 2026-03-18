@@ -3009,15 +3009,15 @@ async fn test_content_types_csv_response_text_csv() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("content-disposition") {
-        assert_eq!(actual, "attachment; filename=data.csv", "Mismatched header 'content-disposition'");
-    } else {
-        panic!("Expected header 'content-disposition' to be present");
-    }
     if let Some(actual) = headers.get("content-type") {
         assert_eq!(actual, "text/csv; charset=utf-8", "Mismatched header 'content-type'");
     } else {
         panic!("Expected header 'content-type' to be present");
+    }
+    if let Some(actual) = headers.get("content-disposition") {
+        assert_eq!(actual, "attachment; filename=data.csv", "Mismatched header 'content-disposition'");
+    } else {
+        panic!("Expected header 'content-disposition' to be present");
     }
 
 }
@@ -4682,15 +4682,15 @@ async fn test_content_types_pdf_response_application_pdf() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("content-disposition") {
-        assert_eq!(actual, "attachment; filename=document.pdf", "Mismatched header 'content-disposition'");
-    } else {
-        panic!("Expected header 'content-disposition' to be present");
-    }
     if let Some(actual) = headers.get("content-type") {
         assert_eq!(actual, "application/pdf", "Mismatched header 'content-type'");
     } else {
         panic!("Expected header 'content-type' to be present");
+    }
+    if let Some(actual) = headers.get("content-disposition") {
+        assert_eq!(actual, "attachment; filename=document.pdf", "Mismatched header 'content-disposition'");
+    } else {
+        panic!("Expected header 'content-disposition' to be present");
     }
 
 }

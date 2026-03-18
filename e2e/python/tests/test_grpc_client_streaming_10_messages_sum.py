@@ -24,5 +24,5 @@ async def test_grpc_client_streaming_10_messages_sum() -> None:
     response = await handle_grpc_client_streaming_10_messages_sum(request)
 
     # Verify response
-    assert response.payload == b'{"sequence_id":"seq-001","count":10,"sum":550,"status":"COMPLETE"}'
+    assert response.payload == b'{"count":10,"sequence_id":"seq-001","status":"COMPLETE","sum":550}'
     assert response.metadata is not None

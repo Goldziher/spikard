@@ -26,6 +26,6 @@ async def test_grpc_client_streaming_validation_failure_mid_stream() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"processed":2,"status":"VALIDATION_FAILED","error_message":"Invalid email format at message index 2: invalid-email"}'
+        == b'{"error_message":"Invalid email format at message index 2: invalid-email","processed":2,"status":"VALIDATION_FAILED"}'
     )
     assert response.metadata is not None

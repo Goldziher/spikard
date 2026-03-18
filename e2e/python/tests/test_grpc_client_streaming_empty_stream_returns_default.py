@@ -26,6 +26,6 @@ async def test_grpc_client_streaming_empty_stream_returns_default() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"request_id":"empty-stream-req","message_count":0,"result":"DEFAULT_RESULT","is_default":true}'
+        == b'{"is_default":true,"message_count":0,"request_id":"empty-stream-req","result":"DEFAULT_RESULT"}'
     )
     assert response.metadata is not None

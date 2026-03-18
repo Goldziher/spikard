@@ -35,8 +35,8 @@ defmodule E2EElixirApp.RequestIdTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["status"] == "preserved"
       assert parsed_body["echo"] == "trace-123"
+      assert parsed_body["status"] == "preserved"
     after
       Spikard.stop(server)
     end

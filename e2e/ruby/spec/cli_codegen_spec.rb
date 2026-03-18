@@ -101,8 +101,8 @@ RSpec.describe "spikard-cli DTO generation (ruby)" do
       )
 
       contents = File.read(output_path)
-      expect(contents).to include('app.websocket("/chat"')
-      expect(contents).to include("def handler.handle_message")
+      expect(contents).to include("app.websocket('/chat')")
+      expect(contents).to include("def handle_message(message)")
       expect(system("ruby", "-c", output_path)).to be true
     end
   end

@@ -26,6 +26,6 @@ async def test_grpc_client_streaming_rpc() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"file_id":"file-12345","total_bytes":57,"status":"COMPLETED","checksum":"d8e8fca2dc0f896fd7cb4cb0031ba249"}'
+        == b'{"checksum":"d8e8fca2dc0f896fd7cb4cb0031ba249","file_id":"file-12345","status":"COMPLETED","total_bytes":57}'
     )
     assert response.metadata is not None

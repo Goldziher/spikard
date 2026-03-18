@@ -121,9 +121,40 @@ impl LifecycleHook<Request<Body>, Response<Body>> for RubyLifecycleHook {
                                 })
                             };
 
-                            let response = Response::builder()
-                                .status(StatusCode::from_u16(status as u16).unwrap_or(StatusCode::OK))
-                                .header("content-type", "application/json")
+                            let mut response_builder = Response::builder()
+                                .status(StatusCode::from_u16(status as u16).unwrap_or(StatusCode::OK));
+
+                            response_builder = response_builder.header("content-type", "application/json");
+                            if let Some(headers_hash) =
+                                result_hash.get(ruby.to_symbol("headers")).and_then(RHash::from_value)
+                            {
+                                let mut header_pairs: Vec<(String, String)> = Vec::new();
+                                headers_hash
+                                    .foreach(|key: Value, val: Value| {
+                                        let header_name = String::try_convert(key).unwrap_or_else(|_| {
+                                            key.to_r_string()
+                                                .and_then(|s| s.to_string())
+                                                .unwrap_or_else(|_| String::new())
+                                        });
+                                        let header_value = String::try_convert(val).unwrap_or_else(|_| {
+                                            val.to_r_string()
+                                                .and_then(|s| s.to_string())
+                                                .unwrap_or_else(|_| String::new())
+                                        });
+
+                                        if !header_name.is_empty() {
+                                            header_pairs.push((header_name, header_value));
+                                        }
+                                        Ok(ForEach::Continue)
+                                    })
+                                    .map_err(|e| format!("Failed to set headers: {}", e))?;
+
+                                for (header_name, header_value) in header_pairs {
+                                    response_builder = response_builder.header(header_name, header_value);
+                                }
+                            }
+
+                            let response = response_builder
                                 .body(Body::from(body_str))
                                 .map_err(|e| format!("Failed to build response: {}", e))?;
 

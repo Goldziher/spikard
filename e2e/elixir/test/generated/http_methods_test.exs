@@ -82,8 +82,8 @@ defmodule E2EElixirApp.HttpMethodsTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["id"] == 1
-      assert parsed_body["name"] == "Deleted Item"
       assert parsed_body["message"] == "Item deleted successfully"
+      assert parsed_body["name"] == "Deleted Item"
     after
       Spikard.stop(server)
     end
@@ -124,9 +124,9 @@ defmodule E2EElixirApp.HttpMethodsTest do
       url = @base_url <> "/items/"
 
       headers = [
-        {~c"Access-Control-Request-Headers", ~c"Content-Type"},
         {~c"Origin", ~c"https://example.com"},
-        {~c"Access-Control-Request-Method", ~c"POST"}
+        {~c"Access-Control-Request-Method", ~c"POST"},
+        {~c"Access-Control-Request-Headers", ~c"Content-Type"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -163,9 +163,9 @@ defmodule E2EElixirApp.HttpMethodsTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["id"] == 1
+      assert parsed_body["in_stock"] == true
       assert parsed_body["name"] == "Existing Item"
       assert parsed_body["price"] == 79.99
-      assert parsed_body["in_stock"] == true
     after
       Spikard.stop(server)
     end
@@ -183,7 +183,7 @@ defmodule E2EElixirApp.HttpMethodsTest do
     try do
       url = @base_url <> "/items/1"
       headers = [{~c"Content-Type", ~c"application/json"}]
-      req_body = Jason.encode!(%{"name" => "Updated Name", "price" => 89.99, "in_stock" => false})
+      req_body = Jason.encode!(%{"in_stock" => false, "name" => "Updated Name", "price" => 89.99})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -198,9 +198,9 @@ defmodule E2EElixirApp.HttpMethodsTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["id"] == 1
+      assert parsed_body["in_stock"] == false
       assert parsed_body["name"] == "Updated Name"
       assert parsed_body["price"] == 89.99
-      assert parsed_body["in_stock"] == false
     after
       Spikard.stop(server)
     end
@@ -221,11 +221,11 @@ defmodule E2EElixirApp.HttpMethodsTest do
 
       req_body =
         Jason.encode!(%{
-          "id" => 1,
-          "name" => "Updated Item",
           "description" => "Completely replaced",
-          "price" => 99.99,
-          "in_stock" => true
+          "id" => 1,
+          "in_stock" => true,
+          "name" => "Updated Item",
+          "price" => 99.99
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -240,11 +240,11 @@ defmodule E2EElixirApp.HttpMethodsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["id"] == 1
-      assert parsed_body["name"] == "Updated Item"
       assert parsed_body["description"] == "Completely replaced"
-      assert parsed_body["price"] == 99.99
+      assert parsed_body["id"] == 1
       assert parsed_body["in_stock"] == true
+      assert parsed_body["name"] == "Updated Item"
+      assert parsed_body["price"] == 99.99
     after
       Spikard.stop(server)
     end
@@ -340,11 +340,11 @@ defmodule E2EElixirApp.HttpMethodsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -374,11 +374,11 @@ defmodule E2EElixirApp.HttpMethodsTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "2 validation errors in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end

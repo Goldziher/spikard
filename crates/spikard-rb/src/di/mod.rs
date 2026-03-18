@@ -12,7 +12,7 @@ pub use builder::build_dependency_container;
 use http::Request;
 use magnus::prelude::*;
 use magnus::value::{InnerValue, Opaque};
-use magnus::{Error, RHash, Ruby, TryConvert, Value};
+use magnus::{Error, RArray, RHash, Ruby, TryConvert, Value};
 use serde_json::Value as JsonValue;
 use spikard_core::di::{Dependency, DependencyError, ResolvedDependencies};
 use spikard_core::request_data::RequestData;
@@ -160,27 +160,12 @@ impl Dependency for RubyFactoryDependency {
                 });
             }
 
-            let result: Value = if !args.is_empty() {
-                let args_array = ruby.ary_new();
-                for arg in &args {
-                    args_array.push(*arg).map_err(|e| DependencyError::ResolutionFailed {
-                        message: format!("Failed to push arg to array: {}", e),
-                    })?;
-                }
-
-                let splat_lambda = ruby
-                    .eval::<Value>("lambda { |proc, args| proc.call(*args) }")
-                    .map_err(|e| DependencyError::ResolutionFailed {
-                        message: format!("Failed to create splat lambda: {}", e),
-                    })?;
-
-                splat_lambda.funcall("call", (factory_value, args_array))
-            } else {
-                factory_value.funcall("call", ())
-            }
-            .map_err(|e| DependencyError::ResolutionFailed {
-                message: format!("Failed to call factory for '{}': {}", key, e),
-            })?;
+            let result: Value =
+                call_factory_with_dependencies(&ruby, factory_value, &depends_on, &args).map_err(|e| {
+                    DependencyError::ResolutionFailed {
+                        message: format!("Failed to call factory for '{}': {}", key, e),
+                    }
+                })?;
 
             let (value_to_convert, cleanup_callback) = if result.is_kind_of(ruby.class_array()) {
                 let array = magnus::RArray::from_value(result).ok_or_else(|| DependencyError::ResolutionFailed {
@@ -237,6 +222,56 @@ impl Dependency for RubyFactoryDependency {
     fn cacheable(&self) -> bool {
         self.cacheable
     }
+}
+
+fn factory_accepts_keywords(ruby: &Ruby, factory_value: Value) -> Result<bool, Error> {
+    let parameters: RArray = factory_value.funcall("parameters", ())?;
+
+    for entry in parameters.each() {
+        let entry = entry?;
+        let pair = RArray::try_convert(entry)?;
+        let param_type: String = pair.entry::<Value>(0)?.funcall("to_s", ()).map_err(|_| {
+            Error::new(
+                ruby.exception_runtime_error(),
+                "Factory parameter type must be a String or Symbol",
+            )
+        })?;
+
+        if matches!(param_type.as_str(), "key" | "keyreq" | "keyrest") {
+            return Ok(true);
+        }
+    }
+
+    Ok(false)
+}
+
+fn call_factory_with_dependencies(
+    ruby: &Ruby,
+    factory_value: Value,
+    depends_on: &[String],
+    args: &[Value],
+) -> Result<Value, Error> {
+    if args.is_empty() {
+        return factory_value.funcall("call", ());
+    }
+
+    if factory_accepts_keywords(ruby, factory_value)? {
+        let kwargs = ruby.hash_new_capa(depends_on.len());
+        for (dep_key, arg) in depends_on.iter().zip(args.iter()) {
+            kwargs.aset(ruby.to_symbol(dep_key), *arg)?;
+        }
+
+        let keyword_lambda = ruby.eval::<Value>("lambda { |callable, kwargs| callable.call(**kwargs) }")?;
+        return keyword_lambda.funcall("call", (factory_value, kwargs));
+    }
+
+    let args_array = ruby.ary_new();
+    for arg in args {
+        args_array.push(*arg)?;
+    }
+
+    let splat_lambda = ruby.eval::<Value>("lambda { |callable, args| callable.call(*args) }")?;
+    splat_lambda.funcall("call", (factory_value, args_array))
 }
 
 /// Wrapper around a Ruby Value that preserves object identity for singleton mutations

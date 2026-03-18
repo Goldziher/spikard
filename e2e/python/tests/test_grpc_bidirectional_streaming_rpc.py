@@ -27,6 +27,6 @@ async def test_grpc_bidirectional_streaming_rpc() -> None:
     # Verify response
     assert (
         response.payload
-        == b'[{"message_id":1,"user_id":10,"username":"alice","message":"Hello, everyone!","timestamp":1704067200000,"acknowledged":true},{"message_id":2,"user_id":20,"username":"bob","message":"Hey Alice, doing great!","timestamp":1704067205000,"acknowledged":true},{"message_id":3,"user_id":10,"username":"alice","message":"How is everyone doing?","timestamp":1704067210000,"acknowledged":true}]'
+        == b'[{"acknowledged":true,"message":"Hello, everyone!","message_id":1,"timestamp":1704067200000,"user_id":10,"username":"alice"},{"acknowledged":true,"message":"Hey Alice, doing great!","message_id":2,"timestamp":1704067205000,"user_id":20,"username":"bob"},{"acknowledged":true,"message":"How is everyone doing?","message_id":3,"timestamp":1704067210000,"user_id":10,"username":"alice"}]'
     )
     assert response.metadata is not None

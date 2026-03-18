@@ -1,6 +1,6 @@
 [package]
 name = "spikard-e2e-app"
-version = "0.12.0"
+version = "0.1.0"
 edition = "2021"
 publish = false
 
@@ -17,6 +17,7 @@ path = "src/main.rs"
 
 [dependencies]
 spikard = { path = "../../crates/spikard" }
+spikard-core = { path = "../../crates/spikard-core" }
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -30,4 +31,4 @@ axum-test = "18"
 uuid = "1"
 
 [package.metadata.cargo-machete]
-ignored = ["serde", "axum-test", "tracing"]
+ignored = ["axum-test", "serde", "tracing"]

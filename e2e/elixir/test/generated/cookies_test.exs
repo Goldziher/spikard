@@ -117,11 +117,11 @@ defmodule E2EElixirApp.CookiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -173,11 +173,11 @@ defmodule E2EElixirApp.CookiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -229,11 +229,11 @@ defmodule E2EElixirApp.CookiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -285,11 +285,11 @@ defmodule E2EElixirApp.CookiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -307,7 +307,7 @@ defmodule E2EElixirApp.CookiesTest do
 
       headers = [
         {~c"Cookie",
-         ~c"googall_tracker=ga789; fatebook_tracker=tracker456; session_id=session123"}
+         ~c"session_id=session123; googall_tracker=ga789; fatebook_tracker=tracker456"}
       ]
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -317,9 +317,9 @@ defmodule E2EElixirApp.CookiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["session_id"] == "session123"
       assert parsed_body["fatebook_tracker"] == "tracker456"
       assert parsed_body["googall_tracker"] == "ga789"
+      assert parsed_body["session_id"] == "session123"
     after
       Spikard.stop(server)
     end
@@ -419,11 +419,11 @@ defmodule E2EElixirApp.CookiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -469,7 +469,7 @@ defmodule E2EElixirApp.CookiesTest do
     try do
       url = @base_url <> "/cookies/multiple"
       headers = []
-      req_body = Jason.encode!(%{"user" => "john", "session" => "session123"})
+      req_body = Jason.encode!(%{"session" => "session123", "user" => "john"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(

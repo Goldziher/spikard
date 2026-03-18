@@ -180,7 +180,7 @@ RSpec.describe "multipart" do
   it "Optional file upload - missing" do
     app = E2ERubyApp.create_app_multipart_18_optional_file_upload_missing
     client = Spikard::Testing.create_test_client(app)
-    response = client.post("/files/optional", data: {})
+    response = client.post("/files/optional", files: {})
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"file" => nil})
     client.close
@@ -207,7 +207,7 @@ RSpec.describe "multipart" do
   it "Required file upload - missing" do
     app = E2ERubyApp.create_app_multipart_21_required_file_upload_missing
     client = Spikard::Testing.create_test_client(app)
-    response = client.post("/files/required", data: {})
+    response = client.post("/files/required", files: {})
     expect(response.status_code).to eq(422)
     body = response.json
     expect(body).to be_a(Hash)

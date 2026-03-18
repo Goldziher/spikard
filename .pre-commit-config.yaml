@@ -106,11 +106,6 @@ repos:
       - id: shfmt
         args: ["-w", "-i", "2"]
 
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.11.0
-    hooks:
-      - id: shellcheck
-
   # GitHub Actions: linting
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.11
@@ -137,6 +132,14 @@ repos:
         files: ^packages/ruby/.*\.(rb|rbs)$|^packages/ruby/spikard\.gemspec$
         pass_filenames: false
         require_serial: true
+        stages: [commit]
+
+      # Shell scripts
+      - id: shellcheck
+        name: Shell linting (shellcheck)
+        entry: shellcheck
+        language: system
+        types: [shell]
         stages: [commit]
 
       # PHP

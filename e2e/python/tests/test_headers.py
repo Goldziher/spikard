@@ -248,10 +248,10 @@ async def test_authorization_header_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "scheme" in response_data
-        assert response_data["scheme"] == "Digest"
         assert "credentials" in response_data
         assert response_data["credentials"] == "foobar"
+        assert "scheme" in response_data
+        assert response_data["scheme"] == "Digest"
 
 
 async def test_30_bearer_token_format_valid() -> None:
@@ -350,10 +350,10 @@ async def test_basic_authentication_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "username" in response_data
-        assert response_data["username"] == "username"
         assert "password" in response_data
         assert response_data["password"] == "password"
+        assert "username" in response_data
+        assert response_data["username"] == "username"
 
 
 async def test_bearer_token_authentication_missing() -> None:
@@ -403,17 +403,17 @@ async def test_multiple_custom_headers() -> None:
     async with TestClient(create_app_headers_multiple_custom_headers()) as client:
         headers = {
             "X-Trace-Id": "trace-abc",
-            "X-Client-Version": "1.2.3",
             "X-Request-Id": "req-12345",
+            "X-Client-Version": "1.2.3",
         }
         response = await client.get("/headers/multiple", headers=headers)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "x_request_id" in response_data
-        assert response_data["x_request_id"] == "req-12345"
         assert "x_client_version" in response_data
         assert response_data["x_client_version"] == "1.2.3"
+        assert "x_request_id" in response_data
+        assert response_data["x_request_id"] == "req-12345"
         assert "x_trace_id" in response_data
         assert response_data["x_trace_id"] == "trace-abc"
 
@@ -507,10 +507,10 @@ async def test_header_case_insensitivity_access() -> None:
         response_data = response.json()
         assert "content_type_lower" in response_data
         assert response_data["content_type_lower"] == "application/json"
-        assert "content_type_upper" in response_data
-        assert response_data["content_type_upper"] == "application/json"
         assert "content_type_mixed" in response_data
         assert response_data["content_type_mixed"] == "application/json"
+        assert "content_type_upper" in response_data
+        assert response_data["content_type_upper"] == "application/json"
 
 
 async def test_user_agent_header_custom_value() -> None:

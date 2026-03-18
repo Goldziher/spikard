@@ -26,6 +26,6 @@ async def test_grpc_large_repeated_field_with_10_000_items() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"series_id":"metrics-large-series","point_count":10000,"min_value":10.5,"max_value":99.9}'
+        == b'{"max_value":99.9,"min_value":10.5,"point_count":10000,"series_id":"metrics-large-series"}'
     )
     assert response.metadata is not None

@@ -1643,15 +1643,15 @@ async fn test_status_codes_206_partial_content() {
     } else {
         panic!("Expected header 'Content-Range' to be present");
     }
-    if let Some(actual) = headers.get("accept-ranges") {
-        assert_eq!(actual, "bytes", "Mismatched header 'Accept-Ranges'");
-    } else {
-        panic!("Expected header 'Accept-Ranges' to be present");
-    }
     if let Some(actual) = headers.get("content-type") {
         assert_eq!(actual, "application/pdf", "Mismatched header 'Content-Type'");
     } else {
         panic!("Expected header 'Content-Type' to be present");
+    }
+    if let Some(actual) = headers.get("accept-ranges") {
+        assert_eq!(actual, "bytes", "Mismatched header 'Accept-Ranges'");
+    } else {
+        panic!("Expected header 'Accept-Ranges' to be present");
     }
 
 }
@@ -5770,25 +5770,25 @@ async fn test_status_codes_429_too_many_requests() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("x-ratelimit-limit") {
-        assert_eq!(actual, "100", "Mismatched header 'X-RateLimit-Limit'");
+    if let Some(actual) = headers.get("x-ratelimit-remaining") {
+        assert_eq!(actual, "0", "Mismatched header 'X-RateLimit-Remaining'");
     } else {
-        panic!("Expected header 'X-RateLimit-Limit' to be present");
+        panic!("Expected header 'X-RateLimit-Remaining' to be present");
     }
     if let Some(actual) = headers.get("retry-after") {
         assert_eq!(actual, "60", "Mismatched header 'Retry-After'");
     } else {
         panic!("Expected header 'Retry-After' to be present");
     }
-    if let Some(actual) = headers.get("x-ratelimit-remaining") {
-        assert_eq!(actual, "0", "Mismatched header 'X-RateLimit-Remaining'");
-    } else {
-        panic!("Expected header 'X-RateLimit-Remaining' to be present");
-    }
     if let Some(actual) = headers.get("x-ratelimit-reset") {
         assert_eq!(actual, "1609459200", "Mismatched header 'X-RateLimit-Reset'");
     } else {
         panic!("Expected header 'X-RateLimit-Reset' to be present");
+    }
+    if let Some(actual) = headers.get("x-ratelimit-limit") {
+        assert_eq!(actual, "100", "Mismatched header 'X-RateLimit-Limit'");
+    } else {
+        panic!("Expected header 'X-RateLimit-Limit' to be present");
     }
 
 }

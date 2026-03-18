@@ -26,6 +26,6 @@ async def test_grpc_server_streaming_mid_stream_error() -> None:
     # Verify response
     assert (
         response.payload
-        == b'[{"sequence":1,"payload":"Message 1"},{"sequence":2,"payload":"Message 2"},{"sequence":3,"payload":"Message 3"},{"sequence":4,"payload":"Message 4"},{"sequence":5,"payload":"Message 5"}]'
+        == b'[{"payload":"Message 1","sequence":1},{"payload":"Message 2","sequence":2},{"payload":"Message 3","sequence":3},{"payload":"Message 4","sequence":4},{"payload":"Message 5","sequence":5}]'
     )
     assert response.metadata is not None

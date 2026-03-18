@@ -389,10 +389,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/background/events",
         handler: &Handlers.handle_background_background_event_logging/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"event" => %{"type" => "string"}},
           "required" => ["event"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -411,10 +411,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/background/events",
         handler: &Handlers.handle_background_background_event_logging___second_payload/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"event" => %{"type" => "string"}},
           "required" => ["event"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -433,10 +433,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/body-limit/over",
         handler: &Handlers.handle_body_limits_body_over_limit_returns_413/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"note" => %{"type" => "string"}},
           "required" => ["note"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -455,10 +455,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/body-limit/under",
         handler: &Handlers.handle_body_limits_body_under_limit_succeeds/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"note" => %{"type" => "string"}},
           "required" => ["note"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -509,7 +509,7 @@ defmodule E2EElixirApp.AppFactories do
         method: :post,
         path: "/data",
         handler: &Handlers.handle_content_types_13_json_with_charset_utf16/1,
-        request_schema: %{"type" => "object", "properties" => %{"value" => %{"type" => "string"}}}
+        request_schema: %{"properties" => %{"value" => %{"type" => "string"}}, "type" => "object"}
       }
     ]
 
@@ -527,9 +527,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/data",
         handler: &Handlers.handle_content_types_14_content_type_case_insensitive/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"name" => %{"type" => "string"}},
           "required" => ["name"],
-          "properties" => %{"name" => %{"type" => "string"}}
+          "type" => "object"
         }
       }
     ]
@@ -564,9 +564,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/data",
         handler: &Handlers.handle_content_types_16_text_plain_not_accepted/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"data" => %{"type" => "string"}},
           "required" => ["data"],
-          "properties" => %{"data" => %{"type" => "string"}}
+          "type" => "object"
         }
       }
     ]
@@ -585,9 +585,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/api/v1/resource",
         handler: &Handlers.handle_content_types_17_vendor_json_accepted/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"data" => %{"type" => "string"}},
           "required" => ["data"],
-          "properties" => %{"data" => %{"type" => "string"}}
+          "type" => "object"
         }
       }
     ]
@@ -605,7 +605,7 @@ defmodule E2EElixirApp.AppFactories do
         method: :post,
         path: "/data",
         handler: &Handlers.handle_content_types_18_content_type_with_multiple_params/1,
-        request_schema: %{"type" => "object", "properties" => %{"value" => %{"type" => "string"}}}
+        request_schema: %{"properties" => %{"value" => %{"type" => "string"}}, "type" => "object"}
       }
     ]
 
@@ -623,9 +623,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/data",
         handler: &Handlers.handle_content_types_19_missing_content_type_default_json/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"name" => %{"type" => "string"}},
           "required" => ["name"],
-          "properties" => %{"name" => %{"type" => "string"}}
+          "type" => "object"
         }
       }
     ]
@@ -648,7 +648,7 @@ defmodule E2EElixirApp.AppFactories do
           "properties" => %{"Content-Length" => %{"source" => "header", "type" => "string"}},
           "required" => []
         },
-        request_schema: %{"type" => "object", "properties" => %{"value" => %{"type" => "string"}}}
+        request_schema: %{"properties" => %{"value" => %{"type" => "string"}}, "type" => "object"}
       }
     ]
 
@@ -1107,9 +1107,9 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "session_id" => %{"source" => "cookie", "type" => "string"},
             "fatebook_tracker" => %{"source" => "cookie", "type" => "string"},
-            "googall_tracker" => %{"source" => "cookie", "type" => "string"}
+            "googall_tracker" => %{"source" => "cookie", "type" => "string"},
+            "session_id" => %{"source" => "cookie", "type" => "string"}
           },
           "required" => []
         }
@@ -1195,8 +1195,8 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "session_id" => %{"source" => "cookie", "type" => "string"},
-            "fatebook_tracker" => %{"source" => "cookie", "type" => "string"}
+            "fatebook_tracker" => %{"source" => "cookie", "type" => "string"},
+            "session_id" => %{"source" => "cookie", "type" => "string"}
           },
           "required" => ["session_id"]
         }
@@ -1238,10 +1238,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/cookies/multiple",
         handler: &Handlers.handle_cookies_response___multiple_cookies/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"user" => %{"type" => "string"}, "session" => %{"type" => "string"}},
+          "additionalProperties" => false,
+          "properties" => %{"session" => %{"type" => "string"}, "user" => %{"type" => "string"}},
           "required" => ["user", "session"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -1260,10 +1260,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/cookies/session",
         handler: &Handlers.handle_cookies_response___session_cookie__no_max_age_/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"value" => %{"type" => "string"}},
           "required" => ["value"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -1282,10 +1282,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/cookies/samesite-lax",
         handler: &Handlers.handle_cookies_response_cookie_with_samesite_lax/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"value" => %{"type" => "string"}},
           "required" => ["value"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -1304,10 +1304,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/cookies/samesite-none",
         handler: &Handlers.handle_cookies_response_cookie_with_samesite_none/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"value" => %{"type" => "string"}},
           "required" => ["value"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -1326,10 +1326,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/cookies/samesite-strict",
         handler: &Handlers.handle_cookies_response_cookie_with_samesite_strict/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"value" => %{"type" => "string"}},
           "required" => ["value"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -1364,10 +1364,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/cookies/set-with-domain",
         handler: &Handlers.handle_cookies_response_cookie_with_domain_attribute/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"value" => %{"type" => "string"}},
           "required" => ["value"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -1386,10 +1386,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/cookies/set-with-path",
         handler: &Handlers.handle_cookies_response_cookie_with_path_attribute/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"value" => %{"type" => "string"}},
           "required" => ["value"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -1426,9 +1426,9 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "Origin" => %{"source" => "header", "type" => "string"},
+            "Access-Control-Request-Headers" => %{"source" => "header", "type" => "string"},
             "Access-Control-Request-Method" => %{"source" => "header", "type" => "string"},
-            "Access-Control-Request-Headers" => %{"source" => "header", "type" => "string"}
+            "Origin" => %{"source" => "header", "type" => "string"}
           },
           "required" => []
         }
@@ -1451,9 +1451,9 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "Origin" => %{"source" => "header", "type" => "string"},
+            "Access-Control-Request-Headers" => %{"source" => "header", "type" => "string"},
             "Access-Control-Request-Method" => %{"source" => "header", "type" => "string"},
-            "Access-Control-Request-Headers" => %{"source" => "header", "type" => "string"}
+            "Origin" => %{"source" => "header", "type" => "string"}
           },
           "required" => []
         }
@@ -1476,9 +1476,9 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "Origin" => %{"source" => "header", "type" => "string"},
+            "Access-Control-Request-Headers" => %{"source" => "header", "type" => "string"},
             "Access-Control-Request-Method" => %{"source" => "header", "type" => "string"},
-            "Access-Control-Request-Headers" => %{"source" => "header", "type" => "string"}
+            "Origin" => %{"source" => "header", "type" => "string"}
           },
           "required" => []
         }
@@ -2118,9 +2118,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/calculate",
         handler: &Handlers.handle_edge_cases_15_float_precision_preservation/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"value" => %{"type" => "number"}},
           "required" => ["value"],
-          "properties" => %{"value" => %{"type" => "number"}}
+          "type" => "object"
         }
       }
     ]
@@ -2139,9 +2139,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/data",
         handler: &Handlers.handle_edge_cases_16_negative_zero_handling/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"offset" => %{"type" => "number"}},
           "required" => ["offset"],
-          "properties" => %{"offset" => %{"type" => "number"}}
+          "type" => "object"
         }
       }
     ]
@@ -2160,9 +2160,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/text",
         handler: &Handlers.handle_edge_cases_17_extremely_long_string/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"content" => %{"maxLength" => 10000, "type" => "string"}},
           "required" => ["content"],
-          "properties" => %{"content" => %{"type" => "string", "maxLength" => 10000}}
+          "type" => "object"
         }
       }
     ]
@@ -2181,9 +2181,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_edge_cases_18_unicode_normalization/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"name" => %{"minLength" => 1, "type" => "string"}},
           "required" => ["name"],
-          "properties" => %{"name" => %{"type" => "string", "minLength" => 1}}
+          "type" => "object"
         }
       }
     ]
@@ -2202,9 +2202,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/messages",
         handler: &Handlers.handle_edge_cases_19_emoji_in_strings/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"text" => %{"maxLength" => 100, "minLength" => 1, "type" => "string"}},
           "required" => ["text"],
-          "properties" => %{"text" => %{"type" => "string", "minLength" => 1, "maxLength" => 100}}
+          "type" => "object"
         }
       }
     ]
@@ -2223,9 +2223,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files",
         handler: &Handlers.handle_edge_cases_20_null_byte_in_string/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"filename" => %{"pattern" => "^[^\\x00]+$", "type" => "string"}},
           "required" => ["filename"],
-          "properties" => %{"filename" => %{"type" => "string", "pattern" => "^[^\\x00]+$"}}
+          "type" => "object"
         }
       }
     ]
@@ -2244,9 +2244,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/calculate",
         handler: &Handlers.handle_edge_cases_21_scientific_notation_number/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"value" => %{"minimum" => 0, "type" => "number"}},
           "required" => ["value"],
-          "properties" => %{"value" => %{"type" => "number", "minimum" => 0}}
+          "type" => "object"
         }
       }
     ]
@@ -2303,9 +2303,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items",
         handler: &Handlers.handle_edge_cases_24_array_with_holes/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"items" => %{"items" => %{"type" => "string"}, "type" => "array"}},
           "required" => ["items"],
-          "properties" => %{"items" => %{"type" => "array", "items" => %{"type" => "string"}}}
+          "type" => "object"
         }
       }
     ]
@@ -2324,83 +2324,83 @@ defmodule E2EElixirApp.AppFactories do
         path: "/nested/",
         handler: &Handlers.handle_edge_cases_deeply_nested_structure__10__levels_/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "level1" => %{
-              "type" => "object",
+              "additionalProperties" => false,
               "properties" => %{
                 "level2" => %{
-                  "type" => "object",
+                  "additionalProperties" => false,
                   "properties" => %{
                     "level3" => %{
-                      "type" => "object",
+                      "additionalProperties" => false,
                       "properties" => %{
                         "level4" => %{
-                          "type" => "object",
+                          "additionalProperties" => false,
                           "properties" => %{
                             "level5" => %{
-                              "type" => "object",
+                              "additionalProperties" => false,
                               "properties" => %{
                                 "level6" => %{
-                                  "type" => "object",
+                                  "additionalProperties" => false,
                                   "properties" => %{
                                     "level7" => %{
-                                      "type" => "object",
+                                      "additionalProperties" => false,
                                       "properties" => %{
                                         "level8" => %{
-                                          "type" => "object",
+                                          "additionalProperties" => false,
                                           "properties" => %{
                                             "level9" => %{
-                                              "type" => "object",
+                                              "additionalProperties" => false,
                                               "properties" => %{
                                                 "level10" => %{
-                                                  "type" => "object",
-                                                  "properties" => %{
-                                                    "value" => %{"type" => "string"},
-                                                    "depth" => %{"type" => "integer"}
-                                                  },
                                                   "additionalProperties" => false,
-                                                  "required" => ["value", "depth"]
+                                                  "properties" => %{
+                                                    "depth" => %{"type" => "integer"},
+                                                    "value" => %{"type" => "string"}
+                                                  },
+                                                  "required" => ["value", "depth"],
+                                                  "type" => "object"
                                                 }
                                               },
-                                              "additionalProperties" => false,
-                                              "required" => ["level10"]
+                                              "required" => ["level10"],
+                                              "type" => "object"
                                             }
                                           },
-                                          "additionalProperties" => false,
-                                          "required" => ["level9"]
+                                          "required" => ["level9"],
+                                          "type" => "object"
                                         }
                                       },
-                                      "additionalProperties" => false,
-                                      "required" => ["level8"]
+                                      "required" => ["level8"],
+                                      "type" => "object"
                                     }
                                   },
-                                  "additionalProperties" => false,
-                                  "required" => ["level7"]
+                                  "required" => ["level7"],
+                                  "type" => "object"
                                 }
                               },
-                              "additionalProperties" => false,
-                              "required" => ["level6"]
+                              "required" => ["level6"],
+                              "type" => "object"
                             }
                           },
-                          "additionalProperties" => false,
-                          "required" => ["level5"]
+                          "required" => ["level5"],
+                          "type" => "object"
                         }
                       },
-                      "additionalProperties" => false,
-                      "required" => ["level4"]
+                      "required" => ["level4"],
+                      "type" => "object"
                     }
                   },
-                  "additionalProperties" => false,
-                  "required" => ["level3"]
+                  "required" => ["level3"],
+                  "type" => "object"
                 }
               },
-              "additionalProperties" => false,
-              "required" => ["level2"]
+              "required" => ["level2"],
+              "type" => "object"
             }
           },
-          "additionalProperties" => false,
-          "required" => ["level1"]
+          "required" => ["level1"],
+          "type" => "object"
         }
       }
     ]
@@ -2419,20 +2419,19 @@ defmodule E2EElixirApp.AppFactories do
         path: "/nulls/",
         handler: &Handlers.handle_edge_cases_empty_and_null_value_handling/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "explicit_null" => %{"type" => "null"},
-            "empty_string" => %{"type" => "string"},
-            "empty_array" => %{"type" => "array", "items" => %{}},
-            "empty_object" => %{
-              "type" => "object",
-              "properties" => %{},
-              "additionalProperties" => false
-            },
-            "zero_number" => %{"type" => "integer"},
-            "false_boolean" => %{"type" => "boolean"}
-          },
           "additionalProperties" => false,
+          "properties" => %{
+            "empty_array" => %{"items" => %{}, "type" => "array"},
+            "empty_object" => %{
+              "additionalProperties" => false,
+              "properties" => %{},
+              "type" => "object"
+            },
+            "empty_string" => %{"type" => "string"},
+            "explicit_null" => %{"type" => "null"},
+            "false_boolean" => %{"type" => "boolean"},
+            "zero_number" => %{"type" => "integer"}
+          },
           "required" => [
             "explicit_null",
             "empty_string",
@@ -2440,7 +2439,8 @@ defmodule E2EElixirApp.AppFactories do
             "empty_object",
             "zero_number",
             "false_boolean"
-          ]
+          ],
+          "type" => "object"
         }
       }
     ]
@@ -2459,16 +2459,15 @@ defmodule E2EElixirApp.AppFactories do
         path: "/calculations/",
         handler: &Handlers.handle_edge_cases_float_precision_and_rounding/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
-            "value1" => %{"type" => "number"},
-            "value2" => %{"type" => "number"},
             "expected_sum" => %{"type" => "number"},
             "precise_value" => %{"type" => "number"},
-            "very_small" => %{"type" => "number"},
-            "very_large" => %{"type" => "number"}
+            "value1" => %{"type" => "number"},
+            "value2" => %{"type" => "number"},
+            "very_large" => %{"type" => "number"},
+            "very_small" => %{"type" => "number"}
           },
-          "additionalProperties" => false,
           "required" => [
             "value1",
             "value2",
@@ -2476,7 +2475,8 @@ defmodule E2EElixirApp.AppFactories do
             "precise_value",
             "very_small",
             "very_large"
-          ]
+          ],
+          "type" => "object"
         }
       }
     ]
@@ -2495,14 +2495,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/numbers/",
         handler: &Handlers.handle_edge_cases_large_integer_boundary_values/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
-            "max_safe_int" => %{"type" => "integer"},
             "large_int" => %{"type" => "integer"},
+            "max_safe_int" => %{"type" => "integer"},
             "negative_large" => %{"type" => "integer"}
           },
-          "additionalProperties" => false,
-          "required" => ["max_safe_int", "large_int", "negative_large"]
+          "required" => ["max_safe_int", "large_int", "negative_large"],
+          "type" => "object"
         }
       }
     ]
@@ -2521,17 +2521,16 @@ defmodule E2EElixirApp.AppFactories do
         path: "/strings/",
         handler: &Handlers.handle_edge_cases_special_string_values_and_escaping/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "empty_string" => %{"type" => "string"},
-            "whitespace" => %{"type" => "string"},
-            "tabs_newlines" => %{"type" => "string"},
-            "quotes" => %{"type" => "string"},
-            "backslashes" => %{"type" => "string"},
-            "unicode_escapes" => %{"type" => "string"},
-            "special_chars" => %{"type" => "string"}
-          },
           "additionalProperties" => false,
+          "properties" => %{
+            "backslashes" => %{"type" => "string"},
+            "empty_string" => %{"type" => "string"},
+            "quotes" => %{"type" => "string"},
+            "special_chars" => %{"type" => "string"},
+            "tabs_newlines" => %{"type" => "string"},
+            "unicode_escapes" => %{"type" => "string"},
+            "whitespace" => %{"type" => "string"}
+          },
           "required" => [
             "empty_string",
             "whitespace",
@@ -2540,7 +2539,8 @@ defmodule E2EElixirApp.AppFactories do
             "backslashes",
             "unicode_escapes",
             "special_chars"
-          ]
+          ],
+          "type" => "object"
         }
       }
     ]
@@ -2559,15 +2559,15 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_edge_cases_unicode_and_emoji_handling/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "description" => %{"type" => "string"},
-            "tags" => %{"type" => "array", "items" => %{"type" => "string"}},
-            "emoji_reactions" => %{"type" => "string"}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "description", "tags", "emoji_reactions"]
+          "properties" => %{
+            "description" => %{"type" => "string"},
+            "emoji_reactions" => %{"type" => "string"},
+            "name" => %{"type" => "string"},
+            "tags" => %{"items" => %{"type" => "string"}, "type" => "array"}
+          },
+          "required" => ["name", "description", "tags", "emoji_reactions"],
+          "type" => "object"
         }
       }
     ]
@@ -2943,10 +2943,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/echo",
         handler: &Handlers.handle_headers_header_case_insensitivity___access/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"test" => %{"type" => "string"}},
           "additionalProperties" => false,
-          "required" => ["test"]
+          "properties" => %{"test" => %{"type" => "string"}},
+          "required" => ["test"],
+          "type" => "object"
         }
       }
     ]
@@ -3109,11 +3109,11 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "X-Request-Id" => %{"source" => "header", "type" => "string"},
             "X-Client-Version" => %{"source" => "header", "type" => "string"},
+            "X-Request-Id" => %{"source" => "header", "type" => "string"},
             "X-Trace-Id" => %{"source" => "header", "type" => "string"}
           },
-          "required" => ["X-Request-Id", "X-Client-Version", "X-Trace-Id"]
+          "required" => ["X-Client-Version", "X-Request-Id", "X-Trace-Id"]
         }
       }
     ]
@@ -3451,9 +3451,9 @@ defmodule E2EElixirApp.AppFactories do
           "required" => ["id"]
         },
         request_schema: %{
-          "type" => "object",
           "properties" => %{"price" => %{"type" => "number"}},
-          "required" => ["price"]
+          "required" => ["price"],
+          "type" => "object"
         }
       }
     ]
@@ -3477,13 +3477,13 @@ defmodule E2EElixirApp.AppFactories do
           "required" => ["id"]
         },
         request_schema: %{
-          "type" => "object",
           "properties" => %{
+            "in_stock" => %{"type" => "boolean"},
             "name" => %{"type" => "string"},
-            "price" => %{"type" => "number"},
-            "in_stock" => %{"type" => "boolean"}
+            "price" => %{"type" => "number"}
           },
-          "required" => ["in_stock", "name", "price"]
+          "required" => ["in_stock", "name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -3507,15 +3507,15 @@ defmodule E2EElixirApp.AppFactories do
           "required" => ["id"]
         },
         request_schema: %{
-          "type" => "object",
           "properties" => %{
-            "id" => %{"type" => "integer"},
-            "name" => %{"type" => "string"},
             "description" => %{"type" => "string"},
-            "price" => %{"type" => "number"},
-            "in_stock" => %{"type" => "boolean"}
+            "id" => %{"type" => "integer"},
+            "in_stock" => %{"type" => "boolean"},
+            "name" => %{"type" => "string"},
+            "price" => %{"type" => "number"}
           },
-          "required" => ["description", "id", "in_stock", "name", "price"]
+          "required" => ["description", "id", "in_stock", "name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -3539,13 +3539,13 @@ defmodule E2EElixirApp.AppFactories do
           "required" => ["id"]
         },
         request_schema: %{
-          "type" => "object",
           "properties" => %{
             "id" => %{"type" => "integer"},
             "name" => %{"type" => "string"},
             "price" => %{"type" => "number"}
           },
-          "required" => ["id", "name", "price"]
+          "required" => ["id", "name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -3569,13 +3569,13 @@ defmodule E2EElixirApp.AppFactories do
           "required" => ["id"]
         },
         request_schema: %{
-          "type" => "object",
           "properties" => %{
             "id" => %{"type" => "integer"},
             "name" => %{"type" => "string"},
             "price" => %{"type" => "number"}
           },
-          "required" => ["id", "name", "price"]
+          "required" => ["id", "name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -3599,13 +3599,13 @@ defmodule E2EElixirApp.AppFactories do
           "required" => ["id"]
         },
         request_schema: %{
-          "type" => "object",
           "properties" => %{
             "id" => %{"type" => "integer"},
             "name" => %{"type" => "string"},
             "price" => %{"type" => "string"}
           },
-          "required" => ["price"]
+          "required" => ["price"],
+          "type" => "object"
         }
       }
     ]
@@ -3630,13 +3630,13 @@ defmodule E2EElixirApp.AppFactories do
         },
         request_schema: %{
           "$schema" => "https://json-schema.org/draft/2020-12/schema",
-          "type" => "object",
-          "required" => ["id", "name", "price"],
           "properties" => %{
             "id" => %{"type" => "integer"},
-            "name" => %{"type" => "string", "minLength" => 3},
-            "price" => %{"type" => "number", "exclusiveMinimum" => 0}
-          }
+            "name" => %{"minLength" => 3, "type" => "string"},
+            "price" => %{"exclusiveMinimum" => 0, "type" => "number"}
+          },
+          "required" => ["id", "name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -3655,18 +3655,18 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_json_bodies_29_nested_object_validation_success/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["profile"],
           "properties" => %{
             "profile" => %{
-              "type" => "object",
-              "required" => ["name", "email"],
               "properties" => %{
-                "name" => %{"type" => "string", "minLength" => 1},
-                "email" => %{"type" => "string", "format" => "email"}
-              }
+                "email" => %{"format" => "email", "type" => "string"},
+                "name" => %{"minLength" => 1, "type" => "string"}
+              },
+              "required" => ["name", "email"],
+              "type" => "object"
             }
-          }
+          },
+          "required" => ["profile"],
+          "type" => "object"
         }
       }
     ]
@@ -3685,18 +3685,18 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_json_bodies_30_nested_object_missing_field/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["profile"],
           "properties" => %{
             "profile" => %{
-              "type" => "object",
-              "required" => ["name", "email"],
               "properties" => %{
-                "name" => %{"type" => "string", "minLength" => 1},
-                "email" => %{"type" => "string", "format" => "email"}
-              }
+                "email" => %{"format" => "email", "type" => "string"},
+                "name" => %{"minLength" => 1, "type" => "string"}
+              },
+              "required" => ["name", "email"],
+              "type" => "object"
             }
-          }
+          },
+          "required" => ["profile"],
+          "type" => "object"
         }
       }
     ]
@@ -3715,12 +3715,12 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_json_bodies_31_nullable_property_null_value/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["name"],
           "properties" => %{
-            "name" => %{"type" => "string"},
-            "description" => %{"type" => ["string", "null"]}
-          }
+            "description" => %{"type" => ["string", "null"]},
+            "name" => %{"type" => "string"}
+          },
+          "required" => ["name"],
+          "type" => "object"
         }
       }
     ]
@@ -3739,19 +3739,19 @@ defmodule E2EElixirApp.AppFactories do
         path: "/products",
         handler: &Handlers.handle_json_bodies_32_schema_ref_definitions/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["product"],
-          "properties" => %{"product" => %{"$ref" => "#/definitions/Product"}},
           "definitions" => %{
             "Product" => %{
-              "type" => "object",
-              "required" => ["name", "price"],
               "properties" => %{
                 "name" => %{"type" => "string"},
-                "price" => %{"type" => "number", "minimum" => 0}
-              }
+                "price" => %{"minimum" => 0, "type" => "number"}
+              },
+              "required" => ["name", "price"],
+              "type" => "object"
             }
-          }
+          },
+          "properties" => %{"product" => %{"$ref" => "#/definitions/Product"}},
+          "required" => ["product"],
+          "type" => "object"
         }
       }
     ]
@@ -3772,14 +3772,14 @@ defmodule E2EElixirApp.AppFactories do
         request_schema: %{
           "allOf" => [
             %{
-              "type" => "object",
+              "properties" => %{"name" => %{"type" => "string"}},
               "required" => ["name"],
-              "properties" => %{"name" => %{"type" => "string"}}
+              "type" => "object"
             },
             %{
-              "type" => "object",
+              "properties" => %{"price" => %{"minimum" => 0, "type" => "number"}},
               "required" => ["price"],
-              "properties" => %{"price" => %{"type" => "number", "minimum" => 0}}
+              "type" => "object"
             }
           ]
         }
@@ -3800,10 +3800,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_json_bodies_34_additional_properties_false/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
+          "properties" => %{"email" => %{"type" => "string"}, "name" => %{"type" => "string"}},
           "required" => ["name"],
-          "properties" => %{"name" => %{"type" => "string"}, "email" => %{"type" => "string"}},
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -3824,16 +3824,16 @@ defmodule E2EElixirApp.AppFactories do
         request_schema: %{
           "oneOf" => [
             %{
-              "type" => "object",
-              "required" => ["credit_card"],
               "properties" => %{
-                "credit_card" => %{"type" => "string", "pattern" => "^[0-9]{16}$"}
-              }
+                "credit_card" => %{"pattern" => "^[0-9]{16}$", "type" => "string"}
+              },
+              "required" => ["credit_card"],
+              "type" => "object"
             },
             %{
-              "type" => "object",
+              "properties" => %{"paypal_email" => %{"format" => "email", "type" => "string"}},
               "required" => ["paypal_email"],
-              "properties" => %{"paypal_email" => %{"type" => "string", "format" => "email"}}
+              "type" => "object"
             }
           ]
         }
@@ -3856,16 +3856,16 @@ defmodule E2EElixirApp.AppFactories do
         request_schema: %{
           "oneOf" => [
             %{
-              "type" => "object",
-              "required" => ["credit_card"],
               "properties" => %{
-                "credit_card" => %{"type" => "string", "pattern" => "^[0-9]{16}$"}
-              }
+                "credit_card" => %{"pattern" => "^[0-9]{16}$", "type" => "string"}
+              },
+              "required" => ["credit_card"],
+              "type" => "object"
             },
             %{
-              "type" => "object",
+              "properties" => %{"paypal_email" => %{"format" => "email", "type" => "string"}},
               "required" => ["paypal_email"],
-              "properties" => %{"paypal_email" => %{"type" => "string", "format" => "email"}}
+              "type" => "object"
             }
           ]
         }
@@ -3888,16 +3888,16 @@ defmodule E2EElixirApp.AppFactories do
         request_schema: %{
           "oneOf" => [
             %{
-              "type" => "object",
-              "required" => ["credit_card"],
               "properties" => %{
-                "credit_card" => %{"type" => "string", "pattern" => "^[0-9]{16}$"}
-              }
+                "credit_card" => %{"pattern" => "^[0-9]{16}$", "type" => "string"}
+              },
+              "required" => ["credit_card"],
+              "type" => "object"
             },
             %{
-              "type" => "object",
+              "properties" => %{"paypal_email" => %{"format" => "email", "type" => "string"}},
               "required" => ["paypal_email"],
-              "properties" => %{"paypal_email" => %{"type" => "string", "format" => "email"}}
+              "type" => "object"
             }
           ]
         }
@@ -3918,10 +3918,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/contact",
         handler: &Handlers.handle_json_bodies_38_anyof_schema_success/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["name"],
+          "anyOf" => [%{"required" => ["email"]}, %{"required" => ["phone"]}],
           "properties" => %{"name" => %{"type" => "string"}},
-          "anyOf" => [%{"required" => ["email"]}, %{"required" => ["phone"]}]
+          "required" => ["name"],
+          "type" => "object"
         }
       }
     ]
@@ -3940,14 +3940,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/contact",
         handler: &Handlers.handle_json_bodies_39_anyof_schema_multiple_match_success/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["name"],
+          "anyOf" => [%{"required" => ["email"]}, %{"required" => ["phone"]}],
           "properties" => %{
+            "email" => %{"format" => "email", "type" => "string"},
             "name" => %{"type" => "string"},
-            "email" => %{"type" => "string", "format" => "email"},
             "phone" => %{"type" => "string"}
           },
-          "anyOf" => [%{"required" => ["email"]}, %{"required" => ["phone"]}]
+          "required" => ["name"],
+          "type" => "object"
         }
       }
     ]
@@ -3966,14 +3966,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/contact",
         handler: &Handlers.handle_json_bodies_40_anyof_schema_failure/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["name"],
+          "anyOf" => [%{"required" => ["email"]}, %{"required" => ["phone"]}],
           "properties" => %{
+            "email" => %{"format" => "email", "type" => "string"},
             "name" => %{"type" => "string"},
-            "email" => %{"type" => "string", "format" => "email"},
             "phone" => %{"type" => "string"}
           },
-          "anyOf" => [%{"required" => ["email"]}, %{"required" => ["phone"]}]
+          "required" => ["name"],
+          "type" => "object"
         }
       }
     ]
@@ -3992,11 +3992,11 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_json_bodies_41_not_schema_success/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["username"],
           "properties" => %{
-            "username" => %{"type" => "string", "not" => %{"enum" => ["admin", "root", "system"]}}
-          }
+            "username" => %{"not" => %{"enum" => ["admin", "root", "system"]}, "type" => "string"}
+          },
+          "required" => ["username"],
+          "type" => "object"
         }
       }
     ]
@@ -4015,11 +4015,11 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_json_bodies_42_not_schema_failure/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["username"],
           "properties" => %{
-            "username" => %{"type" => "string", "not" => %{"enum" => ["admin", "root", "system"]}}
-          }
+            "username" => %{"not" => %{"enum" => ["admin", "root", "system"]}, "type" => "string"}
+          },
+          "required" => ["username"],
+          "type" => "object"
         }
       }
     ]
@@ -4038,12 +4038,12 @@ defmodule E2EElixirApp.AppFactories do
         path: "/api/v1/data",
         handler: &Handlers.handle_json_bodies_43_const_validation_success/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["version", "data"],
           "properties" => %{
-            "version" => %{"type" => "string", "const" => "1.0"},
-            "data" => %{"type" => "string"}
-          }
+            "data" => %{"type" => "string"},
+            "version" => %{"const" => "1.0", "type" => "string"}
+          },
+          "required" => ["version", "data"],
+          "type" => "object"
         }
       }
     ]
@@ -4062,12 +4062,12 @@ defmodule E2EElixirApp.AppFactories do
         path: "/api/v1/data",
         handler: &Handlers.handle_json_bodies_44_const_validation_failure/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["version", "data"],
           "properties" => %{
-            "version" => %{"type" => "string", "const" => "1.0"},
-            "data" => %{"type" => "string"}
-          }
+            "data" => %{"type" => "string"},
+            "version" => %{"const" => "1.0", "type" => "string"}
+          },
+          "required" => ["version", "data"],
+          "type" => "object"
         }
       }
     ]
@@ -4085,7 +4085,7 @@ defmodule E2EElixirApp.AppFactories do
         method: :post,
         path: "/config",
         handler: &Handlers.handle_json_bodies_45_minproperties_validation_success/1,
-        request_schema: %{"type" => "object", "minProperties" => 2}
+        request_schema: %{"minProperties" => 2, "type" => "object"}
       }
     ]
 
@@ -4102,7 +4102,7 @@ defmodule E2EElixirApp.AppFactories do
         method: :post,
         path: "/config",
         handler: &Handlers.handle_json_bodies_46_minproperties_validation_failure/1,
-        request_schema: %{"type" => "object", "minProperties" => 2}
+        request_schema: %{"minProperties" => 2, "type" => "object"}
       }
     ]
 
@@ -4119,7 +4119,7 @@ defmodule E2EElixirApp.AppFactories do
         method: :post,
         path: "/config",
         handler: &Handlers.handle_json_bodies_47_maxproperties_validation_failure/1,
-        request_schema: %{"type" => "object", "maxProperties" => 3}
+        request_schema: %{"maxProperties" => 3, "type" => "object"}
       }
     ]
 
@@ -4137,13 +4137,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/billing",
         handler: &Handlers.handle_json_bodies_48_dependencies_validation_success/1,
         request_schema: %{
-          "type" => "object",
+          "dependencies" => %{"credit_card" => ["billing_address"]},
           "properties" => %{
-            "name" => %{"type" => "string"},
+            "billing_address" => %{"type" => "string"},
             "credit_card" => %{"type" => "string"},
-            "billing_address" => %{"type" => "string"}
+            "name" => %{"type" => "string"}
           },
-          "dependencies" => %{"credit_card" => ["billing_address"]}
+          "type" => "object"
         }
       }
     ]
@@ -4162,13 +4162,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/billing",
         handler: &Handlers.handle_json_bodies_49_dependencies_validation_failure/1,
         request_schema: %{
-          "type" => "object",
+          "dependencies" => %{"credit_card" => ["billing_address"]},
           "properties" => %{
-            "name" => %{"type" => "string"},
+            "billing_address" => %{"type" => "string"},
             "credit_card" => %{"type" => "string"},
-            "billing_address" => %{"type" => "string"}
+            "name" => %{"type" => "string"}
           },
-          "dependencies" => %{"credit_card" => ["billing_address"]}
+          "type" => "object"
         }
       }
     ]
@@ -4187,33 +4187,33 @@ defmodule E2EElixirApp.AppFactories do
         path: "/data",
         handler: &Handlers.handle_json_bodies_50_deep_nesting_4_levels/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["user"],
           "properties" => %{
             "user" => %{
-              "type" => "object",
-              "required" => ["profile"],
               "properties" => %{
                 "profile" => %{
-                  "type" => "object",
-                  "required" => ["contact"],
                   "properties" => %{
                     "contact" => %{
-                      "type" => "object",
-                      "required" => ["address"],
                       "properties" => %{
                         "address" => %{
-                          "type" => "object",
+                          "properties" => %{"street" => %{"type" => "string"}},
                           "required" => ["street"],
-                          "properties" => %{"street" => %{"type" => "string"}}
+                          "type" => "object"
                         }
-                      }
+                      },
+                      "required" => ["address"],
+                      "type" => "object"
                     }
-                  }
+                  },
+                  "required" => ["contact"],
+                  "type" => "object"
                 }
-              }
+              },
+              "required" => ["profile"],
+              "type" => "object"
             }
-          }
+          },
+          "required" => ["user"],
+          "type" => "object"
         }
       }
     ]
@@ -4232,22 +4232,22 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/list",
         handler: &Handlers.handle_json_bodies_array_of_objects___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "tags" => %{"type" => "array", "items" => %{"type" => "string"}},
-            "images" => %{
-              "type" => "array",
-              "items" => %{
-                "type" => "object",
-                "properties" => %{"url" => %{"type" => "string"}, "name" => %{"type" => "string"}},
-                "additionalProperties" => false,
-                "required" => ["url", "name"]
-              }
-            }
-          },
           "additionalProperties" => false,
-          "required" => ["name", "tags", "images"]
+          "properties" => %{
+            "images" => %{
+              "items" => %{
+                "additionalProperties" => false,
+                "properties" => %{"name" => %{"type" => "string"}, "url" => %{"type" => "string"}},
+                "required" => ["url", "name"],
+                "type" => "object"
+              },
+              "type" => "array"
+            },
+            "name" => %{"type" => "string"},
+            "tags" => %{"items" => %{"type" => "string"}, "type" => "array"}
+          },
+          "required" => ["name", "tags", "images"],
+          "type" => "object"
         }
       }
     ]
@@ -4266,14 +4266,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_array_of_primitive_values/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
-            "tags" => %{"type" => "array", "items" => %{"type" => "string"}},
-            "ratings" => %{"type" => "array", "items" => %{"type" => "number"}}
+            "ratings" => %{"items" => %{"type" => "number"}, "type" => "array"},
+            "tags" => %{"items" => %{"type" => "string"}, "type" => "array"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "tags", "ratings"]
+          "required" => ["name", "tags", "ratings"],
+          "type" => "object"
         }
       }
     ]
@@ -4297,10 +4297,10 @@ defmodule E2EElixirApp.AppFactories do
           "required" => ["limit"]
         },
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "number"}},
           "additionalProperties" => false,
-          "required" => ["name", "price"]
+          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "number"}},
+          "required" => ["name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -4319,14 +4319,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_boolean_field___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "price" => %{"type" => "number"},
-            "in_stock" => %{"type" => "boolean"}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "price", "in_stock"]
+          "properties" => %{
+            "in_stock" => %{"type" => "boolean"},
+            "name" => %{"type" => "string"},
+            "price" => %{"type" => "number"}
+          },
+          "required" => ["name", "price", "in_stock"],
+          "type" => "object"
         }
       }
     ]
@@ -4345,13 +4345,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/events/",
         handler: &Handlers.handle_json_bodies_date_field___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "event_date" => %{"type" => "string"}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "event_date"]
+          "properties" => %{
+            "event_date" => %{"type" => "string"},
+            "name" => %{"type" => "string"}
+          },
+          "required" => ["name", "event_date"],
+          "type" => "object"
         }
       }
     ]
@@ -4370,13 +4370,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/events/",
         handler: &Handlers.handle_json_bodies_datetime_field___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "created_at" => %{"type" => "string", "format" => "date-time"}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "created_at"]
+          "properties" => %{
+            "created_at" => %{"format" => "date-time", "type" => "string"},
+            "name" => %{"type" => "string"}
+          },
+          "required" => ["name", "created_at"],
+          "type" => "object"
         }
       }
     ]
@@ -4395,39 +4395,39 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/nested",
         handler: &Handlers.handle_json_bodies_deeply_nested_objects/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
             "price" => %{"type" => "number"},
             "seller" => %{
-              "type" => "object",
+              "additionalProperties" => false,
               "properties" => %{
-                "name" => %{"type" => "string"},
                 "address" => %{
-                  "type" => "object",
+                  "additionalProperties" => false,
                   "properties" => %{
-                    "street" => %{"type" => "string"},
                     "city" => %{"type" => "string"},
                     "country" => %{
-                      "type" => "object",
-                      "properties" => %{
-                        "name" => %{"type" => "string"},
-                        "code" => %{"type" => "string"}
-                      },
                       "additionalProperties" => false,
-                      "required" => ["name", "code"]
-                    }
+                      "properties" => %{
+                        "code" => %{"type" => "string"},
+                        "name" => %{"type" => "string"}
+                      },
+                      "required" => ["name", "code"],
+                      "type" => "object"
+                    },
+                    "street" => %{"type" => "string"}
                   },
-                  "additionalProperties" => false,
-                  "required" => ["street", "city", "country"]
-                }
+                  "required" => ["street", "city", "country"],
+                  "type" => "object"
+                },
+                "name" => %{"type" => "string"}
               },
-              "additionalProperties" => false,
-              "required" => ["name", "address"]
+              "required" => ["name", "address"],
+              "type" => "object"
             }
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price", "seller"]
+          "required" => ["name", "price", "seller"],
+          "type" => "object"
         }
       }
     ]
@@ -4446,9 +4446,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/optional-all",
         handler: &Handlers.handle_json_bodies_empty_json_object/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{},
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -4467,13 +4467,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/list-validated",
         handler: &Handlers.handle_json_bodies_empty_array_validation___fail/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
-            "tags" => %{"type" => "array", "items" => %{}, "minItems" => 1}
+            "tags" => %{"items" => %{}, "minItems" => 1, "type" => "array"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "tags"]
+          "required" => ["name", "tags"],
+          "type" => "object"
         }
       }
     ]
@@ -4492,13 +4492,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_enum_field___invalid_value/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "category" => %{"type" => "string", "enum" => ["electronics", "clothing", "books"]}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "category"]
+          "properties" => %{
+            "category" => %{"enum" => ["electronics", "clothing", "books"], "type" => "string"},
+            "name" => %{"type" => "string"}
+          },
+          "required" => ["name", "category"],
+          "type" => "object"
         }
       }
     ]
@@ -4517,10 +4517,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_enum_field___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"name" => %{"type" => "string"}, "category" => %{"type" => "string"}},
           "additionalProperties" => false,
-          "required" => ["name", "category"]
+          "properties" => %{"category" => %{"type" => "string"}, "name" => %{"type" => "string"}},
+          "required" => ["name", "category"],
+          "type" => "object"
         }
       }
     ]
@@ -4539,15 +4539,15 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_extra_fields_ignored__no_additionalproperties_/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "price" => %{"type" => "number"},
-            "extra_field" => %{"type" => "string"},
-            "another_extra" => %{"type" => "integer"}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "price", "extra_field", "another_extra"]
+          "properties" => %{
+            "another_extra" => %{"type" => "integer"},
+            "extra_field" => %{"type" => "string"},
+            "name" => %{"type" => "string"},
+            "price" => %{"type" => "number"}
+          },
+          "required" => ["name", "price", "extra_field", "another_extra"],
+          "type" => "object"
         }
       }
     ]
@@ -4566,15 +4566,15 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_field_type_validation___invalid_type/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
-            "name" => %{"type" => "string"},
             "description" => %{"type" => "string"},
+            "name" => %{"type" => "string"},
             "price" => %{"type" => "number"},
             "tax" => %{"type" => "number"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "description", "price", "tax"]
+          "required" => ["name", "description", "price", "tax"],
+          "type" => "object"
         }
       }
     ]
@@ -4593,19 +4593,19 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/nested",
         handler: &Handlers.handle_json_bodies_nested_object___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "price" => %{"type" => "number"},
-            "image" => %{
-              "type" => "object",
-              "properties" => %{"url" => %{"type" => "string"}, "name" => %{"type" => "string"}},
-              "additionalProperties" => false,
-              "required" => ["url", "name"]
-            }
-          },
           "additionalProperties" => false,
-          "required" => ["name", "price", "image"]
+          "properties" => %{
+            "image" => %{
+              "additionalProperties" => false,
+              "properties" => %{"name" => %{"type" => "string"}, "url" => %{"type" => "string"}},
+              "required" => ["url", "name"],
+              "type" => "object"
+            },
+            "name" => %{"type" => "string"},
+            "price" => %{"type" => "number"}
+          },
+          "required" => ["name", "price", "image"],
+          "type" => "object"
         }
       }
     ]
@@ -4624,15 +4624,15 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_null_value_for_optional_field/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
+            "description" => %{"type" => "null"},
             "name" => %{"type" => "string"},
             "price" => %{"type" => "number"},
-            "description" => %{"type" => "null"},
             "tax" => %{"type" => "null"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price", "description", "tax"]
+          "required" => ["name", "price", "description", "tax"],
+          "type" => "object"
         }
       }
     ]
@@ -4651,13 +4651,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/validated",
         handler: &Handlers.handle_json_bodies_numeric_ge_validation___fail/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
-            "price" => %{"type" => "number", "minimum" => 1}
+            "price" => %{"minimum" => 1, "type" => "number"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price"]
+          "required" => ["name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -4676,10 +4676,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/validated",
         handler: &Handlers.handle_json_bodies_numeric_le_validation___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "number"}},
           "additionalProperties" => false,
-          "required" => ["name", "price"]
+          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "number"}},
+          "required" => ["name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -4698,10 +4698,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_optional_fields___omitted/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "number"}},
           "additionalProperties" => false,
-          "required" => ["name", "price"]
+          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "number"}},
+          "required" => ["name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -4725,9 +4725,9 @@ defmodule E2EElixirApp.AppFactories do
           "required" => ["id"]
         },
         request_schema: %{
-          "type" => "object",
           "properties" => %{"price" => %{"type" => "number"}},
-          "required" => ["price"]
+          "required" => ["price"],
+          "type" => "object"
         }
       }
     ]
@@ -4746,14 +4746,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_required_field_missing___validation_error/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "description" => %{"type" => "string"},
-            "price" => %{"type" => "number"},
-            "name" => %{"type" => "string"}
+            "name" => %{"type" => "string"},
+            "price" => %{"type" => "number"}
           },
-          "additionalProperties" => false,
-          "required" => ["description", "price", "name"]
+          "required" => ["description", "price", "name"],
+          "type" => "object"
         }
       }
     ]
@@ -4772,15 +4772,15 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_simple_json_object___success/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
-            "name" => %{"type" => "string"},
             "description" => %{"type" => "string"},
+            "name" => %{"type" => "string"},
             "price" => %{"type" => "number"},
             "tax" => %{"type" => "number"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "description", "price", "tax"]
+          "required" => ["name", "description", "price", "tax"],
+          "type" => "object"
         }
       }
     ]
@@ -4799,13 +4799,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/validated",
         handler: &Handlers.handle_json_bodies_string_max_length_validation___fail/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
-            "name" => %{"type" => "string", "maxLength" => 50},
+            "name" => %{"maxLength" => 50, "type" => "string"},
             "price" => %{"type" => "number"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price"]
+          "required" => ["name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -4824,13 +4824,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/validated",
         handler: &Handlers.handle_json_bodies_string_min_length_validation___fail/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
-            "name" => %{"type" => "string", "minLength" => 3},
+            "name" => %{"minLength" => 3, "type" => "string"},
             "price" => %{"type" => "number"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price"]
+          "required" => ["name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -4849,13 +4849,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/validated",
         handler: &Handlers.handle_json_bodies_string_pattern_validation___fail/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
-            "sku" => %{"type" => "string", "pattern" => "^[A-Z]{3}[0-9]{4}$"}
+            "sku" => %{"pattern" => "^[A-Z]{3}[0-9]{4}$", "type" => "string"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "sku"]
+          "required" => ["name", "sku"],
+          "type" => "object"
         }
       }
     ]
@@ -4874,10 +4874,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/validated",
         handler: &Handlers.handle_json_bodies_string_pattern_validation___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"name" => %{"type" => "string"}, "sku" => %{"type" => "string"}},
           "additionalProperties" => false,
-          "required" => ["name", "sku"]
+          "properties" => %{"name" => %{"type" => "string"}, "sku" => %{"type" => "string"}},
+          "required" => ["name", "sku"],
+          "type" => "object"
         }
       }
     ]
@@ -4896,13 +4896,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_uuid_field___invalid_format/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "item_id" => %{"type" => "string", "format" => "uuid"}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "item_id"]
+          "properties" => %{
+            "item_id" => %{"format" => "uuid", "type" => "string"},
+            "name" => %{"type" => "string"}
+          },
+          "required" => ["name", "item_id"],
+          "type" => "object"
         }
       }
     ]
@@ -4921,13 +4921,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_json_bodies_uuid_field___success/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "item_id" => %{"type" => "string", "format" => "uuid"}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "item_id"]
+          "properties" => %{
+            "item_id" => %{"format" => "uuid", "type" => "string"},
+            "name" => %{"type" => "string"}
+          },
+          "required" => ["name", "item_id"],
+          "type" => "object"
         }
       }
     ]
@@ -4962,9 +4962,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/api/full-lifecycle",
         handler: &Handlers.handle_lifecycle_hooks_multiple_hooks___all_phases/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"user_id" => %{"type" => "string"}, "action" => %{"type" => "string"}},
-          "required" => ["user_id", "action"]
+          "properties" => %{"action" => %{"type" => "string"}, "user_id" => %{"type" => "string"}},
+          "required" => ["user_id", "action"],
+          "type" => "object"
         }
       }
     ]
@@ -5114,9 +5114,9 @@ defmodule E2EElixirApp.AppFactories do
         handler:
           &Handlers.handle_lifecycle_hooks_prevalidation___rate_limit_exceeded__short_circuit_/1,
         request_schema: %{
-          "type" => "object",
           "properties" => %{"data" => %{"type" => "string"}},
-          "required" => ["data"]
+          "required" => ["data"],
+          "type" => "object"
         }
       }
     ]
@@ -5135,9 +5135,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/api/test-rate-limit",
         handler: &Handlers.handle_lifecycle_hooks_prevalidation___rate_limiting/1,
         request_schema: %{
-          "type" => "object",
           "properties" => %{"data" => %{"type" => "string"}},
-          "required" => ["data"]
+          "required" => ["data"],
+          "type" => "object"
         }
       }
     ]
@@ -5252,9 +5252,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/images-only",
         handler: &Handlers.handle_multipart_content_type_validation___invalid_type/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"file" => %{"type" => "string", "format" => "binary"}},
-          "additionalProperties" => false
+          "additionalProperties" => false,
+          "properties" => %{"file" => %{"format" => "binary", "type" => "string"}},
+          "type" => "object"
         }
       }
     ]
@@ -5273,10 +5273,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/upload",
         handler: &Handlers.handle_multipart_empty_file_upload/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"file" => %{"type" => "string", "format" => "binary"}},
           "additionalProperties" => false,
-          "required" => ["file"]
+          "properties" => %{"file" => %{"format" => "binary", "type" => "string"}},
+          "required" => ["file"],
+          "type" => "object"
         }
       }
     ]
@@ -5295,15 +5295,15 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/list",
         handler: &Handlers.handle_multipart_file_list_upload__array_of_files_/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "files" => %{
-              "type" => "array",
-              "items" => %{"type" => "string", "format" => "binary"}
+              "items" => %{"format" => "binary", "type" => "string"},
+              "type" => "array"
             }
           },
-          "additionalProperties" => false,
-          "required" => ["files"]
+          "required" => ["files"],
+          "type" => "object"
         }
       }
     ]
@@ -5322,9 +5322,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/validated",
         handler: &Handlers.handle_multipart_file_size_validation___too_large/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"file" => %{"type" => "string", "format" => "binary"}},
-          "additionalProperties" => false
+          "additionalProperties" => false,
+          "properties" => %{"file" => %{"format" => "binary", "type" => "string"}},
+          "type" => "object"
         }
       }
     ]
@@ -5343,10 +5343,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/",
         handler: &Handlers.handle_multipart_file_upload_with_custom_headers/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"test2" => %{"type" => "string", "format" => "binary"}},
           "additionalProperties" => false,
-          "required" => ["test2"]
+          "properties" => %{"test2" => %{"format" => "binary", "type" => "string"}},
+          "required" => ["test2"],
+          "type" => "object"
         }
       }
     ]
@@ -5365,10 +5365,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/",
         handler: &Handlers.handle_multipart_file_upload_without_filename/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"test1" => %{"type" => "string", "format" => "binary"}},
           "additionalProperties" => false,
-          "required" => ["test1"]
+          "properties" => %{"test1" => %{"format" => "binary", "type" => "string"}},
+          "required" => ["test1"],
+          "type" => "object"
         }
       }
     ]
@@ -5387,9 +5387,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/",
         handler: &Handlers.handle_multipart_form_data_without_files/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{"some" => %{"type" => "string"}},
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -5408,10 +5408,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/image",
         handler: &Handlers.handle_multipart_image_file_upload/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"image" => %{"type" => "string", "format" => "binary"}},
           "additionalProperties" => false,
-          "required" => ["image"]
+          "properties" => %{"image" => %{"format" => "binary", "type" => "string"}},
+          "required" => ["image"],
+          "type" => "object"
         }
       }
     ]
@@ -5430,15 +5430,15 @@ defmodule E2EElixirApp.AppFactories do
         path: "/",
         handler: &Handlers.handle_multipart_mixed_files_and_form_data/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "file" => %{"type" => "string", "format" => "binary"},
-            "username" => %{"type" => "string"},
-            "age" => %{"type" => "string"},
-            "active" => %{"type" => "string"}
-          },
           "additionalProperties" => false,
-          "required" => ["file"]
+          "properties" => %{
+            "active" => %{"type" => "string"},
+            "age" => %{"type" => "string"},
+            "file" => %{"format" => "binary", "type" => "string"},
+            "username" => %{"type" => "string"}
+          },
+          "required" => ["file"],
+          "type" => "object"
         }
       }
     ]
@@ -5457,13 +5457,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/",
         handler: &Handlers.handle_multipart_multiple_file_uploads/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "test1" => %{"type" => "string", "format" => "binary"},
-            "test2" => %{"type" => "string", "format" => "binary"}
-          },
           "additionalProperties" => false,
-          "required" => ["test1", "test2"]
+          "properties" => %{
+            "test1" => %{"format" => "binary", "type" => "string"},
+            "test2" => %{"format" => "binary", "type" => "string"}
+          },
+          "required" => ["test1", "test2"],
+          "type" => "object"
         }
       }
     ]
@@ -5482,16 +5482,16 @@ defmodule E2EElixirApp.AppFactories do
         path: "/",
         handler: &Handlers.handle_multipart_multiple_values_for_same_field_name/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "files" => %{
-              "type" => "array",
-              "items" => %{"type" => "string", "format" => "binary"}
+              "items" => %{"format" => "binary", "type" => "string"},
+              "type" => "array"
             },
-            "tags" => %{"type" => "array", "items" => %{"type" => "string"}}
+            "tags" => %{"items" => %{"type" => "string"}, "type" => "array"}
           },
-          "additionalProperties" => false,
-          "required" => ["files"]
+          "required" => ["files"],
+          "type" => "object"
         }
       }
     ]
@@ -5510,9 +5510,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/optional",
         handler: &Handlers.handle_multipart_optional_file_upload___missing/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{},
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -5531,10 +5531,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/optional",
         handler: &Handlers.handle_multipart_optional_file_upload___provided/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"file" => %{"type" => "string", "format" => "binary"}},
           "additionalProperties" => false,
-          "required" => ["file"]
+          "properties" => %{"file" => %{"format" => "binary", "type" => "string"}},
+          "required" => ["file"],
+          "type" => "object"
         }
       }
     ]
@@ -5553,10 +5553,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/document",
         handler: &Handlers.handle_multipart_pdf_file_upload/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"document" => %{"type" => "string", "format" => "binary"}},
           "additionalProperties" => false,
-          "required" => ["document"]
+          "properties" => %{"document" => %{"format" => "binary", "type" => "string"}},
+          "required" => ["document"],
+          "type" => "object"
         }
       }
     ]
@@ -5575,10 +5575,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/files/required",
         handler: &Handlers.handle_multipart_required_file_upload___missing/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"file" => %{"type" => "string", "format" => "binary"}},
+          "additionalProperties" => false,
+          "properties" => %{"file" => %{"format" => "binary", "type" => "string"}},
           "required" => ["file"],
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -5597,10 +5597,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/",
         handler: &Handlers.handle_multipart_simple_file_upload/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"test" => %{"type" => "string", "format" => "binary"}},
           "additionalProperties" => false,
-          "required" => ["test"]
+          "properties" => %{"test" => %{"format" => "binary", "type" => "string"}},
+          "required" => ["test"],
+          "type" => "object"
         }
       }
     ]
@@ -6233,12 +6233,12 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "version" => %{"source" => "path", "type" => "number"},
+            "order_id" => %{"source" => "path", "type" => "string", "format" => "uuid"},
             "service_id" => %{"source" => "path", "type" => "integer"},
             "user_id" => %{"source" => "path", "type" => "string"},
-            "order_id" => %{"source" => "path", "type" => "string", "format" => "uuid"}
+            "version" => %{"source" => "path", "type" => "number"}
           },
-          "required" => ["version", "service_id", "user_id", "order_id"]
+          "required" => ["order_id", "service_id", "user_id", "version"]
         }
       }
     ]
@@ -7563,12 +7563,12 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "name" => %{"source" => "query", "type" => "string"},
-            "age" => %{"source" => "query", "type" => "integer"},
             "active" => %{"source" => "query", "type" => "boolean"},
+            "age" => %{"source" => "query", "type" => "integer"},
+            "name" => %{"source" => "query", "type" => "string"},
             "score" => %{"source" => "query", "type" => "number"}
           },
-          "required" => ["name", "age", "active", "score"]
+          "required" => ["active", "age", "name", "score"]
         }
       }
     ]
@@ -8188,7 +8188,7 @@ defmodule E2EElixirApp.AppFactories do
         method: :post,
         path: "/upload",
         handler: &Handlers.handle_status_codes_19_413_payload_too_large/1,
-        request_schema: %{"type" => "object", "properties" => %{"data" => %{"type" => "string"}}}
+        request_schema: %{"properties" => %{"data" => %{"type" => "string"}}, "type" => "object"}
       }
     ]
 
@@ -8227,10 +8227,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_status_codes_201_created___resource_created/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"name" => %{"type" => "string"}},
           "additionalProperties" => false,
-          "required" => ["name"]
+          "properties" => %{"name" => %{"type" => "string"}},
+          "required" => ["name"],
+          "type" => "object"
         }
       }
     ]
@@ -8249,10 +8249,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/tasks/",
         handler: &Handlers.handle_status_codes_202_accepted___request_accepted_for_processing/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"task" => %{"type" => "string"}},
           "additionalProperties" => false,
-          "required" => ["task"]
+          "properties" => %{"task" => %{"type" => "string"}},
+          "required" => ["task"],
+          "type" => "object"
         }
       }
     ]
@@ -8429,9 +8429,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/redirect-post",
         handler: &Handlers.handle_status_codes_307_temporary_redirect___method_preserved/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{},
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -8520,10 +8520,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/slow-endpoint",
         handler: &Handlers.handle_status_codes_408_request_timeout/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"data" => %{"type" => "string"}},
           "additionalProperties" => false,
-          "required" => ["data"]
+          "properties" => %{"data" => %{"type" => "string"}},
+          "required" => ["data"],
+          "type" => "object"
         }
       }
     ]
@@ -8542,10 +8542,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_status_codes_422_unprocessable_entity___validation_error/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"price" => %{"type" => "string"}, "name" => %{"type" => "string"}},
           "additionalProperties" => false,
-          "required" => ["price", "name"]
+          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "string"}},
+          "required" => ["price", "name"],
+          "type" => "object"
         }
       }
     ]
@@ -8660,11 +8660,11 @@ defmodule E2EElixirApp.AppFactories do
         path: "/register",
         handler: &Handlers.handle_url_encoded_13_array_field_success/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["tags"],
           "properties" => %{
-            "tags" => %{"type" => "array", "items" => %{"type" => "string"}, "minItems" => 1}
-          }
+            "tags" => %{"items" => %{"type" => "string"}, "minItems" => 1, "type" => "array"}
+          },
+          "required" => ["tags"],
+          "type" => "object"
         }
       }
     ]
@@ -8683,19 +8683,19 @@ defmodule E2EElixirApp.AppFactories do
         path: "/profile",
         handler: &Handlers.handle_url_encoded_14_nested_object_bracket_notation/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["user"],
           "properties" => %{
             "user" => %{
-              "type" => "object",
-              "required" => ["name", "email"],
               "properties" => %{
-                "name" => %{"type" => "string", "minLength" => 1},
-                "email" => %{"type" => "string", "format" => "email"},
-                "age" => %{"type" => "integer", "minimum" => 0}
-              }
+                "age" => %{"minimum" => 0, "type" => "integer"},
+                "email" => %{"format" => "email", "type" => "string"},
+                "name" => %{"minLength" => 1, "type" => "string"}
+              },
+              "required" => ["name", "email"],
+              "type" => "object"
             }
-          }
+          },
+          "required" => ["user"],
+          "type" => "object"
         }
       }
     ]
@@ -8714,11 +8714,11 @@ defmodule E2EElixirApp.AppFactories do
         path: "/data",
         handler: &Handlers.handle_url_encoded_15_special_characters_field_names/1,
         request_schema: %{
-          "type" => "object",
           "properties" => %{
-            "user-name" => %{"type" => "string"},
-            "contact.email" => %{"type" => "string", "format" => "email"}
-          }
+            "contact.email" => %{"format" => "email", "type" => "string"},
+            "user-name" => %{"type" => "string"}
+          },
+          "type" => "object"
         }
       }
     ]
@@ -8737,9 +8737,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_url_encoded_16_minlength_validation_failure/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"username" => %{"minLength" => 3, "type" => "string"}},
           "required" => ["username"],
-          "properties" => %{"username" => %{"type" => "string", "minLength" => 3}}
+          "type" => "object"
         }
       }
     ]
@@ -8758,9 +8758,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/accounts",
         handler: &Handlers.handle_url_encoded_17_pattern_validation_failure/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"account_id" => %{"pattern" => "^ACC-[0-9]{6}$", "type" => "string"}},
           "required" => ["account_id"],
-          "properties" => %{"account_id" => %{"type" => "string", "pattern" => "^ACC-[0-9]{6}$"}}
+          "type" => "object"
         }
       }
     ]
@@ -8779,9 +8779,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/products",
         handler: &Handlers.handle_url_encoded_18_integer_minimum_validation_failure/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"quantity" => %{"minimum" => 1, "type" => "integer"}},
           "required" => ["quantity"],
-          "properties" => %{"quantity" => %{"type" => "integer", "minimum" => 1}}
+          "type" => "object"
         }
       }
     ]
@@ -8800,11 +8800,11 @@ defmodule E2EElixirApp.AppFactories do
         path: "/tags",
         handler: &Handlers.handle_url_encoded_19_array_minitems_validation_failure/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["tags"],
           "properties" => %{
-            "tags" => %{"type" => "array", "items" => %{"type" => "string"}, "minItems" => 2}
-          }
+            "tags" => %{"items" => %{"type" => "string"}, "minItems" => 2, "type" => "array"}
+          },
+          "required" => ["tags"],
+          "type" => "object"
         }
       }
     ]
@@ -8823,9 +8823,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/subscribe",
         handler: &Handlers.handle_url_encoded_20_format_email_validation_failure/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"email" => %{"format" => "email", "type" => "string"}},
           "required" => ["email"],
-          "properties" => %{"email" => %{"type" => "string", "format" => "email"}}
+          "type" => "object"
         }
       }
     ]
@@ -8844,9 +8844,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/products",
         handler: &Handlers.handle_url_encoded_21_integer_type_coercion_failure/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"price" => %{"type" => "integer"}},
           "required" => ["price"],
-          "properties" => %{"price" => %{"type" => "integer"}}
+          "type" => "object"
         }
       }
     ]
@@ -8865,10 +8865,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/settings",
         handler: &Handlers.handle_url_encoded_22_additional_properties_strict_failure/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
+          "properties" => %{"theme" => %{"enum" => ["light", "dark"], "type" => "string"}},
           "required" => ["theme"],
-          "properties" => %{"theme" => %{"type" => "string", "enum" => ["light", "dark"]}},
-          "additionalProperties" => false
+          "type" => "object"
         }
       }
     ]
@@ -8887,12 +8887,12 @@ defmodule E2EElixirApp.AppFactories do
         path: "/form/",
         handler: &Handlers.handle_url_encoded_boolean_field_conversion/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["username"],
           "properties" => %{
-            "username" => %{"type" => "string"},
-            "subscribe" => %{"type" => "boolean"}
-          }
+            "subscribe" => %{"type" => "boolean"},
+            "username" => %{"type" => "string"}
+          },
+          "required" => ["username"],
+          "type" => "object"
         }
       }
     ]
@@ -8911,12 +8911,12 @@ defmodule E2EElixirApp.AppFactories do
         path: "/form/",
         handler: &Handlers.handle_url_encoded_empty_string_value/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["username"],
           "properties" => %{
-            "username" => %{"type" => "string"},
-            "description" => %{"type" => "string"}
-          }
+            "description" => %{"type" => "string"},
+            "username" => %{"type" => "string"}
+          },
+          "required" => ["username"],
+          "type" => "object"
         }
       }
     ]
@@ -8935,9 +8935,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/form/tags",
         handler: &Handlers.handle_url_encoded_multiple_values_for_same_field/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"tags" => %{"items" => %{"type" => "string"}, "type" => "array"}},
           "required" => ["tags"],
-          "properties" => %{"tags" => %{"type" => "array", "items" => %{"type" => "string"}}}
+          "type" => "object"
         }
       }
     ]
@@ -8956,9 +8956,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/form/",
         handler: &Handlers.handle_url_encoded_numeric_field_type_conversion/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"age" => %{"type" => "integer"}, "username" => %{"type" => "string"}},
           "required" => ["username"],
-          "properties" => %{"username" => %{"type" => "string"}, "age" => %{"type" => "integer"}}
+          "type" => "object"
         }
       }
     ]
@@ -8977,14 +8977,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/token",
         handler: &Handlers.handle_url_encoded_oauth2_password_grant_flow/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["username", "password", "grant_type"],
           "properties" => %{
-            "username" => %{"type" => "string"},
-            "password" => %{"type" => "string"},
             "grant_type" => %{"type" => "string"},
-            "scope" => %{"type" => "string"}
-          }
+            "password" => %{"type" => "string"},
+            "scope" => %{"type" => "string"},
+            "username" => %{"type" => "string"}
+          },
+          "required" => ["username", "password", "grant_type"],
+          "type" => "object"
         }
       }
     ]
@@ -9003,13 +9003,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/register/",
         handler: &Handlers.handle_url_encoded_optional_field_missing___success/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["username", "password"],
           "properties" => %{
-            "username" => %{"type" => "string"},
+            "email" => %{"format" => "email", "type" => ["string", "null"]},
             "password" => %{"type" => "string"},
-            "email" => %{"type" => ["string", "null"], "format" => "email"}
-          }
+            "username" => %{"type" => "string"}
+          },
+          "required" => ["username", "password"],
+          "type" => "object"
         }
       }
     ]
@@ -9028,9 +9028,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/form/validated",
         handler: &Handlers.handle_url_encoded_pattern_validation___fail/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"username" => %{"pattern" => "^[a-z0-9_]+$", "type" => "string"}},
           "required" => ["username"],
-          "properties" => %{"username" => %{"type" => "string", "pattern" => "^[a-z0-9_]+$"}}
+          "type" => "object"
         }
       }
     ]
@@ -9049,12 +9049,12 @@ defmodule E2EElixirApp.AppFactories do
         path: "/login/",
         handler: &Handlers.handle_url_encoded_required_field_missing___validation_error/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["username", "password"],
           "properties" => %{
-            "username" => %{"type" => "string"},
-            "password" => %{"type" => "string"}
-          }
+            "password" => %{"type" => "string"},
+            "username" => %{"type" => "string"}
+          },
+          "required" => ["username", "password"],
+          "type" => "object"
         }
       }
     ]
@@ -9073,12 +9073,12 @@ defmodule E2EElixirApp.AppFactories do
         path: "/login/",
         handler: &Handlers.handle_url_encoded_simple_form_submission___success/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["username", "password"],
           "properties" => %{
-            "username" => %{"type" => "string"},
-            "password" => %{"type" => "string"}
-          }
+            "password" => %{"type" => "string"},
+            "username" => %{"type" => "string"}
+          },
+          "required" => ["username", "password"],
+          "type" => "object"
         }
       }
     ]
@@ -9097,12 +9097,12 @@ defmodule E2EElixirApp.AppFactories do
         path: "/form/",
         handler: &Handlers.handle_url_encoded_special_characters_encoding/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["name"],
           "properties" => %{
-            "name" => %{"type" => "string"},
-            "description" => %{"type" => "string"}
-          }
+            "description" => %{"type" => "string"},
+            "name" => %{"type" => "string"}
+          },
+          "required" => ["name"],
+          "type" => "object"
         }
       }
     ]
@@ -9121,9 +9121,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/form/validated",
         handler: &Handlers.handle_url_encoded_string_max_length_validation___fail/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"username" => %{"maxLength" => 20, "type" => "string"}},
           "required" => ["username"],
-          "properties" => %{"username" => %{"type" => "string", "maxLength" => 20}}
+          "type" => "object"
         }
       }
     ]
@@ -9142,9 +9142,9 @@ defmodule E2EElixirApp.AppFactories do
         path: "/form/validated",
         handler: &Handlers.handle_url_encoded_string_min_length_validation___fail/1,
         request_schema: %{
-          "type" => "object",
+          "properties" => %{"username" => %{"minLength" => 3, "type" => "string"}},
           "required" => ["username"],
-          "properties" => %{"username" => %{"type" => "string", "minLength" => 3}}
+          "type" => "object"
         }
       }
     ]
@@ -9163,13 +9163,13 @@ defmodule E2EElixirApp.AppFactories do
         path: "/users",
         handler: &Handlers.handle_validation_errors_09_multiple_validation_errors/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["name", "email", "age"],
           "properties" => %{
-            "name" => %{"type" => "string", "minLength" => 3},
-            "email" => %{"type" => "string", "format" => "email"},
-            "age" => %{"type" => "integer", "minimum" => 18}
-          }
+            "age" => %{"minimum" => 18, "type" => "integer"},
+            "email" => %{"format" => "email", "type" => "string"},
+            "name" => %{"minLength" => 3, "type" => "string"}
+          },
+          "required" => ["name", "email", "age"],
+          "type" => "object"
         }
       }
     ]
@@ -9188,21 +9188,21 @@ defmodule E2EElixirApp.AppFactories do
         path: "/profiles",
         handler: &Handlers.handle_validation_errors_10_nested_error_path/1,
         request_schema: %{
-          "type" => "object",
-          "required" => ["profile"],
           "properties" => %{
             "profile" => %{
-              "type" => "object",
-              "required" => ["contact"],
               "properties" => %{
                 "contact" => %{
-                  "type" => "object",
+                  "properties" => %{"email" => %{"format" => "email", "type" => "string"}},
                   "required" => ["email"],
-                  "properties" => %{"email" => %{"type" => "string", "format" => "email"}}
+                  "type" => "object"
                 }
-              }
+              },
+              "required" => ["contact"],
+              "type" => "object"
             }
-          }
+          },
+          "required" => ["profile"],
+          "type" => "object"
         }
       }
     ]
@@ -9221,14 +9221,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_validation_errors_array_item_validation_error/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
             "price" => %{"type" => "number"},
-            "tags" => %{"type" => "array", "items" => %{"type" => "string"}}
+            "tags" => %{"items" => %{"type" => "string"}, "type" => "array"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price", "tags"]
+          "required" => ["name", "price", "tags"],
+          "type" => "object"
         }
       }
     ]
@@ -9247,14 +9247,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_validation_errors_array_max_items_constraint_violation/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
             "price" => %{"type" => "number"},
-            "tags" => %{"type" => "array", "items" => %{"type" => "string"}, "maxItems" => 10}
+            "tags" => %{"items" => %{"type" => "string"}, "maxItems" => 10, "type" => "array"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price", "tags"]
+          "required" => ["name", "price", "tags"],
+          "type" => "object"
         }
       }
     ]
@@ -9273,14 +9273,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_validation_errors_array_min_items_constraint_violation/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
             "price" => %{"type" => "number"},
-            "tags" => %{"type" => "array", "items" => %{}, "minItems" => 1}
+            "tags" => %{"items" => %{}, "minItems" => 1, "type" => "array"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price", "tags"]
+          "required" => ["name", "price", "tags"],
+          "type" => "object"
         }
       }
     ]
@@ -9299,10 +9299,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_validation_errors_body_field_type_error___string_for_float/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "number"}},
           "additionalProperties" => false,
-          "required" => ["name", "price"]
+          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "number"}},
+          "required" => ["name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -9370,10 +9370,10 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "q" => %{"source" => "query", "type" => "string"},
-            "is_active" => %{"source" => "query", "type" => "boolean"}
+            "is_active" => %{"source" => "query", "type" => "boolean"},
+            "q" => %{"source" => "query", "type" => "string"}
           },
-          "required" => ["q", "is_active"]
+          "required" => ["is_active", "q"]
         }
       }
     ]
@@ -9392,14 +9392,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_validation_errors_invalid_datetime_format/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{
-            "name" => %{"type" => "string"},
-            "price" => %{"type" => "number"},
-            "created_at" => %{"type" => "string", "format" => "date-time"}
-          },
           "additionalProperties" => false,
-          "required" => ["name", "price", "created_at"]
+          "properties" => %{
+            "created_at" => %{"format" => "date-time", "type" => "string"},
+            "name" => %{"type" => "string"},
+            "price" => %{"type" => "number"}
+          },
+          "required" => ["name", "price", "created_at"],
+          "type" => "object"
         }
       }
     ]
@@ -9462,10 +9462,10 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_validation_errors_missing_required_body_field/1,
         request_schema: %{
-          "type" => "object",
-          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "string"}},
           "additionalProperties" => false,
-          "required" => ["name", "price"]
+          "properties" => %{"name" => %{"type" => "string"}, "price" => %{"type" => "string"}},
+          "required" => ["name", "price"],
+          "type" => "object"
         }
       }
     ]
@@ -9505,14 +9505,14 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_validation_errors_multiple_validation_errors/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
-            "name" => %{"type" => "string", "minLength" => 3},
-            "price" => %{"type" => "integer", "exclusiveMinimum" => 0},
+            "name" => %{"minLength" => 3, "type" => "string"},
+            "price" => %{"exclusiveMinimum" => 0, "type" => "integer"},
             "quantity" => %{"type" => "integer"}
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price", "quantity"]
+          "required" => ["name", "price", "quantity"],
+          "type" => "object"
         }
       }
     ]
@@ -9531,30 +9531,30 @@ defmodule E2EElixirApp.AppFactories do
         path: "/items/",
         handler: &Handlers.handle_validation_errors_nested_object_validation_error/1,
         request_schema: %{
-          "type" => "object",
+          "additionalProperties" => false,
           "properties" => %{
             "name" => %{"type" => "string"},
             "price" => %{"type" => "number"},
             "seller" => %{
-              "type" => "object",
-              "properties" => %{
-                "name" => %{"type" => "string", "minLength" => 3},
-                "address" => %{
-                  "type" => "object",
-                  "properties" => %{
-                    "city" => %{"type" => "string", "minLength" => 3},
-                    "zip_code" => %{"type" => "string", "minLength" => 5}
-                  },
-                  "additionalProperties" => false,
-                  "required" => ["city", "zip_code"]
-                }
-              },
               "additionalProperties" => false,
-              "required" => ["name", "address"]
+              "properties" => %{
+                "address" => %{
+                  "additionalProperties" => false,
+                  "properties" => %{
+                    "city" => %{"minLength" => 3, "type" => "string"},
+                    "zip_code" => %{"minLength" => 5, "type" => "string"}
+                  },
+                  "required" => ["city", "zip_code"],
+                  "type" => "object"
+                },
+                "name" => %{"minLength" => 3, "type" => "string"}
+              },
+              "required" => ["name", "address"],
+              "type" => "object"
             }
           },
-          "additionalProperties" => false,
-          "required" => ["name", "price", "seller"]
+          "required" => ["name", "price", "seller"],
+          "type" => "object"
         }
       }
     ]
@@ -9576,10 +9576,10 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "q" => %{"source" => "query", "type" => "string"},
-            "price" => %{"source" => "query", "type" => "number"}
+            "price" => %{"source" => "query", "type" => "number"},
+            "q" => %{"source" => "query", "type" => "string"}
           },
-          "required" => ["q", "price"]
+          "required" => ["price", "q"]
         }
       }
     ]
@@ -9601,10 +9601,10 @@ defmodule E2EElixirApp.AppFactories do
         parameter_schema: %{
           "type" => "object",
           "properties" => %{
-            "q" => %{"source" => "query", "type" => "string"},
-            "limit" => %{"source" => "query", "type" => "integer", "maximum" => 100}
+            "limit" => %{"source" => "query", "type" => "integer", "maximum" => 100},
+            "q" => %{"source" => "query", "type" => "string"}
           },
-          "required" => ["q", "limit"]
+          "required" => ["limit", "q"]
         }
       }
     ]

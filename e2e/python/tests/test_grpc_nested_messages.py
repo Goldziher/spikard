@@ -26,6 +26,6 @@ async def test_grpc_nested_messages() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"user_id":456,"name":"Bob Smith","email":"bob@example.com","address":{"street":"123 Main St","city":"Springfield","zip_code":"12345"}}'
+        == b'{"address":{"city":"Springfield","street":"123 Main St","zip_code":"12345"},"email":"bob@example.com","name":"Bob Smith","user_id":456}'
     )
     assert response.metadata is not None

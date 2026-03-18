@@ -24,5 +24,5 @@ async def test_grpc_map_field_handling_map_string_message() -> None:
     response = await handle_grpc_map_field_handling_map_string_message(request)
 
     # Verify response
-    assert response.payload == b'{"id":"map-test-001","map_count":3,"keys":["key1","key2","key3"]}'
+    assert response.payload == b'{"id":"map-test-001","keys":["key1","key2","key3"],"map_count":3}'
     assert response.metadata is not None

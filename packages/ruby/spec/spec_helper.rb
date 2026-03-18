@@ -29,6 +29,8 @@ $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'spikard'
 
 def cleanup_ruby_threads
+  Spikard::Testing.close_all_test_clients if defined?(Spikard::Testing)
+
   3.times do
     GC.start(full_mark: true, immediate_sweep: true)
     sleep 0.01

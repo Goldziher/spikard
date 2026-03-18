@@ -1094,15 +1094,15 @@ async fn test_http_methods_head_get_metadata_without_body() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("content-type") {
-        assert_eq!(actual, "application/json", "Mismatched header 'Content-Type'");
-    } else {
-        panic!("Expected header 'Content-Type' to be present");
-    }
     if let Some(actual) = headers.get("content-length") {
         assert_eq!(actual, "85", "Mismatched header 'Content-Length'");
     } else {
         panic!("Expected header 'Content-Length' to be present");
+    }
+    if let Some(actual) = headers.get("content-type") {
+        assert_eq!(actual, "application/json", "Mismatched header 'Content-Type'");
+    } else {
+        panic!("Expected header 'Content-Type' to be present");
     }
 
 }
@@ -1377,25 +1377,25 @@ async fn test_http_methods_options_cors_preflight_request() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("access-control-allow-origin") {
-        assert_eq!(actual, "https://example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    if let Some(actual) = headers.get("access-control-allow-headers") {
+        assert_eq!(actual, "Content-Type", "Mismatched header 'Access-Control-Allow-Headers'");
     } else {
-        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        panic!("Expected header 'Access-Control-Allow-Headers' to be present");
     }
     if let Some(actual) = headers.get("access-control-allow-methods") {
         assert_eq!(actual, "GET, POST, PUT, DELETE, OPTIONS", "Mismatched header 'Access-Control-Allow-Methods'");
     } else {
         panic!("Expected header 'Access-Control-Allow-Methods' to be present");
     }
-    if let Some(actual) = headers.get("access-control-allow-headers") {
-        assert_eq!(actual, "Content-Type", "Mismatched header 'Access-Control-Allow-Headers'");
-    } else {
-        panic!("Expected header 'Access-Control-Allow-Headers' to be present");
-    }
     if let Some(actual) = headers.get("access-control-max-age") {
         assert_eq!(actual, "86400", "Mismatched header 'Access-Control-Max-Age'");
     } else {
         panic!("Expected header 'Access-Control-Max-Age' to be present");
+    }
+    if let Some(actual) = headers.get("access-control-allow-origin") {
+        assert_eq!(actual, "https://example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    } else {
+        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
     }
 
 }

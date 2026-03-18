@@ -26,6 +26,6 @@ async def test_grpc_bidirectional_streaming_chat_conversation() -> None:
     # Verify response
     assert (
         response.payload
-        == b'[{"user":"alice","message":"Hello Bob","timestamp":1000},{"user":"alice","message":"How are you?","timestamp":1001},{"user":"alice","message":"I\'m doing great!","timestamp":1002}]'
+        == b'[{"message":"Hello Bob","timestamp":1000,"user":"alice"},{"message":"How are you?","timestamp":1001,"user":"alice"},{"message":"I\'m doing great!","timestamp":1002,"user":"alice"}]'
     )
     assert response.metadata is not None

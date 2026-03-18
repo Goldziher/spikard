@@ -11,8 +11,8 @@ async def test_grpc_cors_related_metadata_headers() -> None:
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
         "content-type": "application/grpc",
-        "access-control-request-method": "POST",
         "origin": "https://example.com",
+        "access-control-request-method": "POST",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

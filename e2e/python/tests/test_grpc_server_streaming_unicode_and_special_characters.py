@@ -10,8 +10,8 @@ async def test_grpc_server_streaming_unicode_and_special_characters() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "encoding": "utf-8",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

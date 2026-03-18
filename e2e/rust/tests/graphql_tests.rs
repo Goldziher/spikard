@@ -24,7 +24,7 @@ mutation CreateUser($input: CreateUserInput!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"input":{"name":"a","bio":null}},
+            "variables": {"input":{"bio":null,"name":"a"}},
         });
 
         // Expected status code: 422
@@ -162,7 +162,7 @@ mutation CreateContact($input: CreateContactInput!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"input":{"name":"Invalid Contact","email":"not-an-email","website":"not a url","phone":"123"}},
+            "variables": {"input":{"email":"not-an-email","name":"Invalid Contact","phone":"123","website":"not a url"}},
             "operationName": "CreateContact",
         });
 
@@ -217,7 +217,7 @@ mutation CreateContact($input: CreateContactInput!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"input":{"name":"Alice Johnson","email":"alice.johnson@example.com","website":"https://example.com","phone":"+1-555-123-4567"}},
+            "variables": {"input":{"email":"alice.johnson@example.com","name":"Alice Johnson","phone":"+1-555-123-4567","website":"https://example.com"}},
             "operationName": "CreateContact",
         });
 
@@ -297,7 +297,7 @@ mutation CreateUser($input: CreateUserInput!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"input":{"name":"John Doe","email":"john@example.com","role":"admin"}},
+            "variables": {"input":{"email":"john@example.com","name":"John Doe","role":"admin"}},
             "operationName": "CreateUser",
         });
 
@@ -415,7 +415,7 @@ query ComplexSearch($searchTerm: String!, $userLimit: Int!, $postLimit: Int!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"searchTerm":"graphql","userLimit":5,"postLimit":10},
+            "variables": {"postLimit":10,"searchTerm":"graphql","userLimit":5},
             "operationName": "ComplexSearch",
         });
 
@@ -967,7 +967,7 @@ subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"authorId":"123","statuses":["PUBLISHED","DRAFT"],"tagFilter":"graphql","scoreThreshold":50},
+            "variables": {"authorId":"123","scoreThreshold":50,"statuses":["PUBLISHED","DRAFT"],"tagFilter":"graphql"},
             "operationName": "OnPostUpdated",
         });
 
@@ -1458,7 +1458,7 @@ mutation CreatePost($input: CreatePostInput!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"input":{"title":"My Post","content":"This is a post"}},
+            "variables": {"input":{"content":"This is a post","title":"My Post"}},
         });
 
         // Expected status code: 400
@@ -1934,7 +1934,7 @@ mutation Register($input: UserRegistrationInput!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"input":{"username":"johndoe","email":"john@example.com"}},
+            "variables": {"input":{"email":"john@example.com","username":"johndoe"}},
         });
 
         // Expected status code: 400
@@ -2045,7 +2045,7 @@ mutation UploadDocument($title: String!, $files: [Upload!]!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"title":"Important Documents","files":[null,null]},
+            "variables": {"files":[null,null],"title":"Important Documents"},
             "operationName": "UploadDocument",
         });
 
@@ -2131,7 +2131,7 @@ mutation UploadProfile($userId: ID!, $file: Upload!) {
 
         let mut payload = serde_json::json!({
             "query": query,
-            "variables": {"userId":"user-123","file":null},
+            "variables": {"file":null,"userId":"user-123"},
             "operationName": "UploadProfile",
         });
 

@@ -26,6 +26,6 @@ async def test_grpc_client_streaming_rapid_high_frequency_messages() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"event_id":"rapid-batch-001","event_count":50,"min_value":0.1,"max_value":5.0,"avg_value":2.55,"throughput_mps":500.0,"status":"PROCESSED"}'
+        == b'{"avg_value":2.55,"event_count":50,"event_id":"rapid-batch-001","max_value":5.0,"min_value":0.1,"status":"PROCESSED","throughput_mps":500.0}'
     )
     assert response.metadata is not None

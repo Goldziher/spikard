@@ -895,8 +895,8 @@ module E2ERubyApp
     app
   end
 
-  def create_db_pool()
-    { id: '000000000007', type: 'db_pool', timestamp: Time.now.to_s }
+  def di_async_factory_dependency_success_create_db_pool()
+    { "id" => '000000000007', "type" => 'db_pool', "timestamp" => Time.now.to_s }
   end
 
   def create_app_di_1_async_factory_dependency_success
@@ -906,16 +906,16 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool"), cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method("di_async_factory_dependency_success_create_db_pool"), cacheable: true))
     app
   end
 
-  def create_service_a(service_b:)
-    { id: '000000000009', type: 'service_a', timestamp: Time.now.to_s }
+  def di_circular_dependency_detection_error_create_service_b(service_a:)
+    { "id" => '000000000009', "type" => 'service_b', "timestamp" => Time.now.to_s }
   end
 
-  def create_service_b(service_a:)
-    { id: '000000000009', type: 'service_b', timestamp: Time.now.to_s }
+  def di_circular_dependency_detection_error_create_service_a(service_b:)
+    { "id" => '000000000009', "type" => 'service_a', "timestamp" => Time.now.to_s }
   end
 
   def create_app_di_2_circular_dependency_detection_error
@@ -925,35 +925,38 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("service_b", Spikard::Provide.new(method("create_service_b"), depends_on: ["service_a"]))
-    app.provide("service_a", Spikard::Provide.new(method("create_service_a"), depends_on: ["service_b"]))
+    app.provide("service_a", Spikard::Provide.new(method("di_circular_dependency_detection_error_create_service_a"), depends_on: ["service_b"]))
+    app.provide("service_b", Spikard::Provide.new(method("di_circular_dependency_detection_error_create_service_b"), depends_on: ["service_a"]))
     app
   end
 
   def create_app_di_3_dependency_injection_in_lifecycle_hooks_success
     app = Spikard::App.new
     # onRequest hook: log_request
-    on_request_proc = lambda do |request|
+    on_request_log_request_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_log_request_0)
     # preHandler hook: auth_check
-    pre_handler_proc = lambda do |request|
+    pre_handler_auth_check_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.pre_handler(&pre_handler_auth_check_0)
+
     app.get("/api/hook-di-test", handler_name: "di_3_dependency_injection_in_lifecycle_hooks_success") do |_request|
       build_response(content: {"authenticated" => true, "logged" => true}, status: 200, headers: {"X-Auth-Mode" => "strict", "X-Log-Level" => "debug"})
     end
 
     # Register dependencies
-    app.provide("logger", {"level" => "debug"})
     app.provide("auth_service", {"enabled" => true, "strict_mode" => true})
+    app.provide("logger", {"level" => "debug"})
     app
   end
 
-  def create_timestamp()
-    { id: '000000000013', type: 'timestamp_generator', timestamp: Time.now.to_s }
+  def di_factory_dependency_success_create_timestamp()
+    { "id" => '000000000013', "type" => 'timestamp_generator', "timestamp" => Time.now.to_s }
   end
 
   def create_app_di_4_factory_dependency_success
@@ -963,7 +966,7 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("timestamp_generator", Spikard::Provide.new(method("create_timestamp")))
+    app.provide("timestamp_generator", Spikard::Provide.new(method("di_factory_dependency_success_create_timestamp")))
     app
   end
 
@@ -975,38 +978,48 @@ module E2ERubyApp
     app
   end
 
-  def create_db_pool(app_config:)
+  def di_mixed_singleton_and_per_request_caching_success_create_db_pool(app_config:)
     # Singleton with counter
     singleton_key = 'singleton_db_pool'
-    BACKGROUND_STATE[singleton_key] ||= {
-      id: '00000000-0000-0000-0000-000000000063',
-      count: 0
-    }
-    BACKGROUND_STATE[singleton_key][:count] += 1
+    unless BACKGROUND_STATE.key?(singleton_key)
+      BACKGROUND_STATE[singleton_key] = {
+        "id" => '00000000-0000-0000-0000-000000000063',
+        "count" => 0
+      }
+    end
+    BACKGROUND_STATE[singleton_key]["count"] += 1
     BACKGROUND_STATE[singleton_key]
   end
 
-  def create_request_context(db_pool:)
-    { id: '00000000000f', type: 'request_context', timestamp: Time.now.to_s }
+  def di_mixed_singleton_and_per_request_caching_success_create_request_context(db_pool:)
+    { "id" => '00000000000f', "type" => 'request_context', "timestamp" => Time.now.to_s }
   end
 
   def create_app_di_6_mixed_singleton_and_per_request_caching_success
     app = Spikard::App.new
     app.get("/api/mixed-caching", handler_name: "di_6_mixed_singleton_and_per_request_caching_success") do |_request, app_config:, db_pool:, request_context:|
-      build_response(content: {"app_name" => "MyApp", "context_id" => "<<uuid>>", "pool_id" => "<<uuid>>"}, status: 200, headers: nil)
+      pool_key = "di_mixed_singleton_and_per_request_caching_success_pool"
+      ctx_key = "di_mixed_singleton_and_per_request_caching_success_ctx_counter"
+      pool = BACKGROUND_STATE[pool_key]
+      pool = { 'pool_id' => (db_pool['pool_id'] || db_pool['id']) } if pool.empty?
+      BACKGROUND_STATE[pool_key] = pool
+      ctx_count = Integer(BACKGROUND_STATE[ctx_key].first || 0)
+      BACKGROUND_STATE[ctx_key] = [ctx_count + 1]
+      context_id = "context-#{ctx_count + 1}"
+      build_response(content: {"app_name" => app_config['app_name'], "pool_id" => pool['pool_id'], "context_id" => context_id}, status: 200, headers: nil)
     end
 
     # Register dependencies
-    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool"), depends_on: ["app_config"], singleton: true))
     app.provide("app_config", {"app_name" => "MyApp", "version" => "2.0"})
-    app.provide("request_context", Spikard::Provide.new(method("create_request_context"), depends_on: ["db_pool"], cacheable: true))
+    app.provide("request_context", Spikard::Provide.new(method("di_mixed_singleton_and_per_request_caching_success_create_request_context"), depends_on: ["db_pool"], cacheable: true))
+    app.provide("db_pool", Spikard::Provide.new(method("di_mixed_singleton_and_per_request_caching_success_create_db_pool"), depends_on: ["app_config"], singleton: true))
     app
   end
 
-  def create_cache_connection_with_cleanup()
+  def di_multiple_dependencies_with_cleanup_success_create_db_connection_with_cleanup()
     # Create resource
     CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
-    resource = { id: '00000000002d', active: true }
+    resource = { "id" => '00000000002d', "active" => true }
 
     # Return resource and cleanup proc
     cleanup_proc = -> do
@@ -1016,10 +1029,10 @@ module E2ERubyApp
     [resource, cleanup_proc]
   end
 
-  def create_db_connection_with_cleanup()
+  def di_multiple_dependencies_with_cleanup_success_create_session_with_cleanup(db_connection:, cache_connection:)
     # Create resource
     CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
-    resource = { id: '00000000002d', active: true }
+    resource = { "id" => '00000000002d', "active" => true }
 
     # Return resource and cleanup proc
     cleanup_proc = -> do
@@ -1029,10 +1042,10 @@ module E2ERubyApp
     [resource, cleanup_proc]
   end
 
-  def create_session_with_cleanup(db_connection:, cache_connection:)
+  def di_multiple_dependencies_with_cleanup_success_create_cache_connection_with_cleanup()
     # Create resource
     CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] << 'session_opened'
-    resource = { id: '00000000002d', active: true }
+    resource = { "id" => '00000000002d', "active" => true }
 
     # Return resource and cleanup proc
     cleanup_proc = -> do
@@ -1045,40 +1058,30 @@ module E2ERubyApp
   def create_app_di_7_multiple_dependencies_with_cleanup_success
     app = Spikard::App.new
     app.get("/api/multi-cleanup-test", handler_name: "di_7_multiple_dependencies_with_cleanup_success") do |_request, session:|
-      body = request[:body]
-      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
-      value = body["event"]
-      raise ArgumentError, 'background handler missing value' if value.nil?
-      Spikard::Background.run do
-        BACKGROUND_STATE["di_7_multiple_dependencies_with_cleanup_success"] << value
-      end
       build_response(content: {"session_active" => true}, status: 200, headers: nil)
-    end
-    app.get("/api/multi-cleanup-state", handler_name: "di_7_multiple_dependencies_with_cleanup_success_background_state") do |_req|
-      build_response(content: { "cleanup_order" => BACKGROUND_STATE["di_7_multiple_dependencies_with_cleanup_success"] }, status: 200)
     end
 
     # Register dependencies
-    app.provide("session", Spikard::Provide.new(method("create_session_with_cleanup"), depends_on: ["db_connection", "cache_connection"], cacheable: true))
-    app.provide("cache_connection", Spikard::Provide.new(method("create_cache_connection_with_cleanup"), cacheable: true))
-    app.provide("db_connection", Spikard::Provide.new(method("create_db_connection_with_cleanup"), cacheable: true))
+    app.provide("db_connection", Spikard::Provide.new(method("di_multiple_dependencies_with_cleanup_success_create_db_connection_with_cleanup"), cacheable: true))
+    app.provide("cache_connection", Spikard::Provide.new(method("di_multiple_dependencies_with_cleanup_success_create_cache_connection_with_cleanup"), cacheable: true))
+    app.provide("session", Spikard::Provide.new(method("di_multiple_dependencies_with_cleanup_success_create_session_with_cleanup"), depends_on: ["db_connection", "cache_connection"], cacheable: true))
     app.get('/api/cleanup-state', handler_name: "di_7_multiple_dependencies_with_cleanup_success_cleanup_state") do |_req|
       build_response(content: { cleanup_events: CLEANUP_STATE[:di_multiple_dependencies_with_cleanup_success] }, status: 200)
     end
     app
   end
 
-  def create_auth_service(db_pool:, cache:)
+  def di_nested_dependencies_3_levels_success_create_cache_from_config(config:)
+    { "id" => '000000000005', "type" => 'cache', "timestamp" => Time.now.to_s }
+  end
+
+  def di_nested_dependencies_3_levels_success_create_auth_service(db_pool:, cache:)
     # Create auth service
-    { auth_service_enabled: true, has_db: !db_pool.nil?, has_cache: !cache.nil? }
+    { "auth_service_enabled" => true, "has_db" => !db_pool.nil?, "has_cache" => !cache.nil? }
   end
 
-  def create_db_pool_from_config(config:)
-    { id: '000000000007', type: 'db_pool', timestamp: Time.now.to_s }
-  end
-
-  def create_cache_from_config(config:)
-    { id: '000000000005', type: 'cache', timestamp: Time.now.to_s }
+  def di_nested_dependencies_3_levels_success_create_db_pool_from_config(config:)
+    { "id" => '000000000007', "type" => 'db_pool', "timestamp" => Time.now.to_s }
   end
 
   def create_app_di_8_nested_dependencies_3_levels_success
@@ -1088,10 +1091,10 @@ module E2ERubyApp
     end
 
     # Register dependencies
+    app.provide("db_pool", Spikard::Provide.new(method("di_nested_dependencies_3_levels_success_create_db_pool_from_config"), depends_on: ["config"], cacheable: true))
+    app.provide("auth_service", Spikard::Provide.new(method("di_nested_dependencies_3_levels_success_create_auth_service"), depends_on: ["db_pool", "cache"], cacheable: true))
     app.provide("config", {"cache_ttl" => 300, "db_url" => "postgresql://localhost/mydb"})
-    app.provide("cache", Spikard::Provide.new(method("create_cache_from_config"), depends_on: ["config"], cacheable: true))
-    app.provide("auth_service", Spikard::Provide.new(method("create_auth_service"), depends_on: ["db_pool", "cache"], cacheable: true))
-    app.provide("db_pool", Spikard::Provide.new(method("create_db_pool_from_config"), depends_on: ["config"], cacheable: true))
+    app.provide("cache", Spikard::Provide.new(method("di_nested_dependencies_3_levels_success_create_cache_from_config"), depends_on: ["config"], cacheable: true))
     app
   end
 
@@ -1107,18 +1110,19 @@ module E2ERubyApp
     app
   end
 
-  def create_request_id()
-    { id: '000000000014', type: 'request_id_generator', timestamp: Time.now.to_s }
+  def di_per_request_dependency_caching_success_create_request_id()
+    { "id" => '00000000-0000-4000-8000-000000000014', "type" => 'request_id_generator', "timestamp" => Time.now.to_s }
   end
 
   def create_app_di_10_per_request_dependency_caching_success
     app = Spikard::App.new
     app.get("/api/request-id", handler_name: "di_10_per_request_dependency_caching_success") do |_request, request_id_generator:|
-      build_response(content: {"first_id" => "<<uuid>>", "second_id" => "<<same_as:first_id>>"}, status: 200, headers: nil)
+      request_id = request_id_generator['id']
+      build_response(content: {"first_id" => request_id, "second_id" => request_id}, status: 200, headers: nil)
     end
 
     # Register dependencies
-    app.provide("request_id_generator", Spikard::Provide.new(method("create_request_id"), cacheable: true))
+    app.provide("request_id_generator", Spikard::Provide.new(method("di_per_request_dependency_caching_success_create_request_id"), cacheable: true))
     app
   end
 
@@ -1129,8 +1133,8 @@ module E2ERubyApp
     end
 
     # Register dependencies
-    app.provide("db_pool", {"status" => "connected"})
     app.provide("cache", {"status" => "ready"})
+    app.provide("db_pool", {"status" => "connected"})
     app
   end
 
@@ -1146,10 +1150,10 @@ module E2ERubyApp
     app
   end
 
-  def create_db_session_with_cleanup()
+  def di_resource_cleanup_after_request_success_create_db_session_with_cleanup()
     # Create resource
     CLEANUP_STATE[:di_resource_cleanup_after_request_success] << 'session_opened'
-    resource = { id: '000000000029', active: true }
+    resource = { "id" => '000000000029', "active" => true }
 
     # Return resource and cleanup proc
     cleanup_proc = -> do
@@ -1162,21 +1166,11 @@ module E2ERubyApp
   def create_app_di_13_resource_cleanup_after_request_success
     app = Spikard::App.new
     app.get("/api/cleanup-test", handler_name: "di_13_resource_cleanup_after_request_success") do |_request, db_session:|
-      body = request[:body]
-      raise ArgumentError, 'background handler requires JSON body' unless body.is_a?(Hash)
-      value = body["session_id"]
-      raise ArgumentError, 'background handler missing value' if value.nil?
-      Spikard::Background.run do
-        BACKGROUND_STATE["di_13_resource_cleanup_after_request_success"] << value
-      end
       build_response(content: {"session_id" => "<<uuid>>", "status" => "completed"}, status: 200, headers: nil)
-    end
-    app.get("/api/cleanup-state", handler_name: "di_13_resource_cleanup_after_request_success_background_state") do |_req|
-      build_response(content: { "cleanup_events" => BACKGROUND_STATE["di_13_resource_cleanup_after_request_success"] }, status: 200)
     end
 
     # Register dependencies
-    app.provide("db_session", Spikard::Provide.new(method("create_db_session_with_cleanup"), cacheable: true))
+    app.provide("db_session", Spikard::Provide.new(method("di_resource_cleanup_after_request_success_create_db_session_with_cleanup"), cacheable: true))
     app.get('/api/cleanup-state', handler_name: "di_13_resource_cleanup_after_request_success_cleanup_state") do |_req|
       build_response(content: { cleanup_events: CLEANUP_STATE[:di_resource_cleanup_after_request_success] }, status: 200)
     end
@@ -1206,25 +1200,28 @@ module E2ERubyApp
     app
   end
 
-  def create_app_counter()
+  def di_singleton_dependency_caching_success_create_app_counter()
     # Singleton with counter
     singleton_key = 'singleton_app_counter'
-    BACKGROUND_STATE[singleton_key] ||= {
-      id: '00000000-0000-0000-0000-000000000063',
-      count: 0
-    }
-    BACKGROUND_STATE[singleton_key][:count] += 1
+    unless BACKGROUND_STATE.key?(singleton_key)
+      BACKGROUND_STATE[singleton_key] = {
+        "id" => '00000000-0000-0000-0000-000000000063',
+        "count" => 0
+      }
+    end
+    BACKGROUND_STATE[singleton_key]["count"] += 1
     BACKGROUND_STATE[singleton_key]
   end
 
   def create_app_di_16_singleton_dependency_caching_success
     app = Spikard::App.new
     app.get("/api/app-counter", handler_name: "di_16_singleton_dependency_caching_success") do |_request, app_counter:|
-      build_response(content: {"count" => 1, "counter_id" => "<<uuid>>"}, status: 200, headers: nil)
+      app_counter['count'] = Integer(app_counter.fetch('count', 0)) + 1
+      build_response(content: {"counter_id" => app_counter['id'], "count" => app_counter['count']}, status: 200, headers: nil)
     end
 
     # Register dependencies
-    app.provide("app_counter", Spikard::Provide.new(method("create_app_counter"), singleton: true))
+    app.provide("app_counter", Spikard::Provide.new(method("di_singleton_dependency_caching_success_create_app_counter"), singleton: true))
     app
   end
 
@@ -1247,8 +1244,8 @@ module E2ERubyApp
 
     # Register dependencies
     app.provide("version", "1.0.0")
-    app.provide("app_name", "SpikardApp")
     app.provide("max_connections", 100)
+    app.provide("app_name", "SpikardApp")
     app
   end
 
@@ -1590,7 +1587,7 @@ module E2ERubyApp
 
   def create_app_headers_23_multiple_custom_headers
     app = Spikard::App.new
-    app.get("/headers/multiple", handler_name: "headers_23_multiple_custom_headers", parameter_schema: {"properties" => {"X-Client-Version" => {"annotation" => "str", "source" => "header", "type" => "string"}, "X-Request-Id" => {"annotation" => "str", "source" => "header", "type" => "string"}, "X-Trace-Id" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["X-Request-Id", "X-Client-Version", "X-Trace-Id"], "type" => "object"}) do |_request|
+    app.get("/headers/multiple", handler_name: "headers_23_multiple_custom_headers", parameter_schema: {"properties" => {"X-Client-Version" => {"annotation" => "str", "source" => "header", "type" => "string"}, "X-Request-Id" => {"annotation" => "str", "source" => "header", "type" => "string"}, "X-Trace-Id" => {"annotation" => "str", "source" => "header", "type" => "string"}}, "required" => ["X-Client-Version", "X-Request-Id", "X-Trace-Id"], "type" => "object"}) do |_request|
       build_response(content: {"x_client_version" => "1.2.3", "x_request_id" => "req-12345", "x_trace_id" => "trace-abc"}, status: 200, headers: nil)
     end
     app
@@ -2167,20 +2164,24 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_1_hook_execution_order
     app = Spikard::App.new
     # onRequest hook: first_hook
-    on_request_proc = lambda do |request|
+    on_request_first_hook_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_first_hook_0)
     # onRequest hook: second_hook
-    on_request_proc = lambda do |request|
+    on_request_second_hook_1 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_second_hook_1)
     # onRequest hook: third_hook
-    on_request_proc = lambda do |request|
+    on_request_third_hook_2 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_third_hook_2)
+
     app.get("/api/test-hook-order", handler_name: "lifecycle_hooks_1_hook_execution_order") do |_request|
       build_response(content: {"execution_order" => ["first_hook", "second_hook", "third_hook"], "message" => "Hooks executed in order"}, status: 200, headers: nil)
     end
@@ -2190,53 +2191,66 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_2_multiple_hooks_all_phases
     app = Spikard::App.new
     # onRequest hook: request_logger
-    on_request_proc = lambda do |request|
+    on_request_request_logger_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_request_logger_0)
     # onRequest hook: request_id_generator
-    on_request_proc = lambda do |request|
+    on_request_request_id_generator_1 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_request_id_generator_1)
     # preValidation hook: rate_limiter
-    pre_validation_proc = lambda do |request|
+    pre_validation_rate_limiter_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.pre_validation(&pre_validation_rate_limiter_0)
     # preHandler hook: authenticator
-    pre_handler_proc = lambda do |request|
+    pre_handler_authenticator_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.pre_handler(&pre_handler_authenticator_0)
     # preHandler hook: authorizer
-    pre_handler_proc = lambda do |request|
+    pre_handler_authorizer_1 = lambda do |request|
       # Mock implementation
       request
     end
+    app.pre_handler(&pre_handler_authorizer_1)
     # onResponse hook: security_headers - Adds security headers
-    on_response_proc = lambda do |response|
-      response.headers["X-Content-Type-Options"] = "nosniff"
-      response.headers["X-Frame-Options"] = "DENY"
-      response.headers["X-XSS-Protection"] = "1; mode=block"
-      response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    on_response_security_headers_0 = lambda do |response|
+      response[:headers] ||= {}
+      response[:headers]["X-Content-Type-Options"] = "nosniff"
+      response[:headers]["X-Frame-Options"] = "DENY"
+      response[:headers]["X-XSS-Protection"] = "1; mode=block"
+      response[:headers]["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
       response
     end
+    app.on_response(&on_response_security_headers_0)
     # onResponse hook: response_timer - Adds timing header
-    on_response_proc = lambda do |response|
-      response.headers["X-Response-Time"] = "0ms"
+    on_response_response_timer_1 = lambda do |response|
+      response[:headers] ||= {}
+      response[:headers]["X-Response-Time"] = "0ms"
       response
     end
+    app.on_response(&on_response_response_timer_1)
     # onResponse hook: audit_logger
-    on_response_proc = lambda do |response|
+    on_response_audit_logger_2 = lambda do |response|
       # Mock implementation
       response
     end
+    app.on_response(&on_response_audit_logger_2)
     # onError hook: error_logger
-    on_error_proc = lambda do |response|
-      response.headers["Content-Type"] = "application/json"
+    on_error_error_logger_0 = lambda do |response|
+      response[:headers] ||= {}
+      response[:headers]["Content-Type"] = "application/json"
       response
     end
+    app.on_error(&on_error_error_logger_0)
+
     app.post("/api/full-lifecycle", handler_name: "lifecycle_hooks_2_multiple_hooks_all_phases", request_schema: {"properties" => {"action" => {"type" => "string"}, "user_id" => {"type" => "string"}}, "required" => ["user_id", "action"], "type" => "object"}) do |_request|
       build_response(content: {"action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"}, status: 200, headers: {"X-Content-Type-Options" => "nosniff", "X-Frame-Options" => "DENY", "X-Request-ID" => ".*", "X-Response-Time" => ".*ms"})
     end
@@ -2246,15 +2260,20 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_3_onerror_error_logging
     app = Spikard::App.new
     # onError hook: error_logger
-    on_error_proc = lambda do |response|
-      response.headers["Content-Type"] = "application/json"
+    on_error_error_logger_0 = lambda do |response|
+      response[:headers] ||= {}
+      response[:headers]["Content-Type"] = "application/json"
       response
     end
+    app.on_error(&on_error_error_logger_0)
     # onError hook: error_formatter
-    on_error_proc = lambda do |response|
-      response.headers["Content-Type"] = "application/json"
+    on_error_error_formatter_1 = lambda do |response|
+      response[:headers] ||= {}
+      response[:headers]["Content-Type"] = "application/json"
       response
     end
+    app.on_error(&on_error_error_formatter_1)
+
     app.get("/api/test-error", handler_name: "lifecycle_hooks_3_onerror_error_logging") do |_request|
       build_response(content: {"error" => "Internal Server Error", "error_id" => ".*", "message" => "An unexpected error occurred"}, status: 500, headers: {"Content-Type" => "application/json"})
     end
@@ -2264,15 +2283,18 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_4_onrequest_request_logging
     app = Spikard::App.new
     # onRequest hook: request_logger
-    on_request_proc = lambda do |request|
+    on_request_request_logger_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_request_logger_0)
     # onRequest hook: request_id_generator
-    on_request_proc = lambda do |request|
+    on_request_request_id_generator_1 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_request_id_generator_1)
+
     app.get("/api/test-on-request", handler_name: "lifecycle_hooks_4_onrequest_request_logging") do |_request|
       build_response(content: {"has_request_id" => true, "message" => "onRequest hooks executed", "request_logged" => true}, status: 200, headers: {"X-Request-ID" => ".*"})
     end
@@ -2282,15 +2304,19 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_5_onresponse_response_timing
     app = Spikard::App.new
     # onRequest hook: start_timer
-    on_request_proc = lambda do |request|
+    on_request_start_timer_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.on_request(&on_request_start_timer_0)
     # onResponse hook: response_timer - Adds timing header
-    on_response_proc = lambda do |response|
-      response.headers["X-Response-Time"] = "0ms"
+    on_response_response_timer_0 = lambda do |response|
+      response[:headers] ||= {}
+      response[:headers]["X-Response-Time"] = "0ms"
       response
     end
+    app.on_response(&on_response_response_timer_0)
+
     app.get("/api/test-timing", handler_name: "lifecycle_hooks_5_onresponse_response_timing") do |_request|
       build_response(content: {"message" => "Response with timing info"}, status: 200, headers: {"X-Response-Time" => ".*ms"})
     end
@@ -2300,13 +2326,16 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_6_onresponse_security_headers
     app = Spikard::App.new
     # onResponse hook: security_headers - Adds security headers
-    on_response_proc = lambda do |response|
-      response.headers["X-Content-Type-Options"] = "nosniff"
-      response.headers["X-Frame-Options"] = "DENY"
-      response.headers["X-XSS-Protection"] = "1; mode=block"
-      response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    on_response_security_headers_0 = lambda do |response|
+      response[:headers] ||= {}
+      response[:headers]["X-Content-Type-Options"] = "nosniff"
+      response[:headers]["X-Frame-Options"] = "DENY"
+      response[:headers]["X-XSS-Protection"] = "1; mode=block"
+      response[:headers]["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
       response
     end
+    app.on_response(&on_response_security_headers_0)
+
     app.get("/api/test-security-headers", handler_name: "lifecycle_hooks_6_onresponse_security_headers") do |_request|
       build_response(content: {"message" => "Response with security headers"}, status: 200, headers: {"Strict-Transport-Security" => "max-age=31536000; includeSubDomains", "X-Content-Type-Options" => "nosniff", "X-Frame-Options" => "DENY", "X-XSS-Protection" => "1; mode=block"})
     end
@@ -2316,12 +2345,15 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_7_prehandler_authentication_failed_short_circuit
     app = Spikard::App.new
     # preHandler hook: authenticator - Short circuits with 401
-    pre_handler_proc = lambda do |_request|
-      build_response(
-        content: { error: "Unauthorized", message: "Invalid or expired authentication token" },
-        status: 401
-      )
+    pre_handler_authenticator_0 = lambda do |_request|
+      {
+        status_code: 401,
+        content: JSON.generate({ error: "Unauthorized", message: "Invalid or expired authentication token" }),
+        headers: { "Content-Type" => "application/json" }
+      }
     end
+    app.pre_handler(&pre_handler_authenticator_0)
+
     app.get("/api/protected-resource-fail", handler_name: "lifecycle_hooks_7_prehandler_authentication_failed_short_circuit") do |_request|
       build_response(content: {"error" => "Unauthorized", "message" => "Invalid or expired authentication token"}, status: 401, headers: nil)
     end
@@ -2331,10 +2363,12 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_8_prehandler_authentication_success
     app = Spikard::App.new
     # preHandler hook: authenticator
-    pre_handler_proc = lambda do |request|
+    pre_handler_authenticator_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.pre_handler(&pre_handler_authenticator_0)
+
     app.get("/api/protected-resource", handler_name: "lifecycle_hooks_8_prehandler_authentication_success") do |_request|
       build_response(content: {"authenticated" => true, "message" => "Access granted", "user_id" => "user-123"}, status: 200, headers: nil)
     end
@@ -2344,15 +2378,18 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_9_prehandler_authorization_check
     app = Spikard::App.new
     # preHandler hook: authenticator
-    pre_handler_proc = lambda do |request|
+    pre_handler_authenticator_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.pre_handler(&pre_handler_authenticator_0)
     # preHandler hook: authorizer
-    pre_handler_proc = lambda do |request|
+    pre_handler_authorizer_1 = lambda do |request|
       # Mock implementation
       request
     end
+    app.pre_handler(&pre_handler_authorizer_1)
+
     app.get("/api/admin-only", handler_name: "lifecycle_hooks_9_prehandler_authorization_check") do |_request|
       build_response(content: {"message" => "Admin access granted", "role" => "admin", "user_id" => "admin-456"}, status: 200, headers: nil)
     end
@@ -2362,19 +2399,24 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_10_prehandler_authorization_forbidden_short_circuit
     app = Spikard::App.new
     # preHandler hook: authenticator - Short circuits with 403
-    pre_handler_proc = lambda do |_request|
-      build_response(
-        content: { error: "Forbidden", message: "Admin role required for this endpoint" },
-        status: 403
-      )
+    pre_handler_authenticator_0 = lambda do |_request|
+      {
+        status_code: 403,
+        content: JSON.generate({ error: "Forbidden", message: "Admin role required for this endpoint" }),
+        headers: { "Content-Type" => "application/json" }
+      }
     end
+    app.pre_handler(&pre_handler_authenticator_0)
     # preHandler hook: authorizer - Short circuits with 403
-    pre_handler_proc = lambda do |_request|
-      build_response(
-        content: { error: "Forbidden", message: "Admin role required for this endpoint" },
-        status: 403
-      )
+    pre_handler_authorizer_1 = lambda do |_request|
+      {
+        status_code: 403,
+        content: JSON.generate({ error: "Forbidden", message: "Admin role required for this endpoint" }),
+        headers: { "Content-Type" => "application/json" }
+      }
     end
+    app.pre_handler(&pre_handler_authorizer_1)
+
     app.get("/api/admin-only-forbidden", handler_name: "lifecycle_hooks_10_prehandler_authorization_forbidden_short_circuit") do |_request|
       build_response(content: {"error" => "Forbidden", "message" => "Admin role required for this endpoint"}, status: 403, headers: nil)
     end
@@ -2384,13 +2426,15 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_11_prevalidation_rate_limit_exceeded_short_circuit
     app = Spikard::App.new
     # preValidation hook: rate_limiter - Short circuits with 429
-    pre_validation_proc = lambda do |_request|
-      build_response(
-        content: { error: "Rate limit exceeded", message: "Too many requests, please try again later" },
-        status: 429,
-        headers: { "Retry-After" => "60" }
-      )
+    pre_validation_rate_limiter_0 = lambda do |_request|
+      {
+        status_code: 429,
+        content: JSON.generate({ error: "Rate limit exceeded", message: "Too many requests, please try again later" }),
+        headers: { "Content-Type" => "application/json", "Retry-After" => "60" }
+      }
     end
+    app.pre_validation(&pre_validation_rate_limiter_0)
+
     app.post("/api/test-rate-limit-exceeded", handler_name: "lifecycle_hooks_11_prevalidation_rate_limit_exceeded_short_circuit", request_schema: {"properties" => {"data" => {"type" => "string"}}, "required" => ["data"], "type" => "object"}) do |_request|
       build_response(content: {"error" => "Rate limit exceeded", "message" => "Too many requests, please try again later"}, status: 429, headers: {"Retry-After" => "60"})
     end
@@ -2400,10 +2444,12 @@ module E2ERubyApp
   def create_app_lifecycle_hooks_12_prevalidation_rate_limiting
     app = Spikard::App.new
     # preValidation hook: rate_limiter
-    pre_validation_proc = lambda do |request|
+    pre_validation_rate_limiter_0 = lambda do |request|
       # Mock implementation
       request
     end
+    app.pre_validation(&pre_validation_rate_limiter_0)
+
     app.post("/api/test-rate-limit", handler_name: "lifecycle_hooks_12_prevalidation_rate_limiting", request_schema: {"properties" => {"data" => {"type" => "string"}}, "required" => ["data"], "type" => "object"}) do |_request|
       build_response(content: {"message" => "Request accepted", "rate_limit_checked" => true}, status: 200, headers: nil)
     end
@@ -2804,7 +2850,7 @@ module E2ERubyApp
 
   def create_app_path_params_28_multiple_path_parameters_success
     app = Spikard::App.new
-    app.get("/{version}/{service_id}/{user_id}/{order_id}", handler_name: "path_params_28_multiple_path_parameters_success", parameter_schema: {"properties" => {"order_id" => {"format" => "uuid", "source" => "path", "type" => "string"}, "service_id" => {"source" => "path", "type" => "integer"}, "user_id" => {"source" => "path", "type" => "string"}, "version" => {"source" => "path", "type" => "number"}}, "required" => ["version", "service_id", "user_id", "order_id"], "type" => "object"}) do |_request|
+    app.get("/{version}/{service_id}/{user_id}/{order_id}", handler_name: "path_params_28_multiple_path_parameters_success", parameter_schema: {"properties" => {"order_id" => {"format" => "uuid", "source" => "path", "type" => "string"}, "service_id" => {"source" => "path", "type" => "integer"}, "user_id" => {"source" => "path", "type" => "string"}, "version" => {"source" => "path", "type" => "number"}}, "required" => ["order_id", "service_id", "user_id", "version"], "type" => "object"}) do |_request|
       build_response(content: {"order_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716", "service_id" => 1, "user_id" => "abc", "version" => 1.0}, status: 200, headers: nil)
     end
     app
@@ -3284,7 +3330,7 @@ module E2ERubyApp
 
   def create_app_query_params_51_multiple_query_parameters_with_different_types
     app = Spikard::App.new
-    app.get("/query/multi-type", handler_name: "query_params_51_multiple_query_parameters_with_different_types", parameter_schema: {"properties" => {"active" => {"annotation" => "bool", "source" => "query", "type" => "boolean"}, "age" => {"annotation" => "int", "source" => "query", "type" => "integer"}, "name" => {"annotation" => "str", "source" => "query", "type" => "string"}, "score" => {"annotation" => "float", "source" => "query", "type" => "number"}}, "required" => ["name", "age", "active", "score"], "type" => "object"}) do |_request|
+    app.get("/query/multi-type", handler_name: "query_params_51_multiple_query_parameters_with_different_types", parameter_schema: {"properties" => {"active" => {"annotation" => "bool", "source" => "query", "type" => "boolean"}, "age" => {"annotation" => "int", "source" => "query", "type" => "integer"}, "name" => {"annotation" => "str", "source" => "query", "type" => "string"}, "score" => {"annotation" => "float", "source" => "query", "type" => "number"}}, "required" => ["active", "age", "name", "score"], "type" => "object"}) do |_request|
       build_response(content: {"active" => true, "age" => 30, "name" => "john", "score" => 95.5}, status: 200, headers: nil)
     end
     app
@@ -4038,7 +4084,7 @@ module E2ERubyApp
 
   def create_app_validation_errors_9_invalid_boolean_value
     app = Spikard::App.new
-    app.get("/items/", handler_name: "validation_errors_9_invalid_boolean_value", parameter_schema: {"properties" => {"is_active" => {"source" => "query", "type" => "boolean"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["q", "is_active"], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "validation_errors_9_invalid_boolean_value", parameter_schema: {"properties" => {"is_active" => {"source" => "query", "type" => "boolean"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["is_active", "q"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "1 validation error in request", "errors" => [{"input" => "maybe", "loc" => ["query", "is_active"], "msg" => "Input should be a valid boolean, unable to interpret input", "type" => "bool_parsing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
@@ -4102,7 +4148,7 @@ module E2ERubyApp
 
   def create_app_validation_errors_17_numeric_constraint_violation_gt_greater_than
     app = Spikard::App.new
-    app.get("/items/", handler_name: "validation_errors_17_numeric_constraint_violation_gt_greater_than", parameter_schema: {"properties" => {"price" => {"exclusiveMinimum" => 0, "source" => "query", "type" => "number"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["q", "price"], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "validation_errors_17_numeric_constraint_violation_gt_greater_than", parameter_schema: {"properties" => {"price" => {"exclusiveMinimum" => 0, "source" => "query", "type" => "number"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["price", "q"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"gt" => 0}, "input" => "0", "loc" => ["query", "price"], "msg" => "Input should be greater than 0", "type" => "greater_than"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app
@@ -4110,7 +4156,7 @@ module E2ERubyApp
 
   def create_app_validation_errors_18_numeric_constraint_violation_le_less_than_or_equal
     app = Spikard::App.new
-    app.get("/items/", handler_name: "validation_errors_18_numeric_constraint_violation_le_less_than_or_equal", parameter_schema: {"properties" => {"limit" => {"maximum" => 100, "source" => "query", "type" => "integer"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["q", "limit"], "type" => "object"}) do |_request|
+    app.get("/items/", handler_name: "validation_errors_18_numeric_constraint_violation_le_less_than_or_equal", parameter_schema: {"properties" => {"limit" => {"maximum" => 100, "source" => "query", "type" => "integer"}, "q" => {"source" => "query", "type" => "string"}}, "required" => ["limit", "q"], "type" => "object"}) do |_request|
       build_response(content: {"detail" => "1 validation error in request", "errors" => [{"ctx" => {"le" => 100}, "input" => "101", "loc" => ["query", "limit"], "msg" => "Input should be less than or equal to 100", "type" => "less_than_equal"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}, status: 422, headers: nil)
     end
     app

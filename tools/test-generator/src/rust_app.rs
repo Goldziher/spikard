@@ -53,6 +53,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
+use crate::dependencies::{Dependency, DependencyConfig};
 use crate::fixture_filter::is_http_fixture_category;
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
 use crate::streaming::chunk_bytes;
@@ -162,6 +163,7 @@ path = "src/main.rs"
 
 [dependencies]
 spikard = { path = "../../crates/spikard" }
+spikard-core = { path = "../../crates/spikard-core" }
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -173,6 +175,9 @@ bytes = "1.7"
 futures = "0.3"
 axum-test = "18"
 uuid = "1"
+
+[package.metadata.cargo-machete]
+ignored = ["axum-test", "serde", "tracing"]
 "#
     .to_string()
 }
@@ -258,6 +263,7 @@ fn generate_lib_rs(
     header.push_str("use axum::body::Body;\n");
     header.push_str("use axum::http::{HeaderName, HeaderValue, Response, StatusCode};\n");
     header.push_str("use serde_json::{json, Value};\n");
+    header.push_str("use spikard_core::di::{DependencyError, FactoryDependency};\n");
     header.push_str(
         "use spikard::{App, AppError, CompressionConfig, CorsConfig, HandlerResponse, HandlerResult, HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, RateLimitConfig, RequestContext, RouteBuilder, ServerConfig, SseEvent, SseEventProducer, StaticFilesConfig, WebSocketHandler, add_cors_headers, handle_preflight, request_hook, response_hook, validate_cors_request, delete, get, patch, post, put};\n",
     );
@@ -314,8 +320,21 @@ fn generate_fixture_handler_and_app(
     let fixture_id = format!("{}_{}", category, sanitize_name(&fixture.name));
     let handler_name = format!("{}_handler", fixture_id);
     let app_fn_name = format!("create_app_{}", fixture_id);
+    let di_config = DependencyConfig::from_fixture(fixture).ok().flatten();
 
     if let Ok(Some(background)) = background_data(fixture) {
+        if let Some(ref di_cfg) = di_config
+            && di_cfg.dependencies.values().any(|dependency| dependency.cleanup)
+        {
+            return generate_background_di_fixture(
+                fixture,
+                &fixture_id,
+                &handler_name,
+                &app_fn_name,
+                background,
+                di_cfg,
+            );
+        }
         return generate_background_fixture(fixture, &fixture_id, &handler_name, &app_fn_name, background);
     }
 
@@ -393,6 +412,7 @@ fn generate_fixture_handler_and_app(
             fixture,
             parameter_schema,
             file_params,
+            None,
         ))
     };
 
@@ -528,6 +548,7 @@ pub fn {app_fn_name}() -> Result<App, AppError> {{
         fixture,
         parameter_schema,
         file_params,
+        None,
     );
     app_fn_code.push_str(&format!(
         r#"    {{
@@ -560,6 +581,312 @@ pub fn {app_fn_name}() -> Result<App, AppError> {{
     ));
 
     (handler_code, app_fn_code)
+}
+
+fn generate_background_di_fixture(
+    fixture: &Fixture,
+    fixture_id: &str,
+    handler_name: &str,
+    app_fn_name: &str,
+    background: BackgroundFixtureData,
+    di_config: &DependencyConfig,
+) -> (String, String) {
+    let route = if let Some(handler) = &fixture.handler {
+        handler.route.clone()
+    } else {
+        fixture.request.path.clone()
+    };
+    let route_path = route.split('?').next().unwrap_or(&route).to_string();
+    let method = fixture.request.method.as_str();
+    let state_handler_name = format!("{}_background_state", handler_name);
+    let expected_status = fixture.expected_response.status_code;
+    let sanitized_headers = sanitized_expected_headers(fixture);
+    let header_literal = header_literal(&sanitized_headers);
+    let header_apply_block = header_application_block("    ", header_literal.as_deref());
+
+    let dependency_checks = di_config
+        .handler_dependencies
+        .iter()
+        .map(|dependency| {
+            let dependency_literal = escape_rust_string(dependency);
+            format!(
+                r#"    if !dependencies.contains("{dependency}") {{
+        let response = Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header("content-type", "application/json")
+            .body(Body::from(json!({{"error": "missing dependency", "dependency": "{dependency}"}}).to_string()))
+            .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+        return Ok(response);
+    }}
+"#,
+                dependency = dependency_literal
+            )
+        })
+        .collect::<String>();
+
+    let response_body = if let Some(body) = &fixture.expected_response.body {
+        let body_json = serde_json::to_string(body).unwrap_or_else(|_| "null".to_string());
+        format!(
+            r#"    let body_value: Value = serde_json::from_str("{body}").unwrap_or_else(|_| Value::Null);
+    let response = Response::builder()
+        .status(StatusCode::from_u16({status}).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
+        .header("content-type", "application/json")
+        .body(Body::from(body_value.to_string()))
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+"#,
+            body = escape_rust_string(&body_json),
+            status = expected_status
+        )
+    } else {
+        format!(
+            r#"    let response = Response::builder()
+        .status(StatusCode::from_u16({status}).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR))
+        .body(Body::empty())
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+"#,
+            status = expected_status
+        )
+    };
+
+    let handler_code = format!(
+        r#"async fn {handler_name}(ctx: RequestContext) -> HandlerResult {{
+    let dependencies = match ctx.dependencies() {{
+        Some(dependencies) => dependencies,
+        None => {{
+            let response = Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .header("content-type", "application/json")
+                .body(Body::from(json!({{"error": "missing resolved dependencies"}}).to_string()))
+                .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+            return Ok(response);
+        }}
+    }};
+{dependency_checks}{response_body}{header_apply}    Ok(response)
+}}
+
+async fn {state_handler_name}(_ctx: RequestContext, state: Arc<Mutex<Vec<String>>>) -> HandlerResult {{
+    let values = {{
+        let guard = state.lock().await;
+        guard.clone()
+    }};
+    let response = Response::builder()
+        .status(StatusCode::OK)
+        .header("content-type", "application/json")
+        .body(Body::from(json!({{ "{state_key}": values }}).to_string()))
+        .unwrap_or_else(|_| Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).body(Body::empty()).unwrap());
+    Ok(response)
+}}"#,
+        handler_name = handler_name,
+        dependency_checks = dependency_checks,
+        response_body = response_body,
+        header_apply = header_apply_block,
+        state_handler_name = state_handler_name,
+        state_key = background.state_key
+    );
+
+    let parameters_value = fixture
+        .handler
+        .as_ref()
+        .and_then(|h| h.parameters.clone())
+        .unwrap_or_else(|| serde_json::Value::Object(serde_json::Map::new()));
+    let parameter_schema = build_parameter_schema_from_fixture(&parameters_value);
+    let file_params = extract_file_params(&parameters_value);
+    let builder_expr = route_builder_expression(
+        method,
+        &route_path,
+        handler_name,
+        fixture,
+        parameter_schema,
+        file_params,
+        Some(&di_config.handler_dependencies),
+    );
+
+    let dependency_registration =
+        generate_rust_dependency_registration(di_config, fixture_id, Some("cleanup_state")).unwrap_or_default();
+    let state_route = escape_rust_string(&background.state_path);
+    let app_fn_code = format!(
+        r#"/// App for fixture: {fixture_name}
+pub fn {app_fn_name}() -> Result<App, AppError> {{
+    let cleanup_state: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+{dependency_registration}    let mut app = App::new().config(config);
+    app.route({builder}, {handler_name})?;
+    {{
+        let state_clone = Arc::clone(&cleanup_state);
+        app.route(
+            get("{state_route}").handler_name("{state_handler_name}"),
+            move |ctx: RequestContext| {{
+                let state_clone = Arc::clone(&state_clone);
+                async move {{ {state_handler_name}(ctx, state_clone).await }}
+            }},
+        )?;
+    }}
+
+    Ok(app)
+}}"#,
+        fixture_name = fixture.name,
+        app_fn_name = app_fn_name,
+        dependency_registration = dependency_registration,
+        builder = builder_expr,
+        handler_name = handler_name,
+        state_route = state_route,
+        state_handler_name = state_handler_name
+    );
+
+    (handler_code, app_fn_code)
+}
+
+fn generate_rust_dependency_registration(
+    di_config: &DependencyConfig,
+    fixture_id: &str,
+    cleanup_state_var: Option<&str>,
+) -> Result<String> {
+    let mut code = String::from("    let mut config_builder = ServerConfig::builder();\n");
+    let all_dependencies = di_config.all_dependencies();
+    let resolution_order = di_config.compute_resolution_order()?;
+
+    for mut batch in resolution_order {
+        batch.sort_by_key(|key| rust_dependency_priority(key));
+        for key in batch {
+            if let Some(dependency) = all_dependencies.get(&key) {
+                code.push_str(&generate_rust_dependency_registration_line(
+                    dependency,
+                    fixture_id,
+                    cleanup_state_var,
+                )?);
+            }
+        }
+    }
+
+    code.push_str("    let config = config_builder.build();\n");
+    Ok(code)
+}
+
+fn generate_rust_dependency_registration_line(
+    dependency: &Dependency,
+    fixture_id: &str,
+    cleanup_state_var: Option<&str>,
+) -> Result<String> {
+    if dependency.is_value() {
+        let value_json = serde_json::to_string(dependency.value.as_ref().unwrap_or(&Value::Null))?;
+        return Ok(format!(
+            "    config_builder = config_builder.provide_value(\"{key}\", serde_json::from_str::<Value>(\"{value_json}\").unwrap_or(Value::Null));\n",
+            key = escape_rust_string(&dependency.key),
+            value_json = escape_rust_string(&value_json)
+        ));
+    }
+
+    let dependency_key = escape_rust_string(&dependency.key);
+    let dependency_guards = dependency
+        .depends_on
+        .iter()
+        .map(|dependency_name| {
+            format!(
+                "                    if !resolved.contains(\"{dependency_name}\") {{\n                        return Err(DependencyError::ResolutionFailed {{ message: \"Missing dependency '{dependency_name}'\".to_string() }});\n                    }}\n",
+                dependency_name = escape_rust_string(dependency_name)
+            )
+        })
+        .collect::<String>();
+
+    let cleanup_logic = if dependency.cleanup {
+        cleanup_state_var.context("cleanup dependency requires cleanup state storage")?;
+        let (open_event, close_event) = rust_cleanup_event_names(&dependency.key);
+        format!(
+            "                {{\n                    let mut guard = cleanup_state.lock().await;\n                    guard.push(\"{open_event}\".to_string());\n                }}\n                let cleanup_state_for_task = Arc::clone(&cleanup_state);\n                resolved.add_cleanup_task(Box::new(move || {{\n                    let cleanup_state = Arc::clone(&cleanup_state_for_task);\n                    Box::pin(async move {{\n                        let mut guard = cleanup_state.lock().await;\n                        guard.push(\"{close_event}\".to_string());\n                    }})\n                }}));\n",
+            open_event = open_event,
+            close_event = close_event,
+        )
+    } else {
+        String::new()
+    };
+
+    let dependency_value = if dependency.cleanup {
+        format!(
+            "serde_json::json!({{\"resource\": \"{}\", \"fixture\": \"{}\"}})",
+            dependency.key, fixture_id
+        )
+    } else if dependency.key.contains("db") || dependency.key.contains("database") {
+        "serde_json::json!({\"connected\": true, \"kind\": \"database\"})".to_string()
+    } else if dependency.key.contains("cache") {
+        "serde_json::json!({\"connected\": true, \"kind\": \"cache\"})".to_string()
+    } else if dependency.key.contains("auth") {
+        "serde_json::json!({\"enabled\": true, \"kind\": \"auth\"})".to_string()
+    } else {
+        format!("serde_json::json!({{\"dependency\": \"{}\"}})", dependency.key)
+    };
+
+    let depends_on_builder = if dependency.depends_on.is_empty() {
+        String::new()
+    } else {
+        let depends_on = dependency
+            .depends_on
+            .iter()
+            .map(|dependency_name| format!("\"{}\".to_string()", escape_rust_string(dependency_name)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("            .depends_on(vec![{}])\n", depends_on)
+    };
+    let cacheable_builder = if dependency.cacheable {
+        "            .cacheable(true)\n"
+    } else {
+        ""
+    };
+    let singleton_builder = if dependency.singleton {
+        "            .singleton(true)\n"
+    } else {
+        ""
+    };
+    let cleanup_setup = if dependency.cleanup {
+        let state_var = cleanup_state_var.context("cleanup dependency requires cleanup state storage")?;
+        format!(
+            "        let cleanup_state = Arc::clone(&{});\n",
+            escape_rust_string(state_var)
+        )
+    } else {
+        String::new()
+    };
+
+    Ok(format!(
+        "    {{\n{cleanup_setup}        let dependency = FactoryDependency::builder(\"{dependency_key}\")\n{depends_on_builder}{cacheable_builder}{singleton_builder}            .factory(move |_req, _data, resolved| {{\n{cleanup_clone}                let resolved = resolved.clone();\n                Box::pin(async move {{\n{dependency_guards}{cleanup_logic}                    let value = {dependency_value};\n                    Ok(Arc::new(value) as Arc<dyn std::any::Any + Send + Sync>)\n                }})\n            }})\n            .build()\n            .expect(\"Failed to build generated dependency\");\n        config_builder = config_builder.provide(Arc::new(dependency));\n    }}\n",
+        cleanup_setup = cleanup_setup,
+        dependency_key = dependency_key,
+        depends_on_builder = depends_on_builder,
+        cacheable_builder = cacheable_builder,
+        singleton_builder = singleton_builder,
+        cleanup_clone = if dependency.cleanup {
+            "                let cleanup_state = Arc::clone(&cleanup_state);\n"
+        } else {
+            ""
+        },
+        dependency_guards = dependency_guards,
+        cleanup_logic = cleanup_logic,
+        dependency_value = dependency_value,
+    ))
+}
+
+fn rust_cleanup_event_names(key: &str) -> (&'static str, &'static str) {
+    let lowered = key.to_ascii_lowercase();
+    if lowered.contains("session") {
+        return ("session_opened", "session_closed");
+    }
+    if lowered.contains("cache") {
+        return ("cache_opened", "cache_closed");
+    }
+    if lowered.contains("db") || lowered.contains("database") {
+        return ("db_opened", "db_closed");
+    }
+    ("resource_opened", "resource_closed")
+}
+
+fn rust_dependency_priority(key: &str) -> (u8, String) {
+    let lowered = key.to_ascii_lowercase();
+    let priority = if lowered.contains("db") || lowered.contains("database") {
+        0
+    } else if lowered.contains("cache") {
+        1
+    } else {
+        2
+    };
+    (priority, lowered)
 }
 
 /// Sanitize fixture name to valid Rust identifier
@@ -1419,6 +1746,7 @@ fn route_builder_expression(
     fixture: &Fixture,
     parameter_schema: Option<Value>,
     file_params: Option<Value>,
+    handler_dependencies: Option<&[String]>,
 ) -> String {
     let escaped_route = escape_rust_string(route);
     let mut builder = match method.to_uppercase().as_str() {
@@ -1502,6 +1830,17 @@ fn route_builder_expression(
             ".file_params_json(serde_json::from_str::<Value>(\"{}\").unwrap_or(Value::Null))",
             escape_rust_string(&files_json)
         ));
+    }
+
+    if let Some(handler_dependencies) = handler_dependencies
+        && !handler_dependencies.is_empty()
+    {
+        let dependencies = handler_dependencies
+            .iter()
+            .map(|dependency| format!("\"{}\".to_string()", escape_rust_string(dependency)))
+            .collect::<Vec<_>>()
+            .join(", ");
+        builder.push_str(&format!(".handler_dependencies(vec![{}])", dependencies));
     }
 
     builder

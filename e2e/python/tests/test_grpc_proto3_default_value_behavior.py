@@ -24,5 +24,5 @@ async def test_grpc_proto3_default_value_behavior() -> None:
     response = await handle_grpc_proto3_default_value_behavior(request)
 
     # Verify response
-    assert response.payload == b'{"id":1,"name":"","active":false,"has_id":true}'
+    assert response.payload == b'{"active":false,"has_id":true,"id":1,"name":""}'
     assert response.metadata is not None

@@ -7,6 +7,7 @@ module Spikard
   # Testing helpers that wrap the native Ruby extension.
   module Testing
     GRAPHQL_WS_MAX_CONTROL_MESSAGES = 32
+    @open_test_clients = []
 
     module_function
 
@@ -46,11 +47,39 @@ module Spikard
       Spikard::Native::TestClient.new(routes_json, handlers, config, ws_handlers, sse_producers, payload)
     end
 
+    def register_test_client(client)
+      @open_test_clients << client
+      client
+    end
+
+    def unregister_test_client(client)
+      @open_test_clients.delete(client)
+      client
+    end
+
+    def close_all_test_clients
+      clients = @open_test_clients.dup
+      @open_test_clients.clear
+
+      clients.each do |client|
+        client.close
+      rescue StandardError
+        nil
+      end
+
+      if defined?(Spikard::Native) &&
+         Spikard::Native.respond_to?(:__shutdown_websocket_workers__, true)
+        Spikard::Native.__shutdown_websocket_workers__
+      end
+    end
+
     # High level wrapper around the native test client.
     # rubocop:disable Metrics/ClassLength
     class TestClient
       def initialize(native)
         @native = native
+        @closed = false
+        Spikard::Testing.register_test_client(self)
       end
 
       # Factory method for creating test client from an app
@@ -193,7 +222,12 @@ module Spikard
       # rubocop:enable Metrics/AbcSize, Metrics/BlockLength, Metrics/CyclomaticComplexity
 
       def close
+        return if @closed
+
+        @closed = true
         @native.close
+      ensure
+        Spikard::Testing.unregister_test_client(self)
       end
 
       %w[get post put patch delete head options trace].each do |verb|

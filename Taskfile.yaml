@@ -852,11 +852,18 @@ tasks:
     cmds:
       - php -d extension={{.PHP_EXTENSION_PATH}} ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
 
+  e2e:elixir:install:
+    desc: "Install Elixir e2e app dependencies"
+    dir: e2e/elixir
+    cmds:
+      - mix deps.get
+
   test:e2e:elixir:
     desc: "Run Elixir e2e tests (fixture-driven integration tests)"
     dir: e2e/elixir
     deps:
       - elixir:build
+      - e2e:elixir:install
     cmds:
       - SPIKARD_BUILD=1 mix test
 

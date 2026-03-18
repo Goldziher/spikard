@@ -24,5 +24,5 @@ async def test_grpc_client_streaming_single_message_aggregation() -> None:
     response = await handle_grpc_client_streaming_single_message_aggregation(request)
 
     # Verify response
-    assert response.payload == b'{"count":1,"total":42,"average":42.0,"status":"AGGREGATED"}'
+    assert response.payload == b'{"average":42.0,"count":1,"status":"AGGREGATED","total":42}'
     assert response.metadata is not None

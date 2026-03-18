@@ -51,10 +51,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_api_key_authentication___invalid_key(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "Invalid API key",
+        "detail" => "The provided API key is not valid",
         "status" => 401,
-        "detail" => "The provided API key is not valid"
+        "title" => "Invalid API key",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -67,10 +67,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_api_key_authentication___missing_header(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "Missing API key",
+        "detail" => "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key",
         "status" => 401,
-        "detail" => "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"
+        "title" => "Missing API key",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -81,21 +81,21 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: auth - API key authentication - valid key
   """
   def handle_auth_api_key_authentication___valid_key(_request) do
-    build_response(%{"message" => "Access granted", "data" => "sensitive information"}, 200, %{})
+    build_response(%{"data" => "sensitive information", "message" => "Access granted"}, 200, %{})
   end
 
   @doc """
   Handler for fixture: auth - API key in query parameter
   """
   def handle_auth_api_key_in_query_parameter(_request) do
-    build_response(%{"message" => "Access granted", "data" => "sensitive information"}, 200, %{})
+    build_response(%{"data" => "sensitive information", "message" => "Access granted"}, 200, %{})
   end
 
   @doc """
   Handler for fixture: auth - API key rotation - old key still valid
   """
   def handle_auth_api_key_rotation___old_key_still_valid(_request) do
-    build_response(%{"message" => "Access granted", "data" => "sensitive information"}, 200, %{
+    build_response(%{"data" => "sensitive information", "message" => "Access granted"}, 200, %{
       "X-API-Key-Deprecated" => "true"
     })
   end
@@ -104,7 +104,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: auth - API key with custom header name
   """
   def handle_auth_api_key_with_custom_header_name(_request) do
-    build_response(%{"message" => "Access granted", "data" => "sensitive information"}, 200, %{})
+    build_response(%{"data" => "sensitive information", "message" => "Access granted"}, 200, %{})
   end
 
   @doc """
@@ -113,10 +113,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_bearer_token_without_prefix(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "Invalid Authorization header format",
+        "detail" => "Authorization header must use Bearer scheme: 'Bearer <token>'",
         "status" => 401,
-        "detail" => "Authorization header must use Bearer scheme: 'Bearer <token>'"
+        "title" => "Invalid Authorization header format",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -129,10 +129,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_jwt_authentication___expired_token(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "JWT validation failed",
+        "detail" => "Token has expired",
         "status" => 401,
-        "detail" => "Token has expired"
+        "title" => "JWT validation failed",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -145,10 +145,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_jwt_authentication___invalid_audience(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "JWT validation failed",
+        "detail" => "Token audience is invalid",
         "status" => 401,
-        "detail" => "Token audience is invalid"
+        "title" => "JWT validation failed",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -161,10 +161,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_jwt_authentication___invalid_signature(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "JWT validation failed",
+        "detail" => "Token signature is invalid",
         "status" => 401,
-        "detail" => "Token signature is invalid"
+        "title" => "JWT validation failed",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -177,10 +177,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_jwt_authentication___missing_authorization_header(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "Missing or invalid Authorization header",
+        "detail" => "Expected 'Authorization: Bearer <token>'",
         "status" => 401,
-        "detail" => "Expected 'Authorization: Bearer <token>'"
+        "title" => "Missing or invalid Authorization header",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -200,10 +200,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_jwt_invalid_issuer(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "JWT validation failed",
+        "detail" => "Token issuer is invalid, expected 'https://auth.example.com'",
         "status" => 401,
-        "detail" => "Token issuer is invalid, expected 'https://auth.example.com'"
+        "title" => "JWT validation failed",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -216,10 +216,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_jwt_malformed_token_format(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "Malformed JWT token",
+        "detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2",
         "status" => 401,
-        "detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2"
+        "title" => "Malformed JWT token",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -232,10 +232,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_jwt_missing_required_custom_claims(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/forbidden",
-        "title" => "Forbidden",
+        "detail" => "Required claims 'role' and 'permissions' missing from JWT",
         "status" => 403,
-        "detail" => "Required claims 'role' and 'permissions' missing from JWT"
+        "title" => "Forbidden",
+        "type" => "https://spikard.dev/errors/forbidden"
       },
       403,
       %{}
@@ -248,10 +248,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_auth_jwt_not_before_claim_in_future(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unauthorized",
-        "title" => "JWT validation failed",
+        "detail" => "JWT not valid yet, not before claim is in the future",
         "status" => 401,
-        "detail" => "JWT not valid yet, not before claim is in the future"
+        "title" => "JWT validation failed",
+        "type" => "https://spikard.dev/errors/unauthorized"
       },
       401,
       %{}
@@ -270,7 +270,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_auth_multiple_authentication_schemes___jwt_precedence(_request) do
     build_response(
-      %{"message" => "Access granted", "user_id" => "user123", "auth_method" => "jwt"},
+      %{"auth_method" => "jwt", "message" => "Access granted", "user_id" => "user123"},
       200,
       %{}
     )
@@ -334,10 +334,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_content_types_13_json_with_charset_utf16(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unsupported-charset",
-        "title" => "Unsupported Charset",
+        "detail" => "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported.",
         "status" => 415,
-        "detail" => "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
+        "title" => "Unsupported Charset",
+        "type" => "https://spikard.dev/errors/unsupported-charset"
       },
       415,
       %{}
@@ -364,10 +364,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_content_types_16_text_plain_not_accepted(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unsupported-media-type",
-        "title" => "Unsupported Media Type",
+        "detail" => "Unsupported media type",
         "status" => 415,
-        "detail" => "Unsupported media type"
+        "title" => "Unsupported Media Type",
+        "type" => "https://spikard.dev/errors/unsupported-media-type"
       },
       415,
       %{}
@@ -401,10 +401,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_content_types_20_content_length_mismatch(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/content-length-mismatch",
-        "title" => "Content-Length header mismatch",
+        "detail" => "Content-Length header does not match actual body size",
         "status" => 400,
-        "detail" => "Content-Length header does not match actual body size"
+        "title" => "Content-Length header mismatch",
+        "type" => "https://spikard.dev/errors/content-length-mismatch"
       },
       400,
       %{}
@@ -417,10 +417,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_content_types_415_unsupported_media_type(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/unsupported-media-type",
-        "title" => "Unsupported Media Type",
+        "detail" => "Unsupported media type",
         "status" => 415,
-        "detail" => "Unsupported media type"
+        "title" => "Unsupported Media Type",
+        "type" => "https://spikard.dev/errors/unsupported-media-type"
       },
       415,
       %{}
@@ -432,8 +432,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_content_types_binary_response___application_octet_stream(_request) do
     build_response("binary_data_placeholder", 200, %{
-      "content-type" => "application/octet-stream",
-      "content-disposition" => "attachment; filename=file.bin"
+      "content-disposition" => "attachment; filename=file.bin",
+      "content-type" => "application/octet-stream"
     })
   end
 
@@ -483,7 +483,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: content_types - JSON with UTF-8 charset
   """
   def handle_content_types_json_with_utf_8_charset(_request) do
-    build_response(%{"name" => "Café", "emoji" => "☕"}, 200, %{
+    build_response(%{"emoji" => "☕", "name" => "Café"}, 200, %{
       "content-type" => "application/json; charset=utf-8"
     })
   end
@@ -493,8 +493,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_content_types_pdf_response___application_pdf(_request) do
     build_response("pdf_binary_data", 200, %{
-      "content-type" => "application/pdf",
-      "content-disposition" => "attachment; filename=document.pdf"
+      "content-disposition" => "attachment; filename=document.pdf",
+      "content-type" => "application/pdf"
     })
   end
 
@@ -557,18 +557,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_cookies_apikey_cookie_authentication___missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["cookie", "key"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -588,19 +588,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_cookies_cookie_regex_pattern_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[A-Z0-9]{8}$"},
+            "input" => "invalid-format",
             "loc" => ["cookie", "tracking_id"],
             "msg" => "String should match pattern '^[A-Z0-9]{8}$'",
-            "input" => "invalid-format",
-            "ctx" => %{"pattern" => "^[A-Z0-9]{8}$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -620,19 +620,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_cookies_cookie_validation___max_length_constraint_fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_long",
+            "ctx" => %{"max_length" => 20},
+            "input" => "this_cookie_value_is_way_too_long",
             "loc" => ["cookie", "session_id"],
             "msg" => "String should have at most 20 characters",
-            "input" => "this_cookie_value_is_way_too_long",
-            "ctx" => %{"max_length" => 20}
+            "type" => "string_too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -652,18 +652,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_cookies_cookie_validation___min_length_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "input" => "",
             "loc" => ["cookie", "tracking_id"],
             "msg" => "String should have at least 3 characters",
-            "input" => ""
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -676,9 +676,9 @@ defmodule E2EElixirApp.Handlers do
   def handle_cookies_multiple_cookies___success(_request) do
     build_response(
       %{
-        "session_id" => "session123",
         "fatebook_tracker" => "tracker456",
-        "googall_tracker" => "ga789"
+        "googall_tracker" => "ga789",
+        "session_id" => "session123"
       },
       200,
       %{}
@@ -712,18 +712,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_cookies_required_cookie___missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => "",
             "loc" => ["cookie", "session_id"],
             "msg" => "Field required",
-            "input" => ""
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -819,10 +819,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_08_cors_max_age(_request) do
     build_response(nil, 204, %{
-      "Access-Control-Allow-Methods" => "POST",
       "Access-Control-Allow-Headers" => "Content-Type",
+      "Access-Control-Allow-Origin" => "https://example.com",
       "Access-Control-Max-Age" => "3600",
-      "Access-Control-Allow-Origin" => "https://example.com"
+      "Access-Control-Allow-Methods" => "POST"
     })
   end
 
@@ -831,10 +831,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_09_cors_expose_headers(_request) do
     build_response(nil, 200, %{
-      "Access-Control-Allow-Origin" => "https://example.com",
+      "Access-Control-Expose-Headers" => "X-Total-Count, X-Request-Id",
       "X-Request-Id" => "abc123",
-      "X-Total-Count" => "42",
-      "Access-Control-Expose-Headers" => "X-Total-Count, X-Request-Id"
+      "Access-Control-Allow-Origin" => "https://example.com",
+      "X-Total-Count" => "42"
     })
   end
 
@@ -850,10 +850,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_private_network_access(_request) do
     build_response(nil, 204, %{
-      "Vary" => "Origin",
-      "Access-Control-Allow-Private-Network" => "true",
       "Access-Control-Allow-Origin" => "https://public.example.com",
-      "Access-Control-Allow-Methods" => "GET, POST"
+      "Access-Control-Allow-Private-Network" => "true",
+      "Access-Control-Allow-Methods" => "GET, POST",
+      "Vary" => "Origin"
     })
   end
 
@@ -873,8 +873,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_multiple_allowed_origins(_request) do
     build_response(%{"data" => "resource data"}, 200, %{
-      "Vary" => "Origin",
-      "Access-Control-Allow-Origin" => "https://admin.example.com"
+      "Access-Control-Allow-Origin" => "https://admin.example.com",
+      "Vary" => "Origin"
     })
   end
 
@@ -890,10 +890,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_preflight_for_delete_method(_request) do
     build_response(nil, 204, %{
-      "Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE",
-      "Vary" => "Origin",
       "Access-Control-Max-Age" => "3600",
-      "Access-Control-Allow-Origin" => "https://app.example.com"
+      "Vary" => "Origin",
+      "Access-Control-Allow-Origin" => "https://app.example.com",
+      "Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE"
     })
   end
 
@@ -902,11 +902,11 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_preflight_for_put_method(_request) do
     build_response(nil, 204, %{
-      "Access-Control-Max-Age" => "3600",
-      "Vary" => "Origin",
       "Access-Control-Allow-Headers" => "Content-Type, X-Custom-Header",
+      "Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE",
       "Access-Control-Allow-Origin" => "https://app.example.com",
-      "Access-Control-Allow-Methods" => "GET, POST, PUT, PATCH, DELETE"
+      "Access-Control-Max-Age" => "3600",
+      "Vary" => "Origin"
     })
   end
 
@@ -915,10 +915,10 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_preflight_request(_request) do
     build_response(nil, 200, %{
-      "Access-Control-Allow-Origin" => "https://example.com",
+      "Access-Control-Max-Age" => "600",
       "Access-Control-Allow-Methods" => "GET, POST, PUT, DELETE, OPTIONS",
       "Access-Control-Allow-Headers" => "Content-Type, X-Custom-Header",
-      "Access-Control-Max-Age" => "600"
+      "Access-Control-Allow-Origin" => "https://example.com"
     })
   end
 
@@ -948,8 +948,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_safelisted_headers_without_preflight(_request) do
     build_response(%{"message" => "Success"}, 200, %{
-      "Access-Control-Allow-Origin" => "https://app.example.com",
-      "Vary" => "Origin"
+      "Vary" => "Origin",
+      "Access-Control-Allow-Origin" => "https://app.example.com"
     })
   end
 
@@ -965,9 +965,9 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_cors_cors_with_credentials(_request) do
     build_response(%{"username" => "john"}, 200, %{
-      "Access-Control-Allow-Origin" => "https://app.example.com",
       "Access-Control-Allow-Credentials" => "true",
-      "Vary" => "Origin"
+      "Vary" => "Origin",
+      "Access-Control-Allow-Origin" => "https://app.example.com"
     })
   end
 
@@ -985,7 +985,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: di - Async factory dependency - success
   """
   def handle_di_async_factory_dependency___success(_request) do
-    build_response(%{"pool_status" => "connected", "max_size" => 10}, 200, %{})
+    build_response(%{"max_size" => 10, "pool_status" => "connected"}, 200, %{})
   end
 
   @doc """
@@ -994,17 +994,17 @@ defmodule E2EElixirApp.Handlers do
   def handle_di_circular_dependency_detection___error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/dependency-error",
-        "title" => "Dependency Resolution Failed",
-        "status" => 500,
         "detail" => "Circular dependency detected",
         "errors" => [
           %{
-            "type" => "circular_dependency",
+            "cycle" => ["service_a", "service_b", "service_a"],
             "msg" => "Circular dependency detected in dependency graph",
-            "cycle" => ["service_a", "service_b", "service_a"]
+            "type" => "circular_dependency"
           }
-        ]
+        ],
+        "status" => 500,
+        "title" => "Dependency Resolution Failed",
+        "type" => "https://spikard.dev/errors/dependency-error"
       },
       500,
       %{}
@@ -1034,17 +1034,17 @@ defmodule E2EElixirApp.Handlers do
   def handle_di_missing_dependency___error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/dependency-error",
-        "title" => "Dependency Resolution Failed",
-        "status" => 500,
         "detail" => "Required dependency not found",
         "errors" => [
           %{
-            "type" => "missing_dependency",
+            "dependency_key" => "non_existent_service",
             "msg" => "Dependency 'non_existent_service' is not registered",
-            "dependency_key" => "non_existent_service"
+            "type" => "missing_dependency"
           }
-        ]
+        ],
+        "status" => 500,
+        "title" => "Dependency Resolution Failed",
+        "type" => "https://spikard.dev/errors/dependency-error"
       },
       500,
       %{}
@@ -1056,7 +1056,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_di_mixed_singleton_and_per_request_caching___success(_request) do
     build_response(
-      %{"app_name" => "MyApp", "pool_id" => "<<uuid>>", "context_id" => "<<uuid>>"},
+      %{"app_name" => "MyApp", "context_id" => "<<uuid>>", "pool_id" => "<<uuid>>"},
       200,
       %{}
     )
@@ -1073,7 +1073,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: di - Nested dependencies (3 levels) - success
   """
   def handle_di_nested_dependencies__3_levels____success(_request) do
-    build_response(%{"auth_enabled" => true, "has_db" => true, "has_cache" => true}, 200, %{})
+    build_response(%{"auth_enabled" => true, "has_cache" => true, "has_db" => true}, 200, %{})
   end
 
   @doc """
@@ -1094,14 +1094,14 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: di - Python parameter name-based injection - success
   """
   def handle_di_python_parameter_name_based_injection___success(_request) do
-    build_response(%{"db_status" => "connected", "cache_status" => "ready"}, 200, %{})
+    build_response(%{"cache_status" => "ready", "db_status" => "connected"}, 200, %{})
   end
 
   @doc """
   Handler for fixture: di - Python type annotation-based injection - success
   """
   def handle_di_python_type_annotation_based_injection___success(_request) do
-    build_response(%{"pool_type" => "PostgreSQL", "cache_type" => "Redis"}, 200, %{})
+    build_response(%{"cache_type" => "Redis", "pool_type" => "PostgreSQL"}, 200, %{})
   end
 
   @doc """
@@ -1129,7 +1129,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: di - Singleton dependency caching - success
   """
   def handle_di_singleton_dependency_caching___success(_request) do
-    build_response(%{"counter_id" => "<<uuid>>", "count" => 1}, 200, %{})
+    build_response(%{"count" => 1, "counter_id" => "<<uuid>>"}, 200, %{})
   end
 
   @doc """
@@ -1138,19 +1138,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_di_type_mismatch_in_dependency_resolution___error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/dependency-error",
-        "title" => "Dependency Resolution Failed",
-        "status" => 500,
         "detail" => "Dependency type mismatch",
         "errors" => [
           %{
-            "type" => "type_mismatch",
-            "msg" => "Dependency 'config' type mismatch: expected object, got string",
+            "actual_type" => "string",
             "dependency_key" => "config",
             "expected_type" => "object",
-            "actual_type" => "string"
+            "msg" => "Dependency 'config' type mismatch: expected object, got string",
+            "type" => "type_mismatch"
           }
-        ]
+        ],
+        "status" => 500,
+        "title" => "Dependency Resolution Failed",
+        "type" => "https://spikard.dev/errors/dependency-error"
       },
       500,
       %{}
@@ -1162,7 +1162,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_di_value_dependency_injection___success(_request) do
     build_response(
-      %{"app_name" => "SpikardApp", "version" => "1.0.0", "max_connections" => 100},
+      %{"app_name" => "SpikardApp", "max_connections" => 100, "version" => "1.0.0"},
       200,
       %{}
     )
@@ -1216,20 +1216,20 @@ defmodule E2EElixirApp.Handlers do
   def handle_edge_cases_17_extremely_long_string(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_long",
-            "loc" => ["body", "content"],
-            "msg" => "String should have at most 10000 characters",
+            "ctx" => %{"max_length" => 10000},
             "input" =>
               "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "ctx" => %{"max_length" => 10000}
+            "loc" => ["body", "content"],
+            "msg" => "String should have at most 10000 characters",
+            "type" => "string_too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1256,19 +1256,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_edge_cases_20_null_byte_in_string(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[^\\x00]+$"},
+            "input" => "file .txt",
             "loc" => ["body", "filename"],
             "msg" => "String should match pattern '^[^\\x00]+$'",
-            "input" => "file .txt",
-            "ctx" => %{"pattern" => "^[^\\x00]+$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1313,8 +1313,8 @@ defmodule E2EElixirApp.Handlers do
   def handle_edge_cases_deeply_nested_structure__10__levels_(_request) do
     build_response(
       %{
-        "message" => "Processed deeply nested structure",
         "max_depth" => 10,
+        "message" => "Processed deeply nested structure",
         "value_found" => "deep"
       },
       200,
@@ -1328,12 +1328,12 @@ defmodule E2EElixirApp.Handlers do
   def handle_edge_cases_empty_and_null_value_handling(_request) do
     build_response(
       %{
-        "explicit_null_is_null" => true,
-        "empty_string_length" => 0,
         "empty_array_length" => 0,
         "empty_object_keys" => 0,
-        "zero_is_falsy" => true,
-        "false_is_false" => true
+        "empty_string_length" => 0,
+        "explicit_null_is_null" => true,
+        "false_is_false" => true,
+        "zero_is_falsy" => true
       },
       200,
       %{}
@@ -1346,10 +1346,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_edge_cases_float_precision_and_rounding(_request) do
     build_response(
       %{
-        "sum" => 0.30000000000000004,
         "precise_value" => 3.141592653589793,
-        "very_small" => 1.0e-10,
-        "very_large" => 1.7976931348623157e+308
+        "sum" => 0.30000000000000004,
+        "very_large" => 1.7976931348623157e+308,
+        "very_small" => 1.0e-10
       },
       200,
       %{}
@@ -1362,8 +1362,8 @@ defmodule E2EElixirApp.Handlers do
   def handle_edge_cases_large_integer_boundary_values(_request) do
     build_response(
       %{
-        "max_safe_int" => 9_007_199_254_740_991,
         "large_int" => 9_223_372_036_854_775_807,
+        "max_safe_int" => 9_007_199_254_740_991,
         "negative_large" => -9_223_372_036_854_775_808
       },
       200,
@@ -1377,13 +1377,13 @@ defmodule E2EElixirApp.Handlers do
   def handle_edge_cases_special_string_values_and_escaping(_request) do
     build_response(
       %{
-        "empty_string" => "",
-        "whitespace" => "   ",
-        "tabs_newlines" => "line1\n\tline2\r\nline3",
-        "quotes" => "He said \"hello\" and 'goodbye'",
         "backslashes" => "C:\\\\Users\\\\Path",
+        "empty_string" => "",
+        "quotes" => "He said \"hello\" and 'goodbye'",
+        "special_chars" => "!@#$%^&*()_+-=[]{}|;':\",./<>?",
+        "tabs_newlines" => "line1\n\tline2\r\nline3",
         "unicode_escapes" => "Hello",
-        "special_chars" => "!@#$%^&*()_+-=[]{}|;':\",./<>?"
+        "whitespace" => "   "
       },
       200,
       %{}
@@ -1396,11 +1396,11 @@ defmodule E2EElixirApp.Handlers do
   def handle_edge_cases_unicode_and_emoji_handling(_request) do
     build_response(
       %{
+        "description" => "Best café in München 🇩🇪",
+        "emoji_reactions" => "👍❤️😂🎉",
         "id" => 1,
         "name" => "Coffee Shop ☕",
-        "description" => "Best café in München 🇩🇪",
-        "tags" => ["食べ物", "音楽", "💰"],
-        "emoji_reactions" => "👍❤️😂🎉"
+        "tags" => ["食べ物", "音楽", "💰"]
       },
       200,
       %{}
@@ -1420,21 +1420,21 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_31_bearer_token_format_invalid(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
-            "loc" => ["headers", "authorization"],
-            "msg" => "Invalid Bearer token format",
             "ctx" => %{
               "pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*$",
               "value" => "Bearer invalid token with spaces"
-            }
+            },
+            "loc" => ["headers", "authorization"],
+            "msg" => "Invalid Bearer token format",
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1447,21 +1447,21 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_32_bearer_token_missing_prefix(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
-            "loc" => ["headers", "authorization"],
-            "msg" => "Invalid Bearer token format",
             "ctx" => %{
               "pattern" => "^Bearer [A-Za-z0-9-._~+/]+=*$",
               "value" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-            }
+            },
+            "loc" => ["headers", "authorization"],
+            "msg" => "Invalid Bearer token format",
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1481,18 +1481,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_34_api_key_header_invalid(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"pattern" => "^[a-f0-9]{32}$", "value" => "invalid-key"},
             "loc" => ["headers", "x-api-key"],
             "msg" => "Invalid API key format",
-            "ctx" => %{"pattern" => "^[a-f0-9]{32}$", "value" => "invalid-key"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1526,18 +1526,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_authorization_header___missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["headers", "authorization"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1548,7 +1548,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: headers - Authorization header - success
   """
   def handle_headers_authorization_header___success(_request) do
-    build_response(%{"scheme" => "Digest", "credentials" => "foobar"}, 200, %{})
+    build_response(%{"credentials" => "foobar", "scheme" => "Digest"}, 200, %{})
   end
 
   @doc """
@@ -1557,18 +1557,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_authorization_header___wrong_scheme(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "input" => "Other invalidauthorization",
             "loc" => ["headers", "authorization"],
             "msg" => "String should match pattern '^Digest .+'",
-            "input" => "Other invalidauthorization"
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1579,7 +1579,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: headers - Basic authentication - success
   """
   def handle_headers_basic_authentication___success(_request) do
-    build_response(%{"username" => "username", "password" => "password"}, 200, %{})
+    build_response(%{"password" => "password", "username" => "username"}, 200, %{})
   end
 
   @doc """
@@ -1588,18 +1588,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_bearer_token_authentication___missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["headers", "authorization"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1627,8 +1627,8 @@ defmodule E2EElixirApp.Handlers do
     build_response(
       %{
         "content_type_lower" => "application/json",
-        "content_type_upper" => "application/json",
-        "content_type_mixed" => "application/json"
+        "content_type_mixed" => "application/json",
+        "content_type_upper" => "application/json"
       },
       200,
       %{}
@@ -1641,19 +1641,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_header_regex_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[0-9]{3,}$"},
+            "input" => "invalid-format",
             "loc" => ["headers", "x-request-id"],
             "msg" => "String should match pattern '^[0-9]{3,}$'",
-            "input" => "invalid-format",
-            "ctx" => %{"pattern" => "^[0-9]{3,}$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1673,19 +1673,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_header_validation___max_length_constraint_fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_long",
+            "ctx" => %{"max_length" => 20},
+            "input" => "this_is_way_too_long_for_validation",
             "loc" => ["headers", "x-session-id"],
             "msg" => "String should have at most 20 characters",
-            "input" => "this_is_way_too_long_for_validation",
-            "ctx" => %{"max_length" => 20}
+            "type" => "string_too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1698,19 +1698,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_header_validation___min_length_constraint(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "ab",
             "loc" => ["headers", "x-token"],
             "msg" => "String should have at least 3 characters",
-            "input" => "ab",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1737,8 +1737,8 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_multiple_custom_headers(_request) do
     build_response(
       %{
-        "x_request_id" => "req-12345",
         "x_client_version" => "1.2.3",
+        "x_request_id" => "req-12345",
         "x_trace_id" => "trace-abc"
       },
       200,
@@ -1808,18 +1808,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_headers_x_api_key_required_header___missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["headers", "x-api-key"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1852,7 +1852,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_http_methods_delete___with_response_body(_request) do
     build_response(
-      %{"id" => 1, "name" => "Deleted Item", "message" => "Item deleted successfully"},
+      %{"id" => 1, "message" => "Item deleted successfully", "name" => "Deleted Item"},
       200,
       %{}
     )
@@ -1862,7 +1862,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: http_methods - HEAD - Get metadata without body
   """
   def handle_http_methods_head___get_metadata_without_body(_request) do
-    build_response(nil, 200, %{"Content-Length" => "85", "Content-Type" => "application/json"})
+    build_response(nil, 200, %{"Content-Type" => "application/json", "Content-Length" => "85"})
   end
 
   @doc """
@@ -1871,9 +1871,9 @@ defmodule E2EElixirApp.Handlers do
   def handle_http_methods_options___cors_preflight_request(_request) do
     build_response(nil, 200, %{
       "Access-Control-Allow-Headers" => "Content-Type",
-      "Access-Control-Allow-Origin" => "https://example.com",
       "Access-Control-Max-Age" => "86400",
-      "Access-Control-Allow-Methods" => "GET, POST, PUT, DELETE, OPTIONS"
+      "Access-Control-Allow-Methods" => "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Origin" => "https://example.com"
     })
   end
 
@@ -1882,7 +1882,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_http_methods_patch___partial_update(_request) do
     build_response(
-      %{"id" => 1, "name" => "Existing Item", "price" => 79.99, "in_stock" => true},
+      %{"id" => 1, "in_stock" => true, "name" => "Existing Item", "price" => 79.99},
       200,
       %{}
     )
@@ -1893,7 +1893,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_http_methods_patch___update_multiple_fields(_request) do
     build_response(
-      %{"id" => 1, "name" => "Updated Name", "price" => 89.99, "in_stock" => false},
+      %{"id" => 1, "in_stock" => false, "name" => "Updated Name", "price" => 89.99},
       200,
       %{}
     )
@@ -1905,11 +1905,11 @@ defmodule E2EElixirApp.Handlers do
   def handle_http_methods_put___complete_resource_replacement(_request) do
     build_response(
       %{
-        "id" => 1,
-        "name" => "Updated Item",
         "description" => "Completely replaced",
-        "price" => 99.99,
-        "in_stock" => true
+        "id" => 1,
+        "in_stock" => true,
+        "name" => "Updated Item",
+        "price" => 99.99
       },
       200,
       %{}
@@ -1936,18 +1936,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_http_methods_put___missing_required_field(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => %{"id" => 1, "name" => "Item Name"},
             "loc" => ["body", "price"],
             "msg" => "Field required",
-            "input" => %{"id" => 1, "name" => "Item Name"}
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1960,26 +1960,26 @@ defmodule E2EElixirApp.Handlers do
   def handle_http_methods_put___validation_error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "2 validation errors in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "X",
             "loc" => ["body", "name"],
             "msg" => "String should have at least 3 characters",
-            "input" => "X",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           },
           %{
-            "type" => "greater_than",
+            "ctx" => %{"gt" => 0},
+            "input" => -10,
             "loc" => ["body", "price"],
             "msg" => "Input should be greater than 0",
-            "input" => -10,
-            "ctx" => %{"gt" => 0}
+            "type" => "greater_than"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -1999,18 +1999,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_30_nested_object_missing_field(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => %{"name" => "John Doe"},
             "loc" => ["body", "profile", "email"],
             "msg" => "Field required",
-            "input" => %{"name" => "John Doe"}
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2044,23 +2044,23 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_34_additional_properties_false(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
-            "loc" => ["body", "extra_field"],
-            "msg" => "Additional properties are not allowed",
             "ctx" => %{"additional_properties" => false, "unexpected_field" => "extra_field"},
             "input" => %{
-              "name" => "John",
               "email" => "john@example.com",
-              "extra_field" => "should fail"
-            }
+              "extra_field" => "should fail",
+              "name" => "John"
+            },
+            "loc" => ["body", "extra_field"],
+            "msg" => "Additional properties are not allowed",
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2080,22 +2080,22 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_36_oneof_schema_multiple_match_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
-            "loc" => ["body"],
-            "msg" =>
-              "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the 'oneOf' keyword",
             "input" => %{
               "credit_card" => "1234567812345678",
               "paypal_email" => "user@example.com"
-            }
+            },
+            "loc" => ["body"],
+            "msg" =>
+              "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the 'oneOf' keyword",
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2108,19 +2108,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_37_oneof_schema_no_match_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "input" => %{"bitcoin_address" => "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"},
             "loc" => ["body"],
             "msg" =>
               "{\"bitcoin_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa\"} is not valid under any of the schemas listed in the 'oneOf' keyword",
-            "input" => %{"bitcoin_address" => "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2147,19 +2147,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_40_anyof_schema_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "input" => %{"name" => "John Doe"},
             "loc" => ["body"],
             "msg" =>
               "{\"name\":\"John Doe\"} is not valid under any of the schemas listed in the 'anyOf' keyword",
-            "input" => %{"name" => "John Doe"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2179,18 +2179,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_42_not_schema_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "input" => "admin",
             "loc" => ["body", "username"],
             "msg" => "{\"enum\":[\"admin\",\"root\",\"system\"]} is not allowed for \"admin\"",
-            "input" => "admin"
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2210,18 +2210,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_44_const_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "input" => "2.0",
             "loc" => ["body", "version"],
             "msg" => "\"1.0\" was expected",
-            "input" => "2.0"
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2241,18 +2241,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_46_minproperties_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "input" => %{"host" => "localhost"},
             "loc" => ["body"],
             "msg" => "{\"host\":\"localhost\"} has less than 2 properties",
-            "input" => %{"host" => "localhost"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2265,19 +2265,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_47_maxproperties_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "input" => %{"debug" => false, "host" => "localhost", "port" => 8080, "ssl" => true},
             "loc" => ["body"],
             "msg" =>
               "{\"host\":\"localhost\",\"port\":8080,\"ssl\":true,\"debug\":false} has more than 3 properties",
-            "input" => %{"host" => "localhost", "port" => 8080, "ssl" => true, "debug" => false}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2297,18 +2297,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_49_dependencies_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "input" => %{"credit_card" => "1234567812345678", "name" => "John Doe"},
             "loc" => ["body"],
             "msg" => "\"billing_address\" is a required property",
-            "input" => %{"name" => "John Doe", "credit_card" => "1234567812345678"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2328,12 +2328,12 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_array_of_objects___success(_request) do
     build_response(
       %{
-        "name" => "Product Bundle",
-        "tags" => ["electronics", "gadget"],
         "images" => [
-          %{"url" => "https://example.com/img1.jpg", "name" => "Front"},
-          %{"url" => "https://example.com/img2.jpg", "name" => "Back"}
-        ]
+          %{"name" => "Front", "url" => "https://example.com/img1.jpg"},
+          %{"name" => "Back", "url" => "https://example.com/img2.jpg"}
+        ],
+        "name" => "Product Bundle",
+        "tags" => ["electronics", "gadget"]
       },
       200,
       %{}
@@ -2347,8 +2347,8 @@ defmodule E2EElixirApp.Handlers do
     build_response(
       %{
         "name" => "Product",
-        "tags" => ["electronics", "gadget", "new"],
-        "ratings" => [4.5, 4.8, 5.0, 4.2]
+        "ratings" => [4.5, 4.8, 5.0, 4.2],
+        "tags" => ["electronics", "gadget", "new"]
       },
       200,
       %{}
@@ -2366,21 +2366,21 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: json_bodies - Boolean field - success
   """
   def handle_json_bodies_boolean_field___success(_request) do
-    build_response(%{"name" => "Item", "price" => 42.0, "in_stock" => true}, 200, %{})
+    build_response(%{"in_stock" => true, "name" => "Item", "price" => 42.0}, 200, %{})
   end
 
   @doc """
   Handler for fixture: json_bodies - Date field - success
   """
   def handle_json_bodies_date_field___success(_request) do
-    build_response(%{"name" => "Conference", "event_date" => "2024-03-15"}, 200, %{})
+    build_response(%{"event_date" => "2024-03-15", "name" => "Conference"}, 200, %{})
   end
 
   @doc """
   Handler for fixture: json_bodies - Datetime field - success
   """
   def handle_json_bodies_datetime_field___success(_request) do
-    build_response(%{"name" => "Meeting", "created_at" => "2024-03-15T10:30:00Z"}, 200, %{})
+    build_response(%{"created_at" => "2024-03-15T10:30:00Z", "name" => "Meeting"}, 200, %{})
   end
 
   @doc """
@@ -2392,12 +2392,12 @@ defmodule E2EElixirApp.Handlers do
         "name" => "Product",
         "price" => 100.0,
         "seller" => %{
-          "name" => "John Doe",
           "address" => %{
-            "street" => "123 Main St",
             "city" => "Springfield",
-            "country" => %{"name" => "USA", "code" => "US"}
-          }
+            "country" => %{"code" => "US", "name" => "USA"},
+            "street" => "123 Main St"
+          },
+          "name" => "John Doe"
         }
       },
       200,
@@ -2409,7 +2409,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: json_bodies - Empty JSON object
   """
   def handle_json_bodies_empty_json_object(_request) do
-    build_response(%{"name" => nil, "description" => nil, "price" => nil, "tax" => nil}, 200, %{})
+    build_response(%{"description" => nil, "name" => nil, "price" => nil, "tax" => nil}, 200, %{})
   end
 
   @doc """
@@ -2418,19 +2418,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_empty_array_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "too_short",
+            "ctx" => %{"min_length" => 1},
+            "input" => [],
             "loc" => ["body", "tags"],
             "msg" => "List should have at least 1 item after validation",
-            "input" => [],
-            "ctx" => %{"min_length" => 1}
+            "type" => "too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2443,19 +2443,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_enum_field___invalid_value(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "enum",
+            "ctx" => %{"expected" => "'electronics', 'clothing' or 'books'"},
+            "input" => "furniture",
             "loc" => ["body", "category"],
             "msg" => "Input should be 'electronics', 'clothing' or 'books'",
-            "input" => "furniture",
-            "ctx" => %{"expected" => "'electronics', 'clothing' or 'books'"}
+            "type" => "enum"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2466,7 +2466,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: json_bodies - Enum field - success
   """
   def handle_json_bodies_enum_field___success(_request) do
-    build_response(%{"name" => "Item", "category" => "electronics"}, 200, %{})
+    build_response(%{"category" => "electronics", "name" => "Item"}, 200, %{})
   end
 
   @doc """
@@ -2482,18 +2482,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_field_type_validation___invalid_type(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "float_parsing",
+            "input" => "not a number",
             "loc" => ["body", "price"],
             "msg" => "Input should be a valid number, unable to parse string as a number",
-            "input" => "not a number"
+            "type" => "float_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2506,9 +2506,9 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_nested_object___success(_request) do
     build_response(
       %{
+        "image" => %{"name" => "Product Image", "url" => "https://example.com/image.jpg"},
         "name" => "Foo",
-        "price" => 42.0,
-        "image" => %{"url" => "https://example.com/image.jpg", "name" => "Product Image"}
+        "price" => 42.0
       },
       200,
       %{}
@@ -2520,7 +2520,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_json_bodies_null_value_for_optional_field(_request) do
     build_response(
-      %{"name" => "Item", "price" => 42.0, "description" => nil, "tax" => nil},
+      %{"description" => nil, "name" => "Item", "price" => 42.0, "tax" => nil},
       200,
       %{}
     )
@@ -2532,19 +2532,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_numeric_ge_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "greater_than_equal",
+            "ctx" => %{"ge" => 1},
+            "input" => 0.5,
             "loc" => ["body", "price"],
             "msg" => "Input should be greater than or equal to 1",
-            "input" => 0.5,
-            "ctx" => %{"ge" => 1}
+            "type" => "greater_than_equal"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2563,7 +2563,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_json_bodies_optional_fields___omitted(_request) do
     build_response(
-      %{"name" => "Foo", "price" => 35.4, "description" => nil, "tax" => nil},
+      %{"description" => nil, "name" => "Foo", "price" => 35.4, "tax" => nil},
       200,
       %{}
     )
@@ -2574,7 +2574,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_json_bodies_patch_partial_update(_request) do
     build_response(
-      %{"name" => "Original Item", "price" => 45.0, "description" => "Original description"},
+      %{"description" => "Original description", "name" => "Original Item", "price" => 45.0},
       200,
       %{}
     )
@@ -2586,18 +2586,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_required_field_missing___validation_error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => %{"description" => "A very nice Item", "price" => 35.4},
             "loc" => ["body", "name"],
             "msg" => "Field required",
-            "input" => %{"description" => "A very nice Item", "price" => 35.4}
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2609,7 +2609,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_json_bodies_simple_json_object___success(_request) do
     build_response(
-      %{"name" => "Foo", "description" => "A very nice Item", "price" => 35.4, "tax" => 3.2},
+      %{"description" => "A very nice Item", "name" => "Foo", "price" => 35.4, "tax" => 3.2},
       200,
       %{}
     )
@@ -2621,19 +2621,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_string_max_length_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_long",
+            "ctx" => %{"max_length" => 50},
+            "input" => "This is a very long name that exceeds the maximum length",
             "loc" => ["body", "name"],
             "msg" => "String should have at most 50 characters",
-            "input" => "This is a very long name that exceeds the maximum length",
-            "ctx" => %{"max_length" => 50}
+            "type" => "string_too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2646,19 +2646,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_string_min_length_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "ab",
             "loc" => ["body", "name"],
             "msg" => "String should have at least 3 characters",
-            "input" => "ab",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2671,19 +2671,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_string_pattern_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[A-Z]{3}[0-9]{4}$"},
+            "input" => "ABC-123",
             "loc" => ["body", "sku"],
             "msg" => "String should match pattern '^[A-Z]{3}[0-9]{4}$'",
-            "input" => "ABC-123",
-            "ctx" => %{"pattern" => "^[A-Z]{3}[0-9]{4}$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2703,18 +2703,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_json_bodies_uuid_field___invalid_format(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "uuid_parsing",
+            "input" => "not-a-valid-uuid",
             "loc" => ["body", "item_id"],
             "msg" => "Input should be a valid UUID",
-            "input" => "not-a-valid-uuid"
+            "type" => "uuid_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2726,7 +2726,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_json_bodies_uuid_field___success(_request) do
     build_response(
-      %{"name" => "Item", "item_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716"},
+      %{"item_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716", "name" => "Item"},
       200,
       %{}
     )
@@ -2738,8 +2738,8 @@ defmodule E2EElixirApp.Handlers do
   def handle_lifecycle_hooks_hook_execution_order(_request) do
     build_response(
       %{
-        "message" => "Hooks executed in order",
-        "execution_order" => ["first_hook", "second_hook", "third_hook"]
+        "execution_order" => ["first_hook", "second_hook", "third_hook"],
+        "message" => "Hooks executed in order"
       },
       200,
       %{}
@@ -2752,17 +2752,17 @@ defmodule E2EElixirApp.Handlers do
   def handle_lifecycle_hooks_multiple_hooks___all_phases(_request) do
     build_response(
       %{
-        "message" => "Action completed successfully",
-        "user_id" => "user-123",
         "action" => "update_profile",
-        "request_id" => ".*"
+        "message" => "Action completed successfully",
+        "request_id" => ".*",
+        "user_id" => "user-123"
       },
       200,
       %{
-        "X-Frame-Options" => "DENY",
         "X-Response-Time" => ".*ms",
         "X-Request-ID" => ".*",
-        "X-Content-Type-Options" => "nosniff"
+        "X-Content-Type-Options" => "nosniff",
+        "X-Frame-Options" => "DENY"
       }
     )
   end
@@ -2774,8 +2774,8 @@ defmodule E2EElixirApp.Handlers do
     build_response(
       %{
         "error" => "Internal Server Error",
-        "message" => "An unexpected error occurred",
-        "error_id" => ".*"
+        "error_id" => ".*",
+        "message" => "An unexpected error occurred"
       },
       500,
       %{"Content-Type" => "application/json"}
@@ -2788,9 +2788,9 @@ defmodule E2EElixirApp.Handlers do
   def handle_lifecycle_hooks_onrequest___request_logging(_request) do
     build_response(
       %{
+        "has_request_id" => true,
         "message" => "onRequest hooks executed",
-        "request_logged" => true,
-        "has_request_id" => true
+        "request_logged" => true
       },
       200,
       %{"X-Request-ID" => ".*"}
@@ -2812,9 +2812,9 @@ defmodule E2EElixirApp.Handlers do
   def handle_lifecycle_hooks_onresponse___security_headers(_request) do
     build_response(%{"message" => "Response with security headers"}, 200, %{
       "X-XSS-Protection" => "1; mode=block",
+      "X-Content-Type-Options" => "nosniff",
       "X-Frame-Options" => "DENY",
-      "Strict-Transport-Security" => "max-age=31536000; includeSubDomains",
-      "X-Content-Type-Options" => "nosniff"
+      "Strict-Transport-Security" => "max-age=31536000; includeSubDomains"
     })
   end
 
@@ -2834,7 +2834,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_lifecycle_hooks_prehandler___authentication_success(_request) do
     build_response(
-      %{"message" => "Access granted", "user_id" => "user-123", "authenticated" => true},
+      %{"authenticated" => true, "message" => "Access granted", "user_id" => "user-123"},
       200,
       %{}
     )
@@ -2845,7 +2845,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_lifecycle_hooks_prehandler___authorization_check(_request) do
     build_response(
-      %{"message" => "Admin access granted", "user_id" => "admin-456", "role" => "admin"},
+      %{"message" => "Admin access granted", "role" => "admin", "user_id" => "admin-456"},
       200,
       %{}
     )
@@ -2903,23 +2903,23 @@ defmodule E2EElixirApp.Handlers do
   def handle_multipart_19_file_mime_spoofing_png_as_jpeg(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
-            "loc" => ["files", "image"],
-            "msg" =>
-              "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png",
             "ctx" => %{
               "declared_mime" => "image/jpeg",
               "detected_type" => "image/png",
               "magic_bytes" => "89504e470d0a1a0a"
-            }
+            },
+            "loc" => ["files", "image"],
+            "msg" =>
+              "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png",
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2932,23 +2932,23 @@ defmodule E2EElixirApp.Handlers do
   def handle_multipart_20_file_mime_spoofing_jpeg_as_png(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
-            "loc" => ["files", "image"],
-            "msg" =>
-              "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg",
             "ctx" => %{
               "declared_mime" => "image/png",
               "detected_type" => "image/jpeg",
               "magic_bytes" => "ffd8ffe0"
-            }
+            },
+            "loc" => ["files", "image"],
+            "msg" =>
+              "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg",
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -2968,18 +2968,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_multipart_22_file_empty_buffer(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"buffer_size" => 0},
             "loc" => ["files", "file"],
             "msg" => "File buffer is empty",
-            "ctx" => %{"buffer_size" => 0}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3021,15 +3021,15 @@ defmodule E2EElixirApp.Handlers do
     build_response(
       %{
         "test2" => %{
-          "filename" => "test2.txt",
-          "size" => 15,
           "content" => "<file2 content>",
           "content_type" => "text/plain",
+          "filename" => "test2.txt",
           "headers" => [
             ["content-disposition", "form-data; name=\"test2\"; filename=\"test2.txt\""],
             ["content-type", "text/plain"],
             ["x-custom", "f2"]
-          ]
+          ],
+          "size" => 15
         }
       },
       200,
@@ -3056,7 +3056,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_multipart_image_file_upload(_request) do
     build_response(
-      %{"filename" => "photo.jpg", "content_type" => "image/jpeg", "size" => 22},
+      %{"content_type" => "image/jpeg", "filename" => "photo.jpg", "size" => 22},
       200,
       %{}
     )
@@ -3068,15 +3068,15 @@ defmodule E2EElixirApp.Handlers do
   def handle_multipart_mixed_files_and_form_data(_request) do
     build_response(
       %{
-        "file" => %{
-          "filename" => "upload.txt",
-          "size" => 14,
-          "content" => "file data here",
-          "content_type" => "text/plain"
-        },
-        "username" => "testuser",
+        "active" => "true",
         "age" => "25",
-        "active" => "true"
+        "file" => %{
+          "content" => "file data here",
+          "content_type" => "text/plain",
+          "filename" => "upload.txt",
+          "size" => 14
+        },
+        "username" => "testuser"
       },
       200,
       %{}
@@ -3090,16 +3090,16 @@ defmodule E2EElixirApp.Handlers do
     build_response(
       %{
         "test1" => %{
-          "filename" => "test1.txt",
-          "size" => 15,
           "content" => "<file1 content>",
-          "content_type" => "text/plain"
+          "content_type" => "text/plain",
+          "filename" => "test1.txt",
+          "size" => 15
         },
         "test2" => %{
-          "filename" => "test2.txt",
-          "size" => 15,
           "content" => "<file2 content>",
-          "content_type" => "text/plain"
+          "content_type" => "text/plain",
+          "filename" => "test2.txt",
+          "size" => 15
         }
       },
       200,
@@ -3115,16 +3115,16 @@ defmodule E2EElixirApp.Handlers do
       %{
         "files" => [
           %{
-            "filename" => "file1.txt",
-            "size" => 10,
             "content" => "first file",
-            "content_type" => "text/plain"
+            "content_type" => "text/plain",
+            "filename" => "file1.txt",
+            "size" => 10
           },
           %{
-            "filename" => "file2.txt",
-            "size" => 11,
             "content" => "second file",
-            "content_type" => "text/plain"
+            "content_type" => "text/plain",
+            "filename" => "file2.txt",
+            "size" => 11
           }
         ],
         "tags" => ["python", "rust", "web"]
@@ -3146,7 +3146,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_multipart_optional_file_upload___provided(_request) do
     build_response(
-      %{"filename" => "optional.txt", "content_type" => "text/plain", "size" => 21},
+      %{"content_type" => "text/plain", "filename" => "optional.txt", "size" => 21},
       200,
       %{}
     )
@@ -3157,7 +3157,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_multipart_pdf_file_upload(_request) do
     build_response(
-      %{"filename" => "report.pdf", "content_type" => "application/pdf", "size" => 16},
+      %{"content_type" => "application/pdf", "filename" => "report.pdf", "size" => 16},
       200,
       %{}
     )
@@ -3169,18 +3169,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_multipart_required_file_upload___missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => [],
             "loc" => ["body", "file"],
             "msg" => "Field required",
-            "input" => []
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3194,10 +3194,10 @@ defmodule E2EElixirApp.Handlers do
     build_response(
       %{
         "test" => %{
-          "filename" => "test.txt",
-          "size" => 14,
           "content" => "<file content>",
-          "content_type" => "text/plain"
+          "content_type" => "text/plain",
+          "filename" => "test.txt",
+          "size" => 14
         }
       },
       200,
@@ -3232,18 +3232,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_25_date_format_invalid_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"format" => "date", "value" => "2025-13-45"},
             "loc" => ["path", "date"],
             "msg" => "Invalid date format",
-            "ctx" => %{"format" => "date", "value" => "2025-13-45"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3284,18 +3284,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_31_string_minlength_path_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"actual_length" => 2, "min_length" => 3},
             "loc" => ["path", "username"],
             "msg" => "String length must be at least 3",
-            "ctx" => %{"min_length" => 3, "actual_length" => 2}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3308,18 +3308,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_32_string_maxlength_path_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"actual_length" => 42, "max_length" => 20},
             "loc" => ["path", "username"],
             "msg" => "String length must not exceed 20",
-            "ctx" => %{"max_length" => 20, "actual_length" => 42}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3339,18 +3339,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_34_string_pattern_path_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"pattern" => "^[a-zA-Z0-9-]+$", "value" => "invalid@owner"},
             "loc" => ["path", "owner"],
             "msg" => "String does not match pattern",
-            "ctx" => %{"pattern" => "^[a-zA-Z0-9-]+$", "value" => "invalid@owner"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3391,19 +3391,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_enum_path_parameter___invalid_value(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "enum",
+            "ctx" => %{"expected" => "'alexnet', 'resnet' or 'lenet'"},
+            "input" => "foo",
             "loc" => ["path", "model_name"],
             "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'",
-            "input" => "foo",
-            "ctx" => %{"expected" => "'alexnet', 'resnet' or 'lenet'"}
+            "type" => "enum"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3430,18 +3430,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_integer_path_parameter___invalid_string(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "int_parsing",
+            "input" => "foobar",
             "loc" => ["path", "item_id"],
             "msg" => "Input should be a valid integer, unable to parse string as an integer",
-            "input" => "foobar"
+            "type" => "int_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3477,19 +3477,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_integer_path_parameter_with_gt_constraint___failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "greater_than",
+            "ctx" => %{"gt" => 3},
+            "input" => 2,
             "loc" => ["path", "item_id"],
             "msg" => "Input should be greater than 3",
-            "input" => 2,
-            "ctx" => %{"gt" => 3}
+            "type" => "greater_than"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3523,10 +3523,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_multiple_path_parameters___success(_request) do
     build_response(
       %{
-        "version" => 1.0,
+        "order_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716",
         "service_id" => 1,
         "user_id" => "abc",
-        "order_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+        "version" => 1.0
       },
       200,
       %{}
@@ -3539,18 +3539,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_path_parameter_type_syntax___invalid_uuid(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "uuid_parsing",
+            "input" => "not-a-uuid",
             "loc" => ["path", "id"],
             "msg" => "Input should be a valid UUID",
-            "input" => "not-a-uuid"
+            "type" => "uuid_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3598,19 +3598,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_string_path_parameter_with_max_length___failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_long",
+            "ctx" => %{"max_length" => 3},
+            "input" => "foobar",
             "loc" => ["path", "item_id"],
             "msg" => "String should have at most 3 characters",
-            "input" => "foobar",
-            "ctx" => %{"max_length" => 3}
+            "type" => "string_too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3623,19 +3623,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_path_params_string_path_parameter_with_min_length___failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "fo",
             "loc" => ["path", "item_id"],
             "msg" => "String should have at least 3 characters",
-            "input" => "fo",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3676,18 +3676,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_45_string_minlength_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"actual_length" => 2, "min_length" => 3},
             "loc" => ["query", "term"],
             "msg" => "String length must be at least 3",
-            "ctx" => %{"min_length" => 3, "actual_length" => 2}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3700,18 +3700,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_46_string_maxlength_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"actual_length" => 21, "max_length" => 10},
             "loc" => ["query", "term"],
             "msg" => "String length must not exceed 10",
-            "ctx" => %{"max_length" => 10, "actual_length" => 21}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3731,21 +3731,21 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_48_pattern_validation_email_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
-            "loc" => ["query", "email"],
-            "msg" => "String does not match pattern",
             "ctx" => %{
               "pattern" => "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
               "value" => "invalid-email"
-            }
+            },
+            "loc" => ["query", "email"],
+            "msg" => "String does not match pattern",
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3765,18 +3765,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_50_integer_gt_constraint_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"exclusive_minimum" => 0, "value" => 0},
             "loc" => ["query", "limit"],
             "msg" => "Value must be greater than 0",
-            "ctx" => %{"exclusive_minimum" => 0, "value" => 0}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3803,18 +3803,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_53_integer_le_constraint_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"maximum" => 100, "value" => 101},
             "loc" => ["query", "limit"],
             "msg" => "Value must not exceed 100",
-            "ctx" => %{"maximum" => 100, "value" => 101}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3834,18 +3834,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_55_array_minitems_constraint_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"actual_items" => 1, "min_items" => 2},
             "loc" => ["query", "ids"],
             "msg" => "Array must contain at least 2 items",
-            "ctx" => %{"min_items" => 2, "actual_items" => 1}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3858,18 +3858,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_56_array_maxitems_constraint_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"actual_items" => 6, "max_items" => 5},
             "loc" => ["query", "tags"],
             "msg" => "Array must not contain more than 5 items",
-            "ctx" => %{"max_items" => 5, "actual_items" => 6}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3896,18 +3896,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_59_format_email_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"format" => "email", "value" => "not-an-email"},
             "loc" => ["query", "email"],
             "msg" => "Invalid email format",
-            "ctx" => %{"format" => "email", "value" => "not-an-email"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3927,18 +3927,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_61_format_ipv4_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"format" => "ipv4", "value" => "999.999.999.999"},
             "loc" => ["query", "ip"],
             "msg" => "Invalid IPv4 address format",
-            "ctx" => %{"format" => "ipv4", "value" => "999.999.999.999"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -3965,18 +3965,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_64_format_uri_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"format" => "uri", "value" => "not a uri"},
             "loc" => ["query", "url"],
             "msg" => "Invalid URI format",
-            "ctx" => %{"format" => "uri", "value" => "not a uri"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4003,18 +4003,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_67_multipleof_constraint_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"multiple_of" => 5, "value" => 17},
             "loc" => ["query", "quantity"],
             "msg" => "Value must be a multiple of 5",
-            "ctx" => %{"multiple_of" => 5, "value" => 17}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4034,18 +4034,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_69_array_uniqueitems_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"duplicate_index" => 2, "duplicate_value" => 2, "unique_items" => true},
             "loc" => ["query", "ids"],
             "msg" => "Array items must be unique",
-            "ctx" => %{"unique_items" => true, "duplicate_value" => 2, "duplicate_index" => 2}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4121,19 +4121,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_enum_query_parameter___invalid_value(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "enum",
+            "ctx" => %{"expected" => "'alexnet', 'resnet' or 'lenet'"},
+            "input" => "vgg16",
             "loc" => ["query", "model"],
             "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'",
-            "input" => "vgg16",
-            "ctx" => %{"expected" => "'alexnet', 'resnet' or 'lenet'"}
+            "type" => "enum"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4216,18 +4216,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_list_query_parameter___required_but_missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["query", "device_ids"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4245,7 +4245,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: query_params - Multiple query parameters with different types
   """
   def handle_query_params_multiple_query_parameters_with_different_types(_request) do
-    build_response(%{"name" => "john", "age" => 30, "active" => true, "score" => 95.5}, 200, %{})
+    build_response(%{"active" => true, "age" => 30, "name" => "john", "score" => 95.5}, 200, %{})
   end
 
   @doc """
@@ -4303,18 +4303,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_required_integer_query_parameter___float_value(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "int_parsing",
+            "input" => 42.5,
             "loc" => ["query", "query"],
             "msg" => "Input should be a valid integer, unable to parse string as an integer",
-            "input" => 42.5
+            "type" => "int_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4327,18 +4327,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_required_integer_query_parameter___invalid_type(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "int_parsing",
+            "input" => "baz",
             "loc" => ["query", "query"],
             "msg" => "Input should be a valid integer, unable to parse string as an integer",
-            "input" => "baz"
+            "type" => "int_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4351,18 +4351,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_required_integer_query_parameter___missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["query", "query"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4382,18 +4382,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_required_string_query_parameter___missing(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["query", "query"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4413,19 +4413,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_string_query_param_with_max_length_constraint___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_long",
+            "ctx" => %{"max_length" => 10},
+            "input" => "this_is_way_too_long",
             "loc" => ["query", "name"],
             "msg" => "String should have at most 10 characters",
-            "input" => "this_is_way_too_long",
-            "ctx" => %{"max_length" => 10}
+            "type" => "string_too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4438,19 +4438,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_string_query_param_with_min_length_constraint___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "ab",
             "loc" => ["query", "name"],
             "msg" => "String should have at least 3 characters",
-            "input" => "ab",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4463,19 +4463,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_string_query_param_with_regex_pattern___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[0-9]{3,}$"},
+            "input" => "abc123",
             "loc" => ["query", "code"],
             "msg" => "String should match pattern '^[0-9]{3,}$'",
-            "input" => "abc123",
-            "ctx" => %{"pattern" => "^[0-9]{3,}$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4488,19 +4488,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_string_validation_with_regex___failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^fixedquery$"},
+            "input" => "nonregexquery",
             "loc" => ["query", "item_query"],
             "msg" => "String should match pattern '^fixedquery$'",
-            "input" => "nonregexquery",
-            "ctx" => %{"pattern" => "^fixedquery$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4520,18 +4520,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_query_params_uuid_query_parameter___invalid_format(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "uuid_parsing",
+            "input" => "not-a-uuid",
             "loc" => ["query", "item_id"],
             "msg" => "Input should be a valid UUID",
-            "input" => "not-a-uuid"
+            "type" => "uuid_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4549,7 +4549,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: rate_limit - Rate limit below threshold succeeds
   """
   def handle_rate_limit_rate_limit_below_threshold_succeeds(_request) do
-    build_response(%{"status" => "ok", "request" => "under-limit"}, 200, %{})
+    build_response(%{"request" => "under-limit", "status" => "ok"}, 200, %{})
   end
 
   @doc """
@@ -4563,7 +4563,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: request_id - Request ID header is preserved
   """
   def handle_request_id_request_id_header_is_preserved(_request) do
-    build_response(%{"status" => "preserved", "echo" => "trace-123"}, 200, %{
+    build_response(%{"echo" => "trace-123", "status" => "preserved"}, 200, %{
       "x-request-id" => "trace-123"
     })
   end
@@ -4586,7 +4586,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: request_timeout - Request completes before timeout
   """
   def handle_request_timeout_request_completes_before_timeout(_request) do
-    build_response(%{"status" => "ok", "duration" => "fast"}, 200, %{})
+    build_response(%{"duration" => "fast", "status" => "ok"}, 200, %{})
   end
 
   @doc """
@@ -4601,8 +4601,8 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_static_files_static_file_server_returns_text_file(_request) do
     build_response("Hello from static storage", 200, %{
-      "cache-control" => "public, max-age=60",
-      "content-type" => "text/plain"
+      "content-type" => "text/plain",
+      "cache-control" => "public, max-age=60"
     })
   end
 
@@ -4664,9 +4664,9 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_status_codes_206_partial_content(_request) do
     build_response("binary_data_1024_bytes", 206, %{
+      "Accept-Ranges" => "bytes",
       "Content-Type" => "application/pdf",
-      "Content-Range" => "bytes 0-21/5000",
-      "Accept-Ranges" => "bytes"
+      "Content-Range" => "bytes 0-21/5000"
     })
   end
 
@@ -4781,18 +4781,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_status_codes_422_unprocessable_entity___validation_error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => %{"price" => "not a number"},
             "loc" => ["body", "name"],
             "msg" => "Field required",
-            "input" => %{"price" => "not a number"}
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4805,8 +4805,8 @@ defmodule E2EElixirApp.Handlers do
   def handle_status_codes_429_too_many_requests(_request) do
     build_response(%{"detail" => "Rate limit exceeded. Try again in 60 seconds."}, 429, %{
       "X-RateLimit-Remaining" => "0",
-      "X-RateLimit-Reset" => "1609459200",
       "X-RateLimit-Limit" => "100",
+      "X-RateLimit-Reset" => "1609459200",
       "Retry-After" => "60"
     })
   end
@@ -4817,10 +4817,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_status_codes_500_internal_server_error___server_error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/internal-server-error",
-        "title" => "Internal Server Error",
+        "detail" => "Internal server error",
         "status" => 500,
-        "detail" => "Internal server error"
+        "title" => "Internal Server Error",
+        "type" => "https://spikard.dev/errors/internal-server-error"
       },
       500,
       %{}
@@ -4873,7 +4873,7 @@ defmodule E2EElixirApp.Handlers do
   """
   def handle_url_encoded_14_nested_object_bracket_notation(_request) do
     build_response(
-      %{"user" => %{"name" => "John Doe", "email" => "john@example.com", "age" => 30}},
+      %{"user" => %{"age" => 30, "email" => "john@example.com", "name" => "John Doe"}},
       201,
       %{}
     )
@@ -4883,7 +4883,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: url_encoded - 15_special_characters_field_names
   """
   def handle_url_encoded_15_special_characters_field_names(_request) do
-    build_response(%{"user-name" => "JohnDoe", "contact.email" => "john@example.com"}, 201, %{})
+    build_response(%{"contact.email" => "john@example.com", "user-name" => "JohnDoe"}, 201, %{})
   end
 
   @doc """
@@ -4892,19 +4892,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_16_minlength_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "ab",
             "loc" => ["body", "username"],
             "msg" => "String should have at least 3 characters",
-            "input" => "ab",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4917,19 +4917,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_17_pattern_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^ACC-[0-9]{6}$"},
+            "input" => "INVALID123",
             "loc" => ["body", "account_id"],
             "msg" => "String should match pattern '^ACC-[0-9]{6}$'",
-            "input" => "INVALID123",
-            "ctx" => %{"pattern" => "^ACC-[0-9]{6}$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4942,19 +4942,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_18_integer_minimum_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "greater_than_equal",
+            "ctx" => %{"ge" => 1},
+            "input" => 0,
             "loc" => ["body", "quantity"],
             "msg" => "Input should be greater than or equal to 1",
-            "input" => 0,
-            "ctx" => %{"ge" => 1}
+            "type" => "greater_than_equal"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4967,19 +4967,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_19_array_minitems_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "too_short",
+            "ctx" => %{"min_length" => 2},
+            "input" => ["single"],
             "loc" => ["body", "tags"],
             "msg" => "List should have at least 2 item after validation",
-            "input" => ["single"],
-            "ctx" => %{"min_length" => 2}
+            "type" => "too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -4992,20 +4992,20 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_20_format_email_validation_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"},
+            "input" => "not-an-email",
             "loc" => ["body", "email"],
             "msg" =>
               "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
-            "input" => "not-an-email",
-            "ctx" => %{"pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5018,18 +5018,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_21_integer_type_coercion_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "int_parsing",
+            "input" => "not-a-number",
             "loc" => ["body", "price"],
             "msg" => "Input should be a valid integer, unable to parse string as an integer",
-            "input" => "not-a-number"
+            "type" => "int_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5042,19 +5042,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_22_additional_properties_strict_failure(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "validation_error",
+            "ctx" => %{"additional_properties" => false, "unexpected_field" => "unknown_field"},
+            "input" => %{"theme" => "dark", "unknown_field" => "value"},
             "loc" => ["body", "unknown_field"],
             "msg" => "Additional properties are not allowed",
-            "input" => %{"theme" => "dark", "unknown_field" => "value"},
-            "ctx" => %{"additional_properties" => false, "unexpected_field" => "unknown_field"}
+            "type" => "validation_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5065,14 +5065,14 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: url_encoded - Boolean field conversion
   """
   def handle_url_encoded_boolean_field_conversion(_request) do
-    build_response(%{"username" => "johndoe", "subscribe" => true}, 200, %{})
+    build_response(%{"subscribe" => true, "username" => "johndoe"}, 200, %{})
   end
 
   @doc """
   Handler for fixture: url_encoded - Empty string value
   """
   def handle_url_encoded_empty_string_value(_request) do
-    build_response(%{"username" => "johndoe", "description" => ""}, 200, %{})
+    build_response(%{"description" => "", "username" => "johndoe"}, 200, %{})
   end
 
   @doc """
@@ -5086,7 +5086,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: url_encoded - Numeric field type conversion
   """
   def handle_url_encoded_numeric_field_type_conversion(_request) do
-    build_response(%{"username" => "johndoe", "age" => 30}, 200, %{})
+    build_response(%{"age" => 30, "username" => "johndoe"}, 200, %{})
   end
 
   @doc """
@@ -5100,7 +5100,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: url_encoded - Optional field missing - success
   """
   def handle_url_encoded_optional_field_missing___success(_request) do
-    build_response(%{"username" => "johndoe", "email" => nil}, 200, %{})
+    build_response(%{"email" => nil, "username" => "johndoe"}, 200, %{})
   end
 
   @doc """
@@ -5109,19 +5109,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_pattern_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[a-z0-9_]+$"},
+            "input" => "john doe",
             "loc" => ["body", "username"],
             "msg" => "String should match pattern '^[a-z0-9_]+$'",
-            "input" => "john doe",
-            "ctx" => %{"pattern" => "^[a-z0-9_]+$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5134,18 +5134,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_required_field_missing___validation_error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => %{"password" => "secret"},
             "loc" => ["body", "username"],
             "msg" => "Field required",
-            "input" => %{"password" => "secret"}
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5163,7 +5163,7 @@ defmodule E2EElixirApp.Handlers do
   Handler for fixture: url_encoded - Special characters encoding
   """
   def handle_url_encoded_special_characters_encoding(_request) do
-    build_response(%{"name" => "John Doe", "description" => "Test & Development"}, 200, %{})
+    build_response(%{"description" => "Test & Development", "name" => "John Doe"}, 200, %{})
   end
 
   @doc """
@@ -5172,19 +5172,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_string_max_length_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_long",
+            "ctx" => %{"max_length" => 20},
+            "input" => "this_is_a_very_long_username_that_exceeds_limit",
             "loc" => ["body", "username"],
             "msg" => "String should have at most 20 characters",
-            "input" => "this_is_a_very_long_username_that_exceeds_limit",
-            "ctx" => %{"max_length" => 20}
+            "type" => "string_too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5197,19 +5197,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_url_encoded_string_min_length_validation___fail(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "ab",
             "loc" => ["body", "username"],
             "msg" => "String should have at least 3 characters",
-            "input" => "ab",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5222,34 +5222,34 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_09_multiple_validation_errors(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "3 validation errors in request",
         "errors" => [
           %{
-            "type" => "greater_than_equal",
+            "ctx" => %{"ge" => 18},
+            "input" => 15,
             "loc" => ["body", "age"],
             "msg" => "Input should be greater than or equal to 18",
-            "input" => 15,
-            "ctx" => %{"ge" => 18}
+            "type" => "greater_than_equal"
           },
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"},
+            "input" => "invalid-email",
             "loc" => ["body", "email"],
             "msg" =>
               "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
-            "input" => "invalid-email",
-            "ctx" => %{"pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"}
+            "type" => "string_pattern_mismatch"
           },
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "ab",
             "loc" => ["body", "name"],
             "msg" => "String should have at least 3 characters",
-            "input" => "ab",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5262,20 +5262,20 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_10_nested_error_path(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"},
+            "input" => "invalid",
             "loc" => ["body", "profile", "contact", "email"],
             "msg" =>
               "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
-            "input" => "invalid",
-            "ctx" => %{"pattern" => "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5288,18 +5288,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_array_item_validation_error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "type_error",
+            "input" => 123,
             "loc" => ["body", "tags", "2"],
             "msg" => "Input should be a valid unknown",
-            "input" => 123
+            "type" => "type_error"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5312,15 +5312,10 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_array_max_items_constraint_violation(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "too_long",
-            "loc" => ["body", "tags"],
-            "msg" => "List should have at most 10 items after validation",
+            "ctx" => %{"max_length" => 10},
             "input" => [
               "tag1",
               "tag2",
@@ -5334,9 +5329,14 @@ defmodule E2EElixirApp.Handlers do
               "tag10",
               "tag11"
             ],
-            "ctx" => %{"max_length" => 10}
+            "loc" => ["body", "tags"],
+            "msg" => "List should have at most 10 items after validation",
+            "type" => "too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5349,19 +5349,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_array_min_items_constraint_violation(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "too_short",
+            "ctx" => %{"min_length" => 1},
+            "input" => [],
             "loc" => ["body", "tags"],
             "msg" => "List should have at least 1 item after validation",
-            "input" => [],
-            "ctx" => %{"min_length" => 1}
+            "type" => "too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5374,18 +5374,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_body_field_type_error___string_for_float(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "float_parsing",
+            "input" => "not_a_float",
             "loc" => ["body", "price"],
             "msg" => "Input should be a valid number, unable to parse string as a number",
-            "input" => "not_a_float"
+            "type" => "float_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5398,18 +5398,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_header_validation_error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["headers", "x-token"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5422,19 +5422,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_invalid_uuid_format(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "uuid_parsing",
+            "input" => "not-a-uuid",
             "loc" => ["path", "item_id"],
             "msg" =>
               "Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `n` at 0",
-            "input" => "not-a-uuid"
+            "type" => "uuid_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5447,18 +5447,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_invalid_boolean_value(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "bool_parsing",
+            "input" => "maybe",
             "loc" => ["query", "is_active"],
             "msg" => "Input should be a valid boolean, unable to interpret input",
-            "input" => "maybe"
+            "type" => "bool_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5471,18 +5471,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_invalid_datetime_format(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "datetime_parsing",
+            "input" => "not-a-datetime",
             "loc" => ["body", "created_at"],
             "msg" => "Input should be a valid datetime",
-            "input" => "not-a-datetime"
+            "type" => "datetime_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5495,19 +5495,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_invalid_enum_value(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "enum",
+            "ctx" => %{"expected" => "'alexnet', 'resnet' or 'lenet'"},
+            "input" => "invalid_model",
             "loc" => ["path", "model_name"],
             "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'",
-            "input" => "invalid_model",
-            "ctx" => %{"expected" => "'alexnet', 'resnet' or 'lenet'"}
+            "type" => "enum"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5527,18 +5527,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_missing_required_body_field(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => %{"name" => "Item"},
             "loc" => ["body", "price"],
             "msg" => "Field required",
-            "input" => %{"name" => "Item"}
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5551,18 +5551,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_missing_required_query_parameter(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "missing",
+            "input" => nil,
             "loc" => ["query", "q"],
             "msg" => "Field required",
-            "input" => nil
+            "type" => "missing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5575,32 +5575,32 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_multiple_validation_errors(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "3 validation errors in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "X",
             "loc" => ["body", "name"],
             "msg" => "String should have at least 3 characters",
-            "input" => "X",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           },
           %{
-            "type" => "greater_than",
+            "ctx" => %{"gt" => 0},
+            "input" => -10,
             "loc" => ["body", "price"],
             "msg" => "Input should be greater than 0",
-            "input" => -10,
-            "ctx" => %{"gt" => 0}
+            "type" => "greater_than"
           },
           %{
-            "type" => "int_parsing",
+            "input" => "not_a_number",
             "loc" => ["body", "quantity"],
             "msg" => "Input should be a valid integer, unable to parse string as an integer",
-            "input" => "not_a_number"
+            "type" => "int_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5613,33 +5613,33 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_nested_object_validation_error(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "3 validation errors in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "SF",
             "loc" => ["body", "seller", "address", "city"],
             "msg" => "String should have at least 3 characters",
-            "input" => "SF",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           },
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 5},
+            "input" => "123",
             "loc" => ["body", "seller", "address", "zip_code"],
             "msg" => "String should have at least 5 characters",
-            "input" => "123",
-            "ctx" => %{"min_length" => 5}
+            "type" => "string_too_short"
           },
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "Jo",
             "loc" => ["body", "seller", "name"],
             "msg" => "String should have at least 3 characters",
-            "input" => "Jo",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5652,19 +5652,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_numeric_constraint_violation___gt__greater_than_(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "greater_than",
+            "ctx" => %{"gt" => 0},
+            "input" => "0",
             "loc" => ["query", "price"],
             "msg" => "Input should be greater than 0",
-            "input" => "0",
-            "ctx" => %{"gt" => 0}
+            "type" => "greater_than"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5677,19 +5677,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_numeric_constraint_violation___le__less_than_or_equal_(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "less_than_equal",
+            "ctx" => %{"le" => 100},
+            "input" => "101",
             "loc" => ["query", "limit"],
             "msg" => "Input should be less than or equal to 100",
-            "input" => "101",
-            "ctx" => %{"le" => 100}
+            "type" => "less_than_equal"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5702,18 +5702,18 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_query_param_type_error___string_provided_for_int(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "int_parsing",
+            "input" => "not_a_number",
             "loc" => ["query", "skip"],
             "msg" => "Input should be a valid integer, unable to parse string as an integer",
-            "input" => "not_a_number"
+            "type" => "int_parsing"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5726,20 +5726,20 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_string_max_length_constraint_violation(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_long",
-            "loc" => ["query", "q"],
-            "msg" => "String should have at most 50 characters",
+            "ctx" => %{"max_length" => 50},
             "input" =>
               "this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",
-            "ctx" => %{"max_length" => 50}
+            "loc" => ["query", "q"],
+            "msg" => "String should have at most 50 characters",
+            "type" => "string_too_long"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5752,19 +5752,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_string_min_length_constraint_violation(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_too_short",
+            "ctx" => %{"min_length" => 3},
+            "input" => "ab",
             "loc" => ["query", "q"],
             "msg" => "String should have at least 3 characters",
-            "input" => "ab",
-            "ctx" => %{"min_length" => 3}
+            "type" => "string_too_short"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}
@@ -5777,19 +5777,19 @@ defmodule E2EElixirApp.Handlers do
   def handle_validation_errors_string_regex_pattern_mismatch(_request) do
     build_response(
       %{
-        "type" => "https://spikard.dev/errors/validation-error",
-        "title" => "Request Validation Failed",
-        "status" => 422,
         "detail" => "1 validation error in request",
         "errors" => [
           %{
-            "type" => "string_pattern_mismatch",
+            "ctx" => %{"pattern" => "^[a-zA-Z0-9_-]+$"},
+            "input" => "invalid!",
             "loc" => ["query", "q"],
             "msg" => "String should match pattern '^[a-zA-Z0-9_-]+$'",
-            "input" => "invalid!",
-            "ctx" => %{"pattern" => "^[a-zA-Z0-9_-]+$"}
+            "type" => "string_pattern_mismatch"
           }
-        ]
+        ],
+        "status" => 422,
+        "title" => "Request Validation Failed",
+        "type" => "https://spikard.dev/errors/validation-error"
       },
       422,
       %{}

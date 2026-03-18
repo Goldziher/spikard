@@ -228,7 +228,7 @@ async def test_response_multiple_cookies() -> None:
     """Tests setting multiple cookies in single response."""
 
     async with TestClient(create_app_cookies_response_multiple_cookies()) as client:
-        json_data = {"user": "john", "session": "session123"}
+        json_data = {"session": "session123", "user": "john"}
         response = await client.post("/cookies/multiple", json=json_data)
 
         assert response.status_code == 200
@@ -348,20 +348,20 @@ async def test_multiple_cookies_success() -> None:
 
     async with TestClient(create_app_cookies_multiple_cookies_success()) as client:
         cookies = {
-            "googall_tracker": "ga789",
             "fatebook_tracker": "tracker456",
+            "googall_tracker": "ga789",
             "session_id": "session123",
         }
         response = await client.get("/items/", cookies=cookies)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "session_id" in response_data
-        assert response_data["session_id"] == "session123"
         assert "fatebook_tracker" in response_data
         assert response_data["fatebook_tracker"] == "tracker456"
         assert "googall_tracker" in response_data
         assert response_data["googall_tracker"] == "ga789"
+        assert "session_id" in response_data
+        assert response_data["session_id"] == "session123"
 
 
 async def test_26_cookie_secure_flag() -> None:

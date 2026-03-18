@@ -6,9 +6,14 @@
 use magnus::{RHash, Ruby, Value, prelude::*, value::Opaque};
 use serde_json::Value as JsonValue;
 use spikard_http::WebSocketHandler;
-use std::sync::mpsc;
+use std::sync::{LazyLock, Mutex, mpsc};
 use tokio::sync::oneshot;
 use tracing::{debug, error};
+
+static WS_WORKER_SHUTDOWN_SENDERS: LazyLock<Mutex<Vec<mpsc::Sender<WebSocketWorkItem>>>> =
+    LazyLock::new(|| Mutex::new(Vec::new()));
+static WS_FACTORY_SHUTDOWN_SENDERS: LazyLock<Mutex<Vec<mpsc::Sender<WebSocketFactoryWorkItem>>>> =
+    LazyLock::new(|| Mutex::new(Vec::new()));
 
 /// Ruby implementation of WebSocketHandler
 pub struct RubyWebSocketHandler {
@@ -43,6 +48,42 @@ enum WebSocketFactoryWorkItem {
     Build {
         reply: mpsc::Sender<Result<RubyWebSocketHandler, String>>,
     },
+    Shutdown,
+}
+
+fn shutdown_registry<T>(
+    registry: &LazyLock<Mutex<Vec<mpsc::Sender<T>>>>,
+) -> std::sync::MutexGuard<'_, Vec<mpsc::Sender<T>>> {
+    match registry.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    }
+}
+
+fn register_worker_shutdown(sender: mpsc::Sender<WebSocketWorkItem>) {
+    shutdown_registry(&WS_WORKER_SHUTDOWN_SENDERS).push(sender);
+}
+
+fn register_factory_shutdown(sender: mpsc::Sender<WebSocketFactoryWorkItem>) {
+    shutdown_registry(&WS_FACTORY_SHUTDOWN_SENDERS).push(sender);
+}
+
+pub fn shutdown_websocket_workers() {
+    let worker_senders = {
+        let mut registry = shutdown_registry(&WS_WORKER_SHUTDOWN_SENDERS);
+        std::mem::take(&mut *registry)
+    };
+    for sender in worker_senders {
+        let _ = sender.send(WebSocketWorkItem::Shutdown);
+    }
+
+    let factory_senders = {
+        let mut registry = shutdown_registry(&WS_FACTORY_SHUTDOWN_SENDERS);
+        std::mem::take(&mut *registry)
+    };
+    for sender in factory_senders {
+        let _ = sender.send(WebSocketFactoryWorkItem::Shutdown);
+    }
 }
 
 impl RubyWebSocketHandler {
@@ -60,6 +101,7 @@ impl RubyWebSocketHandler {
         let on_disconnect_proc = on_disconnect_proc.map(Opaque::from);
         let (work_tx, work_rx) = mpsc::channel();
         let handler_name = name.clone();
+        register_worker_shutdown(work_tx.clone());
 
         let handle_message_proc_for_thread = handle_message_proc;
         let on_connect_proc_for_thread = on_connect_proc;
@@ -391,6 +433,7 @@ pub fn create_websocket_state(
 
     let handler_factory = Opaque::from(handler_factory);
     let (factory_tx, factory_rx) = mpsc::channel();
+    register_factory_shutdown(factory_tx.clone());
 
     let handler_factory_for_thread = handler_factory;
     ruby.thread_create_from_fn(move |ruby| {
@@ -459,6 +502,9 @@ fn websocket_factory_worker_loop(
                     RubyWebSocketHandler::from_handler(ruby, handler_instance).map_err(|e| e.to_string())
                 })();
                 let _ = reply.send(result);
+            }
+            WebSocketFactoryWorkItem::Shutdown => {
+                break;
             }
         }
     }

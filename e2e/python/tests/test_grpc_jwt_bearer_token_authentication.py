@@ -10,8 +10,8 @@ async def test_grpc_jwt_bearer_token_authentication() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
         "content-type": "application/grpc",
+        "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -25,5 +25,5 @@ async def test_grpc_jwt_bearer_token_authentication() -> None:
     response = await handle_grpc_jwt_bearer_token_authentication(request)
 
     # Verify response
-    assert response.payload == b'{"user_id":"user-123","action":"read"}'
+    assert response.payload == b'{"action":"read","user_id":"user-123"}'
     assert response.metadata is not None

@@ -55,10 +55,10 @@ async def test_15_special_characters_field_names() -> None:
 
         assert response.status_code == 201
         response_data = response.json()
-        assert "user-name" in response_data
-        assert response_data["user-name"] == "JohnDoe"
         assert "contact.email" in response_data
         assert response_data["contact.email"] == "john@example.com"
+        assert "user-name" in response_data
+        assert response_data["user-name"] == "JohnDoe"
 
 
 async def test_pattern_validation_fail() -> None:
@@ -191,10 +191,10 @@ async def test_numeric_field_type_conversion() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "username" in response_data
-        assert response_data["username"] == "johndoe"
         assert "age" in response_data
         assert response_data["age"] == 30
+        assert "username" in response_data
+        assert response_data["username"] == "johndoe"
 
 
 async def test_special_characters_encoding() -> None:
@@ -209,10 +209,10 @@ async def test_special_characters_encoding() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "name" in response_data
-        assert response_data["name"] == "John Doe"
         assert "description" in response_data
         assert response_data["description"] == "Test & Development"
+        assert "name" in response_data
+        assert response_data["name"] == "John Doe"
 
 
 async def test_boolean_field_conversion() -> None:
@@ -227,10 +227,10 @@ async def test_boolean_field_conversion() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "username" in response_data
-        assert response_data["username"] == "johndoe"
         assert "subscribe" in response_data
         assert response_data["subscribe"] == True
+        assert "username" in response_data
+        assert response_data["username"] == "johndoe"
 
 
 async def test_empty_string_value() -> None:
@@ -245,10 +245,10 @@ async def test_empty_string_value() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "username" in response_data
-        assert response_data["username"] == "johndoe"
         assert "description" in response_data
         assert response_data["description"] == ""
+        assert "username" in response_data
+        assert response_data["username"] == "johndoe"
 
 
 async def test_oauth2_password_grant_flow() -> None:
@@ -297,10 +297,10 @@ async def test_optional_field_missing_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "username" in response_data
-        assert response_data["username"] == "johndoe"
         assert "email" in response_data
         assert response_data["email"] == None
+        assert "username" in response_data
+        assert response_data["username"] == "johndoe"
 
 
 async def test_14_nested_object_bracket_notation() -> None:
@@ -316,12 +316,12 @@ async def test_14_nested_object_bracket_notation() -> None:
         assert response.status_code == 201
         response_data = response.json()
         assert "user" in response_data
-        assert "name" in response_data["user"]
-        assert response_data["user"]["name"] == "John Doe"
-        assert "email" in response_data["user"]
-        assert response_data["user"]["email"] == "john@example.com"
         assert "age" in response_data["user"]
         assert response_data["user"]["age"] == 30
+        assert "email" in response_data["user"]
+        assert response_data["user"]["email"] == "john@example.com"
+        assert "name" in response_data["user"]
+        assert response_data["user"]["name"] == "John Doe"
 
 
 async def test_string_max_length_validation_fail() -> None:

@@ -24,5 +24,5 @@ async def test_grpc_oneof_field_handling() -> None:
     response = await handle_grpc_oneof_field_handling(request)
 
     # Verify response
-    assert response.payload == b'{"received_type":"text_data","data_present":true}'
+    assert response.payload == b'{"data_present":true,"received_type":"text_data"}'
     assert response.metadata is not None

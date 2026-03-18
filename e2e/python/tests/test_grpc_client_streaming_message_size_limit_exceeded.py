@@ -10,8 +10,8 @@ async def test_grpc_client_streaming_message_size_limit_exceeded() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "grpc-max-message-size": "4096",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -27,6 +27,6 @@ async def test_grpc_client_streaming_message_size_limit_exceeded() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"message_id":"payload-002","processed_count":1,"status":"FAILED","error_detail":"Message payload size 10240 exceeds maximum allowed size 4096"}'
+        == b'{"error_detail":"Message payload size 10240 exceeds maximum allowed size 4096","message_id":"payload-002","processed_count":1,"status":"FAILED"}'
     )
     assert response.metadata is not None

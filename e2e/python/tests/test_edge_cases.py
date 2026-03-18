@@ -61,32 +61,32 @@ async def test_special_string_values_and_escaping() -> None:
             "Content-Type": "application/json",
         }
         json_data = {
-            "empty_string": "",
-            "whitespace": "   ",
-            "tabs_newlines": "line1\n\tline2\r\nline3",
-            "quotes": "He said \"hello\" and 'goodbye'",
             "backslashes": "C:\\\\Users\\\\Path",
-            "unicode_escapes": "\\u0048\\u0065\\u006c\\u006c\\u006f",
+            "empty_string": "",
+            "quotes": "He said \"hello\" and 'goodbye'",
             "special_chars": "!@#$%^&*()_+-=[]{}|;':\",./<>?",
+            "tabs_newlines": "line1\n\tline2\r\nline3",
+            "unicode_escapes": "\\u0048\\u0065\\u006c\\u006c\\u006f",
+            "whitespace": "   ",
         }
         response = await client.post("/strings/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "empty_string" in response_data
-        assert response_data["empty_string"] == ""
-        assert "whitespace" in response_data
-        assert response_data["whitespace"] == "   "
-        assert "tabs_newlines" in response_data
-        assert response_data["tabs_newlines"] == "line1\n\tline2\r\nline3"
-        assert "quotes" in response_data
-        assert response_data["quotes"] == "He said \"hello\" and 'goodbye'"
         assert "backslashes" in response_data
         assert response_data["backslashes"] == "C:\\\\Users\\\\Path"
-        assert "unicode_escapes" in response_data
-        assert response_data["unicode_escapes"] == "Hello"
+        assert "empty_string" in response_data
+        assert response_data["empty_string"] == ""
+        assert "quotes" in response_data
+        assert response_data["quotes"] == "He said \"hello\" and 'goodbye'"
         assert "special_chars" in response_data
         assert response_data["special_chars"] == "!@#$%^&*()_+-=[]{}|;':\",./<>?"
+        assert "tabs_newlines" in response_data
+        assert response_data["tabs_newlines"] == "line1\n\tline2\r\nline3"
+        assert "unicode_escapes" in response_data
+        assert response_data["unicode_escapes"] == "Hello"
+        assert "whitespace" in response_data
+        assert response_data["whitespace"] == "   "
 
 
 async def test_15_float_precision_preservation() -> None:
@@ -154,25 +154,25 @@ async def test_float_precision_and_rounding() -> None:
             "Content-Type": "application/json",
         }
         json_data = {
-            "value1": 0.1,
-            "value2": 0.2,
             "expected_sum": 0.3,
             "precise_value": 3.141592653589793,
-            "very_small": 1e-10,
+            "value1": 0.1,
+            "value2": 0.2,
             "very_large": 1.7976931348623157e308,
+            "very_small": 1e-10,
         }
         response = await client.post("/calculations/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "sum" in response_data
-        assert response_data["sum"] == 0.30000000000000004
         assert "precise_value" in response_data
         assert response_data["precise_value"] == 3.141592653589793
-        assert "very_small" in response_data
-        assert response_data["very_small"] == 1e-10
+        assert "sum" in response_data
+        assert response_data["sum"] == 0.30000000000000004
         assert "very_large" in response_data
         assert response_data["very_large"] == 1.7976931348623157e308
+        assert "very_small" in response_data
+        assert response_data["very_small"] == 1e-10
 
 
 async def test_unicode_and_emoji_handling() -> None:
@@ -183,28 +183,28 @@ async def test_unicode_and_emoji_handling() -> None:
             "Content-Type": "application/json; charset=utf-8",
         }
         json_data = {
-            "name": "Coffee Shop ☕",
             "description": "Best café in München 🇩🇪",
-            "tags": ["食べ物", "音楽", "💰"],
             "emoji_reactions": "👍❤️😂🎉",
+            "name": "Coffee Shop ☕",
+            "tags": ["食べ物", "音楽", "💰"],
         }
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
+        assert "description" in response_data
+        assert response_data["description"] == "Best café in München 🇩🇪"
+        assert "emoji_reactions" in response_data
+        assert response_data["emoji_reactions"] == "👍❤️😂🎉"
         assert "id" in response_data
         assert response_data["id"] == 1
         assert "name" in response_data
         assert response_data["name"] == "Coffee Shop ☕"
-        assert "description" in response_data
-        assert response_data["description"] == "Best café in München 🇩🇪"
         assert "tags" in response_data
         assert len(response_data["tags"]) == 3
         assert response_data["tags"][0] == "食べ物"
         assert response_data["tags"][1] == "音楽"
         assert response_data["tags"][2] == "💰"
-        assert "emoji_reactions" in response_data
-        assert response_data["emoji_reactions"] == "👍❤️😂🎉"
 
 
 async def test_17_extremely_long_string() -> None:
@@ -414,18 +414,18 @@ async def test_large_integer_boundary_values() -> None:
             "Content-Type": "application/json",
         }
         json_data = {
-            "max_safe_int": 9007199254740991,
             "large_int": 9223372036854775807,
+            "max_safe_int": 9007199254740991,
             "negative_large": -9223372036854775808,
         }
         response = await client.post("/numbers/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "max_safe_int" in response_data
-        assert response_data["max_safe_int"] == 9007199254740991
         assert "large_int" in response_data
         assert response_data["large_int"] == 9223372036854775807
+        assert "max_safe_int" in response_data
+        assert response_data["max_safe_int"] == 9007199254740991
         assert "negative_large" in response_data
         assert response_data["negative_large"] == -9223372036854775808
 
@@ -444,7 +444,7 @@ async def test_deeply_nested_structure_10_levels() -> None:
                         "level4": {
                             "level5": {
                                 "level6": {
-                                    "level7": {"level8": {"level9": {"level10": {"value": "deep", "depth": 10}}}}
+                                    "level7": {"level8": {"level9": {"level10": {"depth": 10, "value": "deep"}}}}
                                 }
                             }
                         }
@@ -456,10 +456,10 @@ async def test_deeply_nested_structure_10_levels() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "message" in response_data
-        assert response_data["message"] == "Processed deeply nested structure"
         assert "max_depth" in response_data
         assert response_data["max_depth"] == 10
+        assert "message" in response_data
+        assert response_data["message"] == "Processed deeply nested structure"
         assert "value_found" in response_data
         assert response_data["value_found"] == "deep"
 
@@ -472,29 +472,29 @@ async def test_empty_and_null_value_handling() -> None:
             "Content-Type": "application/json",
         }
         json_data = {
-            "explicit_null": None,
-            "empty_string": "",
             "empty_array": [],
             "empty_object": {},
-            "zero_number": 0,
+            "empty_string": "",
+            "explicit_null": None,
             "false_boolean": False,
+            "zero_number": 0,
         }
         response = await client.post("/nulls/", headers=headers, json=json_data)
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "explicit_null_is_null" in response_data
-        assert response_data["explicit_null_is_null"] == True
-        assert "empty_string_length" in response_data
-        assert response_data["empty_string_length"] == 0
         assert "empty_array_length" in response_data
         assert response_data["empty_array_length"] == 0
         assert "empty_object_keys" in response_data
         assert response_data["empty_object_keys"] == 0
-        assert "zero_is_falsy" in response_data
-        assert response_data["zero_is_falsy"] == True
+        assert "empty_string_length" in response_data
+        assert response_data["empty_string_length"] == 0
+        assert "explicit_null_is_null" in response_data
+        assert response_data["explicit_null_is_null"] == True
         assert "false_is_false" in response_data
         assert response_data["false_is_false"] == True
+        assert "zero_is_falsy" in response_data
+        assert response_data["zero_is_falsy"] == True
 
 
 async def test_16_negative_zero_handling() -> None:

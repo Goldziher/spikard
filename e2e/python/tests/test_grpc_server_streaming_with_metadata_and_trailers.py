@@ -10,9 +10,9 @@ async def test_grpc_server_streaming_with_metadata_and_trailers() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "x-client-version": "1.0.0",
         "x-request-id": "metadata-stream-001",
         "content-type": "application/grpc",
+        "x-client-version": "1.0.0",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

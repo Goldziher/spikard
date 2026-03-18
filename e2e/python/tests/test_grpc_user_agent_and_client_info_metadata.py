@@ -10,8 +10,8 @@ async def test_grpc_user_agent_and_client_info_metadata() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "user-agent": "grpc-client/1.2.3 (linux; amd64)",
         "content-type": "application/grpc",
+        "user-agent": "grpc-client/1.2.3 (linux; amd64)",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

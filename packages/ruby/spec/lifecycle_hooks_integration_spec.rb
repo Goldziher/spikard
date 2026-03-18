@@ -795,6 +795,25 @@ RSpec.describe 'Lifecycle Hooks Integration' do
       expect(validation_passed).to include(true)
     end
 
+    it 'preValidation short-circuit preserves custom headers' do
+      app.pre_validation do |_request|
+        {
+          status_code: 429,
+          content: JSON.generate(error: 'rate_limited'),
+          headers: { 'Retry-After' => '60', 'X-Rate-Limit-Reason' => 'burst' }
+        }
+      end
+
+      app.post('/limited') { { ok: true } }
+
+      response = client.post('/limited', json: { data: 'test' })
+
+      expect(response.status).to eq(429)
+      expect(response.headers['retry-after']).to eq('60')
+      expect(response.headers['x-rate-limit-reason']).to eq('burst')
+      expect(response.json['error']).to eq('rate_limited')
+    end
+
     it 'onResponse hook return value does not affect response' do
       app.on_response do |response|
         response

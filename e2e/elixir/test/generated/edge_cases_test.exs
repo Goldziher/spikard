@@ -206,11 +206,11 @@ defmodule E2EElixirApp.EdgeCasesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -300,11 +300,11 @@ defmodule E2EElixirApp.EdgeCasesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -563,7 +563,7 @@ defmodule E2EElixirApp.EdgeCasesTest do
                     "level6" => %{
                       "level7" => %{
                         "level8" => %{
-                          "level9" => %{"level10" => %{"value" => "deep", "depth" => 10}}
+                          "level9" => %{"level10" => %{"depth" => 10, "value" => "deep"}}
                         }
                       }
                     }
@@ -586,8 +586,8 @@ defmodule E2EElixirApp.EdgeCasesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["message"] == "Processed deeply nested structure"
       assert parsed_body["max_depth"] == 10
+      assert parsed_body["message"] == "Processed deeply nested structure"
       assert parsed_body["value_found"] == "deep"
     after
       Spikard.stop(server)
@@ -607,12 +607,12 @@ defmodule E2EElixirApp.EdgeCasesTest do
 
       req_body =
         Jason.encode!(%{
-          "explicit_null" => nil,
-          "empty_string" => "",
           "empty_array" => [],
           "empty_object" => %{},
-          "zero_number" => 0,
-          "false_boolean" => false
+          "empty_string" => "",
+          "explicit_null" => nil,
+          "false_boolean" => false,
+          "zero_number" => 0
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -627,12 +627,12 @@ defmodule E2EElixirApp.EdgeCasesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["explicit_null_is_null"] == true
-      assert parsed_body["empty_string_length"] == 0
       assert parsed_body["empty_array_length"] == 0
       assert parsed_body["empty_object_keys"] == 0
-      assert parsed_body["zero_is_falsy"] == true
+      assert parsed_body["empty_string_length"] == 0
+      assert parsed_body["explicit_null_is_null"] == true
       assert parsed_body["false_is_false"] == true
+      assert parsed_body["zero_is_falsy"] == true
     after
       Spikard.stop(server)
     end
@@ -651,12 +651,12 @@ defmodule E2EElixirApp.EdgeCasesTest do
 
       req_body =
         Jason.encode!(%{
-          "value1" => 0.1,
-          "value2" => 0.2,
           "expected_sum" => 0.3,
           "precise_value" => 3.141592653589793,
-          "very_small" => 1.0e-10,
-          "very_large" => 1.7976931348623157e+308
+          "value1" => 0.1,
+          "value2" => 0.2,
+          "very_large" => 1.7976931348623157e+308,
+          "very_small" => 1.0e-10
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -671,10 +671,10 @@ defmodule E2EElixirApp.EdgeCasesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["sum"] == 0.30000000000000004
       assert parsed_body["precise_value"] == 3.141592653589793
-      assert parsed_body["very_small"] == 1.0e-10
+      assert parsed_body["sum"] == 0.30000000000000004
       assert parsed_body["very_large"] == 1.7976931348623157e+308
+      assert parsed_body["very_small"] == 1.0e-10
     after
       Spikard.stop(server)
     end
@@ -693,8 +693,8 @@ defmodule E2EElixirApp.EdgeCasesTest do
 
       req_body =
         Jason.encode!(%{
-          "max_safe_int" => 9_007_199_254_740_991,
           "large_int" => 9_223_372_036_854_775_807,
+          "max_safe_int" => 9_007_199_254_740_991,
           "negative_large" => -9_223_372_036_854_775_808
         })
 
@@ -710,8 +710,8 @@ defmodule E2EElixirApp.EdgeCasesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["max_safe_int"] == 9_007_199_254_740_991
       assert parsed_body["large_int"] == 9_223_372_036_854_775_807
+      assert parsed_body["max_safe_int"] == 9_007_199_254_740_991
       assert parsed_body["negative_large"] == -9_223_372_036_854_775_808
     after
       Spikard.stop(server)
@@ -733,13 +733,13 @@ defmodule E2EElixirApp.EdgeCasesTest do
 
       req_body =
         Jason.encode!(%{
-          "empty_string" => "",
-          "whitespace" => "   ",
-          "tabs_newlines" => "line1\n\tline2\r\nline3",
-          "quotes" => "He said \"hello\" and 'goodbye'",
           "backslashes" => "C:\\\\Users\\\\Path",
+          "empty_string" => "",
+          "quotes" => "He said \"hello\" and 'goodbye'",
+          "special_chars" => "!@#$%^&*()_+-=[]{}|;':\",./<>?",
+          "tabs_newlines" => "line1\n\tline2\r\nline3",
           "unicode_escapes" => "\\u0048\\u0065\\u006c\\u006c\\u006f",
-          "special_chars" => "!@#$%^&*()_+-=[]{}|;':\",./<>?"
+          "whitespace" => "   "
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -754,13 +754,13 @@ defmodule E2EElixirApp.EdgeCasesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["empty_string"] == ""
-      assert parsed_body["whitespace"] == "   "
-      assert parsed_body["tabs_newlines"] == "line1\n\tline2\r\nline3"
-      assert parsed_body["quotes"] == "He said \"hello\" and 'goodbye'"
       assert parsed_body["backslashes"] == "C:\\\\Users\\\\Path"
-      assert parsed_body["unicode_escapes"] == "Hello"
+      assert parsed_body["empty_string"] == ""
+      assert parsed_body["quotes"] == "He said \"hello\" and 'goodbye'"
       assert parsed_body["special_chars"] == "!@#$%^&*()_+-=[]{}|;':\",./<>?"
+      assert parsed_body["tabs_newlines"] == "line1\n\tline2\r\nline3"
+      assert parsed_body["unicode_escapes"] == "Hello"
+      assert parsed_body["whitespace"] == "   "
     after
       Spikard.stop(server)
     end
@@ -779,10 +779,10 @@ defmodule E2EElixirApp.EdgeCasesTest do
 
       req_body =
         Jason.encode!(%{
-          "name" => "Coffee Shop ☕",
           "description" => "Best café in München 🇩🇪",
-          "tags" => ["食べ物", "音楽", "💰"],
-          "emoji_reactions" => "👍❤️😂🎉"
+          "emoji_reactions" => "👍❤️😂🎉",
+          "name" => "Coffee Shop ☕",
+          "tags" => ["食べ物", "音楽", "💰"]
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -797,11 +797,11 @@ defmodule E2EElixirApp.EdgeCasesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert parsed_body["description"] == "Best café in München 🇩🇪"
+      assert parsed_body["emoji_reactions"] == "👍❤️😂🎉"
       assert parsed_body["id"] == 1
       assert parsed_body["name"] == "Coffee Shop ☕"
-      assert parsed_body["description"] == "Best café in München 🇩🇪"
       assert Map.has_key?(parsed_body, "tags")
-      assert parsed_body["emoji_reactions"] == "👍❤️😂🎉"
     after
       Spikard.stop(server)
     end

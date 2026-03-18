@@ -26,6 +26,6 @@ async def test_grpc_optional_fields() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"user_id":42,"username":"charlie_dev","bio":"Software engineer and gRPC enthusiast","updated_at":1704067200000}'
+        == b'{"bio":"Software engineer and gRPC enthusiast","updated_at":1704067200000,"user_id":42,"username":"charlie_dev"}'
     )
     assert response.metadata is not None

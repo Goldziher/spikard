@@ -31,7 +31,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
       headers = []
 
       req_body =
-        Jason.encode!(%{"profile" => %{"name" => "John Doe", "email" => "john@example.com"}})
+        Jason.encode!(%{"profile" => %{"email" => "john@example.com", "name" => "John Doe"}})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -71,11 +71,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -93,7 +93,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/users"
       headers = []
-      req_body = Jason.encode!(%{"name" => "Test User", "description" => nil})
+      req_body = Jason.encode!(%{"description" => nil, "name" => "Test User"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -174,9 +174,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
 
       req_body =
         Jason.encode!(%{
-          "name" => "John",
           "email" => "john@example.com",
-          "extra_field" => "should fail"
+          "extra_field" => "should fail",
+          "name" => "John"
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -191,11 +191,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -258,11 +258,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -294,11 +294,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -314,7 +314,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/contact"
       headers = []
-      req_body = Jason.encode!(%{"name" => "John Doe", "email" => "john@example.com"})
+      req_body = Jason.encode!(%{"email" => "john@example.com", "name" => "John Doe"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -345,8 +345,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
 
       req_body =
         Jason.encode!(%{
-          "name" => "John Doe",
           "email" => "john@example.com",
+          "name" => "John Doe",
           "phone" => "+1-555-0100"
         })
 
@@ -388,11 +388,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -448,11 +448,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -468,7 +468,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/api/v1/data"
       headers = []
-      req_body = Jason.encode!(%{"version" => "1.0", "data" => "test"})
+      req_body = Jason.encode!(%{"data" => "test", "version" => "1.0"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -494,7 +494,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/api/v1/data"
       headers = []
-      req_body = Jason.encode!(%{"version" => "2.0", "data" => "test"})
+      req_body = Jason.encode!(%{"data" => "test", "version" => "2.0"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -508,11 +508,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -572,11 +572,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -596,7 +596,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
       headers = []
 
       req_body =
-        Jason.encode!(%{"host" => "localhost", "port" => 8080, "ssl" => true, "debug" => false})
+        Jason.encode!(%{"debug" => false, "host" => "localhost", "port" => 8080, "ssl" => true})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -610,11 +610,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -635,9 +635,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
 
       req_body =
         Jason.encode!(%{
-          "name" => "John Doe",
+          "billing_address" => "123 Main St",
           "credit_card" => "1234567812345678",
-          "billing_address" => "123 Main St"
+          "name" => "John Doe"
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -666,7 +666,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/billing"
       headers = []
-      req_body = Jason.encode!(%{"name" => "John Doe", "credit_card" => "1234567812345678"})
+      req_body = Jason.encode!(%{"credit_card" => "1234567812345678", "name" => "John Doe"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -680,11 +680,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -733,12 +733,12 @@ defmodule E2EElixirApp.JsonBodiesTest do
 
       req_body =
         Jason.encode!(%{
-          "name" => "Product Bundle",
-          "tags" => ["electronics", "gadget"],
           "images" => [
-            %{"url" => "https://example.com/img1.jpg", "name" => "Front"},
-            %{"url" => "https://example.com/img2.jpg", "name" => "Back"}
-          ]
+            %{"name" => "Front", "url" => "https://example.com/img1.jpg"},
+            %{"name" => "Back", "url" => "https://example.com/img2.jpg"}
+          ],
+          "name" => "Product Bundle",
+          "tags" => ["electronics", "gadget"]
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -753,9 +753,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert Map.has_key?(parsed_body, "images")
       assert parsed_body["name"] == "Product Bundle"
       assert Map.has_key?(parsed_body, "tags")
-      assert Map.has_key?(parsed_body, "images")
     after
       Spikard.stop(server)
     end
@@ -775,8 +775,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
       req_body =
         Jason.encode!(%{
           "name" => "Product",
-          "tags" => ["electronics", "gadget", "new"],
-          "ratings" => [4.5, 4.8, 5.0, 4.2]
+          "ratings" => [4.5, 4.8, 5.0, 4.2],
+          "tags" => ["electronics", "gadget", "new"]
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -792,8 +792,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["name"] == "Product"
-      assert Map.has_key?(parsed_body, "tags")
       assert Map.has_key?(parsed_body, "ratings")
+      assert Map.has_key?(parsed_body, "tags")
     after
       Spikard.stop(server)
     end
@@ -840,7 +840,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/items/"
       headers = [{~c"Content-Type", ~c"application/json"}]
-      req_body = Jason.encode!(%{"name" => "Item", "price" => 42.0, "in_stock" => true})
+      req_body = Jason.encode!(%{"in_stock" => true, "name" => "Item", "price" => 42.0})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -854,9 +854,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert parsed_body["in_stock"] == true
       assert parsed_body["name"] == "Item"
       assert parsed_body["price"] == 42.0
-      assert parsed_body["in_stock"] == true
     after
       Spikard.stop(server)
     end
@@ -872,7 +872,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/events/"
       headers = [{~c"Content-Type", ~c"application/json"}]
-      req_body = Jason.encode!(%{"name" => "Conference", "event_date" => "2024-03-15"})
+      req_body = Jason.encode!(%{"event_date" => "2024-03-15", "name" => "Conference"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -886,8 +886,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["name"] == "Conference"
       assert parsed_body["event_date"] == "2024-03-15"
+      assert parsed_body["name"] == "Conference"
     after
       Spikard.stop(server)
     end
@@ -903,7 +903,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/events/"
       headers = [{~c"Content-Type", ~c"application/json"}]
-      req_body = Jason.encode!(%{"name" => "Meeting", "created_at" => "2024-03-15T10:30:00Z"})
+      req_body = Jason.encode!(%{"created_at" => "2024-03-15T10:30:00Z", "name" => "Meeting"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -917,8 +917,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["name"] == "Meeting"
       assert parsed_body["created_at"] == "2024-03-15T10:30:00Z"
+      assert parsed_body["name"] == "Meeting"
     after
       Spikard.stop(server)
     end
@@ -940,12 +940,12 @@ defmodule E2EElixirApp.JsonBodiesTest do
           "name" => "Product",
           "price" => 100.0,
           "seller" => %{
-            "name" => "John Doe",
             "address" => %{
-              "street" => "123 Main St",
               "city" => "Springfield",
-              "country" => %{"name" => "USA", "code" => "US"}
-            }
+              "country" => %{"code" => "US", "name" => "USA"},
+              "street" => "123 Main St"
+            },
+            "name" => "John Doe"
           }
         })
 
@@ -993,8 +993,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert Map.has_key?(parsed_body, "name")
       assert Map.has_key?(parsed_body, "description")
+      assert Map.has_key?(parsed_body, "name")
       assert Map.has_key?(parsed_body, "price")
       assert Map.has_key?(parsed_body, "tax")
     after
@@ -1026,11 +1026,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1046,7 +1046,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/items/"
       headers = [{~c"Content-Type", ~c"application/json"}]
-      req_body = Jason.encode!(%{"name" => "Item", "category" => "furniture"})
+      req_body = Jason.encode!(%{"category" => "furniture", "name" => "Item"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -1060,11 +1060,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1080,7 +1080,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/items/"
       headers = [{~c"Content-Type", ~c"application/json"}]
-      req_body = Jason.encode!(%{"name" => "Item", "category" => "electronics"})
+      req_body = Jason.encode!(%{"category" => "electronics", "name" => "Item"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -1094,8 +1094,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["name"] == "Item"
       assert parsed_body["category"] == "electronics"
+      assert parsed_body["name"] == "Item"
     after
       Spikard.stop(server)
     end
@@ -1116,10 +1116,10 @@ defmodule E2EElixirApp.JsonBodiesTest do
 
       req_body =
         Jason.encode!(%{
-          "name" => "Item",
-          "price" => 42.0,
+          "another_extra" => 123,
           "extra_field" => "this should be ignored",
-          "another_extra" => 123
+          "name" => "Item",
+          "price" => 42.0
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -1156,8 +1156,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
 
       req_body =
         Jason.encode!(%{
-          "name" => "Foo",
           "description" => "A very nice Item",
+          "name" => "Foo",
           "price" => "not a number",
           "tax" => 3.2
         })
@@ -1174,11 +1174,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1197,9 +1197,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
 
       req_body =
         Jason.encode!(%{
+          "image" => %{"name" => "Product Image", "url" => "https://example.com/image.jpg"},
           "name" => "Foo",
-          "price" => 42.0,
-          "image" => %{"url" => "https://example.com/image.jpg", "name" => "Product Image"}
+          "price" => 42.0
         })
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
@@ -1214,9 +1214,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert Map.has_key?(parsed_body, "image")
       assert parsed_body["name"] == "Foo"
       assert parsed_body["price"] == 42.0
-      assert Map.has_key?(parsed_body, "image")
     after
       Spikard.stop(server)
     end
@@ -1234,7 +1234,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
       headers = [{~c"Content-Type", ~c"application/json"}]
 
       req_body =
-        Jason.encode!(%{"name" => "Item", "price" => 42.0, "description" => nil, "tax" => nil})
+        Jason.encode!(%{"description" => nil, "name" => "Item", "price" => 42.0, "tax" => nil})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -1248,9 +1248,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert Map.has_key?(parsed_body, "description")
       assert parsed_body["name"] == "Item"
       assert parsed_body["price"] == 42.0
-      assert Map.has_key?(parsed_body, "description")
       assert Map.has_key?(parsed_body, "tax")
     after
       Spikard.stop(server)
@@ -1281,11 +1281,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1348,9 +1348,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert Map.has_key?(parsed_body, "description")
       assert parsed_body["name"] == "Foo"
       assert parsed_body["price"] == 35.4
-      assert Map.has_key?(parsed_body, "description")
       assert Map.has_key?(parsed_body, "tax")
     after
       Spikard.stop(server)
@@ -1381,9 +1381,9 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert parsed_body["description"] == "Original description"
       assert parsed_body["name"] == "Original Item"
       assert parsed_body["price"] == 45.0
-      assert parsed_body["description"] == "Original description"
     after
       Spikard.stop(server)
     end
@@ -1415,11 +1415,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1438,8 +1438,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
 
       req_body =
         Jason.encode!(%{
-          "name" => "Foo",
           "description" => "A very nice Item",
+          "name" => "Foo",
           "price" => 35.4,
           "tax" => 3.2
         })
@@ -1456,8 +1456,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["name"] == "Foo"
       assert parsed_body["description"] == "A very nice Item"
+      assert parsed_body["name"] == "Foo"
       assert parsed_body["price"] == 35.4
       assert parsed_body["tax"] == 3.2
     after
@@ -1496,11 +1496,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1532,11 +1532,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1568,11 +1568,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1621,7 +1621,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
     try do
       url = @base_url <> "/items/"
       headers = [{~c"Content-Type", ~c"application/json"}]
-      req_body = Jason.encode!(%{"name" => "Item", "item_id" => "not-a-valid-uuid"})
+      req_body = Jason.encode!(%{"item_id" => "not-a-valid-uuid", "name" => "Item"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -1635,11 +1635,11 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -1657,7 +1657,7 @@ defmodule E2EElixirApp.JsonBodiesTest do
       headers = [{~c"Content-Type", ~c"application/json"}]
 
       req_body =
-        Jason.encode!(%{"name" => "Item", "item_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716"})
+        Jason.encode!(%{"item_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716", "name" => "Item"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -1671,8 +1671,8 @@ defmodule E2EElixirApp.JsonBodiesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["name"] == "Item"
       assert parsed_body["item_id"] == "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+      assert parsed_body["name"] == "Item"
     after
       Spikard.stop(server)
     end

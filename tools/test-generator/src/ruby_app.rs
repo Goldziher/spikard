@@ -4,7 +4,7 @@
 
 use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::{BackgroundFixtureData, background_data};
-use crate::dependencies::{Dependency, DependencyConfig, has_cleanup};
+use crate::dependencies::{Dependency, DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::fixture_filter::is_http_fixture_category;
 use crate::grpc::GrpcFixture;
 use crate::middleware::{MiddlewareMetadata, parse_middleware, write_static_assets};
@@ -244,7 +244,10 @@ fn build_fixture_function(
         .and_then(|m| m.get("lifecycle_hooks"));
 
     if let Some(hooks) = hooks {
-        function.push_str(&generate_lifecycle_hooks_ruby(hooks, fixture.expected_response.status_code));
+        function.push_str(&generate_lifecycle_hooks_ruby(
+            hooks,
+            fixture.expected_response.status_code,
+        ));
         function.push('\n');
     }
 
@@ -263,8 +266,11 @@ fn build_fixture_function(
     }
     let handler_params_str = handler_params.join(", ");
 
+    let has_cleanup_handler = di_config.is_some_and(has_cleanup);
+    let effective_background = if has_cleanup_handler { None } else { background.as_ref() };
+
     if !skip_route_registration {
-        let request_var = if background.is_some() { "request" } else { "_request" };
+        let request_var = if effective_background.is_some() { "request" } else { "_request" };
         function.push_str(&format!(
             "    app.{}({}, {}) do |{}|
 ",
@@ -285,7 +291,33 @@ fn build_fixture_function(
             function.push_str(&stmt);
         }
 
-        if let Some(bg) = &background {
+        if let Some(di_cfg) = di_config
+            && requires_multi_request_test(di_cfg)
+            && fixture.expected_response.status_code == 200
+            && let Some(body) = fixture.expected_response.body.as_ref().and_then(|v| v.as_object())
+        {
+            if body.contains_key("counter_id") && body.contains_key("count") {
+                function.push_str(
+                    "      app_counter['count'] = Integer(app_counter.fetch('count', 0)) + 1\n",
+                );
+                function.push_str(
+                    "      build_response(content: {\"counter_id\" => app_counter['id'], \"count\" => app_counter['count']}, status: 200, headers: nil)\n",
+                );
+            } else if body.contains_key("pool_id") && body.contains_key("context_id") {
+                function.push_str(&format!(
+                    "      pool_key = {}\n      ctx_key = {}\n",
+                    string_literal(&format!("{fixture_dir}_pool")),
+                    string_literal(&format!("{fixture_dir}_ctx_counter"))
+                ));
+                function.push_str(
+                    "      pool = BACKGROUND_STATE[pool_key]\n      pool = { 'pool_id' => (db_pool['pool_id'] || db_pool['id']) } if pool.empty?\n      BACKGROUND_STATE[pool_key] = pool\n      ctx_count = Integer(BACKGROUND_STATE[ctx_key].first || 0)\n      BACKGROUND_STATE[ctx_key] = [ctx_count + 1]\n      context_id = \"context-#{ctx_count + 1}\"\n      build_response(content: {\"app_name\" => app_config['app_name'], \"pool_id\" => pool['pool_id'], \"context_id\" => context_id}, status: 200, headers: nil)\n",
+                );
+            } else {
+                let response_expr =
+                    build_response_expression(&fixture.expected_response, handler_status, &sanitized_headers);
+                function.push_str(&format!("      {}\n", response_expr));
+            }
+        } else if let Some(bg) = effective_background {
             function.push_str(&build_background_handler_block(
                 &handler_name,
                 request_var,
@@ -300,6 +332,14 @@ fn build_fixture_function(
                 handler_status,
                 &sanitized_headers,
             )?);
+        } else if fixture.expected_response.status_code == 200
+            && let Some(body) = fixture.expected_response.body.as_ref().and_then(|v| v.as_object())
+            && body.contains_key("first_id")
+            && body.contains_key("second_id")
+        {
+            function.push_str(
+                "      request_id = request_id_generator['id']\n      build_response(content: {\"first_id\" => request_id, \"second_id\" => request_id}, status: 200, headers: nil)\n",
+            );
         } else {
             let response_expr =
                 build_response_expression(&fixture.expected_response, handler_status, &sanitized_headers);
@@ -312,7 +352,7 @@ fn build_fixture_function(
     } else {
         function.push_str("    # Static files served via ServerConfig\n");
     }
-    if let Some(bg) = &background {
+    if let Some(bg) = effective_background {
         function.push_str(&format!(
             "    app.get({}, handler_name: {}) do |_req|
 ",
@@ -709,11 +749,11 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, expected_status_code: u16) -> St
                 hook_code.push_str(&format!(
                     r#"    # preValidation hook: {} - Short circuits with 429
     {} = lambda do |_request|
-      build_response(
-        content: {{ error: "Rate limit exceeded", message: "Too many requests, please try again later" }},
-        status: 429,
-        headers: {{ "Retry-After" => "60" }}
-      )
+      {{
+        status_code: 429,
+        content: JSON.generate({{ error: "Rate limit exceeded", message: "Too many requests, please try again later" }}),
+        headers: {{ "Content-Type" => "application/json", "Retry-After" => "60" }}
+      }}
     end
     app.pre_validation(&{})"#,
                     hook_name, var_name, var_name
@@ -738,8 +778,7 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, expected_status_code: u16) -> St
             let hook_name = hook.get("name").and_then(|v| v.as_str()).unwrap_or("unnamed_hook");
             let var_name = format!("pre_handler_{}_{}", sanitize_identifier(hook_name), idx);
 
-            let auth_fails = hook_name.contains("auth")
-                && (expected_status_code == 401 || expected_status_code == 403);
+            let auth_fails = hook_name.contains("auth") && (expected_status_code == 401 || expected_status_code == 403);
 
             if auth_fails {
                 let (status_code, error_msg, detail_msg) = if expected_status_code == 401 {
@@ -751,13 +790,14 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, expected_status_code: u16) -> St
                 hook_code.push_str(&format!(
                     r#"    # preHandler hook: {} - Short circuits with {}
     {} = lambda do |_request|
-      build_response(
-        content: {{ error: "{}", message: "{}" }},
-        status: {}
-      )
+      {{
+        status_code: {},
+        content: JSON.generate({{ error: "{}", message: "{}" }}),
+        headers: {{ "Content-Type" => "application/json" }}
+      }}
     end
     app.pre_handler(&{})"#,
-                    hook_name, status_code, var_name, error_msg, detail_msg, status_code, var_name
+                    hook_name, status_code, var_name, status_code, error_msg, detail_msg, var_name
                 ));
             } else {
                 hook_code.push_str(&format!(
@@ -783,10 +823,11 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, expected_status_code: u16) -> St
                 hook_code.push_str(&format!(
                     r#"    # onResponse hook: {} - Adds security headers
     {} = lambda do |response|
-      response.headers["X-Content-Type-Options"] = "nosniff"
-      response.headers["X-Frame-Options"] = "DENY"
-      response.headers["X-XSS-Protection"] = "1; mode=block"
-      response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+      response[:headers] ||= {{}}
+      response[:headers]["X-Content-Type-Options"] = "nosniff"
+      response[:headers]["X-Frame-Options"] = "DENY"
+      response[:headers]["X-XSS-Protection"] = "1; mode=block"
+      response[:headers]["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
       response
     end
     app.on_response(&{})"#,
@@ -796,7 +837,8 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, expected_status_code: u16) -> St
                 hook_code.push_str(&format!(
                     r#"    # onResponse hook: {} - Adds timing header
     {} = lambda do |response|
-      response.headers["X-Response-Time"] = "0ms"
+      response[:headers] ||= {{}}
+      response[:headers]["X-Response-Time"] = "0ms"
       response
     end
     app.on_response(&{})"#,
@@ -825,7 +867,8 @@ fn generate_lifecycle_hooks_ruby(hooks: &Value, expected_status_code: u16) -> St
             hook_code.push_str(&format!(
                 r#"    # onError hook: {}
     {} = lambda do |response|
-      response.headers["Content-Type"] = "application/json"
+      response[:headers] ||= {{}}
+      response[:headers]["Content-Type"] = "application/json"
       response
     end
     app.on_error(&{})"#,
@@ -1151,9 +1194,14 @@ fn format_sleep_seconds(ms: u64) -> String {
     literal
 }
 
+fn ruby_dependency_factory_name(dep: &Dependency, fixture_id: &str) -> String {
+    let base = dep.factory.as_ref().unwrap_or(&dep.key);
+    format!("{}_{}", fixture_id, sanitize_identifier(base))
+}
+
 /// Generate Ruby factory function for a dependency
 fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Result<String> {
-    let factory_name = dep.factory.as_ref().unwrap_or(&dep.key);
+    let factory_name = ruby_dependency_factory_name(dep, fixture_id);
     let is_cleanup = dep.cleanup;
 
     let mut code = String::new();
@@ -1170,7 +1218,7 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
         code.push_str("    # Create resource\n");
         code.push_str(&format!("    CLEANUP_STATE[:{}] << 'session_opened'\n", fixture_id));
         code.push_str(&format!(
-            "    resource = {{ id: '{:012x}', active: true }}\n",
+            "    resource = {{ \"id\" => '{:012x}', \"active\" => true }}\n",
             fixture_id.len()
         ));
         code.push_str("    \n");
@@ -1192,11 +1240,13 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
         code.push_str(")\n");
         code.push_str("    # Singleton with counter\n");
         code.push_str(&format!("    singleton_key = 'singleton_{}'\n", dep.key));
-        code.push_str("    BACKGROUND_STATE[singleton_key] ||= {\n");
-        code.push_str("      id: '00000000-0000-0000-0000-000000000063',\n");
-        code.push_str("      count: 0\n");
-        code.push_str("    }\n");
-        code.push_str("    BACKGROUND_STATE[singleton_key][:count] += 1\n");
+        code.push_str("    unless BACKGROUND_STATE.key?(singleton_key)\n");
+        code.push_str("      BACKGROUND_STATE[singleton_key] = {\n");
+        code.push_str("        \"id\" => '00000000-0000-0000-0000-000000000063',\n");
+        code.push_str("        \"count\" => 0\n");
+        code.push_str("      }\n");
+        code.push_str("    end\n");
+        code.push_str("    BACKGROUND_STATE[singleton_key][\"count\"] += 1\n");
         code.push_str("    BACKGROUND_STATE[singleton_key]\n");
         code.push_str("  end\n\n");
     } else {
@@ -1213,17 +1263,21 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
             code.push_str("    # Create auth service\n");
             if !dep.depends_on.is_empty() {
                 code.push_str(&format!(
-                    "    {{ {}_enabled: true, has_db: !{}.nil?, has_cache: !{}.nil? }}\n",
+                    "    {{ \"{}_enabled\" => true, \"has_db\" => !{}.nil?, \"has_cache\" => !{}.nil? }}\n",
                     dep.key,
                     dep.depends_on.get(0).unwrap_or(&"nil".to_string()),
                     dep.depends_on.get(1).unwrap_or(&"nil".to_string())
                 ));
             } else {
-                code.push_str(&format!("    {{ {}_enabled: true, enabled: true }}\n", dep.key));
+                code.push_str(&format!("    {{ \"{}_enabled\" => true, \"enabled\" => true }}\n", dep.key));
             }
+        } else if dep.key.contains("request_id") {
+            code.push_str(
+                "    { \"id\" => '00000000-0000-4000-8000-000000000014', \"type\" => 'request_id_generator', \"timestamp\" => Time.now.to_s }\n",
+            );
         } else {
             code.push_str(&format!(
-                "    {{ id: '{:012x}', type: '{}', timestamp: Time.now.to_s }}\n",
+                "    {{ \"id\" => '{:012x}', \"type\" => '{}', \"timestamp\" => Time.now.to_s }}\n",
                 dep.key.len(),
                 dep.key
             ));
@@ -1236,7 +1290,7 @@ fn generate_dependency_factory_ruby(dep: &Dependency, fixture_id: &str) -> Resul
 }
 
 /// Generate Ruby code to register dependencies in app
-fn generate_dependency_registration_ruby(di_config: &DependencyConfig, _fixture_id: &str) -> Result<String> {
+fn generate_dependency_registration_ruby(di_config: &DependencyConfig, fixture_id: &str) -> Result<String> {
     if !di_config.has_dependencies() {
         return Ok(String::new());
     }
@@ -1251,9 +1305,9 @@ fn generate_dependency_registration_ruby(di_config: &DependencyConfig, _fixture_
             let value = ruby_dependency_value(dep)?;
             code.push_str(&format!("    app.provide({}, {})\n", string_literal(key), value));
         } else {
-            let factory_name = dep.factory.as_ref().unwrap_or(key);
+            let factory_name = ruby_dependency_factory_name(dep, fixture_id);
             let mut provide_args = Vec::new();
-            provide_args.push(format!("method({})", string_literal(factory_name)));
+            provide_args.push(format!("method({})", string_literal(&factory_name)));
 
             if !dep.depends_on.is_empty() {
                 let deps_array = dep

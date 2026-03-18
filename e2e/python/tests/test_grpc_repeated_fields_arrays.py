@@ -26,6 +26,6 @@ async def test_grpc_repeated_fields_arrays() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"id":789,"title":"Getting Started with gRPC","content":"This is a comprehensive guide to gRPC...","tags":[{"id":1,"name":"gRPC"},{"id":2,"name":"Protocol Buffers"},{"id":3,"name":"RPC"}],"categories":["tutorial","programming","networking"]}'
+        == b'{"categories":["tutorial","programming","networking"],"content":"This is a comprehensive guide to gRPC...","id":789,"tags":[{"id":1,"name":"gRPC"},{"id":2,"name":"Protocol Buffers"},{"id":3,"name":"RPC"}],"title":"Getting Started with gRPC"}'
     )
     assert response.metadata is not None

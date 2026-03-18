@@ -26,6 +26,6 @@ async def test_grpc_client_streaming_large_batch_100_messages() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"batch_id":"batch-large-001","total_items":100,"total_value":5050,"average_value":50.5,"status":"PROCESSED"}'
+        == b'{"average_value":50.5,"batch_id":"batch-large-001","status":"PROCESSED","total_items":100,"total_value":5050}'
     )
     assert response.metadata is not None

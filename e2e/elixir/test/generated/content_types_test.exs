@@ -41,12 +41,13 @@ defmodule E2EElixirApp.ContentTypesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unsupported-charset"
-      assert parsed_body["title"] == "Unsupported Charset"
-      assert parsed_body["status"] == 415
 
       assert parsed_body["detail"] ==
                "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
+
+      assert parsed_body["status"] == 415
+      assert parsed_body["title"] == "Unsupported Charset"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unsupported-charset"
     after
       Spikard.stop(server)
     end
@@ -149,10 +150,10 @@ defmodule E2EElixirApp.ContentTypesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unsupported-media-type"
-      assert parsed_body["title"] == "Unsupported Media Type"
-      assert parsed_body["status"] == 415
       assert parsed_body["detail"] == "Unsupported media type"
+      assert parsed_body["status"] == 415
+      assert parsed_body["title"] == "Unsupported Media Type"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unsupported-media-type"
     after
       Spikard.stop(server)
     end
@@ -277,10 +278,10 @@ defmodule E2EElixirApp.ContentTypesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/content-length-mismatch"
-      assert parsed_body["title"] == "Content-Length header mismatch"
-      assert parsed_body["status"] == 400
       assert parsed_body["detail"] == "Content-Length header does not match actual body size"
+      assert parsed_body["status"] == 400
+      assert parsed_body["title"] == "Content-Length header mismatch"
+      assert parsed_body["type"] == "https://spikard.dev/errors/content-length-mismatch"
     after
       Spikard.stop(server)
     end
@@ -310,10 +311,10 @@ defmodule E2EElixirApp.ContentTypesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unsupported-media-type"
-      assert parsed_body["title"] == "Unsupported Media Type"
-      assert parsed_body["status"] == 415
       assert parsed_body["detail"] == "Unsupported media type"
+      assert parsed_body["status"] == 415
+      assert parsed_body["title"] == "Unsupported Media Type"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unsupported-media-type"
     after
       Spikard.stop(server)
     end
@@ -487,8 +488,8 @@ defmodule E2EElixirApp.ContentTypesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["name"] == "Café"
       assert parsed_body["emoji"] == "☕"
+      assert parsed_body["name"] == "Café"
     after
       Spikard.stop(server)
     end

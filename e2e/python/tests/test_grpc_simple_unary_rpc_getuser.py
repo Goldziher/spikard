@@ -25,5 +25,5 @@ async def test_grpc_simple_unary_rpc_getuser() -> None:
     response = await handle_grpc_simple_unary_rpc_getuser(request)
 
     # Verify response
-    assert response.payload == b'{"id":123,"name":"Alice Johnson","email":"alice@example.com"}'
+    assert response.payload == b'{"email":"alice@example.com","id":123,"name":"Alice Johnson"}'
     assert response.metadata is not None

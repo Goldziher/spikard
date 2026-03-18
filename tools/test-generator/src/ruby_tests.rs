@@ -6,7 +6,6 @@ use crate::asyncapi::{AsyncFixture, load_sse_fixtures, load_websocket_fixtures};
 use crate::background::background_data;
 use crate::dependencies::{DependencyConfig, has_cleanup, requires_multi_request_test};
 use crate::fixture_filter::is_http_fixture_category;
-use crate::grpc::GrpcFixture;
 use crate::middleware::parse_middleware;
 use anyhow::{Context, Result};
 use serde_json::Value;
@@ -50,24 +49,6 @@ pub fn generate_ruby_tests(fixtures_dir: &Path, output_dir: &Path) -> Result<()>
         let websocket_spec = build_websocket_spec(&websocket_fixtures)?;
         fs::write(spec_dir.join("asyncapi_websocket_spec.rb"), websocket_spec)
             .context("Failed to write asyncapi_websocket_spec.rb")?;
-    }
-
-    // gRPC test generation
-    let grpc_fixtures_result = crate::grpc::load_grpc_fixtures(fixtures_dir);
-    if let Ok(grpc_fixtures) = grpc_fixtures_result {
-        if !grpc_fixtures.is_empty() {
-            for fixture in &grpc_fixtures {
-                let test_code = generate_grpc_test(fixture)
-                    .context(format!("Failed to generate gRPC test for {}", fixture.name))?;
-
-                let test_name = sanitize_identifier(&fixture.name);
-                let test_file = spec_dir.join(format!("grpc_{}_spec.rb", test_name));
-
-                fs::write(&test_file, test_code)
-                    .with_context(|| format!("Failed to write gRPC test file for {}", fixture.name))?;
-                println!("  ✓ Generated spec/generated/grpc_{}_spec.rb", test_name);
-            }
-        }
     }
 
     Ok(())
@@ -207,9 +188,7 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
         options.push(format!("cookies: {}", string_map_to_ruby(cookies)));
     }
 
-    if let Some(files) = fixture.request.files.as_ref()
-        && !files.is_empty()
-    {
+    if let Some(files) = fixture.request.files.as_ref() {
         let files_hash = build_files_hash(files);
         options.push(format!("files: {}", files_hash));
     }
@@ -223,9 +202,13 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
     }
     let content_type = content_type_value.as_deref();
 
-    if let Some(form) = fixture.request.form_data.as_ref() {
+    if let Some(form) = fixture.request.form_data.as_ref()
+        && !form.is_empty()
+    {
         options.push(format!("data: {}", value_map_to_ruby(form)));
-    } else if let Some(data) = fixture.request.data.as_ref() {
+    } else if let Some(data) = fixture.request.data.as_ref()
+        && !data.is_empty()
+    {
         options.push(format!("data: {}", value_map_to_ruby(data)));
     } else if let Some(body) = fixture.request.body.as_ref() {
         let use_raw_body = if let Some(ct) = content_type {
@@ -396,6 +379,7 @@ fn build_spec_example(category: &str, index: usize, fixture: &Fixture) -> String
     }
 
     example.push_str(&build_expectations(
+        category,
         &fixture.expected_response,
         streaming_info.as_ref(),
         &sanitized_headers,
@@ -483,7 +467,85 @@ fn fixture_should_skip(category: &str, fixture: &Fixture) -> bool {
     category == "content_types" && fixture.name == "20_content_length_mismatch"
 }
 
+fn uses_dynamic_expectation(value: &Value) -> bool {
+    match value {
+        Value::String(s) => s == "<<uuid>>" || s == "<<present>>" || s.contains(".*"),
+        Value::Array(items) => items.iter().any(uses_dynamic_expectation),
+        Value::Object(map) => map.values().any(uses_dynamic_expectation),
+        _ => false,
+    }
+}
+
+fn append_string_expectation(expectations: &mut String, actual_expr: &str, value: &str) {
+    if value == "<<present>>" {
+        expectations.push_str(&format!("    expect({}).not_to be_nil\n", actual_expr));
+        return;
+    }
+
+    if value == "<<uuid>>" {
+        expectations.push_str(&format!(
+            "    expect({}).to match(Regexp.new({}))\n",
+            actual_expr,
+            string_literal(r"\A[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\z")
+        ));
+        return;
+    }
+
+    if value.contains(".*") {
+        expectations.push_str(&format!(
+            "    expect({}).to match(Regexp.new({}))\n",
+            actual_expr,
+            string_literal(&format!(r"\A{}\z", value))
+        ));
+        return;
+    }
+
+    expectations.push_str(&format!("    expect({}).to eq({})\n", actual_expr, string_literal(value)));
+}
+
+fn append_value_expectation(expectations: &mut String, root_expr: &str, actual_expr: &str, value: &Value) {
+    match value {
+        Value::Null | Value::Bool(_) | Value::Number(_) => {
+            expectations.push_str(&format!("    expect({}).to eq({})\n", actual_expr, value_to_ruby(value)));
+        }
+        Value::String(s) => {
+            if let Some(reference_key) = s.strip_prefix("<<same_as:").and_then(|value| value.strip_suffix(">>")) {
+                expectations.push_str(&format!(
+                    "    expect({}).to eq({}[{}])\n",
+                    actual_expr,
+                    root_expr,
+                    string_literal(reference_key)
+                ));
+            } else {
+                append_string_expectation(expectations, actual_expr, s);
+            }
+        }
+        Value::Array(items) => {
+            expectations.push_str(&format!("    expect({}).to be_an(Array)\n", actual_expr));
+            expectations.push_str(&format!("    expect({}.length).to eq({})\n", actual_expr, items.len()));
+            for (index, item) in items.iter().enumerate() {
+                append_value_expectation(expectations, root_expr, &format!("{}[{}]", actual_expr, index), item);
+            }
+        }
+        Value::Object(map) => {
+            expectations.push_str(&format!("    expect({}).to be_a(Hash)\n", actual_expr));
+            let mut keys = map.keys().cloned().collect::<Vec<_>>();
+            keys.sort();
+            for key in keys {
+                let item = map.get(&key).expect("key must exist");
+                append_value_expectation(
+                    expectations,
+                    root_expr,
+                    &format!("{}[{}]", actual_expr, string_literal(&key)),
+                    item,
+                );
+            }
+        }
+    }
+}
+
 fn build_expectations(
+    category: &str,
     expected: &FixtureExpectedResponse,
     streaming_info: Option<&StreamingFixtureData>,
     sanitized_headers: &HashMap<String, String>,
@@ -521,10 +583,14 @@ fn build_expectations(
 
     if let Some(body) = expected.body.as_ref() {
         if let Some(text) = body.as_str() {
-            expectations.push_str(&format!(
-                "    expect(response.body_text).to eq({})\n",
-                string_literal(text)
-            ));
+            if category == "static_files" {
+                expectations.push_str(&format!(
+                    "    expect(response.body_text.chomp).to eq({})\n",
+                    string_literal(text)
+                ));
+            } else {
+                append_string_expectation(&mut expectations, "response.body_text", text);
+            }
             append_header_expectations(&mut expectations, sanitized_headers);
             return expectations;
         }
@@ -573,9 +639,14 @@ fn build_expectations(
             return expectations;
         }
 
-        expectations.push_str("    expect(response.json).to eq(");
-        expectations.push_str(&value_to_ruby(body));
-        expectations.push_str(")\n");
+        if uses_dynamic_expectation(body) {
+            expectations.push_str("    body = response.json\n");
+            append_value_expectation(&mut expectations, "body", "body", body);
+        } else {
+            expectations.push_str("    expect(response.json).to eq(");
+            expectations.push_str(&value_to_ruby(body));
+            expectations.push_str(")\n");
+        }
         append_header_expectations(&mut expectations, sanitized_headers);
         return expectations;
     }
@@ -626,11 +697,11 @@ fn append_header_expectations(expectations: &mut String, headers: &HashMap<Strin
     }
     for (key, value) in sorted {
         let normalized_key = key.to_ascii_lowercase();
-        expectations.push_str(&format!(
-            "    expect(response_headers[{}]).to eq({})\n",
-            string_literal(&normalized_key),
-            string_literal(value)
-        ));
+        append_string_expectation(
+            expectations,
+            &format!("response_headers[{}]", string_literal(&normalized_key)),
+            value,
+        );
     }
 }
 
@@ -819,112 +890,4 @@ fn format_sleep_seconds(ms: u64) -> String {
         literal.push('0');
     }
     literal
-}
-
-/// Generate an RSpec test for a gRPC fixture
-///
-/// Creates an RSpec test that:
-/// - Requires the generated handler
-/// - Creates a Spikard::Grpc::Request from fixture data
-/// - Calls the handler with the request
-/// - Asserts response payload matches expected response
-/// - Validates metadata and status code
-///
-/// # Arguments
-///
-/// * `fixture` - The gRPC fixture containing service/method info and expected response
-///
-/// # Returns
-///
-/// An RSpec test function as a string
-pub fn generate_grpc_test(fixture: &GrpcFixture) -> Result<String> {
-    let mut code = String::new();
-
-    // Extract test name and handler name from fixture
-    let test_name = sanitize_identifier(&fixture.name);
-    let handler_name = format!("handle_grpc_{}", test_name);
-
-    // Test block header with describe and it
-    code.push_str(&format!("  describe \"gRPC: {}\" do\n", fixture.handler.method));
-    code.push_str(&format!(
-        "    it \"{}\" do\n",
-        fixture.description.as_deref().unwrap_or(&fixture.name)
-    ));
-
-    // Build request metadata
-    code.push_str("      # Build gRPC request from fixture\n");
-    if let Some(ref metadata) = fixture.request.metadata {
-        if !metadata.is_empty() {
-            code.push_str("      metadata = {\n");
-            for (key, value) in metadata {
-                code.push_str(&format!(
-                    "        {} => {},\n",
-                    string_literal(key),
-                    string_literal(value)
-                ));
-            }
-            code.push_str("      }\n");
-        } else {
-            code.push_str("      metadata = {}\n");
-        }
-    } else {
-        code.push_str("      metadata = {}\n");
-    }
-
-    // Build request payload
-    code.push_str("\n      # Build request payload\n");
-    if let Some(ref request_msg) = fixture.request.message {
-        let request_json = serde_json::to_string(request_msg).context("Failed to serialize request message")?;
-        let request_literal = value_to_ruby(&serde_json::json!(request_json));
-        code.push_str(&format!("      request_payload = {}.to_json\n", request_literal));
-    } else {
-        code.push_str("      request_payload = {}.to_json\n");
-    }
-
-    // Create Spikard::Grpc::Request
-    code.push_str("\n      request = Spikard::Grpc::Request.new(\n");
-    code.push_str(&format!(
-        "        service_name: {},\n",
-        string_literal(&fixture.handler.service)
-    ));
-    code.push_str(&format!(
-        "        method_name: {},\n",
-        string_literal(&fixture.handler.method)
-    ));
-    code.push_str("        payload: request_payload,\n");
-    code.push_str("        metadata: metadata\n");
-    code.push_str("      )\n");
-
-    // Call handler
-    code.push_str("\n      # Call handler\n");
-    code.push_str(&format!("      response = {}(request)\n", handler_name));
-
-    // Assert status code
-    code.push_str("\n      # Verify response\n");
-    code.push_str(&format!(
-        "      expect(response.status_code).to eq({})\n",
-        string_literal(&fixture.expected_response.status_code)
-    ));
-
-    // Assert payload if present
-    if let Some(ref expected_msg) = fixture.expected_response.message {
-        let expected_json = serde_json::to_string(expected_msg).context("Failed to serialize expected response")?;
-        let expected_literal = value_to_ruby(&serde_json::json!(expected_json));
-        code.push_str(&format!(
-            "      expect(response.payload).to eq({}.to_json)\n",
-            expected_literal
-        ));
-    }
-
-    // Assert metadata if present
-    if let Some(ref metadata) = fixture.request.metadata {
-        if !metadata.is_empty() {
-            code.push_str("      expect(response.metadata).not_to be_nil\n");
-        }
-    }
-
-    code.push_str("    end\n");
-    code.push_str("  end\n");
-
-    Ok(code)
 }

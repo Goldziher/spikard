@@ -35,10 +35,10 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "Invalid API key"
-      assert parsed_body["status"] == 401
       assert parsed_body["detail"] == "The provided API key is not valid"
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "Invalid API key"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -64,12 +64,13 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "Missing API key"
-      assert parsed_body["status"] == 401
 
       assert parsed_body["detail"] ==
                "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"
+
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "Missing API key"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -93,8 +94,8 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["message"] == "Access granted"
       assert parsed_body["data"] == "sensitive information"
+      assert parsed_body["message"] == "Access granted"
     after
       Spikard.stop(server)
     end
@@ -118,8 +119,8 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["message"] == "Access granted"
       assert parsed_body["data"] == "sensitive information"
+      assert parsed_body["message"] == "Access granted"
     after
       Spikard.stop(server)
     end
@@ -145,8 +146,8 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["message"] == "Access granted"
       assert parsed_body["data"] == "sensitive information"
+      assert parsed_body["message"] == "Access granted"
     after
       Spikard.stop(server)
     end
@@ -170,8 +171,8 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["message"] == "Access granted"
       assert parsed_body["data"] == "sensitive information"
+      assert parsed_body["message"] == "Access granted"
     after
       Spikard.stop(server)
     end
@@ -199,12 +200,13 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "Invalid Authorization header format"
-      assert parsed_body["status"] == 401
 
       assert parsed_body["detail"] ==
                "Authorization header must use Bearer scheme: 'Bearer <token>'"
+
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "Invalid Authorization header format"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -232,10 +234,10 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "JWT validation failed"
-      assert parsed_body["status"] == 401
       assert parsed_body["detail"] == "Token has expired"
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "JWT validation failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -263,10 +265,10 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "JWT validation failed"
-      assert parsed_body["status"] == 401
       assert parsed_body["detail"] == "Token audience is invalid"
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "JWT validation failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -296,10 +298,10 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "JWT validation failed"
-      assert parsed_body["status"] == 401
       assert parsed_body["detail"] == "Token signature is invalid"
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "JWT validation failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -325,10 +327,10 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "Missing or invalid Authorization header"
-      assert parsed_body["status"] == 401
       assert parsed_body["detail"] == "Expected 'Authorization: Bearer <token>'"
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "Missing or invalid Authorization header"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -385,12 +387,13 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "JWT validation failed"
-      assert parsed_body["status"] == 401
 
       assert parsed_body["detail"] ==
                "Token issuer is invalid, expected 'https://auth.example.com'"
+
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "JWT validation failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -414,12 +417,13 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "Malformed JWT token"
-      assert parsed_body["status"] == 401
 
       assert parsed_body["detail"] ==
                "Malformed JWT token: expected 3 parts separated by dots, found 2"
+
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "Malformed JWT token"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -447,10 +451,10 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/forbidden"
-      assert parsed_body["title"] == "Forbidden"
-      assert parsed_body["status"] == 403
       assert parsed_body["detail"] == "Required claims 'role' and 'permissions' missing from JWT"
+      assert parsed_body["status"] == 403
+      assert parsed_body["title"] == "Forbidden"
+      assert parsed_body["type"] == "https://spikard.dev/errors/forbidden"
     after
       Spikard.stop(server)
     end
@@ -478,10 +482,10 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
-      assert parsed_body["title"] == "JWT validation failed"
-      assert parsed_body["status"] == 401
       assert parsed_body["detail"] == "JWT not valid yet, not before claim is in the future"
+      assert parsed_body["status"] == 401
+      assert parsed_body["title"] == "JWT validation failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/unauthorized"
     after
       Spikard.stop(server)
     end
@@ -541,9 +545,9 @@ defmodule E2EElixirApp.AuthTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert parsed_body["auth_method"] == "jwt"
       assert parsed_body["message"] == "Access granted"
       assert parsed_body["user_id"] == "user123"
-      assert parsed_body["auth_method"] == "jwt"
     after
       Spikard.stop(server)
     end

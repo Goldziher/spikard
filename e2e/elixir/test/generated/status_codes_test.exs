@@ -557,11 +557,11 @@ defmodule E2EElixirApp.StatusCodesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
-      assert parsed_body["title"] == "Request Validation Failed"
-      assert parsed_body["status"] == 422
       assert parsed_body["detail"] == "1 validation error in request"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 422
+      assert parsed_body["title"] == "Request Validation Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/validation-error"
     after
       Spikard.stop(server)
     end
@@ -611,10 +611,10 @@ defmodule E2EElixirApp.StatusCodesTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/internal-server-error"
-      assert parsed_body["title"] == "Internal Server Error"
-      assert parsed_body["status"] == 500
       assert parsed_body["detail"] == "Internal server error"
+      assert parsed_body["status"] == 500
+      assert parsed_body["title"] == "Internal Server Error"
+      assert parsed_body["type"] == "https://spikard.dev/errors/internal-server-error"
     after
       Spikard.stop(server)
     end

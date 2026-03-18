@@ -26,6 +26,6 @@ async def test_grpc_deeply_nested_large_structure() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"success":true,"person":{"name":"John Doe","address":{"street":"123 Main St","city":"Springfield"}}}'
+        == b'{"person":{"address":{"city":"Springfield","street":"123 Main St"},"name":"John Doe"},"success":true}'
     )
     assert response.metadata is not None

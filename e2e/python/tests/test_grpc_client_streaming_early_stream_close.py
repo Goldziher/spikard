@@ -26,6 +26,6 @@ async def test_grpc_client_streaming_early_stream_close() -> None:
     # Verify response
     assert (
         response.payload
-        == b'{"session_id":"sess-early-001","received_chunks":3,"expected_chunks":5,"status":"INCOMPLETE"}'
+        == b'{"expected_chunks":5,"received_chunks":3,"session_id":"sess-early-001","status":"INCOMPLETE"}'
     )
     assert response.metadata is not None

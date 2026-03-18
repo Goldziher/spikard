@@ -190,7 +190,7 @@ async def test_nested_object_validation_error() -> None:
         json_data = {
             "name": "Product",
             "price": 10.0,
-            "seller": {"name": "Jo", "address": {"city": "SF", "zip_code": "123"}},
+            "seller": {"address": {"city": "SF", "zip_code": "123"}, "name": "Jo"},
         }
         response = await client.post("/items/", headers=headers, json=json_data)
 
@@ -220,7 +220,7 @@ async def test_invalid_datetime_format() -> None:
         headers = {
             "Content-Type": "application/json",
         }
-        json_data = {"name": "Item", "price": 10.0, "created_at": "not-a-datetime"}
+        json_data = {"created_at": "not-a-datetime", "name": "Item", "price": 10.0}
         response = await client.post("/items/", headers=headers, json=json_data)
 
         assert response.status_code == 422
@@ -324,7 +324,7 @@ async def test_09_multiple_validation_errors() -> None:
     """Multiple validation errors should be returned together in batch."""
 
     async with TestClient(create_app_validation_errors_09_multiple_validation_errors()) as client:
-        json_data = {"name": "ab", "email": "invalid-email", "age": 15}
+        json_data = {"age": 15, "email": "invalid-email", "name": "ab"}
         response = await client.post("/users", json=json_data)
 
         assert response.status_code == 422

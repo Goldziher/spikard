@@ -550,20 +550,20 @@ async fn test_lifecycle_hooks_multiple_hooks_all_phases() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("x-response-time") {
-        assert_eq!(actual, ".*ms", "Mismatched header 'X-Response-Time'");
+    if let Some(actual) = headers.get("x-request-id") {
+        assert_eq!(actual, ".*", "Mismatched header 'X-Request-ID'");
     } else {
-        panic!("Expected header 'X-Response-Time' to be present");
+        panic!("Expected header 'X-Request-ID' to be present");
     }
     if let Some(actual) = headers.get("x-frame-options") {
         assert_eq!(actual, "DENY", "Mismatched header 'X-Frame-Options'");
     } else {
         panic!("Expected header 'X-Frame-Options' to be present");
     }
-    if let Some(actual) = headers.get("x-request-id") {
-        assert_eq!(actual, ".*", "Mismatched header 'X-Request-ID'");
+    if let Some(actual) = headers.get("x-response-time") {
+        assert_eq!(actual, ".*ms", "Mismatched header 'X-Response-Time'");
     } else {
-        panic!("Expected header 'X-Request-ID' to be present");
+        panic!("Expected header 'X-Response-Time' to be present");
     }
     if let Some(actual) = headers.get("x-content-type-options") {
         assert_eq!(actual, "nosniff", "Mismatched header 'X-Content-Type-Options'");

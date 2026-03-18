@@ -40,8 +40,12 @@ RSpec.configure do |config|
   end
 
   config.around(:each) do |example|
-    timeout_seconds = ENV.fetch("RSPEC_E2E_TIMEOUT", "120").to_i
-    Timeout.timeout(timeout_seconds) { example.run }
+    timeout_seconds = ENV.fetch("RSPEC_E2E_TIMEOUT", "0").to_i
+    if timeout_seconds.positive?
+      Timeout.timeout(timeout_seconds) { example.run }
+    else
+      example.run
+    end
   end
 
   if ENV["RSPEC_VERBOSE"] == "1"
@@ -57,4 +61,8 @@ RSpec.configure do |config|
   end
 
   config.shared_context_metadata_behavior = :apply_to_host_groups
+
+  config.after(:suite) do
+    Spikard::Testing.close_all_test_clients if defined?(Spikard::Testing)
+  end
 end

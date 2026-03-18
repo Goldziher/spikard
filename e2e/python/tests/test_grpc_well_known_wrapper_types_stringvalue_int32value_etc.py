@@ -26,6 +26,6 @@ async def test_grpc_well_known_wrapper_types_stringvalue_int32value_etc() -> Non
     # Verify response
     assert (
         response.payload
-        == b'{"id":"wrapper-test-001","name_present":true,"name_value":"Test Name","count_present":true,"count_value":42}'
+        == b'{"count_present":true,"count_value":42,"id":"wrapper-test-001","name_present":true,"name_value":"Test Name"}'
     )
     assert response.metadata is not None

@@ -26,6 +26,6 @@ async def test_grpc_server_streaming_rpc() -> None:
     # Verify response
     assert (
         response.payload
-        == b'[{"id":101,"name":"Item 1","description":"First item in category","price":9.99},{"id":102,"name":"Item 2","description":"Second item in category","price":14.99},{"id":103,"name":"Item 3","description":"Third item in category","price":19.99}]'
+        == b'[{"description":"First item in category","id":101,"name":"Item 1","price":9.99},{"description":"Second item in category","id":102,"name":"Item 2","price":14.99},{"description":"Third item in category","id":103,"name":"Item 3","price":19.99}]'
     )
     assert response.metadata is not None

@@ -35,8 +35,8 @@ defmodule E2EElixirApp.DiTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["pool_status"] == "connected"
       assert parsed_body["max_size"] == 10
+      assert parsed_body["pool_status"] == "connected"
     after
       Spikard.stop(server)
     end
@@ -60,11 +60,11 @@ defmodule E2EElixirApp.DiTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/dependency-error"
-      assert parsed_body["title"] == "Dependency Resolution Failed"
-      assert parsed_body["status"] == 500
       assert parsed_body["detail"] == "Circular dependency detected"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 500
+      assert parsed_body["title"] == "Dependency Resolution Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/dependency-error"
     after
       Spikard.stop(server)
     end
@@ -139,11 +139,11 @@ defmodule E2EElixirApp.DiTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/dependency-error"
-      assert parsed_body["title"] == "Dependency Resolution Failed"
-      assert parsed_body["status"] == 500
       assert parsed_body["detail"] == "Required dependency not found"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 500
+      assert parsed_body["title"] == "Dependency Resolution Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/dependency-error"
     after
       Spikard.stop(server)
     end
@@ -170,8 +170,8 @@ defmodule E2EElixirApp.DiTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["app_name"] == "MyApp"
-      assert parsed_body["pool_id"] == "<<uuid>>"
       assert parsed_body["context_id"] == "<<uuid>>"
+      assert parsed_body["pool_id"] == "<<uuid>>"
     after
       Spikard.stop(server)
     end
@@ -224,8 +224,8 @@ defmodule E2EElixirApp.DiTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["auth_enabled"] == true
-      assert parsed_body["has_db"] == true
       assert parsed_body["has_cache"] == true
+      assert parsed_body["has_db"] == true
     after
       Spikard.stop(server)
     end
@@ -305,8 +305,8 @@ defmodule E2EElixirApp.DiTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["db_status"] == "connected"
       assert parsed_body["cache_status"] == "ready"
+      assert parsed_body["db_status"] == "connected"
     after
       Spikard.stop(server)
     end
@@ -332,8 +332,8 @@ defmodule E2EElixirApp.DiTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["pool_type"] == "PostgreSQL"
       assert parsed_body["cache_type"] == "Redis"
+      assert parsed_body["pool_type"] == "PostgreSQL"
     after
       Spikard.stop(server)
     end
@@ -438,8 +438,8 @@ defmodule E2EElixirApp.DiTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["counter_id"] == "<<uuid>>"
       assert parsed_body["count"] == 1
+      assert parsed_body["counter_id"] == "<<uuid>>"
     after
       Spikard.stop(server)
     end
@@ -465,11 +465,11 @@ defmodule E2EElixirApp.DiTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["type"] == "https://spikard.dev/errors/dependency-error"
-      assert parsed_body["title"] == "Dependency Resolution Failed"
-      assert parsed_body["status"] == 500
       assert parsed_body["detail"] == "Dependency type mismatch"
       assert Map.has_key?(parsed_body, "errors")
+      assert parsed_body["status"] == 500
+      assert parsed_body["title"] == "Dependency Resolution Failed"
+      assert parsed_body["type"] == "https://spikard.dev/errors/dependency-error"
     after
       Spikard.stop(server)
     end
@@ -494,8 +494,8 @@ defmodule E2EElixirApp.DiTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["app_name"] == "SpikardApp"
-      assert parsed_body["version"] == "1.0.0"
       assert parsed_body["max_connections"] == 100
+      assert parsed_body["version"] == "1.0.0"
     after
       Spikard.stop(server)
     end

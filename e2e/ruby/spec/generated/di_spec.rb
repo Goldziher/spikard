@@ -45,7 +45,9 @@ RSpec.describe "di" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/timestamp")
     expect(response.status_code).to eq(200)
-    expect(response.json).to eq({"timestamp" => "<<present>>"})
+    body = response.json
+    expect(body).to be_a(Hash)
+    expect(body["timestamp"]).not_to be_nil
     client.close
   end
 
@@ -129,7 +131,10 @@ RSpec.describe "di" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/request-id")
     expect(response.status_code).to eq(200)
-    expect(response.json).to eq({"first_id" => "<<uuid>>", "second_id" => "<<same_as:first_id>>"})
+    body = response.json
+    expect(body).to be_a(Hash)
+    expect(body["first_id"]).to match(Regexp.new("\\A[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\z"))
+    expect(body["second_id"]).to eq(body["first_id"])
     client.close
   end
 

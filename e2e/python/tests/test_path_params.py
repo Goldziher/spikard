@@ -366,14 +366,14 @@ async def test_multiple_path_parameters_success() -> None:
 
         assert response.status_code == 200
         response_data = response.json()
-        assert "version" in response_data
-        assert response_data["version"] == 1.0
+        assert "order_id" in response_data
+        assert response_data["order_id"] == "c892496f-b1fd-4b91-bdb8-b46f92df1716"
         assert "service_id" in response_data
         assert response_data["service_id"] == 1
         assert "user_id" in response_data
         assert response_data["user_id"] == "abc"
-        assert "order_id" in response_data
-        assert response_data["order_id"] == "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+        assert "version" in response_data
+        assert response_data["version"] == 1.0
 
 
 async def test_date_path_parameter_success() -> None:

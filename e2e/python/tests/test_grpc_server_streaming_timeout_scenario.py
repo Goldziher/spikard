@@ -10,8 +10,8 @@ async def test_grpc_server_streaming_timeout_scenario() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "grpc-timeout": "1000m",
         "content-type": "application/grpc",
+        "grpc-timeout": "1000m",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(
@@ -27,6 +27,6 @@ async def test_grpc_server_streaming_timeout_scenario() -> None:
     # Verify response
     assert (
         response.payload
-        == b'[{"sequence":1,"data":"Message 1","elapsed_ms":500},{"sequence":2,"data":"Message 2","elapsed_ms":1000}]'
+        == b'[{"data":"Message 1","elapsed_ms":500,"sequence":1},{"data":"Message 2","elapsed_ms":1000,"sequence":2}]'
     )
     assert response.metadata is not None

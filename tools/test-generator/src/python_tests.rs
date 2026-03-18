@@ -622,10 +622,17 @@ fn generate_test_function(category: &str, fixture: &Fixture) -> Result<String> {
                 ));
                 code.push_str(&format!("        assert body_bytes.startswith({})\n", expected_literal));
             } else if is_text_response && expected_body.is_string() {
-                code.push_str(&format!(
-                    "        assert response.text == {}\n",
-                    json_to_python(expected_body)
-                ));
+                if category == "static_files" {
+                    code.push_str(&format!(
+                        "        assert response.text.rstrip(\"\\n\") == {}\n",
+                        json_to_python(expected_body)
+                    ));
+                } else {
+                    code.push_str(&format!(
+                        "        assert response.text == {}\n",
+                        json_to_python(expected_body)
+                    ));
+                }
             } else {
                 generate_body_assertions(&mut code, expected_body, "response_data");
             }

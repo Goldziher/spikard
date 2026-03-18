@@ -34,6 +34,13 @@ rescue LoadError => e
   MSG
 end
 
+at_exit do
+  if defined?(Spikard::Native) &&
+     Spikard::Native.respond_to?(:__shutdown_websocket_workers__, true)
+    Spikard::Native.__shutdown_websocket_workers__
+  end
+end
+
 if defined?(Spikard::Native::TestClient) && !Spikard::Native::TestClient.method_defined?(:__spikard_native_request,
                                                                                          false)
   Spikard::Native::TestClient.class_eval do

@@ -278,15 +278,15 @@ async fn test_static_files_static_file_server_returns_text_file() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("content-type") {
-        assert_eq!(actual, "text/plain", "Mismatched header 'content-type'");
-    } else {
-        panic!("Expected header 'content-type' to be present");
-    }
     if let Some(actual) = headers.get("cache-control") {
         assert_eq!(actual, "public, max-age=60", "Mismatched header 'cache-control'");
     } else {
         panic!("Expected header 'cache-control' to be present");
+    }
+    if let Some(actual) = headers.get("content-type") {
+        assert_eq!(actual, "text/plain", "Mismatched header 'content-type'");
+    } else {
+        panic!("Expected header 'content-type' to be present");
     }
 
 }

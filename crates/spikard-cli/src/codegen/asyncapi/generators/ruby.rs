@@ -29,7 +29,6 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
     fn generate_test_app(&self, channels: &[ChannelInfo], protocol: &str) -> Result<String> {
         let mut code = String::new();
 
-        code.push_str("#!/usr/bin/env ruby\n");
         code.push_str("# frozen_string_literal: true\n\n");
         code.push_str("# Test application generated from AsyncAPI specification\n\n");
 
@@ -85,9 +84,8 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
         }
 
         let mut code = String::new();
-        code.push_str("#!/usr/bin/env ruby\n");
         code.push_str("# frozen_string_literal: true\n\n");
-        code.push_str("require \"spikard\"\n\n");
+        code.push_str("require 'spikard'\n\n");
         code.push_str("app = Spikard::App.new\n\n");
 
         for channel in channels {
@@ -102,8 +100,8 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
                 "websocket" => {
                     code.push_str(&format!("# WebSocket handler for {}\n", channel.path));
                     code.push_str(&format!("class {handler_name}Handler\n"));
-                    code.push_str("  def initialize(ws)\n");
-                    code.push_str("    @ws = ws\n");
+                    code.push_str("  def initialize(socket)\n");
+                    code.push_str("    @socket = socket\n");
                     code.push_str("  end\n\n");
                     code.push_str("  def handle_message(message)\n");
                     code.push_str(&format!(
@@ -111,12 +109,12 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
                         message_description, channel.path
                     ));
                     code.push_str("    # Process message and send response\n");
-                    code.push_str("    @ws.send(message)\n");
+                    code.push_str("    @socket.send(message)\n");
                     code.push_str("  end\n");
                     code.push_str("end\n\n");
-                    code.push_str(&format!("app.websocket(\"{}\") do |ws|\n", channel.path));
-                    code.push_str(&format!("  handler = {handler_name}Handler.new(ws)\n"));
-                    code.push_str("  ws.on(:message) { |msg| handler.handle_message(msg) }\n");
+                    code.push_str(&format!("app.websocket('{}') do |socket|\n", channel.path));
+                    code.push_str(&format!("  handler = {handler_name}Handler.new(socket)\n"));
+                    code.push_str("  socket.on(:message) { |msg| handler.handle_message(msg) }\n");
                     code.push_str("end\n\n");
                 }
                 "sse" => {
@@ -135,9 +133,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
             }
         }
 
-        code.push_str("if $PROGRAM_NAME == __FILE__\n");
-        code.push_str("  app.run\n");
-        code.push_str("end\n");
+        code.push_str("app.run if $PROGRAM_NAME == __FILE__\n");
 
         Ok(code)
     }
@@ -157,7 +153,6 @@ mod tests {
         }];
 
         let code = generator.generate_test_app(&channels, "websocket").unwrap();
-        assert!(code.contains("#!/usr/bin/env ruby"));
         assert!(code.contains("faye/websocket"));
         assert!(code.contains("/chat"));
     }

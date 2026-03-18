@@ -35,8 +35,8 @@ defmodule E2EElixirApp.LifecycleHooksTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["message"] == "Hooks executed in order"
       assert Map.has_key?(parsed_body, "execution_order")
+      assert parsed_body["message"] == "Hooks executed in order"
     after
       Spikard.stop(server)
     end
@@ -55,11 +55,11 @@ defmodule E2EElixirApp.LifecycleHooksTest do
       url = @base_url <> "/api/full-lifecycle"
 
       headers = [
-        {~c"Content-Type", ~c"application/json"},
-        {~c"Authorization", ~c"Bearer valid-token-12345"}
+        {~c"Authorization", ~c"Bearer valid-token-12345"},
+        {~c"Content-Type", ~c"application/json"}
       ]
 
-      req_body = Jason.encode!(%{"user_id" => "user-123", "action" => "update_profile"})
+      req_body = Jason.encode!(%{"action" => "update_profile", "user_id" => "user-123"})
 
       {:ok, {{_, status, _}, _resp_headers, resp_body}} =
         :httpc.request(
@@ -73,10 +73,10 @@ defmodule E2EElixirApp.LifecycleHooksTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
-      assert parsed_body["message"] == "Action completed successfully"
-      assert parsed_body["user_id"] == "user-123"
       assert parsed_body["action"] == "update_profile"
+      assert parsed_body["message"] == "Action completed successfully"
       assert parsed_body["request_id"] == ".*"
+      assert parsed_body["user_id"] == "user-123"
     after
       Spikard.stop(server)
     end
@@ -101,8 +101,8 @@ defmodule E2EElixirApp.LifecycleHooksTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["error"] == "Internal Server Error"
-      assert parsed_body["message"] == "An unexpected error occurred"
       assert parsed_body["error_id"] == ".*"
+      assert parsed_body["message"] == "An unexpected error occurred"
     after
       Spikard.stop(server)
     end
@@ -128,9 +128,9 @@ defmodule E2EElixirApp.LifecycleHooksTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert parsed_body["has_request_id"] == true
       assert parsed_body["message"] == "onRequest hooks executed"
       assert parsed_body["request_logged"] == true
-      assert parsed_body["has_request_id"] == true
     after
       Spikard.stop(server)
     end
@@ -235,9 +235,9 @@ defmodule E2EElixirApp.LifecycleHooksTest do
       # Response body validation
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
+      assert parsed_body["authenticated"] == true
       assert parsed_body["message"] == "Access granted"
       assert parsed_body["user_id"] == "user-123"
-      assert parsed_body["authenticated"] == true
     after
       Spikard.stop(server)
     end
@@ -264,8 +264,8 @@ defmodule E2EElixirApp.LifecycleHooksTest do
       resp_body_str = :erlang.list_to_binary(resp_body)
       parsed_body = Jason.decode!(resp_body_str)
       assert parsed_body["message"] == "Admin access granted"
-      assert parsed_body["user_id"] == "admin-456"
       assert parsed_body["role"] == "admin"
+      assert parsed_body["user_id"] == "admin-456"
     after
       Spikard.stop(server)
     end

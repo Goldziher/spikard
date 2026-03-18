@@ -2010,6 +2010,10 @@ pub fn init(ruby: &Ruby) -> Result<(), Error> {
     native.define_singleton_method("run_server", function!(run_server, 8))?;
     native.define_singleton_method("normalize_route_metadata", function!(normalize_route_metadata, 1))?;
     native.define_singleton_method("background_run", function!(background::background_run, 1))?;
+    native.define_singleton_method(
+        "__shutdown_websocket_workers__",
+        function!(websocket::shutdown_websocket_workers, 0),
+    )?;
     native.define_singleton_method("build_route_metadata", function!(build_route_metadata, 12))?;
     native.define_singleton_method("build_response", function!(build_response, 3))?;
     native.define_singleton_method("build_streaming_response", function!(build_streaming_response, 3))?;

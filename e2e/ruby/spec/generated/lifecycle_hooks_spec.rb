@@ -18,12 +18,17 @@ RSpec.describe "lifecycle_hooks" do
     client = Spikard::Testing.create_test_client(app)
     response = client.post("/api/full-lifecycle", headers: {"Authorization" => "Bearer valid-token-12345", "Content-Type" => "application/json"}, json: {"action" => "update_profile", "user_id" => "user-123"})
     expect(response.status_code).to eq(200)
-    expect(response.json).to eq({"action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"})
+    body = response.json
+    expect(body).to be_a(Hash)
+    expect(body["action"]).to eq("update_profile")
+    expect(body["message"]).to eq("Action completed successfully")
+    expect(body["request_id"]).to match(Regexp.new("\\A.*\\z"))
+    expect(body["user_id"]).to eq("user-123")
     response_headers = response.headers.transform_keys { |key| key.downcase }
     expect(response_headers["x-content-type-options"]).to eq("nosniff")
     expect(response_headers["x-frame-options"]).to eq("DENY")
-    expect(response_headers["x-request-id"]).to eq(".*")
-    expect(response_headers["x-response-time"]).to eq(".*ms")
+    expect(response_headers["x-request-id"]).to match(Regexp.new("\\A.*\\z"))
+    expect(response_headers["x-response-time"]).to match(Regexp.new("\\A.*ms\\z"))
     client.close
   end
 
@@ -32,7 +37,11 @@ RSpec.describe "lifecycle_hooks" do
     client = Spikard::Testing.create_test_client(app)
     response = client.get("/api/test-error")
     expect(response.status_code).to eq(500)
-    expect(response.json).to eq({"error" => "Internal Server Error", "error_id" => ".*", "message" => "An unexpected error occurred"})
+    body = response.json
+    expect(body).to be_a(Hash)
+    expect(body["error"]).to eq("Internal Server Error")
+    expect(body["error_id"]).to match(Regexp.new("\\A.*\\z"))
+    expect(body["message"]).to eq("An unexpected error occurred")
     response_headers = response.headers.transform_keys { |key| key.downcase }
     expect(response_headers["content-type"]).to eq("application/json")
     client.close
@@ -45,7 +54,7 @@ RSpec.describe "lifecycle_hooks" do
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"has_request_id" => true, "message" => "onRequest hooks executed", "request_logged" => true})
     response_headers = response.headers.transform_keys { |key| key.downcase }
-    expect(response_headers["x-request-id"]).to eq(".*")
+    expect(response_headers["x-request-id"]).to match(Regexp.new("\\A.*\\z"))
     client.close
   end
 
@@ -56,7 +65,7 @@ RSpec.describe "lifecycle_hooks" do
     expect(response.status_code).to eq(200)
     expect(response.json).to eq({"message" => "Response with timing info"})
     response_headers = response.headers.transform_keys { |key| key.downcase }
-    expect(response_headers["x-response-time"]).to eq(".*ms")
+    expect(response_headers["x-response-time"]).to match(Regexp.new("\\A.*ms\\z"))
     client.close
   end
 

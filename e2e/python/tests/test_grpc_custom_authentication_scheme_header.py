@@ -10,8 +10,8 @@ async def test_grpc_custom_authentication_scheme_header() -> None:
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "content-type": "application/grpc",
         "x-custom-auth": "CustomScheme token_value_123",
+        "content-type": "application/grpc",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

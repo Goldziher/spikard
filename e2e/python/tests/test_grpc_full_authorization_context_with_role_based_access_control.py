@@ -10,11 +10,11 @@ async def test_grpc_full_authorization_context_with_role_based_access_control() 
 
     # Build gRPC request from fixture
     metadata: dict[str, str] = {
-        "authorization": "Bearer token123",
         "x-user-roles": "admin,editor",
-        "x-user-permissions": "read,write,delete",
         "content-type": "application/grpc",
         "x-user-id": "user-admin-001",
+        "authorization": "Bearer token123",
+        "x-user-permissions": "read,write,delete",
     }
     request_payload: bytes = b"{}"
     request = GrpcRequest(

@@ -317,6 +317,8 @@ pub struct RouteBuilder {
     file_params: Option<Value>,
     cors: Option<CorsConfig>,
     is_async: bool,
+    #[cfg(feature = "di")]
+    handler_dependencies: Option<Vec<String>>,
 }
 
 impl RouteBuilder {
@@ -335,6 +337,8 @@ impl RouteBuilder {
             file_params: None,
             cors: None,
             is_async: true,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
         }
     }
 
@@ -408,6 +412,14 @@ impl RouteBuilder {
         self
     }
 
+    /// Declare the dependency keys that must be resolved before this handler runs.
+    #[cfg(feature = "di")]
+    #[must_use]
+    pub fn handler_dependencies(mut self, dependencies: Vec<String>) -> Self {
+        self.handler_dependencies = Some(dependencies);
+        self
+    }
+
     fn into_metadata(self) -> RouteMetadata {
         #[cfg(feature = "di")]
         {
@@ -422,7 +434,7 @@ impl RouteBuilder {
                 is_async: self.is_async,
                 cors: self.cors,
                 body_param_name: None,
-                handler_dependencies: None,
+                handler_dependencies: self.handler_dependencies,
                 jsonrpc_method: None,
                 static_response: None,
             }

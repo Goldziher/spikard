@@ -822,25 +822,25 @@ async fn test_cors_08_cors_max_age() {
         snapshot.status
     );
     let headers = &snapshot.headers;
+    if let Some(actual) = headers.get("access-control-allow-headers") {
+        assert_eq!(actual, "Content-Type", "Mismatched header 'Access-Control-Allow-Headers'");
+    } else {
+        panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+    }
     if let Some(actual) = headers.get("access-control-allow-origin") {
         assert_eq!(actual, "https://example.com", "Mismatched header 'Access-Control-Allow-Origin'");
     } else {
         panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-    }
-    if let Some(actual) = headers.get("access-control-allow-methods") {
-        assert_eq!(actual, "POST", "Mismatched header 'Access-Control-Allow-Methods'");
-    } else {
-        panic!("Expected header 'Access-Control-Allow-Methods' to be present");
     }
     if let Some(actual) = headers.get("access-control-max-age") {
         assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
     } else {
         panic!("Expected header 'Access-Control-Max-Age' to be present");
     }
-    if let Some(actual) = headers.get("access-control-allow-headers") {
-        assert_eq!(actual, "Content-Type", "Mismatched header 'Access-Control-Allow-Headers'");
+    if let Some(actual) = headers.get("access-control-allow-methods") {
+        assert_eq!(actual, "POST", "Mismatched header 'Access-Control-Allow-Methods'");
     } else {
-        panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+        panic!("Expected header 'Access-Control-Allow-Methods' to be present");
     }
 
 }
@@ -1115,20 +1115,20 @@ async fn test_cors_09_cors_expose_headers() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("access-control-expose-headers") {
-        assert_eq!(actual, "X-Total-Count, X-Request-Id", "Mismatched header 'Access-Control-Expose-Headers'");
+    if let Some(actual) = headers.get("access-control-allow-origin") {
+        assert_eq!(actual, "https://example.com", "Mismatched header 'Access-Control-Allow-Origin'");
     } else {
-        panic!("Expected header 'Access-Control-Expose-Headers' to be present");
+        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
     }
     if let Some(actual) = headers.get("x-total-count") {
         assert_eq!(actual, "42", "Mismatched header 'X-Total-Count'");
     } else {
         panic!("Expected header 'X-Total-Count' to be present");
     }
-    if let Some(actual) = headers.get("access-control-allow-origin") {
-        assert_eq!(actual, "https://example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    if let Some(actual) = headers.get("access-control-expose-headers") {
+        assert_eq!(actual, "X-Total-Count, X-Request-Id", "Mismatched header 'Access-Control-Expose-Headers'");
     } else {
-        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        panic!("Expected header 'Access-Control-Expose-Headers' to be present");
     }
     if let Some(actual) = headers.get("x-request-id") {
         assert_eq!(actual, "abc123", "Mismatched header 'X-Request-Id'");
@@ -1680,25 +1680,25 @@ async fn test_cors_cors_private_network_access() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("access-control-allow-origin") {
-        assert_eq!(actual, "https://public.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
-    } else {
-        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-    }
     if let Some(actual) = headers.get("access-control-allow-methods") {
         assert_eq!(actual, "GET, POST", "Mismatched header 'Access-Control-Allow-Methods'");
     } else {
         panic!("Expected header 'Access-Control-Allow-Methods' to be present");
     }
-    if let Some(actual) = headers.get("access-control-allow-private-network") {
-        assert_eq!(actual, "true", "Mismatched header 'Access-Control-Allow-Private-Network'");
+    if let Some(actual) = headers.get("access-control-allow-origin") {
+        assert_eq!(actual, "https://public.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
     } else {
-        panic!("Expected header 'Access-Control-Allow-Private-Network' to be present");
+        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
     }
     if let Some(actual) = headers.get("vary") {
         assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
     } else {
         panic!("Expected header 'Vary' to be present");
+    }
+    if let Some(actual) = headers.get("access-control-allow-private-network") {
+        assert_eq!(actual, "true", "Mismatched header 'Access-Control-Allow-Private-Network'");
+    } else {
+        panic!("Expected header 'Access-Control-Allow-Private-Network' to be present");
     }
 
 }
@@ -1973,20 +1973,20 @@ async fn test_cors_cors_vary_header_for_proper_caching() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("vary") {
-        assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
+    if let Some(actual) = headers.get("access-control-allow-origin") {
+        assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
     } else {
-        panic!("Expected header 'Vary' to be present");
+        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
     }
     if let Some(actual) = headers.get("cache-control") {
         assert_eq!(actual, "public, max-age=3600", "Mismatched header 'Cache-Control'");
     } else {
         panic!("Expected header 'Cache-Control' to be present");
     }
-    if let Some(actual) = headers.get("access-control-allow-origin") {
-        assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    if let Some(actual) = headers.get("vary") {
+        assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
     } else {
-        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        panic!("Expected header 'Vary' to be present");
     }
 
 }
@@ -2822,6 +2822,11 @@ async fn test_cors_cors_preflight_for_delete_method() {
         snapshot.status
     );
     let headers = &snapshot.headers;
+    if let Some(actual) = headers.get("access-control-allow-origin") {
+        assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    } else {
+        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+    }
     if let Some(actual) = headers.get("access-control-allow-methods") {
         assert_eq!(actual, "GET, POST, PUT, PATCH, DELETE", "Mismatched header 'Access-Control-Allow-Methods'");
     } else {
@@ -2836,11 +2841,6 @@ async fn test_cors_cors_preflight_for_delete_method() {
         assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
     } else {
         panic!("Expected header 'Vary' to be present");
-    }
-    if let Some(actual) = headers.get("access-control-allow-origin") {
-        assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
-    } else {
-        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
     }
 
 }
@@ -3115,25 +3115,25 @@ async fn test_cors_cors_preflight_for_put_method() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("vary") {
-        assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
-    } else {
-        panic!("Expected header 'Vary' to be present");
-    }
     if let Some(actual) = headers.get("access-control-max-age") {
         assert_eq!(actual, "3600", "Mismatched header 'Access-Control-Max-Age'");
     } else {
         panic!("Expected header 'Access-Control-Max-Age' to be present");
     }
-    if let Some(actual) = headers.get("access-control-allow-origin") {
-        assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    if let Some(actual) = headers.get("vary") {
+        assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
     } else {
-        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+        panic!("Expected header 'Vary' to be present");
     }
     if let Some(actual) = headers.get("access-control-allow-headers") {
         assert_eq!(actual, "Content-Type, X-Custom-Header", "Mismatched header 'Access-Control-Allow-Headers'");
     } else {
         panic!("Expected header 'Access-Control-Allow-Headers' to be present");
+    }
+    if let Some(actual) = headers.get("access-control-allow-origin") {
+        assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    } else {
+        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
     }
     if let Some(actual) = headers.get("access-control-allow-methods") {
         assert_eq!(actual, "GET, POST, PUT, PATCH, DELETE", "Mismatched header 'Access-Control-Allow-Methods'");
@@ -3413,16 +3413,6 @@ async fn test_cors_cors_preflight_request() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("access-control-allow-origin") {
-        assert_eq!(actual, "https://example.com", "Mismatched header 'Access-Control-Allow-Origin'");
-    } else {
-        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-    }
-    if let Some(actual) = headers.get("access-control-allow-headers") {
-        assert_eq!(actual, "Content-Type, X-Custom-Header", "Mismatched header 'Access-Control-Allow-Headers'");
-    } else {
-        panic!("Expected header 'Access-Control-Allow-Headers' to be present");
-    }
     if let Some(actual) = headers.get("access-control-max-age") {
         assert_eq!(actual, "600", "Mismatched header 'Access-Control-Max-Age'");
     } else {
@@ -3432,6 +3422,16 @@ async fn test_cors_cors_preflight_request() {
         assert_eq!(actual, "GET, POST, PUT, DELETE, OPTIONS", "Mismatched header 'Access-Control-Allow-Methods'");
     } else {
         panic!("Expected header 'Access-Control-Allow-Methods' to be present");
+    }
+    if let Some(actual) = headers.get("access-control-allow-origin") {
+        assert_eq!(actual, "https://example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    } else {
+        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+    }
+    if let Some(actual) = headers.get("access-control-allow-headers") {
+        assert_eq!(actual, "Content-Type, X-Custom-Header", "Mismatched header 'Access-Control-Allow-Headers'");
+    } else {
+        panic!("Expected header 'Access-Control-Allow-Headers' to be present");
     }
 
 }
@@ -4261,15 +4261,15 @@ async fn test_cors_cors_safelisted_headers_without_preflight() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("vary") {
-        assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
-    } else {
-        panic!("Expected header 'Vary' to be present");
-    }
     if let Some(actual) = headers.get("access-control-allow-origin") {
         assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
     } else {
         panic!("Expected header 'Access-Control-Allow-Origin' to be present");
+    }
+    if let Some(actual) = headers.get("vary") {
+        assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
+    } else {
+        panic!("Expected header 'Vary' to be present");
     }
 
 }
@@ -4822,11 +4822,6 @@ async fn test_cors_cors_with_credentials() {
         snapshot.status
     );
     let headers = &snapshot.headers;
-    if let Some(actual) = headers.get("access-control-allow-origin") {
-        assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
-    } else {
-        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
-    }
     if let Some(actual) = headers.get("access-control-allow-credentials") {
         assert_eq!(actual, "true", "Mismatched header 'Access-Control-Allow-Credentials'");
     } else {
@@ -4836,6 +4831,11 @@ async fn test_cors_cors_with_credentials() {
         assert_eq!(actual.to_ascii_lowercase(), "Origin".to_ascii_lowercase(), "Mismatched header 'Vary'");
     } else {
         panic!("Expected header 'Vary' to be present");
+    }
+    if let Some(actual) = headers.get("access-control-allow-origin") {
+        assert_eq!(actual, "https://app.example.com", "Mismatched header 'Access-Control-Allow-Origin'");
+    } else {
+        panic!("Expected header 'Access-Control-Allow-Origin' to be present");
     }
 
 }
