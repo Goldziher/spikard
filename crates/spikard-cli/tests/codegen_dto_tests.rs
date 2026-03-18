@@ -51,6 +51,35 @@ components:
         - message
 "##;
 
+const ALLOF_OPENAPI: &str = r##"
+openapi: 3.1.0
+info:
+  title: Errors API
+  version: "1.0.0"
+paths: {}
+components:
+  schemas:
+    BaseError:
+      type: object
+      properties:
+        title:
+          type: string
+        status:
+          type: integer
+      required:
+        - title
+        - status
+    AuthError:
+      allOf:
+        - $ref: "#/components/schemas/BaseError"
+        - type: object
+          properties:
+            detail:
+              type: string
+          required:
+            - detail
+"##;
+
 const SIMPLE_ASYNCAPI: &str = r##"
 asyncapi: "3.0.0"
 info:
@@ -157,6 +186,25 @@ fn python_openapi_generation_uses_server_config_startup() -> Result<()> {
         code.contains("app.run(config=ServerConfig(host=\"0.0.0.0\", port=8000))"),
         "expected ServerConfig-based startup in generated python app"
     );
+    Ok(())
+}
+
+#[test]
+fn python_openapi_all_of_models_merge_object_fields() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "allof_openapi.yaml", ALLOF_OPENAPI);
+
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
+    assert!(code.contains("class AuthError"), "expected composed model class");
+    assert!(code.contains("title: str"), "expected inherited required field");
+    assert!(code.contains("status: int"), "expected inherited integer field");
+    assert!(code.contains("detail: str"), "expected composed field");
+
     Ok(())
 }
 

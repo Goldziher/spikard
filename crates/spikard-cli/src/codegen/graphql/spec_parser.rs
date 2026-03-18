@@ -471,6 +471,19 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
         }
     }
 
+    for definition in &doc.definitions {
+        if let graphql_parser::schema::Definition::TypeDefinition(TypeDefinition::Object(obj)) = definition {
+            for interface_name in &obj.implements_interfaces {
+                if let Some(interface) = schema.types.get_mut(interface_name)
+                    && interface.kind == TypeKind::Interface
+                    && !interface.possible_types.contains(&obj.name)
+                {
+                    interface.possible_types.push(obj.name.clone());
+                }
+            }
+        }
+    }
+
     // Validate that schema is not empty
     if schema.types.is_empty() && schema.queries.is_empty() {
         return Err(anyhow!("Empty GraphQL schema - no types or queries defined"));

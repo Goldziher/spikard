@@ -37,6 +37,7 @@ pub use openrpc::{
     generate_php_handler_app as generate_openrpc_php_handler_app,
     generate_python_handler_app as generate_openrpc_python_handler_app,
     generate_ruby_handler_app as generate_openrpc_ruby_handler_app,
+    generate_rust_handler_app as generate_openrpc_rust_handler_app,
     generate_typescript_handler_app as generate_openrpc_typescript_handler_app, parse_openrpc_schema,
 };
 pub use php::PhpGenerator;

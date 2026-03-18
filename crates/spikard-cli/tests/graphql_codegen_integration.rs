@@ -11,9 +11,10 @@
 //! all supported languages (Rust, Python, TypeScript, Ruby, PHP).
 
 use anyhow::Result;
+use spikard_cli::codegen::quality::QualityValidator;
 use spikard_cli::codegen::{
-    TypeKind, generate_php_graphql, generate_python_graphql, generate_ruby_graphql, generate_rust_graphql,
-    generate_typescript_graphql, parse_graphql_sdl_string,
+    TargetLanguage, TypeKind, generate_php_graphql, generate_python_graphql, generate_ruby_graphql,
+    generate_rust_graphql, generate_typescript_graphql, parse_graphql_sdl_string,
 };
 
 // ============================================================================
@@ -35,14 +36,17 @@ fn test_rust_generate_simple_object_type() -> Result<()> {
 
     assert!(result.contains("pub struct User"), "User struct not generated");
     assert!(
-        result.contains("#[async_graphql::SimpleObject]"),
+        result.contains("async_graphql::SimpleObject"),
         "SimpleObject derive missing"
     );
     // Verify all three fields are present in the struct (order may vary)
     assert!(result.contains("id"), "id field reference missing");
     assert!(result.contains("name"), "name field reference missing");
     assert!(result.contains("email"), "email field reference missing");
-    assert!(result.contains("use async_graphql"), "async_graphql import missing");
+    assert!(
+        result.contains("async_graphql::SimpleObject"),
+        "async-graphql derive path missing"
+    );
 
     Ok(())
 }
@@ -60,7 +64,7 @@ fn test_rust_generate_enum_type() -> Result<()> {
 
     let result = generate_rust_graphql(schema, "types")?;
 
-    assert!(result.contains("#[async_graphql::Enum]"), "Enum derive missing");
+    assert!(result.contains("async_graphql::Enum"), "Enum derive missing");
     assert!(result.contains("pub enum UserStatus"), "UserStatus enum not generated");
     assert!(result.contains("ACTIVE"), "ACTIVE variant missing");
     assert!(result.contains("INACTIVE"), "INACTIVE variant missing");
@@ -83,7 +87,7 @@ fn test_rust_generate_input_object_type() -> Result<()> {
     let result = generate_rust_graphql(schema, "types")?;
 
     assert!(
-        result.contains("#[async_graphql::InputObject]"),
+        result.contains("async_graphql::InputObject"),
         "InputObject derive missing"
     );
     assert!(
@@ -107,13 +111,99 @@ fn test_rust_generate_union_type() -> Result<()> {
 
     let result = generate_rust_graphql(schema, "types")?;
 
-    assert!(result.contains("#[async_graphql::Union]"), "Union derive missing");
+    assert!(result.contains("async_graphql::Union"), "Union derive missing");
     assert!(
         result.contains("pub enum SearchResult"),
         "SearchResult union not generated"
     );
     assert!(result.contains("User(User)"), "User variant missing");
     assert!(result.contains("Post(Post)"), "Post variant missing");
+
+    Ok(())
+}
+
+#[test]
+fn test_rust_generated_graphql_validates() -> Result<()> {
+    let schema = r#"
+        type Query {
+            hello: String!
+        }
+
+        type User {
+            id: ID!
+            name: String!
+        }
+    "#;
+
+    let result = generate_rust_graphql(schema, "all")?;
+    let report = QualityValidator::new(TargetLanguage::Rust)
+        .validate_all(&result)
+        .expect("Rust GraphQL validation should run");
+
+    assert!(
+        report.is_valid(),
+        "Rust GraphQL output should validate cleanly: {report}"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_rust_generated_graphql_with_interface_validates() -> Result<()> {
+    let schema = r#"
+        interface Node {
+            id: ID!
+        }
+
+        type User implements Node {
+            id: ID!
+            name: String!
+        }
+
+        type Query {
+            node: Node
+        }
+    "#;
+
+    let result = generate_rust_graphql(schema, "all")?;
+    let report = QualityValidator::new(TargetLanguage::Rust)
+        .validate_all(&result)
+        .expect("Rust GraphQL interface validation should run");
+
+    assert!(
+        report.is_valid(),
+        "Rust GraphQL interface output should validate cleanly: {report}"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_rust_generated_graphql_with_subscription_validates() -> Result<()> {
+    let schema = r#"
+        type Query {
+            health: String!
+        }
+
+        type Event {
+            id: ID!
+            message: String!
+        }
+
+        type Subscription {
+            events: Event!
+        }
+    "#;
+
+    let result = generate_rust_graphql(schema, "all")?;
+    let report = QualityValidator::new(TargetLanguage::Rust)
+        .validate_all(&result)
+        .expect("Rust GraphQL subscription validation should run");
+
+    assert!(
+        report.is_valid(),
+        "Rust GraphQL subscription output should validate cleanly: {report}"
+    );
 
     Ok(())
 }
@@ -133,11 +223,8 @@ fn test_rust_generate_interface_type() -> Result<()> {
 
     let result = generate_rust_graphql(schema, "types")?;
 
-    assert!(
-        result.contains("#[async_graphql::Interface]"),
-        "Interface derive missing"
-    );
-    assert!(result.contains("pub trait Node"), "Node interface not generated");
+    assert!(result.contains("async_graphql::Interface"), "Interface derive missing");
+    assert!(result.contains("pub enum Node"), "Node interface not generated");
 
     Ok(())
 }
@@ -158,7 +245,7 @@ fn test_rust_generate_query_resolvers() -> Result<()> {
 
     let result = generate_rust_graphql(schema, "resolvers")?;
 
-    assert!(result.contains("#[Object]"), "Object derive missing");
+    assert!(result.contains("#[async_graphql::Object]"), "Object derive missing");
     assert!(result.contains("pub struct Query"), "Query struct missing");
     assert!(result.contains("pub async fn hello"), "hello resolver missing");
     assert!(result.contains("pub async fn user"), "user resolver missing");
@@ -237,10 +324,7 @@ fn test_rust_generate_complete_output() -> Result<()> {
 
     // Should include types
     assert!(result.contains("pub struct User"), "User type missing");
-    assert!(
-        result.contains("#[async_graphql::SimpleObject]"),
-        "SimpleObject missing"
-    );
+    assert!(result.contains("async_graphql::SimpleObject"), "SimpleObject missing");
 
     // Should include resolvers
     assert!(result.contains("pub struct Query"), "Query resolver missing");
@@ -375,8 +459,8 @@ fn test_empty_schema_handling() -> Result<()> {
     // Should not error, but generate minimal code
     let result = generate_rust_graphql(schema, "types")?;
     assert!(
-        result.contains("use async_graphql"),
-        "minimal types still should have imports"
+        result.contains("// GraphQL type definitions"),
+        "minimal types should still emit module header"
     );
 
     Ok(())

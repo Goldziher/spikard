@@ -632,10 +632,12 @@ edition = "2024"
 path = "src/lib.rs"
 
 [dependencies]
+async-graphql = "7"
 async-trait = "0.1"
 axum = "0.8"
 bytes = "1"
 futures-core = "0.3"
+futures-util = "0.3"
 prost = "0.14"
 schemars = {{ version = "1.2", features = ["derive"] }}
 serde = {{ version = "1", features = ["derive"] }}

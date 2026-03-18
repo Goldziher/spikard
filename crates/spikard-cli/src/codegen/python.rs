@@ -11,6 +11,13 @@ pub struct PythonGenerator {
     registry: SchemaRegistry,
 }
 
+struct PythonFieldSpec {
+    original_name: String,
+    field_name: String,
+    type_hint: String,
+    required: bool,
+}
+
 impl PythonGenerator {
     #[must_use]
     pub fn new(spec: OpenAPI, dto: PythonDtoStyle) -> Self {
@@ -146,23 +153,19 @@ import msgspec
             )
         ));
 
-        match &schema.schema_kind {
-            SchemaKind::Type(Type::Object(obj)) => {
-                if !obj.properties.is_empty() {
-                    for (prop_name, prop_schema_ref) in &obj.properties {
-                        let is_required = obj.required.contains(prop_name);
-                        let field_name = prop_name.to_snake_case();
-                        let type_hint = self.python_type_from_boxed_schema_ref(prop_schema_ref, !is_required);
+        let mut fields = Vec::new();
+        self.collect_model_fields_into(schema, &mut fields);
 
-                        if is_required {
-                            output.push_str(&format!("    {field_name}: {type_hint}\n"));
-                        } else {
-                            output.push_str(&format!("    {field_name}: {type_hint} = None\n"));
-                        }
-                    }
+        if !fields.is_empty() {
+            fields.sort_by_key(|field| !field.required);
+
+            for field in fields {
+                if field.required {
+                    output.push_str(&format!("    {}: {}\n", field.field_name, field.type_hint));
+                } else {
+                    output.push_str(&format!("    {}: {} = None\n", field.field_name, field.type_hint));
                 }
             }
-            _ => {}
         }
 
         Ok(output)
@@ -186,27 +189,68 @@ import msgspec
             )
         ));
 
+        let mut fields = Vec::new();
+        self.collect_model_fields_into(schema, &mut fields);
+
+        if !fields.is_empty() {
+            fields.sort_by_key(|field| !field.required);
+
+            for field in fields {
+                if field.required {
+                    output.push_str(&format!("    {}: {}\n", field.field_name, field.type_hint));
+                } else {
+                    output.push_str(&format!("    {}: {} = None\n", field.field_name, field.type_hint));
+                }
+            }
+        }
+
+        Ok(output)
+    }
+
+    fn collect_model_fields_into(&self, schema: &Schema, fields: &mut Vec<PythonFieldSpec>) {
         match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
-                if !obj.properties.is_empty() {
-                    for (prop_name, prop_schema_ref) in &obj.properties {
-                        let is_required = obj.required.contains(prop_name);
-                        let field_name = prop_name.to_snake_case();
+                for (prop_name, prop_schema_ref) in &obj.properties {
+                    if fields.iter().any(|field| field.original_name == *prop_name) {
+                        continue;
+                    }
 
-                        let type_hint = self.python_type_from_boxed_schema_ref(prop_schema_ref, !is_required);
-
-                        if is_required {
-                            output.push_str(&format!("    {field_name}: {type_hint}\n"));
-                        } else {
-                            output.push_str(&format!("    {field_name}: {type_hint} = None\n"));
+                    let is_required = obj.required.contains(prop_name);
+                    fields.push(PythonFieldSpec {
+                        original_name: prop_name.clone(),
+                        field_name: prop_name.to_snake_case(),
+                        type_hint: self.python_type_from_boxed_schema_ref(prop_schema_ref, !is_required),
+                        required: is_required,
+                    });
+                }
+            }
+            SchemaKind::AllOf { all_of } => {
+                for schema_ref in all_of {
+                    match schema_ref {
+                        ReferenceOr::Item(schema) => self.collect_model_fields_into(schema, fields),
+                        ReferenceOr::Reference { reference } => {
+                            if let Some(schema) = self.resolve_schema_reference(reference) {
+                                self.collect_model_fields_into(schema, fields);
+                            }
                         }
                     }
                 }
             }
             _ => {}
         }
+    }
 
-        Ok(output)
+    fn resolve_schema_reference<'a>(&'a self, reference: &str) -> Option<&'a Schema> {
+        let name = reference.split('/').next_back()?;
+        self.spec
+            .components
+            .as_ref()?
+            .schemas
+            .get(name)
+            .and_then(|schema_ref| match schema_ref {
+                ReferenceOr::Item(schema) => Some(schema),
+                ReferenceOr::Reference { .. } => None,
+            })
     }
 
     /// Extract type name from a schema reference or inline schema

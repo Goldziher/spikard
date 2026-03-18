@@ -58,10 +58,11 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
         match protocol {
             "websocket" => {
                 code.push_str("use serde_json::Value;\n");
-                code.push_str("use spikard::{App, AppError, WebSocketHandler};\n\n");
+                code.push_str("use spikard::{App, WebSocketHandler};\n\n");
             }
             "sse" => {
-                code.push_str("use spikard::{App, AppError, SseEvent, SseEventProducer};\n\n");
+                code.push_str("use serde_json::json;\n");
+                code.push_str("use spikard::{App, SseEvent, SseEventProducer};\n\n");
             }
             _ => {}
         }
@@ -82,27 +83,21 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
             let path = escape_rust_string(&channel.path);
             match protocol {
                 "websocket" => {
-                    handler_defs.push_str(&format!("struct {struct_name};\n\n"));
+                    handler_defs.push_str(&format!("pub struct {struct_name};\n\n"));
                     handler_defs.push_str(&format!("impl WebSocketHandler for {struct_name} {{\n"));
-                    handler_defs.push_str("    fn handle_message(&self, message: Value) -> impl std::future::Future<Output = Option<Value>> + Send {\n");
-                    handler_defs.push_str("        async move {\n");
-                    handler_defs.push_str("            println!(\"Received message: {:?}\", message);\n");
-                    handler_defs.push_str("            None\n");
-                    handler_defs.push_str("        }\n");
+                    handler_defs.push_str("    async fn handle_message(&self, message: Value) -> Option<Value> {\n");
+                    handler_defs.push_str("        Some(message)\n");
                     handler_defs.push_str("    }\n");
                     handler_defs.push_str("}\n\n");
                     registrations.push_str(&format!("    app.websocket(\"{path}\", {struct_name});\n"));
                 }
                 "sse" => {
-                    handler_defs.push_str(&format!("struct {struct_name};\n\n"));
+                    handler_defs.push_str(&format!("pub struct {struct_name};\n\n"));
                     handler_defs.push_str(&format!("impl SseEventProducer for {struct_name} {{\n"));
+                    handler_defs.push_str("    async fn next_event(&self) -> Option<SseEvent> {\n");
                     handler_defs.push_str(
-                        "    fn next_event(&self) -> impl std::future::Future<Output = Option<SseEvent>> + Send {\n",
+                        "        Some(SseEvent::new(json!({\"message\": \"replace with event payload\"})))\n",
                     );
-                    handler_defs.push_str("        async move {\n");
-                    handler_defs.push_str("            println!(\"Streaming SSE event\");\n");
-                    handler_defs.push_str("            None\n");
-                    handler_defs.push_str("        }\n");
                     handler_defs.push_str("    }\n");
                     handler_defs.push_str("}\n\n");
                     registrations.push_str(&format!("    app.sse(\"{path}\", {struct_name});\n"));
@@ -112,15 +107,13 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
         }
 
         code.push_str(&handler_defs);
-        code.push_str("fn build_app() -> Result<App, AppError> {\n");
-        code.push_str("    let mut app = App::new();\n");
+        code.push_str("pub fn register_asyncapi_routes(app: &mut App) {\n");
         code.push_str(&registrations);
-        code.push_str("    Ok(app)\n");
         code.push_str("}\n\n");
-        code.push_str("#[tokio::main]\n");
-        code.push_str("async fn main() -> Result<(), AppError> {\n");
-        code.push_str("    let app = build_app()?;\n");
-        code.push_str("    app.run().await\n");
+        code.push_str("pub fn build_app() -> App {\n");
+        code.push_str("    let mut app = App::new();\n");
+        code.push_str("    register_asyncapi_routes(&mut app);\n");
+        code.push_str("    app\n");
         code.push_str("}\n");
 
         Ok(code)

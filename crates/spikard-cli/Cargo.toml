@@ -36,6 +36,7 @@ tracing.workspace = true
 axum.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+rmcp = { version = "1.2.0", features = ["transport-io"], optional = true }
 serde-saphyr = "0.0.21"
 openapiv3 = "2.2"
 asyncapiv3 = "0.1.3"                # AsyncAPI v3 spec parsing
@@ -52,11 +53,13 @@ pyo3 = { workspace = true, optional = true }
 _spikard = { package = "spikard-py", version = "0.12.0", path = "../spikard-py", optional = true, default-features = false }
 
 [features]
-default = []
+default = ["mcp"]
 python = ["dep:pyo3", "dep:_spikard", "pyo3/auto-initialize"]
 node = []                                                     # Reserved feature flag for Node CLI integrations
 ruby = []                                                     # Reserved feature flag for Ruby CLI integrations
-all = ["python", "node", "ruby"]
+mcp = ["dep:rmcp"]
+mcp-http = ["mcp", "rmcp/transport-streamable-http-server"]
+all = ["python", "node", "ruby", "mcp", "mcp-http"]
 
 [dev-dependencies]
 tempfile = "3.27"

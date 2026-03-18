@@ -8,11 +8,13 @@ use anyhow::Result;
 pub mod php;
 pub mod python;
 pub mod ruby;
+pub mod rust;
 pub mod typescript;
 
 pub use php::PhpOpenRpcGenerator;
 pub use python::PythonOpenRpcGenerator;
 pub use ruby::RubyOpenRpcGenerator;
+pub use rust::RustOpenRpcGenerator;
 pub use typescript::TypeScriptOpenRpcGenerator;
 
 use crate::codegen::openrpc::spec_parser::OpenRpcSpec;

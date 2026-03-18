@@ -14,6 +14,7 @@ use super::openrpc::{
     generate_php_handler_app as generate_openrpc_php_handler,
     generate_python_handler_app as generate_openrpc_python_handler,
     generate_ruby_handler_app as generate_openrpc_ruby_handler,
+    generate_rust_handler_app as generate_openrpc_rust_handler,
     generate_typescript_handler_app as generate_openrpc_typescript_handler, parse_openrpc_schema,
 };
 use super::quality::QualityValidator;
@@ -78,14 +79,14 @@ pub struct CodegenRequest {
 }
 
 /// Represents an asset emitted by the code generation engine
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct GeneratedAsset {
     pub path: PathBuf,
     pub description: String,
 }
 
 /// Output of the engine run
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub enum CodegenOutcome {
     /// Generated code that should be printed to stdout (no file requested)
     InMemory(String),
@@ -339,11 +340,9 @@ impl CodegenEngine {
         let code = match language {
             TargetLanguage::Python => generate_openrpc_python_handler(spec)?,
             TargetLanguage::TypeScript => generate_openrpc_typescript_handler(spec)?,
+            TargetLanguage::Rust => generate_openrpc_rust_handler(spec)?,
             TargetLanguage::Ruby => generate_openrpc_ruby_handler(spec)?,
             TargetLanguage::Php => generate_openrpc_php_handler(spec)?,
-            other => {
-                bail!("{other:?} is not supported for OpenRPC handler generation");
-            }
         };
         if validate {
             Self::validate_generated_code(language, &code)?;
@@ -768,6 +767,96 @@ service UserService {
                         .unwrap()
                         .contains("pub trait UserService")
                 );
+            }
+            other => panic!("expected file output, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn validates_generated_rust_openrpc_before_writing() {
+        let dir = tempdir().unwrap();
+        let schema_path =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+        let output_path = dir.path().join("openrpc.rs");
+
+        let outcome = CodegenEngine::execute_validated(CodegenRequest {
+            schema_path,
+            schema_kind: SchemaKind::OpenRpc,
+            target: CodegenTargetKind::JsonRpcHandlers {
+                language: TargetLanguage::Rust,
+                output: output_path.clone(),
+            },
+            dto: None,
+        })
+        .unwrap();
+
+        match outcome {
+            CodegenOutcome::Files(assets) => {
+                assert_eq!(assets.len(), 1);
+                assert_eq!(assets[0].path, output_path);
+                let contents = fs::read_to_string(&assets[0].path).unwrap();
+                assert!(contents.contains("pub async fn handle_jsonrpc_call"));
+                assert!(contents.contains("pub fn register_jsonrpc_route"));
+            }
+            other => panic!("expected file output, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn validates_generated_rust_asyncapi_before_writing() {
+        let dir = tempdir().unwrap();
+        let schema_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../examples/schemas/chat-service.asyncapi.yaml");
+        let output_path = dir.path().join("asyncapi.rs");
+
+        let outcome = CodegenEngine::execute_validated(CodegenRequest {
+            schema_path,
+            schema_kind: SchemaKind::AsyncApi,
+            target: CodegenTargetKind::AsyncHandlers {
+                language: TargetLanguage::Rust,
+                output: output_path.clone(),
+            },
+            dto: None,
+        })
+        .unwrap();
+
+        match outcome {
+            CodegenOutcome::Files(assets) => {
+                assert_eq!(assets.len(), 1);
+                assert_eq!(assets[0].path, output_path);
+                let contents = fs::read_to_string(&assets[0].path).unwrap();
+                assert!(contents.contains("pub fn register_asyncapi_routes"));
+                assert!(contents.contains("pub fn build_app() -> App"));
+            }
+            other => panic!("expected file output, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn validates_generated_rust_openapi_before_writing() {
+        let dir = tempdir().unwrap();
+        let schema_path =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/todo-api.openapi.yaml");
+        let output_path = dir.path().join("openapi.rs");
+
+        let outcome = CodegenEngine::execute_validated(CodegenRequest {
+            schema_path,
+            schema_kind: SchemaKind::OpenApi,
+            target: CodegenTargetKind::Server {
+                language: TargetLanguage::Rust,
+                output: Some(output_path.clone()),
+            },
+            dto: None,
+        })
+        .unwrap();
+
+        match outcome {
+            CodegenOutcome::Files(assets) => {
+                assert_eq!(assets.len(), 1);
+                assert_eq!(assets[0].path, output_path);
+                let contents = fs::read_to_string(&assets[0].path).unwrap();
+                assert!(contents.contains("pub fn build_app() -> Result<App, AppError>"));
+                assert!(contents.contains("pub struct AuthErrorResponse"));
             }
             other => panic!("expected file output, got {other:?}"),
         }

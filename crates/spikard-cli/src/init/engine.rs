@@ -89,7 +89,7 @@ pub struct InitRequest {
 ///     println!("  → {}", step);
 /// }
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct InitResponse {
     /// Absolute paths to all files that were created
     pub files_created: Vec<PathBuf>,

@@ -1,14 +1,14 @@
 //! Spikard CLI – user-facing code generation + testing helpers
 
+use crate::app;
 use crate::codegen::{
-    self, CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, DtoConfig, NodeDtoStyle, PhpDtoGenerator,
-    PythonDtoStyle, RubyDtoStyle, SchemaKind, TargetLanguage,
+    self, CodegenOutcome, CodegenRequest, CodegenTargetKind, DtoConfig, NodeDtoStyle, PythonDtoStyle, RubyDtoStyle,
+    SchemaKind, TargetLanguage,
 };
-use crate::init::{InitEngine, InitRequest};
+use crate::init::{InitRequest, InitResponse};
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::ffi::OsString;
-use std::fs;
 use std::path::PathBuf;
 
 /// Spikard - High-performance HTTP framework with Rust core
@@ -23,6 +23,9 @@ struct Cli {
 enum Commands {
     /// Initialize a new Spikard project
     Init(InitArgs),
+    /// Start the Spikard MCP server
+    #[cfg(feature = "mcp")]
+    Mcp(McpArgs),
     /// User-facing code generation entrypoints
     Generate {
         #[command(subcommand)]
@@ -54,6 +57,22 @@ struct InitArgs {
     /// Directory where the project will be created (default: current directory)
     #[arg(long, short = 'd', default_value = ".")]
     dir: PathBuf,
+}
+
+#[cfg(feature = "mcp")]
+#[derive(Args, Debug)]
+struct McpArgs {
+    /// Transport for the MCP server
+    #[arg(long, default_value = "stdio")]
+    transport: String,
+
+    /// Host to bind when using HTTP transport
+    #[arg(long, default_value = "127.0.0.1")]
+    host: String,
+
+    /// Port to bind when using HTTP transport
+    #[arg(long, default_value_t = 3001)]
+    port: u16,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -335,19 +354,9 @@ fn run(cli: Cli) -> Result<()> {
                 schema_path: None,
             };
 
-            match InitEngine::execute(request) {
+            match app::init_project(request) {
                 Ok(response) => {
-                    println!("✓ Project created successfully!");
-                    println!();
-                    println!("Created {} files:", response.files_created.len());
-                    for file in response.files_created {
-                        println!("  - {}", file.display());
-                    }
-                    println!();
-                    println!("Next steps:");
-                    for (i, step) in response.next_steps.iter().enumerate() {
-                        println!("  {}. {}", i + 1, step);
-                    }
+                    print_init_response(response);
                 }
                 Err(e) => {
                     eprintln!("✗ Failed to create project: {e}");
@@ -355,23 +364,37 @@ fn run(cli: Cli) -> Result<()> {
                 }
             }
         }
+        #[cfg(feature = "mcp")]
+        Commands::Mcp(args) => {
+            let runtime = tokio::runtime::Runtime::new().context("Failed to create Tokio runtime for MCP server")?;
+            match args.transport.to_ascii_lowercase().as_str() {
+                "stdio" => runtime
+                    .block_on(crate::mcp::start_mcp_server())
+                    .map_err(|error| anyhow::anyhow!(error.to_string()))
+                    .context("Failed to start MCP server over stdio")?,
+                "http" => {
+                    #[cfg(not(feature = "mcp-http"))]
+                    {
+                        bail!("HTTP transport requires the 'mcp-http' feature");
+                    }
+
+                    #[cfg(feature = "mcp-http")]
+                    runtime
+                        .block_on(crate::mcp::start_mcp_server_http(&args.host, args.port))
+                        .map_err(|error| anyhow::anyhow!(error.to_string()))
+                        .with_context(|| {
+                            format!("Failed to start MCP server over http://{}:{}", args.host, args.port)
+                        })?;
+                }
+                other => bail!("Unknown MCP transport '{other}'. Use 'stdio' or 'http'"),
+            }
+        }
         Commands::Generate { target } => match target {
             GenerateCommand::PhpDto(args) => {
                 println!("Generating PHP DTO classes for Spikard...");
                 println!("  Output directory: {}", args.output.display());
-
-                let generator = PhpDtoGenerator::new();
-                let generated = generator.generate_all().context("Failed to generate PHP DTOs")?;
-
-                fs::create_dir_all(&args.output)
-                    .context(format!("Failed to create output directory: {}", args.output.display()))?;
-
-                for (filename, code) in generated {
-                    let file_path = args.output.join(&filename);
-                    fs::write(&file_path, code)
-                        .context(format!("Failed to write DTO file: {}", file_path.display()))?;
-                    println!("✓ Generated {} at {}", filename, file_path.display());
-                }
+                let assets = app::generate_php_dto(&args.output)?;
+                print_codegen_outcome(CodegenOutcome::Files(assets));
             }
             GenerateCommand::Openapi(args) => {
                 let mut dto_config = DtoConfig::default();
@@ -388,16 +411,8 @@ fn run(cli: Cli) -> Result<()> {
                     dto: Some(dto_config),
                 };
 
-                match CodegenEngine::execute_validated(request)
-                    .context("Failed to generate code from OpenAPI schema")?
-                {
-                    CodegenOutcome::InMemory(code) => println!("{code}"),
-                    CodegenOutcome::Files(files) => {
-                        for asset in files {
-                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                        }
-                    }
-                }
+                let outcome = app::execute_codegen(request).context("Failed to generate code from OpenAPI schema")?;
+                print_codegen_outcome(outcome);
             }
             GenerateCommand::Asyncapi(args) => {
                 println!("Generating handler scaffolding from AsyncAPI schema...");
@@ -417,14 +432,7 @@ fn run(cli: Cli) -> Result<()> {
                     },
                     dto: Some(dto_config),
                 };
-                match CodegenEngine::execute_validated(request)? {
-                    CodegenOutcome::Files(files) => {
-                        for asset in files {
-                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                        }
-                    }
-                    CodegenOutcome::InMemory(_) => {}
-                }
+                print_codegen_outcome(app::execute_codegen(request)?);
             }
             GenerateCommand::Jsonrpc(args) => {
                 println!("Generating JSON-RPC 2.0 handlers from OpenRPC schema...");
@@ -443,16 +451,8 @@ fn run(cli: Cli) -> Result<()> {
                     dto: None,
                 };
 
-                match CodegenEngine::execute_validated(request)
-                    .context("Failed to generate code from OpenRPC schema")?
-                {
-                    CodegenOutcome::InMemory(code) => println!("{code}"),
-                    CodegenOutcome::Files(files) => {
-                        for asset in files {
-                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                        }
-                    }
-                }
+                let outcome = app::execute_codegen(request).context("Failed to generate code from OpenRPC schema")?;
+                print_codegen_outcome(outcome);
             }
             GenerateCommand::Graphql(args) => {
                 println!("Generating GraphQL code from schema...");
@@ -484,16 +484,8 @@ fn run(cli: Cli) -> Result<()> {
                     dto: None,
                 };
 
-                match CodegenEngine::execute_validated(request)
-                    .context("Failed to generate code from GraphQL schema")?
-                {
-                    CodegenOutcome::InMemory(code) => println!("{code}"),
-                    CodegenOutcome::Files(files) => {
-                        for asset in files {
-                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                        }
-                    }
-                }
+                let outcome = app::execute_codegen(request).context("Failed to generate code from GraphQL schema")?;
+                print_codegen_outcome(outcome);
             }
             GenerateCommand::Protobuf(args) => {
                 println!("Generating protobuf code from schema...");
@@ -514,14 +506,8 @@ fn run(cli: Cli) -> Result<()> {
                     dto: None,
                 };
 
-                match CodegenEngine::execute_validated(request).context("Failed to generate protobuf code")? {
-                    CodegenOutcome::InMemory(code) => println!("{code}"),
-                    CodegenOutcome::Files(files) => {
-                        for asset in files {
-                            println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                        }
-                    }
-                }
+                let outcome = app::execute_codegen(request).context("Failed to generate protobuf code")?;
+                print_codegen_outcome(outcome);
             }
         },
         Commands::Testing { target } => match target {
@@ -536,7 +522,7 @@ fn run(cli: Cli) -> Result<()> {
                         target: CodegenTargetKind::AsyncFixtures { output: args.output },
                         dto: None,
                     };
-                    let files = match CodegenEngine::execute(request)? {
+                    let files = match app::execute_codegen_unvalidated(request)? {
                         CodegenOutcome::Files(files) => files,
                         CodegenOutcome::InMemory(_) => unreachable!("Fixtures always write files"),
                     };
@@ -556,14 +542,7 @@ fn run(cli: Cli) -> Result<()> {
                         },
                         dto: None,
                     };
-                    match CodegenEngine::execute(request)? {
-                        CodegenOutcome::Files(files) => {
-                            for asset in files {
-                                println!("✓ Generated {} at {}", asset.description, asset.path.display());
-                            }
-                        }
-                        CodegenOutcome::InMemory(_) => {}
-                    }
+                    print_codegen_outcome(app::execute_codegen_unvalidated(request)?);
                 }
                 AsyncapiTestingTarget::All(args) => {
                     println!("Generating all assets from AsyncAPI schema...");
@@ -575,7 +554,7 @@ fn run(cli: Cli) -> Result<()> {
                         target: CodegenTargetKind::AsyncAll { output: args.output },
                         dto: None,
                     };
-                    let files = match CodegenEngine::execute(request)? {
+                    let files = match app::execute_codegen_unvalidated(request)? {
                         CodegenOutcome::Files(files) => files,
                         CodegenOutcome::InMemory(_) => unreachable!("AsyncAPI bundle writes files"),
                     };
@@ -587,34 +566,61 @@ fn run(cli: Cli) -> Result<()> {
             },
         },
         Commands::Features => {
-            println!("Spikard - High-performance HTTP framework\n");
-            println!("Rust Core: ✓");
-            println!("\nLanguage Bindings:");
-            println!("  Python:     pip install spikard");
-            println!("  TypeScript: npm install spikard");
-            println!("  Ruby:       gem install spikard (coming soon)");
-            println!("\nUsage:");
-            println!("  Python: python server.py");
-            println!("  Node:   node server.js");
-            println!("\nDocumentation: https://spikard.dev");
+            print_feature_summary(app::feature_summary());
         }
         Commands::ValidateAsyncapi { schema } => {
-            let spec = codegen::parse_asyncapi_schema(&schema).context("Failed to parse AsyncAPI schema")?;
-
-            println!("✓ AsyncAPI schema is valid");
-            println!("  Spec Version: 3.0.0");
-            println!("  Title: {}", spec.info.title);
-            println!("  API Version: {}", spec.info.version);
-
-            let protocol = codegen::detect_primary_protocol(&spec)?;
-            println!("  Primary Protocol: {protocol:?}");
-
-            let channel_count = spec.channels.len();
-            println!("  Channels: {channel_count}");
-
-            println!("\nSchema validated successfully!");
+            print_asyncapi_validation(app::validate_asyncapi_schema(&schema)?);
         }
     }
 
     Ok(())
+}
+
+fn print_init_response(response: InitResponse) {
+    println!("✓ Project created successfully!");
+    println!();
+    println!("Created {} files:", response.files_created.len());
+    for file in response.files_created {
+        println!("  - {}", file.display());
+    }
+    println!();
+    println!("Next steps:");
+    for (i, step) in response.next_steps.iter().enumerate() {
+        println!("  {}. {}", i + 1, step);
+    }
+}
+
+fn print_codegen_outcome(outcome: CodegenOutcome) {
+    match outcome {
+        CodegenOutcome::InMemory(code) => println!("{code}"),
+        CodegenOutcome::Files(files) => {
+            for asset in files {
+                println!("✓ Generated {} at {}", asset.description, asset.path.display());
+            }
+        }
+    }
+}
+
+fn print_feature_summary(summary: app::FeatureSummary) {
+    println!("Spikard - High-performance HTTP framework\n");
+    println!("Rust Core: {}", if summary.rust_core { "✓" } else { "✗" });
+    println!("\nLanguage Bindings:");
+    for binding in &summary.language_bindings {
+        println!("  {}: {}", binding.name, binding.install_hint);
+    }
+    println!("\nUsage:");
+    for binding in &summary.language_bindings {
+        println!("  {}: {}", binding.name, binding.usage_hint);
+    }
+    println!("\nDocumentation: {}", summary.documentation_url);
+}
+
+fn print_asyncapi_validation(summary: app::AsyncApiValidationSummary) {
+    println!("✓ AsyncAPI schema is valid");
+    println!("  Spec Version: {}", summary.spec_version);
+    println!("  Title: {}", summary.title);
+    println!("  API Version: {}", summary.api_version);
+    println!("  Primary Protocol: {}", summary.primary_protocol);
+    println!("  Channels: {}", summary.channel_count);
+    println!("\nSchema validated successfully!");
 }

@@ -243,19 +243,7 @@ fn ensure_sentence(text: &str) -> String {
 fn json_schema_to_python_type(schema: &Value) -> String {
     if let Some(type_str) = schema.get("type") {
         match type_str.as_str() {
-            Some("string") => {
-                if let Some(format) = schema.get("format") {
-                    match format.as_str() {
-                        Some("date-time") => "str  # ISO 8601 datetime".to_string(),
-                        Some("uuid") => "str  # UUID".to_string(),
-                        Some("email") => "str  # Email".to_string(),
-                        Some("date") => "str  # Date".to_string(),
-                        _ => "str".to_string(),
-                    }
-                } else {
-                    "str".to_string()
-                }
-            }
+            Some("string") => "str".to_string(),
             Some("number") => "float".to_string(),
             Some("integer") => "int".to_string(),
             Some("boolean") => "bool".to_string(),
@@ -270,7 +258,7 @@ fn json_schema_to_python_type(schema: &Value) -> String {
             _ => "Any".to_string(),
         }
     } else if schema.get("enum").is_some() {
-        "str  # Enum".to_string()
+        "str".to_string()
     } else {
         "Any".to_string()
     }

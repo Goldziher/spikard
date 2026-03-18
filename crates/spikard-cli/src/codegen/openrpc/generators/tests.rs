@@ -1,11 +1,12 @@
 //! Comprehensive tests for OpenRPC code generators.
 //!
-//! Tests cover all 4 language generators (Python, TypeScript, PHP, Ruby) with
+//! Tests cover all supported language generators with
 //! scenarios including basic generation, error handling, method routing,
 //! parameter validation, and cross-language parity.
 
 use super::{
-    OpenRpcGenerator, PhpOpenRpcGenerator, PythonOpenRpcGenerator, RubyOpenRpcGenerator, TypeScriptOpenRpcGenerator,
+    OpenRpcGenerator, PhpOpenRpcGenerator, PythonOpenRpcGenerator, RubyOpenRpcGenerator, RustOpenRpcGenerator,
+    TypeScriptOpenRpcGenerator,
 };
 use crate::codegen::openrpc::spec_parser::{
     OpenRpcError, OpenRpcInfo, OpenRpcMethod, OpenRpcParam, OpenRpcResult, OpenRpcSpec,
@@ -174,6 +175,32 @@ fn test_python_generator_validation_schemas() {
 }
 
 #[test]
+fn test_python_generator_preserves_msgspec_field_aliases() {
+    let mut spec = single_method_spec("user.getById");
+    spec.methods[0].params = vec![OpenRpcParam {
+        name: "userId".to_string(),
+        description: Some("User identifier".to_string()),
+        required: true,
+        schema: json!({
+            "type": "string",
+            "format": "uuid"
+        }),
+    }];
+
+    let generator = PythonOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(
+        output.contains("user_id: str = msgspec.field(name=\"userId\")"),
+        "Should emit a real msgspec alias for camelCase wire names"
+    );
+    assert!(
+        !output.contains("user_id: str  # UUID = msgspec.field(name=\"userId\")"),
+        "Type comments must not comment out msgspec alias definitions"
+    );
+}
+
+#[test]
 fn test_python_generator_empty_spec() {
     let spec = minimal_spec();
     let generator = PythonOpenRpcGenerator;
@@ -256,6 +283,18 @@ fn test_python_generator_executable_imports() {
 
     assert!(output.contains("\"\"\"JSON-RPC 2.0 handlers"), "Should have docstring");
     assert!(output.contains("if __name__ == \"__main__\""), "Should have main block");
+}
+
+#[test]
+fn test_rust_generator_emits_jsonrpc_router() {
+    let spec = spec_with_params("user.get", 1);
+    let generator = RustOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(output.contains("pub struct UserGetParams"));
+    assert!(output.contains("pub async fn handle_user_get"));
+    assert!(output.contains("pub async fn handle_jsonrpc_call"));
+    assert!(output.contains("pub fn register_jsonrpc_route"));
 }
 
 #[test]
