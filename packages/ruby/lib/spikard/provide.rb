@@ -143,6 +143,70 @@ module Spikard
     end
   end
 
+  # Internal helpers for resolving and caching DI dependencies.
+  module DependencyResolutionHelpers
+    UNRESOLVED_DEPENDENCY = Object.new.freeze
+
+    module_function
+
+    def build_resolution_context(*resolution_args)
+      dependencies, request_cache, singleton_cache, stack = resolution_args
+      {
+        dependencies:,
+        request_cache: request_cache || {},
+        singleton_cache: singleton_cache || {},
+        stack: stack || []
+      }
+    end
+
+    def resolve_factory_dependency(dep_def, request, context, resolver)
+      factory = dep_def[:factory]
+      depends_on = Array(dep_def[:depends_on]).map(&:to_s)
+      resolved_kwargs = resolver.call(
+        depends_on,
+        context[:dependencies],
+        request,
+        context[:request_cache],
+        context[:singleton_cache],
+        context[:stack]
+      )
+      invoke_factory(factory, depends_on, resolved_kwargs)
+    end
+
+    def fetch_dependency_definition(key, dependencies, stack)
+      dep_def = dependencies[key]
+      raise KeyError, "Missing dependency: #{key}" unless dep_def
+      raise ArgumentError, "Circular dependency detected: #{(stack + [key]).join(' -> ')}" if stack.include?(key)
+
+      dep_def
+    end
+
+    def lookup_cached_dependency(key, dep_def, request_cache, singleton_cache)
+      return singleton_cache[key] if dep_def[:singleton] && singleton_cache.key?(key)
+      return request_cache[key] if dep_def.fetch(:cacheable, true) && request_cache.key?(key)
+
+      UNRESOLVED_DEPENDENCY
+    end
+
+    def cache_dependency_value(key, dep_def, value, request_cache, singleton_cache)
+      singleton_cache[key] = value if dep_def[:singleton]
+      request_cache[key] = value if dep_def.fetch(:cacheable, true)
+    end
+
+    def invoke_factory(factory, depends_on, resolved_kwargs)
+      return factory.call if depends_on.empty?
+
+      parameters = factory.parameters
+      ordered_values = depends_on.map { |dependency_key| resolved_kwargs.fetch(dependency_key.to_sym) }
+
+      if parameters.any? { |type, _name| %i[key keyreq keyrest].include?(type) }
+        factory.call(**resolved_kwargs)
+      else
+        factory.call(*ordered_values)
+      end
+    end
+  end
+
   # Dependency injection handler wrapper
   #
   # Wraps a route handler to inject dependencies based on parameter names.
@@ -207,48 +271,27 @@ module Spikard
     # @param request [Hash] Request context (unused for now, future: per-request deps)
     # @return [Object] Resolved dependency value
     # @api private
-    def self.resolve_dependency(dep_def, request, dependencies = nil, request_cache = nil, singleton_cache = nil, stack = [])
-      request_cache ||= {}
-      singleton_cache ||= {}
+    def self.resolve_dependency(dep_def, request, *resolution_args)
+      context = DependencyResolutionHelpers.build_resolution_context(*resolution_args)
+      return dep_def[:value] if dep_def[:type] == :value
+      raise ArgumentError, "Unknown dependency type: #{dep_def[:type].inspect}" unless dep_def[:type] == :factory
 
-      case dep_def[:type]
-      when :value
-        dep_def[:value]
-      when :factory
-        factory = dep_def[:factory]
-        depends_on = Array(dep_def[:depends_on]).map(&:to_s)
-        resolved_kwargs = resolve_factory_dependencies(
-          depends_on,
-          dependencies,
-          request,
-          request_cache,
-          singleton_cache,
-          stack
-        )
-        invoke_factory(factory, depends_on, resolved_kwargs)
-      else
-        raise ArgumentError, "Unknown dependency type: #{dep_def[:type].inspect}"
-      end
+      DependencyResolutionHelpers.resolve_factory_dependency(
+        dep_def,
+        request,
+        context,
+        method(:resolve_factory_dependencies)
+      )
     end
 
     def self.resolve_dependency_by_key(key, dependencies, request, request_cache, singleton_cache, stack)
       key = key.to_s
-      dep_def = dependencies[key]
-      raise KeyError, "Missing dependency: #{key}" unless dep_def
-      raise ArgumentError, "Circular dependency detected: #{(stack + [key]).join(' -> ')}" if stack.include?(key)
-
-      if dep_def[:singleton] && singleton_cache.key?(key)
-        return singleton_cache[key]
-      end
-
-      if dep_def.fetch(:cacheable, true) && request_cache.key?(key)
-        return request_cache[key]
-      end
+      dep_def = DependencyResolutionHelpers.fetch_dependency_definition(key, dependencies, stack)
+      cached_value = DependencyResolutionHelpers.lookup_cached_dependency(key, dep_def, request_cache, singleton_cache)
+      return cached_value unless cached_value.equal?(DependencyResolutionHelpers::UNRESOLVED_DEPENDENCY)
 
       value = resolve_dependency(dep_def, request, dependencies, request_cache, singleton_cache, stack + [key])
-
-      singleton_cache[key] = value if dep_def[:singleton]
-      request_cache[key] = value if dep_def.fetch(:cacheable, true)
+      DependencyResolutionHelpers.cache_dependency_value(key, dep_def, value, request_cache, singleton_cache)
       value
     end
 
@@ -257,28 +300,15 @@ module Spikard
 
       raise ArgumentError, 'Dependency registry is required for nested dependency resolution' unless dependencies
 
-      depends_on.each_with_object({}) do |dependency_key, resolved|
-        resolved[dependency_key.to_sym] = resolve_dependency_by_key(
+      depends_on.to_h do |dependency_key|
+        [dependency_key.to_sym, resolve_dependency_by_key(
           dependency_key,
           dependencies,
           request,
           request_cache,
           singleton_cache,
           stack
-        )
-      end
-    end
-
-    def self.invoke_factory(factory, depends_on, resolved_kwargs)
-      return factory.call if depends_on.empty?
-
-      parameters = factory.parameters
-      ordered_values = depends_on.map { |dependency_key| resolved_kwargs.fetch(dependency_key.to_sym) }
-
-      if parameters.any? { |type, _name| %i[key keyreq keyrest].include?(type) }
-        factory.call(**resolved_kwargs)
-      else
-        factory.call(*ordered_values)
+        )]
       end
     end
   end

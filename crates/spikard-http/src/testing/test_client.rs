@@ -386,51 +386,49 @@ impl TestClient {
 
             let message_type = message.get("type").and_then(Value::as_str).unwrap_or_default();
             match message_type {
-                "next" => {
+                "next"
                     if message
                         .get("id")
                         .and_then(Value::as_str)
-                        .is_none_or(|id| id == operation_id)
+                        .is_none_or(|id| id == operation_id) =>
+                {
+                    event = message.get("payload").cloned();
+
+                    websocket
+                        .send_json(&serde_json::json!({
+                            "id": operation_id,
+                            "type": "complete",
+                        }))
+                        .await;
+
+                    if let Ok(next_message) = timeout(
+                        GRAPHQL_WS_MESSAGE_TIMEOUT,
+                        receive_graphql_protocol_message(&mut websocket),
+                    )
+                    .await
+                        && let Ok(next_message) = next_message
+                        && next_message.get("type").and_then(Value::as_str) == Some("complete")
+                        && next_message
+                            .get("id")
+                            .and_then(Value::as_str)
+                            .is_none_or(|id| id == operation_id)
                     {
-                        event = message.get("payload").cloned();
-
-                        websocket
-                            .send_json(&serde_json::json!({
-                                "id": operation_id,
-                                "type": "complete",
-                            }))
-                            .await;
-
-                        if let Ok(next_message) = timeout(
-                            GRAPHQL_WS_MESSAGE_TIMEOUT,
-                            receive_graphql_protocol_message(&mut websocket),
-                        )
-                        .await
-                            && let Ok(next_message) = next_message
-                            && next_message.get("type").and_then(Value::as_str) == Some("complete")
-                            && next_message
-                                .get("id")
-                                .and_then(Value::as_str)
-                                .is_none_or(|id| id == operation_id)
-                        {
-                            complete_received = true;
-                        }
-                        break;
+                        complete_received = true;
                     }
+                    break;
                 }
                 "error" => {
                     errors.push(message.get("payload").cloned().unwrap_or(message));
                     break;
                 }
-                "complete" => {
+                "complete"
                     if message
                         .get("id")
                         .and_then(Value::as_str)
-                        .is_none_or(|id| id == operation_id)
-                    {
-                        complete_received = true;
-                        break;
-                    }
+                        .is_none_or(|id| id == operation_id) =>
+                {
+                    complete_received = true;
+                    break;
                 }
                 "ping" => {
                     let mut pong = serde_json::json!({"type": "pong"});

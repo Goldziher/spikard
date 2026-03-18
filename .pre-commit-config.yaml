@@ -30,7 +30,7 @@ repos:
 
   # TOML formatting
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.16.2
+    rev: v2.19.0
     hooks:
       - id: pyproject-fmt
 
@@ -42,7 +42,7 @@ repos:
 
   # Python: ruff (linting + formatting) + mypy (type checking)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
+    rev: v0.15.6
     hooks:
       - id: ruff
         args: [--fix]
@@ -79,32 +79,6 @@ repos:
           "-D",
           "warnings",
         ]
-      - id: cargo-doc
-        args: [
-          "--no-deps",
-          "--document-private-items",
-          "--workspace",
-          "--exclude=spikard-php",
-          "--exclude=spikard-py",
-          "--exclude=spikard-node",
-          "--exclude=spikard-rb",
-          "--exclude=spikard-rb-macros",
-          "--exclude=spikard-elixir",
-          "--exclude=benchmark-harness",
-        ]
-      - id: cargo-fix
-        args: [
-          "--allow-dirty",
-          "--allow-staged",
-          "--workspace",
-          "--exclude=spikard-php",
-          "--exclude=spikard-py",
-          "--exclude=spikard-node",
-          "--exclude=spikard-rb",
-          "--exclude=spikard-rb-macros",
-          "--exclude=spikard-elixir",
-          "--exclude=benchmark-harness",
-        ]
 
   - repo: https://github.com/bnjbvr/cargo-machete
     rev: v0.9.1
@@ -119,7 +93,7 @@ repos:
 
   # JavaScript/TypeScript/JSON/CSS: biome (formatting + linting with autofixes)
   - repo: https://github.com/biomejs/pre-commit
-    rev: v2.4.4
+    rev: v2.4.7
     hooks:
       - id: biome-format
         exclude: ^tools/benchmark-harness/fixtures/

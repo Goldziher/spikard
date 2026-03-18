@@ -32,7 +32,7 @@ impl Handler for JsonOkHandler {
 struct UnaryGrpcHandler;
 
 impl GrpcHandler for UnaryGrpcHandler {
-    fn service_name(&self) -> &str {
+    fn service_name(&self) -> &'static str {
         "example.UserService"
     }
 

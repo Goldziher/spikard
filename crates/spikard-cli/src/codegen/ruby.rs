@@ -88,7 +88,11 @@ end
 
         if let Some(description) = &schema.schema_data.description {
             for line in description.lines() {
-                output.push_str(&format!("# {line}\n"));
+                if line.trim().is_empty() {
+                    output.push_str("#\n");
+                } else {
+                    output.push_str(&format!("# {}\n", line.trim_end()));
+                }
             }
         } else {
             output.push_str(&format!("# {class_name} model\n"));
@@ -288,7 +292,11 @@ end
 
         if let Some(description) = &operation.description {
             for line in description.lines() {
-                output.push_str(&format!("  # {line}\n"));
+                if line.trim().is_empty() {
+                    output.push_str("  #\n");
+                } else {
+                    output.push_str(&format!("  # {}\n", line.trim_end()));
+                }
             }
         }
 

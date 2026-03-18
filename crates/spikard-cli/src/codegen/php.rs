@@ -104,9 +104,18 @@ impl PhpGenerator {
 
     /// Append constructor method with typed properties
     fn append_constructor(&self, output: &mut String, obj: &openapiv3::ObjectType) -> Result<()> {
+        let (property_lines, property_docs) = self.build_constructor_params(obj)?;
+
+        if !property_docs.is_empty() {
+            output.push_str("    /**\n");
+            for doc_line in &property_docs {
+                output.push_str(doc_line);
+            }
+            output.push_str("     */\n");
+        }
+
         output.push_str("    public function __construct(\n");
 
-        let property_lines = self.build_constructor_params(obj)?;
         let props_str = property_lines.join("");
         let props_str = props_str.trim_end_matches(",\n").to_string() + "\n";
         output.push_str(&props_str);
@@ -117,42 +126,53 @@ impl PhpGenerator {
 
     /// Build constructor parameter declarations for object properties
     /// Partitions properties so required parameters come first (PHP 8.1+ requirement)
-    fn build_constructor_params(&self, obj: &openapiv3::ObjectType) -> Result<Vec<String>> {
+    fn build_constructor_params(&self, obj: &openapiv3::ObjectType) -> Result<(Vec<String>, Vec<String>)> {
         let mut required_props = Vec::new();
         let mut optional_props = Vec::new();
+        let mut required_docs = Vec::new();
+        let mut optional_docs = Vec::new();
 
         // First pass: partition properties into required and optional
         for (prop_name, prop_schema_ref) in &obj.properties {
             let is_required = obj.required.contains(prop_name);
             let field_name = Self::to_camel_case(prop_name);
 
-            let (type_hint, nullable) = match prop_schema_ref {
-                ReferenceOr::Item(prop_schema) => Self::schema_to_php_type(prop_schema, !is_required),
+            let (type_hint, nullable, phpdoc_type) = match prop_schema_ref {
+                ReferenceOr::Item(prop_schema) => {
+                    let (type_hint, nullable) = Self::schema_to_php_type(prop_schema, !is_required);
+                    let phpdoc_type = Self::schema_to_phpdoc_type(prop_schema, !is_required);
+                    (type_hint, nullable, phpdoc_type)
+                }
                 ReferenceOr::Reference { reference } => {
                     let ref_name = self.extract_ref_name(reference);
                     let ref_type = ref_name.to_pascal_case();
                     if is_required {
-                        (ref_type, false)
+                        (ref_type.clone(), false, ref_type)
                     } else {
-                        (format!("?{ref_type}"), true)
+                        (format!("?{ref_type}"), true, format!("{ref_type}|null"))
                     }
                 }
             };
 
             let prop_line = self.build_property_line(&type_hint, &field_name, is_required, nullable);
+            let doc_line = format!("     * @param {phpdoc_type} ${field_name}\n");
 
             if is_required {
                 required_props.push(prop_line);
+                required_docs.push(doc_line);
             } else {
                 optional_props.push(prop_line);
+                optional_docs.push(doc_line);
             }
         }
 
         // Combine: required first, then optional
         let mut property_lines = required_props;
         property_lines.extend(optional_props);
+        let mut property_docs = required_docs;
+        property_docs.extend(optional_docs);
 
-        Ok(property_lines)
+        Ok((property_lines, property_docs))
     }
 
     /// Build a single property parameter line for constructor
@@ -549,10 +569,24 @@ impl PhpGenerator {
     /// Append parameter documentation to `PHPDoc`
     fn append_parameter_docs(&self, output: &mut String, body_type: &Option<String>, return_type: &str) {
         if let Some(body_type_name) = body_type {
-            output.push_str(&format!("     * @param {body_type_name} $body\n"));
+            output.push_str(&format!(
+                "     * @param {} $body\n",
+                Self::phpdoc_type_for_native_hint(body_type_name)
+            ));
         }
-        output.push_str(&format!("     * @return {return_type}\n"));
+        output.push_str(&format!(
+            "     * @return {}\n",
+            Self::phpdoc_type_for_native_hint(return_type)
+        ));
         output.push_str("     */\n");
+    }
+
+    fn phpdoc_type_for_native_hint(type_hint: &str) -> String {
+        match type_hint {
+            "array" => "array<string, mixed>".to_string(),
+            "?array" => "array<string, mixed>|null".to_string(),
+            _ => type_hint.to_string(),
+        }
     }
 
     /// Append function signature to output

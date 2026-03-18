@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate README files for spikard crates and packages from Jinja2 templates.
 
 Uses scripts/readme_config.yaml for configuration and scripts/readme_templates/
@@ -21,14 +20,12 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    print("Error: PyYAML is required. Install with: pip install pyyaml jinja2")
-    sys.exit(1)
+    raise SystemExit("Error: PyYAML is required. Install with: pip install pyyaml jinja2") from None
 
 try:
-    from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+    from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 except ImportError:
-    print("Error: Jinja2 is required. Install with: pip install pyyaml jinja2")
-    sys.exit(1)
+    raise SystemExit("Error: Jinja2 is required. Install with: pip install pyyaml jinja2") from None
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -55,7 +52,7 @@ def load_config() -> dict:
     """Load and parse README configuration from YAML."""
     if not CONFIG_PATH.exists():
         raise FileNotFoundError(f"Configuration not found: {CONFIG_PATH}")
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+    with CONFIG_PATH.open(encoding="utf-8") as f:
         config = yaml.safe_load(f)
     if not config or "targets" not in config:
         raise ValueError("Configuration file is empty or missing 'targets'")
@@ -76,13 +73,17 @@ def setup_jinja_env() -> Environment:
     """Configure Jinja2 environment."""
     if not TEMPLATES_DIR.exists():
         raise FileNotFoundError(f"Templates directory not found: {TEMPLATES_DIR}")
-    env = Environment(
+    return Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
+        autoescape=select_autoescape(
+            enabled_extensions=("html", "xml"),
+            default=False,
+            default_for_string=False,
+        ),
         keep_trailing_newline=True,
         trim_blocks=True,
         lstrip_blocks=True,
     )
-    return env
 
 
 def resolve_content_files(target: dict) -> dict:
@@ -108,11 +109,10 @@ def generate_readme(
     template_name = target.get("template", "crate_readme.md.jinja")
     try:
         template = env.get_template(template_name)
-    except TemplateNotFound:
+    except TemplateNotFound as err:
         raise TemplateNotFound(
-            f"Template not found: {template_name}\n"
-            f"Expected at: {TEMPLATES_DIR / template_name}"
-        )
+            f"Template not found: {template_name}\nExpected at: {TEMPLATES_DIR / template_name}"
+        ) from err
 
     # Resolve content files
     resolved = resolve_content_files(target)
@@ -209,15 +209,9 @@ Examples:
         """,
     )
     parser.add_argument("--target", help="Generate only this target ID", metavar="ID")
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Preview without writing"
-    )
-    parser.add_argument(
-        "--validate", action="store_true", help="Check existing READMEs match templates"
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Verbose output"
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Preview without writing")
+    parser.add_argument("--validate", action="store_true", help="Check existing READMEs match templates")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     return parser.parse_args()
 
 
@@ -248,11 +242,10 @@ def main() -> int:
                 logger.info("All READMEs are up-to-date")
             else:
                 logger.error("Some READMEs are out of date. Run: python scripts/generate_readme.py")
+        elif success:
+            logger.info("README generation completed successfully")
         else:
-            if success:
-                logger.info("README generation completed successfully")
-            else:
-                logger.error("README generation completed with errors")
+            logger.error("README generation completed with errors")
 
         return 0 if success else 1
 

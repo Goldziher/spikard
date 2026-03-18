@@ -35,6 +35,11 @@ impl PythonGenerator {
     fn generate_header(&self) -> String {
         let mut header = String::new();
         header.push_str("from __future__ import annotations\n\n");
+        header.push_str("# ruff: noqa: B008, I001, INP001\n\n");
+
+        let uses_path = self.uses_path_params();
+        let uses_query = self.uses_query_params();
+        let uses_body = self.uses_request_body();
 
         match self.dto {
             PythonDtoStyle::Dataclass => {
@@ -46,10 +51,6 @@ impl PythonGenerator {
 
 from dataclasses import dataclass
 from typing import Any
-from spikard import Body, Path, Query, Request, Spikard, route
-
-app = Spikard()
-
 ",
                     self.spec.openapi, self.spec.info.title,
                 ));
@@ -61,18 +62,18 @@ app = Spikard()
 # Title: {}
 # DO NOT EDIT - regenerate from OpenAPI schema
 
-import msgspec
 from typing import Any
 
-from spikard import Body, Path, Query, Request, Spikard, route
-
-app = Spikard()
-
+import msgspec
 ",
                     self.spec.openapi, self.spec.info.title,
                 ));
             }
         }
+
+        header.push_str("from spikard import ");
+        header.push_str(&self.spikard_imports(uses_body, uses_path, uses_query));
+        header.push_str("\n\napp = Spikard()\n\n");
 
         header
     }
@@ -130,18 +131,24 @@ app = Spikard()
         let mut output = String::new();
         let class_name = name.to_pascal_case();
 
-        if let Some(description) = &schema.schema_data.description {
-            output.push_str(&format!("\"\"\" {description} \"\"\"\n"));
-        }
-
         output.push_str("@dataclass(slots=True, kw_only=True)\n");
         output.push_str(&format!("class {class_name}:\n"));
+        output.push_str(&format!(
+            "    \"\"\"{}\"\"\"\n",
+            ensure_sentence(
+                schema
+                    .schema_data
+                    .description
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+                    .unwrap_or("Generated OpenAPI schema model.")
+            )
+        ));
 
         match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
-                if obj.properties.is_empty() {
-                    output.push_str("    pass\n");
-                } else {
+                if !obj.properties.is_empty() {
                     for (prop_name, prop_schema_ref) in &obj.properties {
                         let is_required = obj.required.contains(prop_name);
                         let field_name = prop_name.to_snake_case();
@@ -155,7 +162,7 @@ app = Spikard()
                     }
                 }
             }
-            _ => output.push_str("    pass  # Unsupported schema type\n"),
+            _ => {}
         }
 
         Ok(output)
@@ -165,17 +172,23 @@ app = Spikard()
         let class_name = name.to_pascal_case();
         let mut output = String::new();
 
-        if let Some(description) = &schema.schema_data.description {
-            output.push_str(&format!("\"\"\" {description} \"\"\"\n"));
-        }
-
         output.push_str(&format!("class {class_name}(msgspec.Struct):\n"));
+        output.push_str(&format!(
+            "    \"\"\"{}\"\"\"\n",
+            ensure_sentence(
+                schema
+                    .schema_data
+                    .description
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+                    .unwrap_or("Generated OpenAPI schema model.")
+            )
+        ));
 
         match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
-                if obj.properties.is_empty() {
-                    output.push_str("    pass\n");
-                } else {
+                if !obj.properties.is_empty() {
                     for (prop_name, prop_schema_ref) in &obj.properties {
                         let is_required = obj.required.contains(prop_name);
                         let field_name = prop_name.to_snake_case();
@@ -190,9 +203,7 @@ app = Spikard()
                     }
                 }
             }
-            _ => {
-                output.push_str("    pass  # Unsupported schema type\n");
-            }
+            _ => {}
         }
 
         Ok(output)
@@ -306,6 +317,65 @@ app = Spikard()
         }
     }
 
+    fn uses_path_params(&self) -> bool {
+        self.spec.paths.paths.values().any(|path_item_ref| {
+            let ReferenceOr::Item(path_item) = path_item_ref else {
+                return false;
+            };
+
+            path_item.get.as_ref().is_some_and(operation_has_path_params)
+                || path_item.post.as_ref().is_some_and(operation_has_path_params)
+                || path_item.put.as_ref().is_some_and(operation_has_path_params)
+                || path_item.delete.as_ref().is_some_and(operation_has_path_params)
+                || path_item.patch.as_ref().is_some_and(operation_has_path_params)
+        })
+    }
+
+    fn uses_query_params(&self) -> bool {
+        self.spec.paths.paths.values().any(|path_item_ref| {
+            let ReferenceOr::Item(path_item) = path_item_ref else {
+                return false;
+            };
+
+            path_item.get.as_ref().is_some_and(operation_has_query_params)
+                || path_item.post.as_ref().is_some_and(operation_has_query_params)
+                || path_item.put.as_ref().is_some_and(operation_has_query_params)
+                || path_item.delete.as_ref().is_some_and(operation_has_query_params)
+                || path_item.patch.as_ref().is_some_and(operation_has_query_params)
+        })
+    }
+
+    fn uses_request_body(&self) -> bool {
+        self.spec.paths.paths.values().any(|path_item_ref| {
+            let ReferenceOr::Item(path_item) = path_item_ref else {
+                return false;
+            };
+
+            path_item.get.as_ref().is_some_and(operation_has_request_body)
+                || path_item.post.as_ref().is_some_and(operation_has_request_body)
+                || path_item.put.as_ref().is_some_and(operation_has_request_body)
+                || path_item.delete.as_ref().is_some_and(operation_has_request_body)
+                || path_item.patch.as_ref().is_some_and(operation_has_request_body)
+        })
+    }
+
+    fn spikard_imports(&self, uses_body: bool, uses_path: bool, uses_query: bool) -> String {
+        let mut imports = Vec::new();
+        if uses_body {
+            imports.push("Body");
+        }
+        if uses_path {
+            imports.push("Path");
+        }
+        if uses_query {
+            imports.push("Query");
+        }
+        imports.push("Request");
+        imports.push("Spikard");
+        imports.push("route");
+        imports.join(", ")
+    }
+
     fn generate_routes(&self) -> Result<String> {
         let mut output = String::new();
         output.push_str("\n# Route Handlers\n\n");
@@ -338,10 +408,6 @@ app = Spikard()
 
     fn generate_route_handler(&self, path: &str, method: &str, operation: &Operation) -> Result<String> {
         let mut output = String::new();
-
-        if let Some(summary) = &operation.summary {
-            output.push_str(&format!("\"\"\" {summary} \"\"\"\n"));
-        }
 
         let func_name = operation
             .operation_id
@@ -407,9 +473,9 @@ app = Spikard()
 
         output.push_str(&format!(") -> {return_type}:\n"));
 
-        if let Some(desc) = &operation.description {
-            output.push_str(&format!("    \"\"\"\n    {desc}\n    \"\"\"\n"));
-        }
+        let docstring =
+            summarize_operation_doc(operation).unwrap_or_else(|| format!("Handle {} {}.", method.to_uppercase(), path));
+        output.push_str(&format!("    \"\"\"{docstring}\"\"\"\n"));
 
         output.push_str("    raise NotImplementedError(\"TODO: Implement this endpoint\")\n\n");
 
@@ -426,4 +492,48 @@ if __name__ == "__main__":
 "#
         .to_string()
     }
+}
+
+fn summarize_operation_doc(operation: &Operation) -> Option<String> {
+    operation
+        .summary
+        .as_deref()
+        .or(operation.description.as_deref())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(|value| {
+            let collapsed = value.split_whitespace().collect::<Vec<_>>().join(" ");
+            if collapsed.ends_with(['.', '!', '?']) {
+                collapsed
+            } else {
+                format!("{collapsed}.")
+            }
+        })
+}
+
+fn ensure_sentence(text: &str) -> String {
+    let trimmed = text.trim();
+    if trimmed.ends_with(['.', '!', '?']) {
+        trimmed.to_string()
+    } else {
+        format!("{trimmed}.")
+    }
+}
+
+fn operation_has_path_params(operation: &Operation) -> bool {
+    operation
+        .parameters
+        .iter()
+        .any(|param_ref| matches!(param_ref, ReferenceOr::Item(Parameter::Path { .. })))
+}
+
+fn operation_has_query_params(operation: &Operation) -> bool {
+    operation
+        .parameters
+        .iter()
+        .any(|param_ref| matches!(param_ref, ReferenceOr::Item(Parameter::Query { .. })))
+}
+
+fn operation_has_request_body(operation: &Operation) -> bool {
+    operation.request_body.is_some()
 }

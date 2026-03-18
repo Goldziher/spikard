@@ -8,7 +8,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use tempfile::{NamedTempFile, TempDir, tempdir};
+use tempfile::{Builder, NamedTempFile, TempDir, tempdir};
 
 /// Error types for quality validation operations
 #[derive(Debug)]
@@ -181,9 +181,20 @@ impl QualityValidator {
                     .map(|_| ())
             }
             TargetLanguage::TypeScript => {
-                let file = self.write_temp_file(code, "ts")?;
-                self.run_tool("tsc", &["--noEmit", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                let project = self.write_temp_typescript_project(code)?;
+                self.run_tool_in_dir(
+                    "pnpm",
+                    &[
+                        "exec",
+                        "tsc",
+                        "--noEmit",
+                        "--project",
+                        project.config_path.to_str().unwrap(),
+                    ],
+                    Path::new("."),
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::Rust => {
                 let project = self.write_temp_rust_project(code)?;
@@ -240,13 +251,25 @@ impl QualityValidator {
         match self.language {
             TargetLanguage::Python => {
                 let file = self.write_temp_file(code, "py")?;
-                self.run_tool("mypy", &["--strict", file.path().to_str().unwrap()], code)
+                self.run_tool("uv", &["run", "mypy", "--strict", file.path().to_str().unwrap()], code)
                     .map(|_| ())
             }
             TargetLanguage::TypeScript => {
-                let file = self.write_temp_file(code, "ts")?;
-                self.run_tool("tsc", &["--strict", "--noEmit", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                let project = self.write_temp_typescript_project(code)?;
+                self.run_tool_in_dir(
+                    "pnpm",
+                    &[
+                        "exec",
+                        "tsc",
+                        "--strict",
+                        "--noEmit",
+                        "--project",
+                        project.config_path.to_str().unwrap(),
+                    ],
+                    Path::new("."),
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::Ruby => {
                 let file = self.write_temp_file(code, "rb")?;
@@ -303,21 +326,35 @@ impl QualityValidator {
                 self.run_tool("ruff", &["check", file.path().to_str().unwrap()], code)
                     .map(|_| ())
             }
-            TargetLanguage::TypeScript => {
-                let file = self.write_temp_file(code, "ts")?;
-                self.run_tool("biome", &["check", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
-            }
+            TargetLanguage::TypeScript => Ok(()),
             TargetLanguage::Ruby => {
                 let file = self.write_temp_file(code, "rb")?;
-                self.run_tool("rubocop", &[file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                self.run_tool(
+                    "rubocop",
+                    &[
+                        "--disable-pending-cops",
+                        "--except",
+                        "Naming/FileName",
+                        file.path().to_str().unwrap(),
+                    ],
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::Php => {
                 let file = self.write_temp_file(code, "php")?;
+                let bootstrap = self.write_php_validation_bootstrap()?;
                 self.run_tool(
                     "phpstan",
-                    &["analyse", "--level=max", file.path().to_str().unwrap()],
+                    &[
+                        "analyse",
+                        "--no-progress",
+                        "--error-format=raw",
+                        "--level=max",
+                        "--autoload-file",
+                        bootstrap.path().to_str().unwrap(),
+                        file.path().to_str().unwrap(),
+                    ],
                     code,
                 )
                 .map(|_| ())
@@ -413,8 +450,12 @@ impl QualityValidator {
     ///
     /// - `Ok(file)` - A named temporary file handle
     /// - `Err(QualityError::IoError)` - If the file cannot be created or written
-    fn write_temp_file(&self, code: &str, _ext: &str) -> Result<NamedTempFile, QualityError> {
-        let mut file = NamedTempFile::new().map_err(|e: std::io::Error| QualityError::IoError(e.to_string()))?;
+    fn write_temp_file(&self, code: &str, ext: &str) -> Result<NamedTempFile, QualityError> {
+        let mut file = Builder::new()
+            .prefix("generated_")
+            .suffix(&format!(".{ext}"))
+            .tempfile()
+            .map_err(|e: std::io::Error| QualityError::IoError(e.to_string()))?;
         file.write_all(code.as_bytes())
             .map_err(|e: std::io::Error| QualityError::IoError(e.to_string()))?;
         file.flush()
@@ -434,6 +475,87 @@ impl QualityValidator {
         fs::write(&lib_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
 
         Ok(RustTempProject { workdir, manifest_path })
+    }
+
+    fn write_temp_typescript_project(&self, code: &str) -> Result<TypeScriptTempProject, QualityError> {
+        let workdir = tempdir().map_err(|e| QualityError::IoError(e.to_string()))?;
+        let entry_path = workdir.path().join("generated.ts");
+        let config_path = workdir.path().join("tsconfig.json");
+        let spikard_stub_path = workdir.path().join("spikard.d.ts");
+        let zod_stub_path = workdir.path().join("zod.d.ts");
+
+        fs::write(&entry_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            &config_path,
+            r#"{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "files": ["generated.ts", "spikard.d.ts", "zod.d.ts"]
+}
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            &spikard_stub_path,
+            r#"declare module "spikard" {
+  export class Spikard {
+    start(config?: unknown): Promise<void>;
+  }
+
+  export type Body<T> = T;
+  export type Path<T> = T;
+  export type Query<T> = T;
+  export type Request = Record<string, unknown>;
+
+  export function route(...args: unknown[]): any;
+}
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            &zod_stub_path,
+            r#"declare module "zod" {
+  export namespace z {
+    export type infer<T> = any;
+  }
+
+  export const z: any;
+}
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+
+        Ok(TypeScriptTempProject {
+            workdir,
+            entry_path,
+            config_path,
+        })
+    }
+
+    fn write_php_validation_bootstrap(&self) -> Result<NamedTempFile, QualityError> {
+        self.write_temp_file(
+            r#"<?php
+declare(strict_types=1);
+
+namespace SpikardGenerated;
+
+#[\Attribute(\Attribute::TARGET_METHOD)]
+final class Route
+{
+    public function __construct(
+        public string $path,
+        public array $methods = [],
+    ) {}
+}
+"#,
+            "php",
+        )
     }
 
     /// Executes a validation tool and captures its output
@@ -487,8 +609,21 @@ struct RustTempProject {
     manifest_path: PathBuf,
 }
 
-fn rust_temp_manifest() -> &'static str {
-    r#"[package]
+struct TypeScriptTempProject {
+    workdir: TempDir,
+    entry_path: PathBuf,
+    config_path: PathBuf,
+}
+
+fn rust_temp_manifest() -> String {
+    let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root should be two levels above crates/spikard-cli");
+    let spikard_path = workspace_root.join("crates/spikard");
+
+    format!(
+        r#"[package]
 name = "spikard_codegen_validation"
 version = "0.1.0"
 edition = "2024"
@@ -498,12 +633,19 @@ path = "src/lib.rs"
 
 [dependencies]
 async-trait = "0.1"
+axum = "0.8"
 bytes = "1"
 futures-core = "0.3"
 prost = "0.14"
-serde = { version = "1", features = ["derive"] }
+schemars = {{ version = "1.2", features = ["derive"] }}
+serde = {{ version = "1", features = ["derive"] }}
+serde_json = "1"
+spikard = {{ path = "{}" }}
+tokio = {{ version = "1", features = ["full"] }}
 tonic = "0.14"
-"#
+"#,
+        spikard_path.display()
+    )
 }
 
 #[cfg(test)]

@@ -189,22 +189,22 @@ pub fn generate_openrpc_spec(
 }
 
 fn openrpc_servers(server_config: &crate::ServerConfig, endpoint_path: &str) -> Vec<OpenRpcServer> {
-    if let Some(openapi) = server_config.openapi.as_ref() {
-        if !openapi.servers.is_empty() {
-            return openapi
-                .servers
-                .iter()
-                .enumerate()
-                .map(|(idx, server)| OpenRpcServer {
-                    name: server
-                        .description
-                        .clone()
-                        .unwrap_or_else(|| format!("server-{}", idx + 1)),
-                    url: join_server_url(&server.url, endpoint_path),
-                    description: server.description.clone(),
-                })
-                .collect();
-        }
+    if let Some(openapi) = server_config.openapi.as_ref()
+        && !openapi.servers.is_empty()
+    {
+        return openapi
+            .servers
+            .iter()
+            .enumerate()
+            .map(|(idx, server)| OpenRpcServer {
+                name: server
+                    .description
+                    .clone()
+                    .unwrap_or_else(|| format!("server-{}", idx + 1)),
+                url: join_server_url(&server.url, endpoint_path),
+                description: server.description.clone(),
+            })
+            .collect();
     }
 
     vec![OpenRpcServer {

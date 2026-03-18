@@ -8,10 +8,10 @@
 		"start": "bun run server.ts"
 	},
 	"dependencies": {
-		"elysia": "^1.4.26"
+		"elysia": "^1.4.28"
 	},
 	"devDependencies": {
-		"@types/bun": "^1.3.9"
+		"@types/bun": "^1.3.10"
 	},
 	"engines": {
 		"bun": ">=1.0.0"

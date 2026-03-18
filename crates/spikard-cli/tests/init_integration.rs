@@ -489,7 +489,12 @@ fn test_init_ruby_next_steps() -> anyhow::Result<()> {
     assert!(response.next_steps.len() >= 3);
     assert!(response.next_steps[0].contains("cd ruby_steps"));
     assert!(response.next_steps.iter().any(|s| s.contains("bundle install")));
-    assert!(response.next_steps.iter().any(|s| s.contains("bundle exec ruby lib/ruby_steps.rb")));
+    assert!(
+        response
+            .next_steps
+            .iter()
+            .any(|s| s.contains("bundle exec ruby lib/ruby_steps.rb"))
+    );
 
     Ok(())
 }

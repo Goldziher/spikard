@@ -5,7 +5,6 @@
 #     "msgspec",
 # ]
 # ///
-
 [project]
 name = "litestar-benchmark"
 version = "0.1.0"

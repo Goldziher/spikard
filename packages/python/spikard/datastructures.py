@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import io
 from tempfile import SpooledTemporaryFile
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 try:
     from typing import Self
@@ -145,7 +145,7 @@ class UploadFile:
         Returns:
             File contents as bytes
         """
-        return await self._run_async_file_op("read", size)
+        return cast("bytes", await self._run_async_file_op("read", size))
 
     def seek(self, offset: int, whence: int = 0) -> int:
         """Seek to a position in the file synchronously.
@@ -169,7 +169,7 @@ class UploadFile:
         Returns:
             New absolute position
         """
-        return await self._run_async_file_op("seek", offset, whence)
+        return cast("int", await self._run_async_file_op("seek", offset, whence))
 
     def write(self, data: bytes) -> int:
         """Write data to the file synchronously.
@@ -197,7 +197,7 @@ class UploadFile:
             Number of bytes written
         """
         current_pos = self._file.tell()
-        bytes_written = await self._run_async_file_op("write", data)
+        bytes_written = cast("int", await self._run_async_file_op("write", data))
         end_pos = self._file.tell()
         self.size = max(self.size, end_pos)
         self._file.seek(current_pos + bytes_written)

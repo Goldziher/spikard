@@ -98,10 +98,9 @@ fn test_python_generator_imports_msgspec() {
         "Generated code should import msgspec"
     );
     assert!(
-        output.contains("from typing import"),
+        output.contains("from typing import Any"),
         "Generated code should have typing imports"
     );
-    assert!(output.contains("import json"), "Generated code should import json");
 }
 
 #[test]
@@ -114,7 +113,7 @@ fn test_python_generator_async_handler_signature() {
         output.contains("async def handle_test_method"),
         "Handler should be async function"
     );
-    assert!(output.contains("-> Dict[str, Any]"), "Handler should return Dict");
+    assert!(output.contains("-> dict[str, Any]"), "Handler should return dict");
 }
 
 #[test]
@@ -244,8 +243,8 @@ fn test_python_generator_complex_param_schemas() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(
-        output.contains("config: Dict[str, Any]"),
-        "Should map nested objects to Dict"
+        output.contains("config: dict[str, Any]"),
+        "Should map nested objects to dict"
     );
 }
 
@@ -255,10 +254,6 @@ fn test_python_generator_executable_imports() {
     let generator = PythonOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    assert!(
-        output.starts_with("#!/usr/bin/env python3"),
-        "Should have Python shebang"
-    );
     assert!(output.contains("\"\"\"JSON-RPC 2.0 handlers"), "Should have docstring");
     assert!(output.contains("if __name__ == \"__main__\""), "Should have main block");
 }

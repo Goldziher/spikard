@@ -44,20 +44,7 @@ PY
   fi
 }
 
-# Expect these to be passed as environment variables from Taskfile
-RBENV_VERSION="${RBENV_VERSION:-}"
-RBENV_BIN="${RBENV_BIN:-/opt/homebrew/bin/rbenv}"
 BUNDLE_UPDATE_TIMEOUT="${BUNDLE_UPDATE_TIMEOUT:-600}"
-
-USE_RBENV=0
-if command -v "$RBENV_BIN" >/dev/null 2>&1; then
-  USE_RBENV=1
-fi
-
-if [[ "$USE_RBENV" -eq 1 && -z "$RBENV_VERSION" ]]; then
-  echo "Error: RBENV_VERSION environment variable not set"
-  exit 1
-fi
 
 for app in hanami-api roda spikard-ruby; do
   echo "Updating $app..."
@@ -69,11 +56,6 @@ for app in hanami-api roda spikard-ruby; do
   fi
 
   cd "$app_dir"
-
-  if [[ "$USE_RBENV" -eq 1 ]]; then
-    run_with_timeout "$BUNDLE_UPDATE_TIMEOUT" env RBENV_VERSION="$RBENV_VERSION" "$RBENV_BIN" exec bundle update --all
-  else
-    run_with_timeout "$BUNDLE_UPDATE_TIMEOUT" bundle update --all
-  fi
+  run_with_timeout "$BUNDLE_UPDATE_TIMEOUT" bundle update --all
   cd - >/dev/null
 done

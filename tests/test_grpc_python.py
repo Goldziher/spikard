@@ -3,6 +3,8 @@
 Tests the PyO3 bridge between Python gRPC handlers and Rust's gRPC runtime.
 """
 
+from collections.abc import AsyncIterator
+
 import pytest
 
 
@@ -793,7 +795,7 @@ async def test_grpc_server_stream_handler_yields_multiple_responses() -> None:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             return GrpcResponse(payload=request.payload)
 
-        async def handle_server_stream(self, request: GrpcRequest):
+        async def handle_server_stream(self, request: GrpcRequest) -> AsyncIterator[GrpcResponse]:
             for item in (b"item1", b"item2", b"item3"):
                 yield GrpcResponse(payload=item, metadata={"method": request.method_name})
 
@@ -818,13 +820,11 @@ async def test_grpc_client_stream_handler_consumes_request_stream() -> None:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             return GrpcResponse(payload=request.payload)
 
-        async def handle_client_stream(self, request_stream):
-            payloads = []
-            async for request in request_stream:
-                payloads.append(request.payload.decode())
+        async def handle_client_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> GrpcResponse:
+            payloads = [request.payload.decode() async for request in request_stream]
             return GrpcResponse(payload=(",".join(payloads)).encode())
 
-    async def request_stream():
+    async def request_stream() -> AsyncIterator[GrpcRequest]:
         for payload in (b"one", b"two", b"three"):
             yield GrpcRequest(service_name="test.StreamService", method_name="Upload", payload=payload)
 
@@ -900,14 +900,14 @@ async def test_grpc_bidi_stream_handler_can_stop_on_cancel_signal() -> None:
         async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
             return GrpcResponse(payload=request.payload)
 
-        async def handle_bidi_stream(self, request_stream):
+        async def handle_bidi_stream(self, request_stream: AsyncIterator[GrpcRequest]) -> AsyncIterator[GrpcResponse]:
             async for request in request_stream:
                 if request.payload == b"cancel":
                     yield GrpcResponse(payload=b"cancelled")
                     return
                 yield GrpcResponse(payload=b"echo:" + request.payload)
 
-    async def request_stream():
+    async def request_stream() -> AsyncIterator[GrpcRequest]:
         yield GrpcRequest(service_name="test.BidiService", method_name="Chat", payload=b"first")
         yield GrpcRequest(service_name="test.BidiService", method_name="Chat", payload=b"cancel")
         yield GrpcRequest(service_name="test.BidiService", method_name="Chat", payload=b"ignored")

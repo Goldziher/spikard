@@ -38,8 +38,8 @@ pyo3 = { version = "0.28", features = ["abi3-py310"] }
 pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
 
 # CLI dependencies
-clap = { version = "4.5", features = ["derive"] }
-clap_complete = "4.5"
+clap = { version = "4.6", features = ["derive"] }
+clap_complete = "4.6"
 clap_mangen = "0.2"
 
 # HTTP dependencies
@@ -79,7 +79,7 @@ serde_json = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 http = "1.4"
-jsonschema = { version = "0.43", default-features = false }
+jsonschema = { version = "0.45", default-features = false }
 flate2 = { version = "1.1", default-features = false, features = [
   "rust_backend",
 ] }

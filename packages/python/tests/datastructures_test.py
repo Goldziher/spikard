@@ -12,10 +12,14 @@ from __future__ import annotations
 
 import io
 from collections.abc import Callable
+from typing import ParamSpec, TypeVar
 
 import pytest
 
 from spikard.datastructures import UploadFile
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 # TestUploadFileRolledToDisk tests
 
@@ -162,9 +166,9 @@ async def test_upload_file_async_disk_backed_operations_use_thread_offload(
     )
     calls: list[str] = []
 
-    async def fake_to_thread(func: Callable[..., object], *args: object) -> object:
+    async def fake_to_thread(func: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T:
         calls.append(func.__name__)
-        return func(*args)
+        return func(*args, **kwargs)
 
     monkeypatch.setattr("spikard.datastructures.asyncio.to_thread", fake_to_thread)
 

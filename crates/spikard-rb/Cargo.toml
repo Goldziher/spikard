@@ -33,7 +33,7 @@ bytes = "1.11"
 cookie = "0.18"
 tokio = { workspace = true }
 tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
-tungstenite = "0.28"
+tungstenite = "0.29"
 tracing = "0.1"
 serde_qs = "1.0"
 urlencoding = "2.1"

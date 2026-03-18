@@ -10,9 +10,7 @@ use ext_php_rs::prelude::*;
 use ext_php_rs::types::{ZendHashTable, Zval};
 use serde_json::Value;
 use spikard_http::server::build_router_with_handlers_and_config;
-use spikard_http::{
-    Handler, HandlerResult, Method, ParameterValidator, Route, Router, SchemaRegistry, ServerConfig,
-};
+use spikard_http::{Handler, HandlerResult, Method, ParameterValidator, Route, Router, SchemaRegistry, ServerConfig};
 use std::collections::HashMap;
 use std::sync::Arc;
 

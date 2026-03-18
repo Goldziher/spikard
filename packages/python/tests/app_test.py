@@ -15,8 +15,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 import spikard.routing as routing_module
-from spikard import app as app_module
 from spikard import Spikard
+from spikard import app as app_module
 from spikard.config import ServerConfig
 from spikard.grpc import GrpcService
 from spikard.params import Query

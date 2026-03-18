@@ -3,7 +3,6 @@
 #     "msgspec>=0.20.0",
 # ]
 # ///
-
 [project]
 name = "spikard-python-benchmark"
 version = "0.1.0"

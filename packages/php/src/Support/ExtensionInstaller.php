@@ -27,20 +27,20 @@ final class ExtensionInstaller
      */
     public function __construct(string $projectRoot, ?array $env = null, ?string $packageVersion = null)
     {
-        $this->projectRoot = rtrim($projectRoot, '/');
+        $this->projectRoot = \rtrim($projectRoot, '/');
         $this->env = $env ?? $_ENV + $_SERVER;
         $this->packageVersionOverride = $packageVersion;
         $this->composerVersion = $this->detectComposerVersion();
         $this->osName = PHP_OS_FAMILY;
         $this->phpVersion = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
-        $this->arch = $this->normalizeArch(php_uname('m'));
+        $this->arch = $this->normalizeArch(\php_uname('m'));
     }
 
     public function install(): bool
     {
         $this->printHeader();
 
-        if (extension_loaded('spikard') || extension_loaded('spikard_php')) {
+        if (\extension_loaded('spikard') || \extension_loaded('spikard_php')) {
             echo "Extension already loaded.\n";
             return true;
         }
@@ -65,17 +65,17 @@ final class ExtensionInstaller
 
     public function assetFileName(): string
     {
-        return sprintf('php-extension-%s-%s.tar.gz', $this->osLabel(), $this->phpVersion);
+        return \sprintf('php-extension-%s-%s.tar.gz', $this->osLabel(), $this->phpVersion);
     }
 
     public function releaseAssetUrl(): string
     {
-        return rtrim($this->releaseBaseUrl(), '/') . '/' . $this->assetFileName();
+        return \rtrim($this->releaseBaseUrl(), '/') . '/' . $this->assetFileName();
     }
 
     public function platformKey(): string
     {
-        return sprintf('%s-%s-%s', $this->osLabel(), $this->arch, $this->phpVersion);
+        return \sprintf('%s-%s-%s', $this->osLabel(), $this->arch, $this->phpVersion);
     }
 
     private function printHeader(): void
@@ -88,22 +88,22 @@ final class ExtensionInstaller
 
     private function detectComposerVersion(): string
     {
-        if (is_string($this->packageVersionOverride) && $this->packageVersionOverride !== '') {
+        if (\is_string($this->packageVersionOverride) && $this->packageVersionOverride !== '') {
             return $this->packageVersionOverride;
         }
 
         $composerJsonPath = $this->projectRoot . '/composer.json';
-        if (!is_file($composerJsonPath)) {
+        if (!\is_file($composerJsonPath)) {
             return 'unknown';
         }
 
-        $json = file_get_contents($composerJsonPath);
+        $json = \file_get_contents($composerJsonPath);
         if ($json === false) {
             return 'unknown';
         }
 
-        $data = json_decode($json, true);
-        return is_array($data) && isset($data['version']) && is_string($data['version'])
+        $data = \json_decode($json, true);
+        return \is_array($data) && isset($data['version']) && \is_string($data['version'])
             ? $data['version']
             : 'unknown';
     }
@@ -113,18 +113,18 @@ final class ExtensionInstaller
         return match ($arch) {
             'x86_64', 'AMD64' => 'x86_64',
             'arm64', 'aarch64' => 'arm64',
-            default => strtolower($arch),
+            default => \strtolower($arch),
         };
     }
 
     private function releaseBaseUrl(): string
     {
         $override = $this->env['SPIKARD_PHP_RELEASE_BASE_URL'] ?? null;
-        if (is_string($override) && $override !== '') {
+        if (\is_string($override) && $override !== '') {
             return $override;
         }
 
-        return sprintf(
+        return \sprintf(
             'https://github.com/%s/releases/download/%s',
             self::REPOSITORY,
             $this->releaseTag()
@@ -137,7 +137,7 @@ final class ExtensionInstaller
             return 'latest';
         }
 
-        return str_starts_with($this->composerVersion, 'v')
+        return \str_starts_with($this->composerVersion, 'v')
             ? $this->composerVersion
             : 'v' . $this->composerVersion;
     }
@@ -148,7 +148,7 @@ final class ExtensionInstaller
             'Linux' => 'linux',
             'Darwin' => 'macos',
             'Windows' => 'windows',
-            default => strtolower($this->osName),
+            default => \strtolower($this->osName),
         };
     }
 
@@ -156,7 +156,7 @@ final class ExtensionInstaller
     {
         $target = $this->createTempArchivePath();
         $source = $this->releaseAssetUrl();
-        if (!@copy($source, $target)) {
+        if (!@\copy($source, $target)) {
             return null;
         }
 
@@ -165,27 +165,27 @@ final class ExtensionInstaller
 
     private function createTempArchivePath(): string
     {
-        $tmp = tempnam(sys_get_temp_dir(), 'spikard-php-');
+        $tmp = \tempnam(\sys_get_temp_dir(), 'spikard-php-');
         if ($tmp === false) {
             throw new RuntimeException('Unable to allocate temporary archive path');
         }
 
-        unlink($tmp);
+        \unlink($tmp);
         return $tmp . '.tar.gz';
     }
 
     private function extractLibrary(string $archivePath): ?string
     {
         $extractDir = $this->extractionRoot();
-        $tarPath = substr($archivePath, 0, -3);
+        $tarPath = \substr($archivePath, 0, -3);
 
         try {
-            if (!is_dir($extractDir) && !mkdir($extractDir, 0777, true) && !is_dir($extractDir)) {
+            if (!\is_dir($extractDir) && !\mkdir($extractDir, 0777, true) && !\is_dir($extractDir)) {
                 return null;
             }
 
-            if (is_file($tarPath)) {
-                unlink($tarPath);
+            if (\is_file($tarPath)) {
+                \unlink($tarPath);
             }
 
             $archive = new PharData($archivePath);
@@ -227,20 +227,20 @@ final class ExtensionInstaller
 
     private function isSharedLibrary(string $path): bool
     {
-        return str_ends_with($path, '.so')
-            || str_ends_with($path, '.dylib')
-            || str_ends_with($path, '.dll');
+        return \str_ends_with($path, '.so')
+            || \str_ends_with($path, '.dylib')
+            || \str_ends_with($path, '.dll');
     }
 
     private function installLibrary(string $sourcePath): ?string
     {
         $targetDir = $this->extensionInstallDir();
-        if (!is_dir($targetDir) && !mkdir($targetDir, 0777, true) && !is_dir($targetDir)) {
+        if (!\is_dir($targetDir) && !\mkdir($targetDir, 0777, true) && !\is_dir($targetDir)) {
             return null;
         }
 
         $targetPath = $targetDir . '/' . $this->installedLibraryName($sourcePath);
-        if (!copy($sourcePath, $targetPath)) {
+        if (!\copy($sourcePath, $targetPath)) {
             return null;
         }
 
@@ -250,8 +250,8 @@ final class ExtensionInstaller
     private function extensionInstallDir(): string
     {
         $override = $this->env['SPIKARD_PHP_EXTENSION_DIR'] ?? null;
-        if (is_string($override) && $override !== '') {
-            return rtrim($override, '/');
+        if (\is_string($override) && $override !== '') {
+            return \rtrim($override, '/');
         }
 
         return $this->projectRoot . '/build/php-extension/lib';
@@ -260,8 +260,8 @@ final class ExtensionInstaller
     private function installedLibraryName(string $sourcePath): string
     {
         return match (true) {
-            str_ends_with($sourcePath, '.dll') => 'spikard.dll',
-            str_ends_with($sourcePath, '.dylib') => 'spikard.dylib',
+            \str_ends_with($sourcePath, '.dll') => 'spikard.dll',
+            \str_ends_with($sourcePath, '.dylib') => 'spikard.dylib',
             default => 'spikard.so',
         };
     }
@@ -275,7 +275,7 @@ final class ExtensionInstaller
         }
 
         $contents = "; generated by Spikard installer\nextension=" . $this->quoteIniPath($installedPath) . "\n";
-        if (file_put_contents($iniPath, $contents) === false) {
+        if (\file_put_contents($iniPath, $contents) === false) {
             $this->printManualActivation($installedPath);
             return false;
         }
@@ -288,18 +288,18 @@ final class ExtensionInstaller
     private function resolveIniPath(): ?string
     {
         $iniFile = $this->env['SPIKARD_PHP_INI_FILE'] ?? null;
-        if (is_string($iniFile) && $iniFile !== '') {
+        if (\is_string($iniFile) && $iniFile !== '') {
             return $iniFile;
         }
 
         $iniDir = $this->env['SPIKARD_PHP_INI_DIR'] ?? null;
-        if (is_string($iniDir) && $iniDir !== '') {
-            return rtrim($iniDir, '/') . '/99-spikard.ini';
+        if (\is_string($iniDir) && $iniDir !== '') {
+            return \rtrim($iniDir, '/') . '/99-spikard.ini';
         }
 
         foreach ($this->scannedIniDirectories() as $directory) {
-            if (is_dir($directory) && is_writable($directory)) {
-                return rtrim($directory, '/') . '/99-spikard.ini';
+            if (\is_dir($directory) && \is_writable($directory)) {
+                return \rtrim($directory, '/') . '/99-spikard.ini';
             }
         }
 
@@ -311,27 +311,27 @@ final class ExtensionInstaller
      */
     private function scannedIniDirectories(): array
     {
-        $scanned = php_ini_scanned_files();
+        $scanned = \php_ini_scanned_files();
         if ($scanned === false) {
             return [];
         }
 
         $directories = [];
-        foreach (explode(',', $scanned) as $file) {
-            $file = trim($file);
+        foreach (\explode(',', $scanned) as $file) {
+            $file = \trim($file);
             if ($file === '') {
                 continue;
             }
 
-            $directories[] = dirname($file);
+            $directories[] = \dirname($file);
         }
 
-        return array_values(array_unique($directories));
+        return \array_values(\array_unique($directories));
     }
 
     private function quoteIniPath(string $installedPath): string
     {
-        return '"' . str_replace('\\', '/', $installedPath) . '"';
+        return '"' . \str_replace('\\', '/', $installedPath) . '"';
     }
 
     private function finishUnavailable(): bool
@@ -348,6 +348,6 @@ final class ExtensionInstaller
         echo "Installed extension library to {$installedPath}\n";
         echo "Automatic INI activation was not possible.\n";
         echo "Create a PHP INI file with:\n";
-        echo "  extension=" . $this->quoteIniPath($installedPath) . "\n";
+        echo '  extension=' . $this->quoteIniPath($installedPath) . "\n";
     }
 }

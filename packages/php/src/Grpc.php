@@ -80,8 +80,7 @@ final class Grpc
         string $message,
         int|string|array $statusOrMetadata = [],
         array $metadata = []
-    ): Response
-    {
+    ): Response {
         return Response::error($message, $statusOrMetadata, $metadata);
     }
 }

@@ -45,7 +45,7 @@ prost-types = "0.14"                # Protocol Buffers well-known types
 prost-reflect = "0.16"              # Protocol Buffers reflection
 protox = "0.9"                      # Protocol Buffers compilation
 heck = "0.5"                        # For case conversion (snake_case, PascalCase)
-tempfile = "3.26"                   # For quality validation temporary files
+tempfile = "3.27"                   # For quality validation temporary files
 
 # Optional language-specific dependencies
 pyo3 = { workspace = true, optional = true }
@@ -59,8 +59,8 @@ ruby = []                                                     # Reserved feature
 all = ["python", "node", "ruby"]
 
 [dev-dependencies]
-tempfile = "3.26"
-assert_cmd = "2.1"
+tempfile = "3.27"
+assert_cmd = "2.2"
 predicates = "3.1"
 
 [package.metadata.cargo-machete]

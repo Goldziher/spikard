@@ -60,11 +60,11 @@ final class ExtensionInstallerPlugin implements EventSubscriberInterface, Plugin
                 $this->detectPackageVersion($packageRoot),
             );
 
-            ob_start();
+            \ob_start();
             $installed = $installer->install();
-            $output = ob_get_clean();
+            $output = \ob_get_clean();
 
-            if (is_string($output) && $output !== '') {
+            if (\is_string($output) && $output !== '') {
                 $this->io->write($output, false);
             }
 
@@ -72,11 +72,11 @@ final class ExtensionInstallerPlugin implements EventSubscriberInterface, Plugin
                 $this->io->writeError('<warning>Spikard extension auto-install did not complete. See installer output above.</warning>');
             }
         } catch (Throwable $exception) {
-            if (ob_get_level() > 0) {
-                ob_end_clean();
+            if (\ob_get_level() > 0) {
+                \ob_end_clean();
             }
             $this->io->writeError(
-                sprintf(
+                \sprintf(
                     '<warning>Spikard extension auto-install failed: %s</warning>',
                     $exception->getMessage(),
                 ),
@@ -87,36 +87,36 @@ final class ExtensionInstallerPlugin implements EventSubscriberInterface, Plugin
     private function projectRoot(): string
     {
         $vendorDir = $this->composer->getConfig()->get('vendor-dir');
-        if (!is_string($vendorDir) || $vendorDir === '') {
-            return getcwd() ?: self::packageRoot();
+        if (!\is_string($vendorDir) || $vendorDir === '') {
+            return \getcwd() ?: self::packageRoot();
         }
 
-        return dirname($vendorDir);
+        return \dirname($vendorDir);
     }
 
     private function detectPackageVersion(string $packageRoot): ?string
     {
         $composerJsonPath = $packageRoot . '/composer.json';
-        if (!is_file($composerJsonPath)) {
+        if (!\is_file($composerJsonPath)) {
             return null;
         }
 
-        $contents = file_get_contents($composerJsonPath);
-        if (!is_string($contents) || $contents === '') {
+        $contents = \file_get_contents($composerJsonPath);
+        if (!\is_string($contents) || $contents === '') {
             return null;
         }
 
-        $data = json_decode($contents, true);
-        if (!is_array($data)) {
+        $data = \json_decode($contents, true);
+        if (!\is_array($data)) {
             return null;
         }
 
         $version = $data['version'] ?? null;
-        return is_string($version) && $version !== '' ? $version : null;
+        return \is_string($version) && $version !== '' ? $version : null;
     }
 
     private static function packageRoot(): string
     {
-        return dirname(__DIR__, 2);
+        return \dirname(__DIR__, 2);
     }
 }
