@@ -60,7 +60,7 @@ jobs:
           cache-key-prefix: node-bindings
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -101,7 +101,7 @@ jobs:
           cache-key-prefix: node-tests
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -199,7 +199,7 @@ jobs:
           node-version: "24"
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
 
       - name: Setup Python
         uses: ./.github/actions/setup-python-env
