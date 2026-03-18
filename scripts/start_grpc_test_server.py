@@ -17,9 +17,11 @@ Usage:
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import contextlib
 import json
+import os
 import signal
 import sys
 import time
@@ -394,5 +396,17 @@ async def serve(port: int = 50051) -> None:
     await server.stop(grace=2.0)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Start the fixture-driven gRPC test server.")
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("SPIKARD_GRPC_TEST_SERVER_PORT", "50051")),
+        help="Port to bind the gRPC fixture server to.",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    asyncio.run(serve())
+    args = parse_args()
+    asyncio.run(serve(port=args.port))

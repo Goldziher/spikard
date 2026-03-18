@@ -3,6 +3,8 @@
 require 'spec_helper'
 require 'json'
 require 'rspec'
+require 'socket'
+require 'timeout'
 require_relative 'support/grpc_test_client'
 
 ##
@@ -288,8 +290,67 @@ CLIENT_STREAMING_FIXTURES = load_fixtures_by_category('client').freeze
 BIDIRECTIONAL_FIXTURES = load_fixtures_by_category('bidirectional').freeze
 ERROR_FIXTURES = load_fixtures_by_category('errors').freeze
 
+def reserve_grpc_test_port
+  server = TCPServer.new('127.0.0.1', 0)
+  server.addr[1]
+ensure
+  server&.close
+end
+
+def wait_for_grpc_test_server(host, port, timeout_seconds = 15)
+  Timeout.timeout(timeout_seconds) do
+    loop do
+      begin
+        socket = TCPSocket.new(host, port)
+        socket.close
+        return
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+        sleep 0.2
+      end
+    end
+  end
+end
+
+def resolve_python_executable
+  repo_root = File.expand_path('../../..', __dir__)
+  venv_from_env = ENV['VIRTUAL_ENV'] && File.join(ENV['VIRTUAL_ENV'], 'bin', 'python')
+  venv_from_repo = File.join(repo_root, '.venv', 'bin', 'python')
+
+  return venv_from_env if venv_from_env && File.exist?(venv_from_env)
+  return venv_from_repo if File.exist?(venv_from_repo)
+
+  ENV.fetch('PYTHON', 'python3')
+end
+
 RSpec.describe 'gRPC Streaming Fixtures' do
-  let(:server_address) { 'localhost:50051' }
+  before(:context) do
+    repo_root = File.expand_path('../../..', __dir__)
+    script_path = File.join(repo_root, 'scripts', 'start_grpc_test_server.py')
+    port = reserve_grpc_test_port
+
+    @server_address = "127.0.0.1:#{port}"
+    @grpc_server_pid = Process.spawn(
+      resolve_python_executable,
+      script_path,
+      '--port', port.to_s,
+      chdir: repo_root,
+      out: File::NULL,
+      err: File::NULL
+    )
+
+    wait_for_grpc_test_server('127.0.0.1', port)
+  end
+
+  after(:context) do
+    next unless @grpc_server_pid
+
+    Process.kill('TERM', @grpc_server_pid)
+    Process.wait(@grpc_server_pid)
+  rescue Errno::ESRCH, Errno::ECHILD
+    nil
+  end
+
+  let(:server_address) { @server_address }
 
   describe 'Server Streaming' do
     SERVER_STREAMING_FIXTURES.each do |fixture|

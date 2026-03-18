@@ -31,11 +31,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GrpcTestClient } from "./grpc_test_client";
 
 const GRPC_SERVER_HOST = "127.0.0.1";
-const GRPC_SERVER_PORT = 50051;
 const GRPC_SERVER_TIMEOUT_MS = 15000;
 
 let grpcServerProcess: ChildProcess | null = null;
-let startedGrpcServer = false;
+let grpcServerAddress = "";
 
 function isPortOpen(host: string, port: number): Promise<boolean> {
 	return new Promise((resolve) => {
@@ -62,6 +61,30 @@ async function waitForPort(host: string, port: number, timeoutMs: number): Promi
 	throw new Error(`gRPC fixture server did not start within ${timeoutMs}ms`);
 }
 
+function reserveGrpcServerPort(): Promise<number> {
+	return new Promise((resolve, reject) => {
+		const server = net.createServer();
+
+		server.on("error", reject);
+		server.listen(0, GRPC_SERVER_HOST, () => {
+			const address = server.address();
+			if (!address || typeof address === "string") {
+				server.close(() => reject(new Error("Failed to reserve a gRPC fixture port")));
+				return;
+			}
+
+			const { port } = address;
+			server.close((error) => {
+				if (error) {
+					reject(error);
+					return;
+				}
+				resolve(port);
+			});
+		});
+	});
+}
+
 function resolvePythonExecutable(): string {
 	const repoRoot = join(__dirname, "../../..");
 	const venvFromEnv = process.env.VIRTUAL_ENV ? join(process.env.VIRTUAL_ENV, "bin", "python") : null;
@@ -79,22 +102,23 @@ function resolvePythonExecutable(): string {
 }
 
 async function ensureGrpcServerRunning(): Promise<void> {
-	if (await isPortOpen(GRPC_SERVER_HOST, GRPC_SERVER_PORT)) {
+	if (grpcServerAddress.length > 0 && grpcServerProcess && !grpcServerProcess.killed) {
 		return;
 	}
 
 	const repoRoot = join(__dirname, "../../..");
 	const scriptPath = join(repoRoot, "scripts", "start_grpc_test_server.py");
 	const python = resolvePythonExecutable();
+	const port = await reserveGrpcServerPort();
+	grpcServerAddress = `${GRPC_SERVER_HOST}:${port}`;
 
-	grpcServerProcess = spawn(python, [scriptPath], {
+	grpcServerProcess = spawn(python, [scriptPath, "--port", String(port)], {
 		cwd: repoRoot,
 		stdio: "ignore",
 		env: { ...process.env },
 	});
 
-	startedGrpcServer = true;
-	await waitForPort(GRPC_SERVER_HOST, GRPC_SERVER_PORT, GRPC_SERVER_TIMEOUT_MS);
+	await waitForPort(GRPC_SERVER_HOST, port, GRPC_SERVER_TIMEOUT_MS);
 }
 
 /**
@@ -432,7 +456,7 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-	if (startedGrpcServer && grpcServerProcess) {
+	if (grpcServerProcess) {
 		grpcServerProcess.kill("SIGTERM");
 	}
 });
@@ -441,7 +465,7 @@ describe("gRPC Server Streaming Fixtures", () => {
 	let client: GrpcTestClient;
 
 	beforeAll(() => {
-		client = new GrpcTestClient("localhost:50051");
+		client = new GrpcTestClient(grpcServerAddress);
 	});
 
 	afterAll(() => {
@@ -509,7 +533,7 @@ describe("gRPC Client Streaming Fixtures", () => {
 	let client: GrpcTestClient;
 
 	beforeAll(() => {
-		client = new GrpcTestClient("localhost:50051");
+		client = new GrpcTestClient(grpcServerAddress);
 	});
 
 	afterAll(() => {
@@ -550,7 +574,7 @@ describe("gRPC Bidirectional Streaming Fixtures", () => {
 	let client: GrpcTestClient;
 
 	beforeAll(() => {
-		client = new GrpcTestClient("localhost:50051");
+		client = new GrpcTestClient(grpcServerAddress);
 	});
 
 	afterAll(() => {
@@ -618,7 +642,7 @@ describe("gRPC Error Handling Fixtures", () => {
 	let client: GrpcTestClient;
 
 	beforeAll(() => {
-		client = new GrpcTestClient("localhost:50051");
+		client = new GrpcTestClient(grpcServerAddress);
 	});
 
 	afterAll(() => {

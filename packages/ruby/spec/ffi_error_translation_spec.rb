@@ -507,7 +507,7 @@ RSpec.describe 'FFI Error Boundary Safety' do
       app = Spikard::App.new
       app.provide(:failing_dep) { raise StandardError, 'Dep failed' }
       app.post('/dep_fail', handler_name: :dep_fail_handler)
-      app.handler(:dep_fail_handler) { |_p, _q, _b| { ok: true } }
+      app.handler(:dep_fail_handler) { |_p, _q, _b, failing_dep:| { dep: failing_dep } }
 
       client = Spikard::Testing.create_test_client(app)
       response = client.post('/dep_fail', {})

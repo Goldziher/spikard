@@ -49,8 +49,62 @@ final class GrpcFixturesTest extends TestCase
         'UNAUTHENTICATED' => 16,
     ];
     private const FIXTURES_DIR = __DIR__ . '/../../../testing_data/protobuf/streaming';
+    private const GRPC_SERVER_HOST = '127.0.0.1';
+    private const GRPC_SERVER_TIMEOUT_SECONDS = 15;
 
     private GrpcTestClient $client;
+    /** @var resource|null */
+    private static $grpcServerProcess = null;
+    private static string $serverAddress = 'localhost:50051';
+
+    public static function setUpBeforeClass(): void
+    {
+        parent::setUpBeforeClass();
+
+        if (!\extension_loaded('grpc')) {
+            return;
+        }
+
+        $port = self::reserveGrpcServerPort();
+        self::$serverAddress = self::GRPC_SERVER_HOST . ':' . (string) $port;
+
+        $repoRoot = self::repoRoot();
+        $command = [
+            self::resolvePythonExecutable(),
+            $repoRoot . '/scripts/start_grpc_test_server.py',
+            '--port',
+            (string) $port,
+        ];
+
+        $process = \proc_open(
+            $command,
+            [
+                0 => ['pipe', 'r'],
+                1 => ['file', '/dev/null', 'w'],
+                2 => ['file', '/dev/null', 'w'],
+            ],
+            $pipes,
+            $repoRoot,
+        );
+
+        if (!\is_resource($process)) {
+            throw new \RuntimeException('Failed to start the gRPC fixture server process.');
+        }
+
+        self::$grpcServerProcess = $process;
+        self::waitForGrpcServer($port);
+    }
+
+    public static function tearDownAfterClass(): void
+    {
+        if (\is_resource(self::$grpcServerProcess)) {
+            \proc_terminate(self::$grpcServerProcess);
+            \proc_close(self::$grpcServerProcess);
+            self::$grpcServerProcess = null;
+        }
+
+        parent::tearDownAfterClass();
+    }
 
     /**
      * Set up test client before each test.
@@ -61,7 +115,7 @@ final class GrpcFixturesTest extends TestCase
         if (!\extension_loaded('grpc')) {
             $this->markTestSkipped('gRPC extension not loaded.');
         }
-        $this->client = new GrpcTestClient('localhost:50051');
+        $this->client = new GrpcTestClient(self::$serverAddress);
     }
 
     /**
@@ -126,6 +180,75 @@ final class GrpcFixturesTest extends TestCase
         \ksort($fixtures);
 
         return $fixtures;
+    }
+
+    private static function repoRoot(): string
+    {
+        return \dirname(__DIR__, 3);
+    }
+
+    private static function resolvePythonExecutable(): string
+    {
+        $virtualEnv = \getenv('VIRTUAL_ENV');
+        if (\is_string($virtualEnv) && $virtualEnv !== '') {
+            $candidate = $virtualEnv . '/bin/python';
+            if (\is_file($candidate)) {
+                return $candidate;
+            }
+        }
+
+        $repoVenv = self::repoRoot() . '/.venv/bin/python';
+        if (\is_file($repoVenv)) {
+            return $repoVenv;
+        }
+
+        $python = \getenv('PYTHON');
+        return \is_string($python) && $python !== '' ? $python : 'python3';
+    }
+
+    private static function reserveGrpcServerPort(): int
+    {
+        $server = \stream_socket_server('tcp://' . self::GRPC_SERVER_HOST . ':0', $errno, $errstr);
+        if ($server === false) {
+            throw new \RuntimeException('Failed to reserve a gRPC fixture port: ' . $errstr);
+        }
+
+        $address = \stream_socket_get_name($server, false);
+        \fclose($server);
+
+        if (!\is_string($address) || !\str_contains($address, ':')) {
+            throw new \RuntimeException('Failed to determine the reserved gRPC fixture port.');
+        }
+
+        $port = (int) \substr($address, (int) \strrpos($address, ':') + 1);
+        if ($port <= 0) {
+            throw new \RuntimeException('Reserved an invalid gRPC fixture port.');
+        }
+
+        return $port;
+    }
+
+    private static function waitForGrpcServer(int $port): void
+    {
+        $deadline = \microtime(true) + self::GRPC_SERVER_TIMEOUT_SECONDS;
+
+        while (\microtime(true) < $deadline) {
+            $socket = @\stream_socket_client(
+                'tcp://' . self::GRPC_SERVER_HOST . ':' . (string) $port,
+                $errno,
+                $errstr,
+                0.2,
+            );
+
+            if ($socket !== false) {
+                \fclose($socket);
+                return;
+            }
+
+            \usleep(200000);
+        }
+
+        throw new \RuntimeException('gRPC fixture server did not start in time.');
     }
 
     /**
