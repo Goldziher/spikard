@@ -26,7 +26,7 @@ runs:
         mkdir -p "$install_dir"
         echo "BENCHMARK_INSTALL_DIR=$install_dir" >> $GITHUB_ENV
 
-    - uses: actions/download-artifact@v7
+    - uses: actions/download-artifact@v8
       with:
         name: ${{ inputs.artifact-name }}
         path: ${{ env.BENCHMARK_INSTALL_DIR }}

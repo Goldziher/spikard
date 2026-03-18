@@ -105,7 +105,7 @@ runs:
     - name: Cache Rust build artifacts
       if: inputs.use-sccache != 'true'
       id: cache-rust
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.cargo/registry/index
@@ -118,7 +118,7 @@ runs:
 
     - name: Cache cargo home (when sccache enabled)
       if: inputs.use-sccache == 'true' && inputs.cache-cargo-home == 'true'
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.cargo/registry/index
@@ -129,7 +129,7 @@ runs:
           cargo-home-${{ runner.os }}-
 
     - name: Cache cargo-llvm-cov
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cargo/bin/cargo-llvm-cov
         key: cargo-llvm-cov-${{ runner.os }}

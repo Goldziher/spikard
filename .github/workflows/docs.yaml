@@ -47,7 +47,7 @@ jobs:
         run: bash scripts/docs/configure-git-for-mike.sh
 
       - name: Download benchmark results (if available)
-        uses: dawidd6/action-download-artifact@v17
+        uses: dawidd6/action-download-artifact@v19
         continue-on-error: true
         with:
           workflow: comparative-benchmarks.yaml
@@ -57,7 +57,9 @@ jobs:
 
       - name: Setup Rust (for benchmark CLI)
         if: hashFiles('benchmark-results/aggregated.json') != ''
-        uses: dtolnay/rust-toolchain@stable
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
 
       - name: Build benchmark-harness
         if: hashFiles('benchmark-results/aggregated.json') != ''

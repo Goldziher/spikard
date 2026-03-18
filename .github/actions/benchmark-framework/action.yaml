@@ -109,7 +109,7 @@ runs:
 
     - name: Cache Bun dependencies
       if: steps.detect.outputs.language == 'node' && (inputs.framework == 'elysia' || inputs.framework == 'spikard-bun')
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.bun/install/cache
@@ -162,7 +162,7 @@ runs:
 
     - name: Cache Ruby gems
       if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           tools/benchmark-harness/apps/${{ inputs.framework }}/vendor/bundle
@@ -224,7 +224,7 @@ runs:
 
     - name: Cache Composer downloads
       if: steps.detect.outputs.language == 'php'
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           ~/.composer/cache
@@ -267,7 +267,7 @@ runs:
 
     - name: Cache Mix dependencies
       if: steps.detect.outputs.language == 'elixir'
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: |
           tools/benchmark-harness/apps/${{ inputs.framework }}/deps
@@ -317,7 +317,7 @@ runs:
           --output "results/${{ inputs.framework }}/profile.json"
 
     - name: Upload benchmark results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: benchmark-results-${{ inputs.framework }}
