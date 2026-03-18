@@ -266,6 +266,14 @@ impl PhpGenerator {
         })
     }
 
+    fn extract_json_schema_doc_type(&self, media_type: Option<&openapiv3::MediaType>) -> Option<String> {
+        media_type.and_then(|mt| {
+            mt.schema
+                .as_ref()
+                .map(|schema_ref| self.phpdoc_type_from_schema_ref(schema_ref, false))
+        })
+    }
+
     /// Extract response type from operation (looks for 200/201 responses)
     fn extract_response_type(&self, operation: &Operation) -> String {
         use openapiv3::StatusCode;
@@ -282,6 +290,33 @@ impl PhpGenerator {
             .unwrap_or_else(|| "array".to_string())
     }
 
+    fn extract_request_body_doc_type(&self, operation: &Operation) -> Option<String> {
+        operation.request_body.as_ref().and_then(|body_ref| match body_ref {
+            ReferenceOr::Item(request_body) => {
+                self.extract_json_schema_doc_type(request_body.content.get("application/json"))
+            }
+            ReferenceOr::Reference { reference } => {
+                let ref_name = self.extract_ref_name(reference);
+                Some(ref_name.to_pascal_case())
+            }
+        })
+    }
+
+    fn extract_response_doc_type(&self, operation: &Operation) -> String {
+        use openapiv3::StatusCode;
+
+        let response = operation
+            .responses
+            .responses
+            .get(&StatusCode::Code(200))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Code(201)))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Range(2)));
+
+        response
+            .and_then(|response_ref| self.extract_response_doc_type_from_ref(response_ref))
+            .unwrap_or_else(|| "array<string, mixed>".to_string())
+    }
+
     /// Extract response type from a single response reference
     fn extract_response_type_from_ref(&self, response_ref: &ReferenceOr<openapiv3::Response>) -> Option<String> {
         match response_ref {
@@ -289,6 +324,20 @@ impl PhpGenerator {
                 let media_type = response.content.get("application/json")?;
                 let schema_ref = media_type.schema.as_ref()?;
                 Some(self.extract_type_from_schema_ref(schema_ref))
+            }
+            ReferenceOr::Reference { reference } => {
+                let ref_name = self.extract_ref_name(reference);
+                Some(ref_name.to_pascal_case())
+            }
+        }
+    }
+
+    fn extract_response_doc_type_from_ref(&self, response_ref: &ReferenceOr<openapiv3::Response>) -> Option<String> {
+        match response_ref {
+            ReferenceOr::Item(response) => {
+                let media_type = response.content.get("application/json")?;
+                let schema_ref = media_type.schema.as_ref()?;
+                Some(self.phpdoc_type_from_schema_ref(schema_ref, false))
             }
             ReferenceOr::Reference { reference } => {
                 let ref_name = self.extract_ref_name(reference);
@@ -338,9 +387,35 @@ impl PhpGenerator {
                     }
                     None => "mixed".to_string(),
                 };
-                format!("{item_type}[]")
+                format!("list<{item_type}>")
             }
-            SchemaKind::Type(Type::Object(_)) => "array<string, mixed>".to_string(),
+            SchemaKind::Type(Type::Object(obj)) => {
+                if obj.properties.is_empty() {
+                    "array<string, mixed>".to_string()
+                } else {
+                    let mut entries = Vec::new();
+                    for (prop_name, prop_schema_ref) in &obj.properties {
+                        let is_required = obj.required.contains(prop_name);
+                        let prop_type = match prop_schema_ref {
+                            ReferenceOr::Item(prop_schema) => Self::schema_to_phpdoc_type(prop_schema, !is_required),
+                            ReferenceOr::Reference { reference } => {
+                                let ref_name = reference.split('/').next_back().unwrap();
+                                let mut base = ref_name.to_pascal_case();
+                                if !is_required {
+                                    base.push_str("|null");
+                                }
+                                base
+                            }
+                        };
+                        if is_required {
+                            entries.push(format!("{prop_name}: {prop_type}"));
+                        } else {
+                            entries.push(format!("{prop_name}?: {prop_type}"));
+                        }
+                    }
+                    format!("array{{{}}}", entries.join(", "))
+                }
+            }
             _ => "mixed".to_string(),
         };
 
@@ -505,8 +580,10 @@ impl PhpGenerator {
         let (path_params, query_params) = self.extract_path_and_query_params(operation, output);
         let body_type = self.extract_request_body_type(operation);
         let return_type = self.extract_response_type(operation);
+        let body_doc_type = self.extract_request_body_doc_type(operation);
+        let return_doc_type = self.extract_response_doc_type(operation);
 
-        self.append_parameter_docs(output, &body_type, &return_type);
+        self.append_parameter_docs(output, &body_doc_type, &return_doc_type);
 
         Ok((path_params, query_params, body_type, return_type))
     }
@@ -567,25 +644,24 @@ impl PhpGenerator {
     }
 
     /// Append parameter documentation to `PHPDoc`
-    fn append_parameter_docs(&self, output: &mut String, body_type: &Option<String>, return_type: &str) {
-        if let Some(body_type_name) = body_type {
-            output.push_str(&format!(
-                "     * @param {} $body\n",
-                Self::phpdoc_type_for_native_hint(body_type_name)
-            ));
+    fn append_parameter_docs(&self, output: &mut String, body_doc_type: &Option<String>, return_doc_type: &str) {
+        if let Some(body_type_name) = body_doc_type {
+            output.push_str(&format!("     * @param {body_type_name} $body\n"));
         }
-        output.push_str(&format!(
-            "     * @return {}\n",
-            Self::phpdoc_type_for_native_hint(return_type)
-        ));
+        output.push_str(&format!("     * @return {return_doc_type}\n"));
         output.push_str("     */\n");
     }
 
-    fn phpdoc_type_for_native_hint(type_hint: &str) -> String {
-        match type_hint {
-            "array" => "array<string, mixed>".to_string(),
-            "?array" => "array<string, mixed>|null".to_string(),
-            _ => type_hint.to_string(),
+    fn phpdoc_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>, optional: bool) -> String {
+        match schema_ref {
+            ReferenceOr::Item(schema) => Self::schema_to_phpdoc_type(schema, optional),
+            ReferenceOr::Reference { reference } => {
+                let mut base = self.extract_ref_name(reference).to_pascal_case();
+                if optional {
+                    base.push_str("|null");
+                }
+                base
+            }
         }
     }
 

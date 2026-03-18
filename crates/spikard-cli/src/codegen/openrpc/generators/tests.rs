@@ -11,6 +11,7 @@ use super::{
 use crate::codegen::openrpc::spec_parser::{
     OpenRpcError, OpenRpcInfo, OpenRpcMethod, OpenRpcParam, OpenRpcResult, OpenRpcSpec,
 };
+use crate::codegen::{TargetLanguage, quality::QualityValidator};
 use serde_json::json;
 
 /// Helper function to create a minimal OpenRPC spec
@@ -86,6 +87,23 @@ fn spec_with_errors(name: &str) -> OpenRpcSpec {
         },
     ];
     spec
+}
+
+#[test]
+fn test_python_generator_validates_with_quality_gates() {
+    let spec = single_method_spec("getUser");
+    let generator = PythonOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("Python OpenRPC generation should succeed");
+    let report = QualityValidator::new(TargetLanguage::Python)
+        .validate_all(&output)
+        .expect("Python OpenRPC validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Python OpenRPC code should validate cleanly: {report}"
+    );
 }
 
 #[test]
@@ -451,7 +469,7 @@ fn test_php_generator_execute_method() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(
-        output.contains("public function execute(mixed $params): array"),
+        output.contains("public function execute(array $params): array"),
         "Handler should have execute method"
     );
 }
@@ -517,8 +535,58 @@ fn test_php_generator_return_types() {
 
     assert!(output.contains(": array"), "Handler should have array return type");
     assert!(
-        output.contains("mixed $params"),
-        "Handler should have mixed params type"
+        output.contains("@param array{} $params") || output.contains("@param array{"),
+        "Handler should document structured params"
+    );
+}
+
+#[test]
+fn test_php_generator_validates_with_quality_gates() {
+    let mut spec = minimal_spec();
+    spec.methods = vec![OpenRpcMethod {
+        name: "widget.create".to_string(),
+        summary: Some("Create a widget".to_string()),
+        description: None,
+        params: vec![
+            OpenRpcParam {
+                name: "name".to_string(),
+                description: None,
+                required: true,
+                schema: json!({"type": "string"}),
+            },
+            OpenRpcParam {
+                name: "count".to_string(),
+                description: None,
+                required: false,
+                schema: json!({"type": "integer"}),
+            },
+        ],
+        result: OpenRpcResult {
+            name: "widget".to_string(),
+            description: None,
+            schema: json!({
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" }
+                },
+                "required": ["id", "name"]
+            }),
+        },
+        errors: vec![],
+        examples: vec![],
+        tags: vec![],
+    }];
+
+    let generator = PhpOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+    let report = QualityValidator::new(TargetLanguage::Php)
+        .validate_all(&output)
+        .expect("php openrpc validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated PHP OpenRPC code should validate cleanly: {report}"
     );
 }
 

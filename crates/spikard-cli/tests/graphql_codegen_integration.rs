@@ -946,6 +946,10 @@ fn test_python_complete_schema() -> Result<()> {
         result.contains("from ariadne import make_executable_schema, QueryType, MutationType"),
         "Ariadne imports missing"
     );
+    assert!(
+        result.contains("def _register_query_resolvers() -> None:"),
+        "query resolver registration helper missing"
+    );
     assert!(result.contains("type_defs = \"\"\""), "SDL string not embedded");
     assert!(result.contains("query = QueryType()"), "Query type not created");
     assert!(
@@ -953,11 +957,11 @@ fn test_python_complete_schema() -> Result<()> {
         "Mutation type not created"
     );
     assert!(
-        result.contains("schema = make_executable_schema(type_defs, [query, mutation])"),
+        result.contains("schema = make_executable_schema(type_defs, query, mutation)"),
         "executable schema not created"
     );
     assert!(
-        result.contains("__all__ = ['schema', 'type_defs']"),
+        result.contains("__all__ = [\"schema\", \"type_defs\"]"),
         "exports not defined"
     );
 
@@ -982,6 +986,49 @@ fn test_python_mutation_resolver() -> Result<()> {
     assert!(result.contains("name: str"), "mutation parameter type hint missing");
     assert!(result.contains("email: str"), "mutation parameter type hint missing");
     assert!(result.contains("-> str"), "mutation return type hint missing");
+
+    Ok(())
+}
+
+#[test]
+fn test_python_generated_graphql_validates() -> Result<()> {
+    let schema = r#"
+        type Query {
+            hello: String!
+            user(id: ID!): User
+        }
+
+        type Mutation {
+            createUser(name: String!): User!
+        }
+
+        type Subscription {
+            userCreated: User!
+        }
+
+        type User {
+            id: ID!
+            name: String!
+        }
+    "#;
+
+    let result = generate_python_graphql(schema, "all")?;
+    assert!(
+        result.contains("async def subscribe_user_created"),
+        "subscription source stub missing from combined Python output"
+    );
+    assert!(
+        result.contains("async def resolve_user_created"),
+        "subscription resolver stub missing from combined Python output"
+    );
+    let report = QualityValidator::new(TargetLanguage::Python)
+        .validate_all(&result)
+        .expect("Python GraphQL validation should run");
+
+    assert!(
+        report.is_valid(),
+        "Python GraphQL output should validate cleanly: {report}"
+    );
 
     Ok(())
 }
@@ -1817,7 +1864,11 @@ fn test_php_generate_enum() -> Result<()> {
 
     let result = generate_php_graphql(schema, "types")?;
 
-    assert!(result.contains("enum UserStatus"), "enum declaration missing");
+    assert!(
+        result.contains("final class UserStatusType extends EnumType"),
+        "GraphQL enum type class missing"
+    );
+    assert!(result.contains("'name' => 'UserStatus'"), "enum type name missing");
     assert!(result.contains("ACTIVE"), "ACTIVE case missing");
     assert!(result.contains("INACTIVE"), "INACTIVE case missing");
     assert!(result.contains("PENDING"), "PENDING case missing");
@@ -1989,6 +2040,39 @@ fn test_php_complete_schema() -> Result<()> {
     assert!(result.contains("<?php"), "PHP opening tag missing");
     assert!(result.contains("declare(strict_types=1)"), "strict types missing");
     assert!(result.contains("namespace"), "namespace missing");
+
+    Ok(())
+}
+
+#[test]
+fn test_php_generated_graphql_validates() -> Result<()> {
+    let schema = r#"
+        input UserFilter {
+            active: Boolean
+            tags: [String!]
+        }
+
+        type User {
+            id: ID!
+            name: String!
+            active: Boolean!
+        }
+
+        type Query {
+            user(id: ID!): User
+            users(filter: UserFilter): [User!]!
+        }
+    "#;
+
+    let result = generate_php_graphql(schema, "all")?;
+    let report = QualityValidator::new(TargetLanguage::Php)
+        .validate_all(&result)
+        .expect("php graphql validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated PHP GraphQL code should validate cleanly: {report}"
+    );
 
     Ok(())
 }

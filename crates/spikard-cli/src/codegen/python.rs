@@ -57,7 +57,6 @@ impl PythonGenerator {
 # DO NOT EDIT - regenerate from OpenAPI schema
 
 from dataclasses import dataclass
-from typing import Any
 ",
                     self.spec.openapi, self.spec.info.title,
                 ));
@@ -68,8 +67,6 @@ from typing import Any
 # OpenAPI Version: {}
 # Title: {}
 # DO NOT EDIT - regenerate from OpenAPI schema
-
-from typing import Any
 
 import msgspec
 ",
@@ -301,7 +298,7 @@ import msgspec
             }
         }
 
-        "dict[str, Any]".to_string()
+        "dict[str, object]".to_string()
     }
 
     fn python_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>, optional: bool) -> String {
@@ -338,12 +335,12 @@ import msgspec
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {
                     Some(item_schema) => self.python_type_from_boxed_schema_ref(item_schema, false),
-                    None => "dict[str, Any]".to_string(),
+                    None => "dict[str, object]".to_string(),
                 };
                 format!("list[{item_type}]")
             }
-            SchemaKind::Type(Type::Object(_)) => "dict[str, Any]".to_string(),
-            _ => "dict[str, Any]".to_string(),
+            SchemaKind::Type(Type::Object(_)) => "dict[str, object]".to_string(),
+            _ => "dict[str, object]".to_string(),
         };
 
         if schema.schema_data.nullable {

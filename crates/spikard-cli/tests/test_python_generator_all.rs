@@ -674,10 +674,13 @@ fn test_python_no_any_type_usage() -> Result<()> {
         "Resolvers MUST NOT import Any type"
     );
 
-    // Should import GraphQLResolveInfo instead
+    assert!(
+        resolvers.contains("from typing import TYPE_CHECKING"),
+        "Resolvers must gate type-only imports behind TYPE_CHECKING"
+    );
     assert!(
         resolvers.contains("from graphql import GraphQLResolveInfo"),
-        "Resolvers must import GraphQLResolveInfo"
+        "Resolvers must import GraphQLResolveInfo for type annotations"
     );
 
     // Verify resolver signature uses proper types

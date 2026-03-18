@@ -16,7 +16,7 @@ use std::process::Command;
 use anyhow::Result;
 use spikard_cli::codegen::{
     CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, DtoConfig, NodeDtoStyle, PythonDtoStyle,
-    RubyDtoStyle, SchemaKind, TargetLanguage, generate_from_openapi,
+    RubyDtoStyle, SchemaKind, TargetLanguage, generate_from_openapi, quality::QualityValidator,
 };
 use tempfile::tempdir;
 
@@ -204,6 +204,29 @@ fn python_openapi_all_of_models_merge_object_fields() -> Result<()> {
     assert!(code.contains("title: str"), "expected inherited required field");
     assert!(code.contains("status: int"), "expected inherited integer field");
     assert!(code.contains("detail: str"), "expected composed field");
+
+    Ok(())
+}
+
+#[test]
+fn python_openapi_generated_code_validates() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
+
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
+    let report = QualityValidator::new(TargetLanguage::Python)
+        .validate_all(&code)
+        .expect("python openapi validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Python OpenAPI code should validate cleanly: {report}"
+    );
 
     Ok(())
 }

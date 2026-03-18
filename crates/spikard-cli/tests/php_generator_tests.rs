@@ -1,5 +1,5 @@
 use openapiv3::OpenAPI;
-use spikard_cli::codegen::{PhpDtoStyle, PhpGenerator};
+use spikard_cli::codegen::{PhpDtoStyle, PhpGenerator, TargetLanguage, quality::QualityValidator};
 
 // Basic model generation tests
 
@@ -215,6 +215,150 @@ fn php_generator_creates_controllers_from_paths() {
     assert!(output.contains("class ProductsController"));
     assert!(output.contains("#[Route('/products'"));
     assert!(output.contains("#[Route('/products/{id}'"));
+}
+
+#[test]
+fn php_generator_uses_array_shapes_for_inline_object_payloads() {
+    let spec: OpenAPI = serde_json::from_value(serde_json::json!({
+        "openapi": "3.1.0",
+        "info": { "title": "Inline Shapes API", "version": "1.0.0" },
+        "paths": {
+            "/widgets": {
+                "post": {
+                    "operationId": "createWidget",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": { "type": "string" },
+                                        "size": { "type": "integer" },
+                                        "metadata": {
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": { "type": "boolean" }
+                                            },
+                                            "required": ["enabled"]
+                                        }
+                                    },
+                                    "required": ["name"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "201": {
+                            "description": "Created",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": { "type": "string" },
+                                            "status": { "type": "string" }
+                                        },
+                                        "required": ["id", "status"]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }))
+    .expect("spec");
+
+    let generator = PhpGenerator::new(spec, PhpDtoStyle::ReadonlyClass);
+    let output = generator.generate().expect("generate");
+
+    assert!(
+        output.contains("@param array{"),
+        "inline request bodies should get array-shape docs"
+    );
+    assert!(
+        output.contains("name: string"),
+        "required request fields should keep concrete types"
+    );
+    assert!(
+        output.contains("size?: int|null"),
+        "optional scalar fields should keep nullable scalar types"
+    );
+    assert!(
+        output.contains("metadata?: array{enabled: bool}|null"),
+        "nested inline objects should keep nested array-shape docs"
+    );
+    assert!(
+        output.contains("@return array{"),
+        "inline object responses should get array-shape docs"
+    );
+    assert!(
+        output.contains("id: string"),
+        "response object fields should keep concrete types"
+    );
+    assert!(
+        output.contains("status: string"),
+        "response object fields should keep concrete types"
+    );
+}
+
+#[test]
+fn php_openapi_generated_code_validates() {
+    let spec: OpenAPI = serde_json::from_value(serde_json::json!({
+        "openapi": "3.1.0",
+        "info": { "title": "Validation API", "version": "1.0.0" },
+        "components": {
+            "schemas": {
+                "Widget": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string" },
+                        "name": { "type": "string" }
+                    },
+                    "required": ["id", "name"]
+                }
+            }
+        },
+        "paths": {
+            "/widgets": {
+                "post": {
+                    "operationId": "createWidget",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/Widget" }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "201": {
+                            "description": "Created",
+                            "content": {
+                                "application/json": {
+                                    "schema": { "$ref": "#/components/schemas/Widget" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }))
+    .expect("spec");
+
+    let generator = PhpGenerator::new(spec, PhpDtoStyle::ReadonlyClass);
+    let output = generator.generate().expect("generate");
+    let report = QualityValidator::new(TargetLanguage::Php)
+        .validate_all(&output)
+        .expect("php quality validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated PHP OpenAPI code should validate cleanly: {report}"
+    );
 }
 
 #[test]

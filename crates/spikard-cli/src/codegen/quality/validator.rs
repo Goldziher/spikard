@@ -176,9 +176,18 @@ impl QualityValidator {
     pub fn validate_syntax(&self, code: &str) -> Result<(), QualityError> {
         match self.language {
             TargetLanguage::Python => {
-                let file = self.write_temp_file(code, "py")?;
-                self.run_tool("python3", &["-m", "py_compile", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                let project = self.write_temp_python_project(code)?;
+                self.run_tool_in_dir(
+                    "python3",
+                    &[
+                        "-m",
+                        "py_compile",
+                        project.entry_path.file_name().unwrap().to_str().unwrap(),
+                    ],
+                    project.workdir.path(),
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::TypeScript => {
                 let project = self.write_temp_typescript_project(code)?;
@@ -250,9 +259,15 @@ impl QualityValidator {
     pub fn validate_types(&self, code: &str) -> Result<(), QualityError> {
         match self.language {
             TargetLanguage::Python => {
-                let file = self.write_temp_file(code, "py")?;
-                self.run_tool("uv", &["run", "mypy", "--strict", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                let project = self.write_temp_python_project(code)?;
+                self.run_tool_in_dir_with_env(
+                    "uv",
+                    &["run", "mypy", "--strict", project.entry_path.to_str().unwrap()],
+                    workspace_root(),
+                    &[("MYPYPATH", project.stub_path.as_os_str())],
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::TypeScript => {
                 let project = self.write_temp_typescript_project(code)?;
@@ -322,9 +337,14 @@ impl QualityValidator {
     pub fn validate_lint(&self, code: &str) -> Result<(), QualityError> {
         match self.language {
             TargetLanguage::Python => {
-                let file = self.write_temp_file(code, "py")?;
-                self.run_tool("ruff", &["check", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                let project = self.write_temp_python_project(code)?;
+                self.run_tool_in_dir(
+                    "ruff",
+                    &["check", project.entry_path.file_name().unwrap().to_str().unwrap()],
+                    project.workdir.path(),
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::TypeScript => Ok(()),
             TargetLanguage::Ruby => {
@@ -477,6 +497,22 @@ impl QualityValidator {
         Ok(RustTempProject { workdir, manifest_path })
     }
 
+    fn write_temp_python_project(&self, code: &str) -> Result<PythonTempProject, QualityError> {
+        let workdir = tempdir().map_err(|e| QualityError::IoError(e.to_string()))?;
+        let entry_path = workdir.path().join("generated.py");
+        let stub_path = workdir.path().join("stubs");
+
+        fs::write(&entry_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::create_dir_all(&stub_path).map_err(|e| QualityError::IoError(e.to_string()))?;
+        write_python_validation_stubs(&stub_path)?;
+
+        Ok(PythonTempProject {
+            workdir,
+            entry_path,
+            stub_path,
+        })
+    }
+
     fn write_temp_typescript_project(&self, code: &str) -> Result<TypeScriptTempProject, QualityError> {
         let workdir = tempdir().map_err(|e| QualityError::IoError(e.to_string()))?;
         let entry_path = workdir.path().join("generated.ts");
@@ -553,6 +589,100 @@ final class Route
         public array $methods = [],
     ) {}
 }
+
+namespace Google\Protobuf\Internal;
+
+class Message {}
+
+namespace GraphQL\Type\Definition;
+
+class Type
+{
+    public static function string(): self
+    {
+        return new self();
+    }
+
+    public static function int(): self
+    {
+        return new self();
+    }
+
+    public static function float(): self
+    {
+        return new self();
+    }
+
+    public static function boolean(): self
+    {
+        return new self();
+    }
+
+    public static function id(): self
+    {
+        return new self();
+    }
+
+    public static function nonNull(self $type): self
+    {
+        return $type;
+    }
+
+    public static function listOf(self $type): self
+    {
+        return $type;
+    }
+}
+
+class ObjectType extends Type
+{
+    /** @param array<string, mixed> $config */
+    public function __construct(array $config = [])
+    {
+    }
+}
+
+class InputObjectType extends Type
+{
+    /** @param array<string, mixed> $config */
+    public function __construct(array $config = [])
+    {
+    }
+}
+
+class InterfaceType extends Type
+{
+    /** @param array<string, mixed> $config */
+    public function __construct(array $config = [])
+    {
+    }
+}
+
+class UnionType extends Type
+{
+    /** @param array<string, mixed> $config */
+    public function __construct(array $config = [])
+    {
+    }
+}
+
+class EnumType extends Type
+{
+    /** @param array<string, mixed> $config */
+    public function __construct(array $config = [])
+    {
+    }
+}
+
+namespace GraphQL\Type;
+
+class Schema
+{
+    /** @param array<string, mixed> $config */
+    public function __construct(array $config = [])
+    {
+    }
+}
 "#,
             "php",
         )
@@ -581,7 +711,24 @@ final class Route
     }
 
     fn run_tool_in_dir(&self, tool: &str, args: &[&str], cwd: &Path, _code: &str) -> Result<String, QualityError> {
-        let output = Command::new(tool).args(args).current_dir(cwd).output().map_err(|e| {
+        self.run_tool_in_dir_with_env(tool, args, cwd, &[], _code)
+    }
+
+    fn run_tool_in_dir_with_env(
+        &self,
+        tool: &str,
+        args: &[&str],
+        cwd: &Path,
+        envs: &[(&str, &std::ffi::OsStr)],
+        _code: &str,
+    ) -> Result<String, QualityError> {
+        let mut command = Command::new(tool);
+        command.args(args).current_dir(cwd);
+        for (key, value) in envs {
+            command.env(key, value);
+        }
+
+        let output = command.output().map_err(|e| {
             if e.kind() == std::io::ErrorKind::NotFound {
                 QualityError::ToolNotFound(tool.to_string())
             } else {
@@ -615,12 +762,140 @@ struct TypeScriptTempProject {
     config_path: PathBuf,
 }
 
+struct PythonTempProject {
+    workdir: TempDir,
+    entry_path: PathBuf,
+    stub_path: PathBuf,
+}
+
+fn write_python_validation_stubs(root: &Path) -> Result<(), QualityError> {
+    write_stub_file(
+        &root.join("msgspec.py"),
+        r#"class Struct:
+    def __init__(self, **kwargs: object) -> None: ...
+
+    def __init_subclass__(cls, *, frozen: bool = False, kw_only: bool = False) -> None: ...
+"#,
+    )?;
+
+    write_stub_file(&root.join("graphql.py"), "class GraphQLResolveInfo: ...\n")?;
+
+    write_stub_file(
+        &root.join("ariadne.py"),
+        r#"from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Any
+
+Resolver = Callable[..., Any]
+
+class QueryType:
+    def set_field(self, _name: str, _resolver: Resolver) -> None: ...
+
+class MutationType:
+    def set_field(self, _name: str, _resolver: Resolver) -> None: ...
+
+class SubscriptionType:
+    def set_field(self, _name: str, _resolver: Resolver) -> None: ...
+    def set_source(self, _name: str, _resolver: Resolver) -> None: ...
+
+def make_executable_schema(*_args: object, **_kwargs: object) -> object:
+    return object()
+"#,
+    )?;
+
+    let spikard_dir = root.join("spikard");
+    fs::create_dir_all(&spikard_dir).map_err(|e| QualityError::IoError(e.to_string()))?;
+    write_stub_file(
+        &spikard_dir.join("__init__.py"),
+        r#"from __future__ import annotations
+
+from collections.abc import Callable
+from typing import Generic, TypeVar
+
+F = TypeVar("F", bound=Callable[..., object])
+T = TypeVar("T")
+
+class Body(Generic[T]): ...
+
+class Path(Generic[T]): ...
+
+class Query(Generic[T]):
+    def __init__(self, default: T | None = None) -> None:
+        self.default = default
+
+class Request: ...
+
+class Spikard:
+    def route(self, *_args: object, **_kwargs: object) -> Callable[[F], F]:
+        def decorator(fn: F) -> F:
+            return fn
+        return decorator
+
+    def post(self, *_args: object, **_kwargs: object) -> Callable[[F], F]:
+        def decorator(fn: F) -> F:
+            return fn
+        return decorator
+
+    def get(self, *_args: object, **_kwargs: object) -> Callable[[F], F]:
+        def decorator(fn: F) -> F:
+            return fn
+        return decorator
+
+    def run(self, *_args: object, **_kwargs: object) -> None:
+        return None
+
+def route(*_args: object, **_kwargs: object) -> Callable[[F], F]:
+    def decorator(fn: F) -> F:
+        return fn
+    return decorator
+
+def websocket(*_args: object, **_kwargs: object) -> Callable[[F], F]:
+    def decorator(fn: F) -> F:
+        return fn
+    return decorator
+
+def sse(*_args: object, **_kwargs: object) -> Callable[[F], F]:
+    def decorator(fn: F) -> F:
+        return fn
+    return decorator
+"#,
+    )?;
+    write_stub_file(
+        &spikard_dir.join("config.py"),
+        r#"class ServerConfig:
+    def __init__(self, host: str = "0.0.0.0", port: int = 8000) -> None:
+        self.host = host
+        self.port = port
+"#,
+    )?;
+
+    let google_protobuf_dir = root.join("google").join("protobuf");
+    fs::create_dir_all(&google_protobuf_dir).map_err(|e| QualityError::IoError(e.to_string()))?;
+    write_stub_file(&root.join("google").join("__init__.py"), "")?;
+    write_stub_file(&google_protobuf_dir.join("__init__.py"), "")?;
+    write_stub_file(&google_protobuf_dir.join("message.py"), "class Message: ...\n")?;
+
+    let websockets_dir = root.join("websockets");
+    fs::create_dir_all(&websockets_dir).map_err(|e| QualityError::IoError(e.to_string()))?;
+    write_stub_file(&websockets_dir.join("__init__.py"), "")?;
+    write_stub_file(
+        &websockets_dir.join("client.py"),
+        "class WebSocketClientProtocol: ...\n",
+    )?;
+
+    Ok(())
+}
+
+fn write_stub_file(path: &Path, contents: &str) -> Result<(), QualityError> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| QualityError::IoError(e.to_string()))?;
+    }
+    fs::write(path, contents).map_err(|e| QualityError::IoError(e.to_string()))
+}
+
 fn rust_temp_manifest() -> String {
-    let workspace_root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .expect("workspace root should be two levels above crates/spikard-cli");
-    let spikard_path = workspace_root.join("crates/spikard");
+    let spikard_path = workspace_root().join("crates/spikard");
 
     format!(
         r#"[package]
@@ -648,6 +923,13 @@ tonic = "0.14"
 "#,
         spikard_path.display()
     )
+}
+
+fn workspace_root() -> &'static Path {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root should be two levels above crates/spikard-cli")
 }
 
 #[cfg(test)]

@@ -7,7 +7,7 @@
 use super::GraphQLGenerator;
 #[allow(unused_imports)]
 use crate::codegen::common::{EscapeContext, escape_quotes, to_snake_case};
-use crate::codegen::graphql::spec_parser::{GraphQLSchema, TypeKind};
+use crate::codegen::graphql::spec_parser::{GraphQLArgument, GraphQLField, GraphQLInputField, GraphQLSchema, TypeKind};
 use anyhow::Result;
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -29,11 +29,17 @@ impl PhpGenerator {
             custom => {
                 if let Some(schema) = schema
                     && let Some(type_def) = schema.types.get(custom)
-                    && type_def.kind == TypeKind::Scalar
                 {
-                    return "Type::string()".to_string();
+                    return match type_def.kind {
+                        TypeKind::Scalar => "Type::string()".to_string(),
+                        TypeKind::Enum => format!("new {custom}Type()"),
+                        TypeKind::InputObject => format!("new {custom}InputType()"),
+                        TypeKind::Union => format!("new {custom}UnionType()"),
+                        TypeKind::Object | TypeKind::Interface => format!("new {custom}Type()"),
+                        _ => "Type::string()".to_string(),
+                    };
                 }
-                format!("{custom}Type::class")
+                format!("new {custom}Type()")
             }
         }
     }
@@ -89,6 +95,189 @@ impl PhpGenerator {
 
         result
     }
+
+    fn resolver_return_native_type(&self, field: &GraphQLField, schema: &GraphQLSchema) -> String {
+        let base_type = if field.is_list {
+            "array".to_string()
+        } else {
+            self.php_native_base_type(&field.type_name, schema)
+        };
+
+        if field.is_nullable && base_type != "mixed" {
+            format!("?{base_type}")
+        } else {
+            base_type
+        }
+    }
+
+    fn php_native_base_type(&self, type_name: &str, schema: &GraphQLSchema) -> String {
+        let mapped = match type_name {
+            "String" | "ID" => "string",
+            "Int" => "int",
+            "Float" => "float",
+            "Boolean" => "bool",
+            custom => {
+                if let Some(type_def) = schema.types.get(custom) {
+                    match type_def.kind {
+                        TypeKind::Scalar => "string",
+                        TypeKind::Enum => "string",
+                        TypeKind::Object | TypeKind::InputObject | TypeKind::Interface | TypeKind::Union => "array",
+                        _ => "mixed",
+                    }
+                } else {
+                    "mixed"
+                }
+            }
+        };
+
+        if mapped == "array" {
+            "array".to_string()
+        } else {
+            mapped.to_string()
+        }
+    }
+
+    fn resolver_arg_doc_type(&self, field: &GraphQLField, schema: &GraphQLSchema) -> String {
+        if field.arguments.is_empty() {
+            return "array{}".to_string();
+        }
+
+        let mut entries = Vec::new();
+        for argument in &field.arguments {
+            let arg_type = self.graphql_phpdoc_type(
+                &argument.type_name,
+                argument.is_nullable,
+                argument.is_list,
+                argument.list_item_nullable,
+                schema,
+                true,
+            );
+            if argument.is_nullable {
+                entries.push(format!("{}?: {arg_type}", argument.name));
+            } else {
+                entries.push(format!("{}: {arg_type}", argument.name));
+            }
+        }
+
+        format!("array{{{}}}", entries.join(", "))
+    }
+
+    fn graphql_phpdoc_type(
+        &self,
+        type_name: &str,
+        is_nullable: bool,
+        is_list: bool,
+        list_item_nullable: bool,
+        schema: &GraphQLSchema,
+        prefer_input_shapes: bool,
+    ) -> String {
+        let base_type = self.graphql_phpdoc_base_type(type_name, schema, prefer_input_shapes);
+        let wrapped = if is_list {
+            let item_type = if list_item_nullable {
+                format!("{base_type}|null")
+            } else {
+                base_type
+            };
+            format!("list<{item_type}>")
+        } else {
+            base_type
+        };
+
+        if is_nullable {
+            format!("{wrapped}|null")
+        } else {
+            wrapped
+        }
+    }
+
+    fn graphql_phpdoc_base_type(&self, type_name: &str, schema: &GraphQLSchema, prefer_input_shapes: bool) -> String {
+        match type_name {
+            "String" | "ID" => "string".to_string(),
+            "Int" => "int".to_string(),
+            "Float" => "float".to_string(),
+            "Boolean" => "bool".to_string(),
+            custom => {
+                let Some(type_def) = schema.types.get(custom) else {
+                    return "mixed".to_string();
+                };
+
+                match type_def.kind {
+                    TypeKind::Scalar => "string".to_string(),
+                    TypeKind::Enum => "string".to_string(),
+                    TypeKind::Object | TypeKind::Interface => self.object_shape_doc_type(&type_def.fields, schema),
+                    TypeKind::InputObject if prefer_input_shapes => {
+                        self.input_shape_doc_type(&type_def.input_fields, schema)
+                    }
+                    TypeKind::InputObject => self.input_shape_doc_type(&type_def.input_fields, schema),
+                    TypeKind::Union => {
+                        let variants: Vec<String> = type_def
+                            .possible_types
+                            .iter()
+                            .map(|possible_type| {
+                                self.graphql_phpdoc_base_type(possible_type, schema, prefer_input_shapes)
+                            })
+                            .collect();
+                        if variants.is_empty() {
+                            "array<string, mixed>".to_string()
+                        } else {
+                            variants.join("|")
+                        }
+                    }
+                    _ => "mixed".to_string(),
+                }
+            }
+        }
+    }
+
+    fn object_shape_doc_type(&self, fields: &[GraphQLField], schema: &GraphQLSchema) -> String {
+        if fields.is_empty() {
+            return "array<string, mixed>".to_string();
+        }
+
+        let mut entries = Vec::new();
+        for field in fields {
+            let field_type = self.graphql_phpdoc_type(
+                &field.type_name,
+                field.is_nullable,
+                field.is_list,
+                field.list_item_nullable,
+                schema,
+                false,
+            );
+            if field.is_nullable {
+                entries.push(format!("{}?: {field_type}", field.name));
+            } else {
+                entries.push(format!("{}: {field_type}", field.name));
+            }
+        }
+
+        format!("array{{{}}}", entries.join(", "))
+    }
+
+    fn input_shape_doc_type(&self, fields: &[GraphQLInputField], schema: &GraphQLSchema) -> String {
+        if fields.is_empty() {
+            return "array<string, mixed>".to_string();
+        }
+
+        let mut entries = Vec::new();
+        for field in fields {
+            let field_type = self.graphql_phpdoc_type(
+                &field.type_name,
+                field.is_nullable,
+                field.is_list,
+                field.list_item_nullable,
+                schema,
+                true,
+            );
+            if field.is_nullable {
+                entries.push(format!("{}?: {field_type}", field.name));
+            } else {
+                entries.push(format!("{}: {field_type}", field.name));
+            }
+        }
+
+        format!("array{{{}}}", entries.join(", "))
+    }
 }
 
 impl GraphQLGenerator for PhpGenerator {
@@ -136,7 +325,9 @@ impl GraphQLGenerator for PhpGenerator {
         code.push_str("// Any manual changes will be overwritten on the next generation.\n\n");
         code.push_str("declare(strict_types=1);\n\n");
         code.push_str("namespace GraphQL\\Types;\n\n");
-        code.push_str("use GraphQL\\Type\\Definition\\{InputObjectType, ObjectType, Type, UnionType};\n\n");
+        code.push_str(
+            "use GraphQL\\Type\\Definition\\{EnumType, InputObjectType, InterfaceType, ObjectType, Type, UnionType};\n\n",
+        );
 
         for (type_name, type_def) in &schema.types {
             if matches!(type_name.as_str(), "String" | "Int" | "Float" | "Boolean" | "ID") {
@@ -173,15 +364,53 @@ impl GraphQLGenerator for PhpGenerator {
                     code.push_str("    }\n");
                     code.push_str("}\n\n");
                 }
-                TypeKind::Enum => {
+                TypeKind::Interface => {
                     code.push_str(&format!("/**\n * {type_name}\n */\n"));
-                    code.push_str(&format!("enum {type_name}: string\n"));
+                    code.push_str(&format!("final class {type_name}Type extends InterfaceType\n"));
                     code.push_str("{\n");
+                    code.push_str("    public function __construct()\n");
+                    code.push_str("    {\n");
+                    code.push_str("        parent::__construct([\n");
+                    code.push_str(&format!("            'name' => '{type_name}',\n"));
+                    code.push_str("            'fields' => [\n");
 
-                    for value in &type_def.enum_values {
-                        code.push_str(&format!("    case {} = '{}';\n", value.name, value.name));
+                    for field in &type_def.fields {
+                        code.push_str(&format!(
+                            "                '{}' => ['type' => {}],\n",
+                            field.name,
+                            self.map_type_with_nullability(
+                                &field.type_name,
+                                field.is_nullable,
+                                field.is_list,
+                                field.list_item_nullable,
+                                Some(schema)
+                            )
+                        ));
                     }
 
+                    code.push_str("            ],\n");
+                    code.push_str("        ]);\n");
+                    code.push_str("    }\n");
+                    code.push_str("}\n\n");
+                }
+                TypeKind::Enum => {
+                    code.push_str(&format!("/**\n * {type_name}\n */\n"));
+                    code.push_str(&format!("final class {type_name}Type extends EnumType\n"));
+                    code.push_str("{\n");
+                    code.push_str("    public function __construct()\n");
+                    code.push_str("    {\n");
+                    code.push_str("        parent::__construct([\n");
+                    code.push_str(&format!("            'name' => '{type_name}',\n"));
+                    code.push_str("            'values' => [\n");
+                    for value in &type_def.enum_values {
+                        code.push_str(&format!(
+                            "                '{}' => ['value' => '{}'],\n",
+                            value.name, value.name
+                        ));
+                    }
+                    code.push_str("            ],\n");
+                    code.push_str("        ]);\n");
+                    code.push_str("    }\n");
                     code.push_str("}\n\n");
                 }
                 TypeKind::InputObject => {
@@ -224,7 +453,7 @@ impl GraphQLGenerator for PhpGenerator {
                     code.push_str("            'types' => [\n");
 
                     for possible_type in &type_def.possible_types {
-                        code.push_str(&format!("                {possible_type}Type::class,\n"));
+                        code.push_str(&format!("                new {possible_type}Type(),\n"));
                     }
 
                     code.push_str("            ],\n");
@@ -349,10 +578,24 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("{\n");
 
             for field in &schema.queries {
-                code.push_str("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n");
+                let args_doc_type = self.resolver_arg_doc_type(field, schema);
+                let return_doc_type = self.graphql_phpdoc_type(
+                    &field.type_name,
+                    field.is_nullable,
+                    field.is_list,
+                    field.list_item_nullable,
+                    schema,
+                    false,
+                );
+                let return_native_type = self.resolver_return_native_type(field, schema);
+                code.push_str("    /**\n");
+                code.push_str("     * @param array<string, mixed>|object|null $root\n");
+                code.push_str(&format!("     * @param {args_doc_type} $args\n"));
+                code.push_str(&format!("     * @return {return_doc_type}\n"));
+                code.push_str("     */\n");
                 code.push_str(&format!(
-                    "    public function {}(mixed $root, array $args): mixed\n",
-                    to_snake_case(&field.name)
+                    "    public function {}(object|array|null $root, array $args): {return_native_type}\n",
+                    to_snake_case(&field.name),
                 ));
                 code.push_str("    {\n");
                 code.push_str(&format!(
@@ -371,10 +614,24 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("{\n");
 
             for field in &schema.mutations {
-                code.push_str("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n");
+                let args_doc_type = self.resolver_arg_doc_type(field, schema);
+                let return_doc_type = self.graphql_phpdoc_type(
+                    &field.type_name,
+                    field.is_nullable,
+                    field.is_list,
+                    field.list_item_nullable,
+                    schema,
+                    false,
+                );
+                let return_native_type = self.resolver_return_native_type(field, schema);
+                code.push_str("    /**\n");
+                code.push_str("     * @param array<string, mixed>|object|null $root\n");
+                code.push_str(&format!("     * @param {args_doc_type} $args\n"));
+                code.push_str(&format!("     * @return {return_doc_type}\n"));
+                code.push_str("     */\n");
                 code.push_str(&format!(
-                    "    public function {}(mixed $root, array $args): mixed\n",
-                    to_snake_case(&field.name)
+                    "    public function {}(object|array|null $root, array $args): {return_native_type}\n",
+                    to_snake_case(&field.name),
                 ));
                 code.push_str("    {\n");
                 code.push_str(&format!(
@@ -393,10 +650,24 @@ impl GraphQLGenerator for PhpGenerator {
             code.push_str("{\n");
 
             for field in &schema.subscriptions {
-                code.push_str("    /**\n     * @param mixed $root\n     * @param array<string, mixed> $args\n     * @return mixed\n     */\n");
+                let args_doc_type = self.resolver_arg_doc_type(field, schema);
+                let return_doc_type = self.graphql_phpdoc_type(
+                    &field.type_name,
+                    field.is_nullable,
+                    field.is_list,
+                    field.list_item_nullable,
+                    schema,
+                    false,
+                );
+                let return_native_type = self.resolver_return_native_type(field, schema);
+                code.push_str("    /**\n");
+                code.push_str("     * @param array<string, mixed>|object|null $root\n");
+                code.push_str(&format!("     * @param {args_doc_type} $args\n"));
+                code.push_str(&format!("     * @return {return_doc_type}\n"));
+                code.push_str("     */\n");
                 code.push_str(&format!(
-                    "    public function {}(mixed $root, array $args): mixed\n",
-                    to_snake_case(&field.name)
+                    "    public function {}(object|array|null $root, array $args): {return_native_type}\n",
+                    to_snake_case(&field.name),
                 ));
                 code.push_str("    {\n");
                 code.push_str(&format!(
@@ -586,7 +857,8 @@ mod tests {
         assert!(result.contains("<?php"));
         assert!(result.contains("declare(strict_types=1);"));
         assert!(result.contains("class QueryResolver"));
-        assert!(result.contains("public function hello(mixed $root, array $args): mixed"));
+        assert!(result.contains("@param array{} $args"));
+        assert!(result.contains("public function hello(object|array|null $root, array $args): ?string"));
         assert!(result.contains("Not implemented: Query.hello"));
     }
 
