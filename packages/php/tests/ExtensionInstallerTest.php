@@ -11,6 +11,10 @@ final class ExtensionInstallerTest extends TestCase
 {
     public function testInstallerDownloadsAndConfiguresLocalReleaseAsset(): void
     {
+        if (\extension_loaded('spikard') || \extension_loaded('spikard_php')) {
+            $this->markTestSkipped('Installer integration path is not exercised when the extension is already loaded.');
+        }
+
         $root = \sys_get_temp_dir() . '/spikard-installer-' . \bin2hex(\random_bytes(8));
         $releaseDir = $root . '/release';
         $extDir = $root . '/ext';
@@ -34,13 +38,14 @@ final class ExtensionInstallerTest extends TestCase
         \ob_end_clean();
 
         $this->assertTrue($result);
-        $this->assertFileExists($extDir . '/spikard.so');
+        $installedLibrary = $extDir . '/' . $this->expectedInstalledLibraryName();
+        $this->assertFileExists($installedLibrary);
         $this->assertFileExists($iniDir . '/99-spikard.ini');
 
         $iniContents = \file_get_contents($iniDir . '/99-spikard.ini');
         $this->assertIsString($iniContents);
         $this->assertStringContainsString('extension="', $iniContents);
-        $this->assertStringContainsString('/spikard.so"', $iniContents);
+        $this->assertStringContainsString('/' . $this->expectedInstalledLibraryName() . '"', $iniContents);
     }
 
     public function testInstallerUsesExplicitPackageVersionOverride(): void
@@ -66,7 +71,7 @@ final class ExtensionInstallerTest extends TestCase
         $packageDir = $tempDir . '/payload';
 
         \mkdir($packageDir, 0777, true);
-        \file_put_contents($packageDir . '/libspikard_php.so', 'fake-binary');
+        \file_put_contents($packageDir . '/' . $this->packagedLibraryName(), 'fake-binary');
 
         @\unlink($tarPath);
         @\unlink($archivePath);
@@ -77,5 +82,23 @@ final class ExtensionInstallerTest extends TestCase
         unset($tar);
 
         \rename($tarPath . '.gz', $archivePath);
+    }
+
+    private function expectedInstalledLibraryName(): string
+    {
+        return match (PHP_OS_FAMILY) {
+            'Darwin' => 'spikard.dylib',
+            'Windows' => 'spikard.dll',
+            default => 'spikard.so',
+        };
+    }
+
+    private function packagedLibraryName(): string
+    {
+        return match (PHP_OS_FAMILY) {
+            'Darwin' => 'libspikard_php.dylib',
+            'Windows' => 'spikard_php.dll',
+            default => 'libspikard_php.so',
+        };
     }
 }

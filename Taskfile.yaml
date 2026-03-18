@@ -566,7 +566,7 @@ tasks:
           elif [ -f target/release/spikard_php.dll ]; then echo target/release/spikard_php.dll; \
           else echo ""; fi
     cmds:
-      - php -d extension={{.PHP_EXTENSION_PATH}} vendor/bin/phpunit --configuration packages/php/phpunit.xml --no-coverage
+      - php -d extension={{.PHP_EXTENSION_PATH}} packages/php/vendor/bin/phpunit --configuration packages/php/phpunit.xml --no-coverage
 
   php:lint:
     desc: "Run PHP static analysis WITH auto-fix (phpstan + php-cs-fixer)"

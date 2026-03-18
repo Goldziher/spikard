@@ -28,13 +28,22 @@ require 'bundler/setup'
 $LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'spikard'
 
-at_exit do
+def cleanup_ruby_threads
+  3.times do
+    GC.start(full_mark: true, immediate_sweep: true)
+    sleep 0.01
+  end
+
   Thread.list.each do |thread|
     next if thread == Thread.current
 
     thread.kill
     thread.join(1)
   end
+end
+
+at_exit do
+  cleanup_ruby_threads
 end
 
 RSpec.configure do |config|
@@ -52,12 +61,6 @@ RSpec.configure do |config|
     next unless ENV['CI'] == 'true' || ENV['GITHUB_ACTIONS'] == 'true'
 
     SimpleCov.result.format! if defined?(SimpleCov)
-
-    Thread.list.each do |thread|
-      next if thread == Thread.current
-
-      thread.kill
-      thread.join(1)
-    end
+    cleanup_ruby_threads
   end
 end

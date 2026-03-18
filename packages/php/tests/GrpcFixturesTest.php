@@ -51,8 +51,9 @@ final class GrpcFixturesTest extends TestCase
     private const FIXTURES_DIR = __DIR__ . '/../../../testing_data/protobuf/streaming';
     private const GRPC_SERVER_HOST = '127.0.0.1';
     private const GRPC_SERVER_TIMEOUT_SECONDS = 15;
+    private const GRPC_SERVER_STOP_TIMEOUT_SECONDS = 5;
 
-    private GrpcTestClient $client;
+    private ?GrpcTestClient $client = null;
     /** @var resource|null */
     private static $grpcServerProcess = null;
     private static string $serverAddress = 'localhost:50051';
@@ -99,7 +100,7 @@ final class GrpcFixturesTest extends TestCase
     {
         if (\is_resource(self::$grpcServerProcess)) {
             \proc_terminate(self::$grpcServerProcess);
-            \proc_close(self::$grpcServerProcess);
+            self::awaitGrpcServerExit();
             self::$grpcServerProcess = null;
         }
 
@@ -123,8 +124,18 @@ final class GrpcFixturesTest extends TestCase
      */
     protected function tearDown(): void
     {
-        $this->client->disconnect();
+        $this->client?->disconnect();
+        $this->client = null;
         parent::tearDown();
+    }
+
+    private function client(): GrpcTestClient
+    {
+        if (!$this->client instanceof GrpcTestClient) {
+            throw new \RuntimeException('gRPC test client was not initialized.');
+        }
+
+        return $this->client;
     }
 
     /**
@@ -249,6 +260,29 @@ final class GrpcFixturesTest extends TestCase
         }
 
         throw new \RuntimeException('gRPC fixture server did not start in time.');
+    }
+
+    private static function awaitGrpcServerExit(): void
+    {
+        if (!\is_resource(self::$grpcServerProcess)) {
+            return;
+        }
+
+        $deadline = \microtime(true) + self::GRPC_SERVER_STOP_TIMEOUT_SECONDS;
+
+        while (\microtime(true) < $deadline) {
+            /** @var array{command: string, pid: int, running: bool, signaled: bool, stopped: bool, exitcode: int, termsig: int, stopsig: int}|false $status */
+            $status = \proc_get_status(self::$grpcServerProcess);
+            if ($status === false || $status['running'] !== true) {
+                \proc_close(self::$grpcServerProcess);
+                return;
+            }
+
+            \usleep(100000);
+        }
+
+        \proc_terminate(self::$grpcServerProcess, 9);
+        \proc_close(self::$grpcServerProcess);
     }
 
     /**
@@ -603,7 +637,7 @@ final class GrpcFixturesTest extends TestCase
 
         if ($expectsError) {
             /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
-            $result = $this->client->executeServerStreamingWithStatus(
+            $result = $this->client()->executeServerStreamingWithStatus(
                 $serviceName,
                 $methodName,
                 $requestMessage,
@@ -636,7 +670,7 @@ final class GrpcFixturesTest extends TestCase
             return;
         }
 
-        $responses = $this->client->executeServerStreaming(
+        $responses = $this->client()->executeServerStreaming(
             $serviceName,
             $methodName,
             $requestMessage,
@@ -685,7 +719,7 @@ final class GrpcFixturesTest extends TestCase
         $timeout = $timeoutMs !== null && \is_numeric($timeoutMs) ? (float) $timeoutMs / 1000.0 : null;
 
         // Execute RPC
-        $response = $this->client->executeClientStreaming(
+        $response = $this->client()->executeClientStreaming(
             $serviceName,
             $methodName,
             $requestMessages,
@@ -749,7 +783,7 @@ final class GrpcFixturesTest extends TestCase
 
         if ($expectsError) {
             /** @var array{responses: array<int, array<string, mixed>>, status: array{code: int, details: string, metadata: array<string, mixed>}} $result */
-            $result = $this->client->executeBidirectionalWithStatus(
+            $result = $this->client()->executeBidirectionalWithStatus(
                 $serviceName,
                 $methodName,
                 $requestMessages,
@@ -782,7 +816,7 @@ final class GrpcFixturesTest extends TestCase
             return;
         }
 
-        $responses = $this->client->executeBidirectional(
+        $responses = $this->client()->executeBidirectional(
             $serviceName,
             $methodName,
             $requestMessages,
@@ -844,7 +878,7 @@ final class GrpcFixturesTest extends TestCase
                 // Server streaming
                 /** @var array<string, mixed> $requestData */
                 $requestData = $requestDataMixed;
-                $this->client->executeServerStreaming(
+                $this->client()->executeServerStreaming(
                     $serviceName,
                     $methodName,
                     $requestData,
@@ -855,7 +889,7 @@ final class GrpcFixturesTest extends TestCase
                 // Client streaming
                 /** @var array<int, array<string, mixed>> $requestData */
                 $requestData = $requestDataMixed;
-                $this->client->executeClientStreaming(
+                $this->client()->executeClientStreaming(
                     $serviceName,
                     $methodName,
                     $requestData,
@@ -866,7 +900,7 @@ final class GrpcFixturesTest extends TestCase
                 // Bidirectional or unary
                 /** @var array<int, array<string, mixed>> $requestData */
                 $requestData = $requestDataMixed;
-                $this->client->executeBidirectional(
+                $this->client()->executeBidirectional(
                     $serviceName,
                     $methodName,
                     $requestData,

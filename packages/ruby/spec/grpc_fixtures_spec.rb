@@ -300,20 +300,18 @@ end
 def wait_for_grpc_test_server(host, port, timeout_seconds = 15)
   Timeout.timeout(timeout_seconds) do
     loop do
-      begin
-        socket = TCPSocket.new(host, port)
-        socket.close
-        return
-      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-        sleep 0.2
-      end
+      socket = TCPSocket.new(host, port)
+      socket.close
+      return
+    rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+      sleep 0.2
     end
   end
 end
 
 def resolve_python_executable
   repo_root = File.expand_path('../../..', __dir__)
-  venv_from_env = ENV['VIRTUAL_ENV'] && File.join(ENV['VIRTUAL_ENV'], 'bin', 'python')
+  venv_from_env = ENV.fetch('VIRTUAL_ENV', nil) && File.join(ENV.fetch('VIRTUAL_ENV', nil), 'bin', 'python')
   venv_from_repo = File.join(repo_root, '.venv', 'bin', 'python')
 
   return venv_from_env if venv_from_env && File.exist?(venv_from_env)
@@ -334,6 +332,7 @@ RSpec.describe 'gRPC Streaming Fixtures' do
       script_path,
       '--port', port.to_s,
       chdir: repo_root,
+      in: File::NULL,
       out: File::NULL,
       err: File::NULL
     )
@@ -345,6 +344,11 @@ RSpec.describe 'gRPC Streaming Fixtures' do
     next unless @grpc_server_pid
 
     Process.kill('TERM', @grpc_server_pid)
+    Timeout.timeout(5) do
+      Process.wait(@grpc_server_pid)
+    end
+  rescue Timeout::Error
+    Process.kill('KILL', @grpc_server_pid)
     Process.wait(@grpc_server_pid)
   rescue Errno::ESRCH, Errno::ECHILD
     nil

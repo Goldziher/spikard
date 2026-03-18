@@ -380,23 +380,28 @@ async def serve(port: int = 50051) -> None:
     # Start server
     await server.start()
 
-    # Setup graceful shutdown
+    # Setup shutdown signaling. grpc.aio shutdown with active streams can linger
+    # on some platforms, so tests prefer an immediate abort during teardown.
     stop_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
 
     def signal_handler(_sig: int, _frame: Any) -> None:
         stop_event.set()
 
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        with contextlib.suppress(NotImplementedError):
+            loop.add_signal_handler(sig, stop_event.set)
+        signal.signal(sig, signal_handler)
 
     # Wait for stop signal
     await stop_event.wait()
 
-    # Stop server gracefully
-    await server.stop(grace=2.0)
+    # Stop immediately so fixture harnesses do not hang waiting on open channels.
+    await server.stop(grace=0.0)
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for the standalone gRPC fixture server."""
     parser = argparse.ArgumentParser(description="Start the fixture-driven gRPC test server.")
     parser.add_argument(
         "--port",

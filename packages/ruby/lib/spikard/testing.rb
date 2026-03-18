@@ -56,7 +56,7 @@ module Spikard
       # Factory method for creating test client from an app
       def self.new(app_or_native, config: nil)
         # If passed a native client directly, use it
-        return super(app_or_native) if app_or_native.is_a?(Spikard::Native::TestClient)
+        return super(app_or_native) if native_test_client_candidate?(app_or_native)
 
         # Otherwise, create test client from app
         Spikard::Testing.create_test_client(app_or_native, config: config)
@@ -201,6 +201,14 @@ module Spikard
           request(verb.upcase, path, headers, body, **options)
         end
       end
+
+      def self.native_test_client_candidate?(candidate)
+        return true if candidate.is_a?(Spikard::Native::TestClient)
+        return false if candidate.respond_to?(:normalized_routes_json)
+
+        %i[request websocket sse close].any? { |method_name| candidate.respond_to?(method_name) }
+      end
+      private_class_method :native_test_client_candidate?
 
       private
 
