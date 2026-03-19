@@ -1,11 +1,12 @@
 //! Python `OpenRPC` code generation.
 
 use anyhow::Result;
-use heck::ToSnakeCase;
+use heck::{ToPascalCase, ToSnakeCase};
 use serde_json::Value;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::codegen::openrpc::spec_parser::{
-    OpenRpcMethod, OpenRpcSpec, get_method_params_class_name, get_result_class_name,
+    OpenRpcMethod, OpenRpcSpec, get_method_params_class_name, get_result_class_name, resolve_schema, schema_ref_name,
 };
 
 use super::OpenRpcGenerator;
@@ -25,15 +26,20 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str(&spec.info.version);
         code.push_str("\n\"\"\"\n\n");
 
-        code.push_str("from typing import Any\n\n");
         code.push_str("import msgspec\n\n");
+
+        code.push_str("# ============================================================================\n");
+        code.push_str("# Shared Component DTOs\n");
+        code.push_str("# ============================================================================\n\n");
+
+        generate_component_dtos(&mut code, spec)?;
 
         code.push_str("# ============================================================================\n");
         code.push_str("# Data Transfer Objects (DTOs)\n");
         code.push_str("# ============================================================================\n\n");
 
         for method in &spec.methods {
-            generate_python_dtos(&mut code, method)?;
+            generate_python_dtos(&mut code, spec, method)?;
         }
 
         code.push_str("# ============================================================================\n");
@@ -41,7 +47,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("# ============================================================================\n\n");
 
         for method in &spec.methods {
-            generate_python_handler(&mut code, method)?;
+            generate_python_handler(&mut code, spec, method)?;
         }
 
         code.push_str("# ============================================================================\n");
@@ -49,7 +55,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("# ============================================================================\n\n");
 
         code.push_str(
-            "async def handle_jsonrpc_call(method_name: str, params: Any, request_id: Any) -> dict[str, Any]:\n",
+            "async def handle_jsonrpc_call(method_name: str, params: object, request_id: object) -> dict[str, object]:\n",
         );
         code.push_str("    \"\"\"Route JSON-RPC method calls to appropriate handlers.\"\"\"\n");
         code.push_str("    try:\n");
@@ -57,8 +63,16 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         for method in &spec.methods {
             let handler_name = handler_name_for_method(&method.name);
             code.push_str(&format!("        if method_name == \"{}\":\n", method.name));
-            code.push_str(&format!("            result = await {handler_name}(params)\n"));
-            code.push_str("            return {\"jsonrpc\": \"2.0\", \"result\": result, \"id\": request_id}\n");
+            if method.params.is_empty() {
+                code.push_str(&format!(
+                    "            return {{\"jsonrpc\": \"2.0\", \"result\": msgspec.to_builtins(await {handler_name}()), \"id\": request_id}}\n"
+                ));
+            } else {
+                let params_class = get_method_params_class_name(&method.name);
+                code.push_str(&format!(
+                    "            return {{\"jsonrpc\": \"2.0\", \"result\": msgspec.to_builtins(await {handler_name}(msgspec.convert(params if params is not None else {{}}, type={params_class}))), \"id\": request_id}}\n"
+                ));
+            }
         }
 
         code.push_str("        return {\n");
@@ -85,7 +99,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("    app = Spikard()\n\n");
 
         code.push_str("    @app.post(\"/rpc\")\n");
-        code.push_str("    async def rpc_handler(request: dict[str, Any]) -> dict[str, Any]:\n");
+        code.push_str("    async def rpc_handler(request: dict[str, object]) -> dict[str, object]:\n");
         code.push_str("        \"\"\"JSON-RPC 2.0 entrypoint.\"\"\"\n");
         code.push_str("        method = request.get(\"method\")\n");
         code.push_str("        if not isinstance(method, str):\n");
@@ -94,7 +108,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("                \"error\": {\"code\": -32600, \"message\": \"Invalid request\"},\n");
         code.push_str("                \"id\": request.get(\"id\"),\n");
         code.push_str("            }\n");
-        code.push_str("        params = request.get(\"params\", {})\n");
+        code.push_str("        params = request.get(\"params\")\n");
         code.push_str("        request_id = request.get(\"id\")\n");
         code.push_str("        return await handle_jsonrpc_call(method, params, request_id)\n\n");
 
@@ -108,7 +122,22 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
     }
 }
 
-fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
+fn generate_component_dtos(code: &mut String, spec: &OpenRpcSpec) -> Result<()> {
+    let components = spec
+        .components
+        .schemas
+        .iter()
+        .map(|(name, schema)| (name.clone(), schema))
+        .collect::<BTreeMap<_, _>>();
+
+    for (name, schema) in components {
+        generate_struct_class(code, spec, &component_class_name(&name), schema, Some(&name))?;
+    }
+
+    Ok(())
+}
+
+fn generate_python_dtos(code: &mut String, spec: &OpenRpcSpec, method: &OpenRpcMethod) -> Result<()> {
     if !method.params.is_empty() {
         let params_class = get_method_params_class_name(&method.name);
         code.push_str(&format!("class {params_class}(msgspec.Struct, frozen=True):\n"));
@@ -122,70 +151,105 @@ fn generate_python_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()>
         ));
 
         for param in &method.params {
-            let py_type = json_schema_to_python_type(&param.schema);
+            let py_type = json_schema_to_python_type(spec, &param.schema);
             let field_name = python_identifier(&param.name);
             code.push_str("    ");
-            code.push_str(&render_field_definition(&field_name, &py_type, &param.name));
+            code.push_str(&render_field_definition(
+                &field_name,
+                &py_type,
+                &param.name,
+                param.required,
+            ));
             code.push('\n');
         }
         code.push('\n');
     }
 
-    let result_class = get_result_class_name(&method.name);
-    code.push_str(&format!("class {result_class}(msgspec.Struct, frozen=True):\n"));
+    if schema_ref_name(&method.result.schema).is_none() {
+        let result_class = get_result_class_name(&method.name);
+        generate_struct_class(
+            code,
+            spec,
+            &result_class,
+            &method.result.schema,
+            method.result.description.as_deref(),
+        )?;
+    }
+
+    Ok(())
+}
+
+fn generate_struct_class(
+    code: &mut String,
+    spec: &OpenRpcSpec,
+    class_name: &str,
+    schema: &Value,
+    description: Option<&str>,
+) -> Result<()> {
+    let resolved = resolve_schema(spec, schema);
+
+    code.push_str(&format!("class {class_name}(msgspec.Struct, frozen=True):\n"));
     code.push_str(&format!(
         "    \"\"\"{}.\"\"\"\n",
-        dto_docstring(
-            method.result.description.as_deref(),
-            &format!("{result_class} result"),
-            None
-        )
+        dto_docstring(description, &format!("{class_name} object"), None)
     ));
 
-    if let Some(properties) = method.result.schema.get("properties")
-        && let Some(props) = properties.as_object()
-    {
-        for (field_name, field_schema) in props {
-            let py_type = json_schema_to_python_type(field_schema);
-            let python_name = python_identifier(field_name);
-            code.push_str("    ");
-            code.push_str(&render_field_definition(&python_name, &py_type, field_name));
-            code.push('\n');
-        }
+    let Some(props) = resolved.get("properties").and_then(Value::as_object) else {
+        code.push_str("    value: object | None = None\n\n");
+        return Ok(());
+    };
+
+    if props.is_empty() {
+        code.push_str("    pass\n\n");
+        return Ok(());
+    }
+
+    let required_fields = required_field_names(resolved);
+    for (field_name, field_schema) in props {
+        let py_type = json_schema_to_python_type(spec, field_schema);
+        let python_name = python_identifier(field_name);
+        code.push_str("    ");
+        code.push_str(&render_field_definition(
+            &python_name,
+            &py_type,
+            field_name,
+            required_fields.contains(field_name),
+        ));
+        code.push('\n');
     }
     code.push('\n');
 
     Ok(())
 }
 
-fn generate_python_handler(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
+fn generate_python_handler(code: &mut String, spec: &OpenRpcSpec, method: &OpenRpcMethod) -> Result<()> {
     let handler_name = handler_name_for_method(&method.name);
-    let params_class = get_method_params_class_name(&method.name);
+    let result_type = result_type_for_method(spec, method);
 
-    code.push_str(&format!("async def {handler_name}(params: Any) -> dict[str, Any]:\n"));
+    if method.params.is_empty() {
+        code.push_str(&format!("async def {handler_name}() -> {result_type}:\n"));
+    } else {
+        let params_class = get_method_params_class_name(&method.name);
+        code.push_str(&format!(
+            "async def {handler_name}(params: {params_class}) -> {result_type}:\n"
+        ));
+    }
     code.push_str(&format!(
         "    \"\"\"{}.\"\"\"\n",
         handler_docstring(method.summary.as_deref(), method.description.as_deref(), &method.name)
     ));
-
-    if !method.params.is_empty() {
-        code.push_str(&format!(
-            "    _parsed_params = msgspec.convert(params, type={params_class})\n"
-        ));
-    }
-
     code.push_str("\n    # TODO: Implement business logic.\n");
-    code.push_str("    # This handler receives validated parameters and should return a JSON-RPC result object.\n\n");
-
-    code.push_str("    result_data: dict[str, Any] = {}\n");
-    if let Some(properties) = method.result.schema.get("properties")
-        && let Some(props) = properties.as_object()
-    {
-        for field_name in props.keys().take(3) {
-            code.push_str(&format!("    result_data[\"{field_name}\"] = \"TODO\"\n"));
-        }
-    }
-    code.push_str("    return result_data\n\n");
+    code.push_str(
+        "    # This handler receives validated parameters and should return a typed JSON-RPC result object.\n\n",
+    );
+    code.push_str("    return ");
+    code.push_str(&render_python_placeholder(
+        spec,
+        &method.result.schema,
+        Some(&result_type),
+        1,
+    ));
+    code.push_str("\n\n");
 
     Ok(())
 }
@@ -197,6 +261,16 @@ fn handler_name_for_method(method_name: &str) -> String {
     )
 }
 
+fn component_class_name(name: &str) -> String {
+    name.to_pascal_case()
+}
+
+fn result_type_for_method(spec: &OpenRpcSpec, method: &OpenRpcMethod) -> String {
+    schema_ref_name(&method.result.schema)
+        .map(component_class_name)
+        .unwrap_or_else(|| get_result_class_name(&method.name))
+}
+
 fn python_identifier(name: &str) -> String {
     if name.contains(['-', '.']) || name.chars().any(char::is_uppercase) {
         name.to_snake_case()
@@ -205,11 +279,20 @@ fn python_identifier(name: &str) -> String {
     }
 }
 
-fn render_field_definition(field_name: &str, field_type: &str, wire_name: &str) -> String {
-    if field_name == wire_name {
-        format!("{field_name}: {field_type}")
+fn render_field_definition(field_name: &str, field_type: &str, wire_name: &str, required: bool) -> String {
+    let annotated_type = if required || field_type.ends_with(" | None") {
+        field_type.to_string()
     } else {
-        format!("{field_name}: {field_type} = msgspec.field(name=\"{wire_name}\")")
+        format!("{field_type} | None")
+    };
+
+    match (field_name == wire_name, required) {
+        (true, true) => format!("{field_name}: {annotated_type}"),
+        (false, true) => format!("{field_name}: {annotated_type} = msgspec.field(name=\"{wire_name}\")"),
+        (true, false) => format!("{field_name}: {annotated_type} = None"),
+        (false, false) => {
+            format!("{field_name}: {annotated_type} = msgspec.field(default=None, name=\"{wire_name}\")")
+        }
     }
 }
 
@@ -240,26 +323,112 @@ fn ensure_sentence(text: &str) -> String {
     }
 }
 
-fn json_schema_to_python_type(schema: &Value) -> String {
-    if let Some(type_str) = schema.get("type") {
+fn required_field_names(schema: &Value) -> BTreeSet<String> {
+    schema
+        .get("required")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .map(ToOwned::to_owned)
+        .collect()
+}
+
+fn json_schema_to_python_type(spec: &OpenRpcSpec, schema: &Value) -> String {
+    if let Some(reference_name) = schema_ref_name(schema) {
+        return component_class_name(reference_name);
+    }
+
+    let resolved = resolve_schema(spec, schema);
+    if let Some(type_str) = resolved.get("type") {
         match type_str.as_str() {
             Some("string") => "str".to_string(),
             Some("number") => "float".to_string(),
             Some("integer") => "int".to_string(),
             Some("boolean") => "bool".to_string(),
             Some("array") => {
-                if let Some(items) = schema.get("items") {
-                    format!("list[{}]", json_schema_to_python_type(items))
+                if let Some(items) = resolved.get("items") {
+                    format!("list[{}]", json_schema_to_python_type(spec, items))
                 } else {
-                    "list[Any]".to_string()
+                    "list[object]".to_string()
                 }
             }
-            Some("object") => "dict[str, Any]".to_string(),
-            _ => "Any".to_string(),
+            Some("object") => "dict[str, object]".to_string(),
+            _ => "object".to_string(),
         }
-    } else if schema.get("enum").is_some() {
+    } else if resolved.get("enum").is_some() {
         "str".to_string()
     } else {
-        "Any".to_string()
+        "object".to_string()
     }
+}
+
+fn render_python_placeholder(spec: &OpenRpcSpec, schema: &Value, expected_type: Option<&str>, indent: usize) -> String {
+    let resolved = resolve_schema(spec, schema);
+    let expected_type = expected_type.map(strip_optional_type);
+
+    match resolved.get("type").and_then(Value::as_str) {
+        Some("string") => "\"TODO\"".to_string(),
+        Some("integer") => "0".to_string(),
+        Some("number") => "0.0".to_string(),
+        Some("boolean") => "False".to_string(),
+        Some("array") => {
+            let item_schema = resolved.get("items");
+            let item_value = item_schema
+                .map(|items| {
+                    render_python_placeholder(spec, items, Some(&json_schema_to_python_type(spec, items)), indent)
+                })
+                .unwrap_or_else(|| "{}".to_string());
+            format!("[{item_value}]")
+        }
+        Some("object") => render_python_object_placeholder(spec, resolved, expected_type, indent),
+        _ => "None".to_string(),
+    }
+}
+
+fn render_python_object_placeholder(
+    spec: &OpenRpcSpec,
+    schema: &Value,
+    expected_type: Option<&str>,
+    indent: usize,
+) -> String {
+    let Some(properties) = schema.get("properties").and_then(Value::as_object) else {
+        return "{}".to_string();
+    };
+
+    if properties.is_empty() {
+        return "{}".to_string();
+    }
+
+    let base_indent = "    ".repeat(indent);
+    let child_indent = "    ".repeat(indent + 1);
+    let use_struct = expected_type.is_some_and(is_named_python_type);
+
+    let rendered = properties
+        .iter()
+        .map(|(name, value)| {
+            let field_type = json_schema_to_python_type(spec, value);
+            let placeholder = render_python_placeholder(spec, value, Some(&field_type), indent + 1);
+            if use_struct {
+                format!("{child_indent}{}={placeholder}", python_identifier(name))
+            } else {
+                format!("{child_indent}\"{name}\": {placeholder}")
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(",\n");
+
+    if let Some(class_name) = expected_type.filter(|name| is_named_python_type(name)) {
+        format!("{class_name}(\n{rendered}\n{base_indent})")
+    } else {
+        format!("{{\n{rendered}\n{base_indent}}}")
+    }
+}
+
+fn strip_optional_type(type_name: &str) -> &str {
+    type_name.split(" | ").next().unwrap_or(type_name).trim()
+}
+
+fn is_named_python_type(type_name: &str) -> bool {
+    matches!(type_name.chars().next(), Some(ch) if ch.is_ascii_uppercase())
 }

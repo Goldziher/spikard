@@ -194,6 +194,41 @@ pub fn parse_openrpc_schema(path: &Path) -> Result<OpenRpcSpec> {
     Ok(spec)
 }
 
+/// Extract the component schema name from a `$ref`, if present.
+pub fn schema_ref_name(schema: &Value) -> Option<&str> {
+    schema
+        .get("$ref")
+        .and_then(Value::as_str)
+        .and_then(|reference| reference.split('/').next_back())
+}
+
+/// Resolve a component schema reference to its concrete schema definition.
+///
+/// Unknown or invalid references are returned unchanged so generators can
+/// degrade gracefully instead of failing mid-generation.
+pub fn resolve_schema<'a>(spec: &'a OpenRpcSpec, schema: &'a Value) -> &'a Value {
+    let mut current = schema;
+    let mut depth = 0usize;
+
+    while let Some(reference) = current.get("$ref").and_then(Value::as_str) {
+        let Some(name) = reference.split('/').next_back() else {
+            break;
+        };
+        let Some(next) = spec.components.schemas.get(name) else {
+            break;
+        };
+
+        current = next;
+        depth += 1;
+
+        if depth >= 32 {
+            break;
+        }
+    }
+
+    current
+}
+
 /// Extract all methods from spec
 pub fn extract_methods(spec: &OpenRpcSpec) -> Vec<&OpenRpcMethod> {
     spec.methods.iter().collect()

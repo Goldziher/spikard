@@ -1,5 +1,7 @@
 use openapiv3::OpenAPI;
 use spikard_cli::codegen::{PhpDtoStyle, PhpGenerator, TargetLanguage, quality::QualityValidator};
+use std::fs;
+use std::path::Path;
 
 // Basic model generation tests
 
@@ -218,7 +220,7 @@ fn php_generator_creates_controllers_from_paths() {
 }
 
 #[test]
-fn php_generator_uses_array_shapes_for_inline_object_payloads() {
+fn php_generator_promotes_inline_object_payloads_to_named_models() {
     let spec: OpenAPI = serde_json::from_value(serde_json::json!({
         "openapi": "3.1.0",
         "info": { "title": "Inline Shapes API", "version": "1.0.0" },
@@ -275,33 +277,40 @@ fn php_generator_uses_array_shapes_for_inline_object_payloads() {
     let output = generator.generate().expect("generate");
 
     assert!(
-        output.contains("@param array{"),
-        "inline request bodies should get array-shape docs"
+        output.contains("readonly class CreateWidgetRequestBody"),
+        "inline request bodies should get named model classes"
     );
     assert!(
-        output.contains("name: string"),
-        "required request fields should keep concrete types"
+        output.contains("readonly class CreateWidgetRequestBodyMetadata"),
+        "nested inline objects should also get named models"
     );
     assert!(
-        output.contains("size?: int|null"),
-        "optional scalar fields should keep nullable scalar types"
+        output.contains("@param CreateWidgetRequestBody $body"),
+        "controller docs should reference the generated request body model"
     );
     assert!(
-        output.contains("metadata?: array{enabled: bool}|null"),
-        "nested inline objects should keep nested array-shape docs"
+        output.contains("public function createWidget(CreateWidgetRequestBody $body): CreateWidgetResponseBody"),
+        "controller signature should use generated inline request and response models"
     );
     assert!(
-        output.contains("@return array{"),
-        "inline object responses should get array-shape docs"
+        output.contains("readonly class CreateWidgetResponseBody"),
+        "inline responses should get named model classes"
     );
-    assert!(
-        output.contains("id: string"),
-        "response object fields should keep concrete types"
-    );
-    assert!(
-        output.contains("status: string"),
-        "response object fields should keep concrete types"
-    );
+}
+
+#[test]
+fn php_generator_promotes_component_nested_objects_without_duplicate_parent_aliases() {
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/openapi_schemas/complex_nested.json");
+    let spec: OpenAPI = serde_json::from_str(&fs::read_to_string(schema_path).expect("fixture")).expect("spec");
+
+    let generator = PhpGenerator::new(spec, PhpDtoStyle::ReadonlyClass);
+    let output = generator.generate().expect("generate");
+
+    assert!(output.contains("readonly class OrganizationSettingsIntegrations"));
+    assert!(output.contains("public ?OrganizationSettingsIntegrations $integrations = null"));
+    assert!(!output.contains("readonly class OrganizationIntegrations"));
+    assert!(!output.contains("readonly class OrganizationNotifications"));
 }
 
 #[test]
@@ -449,6 +458,155 @@ fn php_generator_handles_path_and_query_parameters() {
     assert!(
         output.contains("public function getPost(string $userId, string $postId, ?string $includeComments = null)")
     );
+}
+
+#[test]
+fn php_generator_preserves_parameter_types_and_orders_required_params_before_optional_ones() {
+    let spec: OpenAPI = serde_json::from_value(serde_json::json!({
+        "openapi": "3.1.0",
+        "info": { "title": "Typed Params API", "version": "1.0.0" },
+        "components": {
+            "schemas": {
+                "CreateTaskInput": {
+                    "type": "object",
+                    "properties": {
+                        "title": { "type": "string" },
+                        "priority": { "type": "string", "enum": ["low", "high"] }
+                    },
+                    "required": ["title", "priority"]
+                }
+            }
+        },
+        "paths": {
+            "/projects/{projectId}/tasks": {
+                "post": {
+                    "operationId": "createTask",
+                    "parameters": [
+                        {
+                            "name": "projectId",
+                            "in": "path",
+                            "required": true,
+                            "schema": { "type": "integer" }
+                        },
+                        {
+                            "name": "limit",
+                            "in": "query",
+                            "required": true,
+                            "schema": { "type": "integer" }
+                        },
+                        {
+                            "name": "dryRun",
+                            "in": "query",
+                            "required": false,
+                            "schema": { "type": "boolean" }
+                        }
+                    ],
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": { "$ref": "#/components/schemas/CreateTaskInput" }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "201": {
+                            "description": "Created",
+                            "content": {
+                                "application/json": {
+                                    "schema": { "$ref": "#/components/schemas/CreateTaskInput" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }))
+    .expect("spec");
+
+    let generator = PhpGenerator::new(spec, PhpDtoStyle::ReadonlyClass);
+    let output = generator.generate().expect("generate");
+
+    assert!(output.contains("enum CreateTaskInputPriority: string"));
+    assert!(output.contains("public CreateTaskInputPriority $priority"));
+    assert!(output.contains("@param CreateTaskInputPriority $priority"));
+    assert!(output.contains("@param int $projectId"));
+    assert!(output.contains("@param int $limit"));
+    assert!(output.contains("@param bool|null $dryRun"));
+    assert!(output.contains(
+        "public function createTask(int $projectId, int $limit, CreateTaskInput $body, ?bool $dryRun = null)"
+    ));
+}
+
+#[test]
+fn php_generator_uses_semantic_types_for_string_formats_and_enums() {
+    let spec: OpenAPI = serde_json::from_value(serde_json::json!({
+        "openapi": "3.1.0",
+        "info": { "title": "Event API", "version": "1.0.0" },
+        "components": {
+            "schemas": {
+                "Event": {
+                    "type": "object",
+                    "properties": {
+                        "id": { "type": "string", "format": "uuid" },
+                        "startsAt": { "type": "string", "format": "date-time" },
+                        "eventDate": { "type": "string", "format": "date" },
+                        "status": { "type": "string", "enum": ["scheduled", "cancelled"] }
+                    },
+                    "required": ["id", "startsAt", "eventDate", "status"]
+                }
+            }
+        },
+        "paths": {
+            "/events/{eventId}": {
+                "get": {
+                    "operationId": "getEvent",
+                    "parameters": [
+                        {
+                            "name": "eventId",
+                            "in": "path",
+                            "required": true,
+                            "schema": { "type": "string", "format": "uuid" }
+                        },
+                        {
+                            "name": "status",
+                            "in": "query",
+                            "required": false,
+                            "schema": { "type": "string", "enum": ["scheduled", "cancelled"] }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Success",
+                            "content": {
+                                "application/json": {
+                                    "schema": { "$ref": "#/components/schemas/Event" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }))
+    .expect("spec");
+
+    let generator = PhpGenerator::new(spec, PhpDtoStyle::ReadonlyClass);
+    let output = generator.generate().expect("generate");
+
+    assert!(output.contains("readonly class UuidValue"));
+    assert!(output.contains("enum EventStatus: string"));
+    assert!(output.contains("case Scheduled = 'scheduled';"));
+    assert!(output.contains("case Cancelled = 'cancelled';"));
+    assert!(output.contains("public UuidValue $id"));
+    assert!(output.contains("public \\DateTimeImmutable $startsAt"));
+    assert!(output.contains("public \\DateTimeImmutable $eventDate"));
+    assert!(output.contains("public EventStatus $status"));
+    assert!(output.contains("enum GetEventStatus: string"));
+    assert!(output.contains("@param UuidValue $eventId"));
+    assert!(output.contains("@param GetEventStatus|null $status"));
+    assert!(output.contains("public function getEvent(UuidValue $eventId, ?GetEventStatus $status = null): Event"));
 }
 
 #[test]

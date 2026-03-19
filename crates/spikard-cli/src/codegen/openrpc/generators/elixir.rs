@@ -3,10 +3,11 @@
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
 use serde_json::{Map, Number, Value};
+use std::collections::BTreeMap;
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-use crate::codegen::openrpc::spec_parser::OpenRpcSpec;
+use crate::codegen::openrpc::spec_parser::{OpenRpcSpec, resolve_schema, schema_ref_name};
 
 use super::OpenRpcGenerator;
 
@@ -17,6 +18,12 @@ impl OpenRpcGenerator for ElixirOpenRpcGenerator {
     fn generate_handler_app(&self, spec: &OpenRpcSpec) -> Result<String> {
         let mut code = String::new();
         let module_name = root_module_name(spec);
+        let types_module_name = format!("{module_name}.Types");
+        let has_component_types = !spec.components.schemas.is_empty();
+
+        if has_component_types {
+            code.push_str(&generate_types_module(spec, &types_module_name));
+        }
 
         code.push_str(&format!(
             r#"defmodule {module_name} do
@@ -122,6 +129,9 @@ end
         );
 
         code.push_str(&format!("defmodule {module_name}.Handlers do\n  @moduledoc false\n\n"));
+        if has_component_types {
+            code.push_str(&format!("  alias {types_module_name}, as: Types\n\n"));
+        }
 
         for method in &spec.methods {
             let type_base = method_type_name(&method.name);
@@ -138,13 +148,13 @@ end
                 "  @typedoc \"Parameters for {}.\"\n  @type {} :: {}\n\n",
                 escape_string(&method.name),
                 params_type_name,
-                schema_to_typespec(&params_schema(method), false)
+                schema_to_typespec(spec, &params_schema(method), false, Some("Types"))
             ));
             code.push_str(&format!(
                 "  @typedoc \"Result for {}.\"\n  @type {} :: {}\n",
                 escape_string(&method.name),
                 result_type_name,
-                schema_to_typespec(&method.result.schema, false)
+                schema_to_typespec(spec, &method.result.schema, false, Some("Types"))
             ));
             code.push_str(&format!(
                 "  @spec {}({}) :: {{:ok, {}}} | {{:error, integer(), String.t(), term()}}\n",
@@ -157,7 +167,10 @@ end
             code.push_str("      params when is_map(params) ->\n");
             if required_params.is_empty() {
                 code.push_str("        result = ");
-                code.push_str(&render_elixir_value(&placeholder_from_schema(&method.result.schema), 4));
+                code.push_str(&render_elixir_value(
+                    &placeholder_from_schema(spec, &method.result.schema),
+                    4,
+                ));
                 code.push_str("\n        {:ok, result}\n");
             } else {
                 code.push_str(&format!(
@@ -165,7 +178,10 @@ end
                     required_params.join(", ")
                 ));
                 code.push_str("          result = ");
-                code.push_str(&render_elixir_value(&placeholder_from_schema(&method.result.schema), 5));
+                code.push_str(&render_elixir_value(
+                    &placeholder_from_schema(spec, &method.result.schema),
+                    5,
+                ));
                 code.push_str("\n          {:ok, result}\n");
                 code.push_str("        end\n");
             }
@@ -219,6 +235,34 @@ fn method_type_name(method_name: &str) -> String {
     method_name.replace(['.', '-'], "_").to_snake_case()
 }
 
+fn component_type_name(component_name: &str) -> String {
+    component_name.to_snake_case()
+}
+
+fn generate_types_module(spec: &OpenRpcSpec, module_name: &str) -> String {
+    let mut code = String::new();
+    code.push_str(&format!("defmodule {module_name} do\n  @moduledoc false\n\n"));
+
+    let components = spec
+        .components
+        .schemas
+        .iter()
+        .map(|(name, schema)| (name.clone(), schema))
+        .collect::<BTreeMap<_, _>>();
+
+    for (name, schema) in components {
+        code.push_str(&format!(
+            "  @typedoc \"OpenRPC schema for {}.\"\n  @type {} :: {}\n\n",
+            escape_string(&name),
+            component_type_name(&name),
+            schema_to_typespec(spec, schema, false, None)
+        ));
+    }
+
+    code.push_str("end\n\n");
+    code
+}
+
 fn params_schema(method: &crate::codegen::openrpc::spec_parser::OpenRpcMethod) -> Value {
     let mut properties = Map::new();
     let mut required = Vec::new();
@@ -239,27 +283,24 @@ fn params_schema(method: &crate::codegen::openrpc::spec_parser::OpenRpcMethod) -
     Value::Object(result)
 }
 
-fn safe_required_key(name: &str) -> String {
-    let atom_name = name.to_snake_case();
-    if atom_name
-        .chars()
-        .enumerate()
-        .all(|(index, ch)| ch.is_ascii_lowercase() || ch.is_ascii_digit() || ch == '_' || (index > 0 && ch == '?'))
-        && !atom_name.is_empty()
-        && !atom_name.starts_with(|c: char| c.is_ascii_digit())
-    {
-        format!(":{atom_name}")
-    } else {
-        "String.t()".to_string()
-    }
+fn json_key_typespec(name: &str) -> String {
+    format!(":\"{}\"", escape_string(name))
 }
 
-fn schema_to_typespec(schema: &Value, nullable: bool) -> String {
-    let base = if let Some(enum_values) = schema.get("enum").and_then(Value::as_array) {
+fn schema_to_typespec(spec: &OpenRpcSpec, schema: &Value, nullable: bool, ref_prefix: Option<&str>) -> String {
+    let resolved = resolve_schema(spec, schema);
+
+    let base = if let Some(reference_name) = schema_ref_name(schema) {
+        let type_name = component_type_name(reference_name);
+        match ref_prefix {
+            Some(prefix) => format!("{prefix}.{type_name}()"),
+            None => format!("{type_name}()"),
+        }
+    } else if let Some(enum_values) = resolved.get("enum").and_then(Value::as_array) {
         if enum_values.is_empty() {
             "String.t()".to_string()
         } else {
-            match schema.get("type").and_then(Value::as_str) {
+            match resolved.get("type").and_then(Value::as_str) {
                 Some("integer") => "integer()".to_string(),
                 Some("number") => "float()".to_string(),
                 Some("boolean") => "boolean()".to_string(),
@@ -267,19 +308,19 @@ fn schema_to_typespec(schema: &Value, nullable: bool) -> String {
             }
         }
     } else {
-        match schema.get("type").and_then(Value::as_str) {
+        match resolved.get("type").and_then(Value::as_str) {
             Some("string") => "String.t()".to_string(),
             Some("integer") => "integer()".to_string(),
             Some("number") => "float()".to_string(),
             Some("boolean") => "boolean()".to_string(),
             Some("array") => {
-                let item_type = schema
+                let item_type = resolved
                     .get("items")
-                    .map(|item| schema_to_typespec(item, false))
+                    .map(|item| schema_to_typespec(spec, item, false, ref_prefix))
                     .unwrap_or_else(|| "term()".to_string());
                 format!("[{item_type}]")
             }
-            Some("object") => object_typespec(schema),
+            Some("object") => object_typespec(spec, resolved, ref_prefix),
             _ => "term()".to_string(),
         }
     };
@@ -287,7 +328,7 @@ fn schema_to_typespec(schema: &Value, nullable: bool) -> String {
     if nullable { format!("{base} | nil") } else { base }
 }
 
-fn object_typespec(schema: &Value) -> String {
+fn object_typespec(spec: &OpenRpcSpec, schema: &Value, ref_prefix: Option<&str>) -> String {
     let Some(properties) = schema.get("properties").and_then(Value::as_object) else {
         return "map()".to_string();
     };
@@ -312,11 +353,16 @@ fn object_typespec(schema: &Value) -> String {
         .iter()
         .map(|(name, value)| {
             let key = if required_names.iter().any(|required| required == name) {
-                format!("required({})", safe_required_key(name))
+                format!("required({})", json_key_typespec(name))
             } else {
-                format!("optional({})", safe_required_key(name))
+                format!("optional({})", json_key_typespec(name))
             };
-            let field_type = schema_to_typespec(value, !required_names.iter().any(|required| required == name));
+            let field_type = schema_to_typespec(
+                spec,
+                value,
+                !required_names.iter().any(|required| required == name),
+                ref_prefix,
+            );
             format!("{key} => {field_type}")
         })
         .collect::<Vec<_>>()
@@ -325,35 +371,37 @@ fn object_typespec(schema: &Value) -> String {
     format!("%{{{fields}}}")
 }
 
-fn placeholder_from_schema(schema: &Value) -> Value {
-    if let Some(example) = schema.get("example") {
+fn placeholder_from_schema(spec: &OpenRpcSpec, schema: &Value) -> Value {
+    let resolved = resolve_schema(spec, schema);
+
+    if let Some(example) = resolved.get("example") {
         return example.clone();
     }
 
-    if let Some(enum_values) = schema.get("enum").and_then(Value::as_array)
+    if let Some(enum_values) = resolved.get("enum").and_then(Value::as_array)
         && let Some(first) = enum_values.first()
     {
         return first.clone();
     }
 
-    match schema.get("type").and_then(Value::as_str) {
+    match resolved.get("type").and_then(Value::as_str) {
         Some("string") => Value::String("TODO".to_string()),
         Some("integer") => Value::Number(Number::from(0)),
         Some("number") => Value::Number(Number::from_f64(0.0).unwrap_or_else(|| Number::from(0))),
         Some("boolean") => Value::Bool(false),
         Some("array") => {
-            let items = schema
+            let items = resolved
                 .get("items")
-                .map(placeholder_from_schema)
+                .map(|item| placeholder_from_schema(spec, item))
                 .map(|value| vec![value])
                 .unwrap_or_default();
             Value::Array(items)
         }
         Some("object") => {
             let mut object = Map::new();
-            if let Some(properties) = schema.get("properties").and_then(Value::as_object) {
+            if let Some(properties) = resolved.get("properties").and_then(Value::as_object) {
                 for (name, value) in properties {
-                    object.insert(name.clone(), placeholder_from_schema(value));
+                    object.insert(name.clone(), placeholder_from_schema(spec, value));
                 }
             }
             Value::Object(object)

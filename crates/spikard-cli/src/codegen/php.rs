@@ -3,7 +3,11 @@
 use super::PhpDtoStyle;
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
-use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, Type};
+use openapiv3::{
+    OpenAPI, Operation, Parameter, ParameterData, ParameterSchemaOrContent, ReferenceOr, Schema, SchemaKind,
+    StringFormat, Type, VariantOrUnknownOrEmpty,
+};
+use std::collections::BTreeSet;
 
 pub struct PhpGenerator {
     spec: OpenAPI,
@@ -45,13 +49,25 @@ impl PhpGenerator {
     fn generate_models(&self) -> Result<String> {
         let mut output = String::new();
         output.push_str("// Schema Models\n\n");
+        let mut emitted_models = BTreeSet::new();
+        let mut emitted_enums = BTreeSet::new();
+
+        if self.uses_uuid_types() {
+            output.push_str(&self.generate_uuid_value_class());
+            output.push('\n');
+        }
 
         if let Some(components) = &self.spec.components {
             for (name, schema_ref) in &components.schemas {
                 match schema_ref {
                     ReferenceOr::Item(schema) => {
-                        output.push_str(&self.generate_model_class(name, schema)?);
-                        output.push('\n');
+                        self.generate_schema_family(
+                            &name.to_pascal_case(),
+                            schema,
+                            &mut emitted_models,
+                            &mut emitted_enums,
+                            &mut output,
+                        )?;
                     }
                     ReferenceOr::Reference { .. } => {
                         continue;
@@ -60,12 +76,14 @@ impl PhpGenerator {
             }
         }
 
+        self.generate_inline_route_models(&mut emitted_models, &mut emitted_enums, &mut output)?;
+        self.generate_inline_parameter_enums(&mut emitted_enums, &mut output)?;
+
         Ok(output)
     }
 
     /// Generate a PHP model class for an `OpenAPI` schema
-    fn generate_model_class(&self, name: &str, schema: &Schema) -> Result<String> {
-        let class_name = name.to_pascal_case();
+    fn generate_model_class(&self, class_name: &str, schema: &Schema) -> Result<String> {
         let mut output = String::new();
 
         self.append_php_doc(&mut output, &schema.schema_data.description, &class_name);
@@ -77,7 +95,7 @@ impl PhpGenerator {
                 if obj.properties.is_empty() {
                     output.push_str("    // Empty schema\n");
                 } else {
-                    self.append_constructor(&mut output, obj)?;
+                    self.append_constructor(&mut output, class_name, obj)?;
                 }
             }
             _ => {
@@ -88,6 +106,231 @@ impl PhpGenerator {
         output.push_str("}\n");
 
         Ok(output)
+    }
+
+    fn generate_enum_class(&self, enum_name: &str, schema: &Schema) -> Result<String> {
+        let mut output = String::new();
+
+        self.append_php_doc(&mut output, &schema.schema_data.description, enum_name);
+        output.push_str(&format!("enum {enum_name}: string\n{{\n"));
+
+        let SchemaKind::Type(Type::String(string_type)) = &schema.schema_kind else {
+            output.push_str("}\n");
+            return Ok(output);
+        };
+
+        for value in string_type.enumeration.iter().flatten() {
+            output.push_str(&format!(
+                "    case {} = '{}';\n",
+                Self::enum_case_name(value),
+                Self::escape_php_string(value)
+            ));
+        }
+
+        output.push_str("}\n");
+        Ok(output)
+    }
+
+    fn generate_uuid_value_class(&self) -> String {
+        String::from(
+            "/**\n * UUID value object\n */\nreadonly class UuidValue\n{\n    public function __construct(public string $value)\n    {\n        if (!preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $value)) {\n            throw new \\InvalidArgumentException('Invalid UUID value');\n        }\n    }\n\n    public function __toString(): string\n    {\n        return $this->value;\n    }\n}\n",
+        )
+    }
+
+    fn generate_schema_family(
+        &self,
+        class_name: &str,
+        schema: &Schema,
+        emitted_models: &mut BTreeSet<String>,
+        emitted_enums: &mut BTreeSet<String>,
+        output: &mut String,
+    ) -> Result<()> {
+        if Self::is_enum_schema(schema) {
+            return self.generate_enum_family(class_name, schema, emitted_enums, output);
+        }
+
+        if !emitted_models.insert(class_name.to_string()) {
+            return Ok(());
+        }
+
+        self.generate_nested_model_families(class_name, schema, emitted_models, emitted_enums, output)?;
+        output.push_str(&self.generate_model_class(class_name, schema)?);
+        output.push('\n');
+        Ok(())
+    }
+
+    fn generate_enum_family(
+        &self,
+        enum_name: &str,
+        schema: &Schema,
+        emitted_enums: &mut BTreeSet<String>,
+        output: &mut String,
+    ) -> Result<()> {
+        if !emitted_enums.insert(enum_name.to_string()) {
+            return Ok(());
+        }
+
+        output.push_str(&self.generate_enum_class(enum_name, schema)?);
+        output.push('\n');
+        Ok(())
+    }
+
+    fn generate_nested_model_families(
+        &self,
+        parent_class_name: &str,
+        schema: &Schema,
+        emitted_models: &mut BTreeSet<String>,
+        emitted_enums: &mut BTreeSet<String>,
+        output: &mut String,
+    ) -> Result<()> {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::Object(obj)) => {
+                for (prop_name, prop_schema_ref) in &obj.properties {
+                    match prop_schema_ref {
+                        ReferenceOr::Item(prop_schema) => {
+                            if let Some(enum_name) = self.inline_enum_name(parent_class_name, prop_name, prop_schema) {
+                                self.generate_enum_family(&enum_name, prop_schema, emitted_enums, output)?;
+                            }
+                            if let Some(class_name) = self.inline_model_name(parent_class_name, prop_name, prop_schema)
+                            {
+                                self.generate_schema_family(
+                                    &class_name,
+                                    prop_schema,
+                                    emitted_models,
+                                    emitted_enums,
+                                    output,
+                                )?;
+                            }
+                            if let Some(array_item_name) =
+                                self.inline_array_item_model_name(parent_class_name, prop_name, prop_schema)
+                                && let Some(item_schema) = Self::inline_array_item_schema(prop_schema)
+                            {
+                                self.generate_schema_family(
+                                    &array_item_name,
+                                    item_schema,
+                                    emitted_models,
+                                    emitted_enums,
+                                    output,
+                                )?;
+                            }
+                            if let Some(array_item_enum_name) =
+                                self.inline_array_item_enum_name(parent_class_name, prop_name, prop_schema)
+                                && let Some(item_schema) = Self::inline_array_item_schema(prop_schema)
+                            {
+                                self.generate_enum_family(&array_item_enum_name, item_schema, emitted_enums, output)?;
+                            }
+                        }
+                        ReferenceOr::Reference { .. } => {}
+                    }
+                }
+            }
+            SchemaKind::AllOf { all_of } => {
+                for schema_ref in all_of {
+                    match schema_ref {
+                        ReferenceOr::Item(item_schema) => self.generate_nested_model_families(
+                            parent_class_name,
+                            item_schema,
+                            emitted_models,
+                            emitted_enums,
+                            output,
+                        )?,
+                        ReferenceOr::Reference { reference } => {
+                            if let Some(item_schema) = self.resolve_schema_reference(reference) {
+                                self.generate_nested_model_families(
+                                    parent_class_name,
+                                    item_schema,
+                                    emitted_models,
+                                    emitted_enums,
+                                    output,
+                                )?;
+                            }
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
+
+    fn generate_inline_route_models(
+        &self,
+        emitted_models: &mut BTreeSet<String>,
+        emitted_enums: &mut BTreeSet<String>,
+        output: &mut String,
+    ) -> Result<()> {
+        for path_item_ref in self.spec.paths.paths.values() {
+            let ReferenceOr::Item(path_item) = path_item_ref else {
+                continue;
+            };
+
+            for operation in [
+                path_item.get.as_ref(),
+                path_item.post.as_ref(),
+                path_item.put.as_ref(),
+                path_item.delete.as_ref(),
+                path_item.patch.as_ref(),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                if let Some((class_name, schema)) = self.inline_request_body_model(operation) {
+                    self.generate_schema_family(&class_name, schema, emitted_models, emitted_enums, output)?;
+                }
+                if let Some((class_name, schema)) = self.inline_response_model(operation) {
+                    self.generate_schema_family(&class_name, schema, emitted_models, emitted_enums, output)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn generate_inline_parameter_enums(&self, emitted_enums: &mut BTreeSet<String>, output: &mut String) -> Result<()> {
+        for path_item_ref in self.spec.paths.paths.values() {
+            let ReferenceOr::Item(path_item) = path_item_ref else {
+                continue;
+            };
+
+            for operation in [
+                path_item.get.as_ref(),
+                path_item.post.as_ref(),
+                path_item.put.as_ref(),
+                path_item.delete.as_ref(),
+                path_item.patch.as_ref(),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                let operation_id = operation.operation_id.as_deref();
+
+                for parameter_ref in &operation.parameters {
+                    let ReferenceOr::Item(parameter) = parameter_ref else {
+                        continue;
+                    };
+
+                    let parameter_data = match parameter {
+                        Parameter::Path { parameter_data, .. }
+                        | Parameter::Query { parameter_data, .. }
+                        | Parameter::Header { parameter_data, .. }
+                        | Parameter::Cookie { parameter_data, .. } => parameter_data,
+                    };
+
+                    let ParameterSchemaOrContent::Schema(ReferenceOr::Item(schema)) = &parameter_data.format else {
+                        continue;
+                    };
+
+                    let Some(enum_name) = self.parameter_enum_name(operation_id, &parameter_data.name, schema) else {
+                        continue;
+                    };
+
+                    self.generate_enum_family(&enum_name, schema, emitted_enums, output)?;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Append `PHPDoc` comment block to output
@@ -103,8 +346,8 @@ impl PhpGenerator {
     }
 
     /// Append constructor method with typed properties
-    fn append_constructor(&self, output: &mut String, obj: &openapiv3::ObjectType) -> Result<()> {
-        let (property_lines, property_docs) = self.build_constructor_params(obj)?;
+    fn append_constructor(&self, output: &mut String, class_name: &str, obj: &openapiv3::ObjectType) -> Result<()> {
+        let (property_lines, property_docs) = self.build_constructor_params(class_name, obj)?;
 
         if !property_docs.is_empty() {
             output.push_str("    /**\n");
@@ -126,7 +369,11 @@ impl PhpGenerator {
 
     /// Build constructor parameter declarations for object properties
     /// Partitions properties so required parameters come first (PHP 8.1+ requirement)
-    fn build_constructor_params(&self, obj: &openapiv3::ObjectType) -> Result<(Vec<String>, Vec<String>)> {
+    fn build_constructor_params(
+        &self,
+        class_name: &str,
+        obj: &openapiv3::ObjectType,
+    ) -> Result<(Vec<String>, Vec<String>)> {
         let mut required_props = Vec::new();
         let mut optional_props = Vec::new();
         let mut required_docs = Vec::new();
@@ -139,8 +386,10 @@ impl PhpGenerator {
 
             let (type_hint, nullable, phpdoc_type) = match prop_schema_ref {
                 ReferenceOr::Item(prop_schema) => {
-                    let (type_hint, nullable) = Self::schema_to_php_type(prop_schema, !is_required);
-                    let phpdoc_type = Self::schema_to_phpdoc_type(prop_schema, !is_required);
+                    let (type_hint, nullable) =
+                        self.schema_to_php_type(Some(class_name), Some(prop_name), prop_schema, !is_required, None);
+                    let phpdoc_type =
+                        self.schema_to_phpdoc_type(Some(class_name), Some(prop_name), prop_schema, !is_required, None);
                     (type_hint, nullable, phpdoc_type)
                 }
                 ReferenceOr::Reference { reference } => {
@@ -206,6 +455,120 @@ impl PhpGenerator {
         reference.split('/').next_back().unwrap_or("UnknownType").to_string()
     }
 
+    fn resolve_schema_reference<'a>(&'a self, reference: &str) -> Option<&'a Schema> {
+        let name = reference.split('/').next_back()?;
+        self.spec
+            .components
+            .as_ref()?
+            .schemas
+            .get(name)
+            .and_then(|schema_ref| match schema_ref {
+                ReferenceOr::Item(schema) => Some(schema),
+                ReferenceOr::Reference { .. } => None,
+            })
+    }
+
+    fn uses_uuid_types(&self) -> bool {
+        self.spec.components.as_ref().is_some_and(|components| {
+            components
+                .schemas
+                .values()
+                .filter_map(|schema_ref| match schema_ref {
+                    ReferenceOr::Item(schema) => Some(schema),
+                    ReferenceOr::Reference { .. } => None,
+                })
+                .any(|schema| self.schema_uses_uuid_type(schema))
+        }) || self.spec.paths.paths.values().any(|path_item_ref| {
+            let ReferenceOr::Item(path_item) = path_item_ref else {
+                return false;
+            };
+
+            [
+                path_item.get.as_ref(),
+                path_item.post.as_ref(),
+                path_item.put.as_ref(),
+                path_item.delete.as_ref(),
+                path_item.patch.as_ref(),
+            ]
+            .into_iter()
+            .flatten()
+            .any(|operation| self.operation_uses_uuid_type(operation))
+        })
+    }
+
+    fn operation_uses_uuid_type(&self, operation: &Operation) -> bool {
+        operation.parameters.iter().any(|parameter_ref| {
+            let ReferenceOr::Item(parameter) = parameter_ref else {
+                return false;
+            };
+            match parameter {
+                Parameter::Path { parameter_data, .. }
+                | Parameter::Query { parameter_data, .. }
+                | Parameter::Header { parameter_data, .. }
+                | Parameter::Cookie { parameter_data, .. } => {
+                    let ParameterSchemaOrContent::Schema(schema_ref) = &parameter_data.format else {
+                        return false;
+                    };
+                    match schema_ref {
+                        ReferenceOr::Item(schema) => self.schema_uses_uuid_type(schema),
+                        ReferenceOr::Reference { reference } => self
+                            .resolve_schema_reference(reference)
+                            .is_some_and(|schema| self.schema_uses_uuid_type(schema)),
+                    }
+                }
+            }
+        }) || operation
+            .request_body
+            .as_ref()
+            .and_then(|body_ref| match body_ref {
+                ReferenceOr::Item(request_body) => request_body
+                    .content
+                    .get("application/json")
+                    .and_then(|media_type| media_type.schema.as_ref())
+                    .and_then(|schema_ref| match schema_ref {
+                        ReferenceOr::Item(schema) => Some(schema),
+                        ReferenceOr::Reference { reference } => self.resolve_schema_reference(reference),
+                    }),
+                ReferenceOr::Reference { .. } => None,
+            })
+            .is_some_and(|schema| self.schema_uses_uuid_type(schema))
+    }
+
+    fn schema_uses_uuid_type(&self, schema: &Schema) -> bool {
+        let SchemaKind::Type(ty) = &schema.schema_kind else {
+            if let SchemaKind::AllOf { all_of } = &schema.schema_kind {
+                return all_of.iter().any(|schema_ref| match schema_ref {
+                    ReferenceOr::Item(schema) => self.schema_uses_uuid_type(schema),
+                    ReferenceOr::Reference { reference } => self
+                        .resolve_schema_reference(reference)
+                        .is_some_and(|schema| self.schema_uses_uuid_type(schema)),
+                });
+            }
+            return false;
+        };
+
+        match ty {
+            Type::String(string_type) => {
+                matches!(&string_type.format, VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid")
+            }
+            Type::Array(array_type) => array_type
+                .items
+                .as_ref()
+                .and_then(|item_schema| match item_schema {
+                    ReferenceOr::Item(schema) => Some(schema.as_ref()),
+                    ReferenceOr::Reference { reference } => self.resolve_schema_reference(reference),
+                })
+                .is_some_and(|schema| self.schema_uses_uuid_type(schema)),
+            Type::Object(object_type) => object_type.properties.values().any(|schema_ref| match schema_ref {
+                ReferenceOr::Item(schema) => self.schema_uses_uuid_type(schema),
+                ReferenceOr::Reference { reference } => self
+                    .resolve_schema_reference(reference)
+                    .is_some_and(|schema| self.schema_uses_uuid_type(schema)),
+            }),
+            _ => false,
+        }
+    }
+
     /// Convert `snake_case` or kebab-case to camelCase
     fn to_camel_case(s: &str) -> String {
         let snake = s.to_snake_case();
@@ -230,26 +593,177 @@ impl PhpGenerator {
         }
     }
 
+    fn inline_model_name(&self, parent_class_name: &str, field_name: &str, schema: &Schema) -> Option<String> {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty() => {
+                Some(format!("{parent_class_name}{}", field_name.to_pascal_case()))
+            }
+            _ => None,
+        }
+    }
+
+    fn inline_enum_name(&self, parent_class_name: &str, field_name: &str, schema: &Schema) -> Option<String> {
+        Self::is_enum_schema(schema).then(|| format!("{parent_class_name}{}", field_name.to_pascal_case()))
+    }
+
+    fn inline_array_item_model_name(
+        &self,
+        parent_class_name: &str,
+        field_name: &str,
+        schema: &Schema,
+    ) -> Option<String> {
+        let item_schema = Self::inline_array_item_schema(schema)?;
+        match &item_schema.schema_kind {
+            SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty() => {
+                Some(format!("{parent_class_name}{}Item", field_name.to_pascal_case()))
+            }
+            _ => None,
+        }
+    }
+
+    fn inline_array_item_enum_name(
+        &self,
+        parent_class_name: &str,
+        field_name: &str,
+        schema: &Schema,
+    ) -> Option<String> {
+        let item_schema = Self::inline_array_item_schema(schema)?;
+        Self::is_enum_schema(item_schema).then(|| format!("{parent_class_name}{}Item", field_name.to_pascal_case()))
+    }
+
+    fn inline_array_item_schema(schema: &Schema) -> Option<&Schema> {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::Array(array_type)) => match &array_type.items {
+                Some(ReferenceOr::Item(item_schema)) => Some(item_schema),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn parameter_enum_name(&self, operation_id: Option<&str>, parameter_name: &str, schema: &Schema) -> Option<String> {
+        Self::is_enum_schema(schema).then(|| {
+            let operation_prefix = operation_id
+                .map(str::to_pascal_case)
+                .unwrap_or_else(|| "Operation".to_string());
+            format!("{operation_prefix}{}", parameter_name.to_pascal_case())
+        })
+    }
+
+    fn inline_request_body_model<'a>(&self, operation: &'a Operation) -> Option<(String, &'a Schema)> {
+        let operation_id = operation.operation_id.as_deref()?;
+        let request_body = operation.request_body.as_ref()?;
+
+        match request_body {
+            ReferenceOr::Item(body) => {
+                let schema_ref = body.content.get("application/json")?.schema.as_ref()?;
+                match schema_ref {
+                    ReferenceOr::Item(schema) if Self::is_named_inline_object_schema(schema) => {
+                        Some((format!("{}RequestBody", operation_id.to_pascal_case()), schema))
+                    }
+                    _ => None,
+                }
+            }
+            ReferenceOr::Reference { .. } => None,
+        }
+    }
+
+    fn inline_response_model<'a>(&self, operation: &'a Operation) -> Option<(String, &'a Schema)> {
+        use openapiv3::StatusCode;
+
+        let operation_id = operation.operation_id.as_deref()?;
+        let response = operation
+            .responses
+            .responses
+            .get(&StatusCode::Code(200))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Code(201)))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Range(2)))?;
+
+        match response {
+            ReferenceOr::Item(response) => {
+                let schema_ref = response.content.get("application/json")?.schema.as_ref()?;
+                match schema_ref {
+                    ReferenceOr::Item(schema) if Self::is_named_inline_object_schema(schema) => {
+                        Some((format!("{}ResponseBody", operation_id.to_pascal_case()), schema))
+                    }
+                    _ => None,
+                }
+            }
+            ReferenceOr::Reference { .. } => None,
+        }
+    }
+
+    fn is_named_inline_object_schema(schema: &Schema) -> bool {
+        matches!(&schema.schema_kind, SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty())
+    }
+
+    fn is_enum_schema(schema: &Schema) -> bool {
+        matches!(&schema.schema_kind, SchemaKind::Type(Type::String(string_type)) if !string_type.enumeration.is_empty())
+    }
+
+    fn enum_case_name(value: &str) -> String {
+        let mut name = value
+            .chars()
+            .map(|ch| if ch.is_ascii_alphanumeric() { ch } else { ' ' })
+            .collect::<String>()
+            .to_pascal_case();
+        if name.is_empty() {
+            name = "Value".to_string();
+        }
+        if name.chars().next().is_some_and(|ch| ch.is_ascii_digit()) {
+            name.insert_str(0, "Value");
+        }
+        name
+    }
+
+    fn enum_type_name(
+        &self,
+        parent_class_name: Option<&str>,
+        field_name: Option<&str>,
+        schema: &Schema,
+        inline_name: Option<&str>,
+    ) -> Option<String> {
+        Self::is_enum_schema(schema).then(|| {
+            inline_name
+                .map(ToOwned::to_owned)
+                .or_else(|| {
+                    parent_class_name
+                        .zip(field_name)
+                        .map(|(parent, field)| format!("{parent}{}", field.to_pascal_case()))
+                })
+                .unwrap_or_else(|| "StringBackedEnum".to_string())
+        })
+    }
+
+    fn string_format_php_type(&self, string_type: &openapiv3::StringType) -> String {
+        match &string_type.format {
+            VariantOrUnknownOrEmpty::Item(StringFormat::Date | StringFormat::DateTime) => {
+                "\\DateTimeImmutable".to_string()
+            }
+            VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => "UuidValue".to_string(),
+            _ => "string".to_string(),
+        }
+    }
+
     /// Extract type name from a schema reference or inline schema
-    fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
+    fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>, inline_name: Option<&str>) -> String {
         match schema_ref {
-            ReferenceOr::Reference { reference } => {
-                let ref_name = self.extract_ref_name(reference);
-                ref_name.to_pascal_case()
-            }
-            ReferenceOr::Item(schema) => {
-                let (php_type, _) = Self::schema_to_php_type(schema, false);
-                php_type
-            }
+            ReferenceOr::Reference { reference } => self.extract_ref_name(reference).to_pascal_case(),
+            ReferenceOr::Item(schema) => self.schema_to_php_type(None, None, schema, false, inline_name).0,
         }
     }
 
     /// Extract request body type from operation if present
     fn extract_request_body_type(&self, operation: &Operation) -> Option<String> {
         operation.request_body.as_ref().and_then(|body_ref| match body_ref {
-            ReferenceOr::Item(request_body) => {
-                self.extract_json_schema_type(request_body.content.get("application/json"))
-            }
+            ReferenceOr::Item(request_body) => self.extract_json_schema_type(
+                request_body.content.get("application/json"),
+                operation
+                    .operation_id
+                    .as_deref()
+                    .map(|id| format!("{}RequestBody", id.to_pascal_case()))
+                    .as_deref(),
+            ),
             ReferenceOr::Reference { reference } => {
                 let ref_name = self.extract_ref_name(reference);
                 Some(ref_name.to_pascal_case())
@@ -258,19 +772,27 @@ impl PhpGenerator {
     }
 
     /// Extract JSON schema type from media type content
-    fn extract_json_schema_type(&self, media_type: Option<&openapiv3::MediaType>) -> Option<String> {
+    fn extract_json_schema_type(
+        &self,
+        media_type: Option<&openapiv3::MediaType>,
+        inline_name: Option<&str>,
+    ) -> Option<String> {
         media_type.and_then(|mt| {
             mt.schema
                 .as_ref()
-                .map(|schema_ref| self.extract_type_from_schema_ref(schema_ref))
+                .map(|schema_ref| self.extract_type_from_schema_ref(schema_ref, inline_name))
         })
     }
 
-    fn extract_json_schema_doc_type(&self, media_type: Option<&openapiv3::MediaType>) -> Option<String> {
+    fn extract_json_schema_doc_type(
+        &self,
+        media_type: Option<&openapiv3::MediaType>,
+        inline_name: Option<&str>,
+    ) -> Option<String> {
         media_type.and_then(|mt| {
             mt.schema
                 .as_ref()
-                .map(|schema_ref| self.phpdoc_type_from_schema_ref(schema_ref, false))
+                .map(|schema_ref| self.phpdoc_type_from_schema_ref(schema_ref, false, inline_name))
         })
     }
 
@@ -286,15 +808,29 @@ impl PhpGenerator {
             .or_else(|| operation.responses.responses.get(&StatusCode::Range(2)));
 
         response
-            .and_then(|response_ref| self.extract_response_type_from_ref(response_ref))
+            .and_then(|response_ref| {
+                self.extract_response_type_from_ref(
+                    response_ref,
+                    operation
+                        .operation_id
+                        .as_deref()
+                        .map(|id| format!("{}ResponseBody", id.to_pascal_case()))
+                        .as_deref(),
+                )
+            })
             .unwrap_or_else(|| "array".to_string())
     }
 
     fn extract_request_body_doc_type(&self, operation: &Operation) -> Option<String> {
         operation.request_body.as_ref().and_then(|body_ref| match body_ref {
-            ReferenceOr::Item(request_body) => {
-                self.extract_json_schema_doc_type(request_body.content.get("application/json"))
-            }
+            ReferenceOr::Item(request_body) => self.extract_json_schema_doc_type(
+                request_body.content.get("application/json"),
+                operation
+                    .operation_id
+                    .as_deref()
+                    .map(|id| format!("{}RequestBody", id.to_pascal_case()))
+                    .as_deref(),
+            ),
             ReferenceOr::Reference { reference } => {
                 let ref_name = self.extract_ref_name(reference);
                 Some(ref_name.to_pascal_case())
@@ -313,17 +849,30 @@ impl PhpGenerator {
             .or_else(|| operation.responses.responses.get(&StatusCode::Range(2)));
 
         response
-            .and_then(|response_ref| self.extract_response_doc_type_from_ref(response_ref))
+            .and_then(|response_ref| {
+                self.extract_response_doc_type_from_ref(
+                    response_ref,
+                    operation
+                        .operation_id
+                        .as_deref()
+                        .map(|id| format!("{}ResponseBody", id.to_pascal_case()))
+                        .as_deref(),
+                )
+            })
             .unwrap_or_else(|| "array<string, mixed>".to_string())
     }
 
     /// Extract response type from a single response reference
-    fn extract_response_type_from_ref(&self, response_ref: &ReferenceOr<openapiv3::Response>) -> Option<String> {
+    fn extract_response_type_from_ref(
+        &self,
+        response_ref: &ReferenceOr<openapiv3::Response>,
+        inline_name: Option<&str>,
+    ) -> Option<String> {
         match response_ref {
             ReferenceOr::Item(response) => {
                 let media_type = response.content.get("application/json")?;
                 let schema_ref = media_type.schema.as_ref()?;
-                Some(self.extract_type_from_schema_ref(schema_ref))
+                Some(self.extract_type_from_schema_ref(schema_ref, inline_name))
             }
             ReferenceOr::Reference { reference } => {
                 let ref_name = self.extract_ref_name(reference);
@@ -332,12 +881,16 @@ impl PhpGenerator {
         }
     }
 
-    fn extract_response_doc_type_from_ref(&self, response_ref: &ReferenceOr<openapiv3::Response>) -> Option<String> {
+    fn extract_response_doc_type_from_ref(
+        &self,
+        response_ref: &ReferenceOr<openapiv3::Response>,
+        inline_name: Option<&str>,
+    ) -> Option<String> {
         match response_ref {
             ReferenceOr::Item(response) => {
                 let media_type = response.content.get("application/json")?;
                 let schema_ref = media_type.schema.as_ref()?;
-                Some(self.phpdoc_type_from_schema_ref(schema_ref, false))
+                Some(self.phpdoc_type_from_schema_ref(schema_ref, false, inline_name))
             }
             ReferenceOr::Reference { reference } => {
                 let ref_name = self.extract_ref_name(reference);
@@ -349,18 +902,38 @@ impl PhpGenerator {
     /// Convert `OpenAPI` schema to PHP type hint
     /// Returns (`type_hint`, `is_already_nullable`)
     /// Uses native PHP type syntax for type hints (valid in PHP 7.4+)
-    fn schema_to_php_type(schema: &Schema, optional: bool) -> (String, bool) {
-        let base_type = match &schema.schema_kind {
-            SchemaKind::Type(Type::String(_)) => "string".to_string(),
-            SchemaKind::Type(Type::Number(_)) => "float".to_string(),
-            SchemaKind::Type(Type::Integer(_)) => "int".to_string(),
-            SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
-            SchemaKind::Type(Type::Array(_)) => {
-                // Use plain 'array' for native type hints; generic syntax is only for PHPDoc
-                "array".to_string()
+    fn schema_to_php_type(
+        &self,
+        parent_class_name: Option<&str>,
+        field_name: Option<&str>,
+        schema: &Schema,
+        optional: bool,
+        inline_name: Option<&str>,
+    ) -> (String, bool) {
+        let base_type = if let Some(enum_type) = self.enum_type_name(parent_class_name, field_name, schema, inline_name)
+        {
+            enum_type
+        } else {
+            match &schema.schema_kind {
+                SchemaKind::Type(Type::String(string_type)) => self.string_format_php_type(string_type),
+                SchemaKind::Type(Type::Number(_)) => "float".to_string(),
+                SchemaKind::Type(Type::Integer(_)) => "int".to_string(),
+                SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
+                SchemaKind::Type(Type::Array(_)) => {
+                    // Use plain 'array' for native type hints; generic syntax is only for PHPDoc
+                    "array".to_string()
+                }
+                SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty() => inline_name
+                    .map(ToOwned::to_owned)
+                    .or_else(|| {
+                        parent_class_name
+                            .zip(field_name)
+                            .map(|(parent, field)| format!("{parent}{}", field.to_pascal_case()))
+                    })
+                    .unwrap_or_else(|| "array".to_string()),
+                SchemaKind::Type(Type::Object(_)) => "array".to_string(),
+                _ => "mixed".to_string(),
             }
-            SchemaKind::Type(Type::Object(_)) => "array".to_string(),
-            _ => "mixed".to_string(),
         };
 
         if optional {
@@ -372,51 +945,125 @@ impl PhpGenerator {
 
     /// Generate `PHPDoc` type annotation for arrays
     #[allow(dead_code)]
-    fn schema_to_phpdoc_type(schema: &Schema, optional: bool) -> String {
-        let base_type = match &schema.schema_kind {
-            SchemaKind::Type(Type::String(_)) => "string".to_string(),
-            SchemaKind::Type(Type::Number(_)) => "float".to_string(),
-            SchemaKind::Type(Type::Integer(_)) => "int".to_string(),
-            SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
-            SchemaKind::Type(Type::Array(arr)) => {
-                let item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => Self::schema_to_phpdoc_type(item_schema, false),
-                    Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').next_back().unwrap();
-                        ref_name.to_pascal_case()
+    fn schema_to_phpdoc_type(
+        &self,
+        parent_class_name: Option<&str>,
+        field_name: Option<&str>,
+        schema: &Schema,
+        optional: bool,
+        inline_name: Option<&str>,
+    ) -> String {
+        let base_type = if let Some(enum_type) = self.enum_type_name(parent_class_name, field_name, schema, inline_name)
+        {
+            enum_type
+        } else {
+            match &schema.schema_kind {
+                SchemaKind::Type(Type::String(string_type)) => {
+                    if string_type.enumeration.is_empty() {
+                        self.string_format_php_type(string_type)
+                    } else {
+                        string_type
+                            .enumeration
+                            .iter()
+                            .flatten()
+                            .map(|value| format!("'{}'", Self::escape_php_string(value)))
+                            .collect::<Vec<_>>()
+                            .join("|")
                     }
-                    None => "mixed".to_string(),
-                };
-                format!("list<{item_type}>")
-            }
-            SchemaKind::Type(Type::Object(obj)) => {
-                if obj.properties.is_empty() {
-                    "array<string, mixed>".to_string()
-                } else {
-                    let mut entries = Vec::new();
-                    for (prop_name, prop_schema_ref) in &obj.properties {
-                        let is_required = obj.required.contains(prop_name);
-                        let prop_type = match prop_schema_ref {
-                            ReferenceOr::Item(prop_schema) => Self::schema_to_phpdoc_type(prop_schema, !is_required),
-                            ReferenceOr::Reference { reference } => {
-                                let ref_name = reference.split('/').next_back().unwrap();
-                                let mut base = ref_name.to_pascal_case();
-                                if !is_required {
-                                    base.push_str("|null");
-                                }
-                                base
-                            }
-                        };
-                        if is_required {
-                            entries.push(format!("{prop_name}: {prop_type}"));
-                        } else {
-                            entries.push(format!("{prop_name}?: {prop_type}"));
-                        }
-                    }
-                    format!("array{{{}}}", entries.join(", "))
                 }
+                SchemaKind::Type(Type::Number(number_type)) => {
+                    if number_type.enumeration.is_empty() {
+                        "float".to_string()
+                    } else {
+                        number_type
+                            .enumeration
+                            .iter()
+                            .flatten()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join("|")
+                    }
+                }
+                SchemaKind::Type(Type::Integer(integer_type)) => {
+                    if integer_type.enumeration.is_empty() {
+                        "int".to_string()
+                    } else {
+                        integer_type
+                            .enumeration
+                            .iter()
+                            .flatten()
+                            .map(ToString::to_string)
+                            .collect::<Vec<_>>()
+                            .join("|")
+                    }
+                }
+                SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
+                SchemaKind::Type(Type::Array(arr)) => {
+                    let item_type = match &arr.items {
+                        Some(ReferenceOr::Item(item_schema)) => self.schema_to_phpdoc_type(
+                            None,
+                            None,
+                            item_schema,
+                            false,
+                            parent_class_name
+                                .zip(field_name)
+                                .and_then(|(parent, field)| {
+                                    self.inline_array_item_model_name(parent, field, item_schema)
+                                })
+                                .as_deref(),
+                        ),
+                        Some(ReferenceOr::Reference { reference }) => {
+                            let ref_name = reference.split('/').next_back().unwrap();
+                            ref_name.to_pascal_case()
+                        }
+                        None => "mixed".to_string(),
+                    };
+                    format!("list<{item_type}>")
+                }
+                SchemaKind::Type(Type::Object(obj)) => {
+                    if obj.properties.is_empty() {
+                        "array<string, mixed>".to_string()
+                    } else {
+                        inline_name
+                            .map(ToOwned::to_owned)
+                            .or_else(|| {
+                                parent_class_name
+                                    .zip(field_name)
+                                    .map(|(parent, field)| format!("{parent}{}", field.to_pascal_case()))
+                            })
+                            .unwrap_or_else(|| {
+                                let mut entries = Vec::new();
+                                for (prop_name, prop_schema_ref) in &obj.properties {
+                                    let is_required = obj.required.contains(prop_name);
+                                    let prop_type = match prop_schema_ref {
+                                        ReferenceOr::Item(prop_schema) => self.schema_to_phpdoc_type(
+                                            parent_class_name,
+                                            Some(prop_name),
+                                            prop_schema,
+                                            !is_required,
+                                            None,
+                                        ),
+                                        ReferenceOr::Reference { reference } => {
+                                            let ref_name = reference.split('/').next_back().unwrap();
+                                            let mut base = ref_name.to_pascal_case();
+                                            if !is_required {
+                                                base.push_str("|null");
+                                            }
+                                            base
+                                        }
+                                    };
+                                    if is_required {
+                                        entries.push(format!("{prop_name}: {prop_type}"));
+                                    } else {
+                                        entries.push(format!("{prop_name}?: {prop_type}"));
+                                    }
+                                }
+                                format!("array{{{}}}", entries.join(", "))
+                            })
+                    }
+                }
+                _ => "mixed".to_string(),
             }
-            _ => "mixed".to_string(),
         };
 
         if optional {
@@ -611,7 +1258,13 @@ impl PhpGenerator {
 
         for param_ref in &operation.parameters {
             if let ReferenceOr::Item(param) = param_ref {
-                self.process_parameter(param, &mut path_params, &mut query_params, output);
+                self.process_parameter(
+                    operation.operation_id.as_deref(),
+                    param,
+                    &mut path_params,
+                    &mut query_params,
+                    output,
+                );
             }
         }
 
@@ -621,6 +1274,7 @@ impl PhpGenerator {
     /// Process a single parameter and add to path or query params
     fn process_parameter(
         &self,
+        operation_id: Option<&str>,
         param: &Parameter,
         path_params: &mut Vec<(String, String)>,
         query_params: &mut Vec<(String, String, bool)>,
@@ -629,17 +1283,52 @@ impl PhpGenerator {
         match param {
             Parameter::Path { parameter_data, .. } => {
                 let param_name = Self::to_camel_case(&parameter_data.name);
-                path_params.push((param_name.clone(), "string".to_string()));
-                output.push_str(&format!("     * @param string ${param_name}\n"));
+                let (native_type, phpdoc_type) = self.parameter_types(operation_id, parameter_data, false);
+                path_params.push((param_name.clone(), native_type));
+                output.push_str(&format!("     * @param {phpdoc_type} ${param_name}\n"));
             }
             Parameter::Query { parameter_data, .. } => {
                 let param_name = Self::to_camel_case(&parameter_data.name);
                 let required = parameter_data.required;
-                query_params.push((param_name.clone(), "string".to_string(), required));
-                let type_hint = if required { "string" } else { "string|null" };
-                output.push_str(&format!("     * @param {type_hint} ${param_name}\n"));
+                let (native_type, phpdoc_type) = self.parameter_types(operation_id, parameter_data, !required);
+                query_params.push((param_name.clone(), native_type, required));
+                output.push_str(&format!("     * @param {phpdoc_type} ${param_name}\n"));
             }
             _ => {}
+        }
+    }
+
+    fn parameter_types(
+        &self,
+        operation_id: Option<&str>,
+        parameter_data: &ParameterData,
+        optional: bool,
+    ) -> (String, String) {
+        match &parameter_data.format {
+            ParameterSchemaOrContent::Schema(schema_ref) => match schema_ref {
+                ReferenceOr::Item(schema) => {
+                    let inline_name = self.parameter_enum_name(operation_id, &parameter_data.name, schema);
+                    let (native_type, _) =
+                        self.schema_to_php_type(None, None, schema, optional, inline_name.as_deref());
+                    let phpdoc_type = self.schema_to_phpdoc_type(None, None, schema, optional, inline_name.as_deref());
+                    (native_type, phpdoc_type)
+                }
+                ReferenceOr::Reference { reference } => {
+                    let base = self.extract_ref_name(reference).to_pascal_case();
+                    if optional {
+                        (format!("?{base}"), format!("{base}|null"))
+                    } else {
+                        (base.clone(), base)
+                    }
+                }
+            },
+            ParameterSchemaOrContent::Content(_) => {
+                if optional {
+                    ("?array".to_string(), "array<string, mixed>|null".to_string())
+                } else {
+                    ("array".to_string(), "array<string, mixed>".to_string())
+                }
+            }
         }
     }
 
@@ -652,9 +1341,14 @@ impl PhpGenerator {
         output.push_str("     */\n");
     }
 
-    fn phpdoc_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>, optional: bool) -> String {
+    fn phpdoc_type_from_schema_ref(
+        &self,
+        schema_ref: &ReferenceOr<Schema>,
+        optional: bool,
+        inline_name: Option<&str>,
+    ) -> String {
         match schema_ref {
-            ReferenceOr::Item(schema) => Self::schema_to_phpdoc_type(schema, optional),
+            ReferenceOr::Item(schema) => self.schema_to_phpdoc_type(None, None, schema, optional, inline_name),
             ReferenceOr::Reference { reference } => {
                 let mut base = self.extract_ref_name(reference).to_pascal_case();
                 if optional {
@@ -683,16 +1377,18 @@ impl PhpGenerator {
             params.push(format!("{param_type} ${param_name}"));
         }
 
-        for (param_name, param_type, required) in query_params {
-            if *required {
-                params.push(format!("{param_type} ${param_name}"));
-            } else {
-                params.push(format!("?{param_type} ${param_name} = null"));
-            }
+        for (param_name, param_type, required) in query_params.iter().filter(|(_, _, required)| *required) {
+            let _ = required;
+            params.push(format!("{param_type} ${param_name}"));
         }
 
         if let Some(body_type_name) = body_type {
             params.push(format!("{body_type_name} $body"));
+        }
+
+        for (param_name, param_type, required) in query_params.iter().filter(|(_, _, required)| !*required) {
+            let _ = required;
+            params.push(format!("{param_type} ${param_name} = null"));
         }
 
         output.push_str(&params.join(", "));

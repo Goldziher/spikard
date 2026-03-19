@@ -3,8 +3,11 @@
 use super::RubyDtoStyle;
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
-use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, Type};
-use std::collections::HashSet;
+use openapiv3::{
+    OpenAPI, Operation, Parameter, ParameterSchemaOrContent, ReferenceOr, Schema, SchemaKind, StringFormat, Type,
+    VariantOrUnknownOrEmpty,
+};
+use std::collections::BTreeSet;
 
 pub struct RubyGenerator {
     spec: OpenAPI,
@@ -43,6 +46,7 @@ impl RubyGenerator {
 
 require 'sinatra/base'
 require 'json'
+require 'date'
 
 begin
   require 'dry-struct'
@@ -54,6 +58,12 @@ end
 # Type definitions module
 module Types
   include Dry.Types() if defined?(Dry)
+
+  UUID = Types::Strict::String
+         .constrained(format: /\A[0-9a-fA-F]{{8}}-[0-9a-fA-F]{{4}}-[0-9a-fA-F]{{4}}-[0-9a-fA-F]{{4}}-[0-9a-fA-F]{{12}}\z/)
+
+  ISODate = Types::Params::Date
+  ISODateTime = Types::Params::DateTime
 end
 
 ",
@@ -65,13 +75,13 @@ end
     fn generate_models(&self) -> Result<String> {
         let mut output = String::new();
         output.push_str("# Schema Models\n\n");
+        let mut emitted = BTreeSet::new();
 
         if let Some(components) = &self.spec.components {
             for (name, schema_ref) in &components.schemas {
                 match schema_ref {
                     ReferenceOr::Item(schema) => {
-                        output.push_str(&self.generate_model_class(name, schema)?);
-                        output.push('\n');
+                        self.generate_model_family(&name.to_pascal_case(), schema, &mut emitted, &mut output)?;
                     }
                     ReferenceOr::Reference { .. } => {
                         continue;
@@ -80,7 +90,6 @@ end
             }
         }
 
-        let mut generated_inline_models = HashSet::new();
         for (path, path_item_ref) in &self.spec.paths.paths {
             let path_item = match path_item_ref {
                 ReferenceOr::Item(item) => item,
@@ -98,18 +107,12 @@ end
                     continue;
                 };
 
-                if let Some((class_name, schema)) = self.inline_request_body_model(operation, method, path)
-                    && generated_inline_models.insert(class_name.clone())
-                {
-                    output.push_str(&self.generate_model_class(&class_name, schema)?);
-                    output.push('\n');
+                if let Some((class_name, schema)) = self.inline_request_body_model(operation, method, path) {
+                    self.generate_model_family(&class_name, schema, &mut emitted, &mut output)?;
                 }
 
-                if let Some((class_name, schema)) = self.inline_response_model(operation, method, path)
-                    && generated_inline_models.insert(class_name.clone())
-                {
-                    output.push_str(&self.generate_model_class(&class_name, schema)?);
-                    output.push('\n');
+                if let Some((class_name, schema)) = self.inline_response_model(operation, method, path) {
+                    self.generate_model_family(&class_name, schema, &mut emitted, &mut output)?;
                 }
             }
         }
@@ -117,8 +120,7 @@ end
         Ok(output)
     }
 
-    fn generate_model_class(&self, name: &str, schema: &Schema) -> Result<String> {
-        let class_name = name.to_pascal_case();
+    fn generate_model_class(&self, class_name: &str, schema: &Schema) -> Result<String> {
         let mut output = String::new();
 
         if let Some(description) = &schema.schema_data.description {
@@ -145,7 +147,13 @@ end
                         let field_name = prop_name.to_snake_case();
 
                         let type_hint = match prop_schema_ref {
-                            ReferenceOr::Item(prop_schema) => Self::schema_to_ruby_type(prop_schema, !is_required),
+                            ReferenceOr::Item(prop_schema) => self.schema_to_ruby_type(
+                                Some(class_name),
+                                Some(prop_name),
+                                prop_schema,
+                                !is_required,
+                                None,
+                            ),
                             ReferenceOr::Reference { reference } => {
                                 let ref_name = reference.split('/').next_back().unwrap();
                                 if is_required {
@@ -156,7 +164,7 @@ end
                             }
                         };
 
-                        output.push_str(&format!("  attribute :{field_name}, {type_hint}\n"));
+                        self.append_attribute_line(&mut output, &field_name, &type_hint);
                     }
                 }
             }
@@ -170,6 +178,75 @@ end
         Ok(output)
     }
 
+    fn append_attribute_line(&self, output: &mut String, field_name: &str, type_hint: &str) {
+        let single_line = format!("  attribute :{field_name}, {type_hint}\n");
+        if single_line.len() <= 118 {
+            output.push_str(&single_line);
+            return;
+        }
+
+        output.push_str("  attribute(\n");
+        output.push_str(&format!("    :{field_name},\n"));
+        output.push_str(&format!("    {type_hint}\n"));
+        output.push_str("  )\n");
+    }
+
+    fn generate_model_family(
+        &self,
+        class_name: &str,
+        schema: &Schema,
+        emitted: &mut BTreeSet<String>,
+        output: &mut String,
+    ) -> Result<()> {
+        if !emitted.insert(class_name.to_string()) {
+            return Ok(());
+        }
+
+        self.generate_nested_model_families(class_name, schema, emitted, output)?;
+        output.push_str(&self.generate_model_class(class_name, schema)?);
+        output.push('\n');
+        Ok(())
+    }
+
+    fn generate_nested_model_families(
+        &self,
+        parent_class_name: &str,
+        schema: &Schema,
+        emitted: &mut BTreeSet<String>,
+        output: &mut String,
+    ) -> Result<()> {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::Object(obj)) => {
+                for (prop_name, prop_schema_ref) in &obj.properties {
+                    if let ReferenceOr::Item(prop_schema) = prop_schema_ref {
+                        if let Some(class_name) = self.inline_model_name(parent_class_name, prop_name, prop_schema) {
+                            self.generate_model_family(&class_name, prop_schema, emitted, output)?;
+                        }
+                        if let Some(array_item_name) =
+                            self.inline_array_item_model_name(parent_class_name, prop_name, prop_schema)
+                            && let Some(item_schema) = Self::inline_array_item_schema(prop_schema)
+                        {
+                            self.generate_model_family(&array_item_name, item_schema, emitted, output)?;
+                        }
+                    }
+                }
+            }
+            SchemaKind::AllOf { all_of } => {
+                for schema_ref in all_of {
+                    match schema_ref {
+                        ReferenceOr::Item(item_schema) => {
+                            self.generate_nested_model_families(parent_class_name, item_schema, emitted, output)?
+                        }
+                        ReferenceOr::Reference { .. } => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
+
     /// Extract type name from a schema reference or inline schema
     fn extract_type_from_schema_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
         match schema_ref {
@@ -177,7 +254,7 @@ end
                 let ref_name = reference.split('/').next_back().unwrap();
                 ref_name.to_pascal_case()
             }
-            ReferenceOr::Item(schema) => Self::schema_to_ruby_return_type(schema),
+            ReferenceOr::Item(schema) => self.schema_to_ruby_return_type(None, None, schema, None),
         }
     }
 
@@ -234,48 +311,85 @@ end
         "Hash".to_string()
     }
 
-    fn schema_to_ruby_type(schema: &Schema, optional: bool) -> String {
-        let base_type = match &schema.schema_kind {
-            SchemaKind::Type(Type::String(_)) => "Types::Strict::String".to_string(),
-            SchemaKind::Type(Type::Number(_)) => "Types::Strict::Float".to_string(),
-            SchemaKind::Type(Type::Integer(_)) => "Types::Strict::Integer".to_string(),
-            SchemaKind::Type(Type::Boolean(_)) => "Types::Strict::Bool".to_string(),
-            SchemaKind::Type(Type::Array(arr)) => {
-                let item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => Self::schema_to_ruby_type(item_schema, false),
-                    Some(ReferenceOr::Reference { reference }) => {
-                        let ref_name = reference.split('/').next_back().unwrap();
-                        format!("Types.Instance({})", ref_name.to_pascal_case())
-                    }
-                    None => "Types::Any".to_string(),
-                };
-                format!("Types::Strict::Array.of({item_type})")
-            }
-            SchemaKind::Type(Type::Object(obj)) => {
-                if obj.properties.is_empty() {
-                    "Types::Strict::Hash".to_string()
-                } else {
-                    let mut entries = Vec::new();
-                    for (prop_name, prop_schema_ref) in &obj.properties {
-                        let key = prop_name.to_snake_case();
-                        let is_required = obj.required.contains(prop_name);
-                        let prop_type = match prop_schema_ref {
-                            ReferenceOr::Item(prop_schema) => Self::schema_to_ruby_type(prop_schema, !is_required),
-                            ReferenceOr::Reference { reference } => {
-                                let ref_name = reference.split('/').next_back().unwrap().to_pascal_case();
-                                if is_required {
-                                    format!("Types.Instance({ref_name})")
-                                } else {
-                                    format!("Types.Instance({ref_name}).optional")
-                                }
-                            }
-                        };
-                        entries.push(format!("{key}: {prop_type}"));
-                    }
-                    format!("Types::Hash.schema({})", entries.join(", "))
+    fn schema_to_ruby_type(
+        &self,
+        parent_class_name: Option<&str>,
+        field_name: Option<&str>,
+        schema: &Schema,
+        optional: bool,
+        inline_name: Option<&str>,
+    ) -> String {
+        let base_type = if let Some(enum_type) = self.string_enum_ruby_type(schema) {
+            enum_type
+        } else {
+            match &schema.schema_kind {
+                SchemaKind::Type(Type::String(string_type)) => self.string_format_ruby_type(string_type),
+                SchemaKind::Type(Type::Number(_)) => "Types::Strict::Float".to_string(),
+                SchemaKind::Type(Type::Integer(_)) => "Types::Strict::Integer".to_string(),
+                SchemaKind::Type(Type::Boolean(_)) => "Types::Strict::Bool".to_string(),
+                SchemaKind::Type(Type::Array(arr)) => {
+                    let item_type = match &arr.items {
+                        Some(ReferenceOr::Item(item_schema)) => self.schema_to_ruby_type(
+                            None,
+                            None,
+                            item_schema,
+                            false,
+                            parent_class_name
+                                .zip(field_name)
+                                .and_then(|(parent, field)| {
+                                    self.inline_array_item_model_name(parent, field, item_schema)
+                                })
+                                .as_deref(),
+                        ),
+                        Some(ReferenceOr::Reference { reference }) => {
+                            let ref_name = reference.split('/').next_back().unwrap();
+                            format!("Types.Instance({})", ref_name.to_pascal_case())
+                        }
+                        None => "Types::Any".to_string(),
+                    };
+                    format!("Types::Strict::Array.of({item_type})")
                 }
+                SchemaKind::Type(Type::Object(obj)) => {
+                    if obj.properties.is_empty() {
+                        "Types::Strict::Hash".to_string()
+                    } else {
+                        inline_name
+                            .map(|name| format!("Types.Instance({name})"))
+                            .or_else(|| {
+                                parent_class_name.zip(field_name).map(|(parent, field)| {
+                                    format!("Types.Instance({parent}{})", field.to_pascal_case())
+                                })
+                            })
+                            .unwrap_or_else(|| {
+                                let mut entries = Vec::new();
+                                for (prop_name, prop_schema_ref) in &obj.properties {
+                                    let key = prop_name.to_snake_case();
+                                    let is_required = obj.required.contains(prop_name);
+                                    let prop_type = match prop_schema_ref {
+                                        ReferenceOr::Item(prop_schema) => self.schema_to_ruby_type(
+                                            parent_class_name,
+                                            Some(prop_name),
+                                            prop_schema,
+                                            !is_required,
+                                            None,
+                                        ),
+                                        ReferenceOr::Reference { reference } => {
+                                            let ref_name = reference.split('/').next_back().unwrap().to_pascal_case();
+                                            if is_required {
+                                                format!("Types.Instance({ref_name})")
+                                            } else {
+                                                format!("Types.Instance({ref_name}).optional")
+                                            }
+                                        }
+                                    };
+                                    entries.push(format!("{key}: {prop_type}"));
+                                }
+                                format!("Types::Hash.schema({})", entries.join(", "))
+                            })
+                    }
+                }
+                _ => "Types::Any".to_string(),
             }
-            _ => "Types::Any".to_string(),
         };
 
         if optional {
@@ -285,15 +399,55 @@ end
         }
     }
 
-    fn schema_to_ruby_return_type(schema: &Schema) -> String {
+    fn string_enum_ruby_type(&self, schema: &Schema) -> Option<String> {
+        let SchemaKind::Type(Type::String(string_type)) = &schema.schema_kind else {
+            return None;
+        };
+        let values = string_type
+            .enumeration
+            .iter()
+            .flatten()
+            .map(|value| format!("'{}'", value.replace('\\', "\\\\").replace('\'', "\\'")))
+            .collect::<Vec<_>>();
+        (!values.is_empty()).then(|| format!("Types::Strict::String.enum({})", values.join(", ")))
+    }
+
+    fn string_format_ruby_type(&self, string_type: &openapiv3::StringType) -> String {
+        match &string_type.format {
+            VariantOrUnknownOrEmpty::Item(StringFormat::Date) => "Types::ISODate".to_string(),
+            VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => "Types::ISODateTime".to_string(),
+            VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => "Types::UUID".to_string(),
+            _ => "Types::Strict::String".to_string(),
+        }
+    }
+
+    fn schema_to_ruby_return_type(
+        &self,
+        parent_class_name: Option<&str>,
+        field_name: Option<&str>,
+        schema: &Schema,
+        inline_name: Option<&str>,
+    ) -> String {
         match &schema.schema_kind {
-            SchemaKind::Type(Type::String(_)) => "String".to_string(),
+            SchemaKind::Type(Type::String(string_type)) => match &string_type.format {
+                VariantOrUnknownOrEmpty::Item(StringFormat::Date) => "Date".to_string(),
+                VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => "DateTime".to_string(),
+                _ => "String".to_string(),
+            },
             SchemaKind::Type(Type::Number(_)) => "Float".to_string(),
             SchemaKind::Type(Type::Integer(_)) => "Integer".to_string(),
             SchemaKind::Type(Type::Boolean(_)) => "Boolean".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
                 let item_type = match &arr.items {
-                    Some(ReferenceOr::Item(item_schema)) => Self::schema_to_ruby_return_type(item_schema),
+                    Some(ReferenceOr::Item(item_schema)) => self.schema_to_ruby_return_type(
+                        None,
+                        None,
+                        item_schema,
+                        parent_class_name
+                            .zip(field_name)
+                            .and_then(|(parent, field)| self.inline_array_item_model_name(parent, field, item_schema))
+                            .as_deref(),
+                    ),
                     Some(ReferenceOr::Reference { reference }) => {
                         let ref_name = reference.split('/').next_back().unwrap();
                         ref_name.to_pascal_case()
@@ -306,24 +460,35 @@ end
                 if obj.properties.is_empty() {
                     "Hash".to_string()
                 } else {
-                    let mut value_types = Vec::new();
-                    for prop_schema_ref in obj.properties.values() {
-                        let prop_type = match prop_schema_ref {
-                            ReferenceOr::Item(prop_schema) => Self::schema_to_ruby_return_type(prop_schema),
-                            ReferenceOr::Reference { reference } => {
-                                reference.split('/').next_back().unwrap().to_pascal_case()
+                    inline_name
+                        .map(ToOwned::to_owned)
+                        .or_else(|| {
+                            parent_class_name
+                                .zip(field_name)
+                                .map(|(parent, field)| format!("{parent}{}", field.to_pascal_case()))
+                        })
+                        .unwrap_or_else(|| {
+                            let mut value_types = Vec::new();
+                            for prop_schema_ref in obj.properties.values() {
+                                let prop_type = match prop_schema_ref {
+                                    ReferenceOr::Item(prop_schema) => {
+                                        self.schema_to_ruby_return_type(None, None, prop_schema, None)
+                                    }
+                                    ReferenceOr::Reference { reference } => {
+                                        reference.split('/').next_back().unwrap().to_pascal_case()
+                                    }
+                                };
+                                if !value_types.contains(&prop_type) {
+                                    value_types.push(prop_type);
+                                }
                             }
-                        };
-                        if !value_types.contains(&prop_type) {
-                            value_types.push(prop_type);
-                        }
-                    }
-                    let union = if value_types.is_empty() {
-                        "Object".to_string()
-                    } else {
-                        value_types.join(", ")
-                    };
-                    format!("Hash{{Symbol => ({union})}}")
+                            let union = if value_types.is_empty() {
+                                "Object".to_string()
+                            } else {
+                                value_types.join(", ")
+                            };
+                            format!("Hash{{Symbol => ({union})}}")
+                        })
                 }
             }
             _ => "Object".to_string(),
@@ -338,6 +503,7 @@ end
         output.push_str("  before do\n");
         output.push_str("    content_type :json\n");
         output.push_str("  end\n\n");
+        output.push_str(&self.generate_route_helpers());
 
         for (path, path_item_ref) in &self.spec.paths.paths {
             let path_item = match path_item_ref {
@@ -367,6 +533,63 @@ end
         Ok(output)
     }
 
+    fn generate_route_helpers(&self) -> String {
+        r#"  private
+
+  def invalid_parameter!(name, message)
+    halt 400, { error: 'Invalid parameter', parameter: name, message: message }.to_json
+  end
+
+  def coerce_integer_param!(value, name)
+    Integer(value, 10)
+  rescue ArgumentError, TypeError
+    invalid_parameter!(name, 'must be an integer')
+  end
+
+  def coerce_float_param!(value, name)
+    Float(value)
+  rescue ArgumentError, TypeError
+    invalid_parameter!(name, 'must be a float')
+  end
+
+  def coerce_boolean_param!(value, name)
+    case value
+    when true, 'true', '1', 1 then true
+    when false, 'false', '0', 0 then false
+    else
+      invalid_parameter!(name, 'must be a boolean')
+    end
+  end
+
+  def coerce_date_param!(value, name)
+    Date.iso8601(value)
+  rescue ArgumentError, TypeError
+    invalid_parameter!(name, 'must be an ISO 8601 date')
+  end
+
+  def coerce_datetime_param!(value, name)
+    DateTime.iso8601(value)
+  rescue ArgumentError, TypeError
+    invalid_parameter!(name, 'must be an ISO 8601 date-time')
+  end
+
+  def coerce_uuid_param!(value, name)
+    pattern = /\A[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\z/
+    return value if pattern.match?(value.to_s)
+
+    invalid_parameter!(name, 'must be a UUID')
+  end
+
+  def coerce_enum_param!(value, name, allowed)
+    return value if allowed.include?(value)
+
+    invalid_parameter!(name, "must be one of: #{allowed.join(', ')}")
+  end
+
+"#
+        .to_string()
+    }
+
     fn generate_route_handler(&self, path: &str, method: &str, operation: &Operation) -> Result<String> {
         let mut output = String::new();
 
@@ -388,9 +611,6 @@ end
             }
         }
 
-        let mut has_path_params = false;
-        let mut has_query_params = false;
-
         for param_ref in &operation.parameters {
             if let ReferenceOr::Item(param) = param_ref {
                 match param {
@@ -399,12 +619,13 @@ end
                         style: _,
                         ..
                     } => {
-                        has_path_params = true;
-                        let param_type = self.parameter_doc_type(param);
+                        let param_type = self.parameter_doc_type(param, false);
+                        let detail = self.parameter_detail(param, false);
                         output.push_str(&format!(
-                            "  # @param {} [{}] Path parameter\n",
+                            "  # @param {} [{}] {}\n",
                             parameter_data.name.to_snake_case(),
-                            param_type
+                            param_type,
+                            detail
                         ));
                     }
                     Parameter::Query {
@@ -414,18 +635,13 @@ end
                         allow_empty_value: _,
                         ..
                     } => {
-                        has_query_params = true;
-                        let required = if parameter_data.required {
-                            "required"
-                        } else {
-                            "optional"
-                        };
-                        let param_type = self.parameter_doc_type(param);
+                        let param_type = self.parameter_doc_type(param, !parameter_data.required);
+                        let detail = self.parameter_detail(param, true);
                         output.push_str(&format!(
-                            "  # @param {} [{}] Query parameter ({})\n",
+                            "  # @param {} [{}] {}\n",
                             parameter_data.name.to_snake_case(),
                             param_type,
-                            required
+                            detail
                         ));
                     }
                     _ => {}
@@ -446,12 +662,10 @@ end
 
         output.push_str(&format!("  {method} '{sinatra_path}' do\n"));
 
-        if has_path_params {
-            output.push_str("    # Path parameters available in params hash\n");
-        }
-
-        if has_query_params {
-            output.push_str("    # Query parameters available in params hash\n");
+        let parameter_bindings = self.generate_parameter_bindings(operation);
+        if !parameter_bindings.is_empty() {
+            output.push_str(&parameter_bindings);
+            output.push('\n');
         }
 
         if let Some(bt) = body_type {
@@ -491,6 +705,113 @@ end
         Ok(output)
     }
 
+    fn generate_parameter_bindings(&self, operation: &Operation) -> String {
+        let mut output = String::new();
+
+        for param_ref in &operation.parameters {
+            let ReferenceOr::Item(param) = param_ref else {
+                continue;
+            };
+
+            let Some(binding) = self.parameter_binding_line(param) else {
+                continue;
+            };
+
+            output.push_str("    ");
+            output.push_str(&binding);
+            output.push('\n');
+        }
+
+        output
+    }
+
+    fn parameter_binding_line(&self, parameter: &Parameter) -> Option<String> {
+        match parameter {
+            Parameter::Path { parameter_data, .. } => Some(self.required_parameter_binding_line(parameter_data)),
+            Parameter::Query { parameter_data, .. } => Some(self.query_parameter_binding_line(parameter_data)),
+            _ => None,
+        }
+    }
+
+    fn required_parameter_binding_line(&self, parameter_data: &openapiv3::ParameterData) -> String {
+        let variable_name = format!("_{}", parameter_data.name.to_snake_case());
+        let value_expr = format!("params.fetch('{}')", parameter_data.name);
+        let coercion = self.parameter_coercion_expr(parameter_data, &value_expr);
+        format!("{variable_name} = {coercion}")
+    }
+
+    fn query_parameter_binding_line(&self, parameter_data: &openapiv3::ParameterData) -> String {
+        let variable_name = format!("_{}", parameter_data.name.to_snake_case());
+        if parameter_data.required {
+            let value_expr = format!("params.fetch('{}')", parameter_data.name);
+            let coercion = self.parameter_coercion_expr(parameter_data, &value_expr);
+            format!("{variable_name} = {coercion}")
+        } else {
+            let value_expr = format!("params['{}']", parameter_data.name);
+            let coercion = self.parameter_coercion_expr(parameter_data, &value_expr);
+            format!(
+                "{variable_name} = params.key?('{}') ? {coercion} : nil",
+                parameter_data.name
+            )
+        }
+    }
+
+    fn parameter_coercion_expr(&self, parameter_data: &openapiv3::ParameterData, value_expr: &str) -> String {
+        match &parameter_data.format {
+            ParameterSchemaOrContent::Schema(schema_ref) => {
+                self.schema_param_coercion_expr(schema_ref, value_expr, &parameter_data.name)
+            }
+            ParameterSchemaOrContent::Content(_) => value_expr.to_string(),
+        }
+    }
+
+    fn schema_param_coercion_expr(&self, schema_ref: &ReferenceOr<Schema>, value_expr: &str, name: &str) -> String {
+        match schema_ref {
+            ReferenceOr::Item(schema) => self.inline_schema_param_coercion_expr(schema, value_expr, name),
+            ReferenceOr::Reference { reference } => self
+                .resolve_schema_reference(reference)
+                .map(|schema| self.inline_schema_param_coercion_expr(schema, value_expr, name))
+                .unwrap_or_else(|| value_expr.to_string()),
+        }
+    }
+
+    fn inline_schema_param_coercion_expr(&self, schema: &Schema, value_expr: &str, name: &str) -> String {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::String(string_type)) => {
+                let enum_values = string_type
+                    .enumeration
+                    .iter()
+                    .flatten()
+                    .map(|value| format!("'{}'", value.replace('\\', "\\\\").replace('\'', "\\'")))
+                    .collect::<Vec<_>>();
+
+                if !enum_values.is_empty() {
+                    return format!(
+                        "coerce_enum_param!({value_expr}, '{name}', [{}])",
+                        enum_values.join(", ")
+                    );
+                }
+
+                match &string_type.format {
+                    VariantOrUnknownOrEmpty::Item(StringFormat::Date) => {
+                        format!("coerce_date_param!({value_expr}, '{name}')")
+                    }
+                    VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => {
+                        format!("coerce_datetime_param!({value_expr}, '{name}')")
+                    }
+                    VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => {
+                        format!("coerce_uuid_param!({value_expr}, '{name}')")
+                    }
+                    _ => value_expr.to_string(),
+                }
+            }
+            SchemaKind::Type(Type::Integer(_)) => format!("coerce_integer_param!({value_expr}, '{name}')"),
+            SchemaKind::Type(Type::Number(_)) => format!("coerce_float_param!({value_expr}, '{name}')"),
+            SchemaKind::Type(Type::Boolean(_)) => format!("coerce_boolean_param!({value_expr}, '{name}')"),
+            _ => value_expr.to_string(),
+        }
+    }
+
     fn generate_main(&self) -> String {
         r"
 # Run the application
@@ -504,23 +825,143 @@ API.run!(host: '0.0.0.0', port: 4567) if __FILE__ == $PROGRAM_NAME
         .to_string()
     }
 
-    fn parameter_doc_type(&self, parameter: &Parameter) -> String {
+    fn parameter_doc_type(&self, parameter: &Parameter, optional: bool) -> String {
         match parameter {
             Parameter::Path { parameter_data, .. }
             | Parameter::Query { parameter_data, .. }
             | Parameter::Header { parameter_data, .. }
             | Parameter::Cookie { parameter_data, .. } => match &parameter_data.format {
-                openapiv3::ParameterSchemaOrContent::Schema(schema_ref) => match schema_ref {
-                    ReferenceOr::Item(schema) => Self::schema_to_ruby_return_type(schema),
-                    ReferenceOr::Reference { reference } => reference.split('/').next_back().unwrap().to_pascal_case(),
-                },
-                openapiv3::ParameterSchemaOrContent::Content(_) => "Object".to_string(),
+                ParameterSchemaOrContent::Schema(schema_ref) => {
+                    let base_type = match schema_ref {
+                        ReferenceOr::Item(schema) => self.schema_to_ruby_return_type(None, None, schema, None),
+                        ReferenceOr::Reference { reference } => self
+                            .resolve_schema_reference(reference)
+                            .map(|schema| self.schema_to_ruby_return_type(None, None, schema, None))
+                            .unwrap_or_else(|| reference.split('/').next_back().unwrap().to_pascal_case()),
+                    };
+                    if optional {
+                        format!("{base_type}, nil")
+                    } else {
+                        base_type
+                    }
+                }
+                ParameterSchemaOrContent::Content(_) => {
+                    if optional {
+                        "Object, nil".to_string()
+                    } else {
+                        "Object".to_string()
+                    }
+                }
             },
         }
     }
 
+    fn parameter_detail(&self, parameter: &Parameter, query: bool) -> String {
+        let (parameter_data, required_suffix) = match parameter {
+            Parameter::Path { parameter_data, .. } => (parameter_data, String::new()),
+            Parameter::Query { parameter_data, .. } => {
+                let suffix = if parameter_data.required {
+                    "required".to_string()
+                } else {
+                    "optional".to_string()
+                };
+                (parameter_data, suffix)
+            }
+            Parameter::Header { parameter_data, .. } | Parameter::Cookie { parameter_data, .. } => {
+                (parameter_data, String::new())
+            }
+        };
+
+        let mut details = Vec::new();
+        if let Some(constraint) = self.parameter_constraint(parameter_data) {
+            details.push(constraint);
+        }
+        if query {
+            details.push(required_suffix);
+        }
+
+        let label = if query { "Query parameter" } else { "Path parameter" };
+        if details.is_empty() {
+            label.to_string()
+        } else {
+            format!("{label} ({})", details.join("; "))
+        }
+    }
+
+    fn parameter_constraint(&self, parameter_data: &openapiv3::ParameterData) -> Option<String> {
+        let ParameterSchemaOrContent::Schema(schema_ref) = &parameter_data.format else {
+            return None;
+        };
+
+        let schema = match schema_ref {
+            ReferenceOr::Item(schema) => schema,
+            ReferenceOr::Reference { reference } => self.resolve_schema_reference(reference)?,
+        };
+
+        let SchemaKind::Type(Type::String(string_type)) = &schema.schema_kind else {
+            return None;
+        };
+
+        if !string_type.enumeration.is_empty() {
+            let values = string_type.enumeration.iter().flatten().cloned().collect::<Vec<_>>();
+            return Some(format!("enum: {}", values.join(", ")));
+        }
+
+        match &string_type.format {
+            VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => Some("UUID".to_string()),
+            _ => None,
+        }
+    }
+
+    fn resolve_schema_reference<'a>(&'a self, reference: &str) -> Option<&'a Schema> {
+        let name = reference.split('/').next_back()?;
+        self.spec
+            .components
+            .as_ref()?
+            .schemas
+            .get(name)
+            .and_then(|schema_ref| match schema_ref {
+                ReferenceOr::Item(schema) => Some(schema),
+                ReferenceOr::Reference { .. } => None,
+            })
+    }
+
     fn should_generate_inline_model(schema: &Schema) -> bool {
         matches!(&schema.schema_kind, SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty())
+    }
+
+    fn inline_model_name(&self, parent_class_name: &str, field_name: &str, schema: &Schema) -> Option<String> {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty() => {
+                Some(format!("{parent_class_name}{}", field_name.to_pascal_case()))
+            }
+            _ => None,
+        }
+    }
+
+    fn inline_array_item_model_name(
+        &self,
+        parent_class_name: &str,
+        field_name: &str,
+        schema: &Schema,
+    ) -> Option<String> {
+        let item_schema = Self::inline_array_item_schema(schema)?;
+        match &item_schema.schema_kind {
+            SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty() => {
+                Some(format!("{parent_class_name}{}Item", field_name.to_pascal_case()))
+            }
+            _ => None,
+        }
+    }
+
+    fn inline_array_item_schema(schema: &Schema) -> Option<&Schema> {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::Array(array_type)) => match &array_type.items {
+                Some(ReferenceOr::Item(item_schema)) => Some(item_schema),
+                _ => None,
+            },
+            _ => None,
+        }
     }
 
     fn inline_request_body_model<'a>(

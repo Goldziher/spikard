@@ -9,10 +9,11 @@ use super::{
     RustOpenRpcGenerator, TypeScriptOpenRpcGenerator,
 };
 use crate::codegen::openrpc::spec_parser::{
-    OpenRpcError, OpenRpcInfo, OpenRpcMethod, OpenRpcParam, OpenRpcResult, OpenRpcSpec,
+    OpenRpcError, OpenRpcInfo, OpenRpcMethod, OpenRpcParam, OpenRpcResult, OpenRpcSpec, parse_openrpc_schema,
 };
 use crate::codegen::{TargetLanguage, quality::QualityValidator};
 use serde_json::json;
+use std::path::Path;
 
 /// Helper function to create a minimal OpenRPC spec
 fn minimal_spec() -> OpenRpcSpec {
@@ -29,6 +30,11 @@ fn minimal_spec() -> OpenRpcSpec {
         servers: vec![],
         components: Default::default(),
     }
+}
+
+fn user_service_spec() -> OpenRpcSpec {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/openrpc_schemas/user_service.json");
+    parse_openrpc_schema(&fixture).expect("user_service OpenRPC fixture should parse")
 }
 
 /// Helper function to create a spec with a single test method
@@ -116,10 +122,6 @@ fn test_python_generator_imports_msgspec() {
         output.contains("import msgspec"),
         "Generated code should import msgspec"
     );
-    assert!(
-        output.contains("from typing import Any"),
-        "Generated code should have typing imports"
-    );
 }
 
 #[test]
@@ -132,7 +134,10 @@ fn test_python_generator_async_handler_signature() {
         output.contains("async def handle_test_method"),
         "Handler should be async function"
     );
-    assert!(output.contains("-> dict[str, Any]"), "Handler should return dict");
+    assert!(
+        output.contains("async def handle_test_method() -> Test_methodResult"),
+        "Handler should return its generated result DTO"
+    );
 }
 
 #[test]
@@ -189,7 +194,10 @@ fn test_python_generator_validation_schemas() {
         "Should generate params DTO"
     );
     assert!(output.contains("param0: str"), "Should include first parameter");
-    assert!(output.contains("param1: str"), "Should include second parameter");
+    assert!(
+        output.contains("param1: str | None = None"),
+        "Optional parameters should remain optional in the generated DTO"
+    );
 }
 
 #[test]
@@ -288,9 +296,23 @@ fn test_python_generator_complex_param_schemas() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(
-        output.contains("config: dict[str, Any]"),
+        output.contains("config: dict[str, object]"),
         "Should map nested objects to dict"
     );
+}
+
+#[test]
+fn test_python_generator_resolves_component_refs_with_named_structs() {
+    let spec = user_service_spec();
+    let generator = PythonOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(output.contains("class User(msgspec.Struct, frozen=True):"));
+    assert!(output.contains("class CreateUserInput(msgspec.Struct, frozen=True):"));
+    assert!(output.contains("user: CreateUserInput"));
+    assert!(output.contains("profile: UserProfile | None = None"));
+    assert!(output.contains("-> User"));
+    assert!(output.contains("msgspec.to_builtins("));
 }
 
 #[test]
@@ -845,6 +867,23 @@ fn test_elixir_generator_validates_with_quality_gates() {
         report.is_valid(),
         "generated Elixir OpenRPC code should validate cleanly: {report}"
     );
+}
+
+#[test]
+fn test_elixir_generator_resolves_component_refs_and_preserves_json_keys() {
+    let spec = user_service_spec();
+    let generator = ElixirOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(output.contains("defmodule UserManagementRpcApiJsonRpc.Types"));
+    assert!(output.contains("@type user :: %{"));
+    assert!(output.contains("required(:id) => String.t()") || output.contains("required(:\"id\") => String.t()"));
+    assert!(output.contains("@type users_get_by_id_result :: Types.user()"));
+    assert!(
+        output.contains("@type users_create_params :: %{required(:user) => Types.create_user_input()}")
+            || output.contains("@type users_create_params :: %{required(:\"user\") => Types.create_user_input()}")
+    );
+    assert!(!output.contains("@type users_get_by_id_result :: term()"));
 }
 
 #[test]

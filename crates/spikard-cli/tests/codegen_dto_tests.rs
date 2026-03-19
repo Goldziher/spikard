@@ -151,6 +151,133 @@ paths:
                   - status
 "##;
 
+const TYPED_PARAMETERS_OPENAPI: &str = r##"
+openapi: 3.1.0
+info:
+  title: Typed Parameters API
+  version: "1.0.0"
+paths:
+  /projects/{projectId}/tasks:
+    get:
+      operationId: listTasks
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - todo
+              - in_progress
+              - done
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: includeArchived
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required:
+                  - ok
+"##;
+
+const STRING_FORMATS_OPENAPI: &str = r##"
+openapi: 3.1.0
+info:
+  title: String Formats API
+  version: "1.0.0"
+paths:
+  /events/{eventId}:
+    get:
+      operationId: getEvent
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  startsAt:
+                    type: string
+                    format: date-time
+                  eventDate:
+                    type: string
+                    format: date
+                  rawPayload:
+                    type: string
+                    format: byte
+                required:
+                  - id
+                  - startsAt
+                  - eventDate
+                  - rawPayload
+"##;
+
+const ROUTE_SEMANTICS_OPENAPI: &str = r##"
+openapi: 3.1.0
+info:
+  title: Route Semantics API
+  version: "1.0.0"
+paths:
+  /events/{eventId}:
+    get:
+      operationId: getEvent
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - scheduled
+              - cancelled
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required:
+                  - ok
+"##;
+
 fn write_temp_file(dir: &Path, name: &str, contents: &str) -> PathBuf {
     let path = dir.join(name);
     fs::write(&path, contents).expect("failed to write test fixture");
@@ -278,6 +405,151 @@ fn python_openapi_generated_code_validates() -> Result<()> {
 }
 
 #[test]
+fn python_openapi_inline_objects_generate_named_models() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "inline_openapi.yaml", INLINE_OBJECT_OPENAPI);
+
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
+    assert!(
+        code.contains("class CreateWidgetRequestBody:"),
+        "expected named request body model"
+    );
+    assert!(
+        code.contains("class CreateWidgetRequestBodyMetadata:"),
+        "expected nested named model for shaped inline object"
+    );
+    assert!(
+        code.contains("body: Body[CreateWidgetRequestBody]"),
+        "route signature should use generated request body model"
+    );
+    assert!(
+        code.contains(") -> CreateWidgetResponseBody:"),
+        "route return type should use generated response body model"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn python_openapi_component_inline_objects_generate_named_models() -> Result<()> {
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/openapi_schemas/complex_nested.json");
+
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
+    assert!(
+        code.contains("class OrganizationSettingsIntegrations:"),
+        "expected named model for nested component object"
+    );
+    assert!(
+        code.contains("integrations: OrganizationSettingsIntegrations | None = None"),
+        "component field should use generated nested model"
+    );
+    assert!(
+        code.contains("class OrganizationSettingsNotifications:"),
+        "expected named model for additional nested component object"
+    );
+    assert!(
+        code.contains("notifications: OrganizationSettingsNotifications | None = None"),
+        "nested notifications object should use generated model"
+    );
+    assert!(
+        code.contains("metadata: ProjectMetadata | None = None"),
+        "shaped metadata should use a generated nested model"
+    );
+    assert!(
+        code.contains("custom_fields: dict[str, object] | None = None"),
+        "free-form nested leaves should remain dicts"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn python_openapi_parameters_preserve_schema_types() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "typed_parameters_openapi.yaml", TYPED_PARAMETERS_OPENAPI);
+
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
+    assert!(
+        code.contains("from typing import Literal"),
+        "expected Literal import when enum-backed parameter types are generated"
+    );
+    assert!(
+        code.contains("project_id: Path[int]"),
+        "path parameters should preserve integer typing"
+    );
+    assert!(
+        code.contains("status: Query[Literal[\"todo\", \"in_progress\", \"done\"] | None] = Query(default=None)"),
+        "optional enum query parameters should preserve literal typing"
+    );
+    assert!(
+        code.contains("limit: Query[int]"),
+        "required integer query parameters should preserve integer typing"
+    );
+    assert!(
+        code.contains("include_archived: Query[bool | None] = Query(default=None)"),
+        "optional boolean query parameters should preserve boolean typing"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn python_openapi_string_formats_use_semantic_types() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "string_formats_openapi.yaml", STRING_FORMATS_OPENAPI);
+
+    let dto = DtoConfig {
+        python: PythonDtoStyle::Dataclass,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Python, &dto)?;
+    assert!(
+        code.contains("from datetime import date, datetime"),
+        "expected datetime imports for date/date-time schemas"
+    );
+    assert!(
+        code.contains("from uuid import UUID"),
+        "expected UUID import for uuid-formatted schemas"
+    );
+    assert!(
+        code.contains("event_id: Path[UUID]"),
+        "uuid path parameters should use UUID typing"
+    );
+    assert!(code.contains("id: UUID"), "uuid schema fields should use UUID typing");
+    assert!(
+        code.contains("starts_at: datetime"),
+        "date-time schema fields should use datetime typing"
+    );
+    assert!(
+        code.contains("event_date: date"),
+        "date schema fields should use date typing"
+    );
+    assert!(
+        code.contains("raw_payload: bytes"),
+        "byte-formatted string fields should use bytes typing"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn node_generation_uses_zod_schemas() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
@@ -355,8 +627,12 @@ fn ruby_openapi_inline_objects_generate_named_models() -> Result<()> {
         "expected named dry-struct response body model"
     );
     assert!(
-        code.contains("attribute :metadata, Types::Hash.schema(enabled: Types::Strict::Bool).optional"),
-        "nested inline objects should use dry-types hash schemas"
+        code.contains("class CreateWidgetRequestBodyMetadata < Dry::Struct"),
+        "nested inline objects should get named dry-struct models"
+    );
+    assert!(
+        code.contains("attribute :metadata, Types.Instance(CreateWidgetRequestBodyMetadata).optional"),
+        "parent model should reference the nested generated model"
     );
     assert!(
         code.contains("# @param body [CreateWidgetRequestBody] Request body"),
@@ -365,6 +641,138 @@ fn ruby_openapi_inline_objects_generate_named_models() -> Result<()> {
     assert!(
         code.contains("# @return [CreateWidgetResponseBody] Response body"),
         "route docs should use generated response model type"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn ruby_openapi_component_inline_objects_generate_named_models() -> Result<()> {
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/openapi_schemas/complex_nested.json");
+
+    let dto = DtoConfig {
+        ruby: RubyDtoStyle::DrySchema,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto)?;
+    assert!(
+        code.contains("class OrganizationSettingsIntegrations < Dry::Struct"),
+        "expected named model for nested component object"
+    );
+    assert!(
+        code.contains("attribute :integrations, Types.Instance(OrganizationSettingsIntegrations).optional"),
+        "component field should reference generated nested model"
+    );
+    assert!(
+        code.contains("class OrganizationSettingsNotifications < Dry::Struct"),
+        "expected named model for additional nested component object"
+    );
+    assert!(
+        code.contains("attribute :notifications, Types.Instance(OrganizationSettingsNotifications).optional"),
+        "nested notifications object should reference generated model"
+    );
+    assert!(
+        code.contains("attribute :custom_fields, Types::Strict::Hash.optional"),
+        "free-form nested leaves should remain hashes"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn ruby_openapi_string_formats_and_enums_use_semantic_types() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "string_formats_openapi.yaml", STRING_FORMATS_OPENAPI);
+
+    let dto = DtoConfig {
+        ruby: RubyDtoStyle::DrySchema,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto)?;
+    assert!(
+        code.contains("require 'date'"),
+        "expected date support import for semantic date/date-time types"
+    );
+    assert!(
+        code.contains("UUID = Types::Strict::String"),
+        "expected UUID helper type in generated Types module"
+    );
+    assert!(
+        code.contains("attribute :id, Types::UUID"),
+        "uuid schema fields should use UUID helper type"
+    );
+    assert!(
+        code.contains("attribute :starts_at, Types::ISODateTime"),
+        "date-time schema fields should use semantic datetime type"
+    );
+    assert!(
+        code.contains("attribute :event_date, Types::ISODate"),
+        "date schema fields should use semantic date type"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn ruby_openapi_routes_coerce_and_validate_semantic_parameters() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "route_semantics_openapi.yaml", ROUTE_SEMANTICS_OPENAPI);
+
+    let dto = DtoConfig {
+        ruby: RubyDtoStyle::DrySchema,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto)?;
+    assert!(
+        code.contains("def coerce_uuid_param!(value, name)"),
+        "expected UUID route coercion helper"
+    );
+    assert!(
+        code.contains("def coerce_enum_param!(value, name, allowed)"),
+        "expected enum route coercion helper"
+    );
+    assert!(
+        code.contains("# @param event_id [String] Path parameter (UUID)"),
+        "path parameter docs should preserve UUID semantics"
+    );
+    assert!(
+        code.contains("# @param status [String, nil] Query parameter (enum: scheduled, cancelled; optional)"),
+        "query parameter docs should preserve enum semantics and optionality"
+    );
+    assert!(
+        code.contains("_event_id = coerce_uuid_param!(params.fetch('eventId'), 'eventId')"),
+        "route should coerce path UUID parameters"
+    );
+    assert!(
+        code.contains("_status = params.key?('status') ? coerce_enum_param!(params['status'], 'status', ['scheduled', 'cancelled']) : nil"),
+        "route should coerce and validate optional enum query parameters"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn ruby_openapi_string_enums_use_dry_enum_types() -> Result<()> {
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/openapi_schemas/complex_nested.json");
+
+    let dto = DtoConfig {
+        ruby: RubyDtoStyle::DrySchema,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto)?;
+    assert!(
+        code.contains("attribute :type, Types::Strict::String.enum('startup', 'enterprise', 'nonprofit', 'educational', 'personal')"),
+        "string enums should use dry-types enum constraints"
+    );
+    assert!(
+        code.contains("attribute :priority, Types::Strict::String.enum('low', 'medium', 'high', 'critical')"),
+        "additional enums should use dry-types enum constraints"
     );
 
     Ok(())

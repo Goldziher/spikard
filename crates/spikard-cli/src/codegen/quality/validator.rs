@@ -961,10 +961,21 @@ struct ElixirTempProject {
 fn write_python_validation_stubs(root: &Path) -> Result<(), QualityError> {
     write_stub_file(
         &root.join("msgspec.py"),
-        r#"class Struct:
+        r#"from typing import Any, TypeVar, cast
+
+T = TypeVar("T")
+
+class Struct:
     def __init__(self, **kwargs: object) -> None: ...
 
     def __init_subclass__(cls, *, frozen: bool = False, kw_only: bool = False) -> None: ...
+
+def field(*, default: object = ..., name: str | None = None) -> Any: ...
+
+def convert(value: object, *, type: type[T]) -> T:
+    return cast(T, value)
+
+def to_builtins(value: object) -> object: ...
 "#,
     )?;
 
