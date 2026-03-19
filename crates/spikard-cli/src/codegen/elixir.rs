@@ -4,7 +4,10 @@ use super::ElixirDtoStyle;
 use super::base::OpenApiGenerator;
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
-use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, StatusCode, Type};
+use openapiv3::{
+    OpenAPI, Operation, Parameter, ParameterData, ParameterSchemaOrContent, ReferenceOr, Schema, SchemaKind,
+    StatusCode, StringFormat, Type, VariantOrUnknownOrEmpty,
+};
 use serde_json::{Map, Number, Value};
 use std::io::Write;
 use std::process::{Command, Stdio};
@@ -15,6 +18,17 @@ pub struct ElixirGenerator {
     spec: OpenAPI,
     registry: SchemaRegistry,
     style: ElixirDtoStyle,
+}
+
+#[derive(Default)]
+struct ElixirParamHelperUsage {
+    uuid: bool,
+    integer: bool,
+    float: bool,
+    boolean: bool,
+    date: bool,
+    datetime: bool,
+    enum_values: bool,
 }
 
 impl ElixirGenerator {
@@ -348,6 +362,247 @@ impl ElixirGenerator {
         Ok((prelude.join(""), options))
     }
 
+    fn parameter_binding(&self, parameter: &Parameter) -> Option<String> {
+        let (parameter_data, getter) = match parameter {
+            Parameter::Path { parameter_data, .. } => (parameter_data, "get_path_param"),
+            Parameter::Query { parameter_data, .. } => (parameter_data, "get_query_param"),
+            Parameter::Header { parameter_data, .. } => (parameter_data, "get_header"),
+            Parameter::Cookie { parameter_data, .. } => (parameter_data, "get_cookie"),
+        };
+
+        let variable = format!("_{}", parameter_data.name.to_snake_case());
+        let access = format!("Spikard.Request.{getter}(request, \"{}\")", parameter_data.name);
+        Some(format!(
+            "    {} = {}\n",
+            variable,
+            self.parameter_coercion_expr(parameter_data, &access)
+        ))
+    }
+
+    fn parameter_coercion_expr(&self, parameter_data: &ParameterData, access: &str) -> String {
+        match &parameter_data.format {
+            ParameterSchemaOrContent::Schema(schema_ref) => {
+                self.schema_param_coercion_expr(schema_ref, access, &parameter_data.name)
+            }
+            ParameterSchemaOrContent::Content(_) => access.to_string(),
+        }
+    }
+
+    fn schema_param_coercion_expr(&self, schema_ref: &ReferenceOr<Schema>, access: &str, name: &str) -> String {
+        let Some(schema) = self.registry.resolve(schema_ref) else {
+            return access.to_string();
+        };
+        self.inline_schema_param_coercion_expr(schema, access, name)
+    }
+
+    fn inline_schema_param_coercion_expr(&self, schema: &Schema, access: &str, name: &str) -> String {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::String(string_type)) => {
+                let enum_values = string_type
+                    .enumeration
+                    .iter()
+                    .flatten()
+                    .map(|value| format!("\"{}\"", self.escape_string(value)))
+                    .collect::<Vec<_>>();
+
+                if !enum_values.is_empty() {
+                    return format!(
+                        "coerce_enum_param!({}, \"{}\", [{}])",
+                        access,
+                        name,
+                        enum_values.join(", ")
+                    );
+                }
+
+                match &string_type.format {
+                    VariantOrUnknownOrEmpty::Item(StringFormat::Date) => {
+                        format!("coerce_date_param!({}, \"{}\")", access, name)
+                    }
+                    VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => {
+                        format!("coerce_datetime_param!({}, \"{}\")", access, name)
+                    }
+                    VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => {
+                        format!("coerce_uuid_param!({}, \"{}\")", access, name)
+                    }
+                    _ => access.to_string(),
+                }
+            }
+            SchemaKind::Type(Type::Integer(_)) => format!("coerce_integer_param!({}, \"{}\")", access, name),
+            SchemaKind::Type(Type::Number(_)) => format!("coerce_float_param!({}, \"{}\")", access, name),
+            SchemaKind::Type(Type::Boolean(_)) => format!("coerce_boolean_param!({}, \"{}\")", access, name),
+            _ => access.to_string(),
+        }
+    }
+
+    fn collect_param_helper_usage(&self, operation: &Operation, usage: &mut ElixirParamHelperUsage) {
+        for parameter_ref in &operation.parameters {
+            let ReferenceOr::Item(parameter) = parameter_ref else {
+                continue;
+            };
+
+            let parameter_data = match parameter {
+                Parameter::Path { parameter_data, .. }
+                | Parameter::Query { parameter_data, .. }
+                | Parameter::Header { parameter_data, .. }
+                | Parameter::Cookie { parameter_data, .. } => parameter_data,
+            };
+
+            let ParameterSchemaOrContent::Schema(schema_ref) = &parameter_data.format else {
+                continue;
+            };
+            let Some(schema) = self.registry.resolve(schema_ref) else {
+                continue;
+            };
+
+            self.collect_schema_helper_usage(schema, usage);
+        }
+    }
+
+    fn collect_schema_helper_usage(&self, schema: &Schema, usage: &mut ElixirParamHelperUsage) {
+        match &schema.schema_kind {
+            SchemaKind::Type(Type::String(string_type)) => {
+                if string_type.enumeration.iter().flatten().next().is_some() {
+                    usage.enum_values = true;
+                }
+                match &string_type.format {
+                    VariantOrUnknownOrEmpty::Item(StringFormat::Date) => usage.date = true,
+                    VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => usage.datetime = true,
+                    VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => usage.uuid = true,
+                    _ => {}
+                }
+            }
+            SchemaKind::Type(Type::Integer(_)) => usage.integer = true,
+            SchemaKind::Type(Type::Number(_)) => usage.float = true,
+            SchemaKind::Type(Type::Boolean(_)) => usage.boolean = true,
+            _ => {}
+        }
+    }
+
+    fn render_param_helpers(&self, usage: &ElixirParamHelperUsage) -> String {
+        let mut helpers = String::new();
+
+        if usage.uuid {
+            helpers.push_str(
+                r#"  @uuid_regex ~r/\A[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\z/
+
+  defp coerce_uuid_param!(nil, _name), do: nil
+
+  defp coerce_uuid_param!(value, name) do
+    if Regex.match?(@uuid_regex, value) do
+      value
+    else
+      invalid_parameter!(name, "must be a UUID")
+    end
+  end
+
+"#,
+            );
+        }
+
+        if usage.integer {
+            helpers.push_str(
+                r#"  defp coerce_integer_param!(nil, _name), do: nil
+
+  defp coerce_integer_param!(value, name) do
+    case Integer.parse(value) do
+      {integer, ""} -> integer
+      _ -> invalid_parameter!(name, "must be an integer")
+    end
+  end
+
+"#,
+            );
+        }
+
+        if usage.float {
+            helpers.push_str(
+                r#"  defp coerce_float_param!(nil, _name), do: nil
+
+  defp coerce_float_param!(value, name) do
+    case Float.parse(value) do
+      {float, ""} -> float
+      _ -> invalid_parameter!(name, "must be a float")
+    end
+  end
+
+"#,
+            );
+        }
+
+        if usage.boolean {
+            helpers.push_str(
+                r#"  defp coerce_boolean_param!(nil, _name), do: nil
+  defp coerce_boolean_param!(true, _name), do: true
+  defp coerce_boolean_param!(false, _name), do: false
+  defp coerce_boolean_param!("true", _name), do: true
+  defp coerce_boolean_param!("false", _name), do: false
+  defp coerce_boolean_param!("1", _name), do: true
+  defp coerce_boolean_param!("0", _name), do: false
+  defp coerce_boolean_param!(_value, name), do: invalid_parameter!(name, "must be a boolean")
+
+"#,
+            );
+        }
+
+        if usage.date {
+            helpers.push_str(
+                r#"  defp coerce_date_param!(nil, _name), do: nil
+
+  defp coerce_date_param!(value, name) do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> date
+      {:error, _reason} -> invalid_parameter!(name, "must be an ISO 8601 date")
+    end
+  end
+
+"#,
+            );
+        }
+
+        if usage.datetime {
+            helpers.push_str(
+                r#"  defp coerce_datetime_param!(nil, _name), do: nil
+
+  defp coerce_datetime_param!(value, name) do
+    case DateTime.from_iso8601(value) do
+      {:ok, datetime, _offset} -> datetime
+      {:error, _reason} -> invalid_parameter!(name, "must be an ISO 8601 date-time")
+    end
+  end
+
+"#,
+            );
+        }
+
+        if usage.enum_values {
+            helpers.push_str(
+                r#"  defp coerce_enum_param!(nil, _name, _allowed), do: nil
+
+  defp coerce_enum_param!(value, name, allowed) do
+    if value in allowed do
+      value
+    else
+      invalid_parameter!(name, "must be one of: #{Enum.join(allowed, ", ")}")
+    end
+  end
+
+"#,
+            );
+        }
+
+        if !helpers.is_empty() {
+            helpers.push_str(
+                r#"  defp invalid_parameter!(name, message) do
+    raise ArgumentError, "invalid parameter #{name}: #{message}"
+  end
+
+"#,
+            );
+        }
+
+        helpers
+    }
+
     fn handler_stub(&self, operation: &Operation, operation_id: &str) -> String {
         let mut code = String::new();
         let has_request_data = !operation.parameters.is_empty() || operation.request_body.is_some();
@@ -364,35 +619,8 @@ impl ElixirGenerator {
                 let ReferenceOr::Item(parameter) = parameter_ref else {
                     continue;
                 };
-                match parameter {
-                    Parameter::Path { parameter_data, .. } => {
-                        let variable = format!("_{}", parameter_data.name.to_snake_case());
-                        code.push_str(&format!(
-                            "    {} = Spikard.Request.get_path_param(request, \"{}\")\n",
-                            variable, parameter_data.name
-                        ));
-                    }
-                    Parameter::Query { parameter_data, .. } => {
-                        let variable = format!("_{}", parameter_data.name.to_snake_case());
-                        code.push_str(&format!(
-                            "    {} = Spikard.Request.get_query_param(request, \"{}\")\n",
-                            variable, parameter_data.name
-                        ));
-                    }
-                    Parameter::Header { parameter_data, .. } => {
-                        let variable = format!("_{}", parameter_data.name.to_snake_case());
-                        code.push_str(&format!(
-                            "    {} = Spikard.Request.get_header(request, \"{}\")\n",
-                            variable, parameter_data.name
-                        ));
-                    }
-                    Parameter::Cookie { parameter_data, .. } => {
-                        let variable = format!("_{}", parameter_data.name.to_snake_case());
-                        code.push_str(&format!(
-                            "    {} = Spikard.Request.get_cookie(request, \"{}\")\n",
-                            variable, parameter_data.name
-                        ));
-                    }
+                if let Some(binding) = self.parameter_binding(parameter) {
+                    code.push_str(&binding);
                 }
             }
 
@@ -516,6 +744,7 @@ impl OpenApiGenerator for ElixirGenerator {
         let module_name = self.root_module_name();
         let mut router = String::new();
         let mut handlers = String::new();
+        let mut helper_usage = ElixirParamHelperUsage::default();
 
         handlers.push_str(&format!(
             "defmodule {module_name}.Handlers do\n  @moduledoc false\n\n  alias Spikard.Response\n\n"
@@ -543,6 +772,7 @@ impl OpenApiGenerator for ElixirGenerator {
             }
             router.push_str("\n\n");
 
+            self.collect_param_helper_usage(operation, &mut helper_usage);
             handlers.push_str(&self.handler_stub(operation, &operation_id));
             Ok(())
         })?;
@@ -554,6 +784,7 @@ impl OpenApiGenerator for ElixirGenerator {
         while handlers.ends_with("\n\n") {
             handlers.pop();
         }
+        handlers.push_str(&self.render_param_helpers(&helper_usage));
         handlers.push_str("end\n");
 
         Ok(format!("{router}{handlers}"))

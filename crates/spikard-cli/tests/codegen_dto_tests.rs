@@ -867,8 +867,43 @@ paths:
     let code = generate_from_openapi(&schema_path, TargetLanguage::Elixir, &DtoConfig::default())?;
     assert!(code.contains("get(\"/users/:id\""), "expected :param route syntax");
     assert!(
-        code.contains("Spikard.Request.get_path_param(request, \"id\")"),
-        "expected handler to pull path params through Spikard.Request"
+        code.contains("_id = coerce_uuid_param!(Spikard.Request.get_path_param(request, \"id\"), \"id\")")
+            || code.contains("_id = Spikard.Request.get_path_param(request, \"id\")"),
+        "expected handler to bind path params through generated request access"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn elixir_openapi_handlers_coerce_semantic_parameters() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "route_semantics_openapi.yaml", ROUTE_SEMANTICS_OPENAPI);
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Elixir, &DtoConfig::default())?;
+    assert!(
+        code.contains("defp coerce_uuid_param!(value, name) do"),
+        "expected UUID coercion helper in generated handler module"
+    );
+    assert!(
+        code.contains("defp coerce_enum_param!(value, name, allowed) do"),
+        "expected enum coercion helper in generated handler module"
+    );
+    assert!(
+        code.contains(
+            "_event_id = coerce_uuid_param!(Spikard.Request.get_path_param(request, \"eventId\"), \"eventId\")"
+        ),
+        "expected path params to be coerced through semantic helper"
+    );
+    assert!(
+        code.contains(
+            "_status =\n      coerce_enum_param!(Spikard.Request.get_query_param(request, \"status\"), \"status\", ["
+        ),
+        "expected query params to be coerced through semantic helper"
+    );
+    assert!(
+        code.contains("\"scheduled\"") && code.contains("\"cancelled\""),
+        "expected generated enum coercion to preserve allowed values"
     );
 
     Ok(())
