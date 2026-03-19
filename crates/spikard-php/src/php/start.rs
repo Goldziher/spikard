@@ -568,7 +568,7 @@ pub fn spikard_start_server_impl(
                 ext_php_rs::types::ArrayKey::Str(s) => s.to_string(),
                 ext_php_rs::types::ArrayKey::Long(i) => i.to_string(),
             };
-            let handler = PhpGrpcHandler::register_from_zval(&handler_value, service_name.clone())
+            let handler = PhpGrpcHandler::register_from_zval(handler_value, service_name.clone())
                 .map_err(|e| PhpException::default(format!("Failed to register gRPC handler: {}", e)))?;
             registry.register_service(service_name, Arc::new(handler), spikard_http::grpc::RpcMode::Unary);
         }
