@@ -7,7 +7,10 @@ use rmcp::{
 use serde_json::json;
 use std::process::Stdio;
 use tempfile::TempDir;
-use tokio::{process::Command as TokioCommand, time::{Duration, timeout}};
+use tokio::{
+    process::Command as TokioCommand,
+    time::{Duration, timeout},
+};
 
 #[derive(Debug, Clone, Default)]
 struct DummyClientHandler;
@@ -74,8 +77,7 @@ async fn spikard_mcp_stdio_supports_initialize_list_and_call() -> anyhow::Result
 
     let result = client
         .call_tool(
-            CallToolRequestParams::new("get_features")
-                .with_arguments(json!({}).as_object().expect("object").clone()),
+            CallToolRequestParams::new("get_features").with_arguments(json!({}).as_object().expect("object").clone()),
         )
         .await?;
 

@@ -376,10 +376,7 @@ impl GraphQLGenerator for PythonGenerator {
         if !schema.subscriptions.is_empty() {
             ariadne_imports.push("SubscriptionType");
         }
-        code.push_str(&format!(
-            "from ariadne import {}\n\n",
-            ariadne_imports.join(", ")
-        ));
+        code.push_str(&format!("from ariadne import {}\n\n", ariadne_imports.join(", ")));
 
         // Reconstruct and embed the SDL using SdlBuilder
         let sdl = SdlBuilder::new(schema).build();

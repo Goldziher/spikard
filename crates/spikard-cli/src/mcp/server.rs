@@ -760,8 +760,14 @@ mod tests {
                     assert!(tool_code.contains(expected), "tool output missing {expected}");
                     assert!(app_code.contains(expected), "app output missing {expected}");
                 }
-                assert_eq!(tool_code.matches("export interface").count(), app_code.matches("export interface").count());
-                assert_eq!(tool_code.matches("export enum").count(), app_code.matches("export enum").count());
+                assert_eq!(
+                    tool_code.matches("export interface").count(),
+                    app_code.matches("export interface").count()
+                );
+                assert_eq!(
+                    tool_code.matches("export enum").count(),
+                    app_code.matches("export enum").count()
+                );
             }
             _ => panic!("expected file-based Protobuf generation results"),
         }
@@ -832,7 +838,10 @@ mod tests {
                 assert_eq!(app_files.len(), 1);
                 let tool_code = std::fs::read_to_string(&tool_output)?;
                 let app_code = std::fs::read_to_string(&app_output)?;
-                assert_eq!(collect_prefixed_lines(&tool_code, "class "), collect_prefixed_lines(&app_code, "class "));
+                assert_eq!(
+                    collect_prefixed_lines(&tool_code, "class "),
+                    collect_prefixed_lines(&app_code, "class ")
+                );
                 assert!(tool_code.contains("@websocket(\"/chat/{roomId}\")"));
                 assert!(app_code.contains("@websocket(\"/chat/{roomId}\")"));
                 assert!(tool_code.contains("parsed: ChatMessage = msgspec.convert(message, type=ChatMessage)"));
