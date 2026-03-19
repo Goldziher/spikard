@@ -369,11 +369,17 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("from __future__ import annotations\n\n");
 
         // Build imports based on what's in the schema
-        code.push_str("from ariadne import make_executable_schema, QueryType, MutationType");
-        if !schema.subscriptions.is_empty() {
-            code.push_str(", SubscriptionType");
+        let mut ariadne_imports = vec!["make_executable_schema", "QueryType"];
+        if !schema.mutations.is_empty() {
+            ariadne_imports.push("MutationType");
         }
-        code.push_str("\n\n");
+        if !schema.subscriptions.is_empty() {
+            ariadne_imports.push("SubscriptionType");
+        }
+        code.push_str(&format!(
+            "from ariadne import {}\n\n",
+            ariadne_imports.join(", ")
+        ));
 
         // Reconstruct and embed the SDL using SdlBuilder
         let sdl = SdlBuilder::new(schema).build();

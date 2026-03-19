@@ -23,6 +23,143 @@ fn cli_features_command_runs() -> Result<()> {
 }
 
 #[test]
+fn cli_init_command_creates_python_project_by_default() -> Result<()> {
+    let tmp = TempDir::new()?;
+    let project_name = "cli_init_demo";
+
+    spikard_cli::cli::run_from([
+        "spikard",
+        "init",
+        project_name,
+        "--dir",
+        tmp.path().to_string_lossy().as_ref(),
+    ])?;
+
+    let project_dir = tmp.path().join(project_name);
+    assert!(project_dir.exists());
+    assert!(project_dir.join("pyproject.toml").exists());
+    assert!(project_dir.join("src").join(project_name).join("__init__.py").exists());
+    assert!(project_dir.join("src").join(project_name).join("app.py").exists());
+    assert!(project_dir.join("tests").join("test_app.py").exists());
+    Ok(())
+}
+
+#[test]
+fn cli_init_command_creates_expected_project_structures_for_each_binding() -> Result<()> {
+    let cases = [
+        (
+            "python",
+            "py_demo",
+            vec![
+                "pyproject.toml",
+                "README.md",
+                ".gitignore",
+                "src/py_demo/__init__.py",
+                "src/py_demo/app.py",
+                "tests/test_app.py",
+            ],
+        ),
+        (
+            "typescript",
+            "ts-demo",
+            vec![
+                "package.json",
+                "tsconfig.json",
+                "vitest.config.ts",
+                "pnpm-lock.yaml",
+                ".gitignore",
+                "README.md",
+                "src/app.ts",
+                "tests/app.spec.ts",
+            ],
+        ),
+        (
+            "rust",
+            "rust_demo",
+            vec![
+                "Cargo.toml",
+                "Cargo.lock",
+                "README.md",
+                ".gitignore",
+                "src/main.rs",
+                "src/lib.rs",
+                "tests/integration_test.rs",
+            ],
+        ),
+        (
+            "ruby",
+            "ruby_demo",
+            vec![
+                "Gemfile",
+                "Gemfile.lock",
+                ".ruby-version",
+                ".gitignore",
+                "README.md",
+                "lib/ruby_demo.rb",
+                "sig/ruby_demo.rbs",
+                "spec/ruby_demo_spec.rb",
+                ".rspec",
+                "Rakefile",
+            ],
+        ),
+        (
+            "php",
+            "php_demo",
+            vec![
+                "composer.json",
+                "composer.lock",
+                "phpstan.neon",
+                "phpunit.xml",
+                ".gitignore",
+                "README.md",
+                "src/App.php",
+                "tests/AppTest.php",
+            ],
+        ),
+        (
+            "elixir",
+            "elixir_demo",
+            vec![
+                "mix.exs",
+                ".formatter.exs",
+                ".gitignore",
+                "lib/elixir_demo.ex",
+                "test/elixir_demo_test.exs",
+                "test/test_helper.exs",
+            ],
+        ),
+    ];
+
+    for (lang, project_name, expected_paths) in cases {
+        let tmp = TempDir::new()?;
+
+        spikard_cli::cli::run_from([
+            "spikard",
+            "init",
+            project_name,
+            "--lang",
+            lang,
+            "--dir",
+            tmp.path().to_string_lossy().as_ref(),
+        ])?;
+
+        let project_dir = tmp.path().join(project_name);
+        assert!(project_dir.exists(), "expected {} project root", lang);
+
+        for expected in expected_paths {
+            assert!(
+                project_dir.join(expected).exists(),
+                "expected {} to create {}",
+                lang,
+                expected
+            );
+        }
+    }
+
+    Ok(())
+}
+
+#[test]
 fn cli_validate_asyncapi_command_runs() -> Result<()> {
     let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
     spikard_cli::cli::run_from(["spikard", "validate-asyncapi", schema.to_string_lossy().as_ref()])?;

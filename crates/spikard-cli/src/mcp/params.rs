@@ -10,7 +10,8 @@ pub struct EmptyParams {}
 #[derive(Debug, serde::Deserialize, serde::Serialize, schemars::JsonSchema)]
 pub struct InitProjectParams {
     pub name: String,
-    pub language: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub directory: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -21,7 +22,8 @@ pub struct InitProjectParams {
 #[derive(Debug, serde::Deserialize, serde::Serialize, schemars::JsonSchema)]
 pub struct GenerateOpenapiParams {
     pub schema: String,
-    pub language: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -42,7 +44,8 @@ pub struct GenerateAsyncapiHandlersParams {
 #[derive(Debug, serde::Deserialize, serde::Serialize, schemars::JsonSchema)]
 pub struct GenerateJsonrpcParams {
     pub schema: String,
-    pub language: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output: Option<String>,
 }
@@ -51,7 +54,8 @@ pub struct GenerateJsonrpcParams {
 #[derive(Debug, serde::Deserialize, serde::Serialize, schemars::JsonSchema)]
 pub struct GenerateGraphqlParams {
     pub schema: String,
-    pub language: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -62,7 +66,8 @@ pub struct GenerateGraphqlParams {
 #[derive(Debug, serde::Deserialize, serde::Serialize, schemars::JsonSchema)]
 pub struct GenerateProtobufParams {
     pub schema: String,
-    pub language: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
     pub output: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target: Option<String>,

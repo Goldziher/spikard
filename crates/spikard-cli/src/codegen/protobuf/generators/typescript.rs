@@ -225,7 +225,11 @@ impl TypeScriptProtobufGenerator {
 
                 // Build method signature
                 let method_name = sanitize_identifier(&method.name, "typescript");
-                let request_type = &method.input_type;
+                let request_type = if method.input_streaming {
+                    format!("AsyncIterable<{}>", method.input_type)
+                } else {
+                    method.input_type.clone()
+                };
                 let response_type = &method.output_type;
 
                 // Determine return type based on streaming
@@ -234,9 +238,10 @@ impl TypeScriptProtobufGenerator {
                 } else {
                     format!("Promise<{response_type}>")
                 };
+                let async_prefix = if method.output_streaming { "" } else { "async " };
 
                 code.push_str(&format!(
-                    "  async {method_name}(request: {request_type}): {return_type} {{\n"
+                    "  {async_prefix}{method_name}(request: {request_type}): {return_type} {{\n"
                 ));
 
                 code.push_str("    throw new Error(\"Not implemented\");\n");

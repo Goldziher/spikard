@@ -42,7 +42,7 @@ impl SpikardMcp {
     }
 
     fn init_project_impl(&self, params: InitProjectParams) -> Result<crate::init::InitResponse, rmcp::ErrorData> {
-        let language = parse_target_language(&params.language)?;
+        let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
         let base_dir = params.directory.unwrap_or_else(|| ".".to_string());
         let request = InitRequest {
             project_name: params.name.clone(),
@@ -55,7 +55,7 @@ impl SpikardMcp {
     }
 
     fn generate_openapi_impl(&self, params: GenerateOpenapiParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
-        let language = parse_target_language(&params.language)?;
+        let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
         let mut dto = DtoConfig::default();
         if let Some(dto_name) = params.dto.as_deref() {
             apply_dto_choice(&mut dto, language, dto_name)?;
@@ -96,7 +96,7 @@ impl SpikardMcp {
     }
 
     fn generate_jsonrpc_impl(&self, params: GenerateJsonrpcParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
-        let language = parse_target_language(&params.language)?;
+        let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
 
         app::execute_codegen(CodegenRequest {
             schema_path: PathBuf::from(params.schema),
@@ -114,7 +114,7 @@ impl SpikardMcp {
     }
 
     fn generate_graphql_impl(&self, params: GenerateGraphqlParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
-        let language = parse_target_language(&params.language)?;
+        let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
         let output = params
             .output
             .map(PathBuf::from)
@@ -134,7 +134,7 @@ impl SpikardMcp {
     }
 
     fn generate_protobuf_impl(&self, params: GenerateProtobufParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
-        let language = parse_target_language(&params.language)?;
+        let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
 
         app::execute_codegen(CodegenRequest {
             schema_path: PathBuf::from(params.schema),
@@ -444,6 +444,16 @@ fn parse_target_language(language: &str) -> Result<TargetLanguage, rmcp::ErrorDa
     }
 }
 
+fn parse_target_language_or_default(
+    language: Option<&str>,
+    default: TargetLanguage,
+) -> Result<TargetLanguage, rmcp::ErrorData> {
+    match language {
+        Some(language) => parse_target_language(language),
+        None => Ok(default),
+    }
+}
+
 fn apply_dto_choice(config: &mut DtoConfig, language: TargetLanguage, dto: &str) -> Result<(), rmcp::ErrorData> {
     match (language, dto.to_ascii_lowercase().as_str()) {
         (TargetLanguage::Python, "dataclass") => {
@@ -505,6 +515,7 @@ fn default_jsonrpc_output(language: TargetLanguage) -> PathBuf {
 mod tests {
     use super::*;
     use crate::codegen::{SchemaKind, TargetLanguage};
+    use std::collections::BTreeMap;
     use tempfile::TempDir;
 
     fn repo_root() -> PathBuf {
@@ -513,6 +524,49 @@ mod tests {
             .and_then(|p| p.parent())
             .expect("CARGO_MANIFEST_DIR should be crates/spikard-cli")
             .to_path_buf()
+    }
+
+    fn write_temp_graphql_schema(tmp: &TempDir) -> Result<PathBuf> {
+        let schema = tmp.path().join("schema.graphql");
+        std::fs::write(
+            &schema,
+            "type Query {\n  hello: String!\n}\n\ntype User {\n  id: ID!\n  name: String!\n}\n",
+        )?;
+        Ok(schema)
+    }
+
+    fn read_file_map(root: &std::path::Path) -> Result<BTreeMap<PathBuf, String>> {
+        fn walk_dir(
+            root: &std::path::Path,
+            dir: &std::path::Path,
+            files: &mut BTreeMap<PathBuf, String>,
+        ) -> Result<()> {
+            for entry in std::fs::read_dir(dir)? {
+                let entry = entry?;
+                let path = entry.path();
+                if path.is_dir() {
+                    walk_dir(root, &path, files)?;
+                    continue;
+                }
+
+                files.insert(path.strip_prefix(root)?.to_path_buf(), std::fs::read_to_string(&path)?);
+            }
+            Ok(())
+        }
+
+        let mut files = BTreeMap::new();
+        walk_dir(root, root, &mut files)?;
+        Ok(files)
+    }
+
+    fn collect_prefixed_lines(text: &str, prefix: &str) -> Vec<String> {
+        let mut lines = text
+            .lines()
+            .filter(|line| line.starts_with(prefix))
+            .map(ToOwned::to_owned)
+            .collect::<Vec<_>>();
+        lines.sort();
+        lines
     }
 
     #[test]
@@ -556,7 +610,7 @@ mod tests {
 
         let tool_result = server.generate_openapi_impl(GenerateOpenapiParams {
             schema: schema.display().to_string(),
-            language: "python".to_string(),
+            language: Some("python".to_string()),
             output: None,
             dto: Some("dataclass".to_string()),
         })?;
@@ -584,6 +638,294 @@ mod tests {
     }
 
     #[test]
+    fn test_generate_jsonrpc_impl_matches_service() -> Result<()> {
+        let server = SpikardMcp::new();
+        let schema = repo_root().join("examples/schemas/user-api.openrpc.json");
+        let tmp = TempDir::new()?;
+        let tool_output = tmp.path().join("tool_handlers.py");
+        let app_output = tmp.path().join("app_handlers.py");
+
+        let tool_result = server.generate_jsonrpc_impl(GenerateJsonrpcParams {
+            schema: schema.display().to_string(),
+            language: Some("python".to_string()),
+            output: Some(tool_output.display().to_string()),
+        })?;
+
+        let app_result = app::execute_codegen(CodegenRequest {
+            schema_path: schema,
+            schema_kind: SchemaKind::OpenRpc,
+            target: CodegenTargetKind::JsonRpcHandlers {
+                language: TargetLanguage::Python,
+                output: app_output.clone(),
+            },
+            dto: None,
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
+                assert_eq!(tool_files.len(), 1);
+                assert_eq!(app_files.len(), 1);
+                assert_eq!(
+                    std::fs::read_to_string(&tool_output)?,
+                    std::fs::read_to_string(&app_output)?
+                );
+            }
+            _ => panic!("expected file-based JSON-RPC generation results"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_graphql_impl_matches_service() -> Result<()> {
+        let server = SpikardMcp::new();
+        let tmp = TempDir::new()?;
+        let schema = write_temp_graphql_schema(&tmp)?;
+        let tool_output = tmp.path().join("tool_generated.py");
+        let app_output = tmp.path().join("app_generated.py");
+
+        let tool_result = server.generate_graphql_impl(GenerateGraphqlParams {
+            schema: schema.display().to_string(),
+            language: Some("python".to_string()),
+            output: Some(tool_output.display().to_string()),
+            target: Some("all".to_string()),
+        })?;
+
+        let app_result = app::execute_codegen(CodegenRequest {
+            schema_path: schema,
+            schema_kind: SchemaKind::GraphQL,
+            target: CodegenTargetKind::GraphQL {
+                language: TargetLanguage::Python,
+                output: app_output.clone(),
+                target: "all".to_string(),
+            },
+            dto: None,
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
+                assert_eq!(tool_files.len(), 1);
+                assert_eq!(app_files.len(), 1);
+                assert_eq!(
+                    std::fs::read_to_string(&tool_output)?,
+                    std::fs::read_to_string(&app_output)?
+                );
+            }
+            _ => panic!("expected file-based GraphQL generation results"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_protobuf_impl_matches_service() -> Result<()> {
+        let server = SpikardMcp::new();
+        let schema = repo_root().join("examples/schemas/user-service.proto");
+        let tmp = TempDir::new()?;
+        let tool_output = tmp.path().join("tool_generated.ts");
+        let app_output = tmp.path().join("app_generated.ts");
+
+        let tool_result = server.generate_protobuf_impl(GenerateProtobufParams {
+            schema: schema.display().to_string(),
+            language: Some("typescript".to_string()),
+            output: tool_output.display().to_string(),
+            target: Some("all".to_string()),
+            include: None,
+        })?;
+
+        let app_result = app::execute_codegen(CodegenRequest {
+            schema_path: schema,
+            schema_kind: SchemaKind::Protobuf,
+            target: CodegenTargetKind::Protobuf {
+                language: TargetLanguage::TypeScript,
+                output: app_output.clone(),
+                target: "all".to_string(),
+                include_paths: Vec::new(),
+            },
+            dto: None,
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
+                assert_eq!(tool_files.len(), 1);
+                assert_eq!(app_files.len(), 1);
+                let tool_code = std::fs::read_to_string(&tool_output)?;
+                let app_code = std::fs::read_to_string(&app_output)?;
+                for expected in [
+                    "export interface User",
+                    "export interface GetUserRequest",
+                    "export interface UserResponse",
+                    "export class UserServiceService",
+                ] {
+                    assert!(tool_code.contains(expected), "tool output missing {expected}");
+                    assert!(app_code.contains(expected), "app output missing {expected}");
+                }
+                assert_eq!(tool_code.matches("export interface").count(), app_code.matches("export interface").count());
+                assert_eq!(tool_code.matches("export enum").count(), app_code.matches("export enum").count());
+            }
+            _ => panic!("expected file-based Protobuf generation results"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_asyncapi_bundle_impl_matches_service_asset_count() -> Result<()> {
+        let server = SpikardMcp::new();
+        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let tool_tmp = TempDir::new()?;
+        let app_tmp = TempDir::new()?;
+
+        let tool_result = server.generate_asyncapi_bundle_impl(GenerateAsyncapiBundleParams {
+            schema: schema.display().to_string(),
+            output: Some(tool_tmp.path().display().to_string()),
+        })?;
+
+        let app_result = app::execute_codegen_unvalidated(CodegenRequest {
+            schema_path: schema,
+            schema_kind: SchemaKind::AsyncApi,
+            target: CodegenTargetKind::AsyncAll {
+                output: app_tmp.path().to_path_buf(),
+            },
+            dto: None,
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
+                assert_eq!(tool_files.len(), app_files.len());
+                assert!(tool_files.len() >= 30, "expected fixtures plus six test apps");
+            }
+            _ => panic!("expected file-based AsyncAPI bundle results"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_asyncapi_handlers_impl_matches_service() -> Result<()> {
+        let server = SpikardMcp::new();
+        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let tmp = TempDir::new()?;
+        let tool_output = tmp.path().join("tool_handlers.py");
+        let app_output = tmp.path().join("app_handlers.py");
+
+        let tool_result = server.generate_asyncapi_handlers_impl(GenerateAsyncapiHandlersParams {
+            schema: schema.display().to_string(),
+            language: "python".to_string(),
+            output: tool_output.display().to_string(),
+            dto: None,
+        })?;
+
+        let app_result = app::execute_codegen(CodegenRequest {
+            schema_path: schema,
+            schema_kind: SchemaKind::AsyncApi,
+            target: CodegenTargetKind::AsyncHandlers {
+                language: TargetLanguage::Python,
+                output: app_output.clone(),
+            },
+            dto: Some(DtoConfig::default()),
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
+                assert_eq!(tool_files.len(), 1);
+                assert_eq!(app_files.len(), 1);
+                let tool_code = std::fs::read_to_string(&tool_output)?;
+                let app_code = std::fs::read_to_string(&app_output)?;
+                assert_eq!(collect_prefixed_lines(&tool_code, "class "), collect_prefixed_lines(&app_code, "class "));
+                assert!(tool_code.contains("@websocket(\"/chat/{roomId}\")"));
+                assert!(app_code.contains("@websocket(\"/chat/{roomId}\")"));
+                assert!(tool_code.contains("parsed: ChatMessage = msgspec.convert(message, type=ChatMessage)"));
+                assert!(app_code.contains("parsed: ChatMessage = msgspec.convert(message, type=ChatMessage)"));
+            }
+            _ => panic!("expected file-based AsyncAPI handler generation results"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_asyncapi_fixtures_impl_matches_service() -> Result<()> {
+        let server = SpikardMcp::new();
+        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let tool_tmp = TempDir::new()?;
+        let app_tmp = TempDir::new()?;
+
+        let tool_result = server.generate_asyncapi_fixtures_impl(GenerateAsyncapiFixturesParams {
+            schema: schema.display().to_string(),
+            output: Some(tool_tmp.path().display().to_string()),
+        })?;
+
+        let app_result = app::execute_codegen_unvalidated(CodegenRequest {
+            schema_path: schema,
+            schema_kind: SchemaKind::AsyncApi,
+            target: CodegenTargetKind::AsyncFixtures {
+                output: app_tmp.path().to_path_buf(),
+            },
+            dto: None,
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
+                assert_eq!(tool_files.len(), app_files.len());
+                assert_eq!(read_file_map(tool_tmp.path())?, read_file_map(app_tmp.path())?);
+            }
+            _ => panic!("expected file-based AsyncAPI fixture generation results"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_asyncapi_test_app_impl_matches_service() -> Result<()> {
+        let server = SpikardMcp::new();
+        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let tmp = TempDir::new()?;
+        let tool_output = tmp.path().join("tool_app.ex");
+        let app_output = tmp.path().join("app_app.ex");
+
+        let tool_result = server.generate_asyncapi_test_app_impl(GenerateAsyncapiTestAppParams {
+            schema: schema.display().to_string(),
+            language: "elixir".to_string(),
+            output: tool_output.display().to_string(),
+        })?;
+
+        let app_result = app::execute_codegen_unvalidated(CodegenRequest {
+            schema_path: schema,
+            schema_kind: SchemaKind::AsyncApi,
+            target: CodegenTargetKind::AsyncTestApp {
+                language: TargetLanguage::Elixir,
+                output: app_output.clone(),
+            },
+            dto: None,
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
+                assert_eq!(tool_files.len(), 1);
+                assert_eq!(app_files.len(), 1);
+                let tool_code = std::fs::read_to_string(&tool_output)?;
+                let app_code = std::fs::read_to_string(&app_output)?;
+                assert_eq!(
+                    collect_prefixed_lines(&tool_code, "defmodule AsyncApiTypes."),
+                    collect_prefixed_lines(&app_code, "defmodule AsyncApiTypes.")
+                );
+                for expected in [
+                    "defmodule AsyncApiFixtures do",
+                    "defmodule AsyncApiTestClient do",
+                    "def websocket_fixtures do",
+                ] {
+                    assert!(tool_code.contains(expected), "tool output missing {expected}");
+                    assert!(app_code.contains(expected), "app output missing {expected}");
+                }
+            }
+            _ => panic!("expected file-based AsyncAPI test app generation results"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
     fn test_validate_asyncapi_impl_matches_service() -> Result<()> {
         let server = SpikardMcp::new();
         let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
@@ -597,6 +939,96 @@ mod tests {
         assert_eq!(tool_result.primary_protocol, app_result.primary_protocol);
         assert_eq!(tool_result.channel_count, app_result.channel_count);
         Ok(())
+    }
+
+    #[test]
+    fn test_init_project_impl_defaults_to_python_and_current_dir() -> Result<()> {
+        let server = SpikardMcp::new();
+        let tmp = TempDir::new()?;
+        let project_name = "mcp_default_init";
+
+        let response = server.init_project_impl(InitProjectParams {
+            name: project_name.to_string(),
+            language: None,
+            directory: Some(tmp.path().display().to_string()),
+            schema_path: None,
+        })?;
+
+        assert!(!response.files_created.is_empty());
+        let created_root = tmp.path().join(project_name);
+        assert!(created_root.exists(), "expected {} to exist", created_root.display());
+        assert!(
+            response
+                .files_created
+                .iter()
+                .any(|path| path.extension().is_some_and(|ext| ext == "py")),
+            "expected python project files"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_generate_openapi_impl_defaults_to_python() -> Result<()> {
+        let server = SpikardMcp::new();
+        let schema = repo_root().join("examples/schemas/todo-api.openapi.yaml");
+
+        let tool_result = server.generate_openapi_impl(GenerateOpenapiParams {
+            schema: schema.display().to_string(),
+            language: None,
+            output: None,
+            dto: None,
+        })?;
+
+        let app_result = app::execute_codegen(CodegenRequest {
+            schema_path: schema,
+            schema_kind: SchemaKind::OpenApi,
+            target: CodegenTargetKind::Server {
+                language: TargetLanguage::Python,
+                output: None,
+            },
+            dto: Some(DtoConfig::default()),
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::InMemory(tool_code), CodegenOutcome::InMemory(app_code)) => {
+                assert_eq!(tool_code, app_code);
+            }
+            _ => panic!("expected in-memory OpenAPI generation results"),
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_target_language_or_default_uses_python() {
+        assert_eq!(
+            parse_target_language_or_default(None, TargetLanguage::Python).unwrap(),
+            TargetLanguage::Python
+        );
+        assert_eq!(
+            parse_target_language_or_default(Some("ruby"), TargetLanguage::Python).unwrap(),
+            TargetLanguage::Ruby
+        );
+    }
+
+    #[test]
+    fn test_default_output_helpers_match_cli_conventions() {
+        assert_eq!(
+            default_graphql_output(TargetLanguage::Python),
+            PathBuf::from("generated.py")
+        );
+        assert_eq!(
+            default_graphql_output(TargetLanguage::TypeScript),
+            PathBuf::from("generated.ts")
+        );
+        assert_eq!(
+            default_jsonrpc_output(TargetLanguage::Python),
+            PathBuf::from("handlers.py")
+        );
+        assert_eq!(
+            default_jsonrpc_output(TargetLanguage::Elixir),
+            PathBuf::from("handlers.ex")
+        );
     }
 
     #[test]
@@ -614,13 +1046,44 @@ mod tests {
     }
 
     #[test]
+    fn test_generate_php_dto_impl_matches_service() -> Result<()> {
+        let server = SpikardMcp::new();
+        let tool_tmp = TempDir::new()?;
+        let app_tmp = TempDir::new()?;
+
+        let tool_result = server.generate_php_dto_impl(GeneratePhpDtoParams {
+            output: Some(tool_tmp.path().display().to_string()),
+        })?;
+        let app_result = app::generate_php_dto(app_tmp.path())?;
+
+        assert_eq!(tool_result.len(), app_result.len());
+        assert_eq!(read_file_map(tool_tmp.path())?, read_file_map(app_tmp.path())?);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_features_matches_app_summary() -> Result<()> {
+        let server = SpikardMcp::new();
+        let response = server.get_features(Parameters(EmptyParams {}))?;
+        let text = response
+            .content
+            .first()
+            .and_then(|content| content.raw.as_text())
+            .map(|content| content.text.as_str())
+            .expect("expected text tool response");
+        let summary = app::feature_summary();
+        assert_eq!(text, serde_json::to_string_pretty(&summary)?);
+        Ok(())
+    }
+
+    #[test]
     fn test_init_project_impl_creates_files() -> Result<()> {
         let server = SpikardMcp::new();
         let tmp = TempDir::new()?;
 
         let result = server.init_project_impl(InitProjectParams {
             name: "agent_demo".to_string(),
-            language: "python".to_string(),
+            language: Some("python".to_string()),
             directory: Some(tmp.path().display().to_string()),
             schema_path: None,
         })?;
