@@ -105,6 +105,52 @@ channels:
             - body
 "##;
 
+const INLINE_OBJECT_OPENAPI: &str = r##"
+openapi: 3.1.0
+info:
+  title: Inline API
+  version: "1.0.0"
+paths:
+  /widgets:
+    post:
+      operationId: createWidget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                size:
+                  type: integer
+                metadata:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                  required:
+                    - enabled
+              required:
+                - name
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                required:
+                  - id
+                  - status
+"##;
+
 fn write_temp_file(dir: &Path, name: &str, contents: &str) -> PathBuf {
     let path = dir.join(name);
     fs::write(&path, contents).expect("failed to write test fixture");
@@ -286,6 +332,64 @@ fn ruby_generation_uses_dry_structs() -> Result<()> {
         code.contains("class HelloResponse < Dry::Struct"),
         "expected Dry::Struct model"
     );
+    Ok(())
+}
+
+#[test]
+fn ruby_openapi_inline_objects_generate_named_models() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "inline_openapi.yaml", INLINE_OBJECT_OPENAPI);
+
+    let dto = DtoConfig {
+        ruby: RubyDtoStyle::DrySchema,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto)?;
+    assert!(
+        code.contains("class CreateWidgetRequestBody < Dry::Struct"),
+        "expected named dry-struct request body model"
+    );
+    assert!(
+        code.contains("class CreateWidgetResponseBody < Dry::Struct"),
+        "expected named dry-struct response body model"
+    );
+    assert!(
+        code.contains("attribute :metadata, Types::Hash.schema(enabled: Types::Strict::Bool).optional"),
+        "nested inline objects should use dry-types hash schemas"
+    );
+    assert!(
+        code.contains("# @param body [CreateWidgetRequestBody] Request body"),
+        "route docs should use generated request model type"
+    );
+    assert!(
+        code.contains("# @return [CreateWidgetResponseBody] Response body"),
+        "route docs should use generated response model type"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn ruby_openapi_generated_code_validates() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
+
+    let dto = DtoConfig {
+        ruby: RubyDtoStyle::DrySchema,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto)?;
+    let report = QualityValidator::new(TargetLanguage::Ruby)
+        .validate_all(&code)
+        .expect("ruby openapi validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Ruby OpenAPI code should validate cleanly: {report}"
+    );
+
     Ok(())
 }
 

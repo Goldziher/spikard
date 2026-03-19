@@ -1654,23 +1654,23 @@ fn test_ruby_field_types() -> Result<()> {
     let result = generate_ruby_graphql(schema, "types")?;
 
     assert!(
-        result.contains("field :id") && result.contains("Types::ID"),
+        result.contains("field :id") && result.contains("ID"),
         "ID type mapping missing"
     );
     assert!(
-        result.contains("field :name") && result.contains("Types::String"),
+        result.contains("field :name") && result.contains("String"),
         "String type mapping missing"
     );
     assert!(
-        result.contains("field :age") && result.contains("Types::Int"),
+        result.contains("field :age") && result.contains("Integer"),
         "Int type mapping missing"
     );
     assert!(
-        result.contains("field :score") && result.contains("Types::Float"),
+        result.contains("field :score") && result.contains("Float"),
         "Float type mapping missing"
     );
     assert!(
-        result.contains("field :active") && result.contains("Types::Boolean"),
+        result.contains("field :active") && result.contains("Boolean"),
         "Boolean type mapping missing"
     );
 
@@ -1761,7 +1761,7 @@ fn test_ruby_custom_scalar() -> Result<()> {
     let result = generate_ruby_graphql(schema, "types")?;
 
     assert!(
-        result.contains("field :createdAt") && result.contains("Types::DateTime"),
+        result.contains("field :createdAt") && result.contains("GraphQL::Types::ISO8601DateTime"),
         "custom scalar handling missing"
     );
 
@@ -1818,6 +1818,39 @@ fn test_ruby_mutation_resolver() -> Result<()> {
     assert!(
         result.contains("def update_user") || result.contains("def updateUser"),
         "updateUser resolver missing"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_ruby_generated_graphql_validates() -> Result<()> {
+    let schema = r#"
+        input UserFilter {
+            active: Boolean
+            tags: [String!]
+        }
+
+        type User {
+            id: ID!
+            name: String!
+            active: Boolean!
+        }
+
+        type Query {
+            user(id: ID!): User
+            users(filter: UserFilter): [User!]!
+        }
+    "#;
+
+    let result = generate_ruby_graphql(schema, "all")?;
+    let report = QualityValidator::new(TargetLanguage::Ruby)
+        .validate_all(&result)
+        .expect("ruby graphql validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Ruby GraphQL code should validate cleanly: {report}"
     );
 
     Ok(())

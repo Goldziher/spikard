@@ -639,8 +639,14 @@ fn test_ruby_generator_error_handling() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(output.contains("rescue StandardError"), "Should handle errors");
-    assert!(output.contains("-32601"), "Should have method not found error");
-    assert!(output.contains("-32603"), "Should have internal error code");
+    assert!(
+        output.contains("-32601") || output.contains("-32_601"),
+        "Should have method not found error"
+    );
+    assert!(
+        output.contains("-32603") || output.contains("-32_603"),
+        "Should have internal error code"
+    );
 }
 
 #[test]
@@ -655,8 +661,14 @@ fn test_ruby_generator_handler_registry() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(output.contains("HANDLERS = {"), "Should define handlers hash");
-    assert!(output.contains("\"user.get\""), "Should register user.get");
-    assert!(output.contains("\"user.create\""), "Should register user.create");
+    assert!(
+        output.contains("\"user.get\"") || output.contains("'user.get'"),
+        "Should register user.get"
+    );
+    assert!(
+        output.contains("\"user.create\"") || output.contains("'user.create'"),
+        "Should register user.create"
+    );
     assert!(output.contains("class JsonRpcRouter"), "Should have router class");
     assert!(
         output.contains("def self.handle_call"),
@@ -687,16 +699,65 @@ fn test_ruby_generator_valid_syntax() {
     let generator = RubyOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    assert!(output.starts_with("#!/usr/bin/env ruby"), "Should have ruby shebang");
     assert!(
-        output.contains("# frozen_string_literal: true"),
-        "Should have frozen string literal"
+        output.starts_with("# frozen_string_literal: true"),
+        "Should start with frozen string literal pragma"
     );
     assert!(output.contains("require"), "Should have requires");
     assert!(output.contains("class"), "Should have classes");
     let open_braces = output.matches('{').count();
     let close_braces = output.matches('}').count();
     assert_eq!(open_braces, close_braces, "Braces should be balanced");
+}
+
+#[test]
+fn test_ruby_generator_validates_with_quality_gates() {
+    let mut spec = minimal_spec();
+    spec.methods = vec![OpenRpcMethod {
+        name: "widget.create".to_string(),
+        summary: Some("Create a widget".to_string()),
+        description: None,
+        params: vec![
+            OpenRpcParam {
+                name: "name".to_string(),
+                description: None,
+                required: true,
+                schema: json!({"type": "string"}),
+            },
+            OpenRpcParam {
+                name: "count".to_string(),
+                description: None,
+                required: false,
+                schema: json!({"type": "integer"}),
+            },
+        ],
+        result: OpenRpcResult {
+            name: "widget".to_string(),
+            description: None,
+            schema: json!({
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" }
+                },
+                "required": ["id", "name"]
+            }),
+        },
+        errors: vec![],
+        examples: vec![],
+        tags: vec![],
+    }];
+
+    let generator = RubyOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+    let report = QualityValidator::new(TargetLanguage::Ruby)
+        .validate_all(&output)
+        .expect("ruby openrpc validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Ruby OpenRPC code should validate cleanly: {report}"
+    );
 }
 
 #[test]

@@ -4,6 +4,7 @@ use super::RubyDtoStyle;
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
 use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, Type};
+use std::collections::HashSet;
 
 pub struct RubyGenerator {
     spec: OpenAPI,
@@ -79,6 +80,40 @@ end
             }
         }
 
+        let mut generated_inline_models = HashSet::new();
+        for (path, path_item_ref) in &self.spec.paths.paths {
+            let path_item = match path_item_ref {
+                ReferenceOr::Item(item) => item,
+                ReferenceOr::Reference { .. } => continue,
+            };
+
+            for (method, operation) in [
+                ("get", path_item.get.as_ref()),
+                ("post", path_item.post.as_ref()),
+                ("put", path_item.put.as_ref()),
+                ("delete", path_item.delete.as_ref()),
+                ("patch", path_item.patch.as_ref()),
+            ] {
+                let Some(operation) = operation else {
+                    continue;
+                };
+
+                if let Some((class_name, schema)) = self.inline_request_body_model(operation, method, path)
+                    && generated_inline_models.insert(class_name.clone())
+                {
+                    output.push_str(&self.generate_model_class(&class_name, schema)?);
+                    output.push('\n');
+                }
+
+                if let Some((class_name, schema)) = self.inline_response_model(operation, method, path)
+                    && generated_inline_models.insert(class_name.clone())
+                {
+                    output.push_str(&self.generate_model_class(&class_name, schema)?);
+                    output.push('\n');
+                }
+            }
+        }
+
         Ok(output)
     }
 
@@ -147,13 +182,15 @@ end
     }
 
     /// Extract request body type from operation
-    fn extract_request_body_type(&self, operation: &Operation) -> Option<String> {
+    fn extract_request_body_type(&self, operation: &Operation, method: &str, path: &str) -> Option<String> {
         operation.request_body.as_ref().and_then(|body_ref| match body_ref {
             ReferenceOr::Item(request_body) => request_body.content.get("application/json").and_then(|media_type| {
-                media_type
-                    .schema
-                    .as_ref()
-                    .map(|schema_ref| self.extract_type_from_schema_ref(schema_ref))
+                media_type.schema.as_ref().map(|schema_ref| match schema_ref {
+                    ReferenceOr::Item(schema) if Self::should_generate_inline_model(schema) => {
+                        self.inline_request_body_name(operation, method, path)
+                    }
+                    _ => self.extract_type_from_schema_ref(schema_ref),
+                })
             }),
             ReferenceOr::Reference { reference } => {
                 let ref_name = reference.split('/').next_back().unwrap();
@@ -163,7 +200,7 @@ end
     }
 
     /// Extract response type from operation (looks for 200/201 responses)
-    fn extract_response_type(&self, operation: &Operation) -> String {
+    fn extract_response_type(&self, operation: &Operation, method: &str, path: &str) -> String {
         use openapiv3::StatusCode;
 
         let response = operation
@@ -179,7 +216,12 @@ end
                     if let Some(content) = response.content.get("application/json")
                         && let Some(schema_ref) = &content.schema
                     {
-                        return self.extract_type_from_schema_ref(schema_ref);
+                        return match schema_ref {
+                            ReferenceOr::Item(schema) if Self::should_generate_inline_model(schema) => {
+                                self.inline_response_name(operation, method, path)
+                            }
+                            _ => self.extract_type_from_schema_ref(schema_ref),
+                        };
                     }
                 }
                 ReferenceOr::Reference { reference } => {
@@ -209,7 +251,30 @@ end
                 };
                 format!("Types::Strict::Array.of({item_type})")
             }
-            SchemaKind::Type(Type::Object(_)) => "Types::Strict::Hash".to_string(),
+            SchemaKind::Type(Type::Object(obj)) => {
+                if obj.properties.is_empty() {
+                    "Types::Strict::Hash".to_string()
+                } else {
+                    let mut entries = Vec::new();
+                    for (prop_name, prop_schema_ref) in &obj.properties {
+                        let key = prop_name.to_snake_case();
+                        let is_required = obj.required.contains(prop_name);
+                        let prop_type = match prop_schema_ref {
+                            ReferenceOr::Item(prop_schema) => Self::schema_to_ruby_type(prop_schema, !is_required),
+                            ReferenceOr::Reference { reference } => {
+                                let ref_name = reference.split('/').next_back().unwrap().to_pascal_case();
+                                if is_required {
+                                    format!("Types.Instance({ref_name})")
+                                } else {
+                                    format!("Types.Instance({ref_name}).optional")
+                                }
+                            }
+                        };
+                        entries.push(format!("{key}: {prop_type}"));
+                    }
+                    format!("Types::Hash.schema({})", entries.join(", "))
+                }
+            }
             _ => "Types::Any".to_string(),
         };
 
@@ -237,7 +302,30 @@ end
                 };
                 format!("Array<{item_type}>")
             }
-            SchemaKind::Type(Type::Object(_)) => "Hash".to_string(),
+            SchemaKind::Type(Type::Object(obj)) => {
+                if obj.properties.is_empty() {
+                    "Hash".to_string()
+                } else {
+                    let mut value_types = Vec::new();
+                    for prop_schema_ref in obj.properties.values() {
+                        let prop_type = match prop_schema_ref {
+                            ReferenceOr::Item(prop_schema) => Self::schema_to_ruby_return_type(prop_schema),
+                            ReferenceOr::Reference { reference } => {
+                                reference.split('/').next_back().unwrap().to_pascal_case()
+                            }
+                        };
+                        if !value_types.contains(&prop_type) {
+                            value_types.push(prop_type);
+                        }
+                    }
+                    let union = if value_types.is_empty() {
+                        "Object".to_string()
+                    } else {
+                        value_types.join(", ")
+                    };
+                    format!("Hash{{Symbol => ({union})}}")
+                }
+            }
             _ => "Object".to_string(),
         }
     }
@@ -306,23 +394,37 @@ end
         for param_ref in &operation.parameters {
             if let ReferenceOr::Item(param) = param_ref {
                 match param {
-                    Parameter::Path { parameter_data, .. } => {
+                    Parameter::Path {
+                        parameter_data,
+                        style: _,
+                        ..
+                    } => {
                         has_path_params = true;
+                        let param_type = self.parameter_doc_type(param);
                         output.push_str(&format!(
-                            "  # @param {} [String] Path parameter\n",
-                            parameter_data.name.to_snake_case()
+                            "  # @param {} [{}] Path parameter\n",
+                            parameter_data.name.to_snake_case(),
+                            param_type
                         ));
                     }
-                    Parameter::Query { parameter_data, .. } => {
+                    Parameter::Query {
+                        parameter_data,
+                        style: _,
+                        allow_reserved: _,
+                        allow_empty_value: _,
+                        ..
+                    } => {
                         has_query_params = true;
                         let required = if parameter_data.required {
                             "required"
                         } else {
                             "optional"
                         };
+                        let param_type = self.parameter_doc_type(param);
                         output.push_str(&format!(
-                            "  # @param {} [String] Query parameter ({})\n",
+                            "  # @param {} [{}] Query parameter ({})\n",
                             parameter_data.name.to_snake_case(),
+                            param_type,
                             required
                         ));
                     }
@@ -331,12 +433,15 @@ end
             }
         }
 
-        let body_type = self.extract_request_body_type(operation);
+        let body_type = self.extract_request_body_type(operation, method, path);
         if body_type.is_some() {
-            output.push_str("  # @param body [Hash] Request body\n");
+            output.push_str(&format!(
+                "  # @param body [{}] Request body\n",
+                body_type.as_deref().unwrap_or("Hash")
+            ));
         }
 
-        let return_type = self.extract_response_type(operation);
+        let return_type = self.extract_response_type(operation, method, path);
         output.push_str(&format!("  # @return [{return_type}] Response body\n"));
 
         output.push_str(&format!("  {method} '{sinatra_path}' do\n"));
@@ -397,5 +502,101 @@ API.run!(host: '0.0.0.0', port: 4567) if __FILE__ == $PROGRAM_NAME
 # run API
 "
         .to_string()
+    }
+
+    fn parameter_doc_type(&self, parameter: &Parameter) -> String {
+        match parameter {
+            Parameter::Path { parameter_data, .. }
+            | Parameter::Query { parameter_data, .. }
+            | Parameter::Header { parameter_data, .. }
+            | Parameter::Cookie { parameter_data, .. } => match &parameter_data.format {
+                openapiv3::ParameterSchemaOrContent::Schema(schema_ref) => match schema_ref {
+                    ReferenceOr::Item(schema) => Self::schema_to_ruby_return_type(schema),
+                    ReferenceOr::Reference { reference } => reference.split('/').next_back().unwrap().to_pascal_case(),
+                },
+                openapiv3::ParameterSchemaOrContent::Content(_) => "Object".to_string(),
+            },
+        }
+    }
+
+    fn should_generate_inline_model(schema: &Schema) -> bool {
+        matches!(&schema.schema_kind, SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty())
+    }
+
+    fn inline_request_body_model<'a>(
+        &self,
+        operation: &'a Operation,
+        method: &str,
+        path: &str,
+    ) -> Option<(String, &'a Schema)> {
+        let body_ref = operation.request_body.as_ref()?;
+        let ReferenceOr::Item(request_body) = body_ref else {
+            return None;
+        };
+        let media_type = request_body.content.get("application/json")?;
+        let schema_ref = media_type.schema.as_ref()?;
+        let ReferenceOr::Item(schema) = schema_ref else {
+            return None;
+        };
+        if Self::should_generate_inline_model(schema) {
+            Some((self.inline_request_body_name(operation, method, path), schema))
+        } else {
+            None
+        }
+    }
+
+    fn inline_response_model<'a>(
+        &self,
+        operation: &'a Operation,
+        method: &str,
+        path: &str,
+    ) -> Option<(String, &'a Schema)> {
+        use openapiv3::StatusCode;
+
+        let response_ref = operation
+            .responses
+            .responses
+            .get(&StatusCode::Code(200))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Code(201)))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Range(2)))?;
+
+        let ReferenceOr::Item(response) = response_ref else {
+            return None;
+        };
+        let media_type = response.content.get("application/json")?;
+        let schema_ref = media_type.schema.as_ref()?;
+        let ReferenceOr::Item(schema) = schema_ref else {
+            return None;
+        };
+        if Self::should_generate_inline_model(schema) {
+            Some((self.inline_response_name(operation, method, path), schema))
+        } else {
+            None
+        }
+    }
+
+    fn inline_request_body_name(&self, operation: &Operation, method: &str, path: &str) -> String {
+        format!("{}RequestBody", self.operation_model_stem(operation, method, path))
+    }
+
+    fn inline_response_name(&self, operation: &Operation, method: &str, path: &str) -> String {
+        format!("{}ResponseBody", self.operation_model_stem(operation, method, path))
+    }
+
+    fn operation_model_stem(&self, operation: &Operation, method: &str, path: &str) -> String {
+        operation
+            .operation_id
+            .as_ref()
+            .map(|id| id.to_pascal_case())
+            .unwrap_or_else(|| {
+                format!(
+                    "{}{}",
+                    method.to_pascal_case(),
+                    path.split('/')
+                        .filter(|segment| !segment.is_empty())
+                        .map(|segment| segment.trim_matches(|c| c == '{' || c == '}').to_pascal_case())
+                        .collect::<String>()
+                )
+            })
     }
 }

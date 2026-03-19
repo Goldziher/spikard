@@ -249,6 +249,34 @@ message User {
     }
 
     #[test]
+    fn test_parse_and_generate_ruby_all_validates() {
+        let proto = r#"syntax = "proto3";
+
+package example.service;
+
+message User {
+  string id = 1;
+  repeated string tags = 2;
+}
+
+service UserService {
+  rpc GetUser (User) returns (User);
+}
+"#;
+
+        let schema = parse_proto_schema_string(proto).expect("Failed to parse proto");
+        let code = generate_ruby_protobuf(&schema, &ProtobufTarget::All).expect("Failed to generate Ruby code");
+        let report = QualityValidator::new(TargetLanguage::Ruby)
+            .validate_all(&code)
+            .expect("ruby protobuf validation should run");
+
+        assert!(
+            report.is_valid(),
+            "generated Ruby Protobuf code should validate cleanly: {report}"
+        );
+    }
+
+    #[test]
     fn test_generate_php_all() {
         let proto = r#"syntax = "proto3";
 
