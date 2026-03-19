@@ -703,6 +703,54 @@ end
 "#,
         )
         .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            spikard_dir.join("grpc.ex"),
+            r#"defmodule Spikard.Grpc do
+  defmodule Request do
+    @type t :: %{
+            service_name: String.t(),
+            method_name: String.t(),
+            payload: binary(),
+            metadata: %{optional(String.t()) => String.t()}
+          }
+  end
+
+  defmodule Error do
+    defstruct [:code, :message, metadata: %{}]
+    @type t :: %__MODULE__{code: term(), message: String.t(), metadata: map()}
+  end
+
+  defmodule Response do
+    defstruct payload: <<>>, metadata: %{}
+    @type t :: %__MODULE__{payload: binary(), metadata: %{optional(String.t()) => String.t()}}
+
+    @spec error(String.t(), term()) :: {:error, Spikard.Grpc.Error.t()}
+    def error(message, code \\ :internal) do
+      {:error, %Spikard.Grpc.Error{code: code, message: message, metadata: %{}}}
+    end
+  end
+
+  defmodule Service do
+    defstruct services: %{}
+    @type t :: %__MODULE__{services: map()}
+
+    @spec new() :: t()
+    def new, do: %__MODULE__{}
+
+    @spec register(t(), String.t(), String.t(), atom(), function()) :: t()
+    def register(%__MODULE__{services: services} = service, service_name, method_name, rpc_mode, handler) do
+      methods =
+        services
+        |> Map.get(service_name, %{})
+        |> Map.put(method_name, {rpc_mode, handler})
+
+      %{service | services: Map.put(services, service_name, methods)}
+    end
+  end
+end
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
         fs::write(&generated_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
 
         Ok(ElixirTempProject {

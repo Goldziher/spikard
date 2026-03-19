@@ -152,11 +152,31 @@ fn render_message(schema: &ProtobufSchema, message: &MessageDef) -> String {
 fn render_service(schema: &ProtobufSchema, service: &ServiceDef) -> String {
     let behaviour_module = qualified_module_name(schema, &service.name);
     let server_module = format!("{behaviour_module}.Server");
+    let service_name = fully_qualified_service_name(schema, &service.name);
     let mut code = String::new();
 
     code.push_str(&format!(
-        "defmodule {behaviour_module} do\n  @moduledoc false\n  @type rpc_error :: term()\n\n"
+        "defmodule {behaviour_module} do\n  @moduledoc false\n  alias Spikard.Grpc\n  @type rpc_error :: term()\n\n"
     ));
+    code.push_str("  @spec service_name() :: String.t()\n");
+    code.push_str(&format!("  def service_name, do: \"{service_name}\"\n\n"));
+    code.push_str("  @spec rpc_methods() :: %{required(String.t()) => atom()}\n");
+    code.push_str("  def rpc_methods do\n    %{\n");
+    for method in &service.methods {
+        code.push_str(&format!("      \"{}\" => :{},\n", method.name, rpc_mode_atom(method)));
+    }
+    code.push_str("    }\n  end\n\n");
+    code.push_str("  @spec registry(module()) :: Grpc.Service.t()\n");
+    code.push_str("  def registry(handler \\\\ ");
+    code.push_str(&server_module);
+    code.push_str(") do\n    Enum.reduce(rpc_methods(), Grpc.Service.new(), fn {method_name, rpc_mode}, service ->\n");
+    code.push_str(
+        "      function_name =\n        method_name\n        |> Macro.underscore()\n        |> String.to_atom()\n\n",
+    );
+    code.push_str(
+        "      Grpc.Service.register(service, service_name(), method_name, rpc_mode, &apply(handler, function_name, [&1]))\n",
+    );
+    code.push_str("    end)\n  end\n\n");
 
     for method in &service.methods {
         code.push_str(&format!(
@@ -169,14 +189,20 @@ fn render_service(schema: &ProtobufSchema, service: &ServiceDef) -> String {
 
     code.push_str("end\n\n");
     code.push_str(&format!(
-        "defmodule {server_module} do\n  @moduledoc false\n  @behaviour {behaviour_module}\n\n"
+        "defmodule {server_module} do\n  @moduledoc false\n  alias Spikard.Grpc\n  @behaviour {behaviour_module}\n\n"
     ));
 
     for method in &service.methods {
         let function_name = function_name(&method.name);
-        code.push_str(&format!(
-            "  @impl true\n  def {function_name}(_request) do\n    {{:error, :not_implemented}}\n  end\n\n"
-        ));
+        match method_rpc_kind(method) {
+            RpcKind::UnaryLike => code.push_str(&format!(
+                "  @impl true\n  def {function_name}(_request) do\n    Grpc.Response.error(\"{} is not implemented\", :unimplemented)\n  end\n\n",
+                method.name
+            )),
+            RpcKind::StreamingOut => code.push_str(&format!(
+                "  @impl true\n  def {function_name}(_request_or_requests) do\n    []\n  end\n\n"
+            )),
+        }
     }
 
     code.push_str("end\n");
@@ -230,20 +256,43 @@ fn field_type_spec(schema: &ProtobufSchema, field: &FieldDef) -> String {
 }
 
 fn method_input_type(schema: &ProtobufSchema, method: &MethodDef) -> String {
-    if method.input_streaming {
-        "Enumerable.t()".to_string()
-    } else {
-        proto_name_type(schema, &method.input_type, true)
+    match method_rpc_kind(method) {
+        RpcKind::UnaryLike => "Spikard.Grpc.Request.t()".to_string(),
+        RpcKind::StreamingOut if method.input_streaming => "[Spikard.Grpc.Request.t()]".to_string(),
+        RpcKind::StreamingOut => "Spikard.Grpc.Request.t()".to_string(),
     }
 }
 
-fn method_output_type(schema: &ProtobufSchema, method: &MethodDef) -> String {
-    let success_type = if method.output_streaming {
-        "Enumerable.t()".to_string()
+fn method_output_type(_schema: &ProtobufSchema, method: &MethodDef) -> String {
+    match method_rpc_kind(method) {
+        RpcKind::UnaryLike => {
+            "{:ok, Spikard.Grpc.Response.t()} | {:error, rpc_error} | Spikard.Grpc.Response.t()".to_string()
+        }
+        RpcKind::StreamingOut => "[Spikard.Grpc.Response.t()] | Enumerable.t() | {:error, rpc_error}".to_string(),
+    }
+}
+
+#[derive(Clone, Copy)]
+enum RpcKind {
+    UnaryLike,
+    StreamingOut,
+}
+
+fn method_rpc_kind(method: &MethodDef) -> RpcKind {
+    if method.output_streaming {
+        RpcKind::StreamingOut
     } else {
-        proto_name_type(schema, &method.output_type, true)
-    };
-    format!("{{:ok, {success_type}}} | {{:error, rpc_error}}")
+        RpcKind::UnaryLike
+    }
+}
+
+fn rpc_mode_atom(method: &MethodDef) -> &'static str {
+    match (method.input_streaming, method.output_streaming) {
+        (false, false) => "unary",
+        (false, true) => "server_stream",
+        (true, false) => "client_stream",
+        (true, true) => "bidi_stream",
+    }
 }
 
 fn wrap_type(base: String, field: &FieldDef) -> String {
@@ -293,6 +342,14 @@ fn qualified_module_name(schema: &ProtobufSchema, name: &str) -> String {
     }
     parts.extend(name.split('.').map(pascal_case_segment));
     parts.join(".")
+}
+
+fn fully_qualified_service_name(schema: &ProtobufSchema, name: &str) -> String {
+    if let Some(package) = &schema.package {
+        format!("{package}.{name}")
+    } else {
+        name.to_string()
+    }
 }
 
 fn pascal_case_segment(segment: &str) -> String {

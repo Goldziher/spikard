@@ -380,6 +380,9 @@ service UserService {
         assert!(code.contains("defmodule Example.User"));
         assert!(code.contains("defstruct"));
         assert!(code.contains("@callback get_user"));
+        assert!(code.contains("def registry(handler \\\\ Example.UserService.Server)"));
+        assert!(code.contains("Grpc.Service.register("));
+        assert!(code.contains("def service_name, do: \"example.UserService\""));
 
         let report = QualityValidator::new(TargetLanguage::Elixir)
             .validate_all(&code)
@@ -389,5 +392,35 @@ service UserService {
             report.is_valid(),
             "generated Elixir Protobuf code should validate cleanly: {report}"
         );
+    }
+
+    #[test]
+    fn test_generate_elixir_services_emit_runtime_rpc_modes() {
+        let proto = r#"syntax = "proto3";
+
+package example;
+
+message User {
+  string id = 1;
+}
+
+service UserService {
+  rpc GetUser (User) returns (User);
+  rpc WatchUsers (User) returns (stream User);
+  rpc UploadUsers (stream User) returns (User);
+  rpc ChatUsers (stream User) returns (stream User);
+}
+"#;
+
+        let schema = parse_proto_schema_string(proto).expect("Failed to parse proto");
+        let code =
+            generate_elixir_protobuf(&schema, &ProtobufTarget::Services).expect("Failed to generate Elixir code");
+
+        assert!(code.contains("\"GetUser\" => :unary"));
+        assert!(code.contains("\"WatchUsers\" => :server_stream"));
+        assert!(code.contains("\"UploadUsers\" => :client_stream"));
+        assert!(code.contains("\"ChatUsers\" => :bidi_stream"));
+        assert!(code.contains("@callback get_user(Spikard.Grpc.Request.t())"));
+        assert!(code.contains("@callback upload_users("));
     }
 }
