@@ -680,7 +680,7 @@ end
   def get_cookie(_request, _key), do: nil
 
   @spec get_body(t()) :: term()
-  def get_body(_request), do: nil
+  def get_body(_request), do: %{}
 end
 "#,
         )

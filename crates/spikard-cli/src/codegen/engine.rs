@@ -11,6 +11,7 @@ use super::graphql::generators::ruby::RubyGenerator;
 use super::graphql::generators::typescript::TypeScriptGenerator;
 use super::graphql::{RustGenerator, parse_graphql_schema};
 use super::openrpc::{
+    generate_elixir_handler_app as generate_openrpc_elixir_handler,
     generate_php_handler_app as generate_openrpc_php_handler,
     generate_python_handler_app as generate_openrpc_python_handler,
     generate_ruby_handler_app as generate_openrpc_ruby_handler,
@@ -348,7 +349,7 @@ impl CodegenEngine {
             TargetLanguage::Rust => generate_openrpc_rust_handler(spec)?,
             TargetLanguage::Ruby => generate_openrpc_ruby_handler(spec)?,
             TargetLanguage::Php => generate_openrpc_php_handler(spec)?,
-            TargetLanguage::Elixir => bail!("Elixir OpenRPC codegen is not implemented yet"),
+            TargetLanguage::Elixir => generate_openrpc_elixir_handler(spec)?,
         };
         if validate {
             Self::validate_generated_code(language, &code)?;

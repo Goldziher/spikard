@@ -5,8 +5,8 @@
 //! parameter validation, and cross-language parity.
 
 use super::{
-    OpenRpcGenerator, PhpOpenRpcGenerator, PythonOpenRpcGenerator, RubyOpenRpcGenerator, RustOpenRpcGenerator,
-    TypeScriptOpenRpcGenerator,
+    ElixirOpenRpcGenerator, OpenRpcGenerator, PhpOpenRpcGenerator, PythonOpenRpcGenerator, RubyOpenRpcGenerator,
+    RustOpenRpcGenerator, TypeScriptOpenRpcGenerator,
 };
 use crate::codegen::openrpc::spec_parser::{
     OpenRpcError, OpenRpcInfo, OpenRpcMethod, OpenRpcParam, OpenRpcResult, OpenRpcSpec,
@@ -761,6 +761,93 @@ fn test_ruby_generator_validates_with_quality_gates() {
 }
 
 #[test]
+fn test_elixir_generator_uses_spikard_router() {
+    let spec = single_method_spec("user.get");
+    let generator = ElixirOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(output.contains("use Spikard.Router"), "Should use Spikard.Router");
+    assert!(output.contains("post(\"/rpc\""), "Should expose /rpc endpoint");
+    assert!(
+        output.contains("defmodule TestApiJsonRpc.Handlers"),
+        "Should generate handlers module"
+    );
+    assert!(
+        output.contains("def handle_user_get(params)"),
+        "Should generate per-method handler"
+    );
+}
+
+#[test]
+fn test_elixir_generator_dispatches_methods() {
+    let mut spec = minimal_spec();
+    spec.methods = vec![
+        single_method_spec("user.get").methods[0].clone(),
+        single_method_spec("user.create").methods[0].clone(),
+    ];
+
+    let generator = ElixirOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(output.contains("\"user.get\" ->"), "Should dispatch user.get");
+    assert!(output.contains("\"user.create\" ->"), "Should dispatch user.create");
+    assert!(
+        output.contains("error_response(-32601, \"Method not found\", request_id)"),
+        "Should return JSON-RPC method not found"
+    );
+}
+
+#[test]
+fn test_elixir_generator_validates_with_quality_gates() {
+    let mut spec = minimal_spec();
+    spec.methods = vec![OpenRpcMethod {
+        name: "widget.create".to_string(),
+        summary: Some("Create a widget".to_string()),
+        description: None,
+        params: vec![
+            OpenRpcParam {
+                name: "name".to_string(),
+                description: None,
+                required: true,
+                schema: json!({"type": "string"}),
+            },
+            OpenRpcParam {
+                name: "count".to_string(),
+                description: None,
+                required: false,
+                schema: json!({"type": "integer"}),
+            },
+        ],
+        result: OpenRpcResult {
+            name: "widget".to_string(),
+            description: None,
+            schema: json!({
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" }
+                },
+                "required": ["id", "name"]
+            }),
+        },
+        errors: vec![],
+        examples: vec![],
+        tags: vec![],
+    }];
+
+    let generator = ElixirOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+    let report = QualityValidator::new(TargetLanguage::Elixir)
+        .validate_all(&output)
+        .expect("elixir openrpc validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Elixir OpenRPC code should validate cleanly: {report}"
+    );
+}
+
+#[test]
 fn test_generators_same_spec_produces_equivalent_behavior() {
     let mut spec = minimal_spec();
     spec.methods = vec![single_method_spec("test_method").methods[0].clone()];
@@ -769,16 +856,19 @@ fn test_generators_same_spec_produces_equivalent_behavior() {
     let ts_gen = TypeScriptOpenRpcGenerator;
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
+    let elixir_gen = ElixirOpenRpcGenerator;
 
     let py_out = py_gen.generate_handler_app(&spec).unwrap();
     let ts_out = ts_gen.generate_handler_app(&spec).unwrap();
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
+    let elixir_out = elixir_gen.generate_handler_app(&spec).unwrap();
 
     assert!(!py_out.is_empty(), "Python should generate output");
     assert!(!ts_out.is_empty(), "TypeScript should generate output");
     assert!(!php_out.is_empty(), "PHP should generate output");
     assert!(!ruby_out.is_empty(), "Ruby should generate output");
+    assert!(!elixir_out.is_empty(), "Elixir should generate output");
 }
 
 #[test]
@@ -789,15 +879,23 @@ fn test_generators_error_codes_consistent() {
     let ts_gen = TypeScriptOpenRpcGenerator;
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
+    let elixir_gen = ElixirOpenRpcGenerator;
 
     let py_out = py_gen.generate_handler_app(&spec).unwrap();
     let ts_out = ts_gen.generate_handler_app(&spec).unwrap();
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
+    let elixir_out = elixir_gen.generate_handler_app(&spec).unwrap();
 
-    for output in &[&py_out, &ts_out, &php_out, &ruby_out] {
-        assert!(output.contains("-32601"), "All should have -32601 (method not found)");
-        assert!(output.contains("-32603"), "All should have -32603 (internal error)");
+    for output in &[&py_out, &ts_out, &php_out, &ruby_out, &elixir_out] {
+        assert!(
+            output.contains("-32601") || output.contains("-32_601"),
+            "All should have -32601 (method not found)"
+        );
+        assert!(
+            output.contains("-32603") || output.contains("-32_603"),
+            "All should have -32603 (internal error)"
+        );
     }
 }
 
@@ -814,17 +912,20 @@ fn test_generators_method_dispatch_correct_method() {
     let ts_gen = TypeScriptOpenRpcGenerator;
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
+    let elixir_gen = ElixirOpenRpcGenerator;
 
     let py_out = py_gen.generate_handler_app(&spec).unwrap();
     let ts_out = ts_gen.generate_handler_app(&spec).unwrap();
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
+    let elixir_out = elixir_gen.generate_handler_app(&spec).unwrap();
 
     for (output, lang) in &[
         (&py_out, "Python"),
         (&ts_out, "TypeScript"),
         (&php_out, "PHP"),
         (&ruby_out, "Ruby"),
+        (&elixir_out, "Elixir"),
     ] {
         assert!(output.contains("user.get"), "{} should handle user.get", lang);
         assert!(output.contains("user.create"), "{} should handle user.create", lang);
@@ -840,11 +941,13 @@ fn test_generators_parameter_validation_consistent() {
     let ts_gen = TypeScriptOpenRpcGenerator;
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
+    let elixir_gen = ElixirOpenRpcGenerator;
 
     let py_out = py_gen.generate_handler_app(&spec).unwrap();
     let ts_out = ts_gen.generate_handler_app(&spec).unwrap();
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
+    let elixir_out = elixir_gen.generate_handler_app(&spec).unwrap();
 
     assert!(
         py_out.contains("param0") || py_out.contains("Params"),
@@ -862,6 +965,10 @@ fn test_generators_parameter_validation_consistent() {
         ruby_out.contains("param0") || ruby_out.contains("params"),
         "Ruby should handle params"
     );
+    assert!(
+        elixir_out.contains("param0") || elixir_out.contains("params"),
+        "Elixir should handle params"
+    );
 }
 
 #[test]
@@ -872,17 +979,20 @@ fn test_generators_response_structure_identical() {
     let ts_gen = TypeScriptOpenRpcGenerator;
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
+    let elixir_gen = ElixirOpenRpcGenerator;
 
     let py_out = py_gen.generate_handler_app(&spec).unwrap();
     let ts_out = ts_gen.generate_handler_app(&spec).unwrap();
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
+    let elixir_out = elixir_gen.generate_handler_app(&spec).unwrap();
 
     for (output, lang) in &[
         (&py_out, "Python"),
         (&ts_out, "TypeScript"),
         (&php_out, "PHP"),
         (&ruby_out, "Ruby"),
+        (&elixir_out, "Elixir"),
     ] {
         assert!(
             output.contains("jsonrpc") && (output.contains("result") || output.contains("error")),
@@ -904,16 +1014,19 @@ fn test_generator_with_many_methods() {
     let ts_gen = TypeScriptOpenRpcGenerator;
     let php_gen = PhpOpenRpcGenerator;
     let ruby_gen = RubyOpenRpcGenerator;
+    let elixir_gen = ElixirOpenRpcGenerator;
 
     let py_out = py_gen.generate_handler_app(&spec).unwrap();
     let ts_out = ts_gen.generate_handler_app(&spec).unwrap();
     let php_out = php_gen.generate_handler_app(&spec).unwrap();
     let ruby_out = ruby_gen.generate_handler_app(&spec).unwrap();
+    let elixir_out = elixir_gen.generate_handler_app(&spec).unwrap();
 
     assert!(py_out.matches("def handle_method").count() >= 10);
     assert!(ts_out.matches("async function handle").count() >= 10);
     assert!(php_out.matches("final class Handle").count() >= 10);
     assert!(ruby_out.matches("class Handle").count() >= 10);
+    assert!(elixir_out.matches("def handle_method").count() >= 10);
 }
 
 #[test]

@@ -5,12 +5,14 @@
 
 use anyhow::Result;
 
+pub mod elixir;
 pub mod php;
 pub mod python;
 pub mod ruby;
 pub mod rust;
 pub mod typescript;
 
+pub use elixir::ElixirOpenRpcGenerator;
 pub use php::PhpOpenRpcGenerator;
 pub use python::PythonOpenRpcGenerator;
 pub use ruby::RubyOpenRpcGenerator;

@@ -10,8 +10,8 @@ pub mod generators;
 pub mod spec_parser;
 
 pub use generators::{
-    OpenRpcGenerator, PhpOpenRpcGenerator, PythonOpenRpcGenerator, RubyOpenRpcGenerator, RustOpenRpcGenerator,
-    TypeScriptOpenRpcGenerator,
+    ElixirOpenRpcGenerator, OpenRpcGenerator, PhpOpenRpcGenerator, PythonOpenRpcGenerator, RubyOpenRpcGenerator,
+    RustOpenRpcGenerator, TypeScriptOpenRpcGenerator,
 };
 pub use spec_parser::parse_openrpc_schema;
 
@@ -48,6 +48,12 @@ pub fn generate_php_handler_app(spec: &OpenRpcSpec) -> Result<String> {
     generator.generate_handler_app(spec)
 }
 
+/// Generate Elixir handler scaffolding from `OpenRPC` spec
+pub fn generate_elixir_handler_app(spec: &OpenRpcSpec) -> Result<String> {
+    let generator = ElixirOpenRpcGenerator;
+    generator.generate_handler_app(spec)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -59,6 +65,7 @@ mod tests {
         let _: fn(&OpenRpcSpec) -> Result<String> = generate_rust_handler_app;
         let _: fn(&OpenRpcSpec) -> Result<String> = generate_ruby_handler_app;
         let _: fn(&OpenRpcSpec) -> Result<String> = generate_php_handler_app;
+        let _: fn(&OpenRpcSpec) -> Result<String> = generate_elixir_handler_app;
     }
 
     #[test]
