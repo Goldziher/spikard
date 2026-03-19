@@ -4,6 +4,7 @@
 //! for code generation, including methods, parameters, results, and errors.
 
 use anyhow::{Context, Result};
+use heck::ToPascalCase;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -236,34 +237,12 @@ pub fn extract_methods(spec: &OpenRpcSpec) -> Vec<&OpenRpcMethod> {
 
 /// Get params class name from method name
 pub fn get_method_params_class_name(method_name: &str) -> String {
-    let method_pascal = method_name
-        .split('.')
-        .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            }
-        })
-        .collect::<String>();
-
-    format!("{method_pascal}Params")
+    format!("{}Params", method_name.replace(['.', '-', '_'], " ").to_pascal_case())
 }
 
 /// Get result class name from method name
 pub fn get_result_class_name(method_name: &str) -> String {
-    let method_pascal = method_name
-        .split('.')
-        .map(|part| {
-            let mut chars = part.chars();
-            match chars.next() {
-                None => String::new(),
-                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            }
-        })
-        .collect::<String>();
-
-    format!("{method_pascal}Result")
+    format!("{}Result", method_name.replace(['.', '-', '_'], " ").to_pascal_case())
 }
 
 #[cfg(test)]
@@ -274,11 +253,15 @@ mod tests {
     #[test]
     fn test_get_method_params_class_name() {
         assert_eq!(get_method_params_class_name("user.getById"), "UserGetByIdParams");
+        assert_eq!(get_method_params_class_name("complex_method"), "ComplexMethodParams");
+        assert_eq!(get_method_params_class_name("user-create"), "UserCreateParams");
     }
 
     #[test]
     fn test_get_result_class_name() {
         assert_eq!(get_result_class_name("user.getById"), "UserGetByIdResult");
+        assert_eq!(get_result_class_name("complex_method"), "ComplexMethodResult");
+        assert_eq!(get_result_class_name("user-create"), "UserCreateResult");
     }
 
     #[test]

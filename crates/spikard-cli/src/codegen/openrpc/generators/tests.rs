@@ -135,7 +135,7 @@ fn test_python_generator_async_handler_signature() {
         "Handler should be async function"
     );
     assert!(
-        output.contains("async def handle_test_method() -> Test_methodResult"),
+        output.contains("async def handle_test_method() -> TestMethodResult"),
         "Handler should return its generated result DTO"
     );
 }
@@ -217,8 +217,8 @@ fn test_python_generator_preserves_msgspec_field_aliases() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(
-        output.contains("user_id: str = msgspec.field(name=\"userId\")"),
-        "Should emit a real msgspec alias for camelCase wire names"
+        output.contains("user_id: UUID = msgspec.field(name=\"userId\")"),
+        "Should emit a typed msgspec alias for camelCase wire names"
     );
     assert!(
         !output.contains("user_id: str  # UUID = msgspec.field(name=\"userId\")"),
@@ -296,8 +296,12 @@ fn test_python_generator_complex_param_schemas() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(
-        output.contains("config: dict[str, object]"),
-        "Should map nested objects to dict"
+        output.contains("class ComplexMethodParamsConfig(msgspec.Struct, frozen=True):"),
+        "Should promote shaped nested objects to named structs"
+    );
+    assert!(
+        output.contains("config: ComplexMethodParamsConfig"),
+        "Should reference named nested structs from params DTOs"
     );
 }
 
@@ -307,12 +311,34 @@ fn test_python_generator_resolves_component_refs_with_named_structs() {
     let generator = PythonOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
+    assert!(output.contains("\"\"\"JSON-RPC 2.0 handlers generated from OpenRPC specification."));
+    assert!(output.contains("from __future__ import annotations"));
+    assert!(output.contains("import msgspec"));
     assert!(output.contains("class User(msgspec.Struct, frozen=True):"));
     assert!(output.contains("class CreateUserInput(msgspec.Struct, frozen=True):"));
     assert!(output.contains("user: CreateUserInput"));
     assert!(output.contains("profile: UserProfile | None = None"));
+    assert!(output.contains("preferences: UserProfilePreferences | None = None"));
+    assert!(output.contains("birth_date: date | None = msgspec.field(default=None, name=\"birthDate\")"));
     assert!(output.contains("-> User"));
     assert!(output.contains("msgspec.to_builtins("));
+}
+
+#[test]
+fn test_python_generator_user_service_fixture_validates_with_quality_gates() {
+    let spec = user_service_spec();
+    let generator = PythonOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("Python OpenRPC generation should succeed for user service fixture");
+    let report = QualityValidator::new(TargetLanguage::Python)
+        .validate_all(&output)
+        .expect("Python OpenRPC validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Python OpenRPC code for user_service fixture should validate cleanly: {report}"
+    );
 }
 
 #[test]
