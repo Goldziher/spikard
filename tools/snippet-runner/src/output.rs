@@ -78,6 +78,11 @@ pub fn print_summary(summary: &RunSummary, show_code: bool) {
     println!();
 }
 
+/// Write validation results to a JSON file.
+///
+/// # Errors
+///
+/// Returns an error when serialization fails or the destination cannot be written.
 pub fn write_json(results: &[ValidationResult], path: &Path) -> Result<()> {
     let json = serde_json::to_string_pretty(results)?;
     std::fs::write(path, json)?;

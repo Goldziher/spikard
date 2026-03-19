@@ -26,6 +26,11 @@ fn available_parallelism() -> usize {
     std::thread::available_parallelism().map_or(4, std::num::NonZeroUsize::get)
 }
 
+/// Run validation over the provided snippets.
+///
+/// # Errors
+///
+/// Returns an error when the validation thread pool cannot be created.
 pub fn run_validation(snippets: &[Snippet], registry: &ValidatorRegistry, config: &RunnerConfig) -> Result<RunSummary> {
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(config.parallelism)
@@ -116,7 +121,7 @@ fn validate_one(snippet: &Snippet, registry: &ValidatorRegistry, config: &Runner
         Ok((status, message)) => (status, message),
         Err(err) => (SnippetStatus::Error, Some(err.to_string())),
     };
-    let duration_ms = start.elapsed().as_millis() as u64;
+    let duration_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
 
     if status == SnippetStatus::Fail
         && effective_level == ValidationLevel::Syntax

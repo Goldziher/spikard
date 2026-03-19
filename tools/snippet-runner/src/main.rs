@@ -4,7 +4,7 @@ use snippet_runner::output;
 use snippet_runner::runner::{RunnerConfig, run_validation};
 use snippet_runner::types::{Language, ValidationLevel};
 use snippet_runner::validators::ValidatorRegistry;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 #[derive(Parser)]
@@ -63,24 +63,7 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::List { snippets, languages } => {
-            let filter = parse_language_filter(languages.as_deref());
-            match discovery::discover_snippets(&snippets, filter.as_deref()) {
-                Ok(found) => {
-                    output::print_snippet_list(&found);
-                    println!();
-                    for (language, count) in &discovery::count_by_language(&found) {
-                        println!("  {language:<12} {count}");
-                    }
-                    println!();
-                    ExitCode::SUCCESS
-                }
-                Err(err) => {
-                    eprintln!("Error discovering snippets: {err}");
-                    ExitCode::FAILURE
-                }
-            }
-        }
+        Commands::List { snippets, languages } => run_list_command(&snippets, languages.as_ref()),
         Commands::Validate {
             snippets,
             level,
@@ -91,93 +74,140 @@ fn main() -> ExitCode {
             fail_fast,
             include,
             show_code,
-        } => {
-            let filter = parse_language_filter(languages.as_deref());
-            let mut found = match discovery::discover_snippets(&snippets, filter.as_deref()) {
-                Ok(found) => found,
-                Err(err) => {
-                    eprintln!("Error discovering snippets: {err}");
-                    return ExitCode::FAILURE;
-                }
-            };
-
-            if let Some(pattern) = &include {
-                found.retain(|snippet| snippet.path.to_string_lossy().contains(pattern));
-            }
-
-            if found.is_empty() {
-                println!("No snippets found.");
-                return ExitCode::SUCCESS;
-            }
-
-            println!("Validating {} snippets at level '{level}'...", found.len());
-            let registry = ValidatorRegistry::new();
-            let config = RunnerConfig {
-                level,
-                parallelism: jobs,
-                timeout_secs: timeout,
-                fail_fast,
-            };
-
-            match run_validation(&found, &registry, &config) {
-                Ok(summary) => {
-                    output::print_summary(&summary, show_code);
-
-                    if let Some(path) = output_path {
-                        if let Err(err) = output::write_json(&summary.results, &path) {
-                            eprintln!("Error writing JSON output: {err}");
-                        } else {
-                            println!("Results written to {}", path.display());
-                        }
-                    }
-
-                    if summary.has_failures() {
-                        ExitCode::FAILURE
-                    } else {
-                        ExitCode::SUCCESS
-                    }
-                }
-                Err(err) => {
-                    eprintln!("Error running validation: {err}");
-                    ExitCode::FAILURE
-                }
-            }
-        }
-        Commands::Parse { file } => match snippet_runner::parser::parse_code_blocks(&file) {
-            Ok(blocks) => {
-                if blocks.is_empty() {
-                    println!("No code blocks found in {}", file.display());
-                } else {
-                    for (index, block) in blocks.iter().enumerate() {
-                        println!("--- Block {} (line {}) ---", index + 1, block.start_line);
-                        println!("Language: {}", block.lang);
-                        if let Some(title) = &block.title {
-                            println!("Title: {title}");
-                        }
-                        if let Some(comment) = &block.preceding_comment {
-                            println!("Annotation: {comment}");
-                        }
-                        println!("Code ({} lines):", block.code.lines().count());
-                        println!("{}", block.code);
-                        println!();
-                    }
-                }
-                ExitCode::SUCCESS
-            }
-            Err(err) => {
-                eprintln!("Error parsing {}: {err}", file.display());
-                ExitCode::FAILURE
-            }
-        },
+        } => run_validate_command(
+            &snippets,
+            level,
+            languages.as_ref(),
+            output_path,
+            jobs,
+            timeout,
+            fail_fast,
+            include.as_ref(),
+            show_code,
+        ),
+        Commands::Parse { file } => run_parse_command(&file),
     }
 }
 
 fn parse_language_filter(languages: Option<&[String]>) -> Option<Vec<Language>> {
-    languages.map(|languages| {
+    let languages = languages?;
+    Some(
         languages
             .iter()
             .map(|language| Language::from_fence_tag(language))
             .filter(|language| *language != Language::Unknown)
-            .collect()
-    })
+            .collect(),
+    )
+}
+
+fn run_list_command(snippets: &[PathBuf], languages: Option<&Vec<String>>) -> ExitCode {
+    let filter = parse_language_filter(languages.map(Vec::as_slice));
+    match discovery::discover_snippets(snippets, filter.as_deref()) {
+        Ok(found) => {
+            output::print_snippet_list(&found);
+            println!();
+            for (language, count) in &discovery::count_by_language(&found) {
+                println!("  {language:<12} {count}");
+            }
+            println!();
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("Error discovering snippets: {err}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_validate_command(
+    snippets: &[PathBuf],
+    level: ValidationLevel,
+    languages: Option<&Vec<String>>,
+    output_path: Option<PathBuf>,
+    jobs: usize,
+    timeout: u64,
+    fail_fast: bool,
+    include: Option<&String>,
+    show_code: bool,
+) -> ExitCode {
+    let filter = parse_language_filter(languages.map(Vec::as_slice));
+    let mut found = match discovery::discover_snippets(snippets, filter.as_deref()) {
+        Ok(found) => found,
+        Err(err) => {
+            eprintln!("Error discovering snippets: {err}");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    if let Some(pattern) = &include {
+        found.retain(|snippet| snippet.path.to_string_lossy().contains(pattern.as_str()));
+    }
+
+    if found.is_empty() {
+        println!("No snippets found.");
+        return ExitCode::SUCCESS;
+    }
+
+    println!("Validating {} snippets at level '{level}'...", found.len());
+    let registry = ValidatorRegistry::new();
+    let config = RunnerConfig {
+        level,
+        parallelism: jobs,
+        timeout_secs: timeout,
+        fail_fast,
+    };
+
+    match run_validation(&found, &registry, &config) {
+        Ok(summary) => {
+            output::print_summary(&summary, show_code);
+
+            if let Some(path) = output_path {
+                if let Err(err) = output::write_json(&summary.results, &path) {
+                    eprintln!("Error writing JSON output: {err}");
+                } else {
+                    println!("Results written to {}", path.display());
+                }
+            }
+
+            if summary.has_failures() {
+                ExitCode::FAILURE
+            } else {
+                ExitCode::SUCCESS
+            }
+        }
+        Err(err) => {
+            eprintln!("Error running validation: {err}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn run_parse_command(file: &Path) -> ExitCode {
+    match snippet_runner::parser::parse_code_blocks(file) {
+        Ok(blocks) => {
+            if blocks.is_empty() {
+                println!("No code blocks found in {}", file.display());
+            } else {
+                for (index, block) in blocks.iter().enumerate() {
+                    println!("--- Block {} (line {}) ---", index + 1, block.start_line);
+                    println!("Language: {}", block.lang);
+                    if let Some(title) = &block.title {
+                        println!("Title: {title}");
+                    }
+                    if let Some(comment) = &block.preceding_comment {
+                        println!("Annotation: {comment}");
+                    }
+                    println!("Code ({} lines):", block.code.lines().count());
+                    println!("{}", block.code);
+                    println!();
+                }
+            }
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("Error parsing {}: {err}", file.display());
+            ExitCode::FAILURE
+        }
+    }
 }

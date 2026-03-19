@@ -35,9 +35,8 @@ impl TypeScriptValidator {
 
     fn is_api_signature(code: &str) -> bool {
         let trimmed = code.trim();
-        let lines: Vec<&str> = trimmed.lines().collect();
 
-        if lines.len() <= 6 {
+        if trimmed.lines().count() <= 6 {
             let has_fn_decl = trimmed.starts_with("function ")
                 || trimmed.starts_with("async function ")
                 || trimmed.starts_with("export function ")

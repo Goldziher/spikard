@@ -5,6 +5,11 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
+/// Discover snippets beneath the provided directories.
+///
+/// # Errors
+///
+/// Returns an error when a source file cannot be parsed into snippet blocks.
 pub fn discover_snippets(dirs: &[PathBuf], language_filter: Option<&[Language]>) -> Result<Vec<Snippet>> {
     let mut snippets = Vec::new();
 
@@ -50,10 +55,10 @@ fn extract_snippets_from_file(path: &Path, base_dir: &Path) -> Result<Vec<Snippe
     for (index, block) in blocks.into_iter().enumerate() {
         let language = {
             let from_fence = Language::from_fence_tag(&block.lang);
-            if from_fence != Language::Unknown {
-                from_fence
-            } else {
+            if from_fence == Language::Unknown {
                 dir_language.unwrap_or(Language::Unknown)
+            } else {
+                from_fence
             }
         };
 

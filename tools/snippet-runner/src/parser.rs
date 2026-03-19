@@ -75,6 +75,11 @@ pub fn extract_fenced_blocks(content: &str) -> Vec<CodeBlock> {
     blocks
 }
 
+/// Parse code blocks from a markdown or source file.
+///
+/// # Errors
+///
+/// Returns an error when the file cannot be read for reasons other than invalid UTF-8.
 pub fn parse_code_blocks(path: &Path) -> crate::error::Result<Vec<CodeBlock>> {
     let content = match std::fs::read_to_string(path) {
         Ok(content) => content,

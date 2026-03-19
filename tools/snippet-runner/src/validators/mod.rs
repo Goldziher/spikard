@@ -15,6 +15,11 @@ use std::io::Read;
 pub trait SnippetValidator: Send + Sync {
     fn language(&self) -> Language;
     fn is_available(&self) -> bool;
+    /// Validate a snippet at the requested level.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the validator cannot execute its underlying toolchain.
     fn validate(
         &self,
         snippet: &Snippet,
@@ -88,6 +93,11 @@ fn strip_ansi_codes(input: &str) -> String {
     result
 }
 
+/// Run a child process with a timeout and capture combined stdout/stderr.
+///
+/// # Errors
+///
+/// Returns an error when the child process cannot be spawned, waited on, or times out.
 pub fn run_command(command: &mut std::process::Command, timeout_secs: u64) -> Result<(bool, String)> {
     let mut child = command
         .stdout(std::process::Stdio::piped())
@@ -132,15 +142,15 @@ impl WaitTimeout for std::process::Child {
         let poll_interval = std::time::Duration::from_millis(50);
 
         loop {
-            match self.try_wait()? {
-                Some(status) => return Ok(Some(status)),
-                None => {
-                    if start.elapsed() >= timeout {
-                        return Ok(None);
-                    }
-                    std::thread::sleep(poll_interval);
-                }
+            if let Some(status) = self.try_wait()? {
+                return Ok(Some(status));
             }
+
+            if start.elapsed() >= timeout {
+                return Ok(None);
+            }
+
+            std::thread::sleep(poll_interval);
         }
     }
 }

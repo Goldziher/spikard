@@ -197,7 +197,7 @@ impl RunSummary {
     }
 
     #[must_use]
-    pub fn has_failures(&self) -> bool {
+    pub const fn has_failures(&self) -> bool {
         self.failed > 0 || self.errors > 0
     }
 }
