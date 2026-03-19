@@ -87,6 +87,7 @@
 pub mod atoms;
 pub mod conversion;
 pub mod error;
+pub mod grpc;
 pub mod handler;
 pub mod lifecycle;
 pub mod server;

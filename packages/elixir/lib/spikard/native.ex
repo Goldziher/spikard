@@ -37,15 +37,16 @@ defmodule Spikard.Native do
     - `routes_json` - JSON string containing route metadata
     - `handler_runner_pid` - PID of the HandlerRunner GenServer
     - `config_map` - Server configuration options as a map
+    - `grpc_service_defs` - gRPC service definitions map used by the Rust router
 
   ## Returns
 
     - `{:ok, server_ref}` - Server started; server_ref is `{host, port}`
     - `{:error, reason}` - Error with reason atom or string
   """
-  @spec start_server(integer(), String.t(), String.t(), pid(), map()) ::
+  @spec start_server(integer(), String.t(), String.t(), pid(), map(), map()) ::
           {:ok, {String.t(), integer()}} | {:error, atom() | String.t()}
-  def start_server(_port, _host, _routes_json, _handler_runner_pid, _config_map) do
+  def start_server(_port, _host, _routes_json, _handler_runner_pid, _config_map, _grpc_service_defs) do
     :erlang.nif_error(:nif_not_loaded)
   end
 
@@ -101,6 +102,27 @@ defmodule Spikard.Native do
   """
   @spec deliver_handler_response(non_neg_integer(), map()) :: :ok | {:error, atom()}
   def deliver_handler_response(_request_id, _response_map) do
+    :erlang.nif_error(:nif_not_loaded)
+  end
+
+  @doc """
+  Deliver a gRPC response from Elixir back to the waiting Rust handler.
+
+  ## Arguments
+
+    - `request_id` - Unique identifier for the gRPC request
+    - `response_term` - One of:
+      - `{:ok, payload_binary, metadata_map}` for unary/client-stream responses
+      - `{:stream, [payload_binary, ...]}` for server/bidi-stream responses
+      - `{:error, code, message, metadata_map}` for gRPC status errors
+
+  ## Returns
+
+    - `:ok` - Response delivered successfully
+    - `{:error, reason}` - Failed to deliver response
+  """
+  @spec deliver_grpc_response(non_neg_integer(), term()) :: :ok | {:error, atom()}
+  def deliver_grpc_response(_request_id, _response_term) do
     :erlang.nif_error(:nif_not_loaded)
   end
 

@@ -5,6 +5,7 @@ use super::asyncapi::{
     generate_rust_handler_app,
 };
 use super::graphql::generators::GraphQLGenerator;
+use super::graphql::generators::elixir::ElixirGenerator;
 use super::graphql::generators::php::PhpGenerator;
 use super::graphql::generators::python::PythonGenerator;
 use super::graphql::generators::ruby::RubyGenerator;
@@ -199,7 +200,7 @@ impl CodegenEngine {
                     TargetLanguage::Ruby => super::protobuf::generate_ruby_protobuf(&schema, &proto_target)?,
                     TargetLanguage::Php => super::protobuf::generate_php_protobuf(&schema, &proto_target)?,
                     TargetLanguage::Rust => super::protobuf::generate_rust_protobuf(&schema, &proto_target)?,
-                    TargetLanguage::Elixir => bail!("Elixir Protobuf codegen is not implemented yet"),
+                    TargetLanguage::Elixir => super::protobuf::generate_elixir_protobuf(&schema, &proto_target)?,
                 };
                 if validate {
                     Self::validate_generated_code(*language, &code)?;
@@ -421,7 +422,16 @@ impl CodegenEngine {
                     _ => generator.generate_complete(&parsed_schema)?,
                 }
             }
-            TargetLanguage::Elixir => bail!("Elixir GraphQL codegen is not implemented yet"),
+            TargetLanguage::Elixir => {
+                let generator = ElixirGenerator;
+                match target {
+                    "types" => generator.generate_types(&parsed_schema)?,
+                    "resolvers" => generator.generate_resolvers(&parsed_schema)?,
+                    "schema" => generator.generate_schema_definition(&parsed_schema)?,
+                    "all" => generator.generate_complete(&parsed_schema)?,
+                    _ => generator.generate_complete(&parsed_schema)?,
+                }
+            }
         };
         if validate {
             Self::validate_generated_code(language, &code)?;

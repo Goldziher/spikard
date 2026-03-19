@@ -4,6 +4,7 @@
 //! language-specific code generation from Protobuf specifications.
 
 pub mod base;
+pub mod elixir;
 pub mod php;
 pub mod python;
 pub mod ruby;

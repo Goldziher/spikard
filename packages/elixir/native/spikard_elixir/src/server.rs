@@ -6,6 +6,7 @@
 
 use crate::atoms;
 use crate::error::struct_error;
+use crate::grpc::build_registry as build_grpc_registry;
 use crate::lifecycle::{LifecycleHookCounts, build_lifecycle_hooks};
 use once_cell::sync::{Lazy, OnceCell};
 use rustler::{Encoder, Env, LocalPid, MapIterator, NifResult, Term};
@@ -173,6 +174,11 @@ fn extract_server_config(
                     config.api_key_auth = Some(api_key);
                 }
             }
+            "grpc" => {
+                if let Some(grpc) = extract_grpc_config(value) {
+                    config.grpc = Some(grpc);
+                }
+            }
             "lifecycle" => {
                 if let Some(pid) = handler_runner_pid {
                     if let Some(counts) = extract_lifecycle_counts(value) {
@@ -306,6 +312,76 @@ fn extract_jwt_auth_config(term: Term) -> Option<JwtConfig> {
         issuer,
         leeway: leeway.unwrap_or(0),
     })
+}
+
+fn extract_grpc_config(term: Term) -> Option<spikard_http::grpc::GrpcConfig> {
+    let iter = MapIterator::new(term)?;
+    let mut config = spikard_http::grpc::GrpcConfig::default();
+    let mut has_values = false;
+
+    for (key, value) in iter {
+        let key_str: String = if let Ok(s) = key.decode::<String>() {
+            s
+        } else if let Ok(atom) = key.decode::<rustler::Atom>() {
+            format!("{:?}", atom).trim_start_matches(':').to_string()
+        } else {
+            continue;
+        };
+
+        match key_str.as_str() {
+            "enabled" => {
+                if let Ok(v) = value.decode::<bool>() {
+                    config.enabled = v;
+                    has_values = true;
+                }
+            }
+            "max_message_size" => {
+                if let Ok(v) = value.decode::<i64>() {
+                    config.max_message_size = v as usize;
+                    has_values = true;
+                }
+            }
+            "enable_compression" => {
+                if let Ok(v) = value.decode::<bool>() {
+                    config.enable_compression = v;
+                    has_values = true;
+                }
+            }
+            "request_timeout" => {
+                if let Ok(v) = value.decode::<i64>() {
+                    config.request_timeout = Some(v as u64);
+                    has_values = true;
+                }
+            }
+            "max_concurrent_streams" => {
+                if let Ok(v) = value.decode::<i64>() {
+                    config.max_concurrent_streams = v as u32;
+                    has_values = true;
+                }
+            }
+            "enable_keepalive" => {
+                if let Ok(v) = value.decode::<bool>() {
+                    config.enable_keepalive = v;
+                    has_values = true;
+                }
+            }
+            "keepalive_interval" => {
+                if let Ok(v) = value.decode::<i64>() {
+                    config.keepalive_interval = v as u64;
+                    has_values = true;
+                }
+            }
+            "keepalive_timeout" => {
+                if let Ok(v) = value.decode::<i64>() {
+                    config.keepalive_timeout = v as u64;
+                    has_values = true;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    if has_values { Some(config) } else { None }
 }
 
 fn extract_api_key_auth_config(term: Term) -> Option<ApiKeyConfig> {
@@ -519,6 +595,7 @@ pub fn start_server<'a>(
     routes_json: String,
     handler_runner_pid: rustler::LocalPid,
     config_map: Term<'a>,
+    grpc_service_defs: Term<'a>,
 ) -> NifResult<Term<'a>> {
     // Validate port
     if !(1..=65535).contains(&port) {
@@ -541,7 +618,18 @@ pub fn start_server<'a>(
     };
 
     // Extract server config first to check if we have static_files or other config
-    let config = extract_server_config(host.clone(), port, Some(handler_runner_pid), config_map);
+    let mut config = extract_server_config(host.clone(), port, Some(handler_runner_pid), config_map);
+    let grpc_registry = match build_grpc_registry(grpc_service_defs, handler_runner_pid) {
+        Ok(registry) => registry,
+        Err(err) => {
+            let error_msg = format!("Failed to build gRPC registry: {}", err);
+            return Ok(struct_error(env, atoms::invalid_config(), &error_msg));
+        }
+    };
+
+    if grpc_registry.is_some() && config.grpc.is_none() {
+        config.grpc = Some(spikard_http::grpc::GrpcConfig::default());
+    }
 
     // Allow empty routes - middleware (like static_files) can serve content without routes
     // Allow empty routes if metadata is empty and no routes are defined
@@ -583,12 +671,26 @@ pub fn start_server<'a>(
     info!("Registered {} routes", routes_with_handlers.len());
 
     // Build the router
-    let app_router = match Server::with_handlers_and_metadata(config.clone(), routes_with_handlers, metadata) {
-        Ok(router) => router,
-        Err(e) => {
-            let error_msg = format!("Failed to build router: {}", e);
-            return Ok(struct_error(env, atoms::router_build_failed(), &error_msg));
-        }
+    let app_router = match grpc_registry {
+        Some(registry) => match Server::with_handlers_metadata_and_grpc(
+            config.clone(),
+            routes_with_handlers,
+            metadata,
+            registry,
+        ) {
+            Ok(router) => router,
+            Err(e) => {
+                let error_msg = format!("Failed to build router: {}", e);
+                return Ok(struct_error(env, atoms::router_build_failed(), &error_msg));
+            }
+        },
+        None => match Server::with_handlers_and_metadata(config.clone(), routes_with_handlers, metadata) {
+            Ok(router) => router,
+            Err(e) => {
+                let error_msg = format!("Failed to build router: {}", e);
+                return Ok(struct_error(env, atoms::router_build_failed(), &error_msg));
+            }
+        },
     };
 
     // Create a socket address

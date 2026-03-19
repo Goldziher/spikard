@@ -24,7 +24,9 @@ serde_json = "1.0"
 spikard-core = { path = "../../../../crates/spikard-core", features = ["di"] }
 spikard-http = { path = "../../../../crates/spikard-http", features = ["di"] }
 spikard-bindings-shared = { path = "../../../../crates/spikard-bindings-shared" }
+futures = "0.3"
 tokio = { version = "1", features = ["full"] }
+tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
 tower = { version = "0.5", features = ["util"] }
 tracing = "0.1"
 urlencoding = "2.1"

@@ -307,3 +307,23 @@ pub fn generate_php_graphql(schema: &str, target: &str) -> Result<String> {
         }
     }
 }
+
+/// Generate Elixir GraphQL code from a schema.
+///
+/// Parses GraphQL SDL and emits `Spikard.Router`-based scaffolding with typed
+/// schema modules, resolver stubs, and an embedded SDL definition.
+pub fn generate_elixir_graphql(schema: &str, target: &str) -> Result<String> {
+    use generators::GraphQLGenerator;
+    use generators::elixir::ElixirGenerator;
+
+    let parsed_schema = parse_graphql_sdl_string(schema)?;
+    let generator = ElixirGenerator;
+
+    match target {
+        "all" => generator.generate_complete(&parsed_schema),
+        "types" => generator.generate_types(&parsed_schema),
+        "resolvers" => generator.generate_resolvers(&parsed_schema),
+        "schema" => generator.generate_schema_definition(&parsed_schema),
+        _ => generator.generate_complete(&parsed_schema),
+    }
+}

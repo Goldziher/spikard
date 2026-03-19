@@ -20,6 +20,12 @@ rustler::atoms! {
     true_ = "true",
     false_ = "false",
     stopped,
+    stream,
+    grpc_execute,
+    unary,
+    server_stream,
+    client_stream,
+    bidi_stream,
 
     // HTTP method atoms
     get,

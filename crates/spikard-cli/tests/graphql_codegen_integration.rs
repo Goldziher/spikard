@@ -13,8 +13,8 @@
 use anyhow::Result;
 use spikard_cli::codegen::quality::QualityValidator;
 use spikard_cli::codegen::{
-    TargetLanguage, TypeKind, generate_php_graphql, generate_python_graphql, generate_ruby_graphql,
-    generate_rust_graphql, generate_typescript_graphql, parse_graphql_sdl_string,
+    TargetLanguage, TypeKind, generate_elixir_graphql, generate_php_graphql, generate_python_graphql,
+    generate_ruby_graphql, generate_rust_graphql, generate_typescript_graphql, parse_graphql_sdl_string,
 };
 
 // ============================================================================
@@ -2111,6 +2111,75 @@ fn test_php_generated_graphql_validates() -> Result<()> {
 }
 
 #[test]
+fn test_elixir_generated_graphql_uses_spikard_router() -> Result<()> {
+    let schema = r#"
+        type Query {
+            user(id: ID!): User
+        }
+
+        type User {
+            id: ID!
+            name: String!
+            email: String
+        }
+    "#;
+
+    let result = generate_elixir_graphql(schema, "all")?;
+
+    assert!(result.contains("use Spikard.Router"), "router macro missing");
+    assert!(
+        result.contains("post(\"/graphql\", &__MODULE__.handle_graphql/1)"),
+        "graphql route missing"
+    );
+    assert!(
+        result.contains("defmodule GeneratedGraphQL.Types.User"),
+        "typed object module missing"
+    );
+    assert!(
+        result.contains("@type query_user_args"),
+        "resolver argument types missing"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_elixir_generated_graphql_with_subscription_validates() -> Result<()> {
+    let schema = r#"
+        type Query {
+            health: String!
+        }
+
+        type Event {
+            id: ID!
+            message: String!
+        }
+
+        type Subscription {
+            events: Event!
+        }
+    "#;
+
+    let result = generate_elixir_graphql(schema, "all")?;
+
+    assert!(
+        result.contains("defmodule GeneratedGraphQL.Resolvers.Subscription"),
+        "subscription resolver module missing"
+    );
+
+    let report = QualityValidator::new(TargetLanguage::Elixir)
+        .validate_all(&result)
+        .expect("Elixir GraphQL validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Elixir GraphQL code should validate cleanly: {report}"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_php_mutation_resolver() -> Result<()> {
     let schema = r#"
         type User { id: ID! name: String! }
@@ -2277,6 +2346,7 @@ fn test_all_languages_parse_same_schema() -> Result<()> {
     let _typescript = generate_typescript_graphql(schema, "types")?;
     let _ruby = generate_ruby_graphql(schema, "types")?;
     let _php = generate_php_graphql(schema, "types")?;
+    let _elixir = generate_elixir_graphql(schema, "types")?;
 
     Ok(())
 }

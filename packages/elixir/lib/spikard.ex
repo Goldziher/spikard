@@ -134,13 +134,26 @@ defmodule Spikard do
   @spec start(keyword()) :: {:ok, server_handle()} | {:error, String.t()}
   def start(opts) when is_list(opts) do
     with :ok <- validate_start_opts(opts),
-         {:ok, port, host, routes, config, dependencies} <- extract_start_params(opts),
+         {:ok, port, host, routes, config, dependencies, grpc_services} <- extract_start_params(opts),
          :ok <- Spikard.DI.validate(dependencies),
          {:ok, routes_json} <- serialize_routes(routes),
          handlers <- build_handlers_map(routes),
-         {:ok, handler_runner_pid} <- Spikard.HandlerRunner.start_link(handlers, %{}, dependencies),
+         {:ok, handler_runner_pid} <-
+           Spikard.HandlerRunner.start_link(
+             handlers,
+             %{},
+             dependencies,
+             Spikard.Grpc.Service.handler_map(grpc_services)
+           ),
          {:ok, server_handle} <-
-           Spikard.Native.start_server(port, host, routes_json, handler_runner_pid, config) do
+           Spikard.Native.start_server(
+             port,
+             host,
+             routes_json,
+             handler_runner_pid,
+             config,
+             Spikard.Grpc.Service.service_definitions(grpc_services)
+           ) do
       {:ok, server_handle}
     else
       {:error, reason} -> {:error, reason}
@@ -213,6 +226,9 @@ defmodule Spikard do
 
   @spec validate_start_opts(keyword()) :: :ok | {:error, String.t()}
   defp validate_start_opts(opts) do
+    routes? = Keyword.has_key?(opts, :routes)
+    grpc? = Keyword.has_key?(opts, :grpc) or Keyword.has_key?(opts, :grpc_services)
+
     cond do
       !Keyword.has_key?(opts, :port) ->
         {:error, "Missing required option: :port"}
@@ -220,10 +236,10 @@ defmodule Spikard do
       !is_integer(Keyword.get(opts, :port)) ->
         {:error, "Option :port must be an integer"}
 
-      !Keyword.has_key?(opts, :routes) ->
-        {:error, "Missing required option: :routes"}
+      !routes? and !grpc? ->
+        {:error, "Missing required option: :routes or :grpc"}
 
-      !is_list(Keyword.get(opts, :routes)) ->
+      routes? and !is_list(Keyword.get(opts, :routes)) ->
         {:error, "Option :routes must be a list"}
 
       true ->
@@ -232,13 +248,16 @@ defmodule Spikard do
   end
 
   @spec extract_start_params(keyword()) ::
-          {:ok, pos_integer(), String.t(), [route() | map()], map(), [Spikard.DI.dependency()]} | {:error, String.t()}
+          {:ok, pos_integer(), String.t(), [route() | map()], map(), [Spikard.DI.dependency()],
+           Spikard.Grpc.Service.t()}
+          | {:error, String.t()}
   defp extract_start_params(opts) do
     port = Keyword.get(opts, :port)
     host = Keyword.get(opts, :host, "0.0.0.0")
     routes = Keyword.get(opts, :routes, [])
     config = Keyword.get(opts, :config, %{})
     dependencies = Keyword.get(opts, :dependencies, [])
+    grpc_services = Keyword.get(opts, :grpc, Keyword.get(opts, :grpc_services, Spikard.Grpc.Service.new()))
 
     config_map =
       case config do
@@ -247,11 +266,23 @@ defmodule Spikard do
         _ -> %{}
       end
 
+    grpc_registry =
+      case grpc_services do
+        %Spikard.Grpc.Service{} = registry -> registry
+        nil -> Spikard.Grpc.Service.new()
+        _ -> :invalid
+      end
+
     # Validate port range
-    if port >= 1 and port <= 65535 do
-      {:ok, port, host, routes, config_map, dependencies}
-    else
-      {:error, "Port must be between 1 and 65535"}
+    cond do
+      port < 1 or port > 65535 ->
+        {:error, "Port must be between 1 and 65535"}
+
+      grpc_registry == :invalid ->
+        {:error, "Option :grpc must be a Spikard.Grpc.Service registry"}
+
+      true ->
+        {:ok, port, host, routes, config_map, dependencies, grpc_registry}
     end
   end
 

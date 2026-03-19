@@ -46,6 +46,98 @@ fn cli_can_generate_jsonrpc_scaffolding_from_openrpc() {
 }
 
 #[test]
+fn cli_can_generate_elixir_graphql_scaffolding() {
+    let exe = env!("CARGO_BIN_EXE_spikard");
+    let dir = tempfile::tempdir().expect("tempdir");
+    let schema_path = dir.path().join("schema.graphql");
+    let output_path = dir.path().join("graphql.ex");
+
+    std::fs::write(
+        &schema_path,
+        r#"
+        type Query {
+          user(id: ID!): User
+        }
+
+        type User {
+          id: ID!
+          name: String!
+        }
+        "#,
+    )
+    .expect("write schema");
+
+    let output = Command::new(exe)
+        .arg("generate")
+        .arg("graphql")
+        .arg(&schema_path)
+        .arg("--lang")
+        .arg("elixir")
+        .arg("--output")
+        .arg(&output_path)
+        .output()
+        .expect("run failed");
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let generated = std::fs::read_to_string(&output_path).expect("read generated file");
+    assert!(generated.contains("use Spikard.Router"));
+    assert!(generated.contains("post(\"/graphql\", &__MODULE__.handle_graphql/1)"));
+    assert!(generated.contains("defmodule GeneratedGraphQL.Resolvers.Query"));
+}
+
+#[test]
+fn cli_can_generate_elixir_protobuf_scaffolding() {
+    let exe = env!("CARGO_BIN_EXE_spikard");
+    let dir = tempfile::tempdir().expect("tempdir");
+    let schema_path = dir.path().join("schema.proto");
+    let output_path = dir.path().join("protobuf.ex");
+
+    std::fs::write(
+        &schema_path,
+        r#"syntax = "proto3";
+
+package example;
+
+message User {
+  string id = 1;
+}
+
+service UserService {
+  rpc GetUser (User) returns (User);
+}
+"#,
+    )
+    .expect("write schema");
+
+    let output = Command::new(exe)
+        .arg("generate")
+        .arg("protobuf")
+        .arg(&schema_path)
+        .arg("--lang")
+        .arg("elixir")
+        .arg("--output")
+        .arg(&output_path)
+        .output()
+        .expect("run failed");
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let generated = std::fs::read_to_string(&output_path).expect("read generated file");
+    assert!(generated.contains("defmodule Example.User"));
+    assert!(generated.contains("defstruct"));
+    assert!(generated.contains("@callback get_user"));
+}
+
+#[test]
 fn cli_can_generate_php_dtos() {
     let exe = env!("CARGO_BIN_EXE_spikard");
     let dir = tempfile::tempdir().expect("tempdir");

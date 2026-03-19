@@ -11,8 +11,11 @@ defmodule Spikard.HandlerRunner do
 
   use GenServer
   require Logger
+  alias Spikard.Grpc
 
   @type handler_map :: %{String.t() => (Spikard.Request.t() -> map())}
+  @type grpc_handler_map ::
+          %{String.t() => %{String.t() => {Grpc.Service.rpc_mode(), function()}}}
   @type lifecycle_hooks :: %{
           String.t() => [function()]
         }
@@ -20,6 +23,7 @@ defmodule Spikard.HandlerRunner do
   @type singleton_cache :: %{String.t() => term()}
   @type state :: %{
           handlers: handler_map(),
+          grpc_services: grpc_handler_map(),
           lifecycle_hooks: lifecycle_hooks(),
           dependencies: dependencies(),
           singleton_cache: singleton_cache()
@@ -35,6 +39,7 @@ defmodule Spikard.HandlerRunner do
     - `handlers` - Map of handler_name => handler_function
     - `lifecycle_hooks` - Optional map of hook_type => [hook_functions]
     - `dependencies` - Optional list of Spikard.DI.dependency() structs for dependency injection
+    - `grpc_services` - Optional map of service_name => method_name => {rpc_mode, handler}
 
   ## Returns
 
@@ -47,10 +52,10 @@ defmodule Spikard.HandlerRunner do
       iex> deps = [Spikard.DI.value("db", db_config)]
       iex> {:ok, pid} = Spikard.HandlerRunner.start_link(handlers, %{}, deps)
   """
-  @spec start_link(handler_map(), lifecycle_hooks(), dependencies()) :: GenServer.on_start()
-  def start_link(handlers, lifecycle_hooks \\ %{}, dependencies \\ [])
-      when is_map(handlers) and is_map(lifecycle_hooks) and is_list(dependencies) do
-    GenServer.start_link(__MODULE__, {handlers, lifecycle_hooks, dependencies})
+  @spec start_link(handler_map(), lifecycle_hooks(), dependencies(), grpc_handler_map()) :: GenServer.on_start()
+  def start_link(handlers, lifecycle_hooks \\ %{}, dependencies \\ [], grpc_services \\ %{})
+      when is_map(handlers) and is_map(lifecycle_hooks) and is_list(dependencies) and is_map(grpc_services) do
+    GenServer.start_link(__MODULE__, {handlers, lifecycle_hooks, dependencies, grpc_services})
   end
 
   @doc """
@@ -77,10 +82,11 @@ defmodule Spikard.HandlerRunner do
   # Server Callbacks
 
   @impl true
-  def init({handlers, lifecycle_hooks, dependencies}) do
+  def init({handlers, lifecycle_hooks, dependencies, grpc_services}) do
     {:ok,
      %{
        handlers: handlers,
+       grpc_services: grpc_services,
        lifecycle_hooks: lifecycle_hooks,
        dependencies: dependencies,
        singleton_cache: %{}
@@ -110,6 +116,48 @@ defmodule Spikard.HandlerRunner do
     Logger.debug("Deliver result: #{inspect(result)}")
 
     {:noreply, new_state}
+  end
+
+  @impl true
+  def handle_info({:grpc_execute, request_id, rpc_mode, service_name, method_name, payload, metadata}, state)
+      when rpc_mode in [:unary, :server_stream] and is_binary(payload) and is_map(metadata) do
+    Logger.debug("HandlerRunner executing gRPC #{rpc_mode} #{service_name}/#{method_name} request #{request_id}")
+
+    response =
+      execute_grpc_request(
+        state.grpc_services,
+        rpc_mode,
+        service_name,
+        method_name,
+        payload,
+        metadata
+      )
+
+    result = Spikard.Native.deliver_grpc_response(request_id, response)
+    Logger.debug("Deliver gRPC result: #{inspect(result)}")
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info({:grpc_execute, request_id, rpc_mode, service_name, method_name, payloads, metadata}, state)
+      when rpc_mode in [:client_stream, :bidi_stream] and is_list(payloads) and is_map(metadata) do
+    Logger.debug("HandlerRunner executing gRPC #{rpc_mode} #{service_name}/#{method_name} request #{request_id}")
+
+    response =
+      execute_grpc_stream_request(
+        state.grpc_services,
+        rpc_mode,
+        service_name,
+        method_name,
+        payloads,
+        metadata
+      )
+
+    result = Spikard.Native.deliver_grpc_response(request_id, response)
+    Logger.debug("Deliver gRPC result: #{inspect(result)}")
+
+    {:noreply, state}
   end
 
   # Handle lifecycle hook execution messages from Rust NIF
@@ -271,6 +319,174 @@ defmodule Spikard.HandlerRunner do
       "body" => Jason.encode!(%{error: message})
     }
   end
+
+  @spec execute_grpc_request(grpc_handler_map(), Grpc.Service.rpc_mode(), String.t(), String.t(), binary(), map()) ::
+          term()
+  defp execute_grpc_request(grpc_services, rpc_mode, service_name, method_name, payload, metadata) do
+    with {:ok, handler} <- fetch_grpc_handler(grpc_services, service_name, method_name, rpc_mode),
+         request <- Grpc.Service.build_request(service_name, method_name, payload, metadata),
+         {:ok, result} <- invoke_grpc_handler(handler, request) do
+      case rpc_mode do
+        :unary -> normalize_grpc_unary_result(result, rpc_mode)
+        :server_stream -> normalize_grpc_stream_result(result)
+      end
+    else
+      {:error, {:grpc, code, message, meta}} ->
+        {:error, normalize_grpc_code(code), to_string(message), normalize_headers(meta)}
+
+      {:error, message} ->
+        {:error, "internal", to_string(message), %{}}
+    end
+  end
+
+  @spec execute_grpc_stream_request(
+          grpc_handler_map(),
+          Grpc.Service.rpc_mode(),
+          String.t(),
+          String.t(),
+          [binary()],
+          map()
+        ) :: term()
+  defp execute_grpc_stream_request(grpc_services, rpc_mode, service_name, method_name, payloads, metadata) do
+    with {:ok, handler} <- fetch_grpc_handler(grpc_services, service_name, method_name, rpc_mode),
+         requests <- Enum.map(payloads, &Grpc.Service.build_request(service_name, method_name, &1, metadata)),
+         {:ok, result} <- invoke_grpc_stream_handler(handler, requests, rpc_mode) do
+      case rpc_mode do
+        :client_stream -> normalize_grpc_unary_result(result, rpc_mode)
+        :bidi_stream -> normalize_grpc_stream_result(result)
+      end
+    else
+      {:error, {:grpc, code, message, meta}} ->
+        {:error, normalize_grpc_code(code), to_string(message), normalize_headers(meta)}
+
+      {:error, message} ->
+        {:error, "internal", to_string(message), %{}}
+    end
+  end
+
+  @spec fetch_grpc_handler(grpc_handler_map(), String.t(), String.t(), Grpc.Service.rpc_mode()) ::
+          {:ok, function()} | {:error, String.t()}
+  defp fetch_grpc_handler(grpc_services, service_name, method_name, rpc_mode) do
+    with {:ok, methods} <- Map.fetch(grpc_services, service_name),
+         {:ok, {registered_mode, handler}} <- Map.fetch(methods, method_name) do
+      if registered_mode == rpc_mode do
+        {:ok, handler}
+      else
+        {:error, "gRPC method #{service_name}/#{method_name} was registered as #{registered_mode}, not #{rpc_mode}"}
+      end
+    else
+      :error -> {:error, "No gRPC handler registered for #{service_name}/#{method_name}"}
+    end
+  end
+
+  @spec invoke_grpc_handler(function(), Grpc.Request.t()) :: {:ok, term()} | {:error, term()}
+  defp invoke_grpc_handler(handler, request) do
+    try do
+      {:ok, handler.(request)}
+    rescue
+      e ->
+        Logger.error("gRPC handler raised: #{inspect(e)}")
+        {:error, Exception.message(e)}
+    catch
+      kind, reason ->
+        Logger.error("gRPC handler threw #{kind}: #{inspect(reason)}")
+        {:error, inspect(reason)}
+    end
+  end
+
+  @spec invoke_grpc_stream_handler(function(), [Grpc.Request.t()], Grpc.Service.rpc_mode()) ::
+          {:ok, term()} | {:error, term()}
+  defp invoke_grpc_stream_handler(handler, requests, _rpc_mode) do
+    try do
+      {:ok, handler.(requests)}
+    rescue
+      e ->
+        Logger.error("gRPC stream handler raised: #{inspect(e)}")
+        {:error, Exception.message(e)}
+    catch
+      kind, reason ->
+        Logger.error("gRPC stream handler threw #{kind}: #{inspect(reason)}")
+        {:error, inspect(reason)}
+    end
+  end
+
+  @spec normalize_grpc_unary_result(term(), Grpc.Service.rpc_mode()) :: term()
+  defp normalize_grpc_unary_result(result, _rpc_mode) do
+    case result do
+      %Grpc.Response{} = response ->
+        {:ok, response.payload, normalize_headers(response.metadata)}
+
+      response when is_binary(response) ->
+        {:ok, response, %{}}
+
+      {:error, %Grpc.Error{} = error} ->
+        {:error, normalize_grpc_code(error.code), error.message, normalize_headers(error.metadata)}
+
+      {:error, code, message} ->
+        {:error, normalize_grpc_code(code), to_string(message), %{}}
+
+      {:error, code, message, metadata} ->
+        {:error, normalize_grpc_code(code), to_string(message), normalize_headers(metadata)}
+
+      other ->
+        {:error, "internal", "Invalid gRPC handler result: #{inspect(other)}", %{}}
+    end
+  end
+
+  @spec normalize_grpc_stream_result(term()) :: term()
+  defp normalize_grpc_stream_result({:error, %Grpc.Error{} = error}) do
+    {:error, normalize_grpc_code(error.code), error.message, normalize_headers(error.metadata)}
+  end
+
+  defp normalize_grpc_stream_result({:error, code, message}) do
+    {:error, normalize_grpc_code(code), to_string(message), %{}}
+  end
+
+  defp normalize_grpc_stream_result({:error, code, message, metadata}) do
+    {:error, normalize_grpc_code(code), to_string(message), normalize_headers(metadata)}
+  end
+
+  defp normalize_grpc_stream_result(responses) do
+    with {:ok, list} <- coerce_stream_list(responses),
+         {:ok, payloads} <- Enum.reduce_while(list, {:ok, []}, &collect_stream_payload/2) do
+      {:stream, Enum.reverse(payloads)}
+    else
+      {:error, message} -> {:error, "internal", message, %{}}
+    end
+  end
+
+  @spec coerce_stream_list(term()) :: {:ok, list()} | {:error, String.t()}
+  defp coerce_stream_list(list) when is_list(list), do: {:ok, list}
+
+  defp coerce_stream_list(other) do
+    if Enumerable.impl_for(other) do
+      {:ok, Enum.to_list(other)}
+    else
+      {:error, "Streaming gRPC handlers must return a list or enumerable of responses"}
+    end
+  end
+
+  @spec collect_stream_payload(term(), {:ok, [binary()]}) :: {:cont, {:ok, [binary()]}} | {:halt, {:error, String.t()}}
+  defp collect_stream_payload(item, {:ok, payloads}) when is_binary(item) do
+    {:cont, {:ok, [item | payloads]}}
+  end
+
+  defp collect_stream_payload(%Grpc.Response{payload: payload, metadata: metadata}, {:ok, payloads})
+       when is_binary(payload) do
+    if metadata == %{} or metadata == nil do
+      {:cont, {:ok, [payload | payloads]}}
+    else
+      {:halt, {:error, "Streaming gRPC responses do not support metadata"}}
+    end
+  end
+
+  defp collect_stream_payload(other, _acc) do
+    {:halt, {:error, "Invalid streaming gRPC response item: #{inspect(other)}"}}
+  end
+
+  defp normalize_grpc_code(code) when is_atom(code), do: Atom.to_string(code)
+  defp normalize_grpc_code(code) when is_integer(code), do: Integer.to_string(code)
+  defp normalize_grpc_code(code), do: to_string(code)
 
   # Convert string keys to atoms for top-level idiomatic Elixir access
   # but preserve nested maps like headers with string keys (HTTP headers can have hyphens)

@@ -4,6 +4,7 @@ use super::spec_parser::GraphQLSchema;
 use anyhow::Result;
 
 pub mod base;
+pub mod elixir;
 pub mod php;
 pub mod python;
 pub mod ruby;

@@ -31,8 +31,9 @@ pub use engine::{CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKin
 pub use formatters::{Formatter, HeaderMetadata, Import, PythonFormatter, RubyFormatter, Section, TypeScriptFormatter};
 pub use graphql::{
     GraphQLArgument, GraphQLDirective, GraphQLEnumValue, GraphQLField, GraphQLInputField, GraphQLSchema, GraphQLType,
-    TypeKind, generate_php_graphql, generate_python_graphql, generate_ruby_graphql, generate_rust_graphql,
-    generate_typescript_graphql, parse_graphql_schema, parse_graphql_sdl, parse_graphql_sdl_string,
+    TypeKind, generate_elixir_graphql, generate_php_graphql, generate_python_graphql, generate_ruby_graphql,
+    generate_rust_graphql, generate_typescript_graphql, parse_graphql_schema, parse_graphql_sdl,
+    parse_graphql_sdl_string,
 };
 pub use openapi::parse_openapi_schema;
 pub use openrpc::{
@@ -46,7 +47,7 @@ pub use php::PhpGenerator;
 pub use php_dto::PhpDtoGenerator;
 pub use protobuf::{
     EnumDef, EnumValue, FieldDef, FieldLabel, MessageDef, MethodDef, ProtoType, ProtobufGenerator, ProtobufSchema,
-    ProtobufTarget, generate_php_protobuf, generate_python_protobuf, generate_ruby_protobuf,
+    ProtobufTarget, generate_elixir_protobuf, generate_php_protobuf, generate_python_protobuf, generate_ruby_protobuf,
     generate_typescript_protobuf, parse_proto_schema, parse_proto_schema_string,
 };
 pub use python::PythonGenerator;
