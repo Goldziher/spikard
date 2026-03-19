@@ -1,8 +1,9 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
 use rmcp::{
-    ClientHandler, ServiceExt,
+    ClientHandler, RoleClient, ServiceExt,
     model::{CallToolRequestParams, ClientInfo},
+    service::RunningService,
 };
 use serde_json::json;
 use std::process::Stdio;
@@ -19,6 +20,33 @@ impl ClientHandler for DummyClientHandler {
     fn get_info(&self) -> ClientInfo {
         ClientInfo::default()
     }
+}
+
+async fn spawn_stdio_client() -> anyhow::Result<(
+    RunningService<RoleClient, DummyClientHandler>,
+    tokio::process::Child,
+)> {
+    let mut child = TokioCommand::new(assert_cmd::cargo::cargo_bin!("spikard"))
+        .arg("mcp")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .kill_on_drop(true)
+        .spawn()?;
+
+    let stdout = child.stdout.take().expect("child stdout should be piped");
+    let stdin = child.stdin.take().expect("child stdin should be piped");
+    let client = DummyClientHandler.serve((stdout, stdin)).await?;
+    Ok((client, child))
+}
+
+async fn shutdown_client(
+    client: &mut RunningService<RoleClient, DummyClientHandler>,
+    child: &mut tokio::process::Child,
+) -> anyhow::Result<()> {
+    let _ = client.close().await?;
+    let _ = timeout(Duration::from_secs(5), child.wait()).await?;
+    Ok(())
 }
 
 #[test]
@@ -56,18 +84,7 @@ fn spikard_mcp_stdio_path_reaches_server_startup() {
 
 #[tokio::test]
 async fn spikard_mcp_stdio_supports_initialize_list_and_call() -> anyhow::Result<()> {
-    let mut child = TokioCommand::new(assert_cmd::cargo::cargo_bin!("spikard"))
-        .arg("mcp")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .kill_on_drop(true)
-        .spawn()?;
-
-    let stdout = child.stdout.take().expect("child stdout should be piped");
-    let stdin = child.stdin.take().expect("child stdin should be piped");
-
-    let client = DummyClientHandler.serve((stdout, stdin)).await?;
+    let (mut client, mut child) = spawn_stdio_client().await?;
 
     let tools = client.list_all_tools().await?;
     let tool_names = tools.iter().map(|tool| tool.name.as_ref()).collect::<Vec<_>>();
@@ -91,8 +108,7 @@ async fn spikard_mcp_stdio_supports_initialize_list_and_call() -> anyhow::Result
     assert!(text.contains("\"Python\""));
     assert!(text.contains("\"Elixir\""));
 
-    client.cancel().await?;
-    let _ = timeout(Duration::from_secs(5), child.wait()).await?;
+    shutdown_client(&mut client, &mut child).await?;
     Ok(())
 }
 
@@ -101,18 +117,7 @@ async fn spikard_mcp_stdio_can_initialize_a_project() -> anyhow::Result<()> {
     let tmp = TempDir::new()?;
     let project_name = "mcp_init_demo";
 
-    let mut child = TokioCommand::new(assert_cmd::cargo::cargo_bin!("spikard"))
-        .arg("mcp")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .kill_on_drop(true)
-        .spawn()?;
-
-    let stdout = child.stdout.take().expect("child stdout should be piped");
-    let stdin = child.stdin.take().expect("child stdin should be piped");
-
-    let client = DummyClientHandler.serve((stdout, stdin)).await?;
+    let (mut client, mut child) = spawn_stdio_client().await?;
     let result = client
         .call_tool(
             CallToolRequestParams::new("init_project").with_arguments(
@@ -143,7 +148,138 @@ async fn spikard_mcp_stdio_can_initialize_a_project() -> anyhow::Result<()> {
     assert!(text.contains("\"files_created\""));
     assert!(text.contains("\"next_steps\""));
 
-    client.cancel().await?;
-    let _ = timeout(Duration::from_secs(5), child.wait()).await?;
+    shutdown_client(&mut client, &mut child).await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn spikard_mcp_stdio_init_project_creates_expected_structures_for_each_binding() -> anyhow::Result<()> {
+    let tmp = TempDir::new()?;
+    let (mut client, mut child) = spawn_stdio_client().await?;
+
+    let cases = [
+        (
+            "python",
+            "mcp_python_demo",
+            vec![
+                "pyproject.toml",
+                "README.md",
+                ".gitignore",
+                "src/mcp_python_demo/__init__.py",
+                "src/mcp_python_demo/app.py",
+                "tests/test_app.py",
+            ],
+        ),
+        (
+            "typescript",
+            "mcp-ts-demo",
+            vec![
+                "package.json",
+                "tsconfig.json",
+                "vitest.config.ts",
+                ".gitignore",
+                "README.md",
+                "src/app.ts",
+                "src/server.ts",
+                "tests/app.spec.ts",
+            ],
+        ),
+        (
+            "rust",
+            "mcp_rust_demo",
+            vec![
+                "Cargo.toml",
+                "README.md",
+                ".gitignore",
+                "src/main.rs",
+                "src/lib.rs",
+                "tests/integration_test.rs",
+            ],
+        ),
+        (
+            "ruby",
+            "mcp_ruby_demo",
+            vec![
+                "Gemfile",
+                ".gitignore",
+                "README.md",
+                "bin/server",
+                "lib/mcp_ruby_demo.rb",
+                "sig/mcp_ruby_demo.rbs",
+                "spec/mcp_ruby_demo_spec.rb",
+                "spec/spec_helper.rb",
+                ".rspec",
+                "Rakefile",
+            ],
+        ),
+        (
+            "php",
+            "mcp_php_demo",
+            vec![
+                "composer.json",
+                "phpstan.neon",
+                "phpunit.xml",
+                ".gitignore",
+                "README.md",
+                "src/AppController.php",
+                "bin/server.php",
+                "tests/AppTest.php",
+            ],
+        ),
+        (
+            "elixir",
+            "mcp_elixir_demo",
+            vec![
+                "mix.exs",
+                ".formatter.exs",
+                ".gitignore",
+                "lib/mcp_elixir_demo.ex",
+                "lib/mcp_elixir_demo/router.ex",
+                "run.exs",
+                "test/mcp_elixir_demo_test.exs",
+                "test/test_helper.exs",
+            ],
+        ),
+    ];
+
+    for (language, name, expected_paths) in cases {
+        let result = client
+            .call_tool(
+                CallToolRequestParams::new("init_project").with_arguments(
+                    json!({
+                        "name": name,
+                        "language": language,
+                        "directory": tmp.path().display().to_string()
+                    })
+                    .as_object()
+                    .expect("object")
+                    .clone(),
+                ),
+            )
+            .await?;
+
+        let text = result
+            .content
+            .first()
+            .and_then(|content| content.raw.as_text())
+            .map(|content| content.text.as_str())
+            .expect("expected text tool result");
+        let project_dir = tmp.path().join(name);
+
+        assert!(project_dir.exists(), "expected {} project root", language);
+        assert!(text.contains("\"files_created\""), "expected {} result payload", language);
+        assert!(text.contains("\"next_steps\""), "expected {} next_steps payload", language);
+
+        for expected in expected_paths {
+            assert!(
+                project_dir.join(expected).exists(),
+                "expected {} to create {}",
+                language,
+                expected
+            );
+        }
+    }
+
+    shutdown_client(&mut client, &mut child).await?;
     Ok(())
 }

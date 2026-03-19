@@ -1101,4 +1101,121 @@ mod tests {
         assert!(!result.next_steps.is_empty());
         Ok(())
     }
+
+    #[test]
+    fn test_init_project_impl_creates_expected_structures_for_each_binding() -> Result<()> {
+        let server = SpikardMcp::new();
+        let tmp = TempDir::new()?;
+
+        let cases = [
+            (
+                "python",
+                "mcp_python_demo",
+                vec![
+                    "pyproject.toml",
+                    "README.md",
+                    ".gitignore",
+                    "src/mcp_python_demo/__init__.py",
+                    "src/mcp_python_demo/app.py",
+                    "tests/test_app.py",
+                ],
+            ),
+            (
+                "typescript",
+                "mcp-ts-demo",
+                vec![
+                    "package.json",
+                    "tsconfig.json",
+                    "vitest.config.ts",
+                    ".gitignore",
+                    "README.md",
+                    "src/app.ts",
+                    "src/server.ts",
+                    "tests/app.spec.ts",
+                ],
+            ),
+            (
+                "rust",
+                "mcp_rust_demo",
+                vec![
+                    "Cargo.toml",
+                    "README.md",
+                    ".gitignore",
+                    "src/main.rs",
+                    "src/lib.rs",
+                    "tests/integration_test.rs",
+                ],
+            ),
+            (
+                "ruby",
+                "mcp_ruby_demo",
+                vec![
+                    "Gemfile",
+                    ".gitignore",
+                    "README.md",
+                    "bin/server",
+                    "lib/mcp_ruby_demo.rb",
+                    "sig/mcp_ruby_demo.rbs",
+                    "spec/mcp_ruby_demo_spec.rb",
+                    "spec/spec_helper.rb",
+                    ".rspec",
+                    "Rakefile",
+                ],
+            ),
+            (
+                "php",
+                "mcp_php_demo",
+                vec![
+                    "composer.json",
+                    "phpstan.neon",
+                    "phpunit.xml",
+                    ".gitignore",
+                    "README.md",
+                    "src/AppController.php",
+                    "bin/server.php",
+                    "tests/AppTest.php",
+                ],
+            ),
+            (
+                "elixir",
+                "mcp_elixir_demo",
+                vec![
+                    "mix.exs",
+                    ".formatter.exs",
+                    ".gitignore",
+                    "lib/mcp_elixir_demo.ex",
+                    "lib/mcp_elixir_demo/router.ex",
+                    "run.exs",
+                    "test/mcp_elixir_demo_test.exs",
+                    "test/test_helper.exs",
+                ],
+            ),
+        ];
+
+        for (language, name, expected_paths) in cases {
+            let result = server.init_project_impl(InitProjectParams {
+                name: name.to_string(),
+                language: Some(language.to_string()),
+                directory: Some(tmp.path().display().to_string()),
+                schema_path: None,
+            })?;
+
+            assert!(!result.files_created.is_empty(), "expected {} files_created", language);
+            assert!(!result.next_steps.is_empty(), "expected {} next_steps", language);
+
+            let project_dir = tmp.path().join(name);
+            assert!(project_dir.exists(), "expected {} project root", language);
+
+            for expected in expected_paths {
+                assert!(
+                    project_dir.join(expected).exists(),
+                    "expected {} to create {}",
+                    language,
+                    expected
+                );
+            }
+        }
+
+        Ok(())
+    }
 }
