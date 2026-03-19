@@ -70,8 +70,36 @@ jobs:
           bundler: "4.0.0"
           bundler-cache: false
 
+      - name: Install Ruby dependencies
+        working-directory: packages/ruby
+        run: |
+          bundle config set frozen true
+          bundle install
+
+      - name: Setup Node
+        uses: ./.github/actions/setup-node-workspace
+        with:
+          node-version: "24"
+
       - name: Install LLVM/Clang (for ext-php-rs bindgen)
         uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: packages/php
+        run: composer install --no-interaction --no-progress
+
+      - name: Setup Elixir and OTP
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
 
       - name: Run workspace tests (excluding extension-module feature)
         env:
@@ -108,8 +136,36 @@ jobs:
           bundler: "4.0.0"
           bundler-cache: false
 
+      - name: Install Ruby dependencies
+        working-directory: packages/ruby
+        run: |
+          bundle config set frozen true
+          bundle install
+
+      - name: Setup Node
+        uses: ./.github/actions/setup-node-workspace
+        with:
+          node-version: "24"
+
       - name: Install LLVM/Clang (for ext-php-rs bindgen)
         uses: ./.github/actions/setup-llvm-clang
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: packages/php
+        run: composer install --no-interaction --no-progress
+
+      - name: Setup Elixir and OTP
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
 
       - name: Run workspace tests
         env:

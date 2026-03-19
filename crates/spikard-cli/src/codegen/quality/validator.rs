@@ -298,8 +298,14 @@ impl QualityValidator {
             }
             TargetLanguage::Ruby => {
                 let file = self.write_temp_file(code, "rb")?;
-                self.run_tool("steep", &["check", file.path().to_str().unwrap()], code)
-                    .map(|_| ())
+                let package_dir = workspace_root().join("packages/ruby");
+                self.run_tool_in_dir(
+                    "bundle",
+                    &["exec", "steep", "check", file.path().to_str().unwrap()],
+                    &package_dir,
+                    code,
+                )
+                .map(|_| ())
             }
             TargetLanguage::Rust => {
                 let project = self.write_temp_rust_project(code)?;
@@ -350,9 +356,9 @@ impl QualityValidator {
             TargetLanguage::Python => {
                 let project = self.write_temp_python_project(code)?;
                 self.run_tool_in_dir(
-                    "ruff",
-                    &["check", project.entry_path.file_name().unwrap().to_str().unwrap()],
-                    project.workdir.path(),
+                    "uv",
+                    &["run", "ruff", "check", project.entry_path.to_str().unwrap()],
+                    workspace_root(),
                     code,
                 )
                 .map(|_| ())
@@ -360,14 +366,18 @@ impl QualityValidator {
             TargetLanguage::TypeScript => Ok(()),
             TargetLanguage::Ruby => {
                 let file = self.write_temp_file(code, "rb")?;
-                self.run_tool(
-                    "rubocop",
+                let package_dir = workspace_root().join("packages/ruby");
+                self.run_tool_in_dir(
+                    "bundle",
                     &[
+                        "exec",
+                        "rubocop",
                         "--disable-pending-cops",
                         "--except",
                         "Naming/FileName",
                         file.path().to_str().unwrap(),
                     ],
+                    &package_dir,
                     code,
                 )
                 .map(|_| ())
@@ -375,9 +385,13 @@ impl QualityValidator {
             TargetLanguage::Php => {
                 let file = self.write_temp_file(code, "php")?;
                 let bootstrap = self.write_php_validation_bootstrap()?;
-                self.run_tool(
-                    "phpstan",
+                let package_dir = workspace_root().join("packages/php");
+                self.run_tool_in_dir(
+                    "composer",
                     &[
+                        "exec",
+                        "--",
+                        "phpstan",
                         "analyse",
                         "--no-progress",
                         "--error-format=raw",
@@ -386,6 +400,7 @@ impl QualityValidator {
                         bootstrap.path().to_str().unwrap(),
                         file.path().to_str().unwrap(),
                     ],
+                    &package_dir,
                     code,
                 )
                 .map(|_| ())

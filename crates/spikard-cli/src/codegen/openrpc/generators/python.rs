@@ -76,6 +76,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         );
         code.push_str("    \"\"\"Route JSON-RPC method calls to appropriate handlers.\"\"\"\n");
         code.push_str("    try:\n");
+        code.push_str("        _ = params\n");
 
         for method in &spec.methods {
             let handler_name = handler_name_for_method(&method.name);

@@ -16,6 +16,8 @@
             <file>src/Http/Response.php</file>
             <file>src/Http/Request.php</file>
             <file>src/Native/TestClient.php</file>
+            <directory>src/Composer</directory>
+            <directory>src/Support</directory>
             <directory>tests</directory>
             <directory>vendor</directory>
         </exclude>
