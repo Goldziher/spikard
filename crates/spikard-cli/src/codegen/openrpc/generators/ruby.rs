@@ -176,18 +176,21 @@ fn generate_ruby_handler(
     code.push_str("  end\n");
 
     if !method.params.is_empty() {
+        let required_params = method.params.iter().filter(|param| param.required).collect::<Vec<_>>();
         code.push_str("\n  private\n\n");
-        code.push_str("  def validate_params(params)\n");
-        for param in &method.params {
-            if param.required {
+        if required_params.is_empty() {
+            code.push_str("  def validate_params(_params); end\n");
+        } else {
+            code.push_str("  def validate_params(params)\n");
+            for param in required_params {
                 code.push_str(&format!(
                     "    raise JsonRpcError.invalid_params('Missing required parameter: {}') unless params.key?('{}')\n",
                     escape_single_quoted(&param.name),
                     escape_single_quoted(&param.name)
                 ));
             }
+            code.push_str("  end\n");
         }
-        code.push_str("  end\n");
     }
 
     code.push_str("end\n\n");

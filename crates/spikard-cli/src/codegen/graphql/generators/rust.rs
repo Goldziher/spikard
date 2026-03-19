@@ -196,8 +196,13 @@ impl RustGenerator {
         code.push_str(&format!("pub enum {} {{\n", type_def.name));
 
         for value in &type_def.enum_values {
+            let variant_name = rust_enum_variant_name(&value.name);
             code.push_str(&self.gen_doc(value.description.as_deref(), 4));
-            code.push_str(&format!("    {},\n", value.name));
+            code.push_str(&format!("    #[graphql(name = \"{}\")]\n", value.name));
+            if self.include_serde {
+                code.push_str(&format!("    #[serde(rename = \"{}\")]\n", value.name));
+            }
+            code.push_str(&format!("    {variant_name},\n"));
         }
 
         code.push_str("}\n");
@@ -243,7 +248,10 @@ impl RustGenerator {
         code.push_str(&self.gen_doc(type_def.description.as_deref(), 0));
 
         if type_def.possible_types.is_empty() {
-            code.push_str(&format!("// TODO: Add implementors for interface {}\n", type_def.name));
+            code.push_str(&format!(
+                "// Interface {} has no discovered implementors in the parsed schema.\n",
+                type_def.name
+            ));
             return code;
         }
 
@@ -330,7 +338,7 @@ impl RustGenerator {
         code.push_str("impl Query {\n");
 
         if schema.queries.is_empty() {
-            code.push_str("    // TODO: Add query fields\n");
+            code.push_str("    // No query fields were discovered in the parsed schema.\n");
         } else {
             for field in &schema.queries {
                 code.push_str(&self.gen_doc(field.description.as_deref(), 4));
@@ -347,10 +355,14 @@ impl RustGenerator {
                 let return_type = self.map_type(&field.type_name, field.is_nullable, field.is_list);
                 if self.use_result_types {
                     code.push_str(&format!(") -> async_graphql::Result<{return_type}> {{\n"));
+                    code.push_str(&format!(
+                        "        Err(async_graphql::Error::new(\"Implement query resolver for {}\"))\n",
+                        field.name
+                    ));
                 } else {
                     code.push_str(&format!(") -> {return_type} {{\n"));
+                    code.push_str("        unreachable!(\"Enable result-based resolver stubs for safe scaffolding\")\n");
                 }
-                code.push_str("        todo!(\"Implement query resolver\")\n");
                 code.push_str("    }\n");
             }
         }
@@ -379,10 +391,14 @@ impl RustGenerator {
                 let return_type = self.map_type(&field.type_name, field.is_nullable, field.is_list);
                 if self.use_result_types {
                     code.push_str(&format!(") -> async_graphql::Result<{return_type}> {{\n"));
+                    code.push_str(&format!(
+                        "        Err(async_graphql::Error::new(\"Implement mutation resolver for {}\"))\n",
+                        field.name
+                    ));
                 } else {
                     code.push_str(&format!(") -> {return_type} {{\n"));
+                    code.push_str("        unreachable!(\"Enable result-based resolver stubs for safe scaffolding\")\n");
                 }
-                code.push_str("        todo!(\"Implement mutation resolver\")\n");
                 code.push_str("    }\n");
             }
 
@@ -479,6 +495,16 @@ impl RustGenerator {
 impl Default for RustGenerator {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+fn rust_enum_variant_name(name: &str) -> String {
+    let candidate = name.to_pascal_case();
+    match candidate.as_str() {
+        "Self" => "SelfValue".to_string(),
+        "Super" => "SuperValue".to_string(),
+        _ if candidate.is_empty() => "UnknownValue".to_string(),
+        _ => candidate,
     }
 }
 

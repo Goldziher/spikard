@@ -1112,15 +1112,17 @@ async-graphql = "7"
 async-trait = "0.1"
 axum = "0.8"
 bytes = "1"
+chrono = {{ version = "0.4", features = ["serde"] }}
 futures-core = "0.3"
 futures-util = "0.3"
 prost = "0.14"
-schemars = {{ version = "1.2", features = ["derive"] }}
+schemars = {{ version = "1.2", features = ["derive", "chrono04", "uuid1"] }}
 serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"
 spikard = {{ path = "{}" }}
 tokio = {{ version = "1", features = ["full"] }}
 tonic = "0.14"
+uuid = {{ version = "1", features = ["serde", "v4"] }}
 "#,
         spikard_path.display()
     )

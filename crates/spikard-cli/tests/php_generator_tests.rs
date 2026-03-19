@@ -1,5 +1,7 @@
 use openapiv3::OpenAPI;
-use spikard_cli::codegen::{PhpDtoStyle, PhpGenerator, TargetLanguage, quality::QualityValidator};
+use spikard_cli::codegen::{
+    DtoConfig, PhpDtoStyle, PhpGenerator, TargetLanguage, generate_from_openapi, quality::QualityValidator,
+};
 use std::fs;
 use std::path::Path;
 
@@ -368,6 +370,22 @@ fn php_openapi_generated_code_validates() {
         report.is_valid(),
         "generated PHP OpenAPI code should validate cleanly: {report}"
     );
+}
+
+#[test]
+fn php_openapi_auth_service_example_validates() {
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+    let output = generate_from_openapi(&schema_path, TargetLanguage::Php, &DtoConfig::default()).expect("generate");
+    let report = QualityValidator::new(TargetLanguage::Php)
+        .validate_all(&output)
+        .expect("php quality validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated PHP auth-service OpenAPI code should validate cleanly: {report}"
+    );
+    assert!(!output.contains("StringBackedEnum"));
 }
 
 #[test]

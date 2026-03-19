@@ -20,6 +20,11 @@ impl OpenRpcGenerator for ElixirOpenRpcGenerator {
         let module_name = root_module_name(spec);
         let types_module_name = format!("{module_name}.Types");
         let has_component_types = !spec.components.schemas.is_empty();
+        let needs_types_alias = has_component_types
+            && spec
+                .methods
+                .iter()
+                .any(|method| schema_uses_component_ref(&params_schema(method)) || schema_uses_component_ref(&method.result.schema));
 
         if has_component_types {
             code.push_str(&generate_types_module(spec, &types_module_name));
@@ -129,7 +134,7 @@ end
         );
 
         code.push_str(&format!("defmodule {module_name}.Handlers do\n  @moduledoc false\n\n"));
-        if has_component_types {
+        if needs_types_alias {
             code.push_str(&format!("  alias {types_module_name}, as: Types\n\n"));
         }
 
@@ -281,6 +286,14 @@ fn params_schema(method: &crate::codegen::openrpc::spec_parser::OpenRpcMethod) -
         result.insert("required".to_string(), Value::Array(required));
     }
     Value::Object(result)
+}
+
+fn schema_uses_component_ref(schema: &Value) -> bool {
+    match schema {
+        Value::Object(map) => map.contains_key("$ref") || map.values().any(schema_uses_component_ref),
+        Value::Array(values) => values.iter().any(schema_uses_component_ref),
+        _ => false,
+    }
 }
 
 fn json_key_typespec(name: &str) -> String {
@@ -457,7 +470,7 @@ fn format_elixir(code: &str) -> String {
         .arg("-e")
         .arg(
             r#"input = IO.read(:stdio, :all)
-IO.write(IO.iodata_to_binary(Code.format_string!(input)))"#,
+IO.write(IO.iodata_to_binary(Code.format_string!(input, line_length: 120)))"#,
         )
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

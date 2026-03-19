@@ -5,7 +5,7 @@ use heck::{ToPascalCase, ToSnakeCase};
 use serde_json::Value;
 
 use crate::codegen::openrpc::spec_parser::{
-    OpenRpcMethod, OpenRpcSpec, get_method_params_class_name, get_result_class_name,
+    OpenRpcMethod, OpenRpcSpec, get_method_params_class_name, get_result_class_name, resolve_schema, schema_ref_name,
 };
 
 use super::OpenRpcGenerator;
@@ -82,8 +82,12 @@ impl OpenRpcGenerator for RustOpenRpcGenerator {
         code.push_str("    }\n");
         code.push_str("}\n\n");
 
+        for (name, schema) in &spec.components.schemas {
+            generate_named_schema(&mut code, spec, &name.to_pascal_case(), schema)?;
+        }
+
         for method in &spec.methods {
-            generate_rust_dtos(&mut code, method)?;
+            generate_rust_dtos(&mut code, spec, method)?;
         }
 
         for method in &spec.methods {
@@ -168,10 +172,42 @@ impl OpenRpcGenerator for RustOpenRpcGenerator {
     }
 }
 
-fn generate_rust_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
+fn generate_named_schema(code: &mut String, spec: &OpenRpcSpec, type_name: &str, schema: &Value) -> Result<()> {
+    let resolved = resolve_schema(spec, schema);
+    emit_nested_object_types(code, spec, type_name, resolved)?;
+    code.push_str(&format!("/// Schema `{type_name}`.\n"));
+    code.push_str("#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]\n");
+
+    if let Some(properties) = resolved.get("properties").and_then(Value::as_object) {
+        code.push_str(&format!("pub struct {type_name} {{\n"));
+        let required_fields = required_field_names(resolved);
+        for (field_name, field_schema) in properties {
+            let rust_name = rust_identifier(field_name);
+            let required = required_fields.iter().any(|required_name| required_name == field_name);
+            let field_type = json_schema_to_rust_type_in_context(spec, field_schema, required, Some(type_name), Some(field_name));
+            if rust_name != *field_name {
+                code.push_str(&format!("    #[serde(rename = \"{}\")]\n", field_name));
+            }
+            if !required {
+                code.push_str("    #[serde(default, skip_serializing_if = \"Option::is_none\")]\n");
+            }
+            code.push_str(&format!("    pub {rust_name}: {field_type},\n"));
+        }
+        code.push_str("}\n\n");
+    } else {
+        code.push_str(&format!("pub type {type_name} = {};\n\n", json_schema_to_rust_type(spec, resolved, true)));
+    }
+
+    Ok(())
+}
+
+fn generate_rust_dtos(code: &mut String, spec: &OpenRpcSpec, method: &OpenRpcMethod) -> Result<()> {
     let params_class = get_method_params_class_name(&method.name);
     let result_class = get_result_class_name(&method.name);
 
+    for param in &method.params {
+        emit_nested_object_types(code, spec, &params_class, &param.schema)?;
+    }
     code.push_str(&format!("/// Parameters for `{}`.\n", method.name));
     code.push_str("#[derive(Debug, Clone, Deserialize, JsonSchema)]\n");
     code.push_str(&format!("pub struct {params_class} {{\n"));
@@ -180,7 +216,8 @@ fn generate_rust_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
     } else {
         for param in &method.params {
             let field_name = rust_identifier(&param.name);
-            let field_type = json_schema_to_rust_type(&param.schema, param.required);
+            let field_type =
+                json_schema_to_rust_type_in_context(spec, &param.schema, param.required, Some(&params_class), Some(&param.name));
             if field_name != param.name {
                 code.push_str(&format!("    #[serde(rename = \"{}\")]\n", param.name));
             }
@@ -195,15 +232,20 @@ fn generate_rust_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
         code.push_str("}\n\n");
     }
 
+    let resolved_result = resolve_schema(spec, &method.result.schema);
+    emit_nested_object_types(code, spec, &result_class, resolved_result)?;
     code.push_str(&format!("/// Result payload for `{}`.\n", method.name));
-    code.push_str("#[derive(Debug, Clone, Serialize, JsonSchema)]\n");
-    code.push_str(&format!("pub struct {result_class} {{\n"));
-    if let Some(properties) = method.result.schema.get("properties").and_then(Value::as_object) {
-        let required_fields = required_field_names(&method.result.schema);
+    if let Some(ref_name) = schema_ref_name(&method.result.schema) {
+        code.push_str(&format!("pub type {result_class} = {};\n\n", ref_name.to_pascal_case()));
+    } else if let Some(properties) = resolved_result.get("properties").and_then(Value::as_object) {
+        code.push_str("#[derive(Debug, Clone, Serialize, JsonSchema)]\n");
+        code.push_str(&format!("pub struct {result_class} {{\n"));
+        let required_fields = required_field_names(resolved_result);
         for (field_name, field_schema) in properties {
             let rust_name = rust_identifier(field_name);
             let required = required_fields.iter().any(|required_name| required_name == field_name);
-            let field_type = json_schema_to_rust_type(field_schema, required);
+            let field_type =
+                json_schema_to_rust_type_in_context(spec, field_schema, required, Some(&result_class), Some(field_name));
             if rust_name != *field_name {
                 code.push_str(&format!("    #[serde(rename = \"{}\")]\n", field_name));
             }
@@ -214,11 +256,49 @@ fn generate_rust_dtos(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
         }
         code.push_str("}\n\n");
     } else {
-        code.push_str("    pub value: Value,\n");
-        code.push_str("}\n\n");
+        code.push_str(&format!("pub type {result_class} = {};\n\n", json_schema_to_rust_type(spec, resolved_result, true)));
     }
 
     Ok(())
+}
+
+fn emit_nested_object_types(code: &mut String, spec: &OpenRpcSpec, parent_name: &str, schema: &Value) -> Result<()> {
+    let resolved = resolve_schema(spec, schema);
+    if let Some(properties) = resolved.get("properties").and_then(Value::as_object) {
+        for (field_name, field_schema) in properties {
+            if schema_ref_name(field_schema).is_some() {
+                continue;
+            }
+
+            let nested_schema = resolve_schema(spec, field_schema);
+            if schema_has_named_object_shape(nested_schema) {
+                let nested_name = format!("{parent_name}{}", field_name.to_pascal_case());
+                generate_named_schema(code, spec, &nested_name, nested_schema)?;
+                continue;
+            }
+
+            if let Some(items) = nested_schema.get("items") {
+                let resolved_items = resolve_schema(spec, items);
+                if schema_ref_name(items).is_none() && schema_has_named_object_shape(resolved_items) {
+                    let nested_name = format!("{parent_name}{}Item", field_name.to_pascal_case());
+                    generate_named_schema(code, spec, &nested_name, resolved_items)?;
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn schema_has_named_object_shape(schema: &Value) -> bool {
+    schema
+        .get("type")
+        .and_then(Value::as_str)
+        .is_some_and(|schema_type| schema_type == "object")
+        && schema
+            .get("properties")
+            .and_then(Value::as_object)
+            .is_some_and(|properties| !properties.is_empty())
 }
 
 fn generate_rust_handler(code: &mut String, method: &OpenRpcMethod) -> Result<()> {
@@ -256,21 +336,62 @@ fn rust_identifier(name: &str) -> String {
     }
 }
 
-fn json_schema_to_rust_type(schema: &Value, required: bool) -> String {
-    let base_type = match schema.get("type").and_then(Value::as_str) {
-        Some("string") => "String".to_string(),
+fn json_schema_to_rust_type(spec: &OpenRpcSpec, schema: &Value, required: bool) -> String {
+    json_schema_to_rust_type_in_context(spec, schema, required, None, None)
+}
+
+fn json_schema_to_rust_type_in_context(
+    spec: &OpenRpcSpec,
+    schema: &Value,
+    required: bool,
+    parent_name: Option<&str>,
+    field_name: Option<&str>,
+) -> String {
+    if let Some(ref_name) = schema_ref_name(schema) {
+        let base_type = ref_name.to_pascal_case();
+        return if required {
+            base_type
+        } else {
+            format!("Option<{base_type}>")
+        };
+    }
+
+    let resolved = resolve_schema(spec, schema);
+    let base_type = match resolved.get("type").and_then(Value::as_str) {
+        Some("string") => match resolved.get("format").and_then(Value::as_str) {
+            Some("uuid") => "uuid::Uuid".to_string(),
+            Some("date-time") => "chrono::DateTime<chrono::Utc>".to_string(),
+            Some("date") => "chrono::NaiveDate".to_string(),
+            _ => "String".to_string(),
+        },
         Some("integer") => "i64".to_string(),
         Some("number") => "f64".to_string(),
         Some("boolean") => "bool".to_string(),
         Some("array") => {
-            let item_type = schema
+            let item_type = resolved
                 .get("items")
-                .map(|items| json_schema_to_rust_type(items, true))
+                .map(|items| {
+                    if let (Some(parent_name), Some(field_name)) = (parent_name, field_name) {
+                        if schema_ref_name(items).is_none() && schema_has_named_object_shape(resolve_schema(spec, items)) {
+                            return format!("{parent_name}{}Item", field_name.to_pascal_case());
+                        }
+                    }
+
+                    json_schema_to_rust_type_in_context(spec, items, true, None, None)
+                })
                 .unwrap_or_else(|| "Value".to_string());
             format!("Vec<{item_type}>")
         }
-        Some("object") => "Value".to_string(),
-        _ if schema.get("enum").is_some() => "String".to_string(),
+        Some("object") => {
+            if let (Some(parent_name), Some(field_name)) = (parent_name, field_name)
+                && schema_has_named_object_shape(resolved)
+            {
+                format!("{parent_name}{}", field_name.to_pascal_case())
+            } else {
+                "Value".to_string()
+            }
+        }
+        _ if resolved.get("enum").is_some() => "String".to_string(),
         _ => "Value".to_string(),
     };
 

@@ -337,7 +337,7 @@ end
                             parent_class_name
                                 .zip(field_name)
                                 .and_then(|(parent, field)| {
-                                    self.inline_array_item_model_name(parent, field, item_schema)
+                                    self.inline_array_item_model_name(parent, field, schema)
                                 })
                                 .as_deref(),
                         ),
@@ -445,7 +445,7 @@ end
                         item_schema,
                         parent_class_name
                             .zip(field_name)
-                            .and_then(|(parent, field)| self.inline_array_item_model_name(parent, field, item_schema))
+                            .and_then(|(parent, field)| self.inline_array_item_model_name(parent, field, schema))
                             .as_deref(),
                     ),
                     Some(ReferenceOr::Reference { reference }) => {

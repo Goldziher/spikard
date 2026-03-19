@@ -658,7 +658,7 @@ impl ElixirGenerator {
             .arg("-e")
             .arg(
                 r#"input = IO.read(:stdio, :all)
-IO.write(IO.iodata_to_binary(Code.format_string!(input)))"#,
+IO.write(IO.iodata_to_binary(Code.format_string!(input, line_length: 120)))"#,
             )
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

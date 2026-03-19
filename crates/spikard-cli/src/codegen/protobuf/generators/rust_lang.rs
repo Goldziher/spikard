@@ -6,7 +6,7 @@ use super::ProtobufGenerator;
 use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier};
 use crate::codegen::protobuf::spec_parser::{EnumDef, FieldLabel, MessageDef, ProtobufSchema, ServiceDef};
 use anyhow::Result;
-use heck::ToSnakeCase;
+use heck::{ToPascalCase, ToSnakeCase};
 
 /// Rust Protobuf code generator
 #[derive(Default, Debug, Clone, Copy)]
@@ -154,7 +154,7 @@ impl RustProtobufGenerator {
                 if let Some(description) = &value.description {
                     code.push_str(&format!("    /// {}\n", escape_string(description, "rust")));
                 }
-                code.push_str(&format!("    {} = {},\n", value.name, value.number));
+                code.push_str(&format!("    {} = {},\n", value.name.to_pascal_case(), value.number));
             }
         }
 

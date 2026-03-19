@@ -105,31 +105,15 @@ impl OpenRpcGenerator for TypeScriptOpenRpcGenerator {
         code.push_str("// Example Usage\n");
         code.push_str("// ============================================================================\n\n");
 
-        code.push_str("if (require.main === module) {\n");
-        code.push_str("  import('http').then(({ createServer }) => {\n");
-        code.push_str("    const server = createServer(async (req, res) => {\n");
-        code.push_str("      if (req.method === 'POST' && req.url === '/rpc') {\n");
-        code.push_str("        let body = '';\n");
-        code.push_str("        req.on('data', (chunk) => { body += chunk; });\n");
-        code.push_str("        req.on('end', async () => {\n");
-        code.push_str("          try {\n");
-        code.push_str("            const request = JSON.parse(body);\n");
-        code.push_str("            const response = await handleJsonRpcCall(request);\n");
-        code.push_str("            res.writeHead(200, { 'Content-Type': 'application/json' });\n");
-        code.push_str("            res.end(JSON.stringify(response));\n");
-        code.push_str("          } catch (e) {\n");
-        code.push_str("            res.writeHead(400);\n");
-        code.push_str("            res.end('Invalid request');\n");
-        code.push_str("          }\n");
-        code.push_str("        });\n");
-        code.push_str("      } else {\n");
-        code.push_str("        res.writeHead(404);\n");
-        code.push_str("        res.end('Not found');\n");
-        code.push_str("      }\n");
-        code.push_str("    });\n");
-        code.push_str("    server.listen(8000, () => console.log('Server running on port 8000'));\n");
-        code.push_str("  });\n");
-        code.push_str("}\n");
+        code.push_str("// Wire `handleJsonRpcCall` into your runtime or framework of choice.\n");
+        code.push_str("// Example:\n");
+        code.push_str("//   const response = await handleJsonRpcCall({\n");
+        code.push_str("//     jsonrpc: \"2.0\",\n");
+        code.push_str("//     method: \"example.method\",\n");
+        code.push_str("//     params: {},\n");
+        code.push_str("//     id: 1,\n");
+        code.push_str("//   });\n");
+        code.push_str("//   console.log(JSON.stringify(response));\n");
 
         Ok(code)
     }
@@ -145,23 +129,17 @@ fn generate_typescript_schemas(
 ) -> Result<()> {
     if !method.params.is_empty() {
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
-        code.push_str(&format!("const {schema_name} = z.object({{\n"));
-        for param in &method.params {
-            code.push_str(&format!("  {}: {},\n", param.name, json_schema_to_zod(&param.schema)));
-        }
-        code.push_str("});\n\n");
+        code.push_str(&format!(
+            "const {schema_name} = {};\n\n",
+            method_params_to_zod(&method.params)
+        ));
     }
 
     let result_schema_name = format!("{}ResultSchema", pascal_case(&method.name));
-    code.push_str(&format!("const {result_schema_name} = z.object({{\n"));
-    if let Some(properties) = method.result.schema.get("properties")
-        && let Some(props) = properties.as_object()
-    {
-        for (field_name, field_schema) in props {
-            code.push_str(&format!("  {}: {},\n", field_name, json_schema_to_zod(field_schema)));
-        }
-    }
-    code.push_str("});\n\n");
+    code.push_str(&format!(
+        "const {result_schema_name} = {};\n\n",
+        json_schema_to_zod(&method.result.schema)
+    ));
 
     Ok(())
 }
@@ -213,6 +191,7 @@ fn generate_typescript_handler(
     if !method.params.is_empty() {
         let schema_name = format!("{}ParamsSchema", pascal_case(&method.name));
         code.push_str(&format!("  const parsedParams = {schema_name}.parse(params);\n\n"));
+        code.push_str("  void parsedParams;\n\n");
     }
 
     // TODO comment
@@ -222,25 +201,31 @@ fn generate_typescript_handler(
     code.push_str("  // 2. Execute business logic\n");
     code.push_str("  // 3. Return result matching schema\n");
     code.push_str("  // 4. Throw appropriate JSON-RPC errors on failure\n\n");
-
-    code.push_str("  // Example return structure (update with real data):\n");
-    code.push_str("  const result: Record<string, unknown> = {};\n");
-    if let Some(properties) = method.result.schema.get("properties")
-        && let Some(props) = properties.as_object()
-    {
-        for field_name in props.keys().take(3) {
-            code.push_str(&format!("  result[\"{field_name}\"] = \"TODO\";\n"));
-        }
-    }
-    code.push_str("  return result as any; // TODO: type-safe return\n");
+    code.push_str("  throw new Error(\"TODO: Implement JSON-RPC method logic\");\n");
     code.push_str("}\n\n");
 
     Ok(())
 }
 
 fn json_schema_to_zod(schema: &Value) -> String {
+    if let Some(reference) = schema.get("$ref").and_then(Value::as_str) {
+        let ref_name = reference.split('/').next_back().unwrap_or(reference);
+        return format!("{}Schema", pascal_case(ref_name));
+    }
+
+    if let Some(enum_values) = schema.get("enum").and_then(Value::as_array) {
+        let literals = enum_values
+            .iter()
+            .filter_map(Value::as_str)
+            .map(|value| format!("{value:?}"))
+            .collect::<Vec<_>>();
+        if !literals.is_empty() {
+            return format!("z.enum([{}])", literals.join(", "));
+        }
+    }
+
     if let Some(type_str) = schema.get("type") {
-        match type_str.as_str() {
+        let mut zod_type = match type_str.as_str() {
             Some("string") => {
                 if let Some(format) = schema.get("format") {
                     match format.as_str() {
@@ -264,14 +249,58 @@ fn json_schema_to_zod(schema: &Value) -> String {
                     "z.array(z.unknown())".to_string()
                 }
             }
-            Some("object") => "z.record(z.unknown())".to_string(),
+            Some("object") => object_schema_to_zod(schema),
             _ => "z.unknown()".to_string(),
+        };
+
+        if schema.get("nullable").and_then(Value::as_bool).unwrap_or(false) {
+            zod_type.push_str(".nullable()");
         }
-    } else if schema.get("enum").is_some() {
-        "z.string()".to_string()
+
+        zod_type
     } else {
         "z.unknown()".to_string()
     }
+}
+
+fn method_params_to_zod(params: &[crate::codegen::openrpc::spec_parser::OpenRpcParam]) -> String {
+    let mut lines = String::from("z.object({\n");
+
+    for param in params {
+        let mut param_zod = json_schema_to_zod(&param.schema);
+        if !param.required {
+            param_zod.push_str(".optional()");
+        }
+        lines.push_str(&format!("  {}: {param_zod},\n", param.name));
+    }
+
+    lines.push_str("})");
+    lines
+}
+
+fn object_schema_to_zod(schema: &Value) -> String {
+    let Some(properties) = schema.get("properties").and_then(Value::as_object) else {
+        return "z.record(z.unknown())".to_string();
+    };
+
+    let required_fields = schema
+        .get("required")
+        .and_then(Value::as_array)
+        .map(|items| items.iter().filter_map(Value::as_str).collect::<Vec<_>>())
+        .unwrap_or_default();
+
+    let mut lines = String::from("z.object({\n");
+
+    for (field_name, field_schema) in properties {
+        let mut field_zod = json_schema_to_zod(field_schema);
+        if !required_fields.iter().any(|required| required == field_name) {
+            field_zod.push_str(".optional()");
+        }
+        lines.push_str(&format!("  {}: {field_zod},\n", field_name));
+    }
+
+    lines.push_str("})");
+    lines
 }
 
 fn pascal_case(input: &str) -> String {

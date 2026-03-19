@@ -3,7 +3,10 @@
 use super::NodeDtoStyle;
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
-use openapiv3::{OpenAPI, Operation, Parameter, ReferenceOr, Schema, SchemaKind, Type};
+use openapiv3::{
+    OpenAPI, Operation, Parameter, ParameterSchemaOrContent, ReferenceOr, Schema, SchemaKind, StringFormat, Type,
+    VariantOrUnknownOrEmpty,
+};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 pub struct TypeScriptGenerator {
@@ -141,29 +144,29 @@ import {{ z }} from "zod";
         }
     }
 
-    /// Extract Zod schema name from a schema reference or generate inline
-    fn extract_zod_schema_from_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
+    /// Extract TypeScript type from a schema reference or inline schema
+    fn extract_typescript_type_from_ref(&self, schema_ref: &ReferenceOr<Schema>) -> String {
         match schema_ref {
             ReferenceOr::Reference { reference } => {
                 let ref_name = reference.split('/').next_back().unwrap();
-                format!("{}Schema", ref_name.to_pascal_case())
+                ref_name.to_pascal_case()
             }
-            ReferenceOr::Item(schema) => Self::schema_to_zod_type(schema, false),
+            ReferenceOr::Item(schema) => Self::schema_to_typescript_type(schema, false),
         }
     }
 
-    /// Extract request body type from operation
-    fn extract_request_body_schema(&self, operation: &Operation) -> Option<String> {
+    /// Extract request body TypeScript type from operation
+    fn extract_request_body_type(&self, operation: &Operation) -> Option<String> {
         operation.request_body.as_ref().and_then(|body_ref| match body_ref {
             ReferenceOr::Item(request_body) => request_body.content.get("application/json").and_then(|media_type| {
                 media_type
                     .schema
                     .as_ref()
-                    .map(|schema_ref| self.extract_zod_schema_from_ref(schema_ref))
+                    .map(|schema_ref| self.extract_typescript_type_from_ref(schema_ref))
             }),
             ReferenceOr::Reference { reference } => {
                 let ref_name = reference.split('/').next_back().unwrap();
-                Some(format!("{}Schema", ref_name.to_pascal_case()))
+                Some(ref_name.to_pascal_case())
             }
         })
     }
@@ -200,7 +203,31 @@ import {{ z }} from "zod";
 
     fn schema_to_zod_type(schema: &Schema, optional: bool) -> String {
         let mut base_type = match &schema.schema_kind {
-            SchemaKind::Type(Type::String(_)) => "z.string()".to_string(),
+            SchemaKind::Type(Type::String(string_type)) => {
+                let enum_values = string_type
+                    .enumeration
+                    .iter()
+                    .flatten()
+                    .map(|value| format!("{value:?}"))
+                    .collect::<Vec<_>>();
+                if !enum_values.is_empty() {
+                    format!("z.enum([{}])", enum_values.join(", "))
+                } else {
+                    match &string_type.format {
+                        VariantOrUnknownOrEmpty::Item(StringFormat::Date) => "z.string()".to_string(),
+                        VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => {
+                            "z.string().datetime()".to_string()
+                        }
+                        VariantOrUnknownOrEmpty::Unknown(format) if format == "email" => {
+                            "z.string().email()".to_string()
+                        }
+                        VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => {
+                            "z.string().uuid()".to_string()
+                        }
+                        _ => "z.string()".to_string(),
+                    }
+                }
+            }
             SchemaKind::Type(Type::Number(_)) => "z.number()".to_string(),
             SchemaKind::Type(Type::Integer(_)) => "z.number().int()".to_string(),
             SchemaKind::Type(Type::Boolean(_)) => "z.boolean()".to_string(),
@@ -215,7 +242,76 @@ import {{ z }} from "zod";
                 };
                 format!("z.array({item_type})")
             }
-            SchemaKind::Type(Type::Object(_)) => "z.record(z.string(), z.unknown())".to_string(),
+            SchemaKind::Type(Type::Object(obj)) => {
+                if obj.properties.is_empty() {
+                    "z.record(z.string(), z.unknown())".to_string()
+                } else {
+                    let mut fields = String::from("z.object({\n");
+                    for (prop_name, prop_schema_ref) in &obj.properties {
+                        let is_required = obj.required.contains(prop_name);
+                        let field_name = prop_name.to_snake_case();
+                        let zod_type = match prop_schema_ref {
+                            ReferenceOr::Item(prop_schema) => Self::schema_to_zod_type(prop_schema, !is_required),
+                            ReferenceOr::Reference { reference } => {
+                                let ref_name = reference.split('/').next_back().unwrap();
+                                let ref_schema = format!("{}Schema", ref_name.to_pascal_case());
+                                if is_required {
+                                    ref_schema
+                                } else {
+                                    format!("{ref_schema}.optional()")
+                                }
+                            }
+                        };
+                        fields.push_str(&format!("\t{field_name}: {zod_type},\n"));
+                    }
+                    fields.push_str("})");
+                    fields
+                }
+            }
+            SchemaKind::OneOf { one_of } => {
+                let members = one_of
+                    .iter()
+                    .map(|schema_ref| match schema_ref {
+                        ReferenceOr::Item(item_schema) => Self::schema_to_zod_type(item_schema, false),
+                        ReferenceOr::Reference { reference } => {
+                            let ref_name = reference.split('/').next_back().unwrap();
+                            format!("{}Schema", ref_name.to_pascal_case())
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                format!("z.union([{}])", members.join(", "))
+            }
+            SchemaKind::AnyOf { any_of } => {
+                let members = any_of
+                    .iter()
+                    .map(|schema_ref| match schema_ref {
+                        ReferenceOr::Item(item_schema) => Self::schema_to_zod_type(item_schema, false),
+                        ReferenceOr::Reference { reference } => {
+                            let ref_name = reference.split('/').next_back().unwrap();
+                            format!("{}Schema", ref_name.to_pascal_case())
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                format!("z.union([{}])", members.join(", "))
+            }
+            SchemaKind::AllOf { all_of } => {
+                let members = all_of
+                    .iter()
+                    .map(|schema_ref| match schema_ref {
+                        ReferenceOr::Item(item_schema) => Self::schema_to_zod_type(item_schema, false),
+                        ReferenceOr::Reference { reference } => {
+                            let ref_name = reference.split('/').next_back().unwrap();
+                            format!("{}Schema", ref_name.to_pascal_case())
+                        }
+                    })
+                    .collect::<Vec<_>>();
+                match members.split_first() {
+                    Some((first, rest)) => rest
+                        .iter()
+                        .fold(first.clone(), |acc, member| format!("{acc}.and({member})")),
+                    None => "z.unknown()".to_string(),
+                }
+            }
             _ => "z.unknown()".to_string(),
         };
 
@@ -232,7 +328,19 @@ import {{ z }} from "zod";
 
     fn schema_to_typescript_type(schema: &Schema, optional: bool) -> String {
         let mut base_type = match &schema.schema_kind {
-            SchemaKind::Type(Type::String(_)) => "string".to_string(),
+            SchemaKind::Type(Type::String(string_type)) => {
+                let enum_values = string_type
+                    .enumeration
+                    .iter()
+                    .flatten()
+                    .map(|value| format!("{value:?}"))
+                    .collect::<Vec<_>>();
+                if enum_values.is_empty() {
+                    "string".to_string()
+                } else {
+                    enum_values.join(" | ")
+                }
+            }
             SchemaKind::Type(Type::Number(_) | Type::Integer(_)) => "number".to_string(),
             SchemaKind::Type(Type::Boolean(_)) => "boolean".to_string(),
             SchemaKind::Type(Type::Array(arr)) => {
@@ -244,9 +352,61 @@ import {{ z }} from "zod";
                     }
                     None => "Record<string, unknown>".to_string(),
                 };
+                let item_type = if item_type.contains(" | ") {
+                    format!("({item_type})")
+                } else {
+                    item_type
+                };
                 format!("{item_type}[]")
             }
-            SchemaKind::Type(Type::Object(_)) => "Record<string, unknown>".to_string(),
+            SchemaKind::Type(Type::Object(obj)) => {
+                if obj.properties.is_empty() {
+                    "Record<string, unknown>".to_string()
+                } else {
+                    let fields = obj
+                        .properties
+                        .iter()
+                        .map(|(prop_name, prop_schema_ref)| {
+                            let optional_marker = if obj.required.contains(prop_name) { "" } else { "?" };
+                            let prop_type = match prop_schema_ref {
+                                ReferenceOr::Item(prop_schema) => Self::schema_to_typescript_type(
+                                    prop_schema,
+                                    false,
+                                ),
+                                ReferenceOr::Reference { reference } => {
+                                    let ref_name = reference.split('/').next_back().unwrap();
+                                    ref_name.to_pascal_case()
+                                }
+                            };
+                            format!("{prop_name}{optional_marker}: {prop_type}")
+                        })
+                        .collect::<Vec<_>>()
+                        .join("; ");
+                    format!("{{ {fields} }}")
+                }
+            }
+            SchemaKind::OneOf { one_of } | SchemaKind::AnyOf { any_of: one_of } => one_of
+                .iter()
+                .map(|schema_ref| match schema_ref {
+                    ReferenceOr::Item(item_schema) => Self::schema_to_typescript_type(item_schema, false),
+                    ReferenceOr::Reference { reference } => {
+                        let ref_name = reference.split('/').next_back().unwrap();
+                        ref_name.to_pascal_case()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(" | "),
+            SchemaKind::AllOf { all_of } => all_of
+                .iter()
+                .map(|schema_ref| match schema_ref {
+                    ReferenceOr::Item(item_schema) => Self::schema_to_typescript_type(item_schema, false),
+                    ReferenceOr::Reference { reference } => {
+                        let ref_name = reference.split('/').next_back().unwrap();
+                        ref_name.to_pascal_case()
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(" & "),
             _ => "unknown".to_string(),
         };
 
@@ -321,10 +481,11 @@ import {{ z }} from "zod";
             if let ReferenceOr::Item(param) = param_ref {
                 match param {
                     Parameter::Path { parameter_data, .. } => {
-                        path_params.push((parameter_data.name.clone(), "string".to_string()));
+                        let type_hint = Self::parameter_typescript_type(parameter_data);
+                        path_params.push((parameter_data.name.clone(), type_hint));
                     }
                     Parameter::Query { parameter_data, .. } => {
-                        let type_hint = "string".to_string();
+                        let type_hint = Self::parameter_typescript_type(parameter_data);
                         query_params.push((parameter_data.name.clone(), type_hint, parameter_data.required));
                     }
                     _ => {}
@@ -332,7 +493,7 @@ import {{ z }} from "zod";
             }
         }
 
-        let body_schema = self.extract_request_body_schema(operation);
+        let body_type = self.extract_request_body_type(operation);
 
         let return_type = self.extract_response_type(operation);
 
@@ -354,12 +515,7 @@ import {{ z }} from "zod";
             }
         }
 
-        if let Some(body_schema_name) = &body_schema {
-            let body_type = if body_schema_name.ends_with("Schema") {
-                body_schema_name.strip_suffix("Schema").unwrap_or(body_schema_name)
-            } else {
-                body_schema_name.as_str()
-            };
+        if let Some(body_type) = &body_type {
             output.push_str(&format!(", _body: Body<{body_type}>"));
         }
 
@@ -388,6 +544,19 @@ import {{ z }} from "zod";
 // Note: Actual server setup depends on your runtime configuration
 "
         .to_string()
+    }
+
+    fn parameter_typescript_type(parameter_data: &openapiv3::ParameterData) -> String {
+        match &parameter_data.format {
+            ParameterSchemaOrContent::Schema(schema_ref) => match schema_ref {
+                ReferenceOr::Item(schema) => Self::schema_to_typescript_type(schema, false),
+                ReferenceOr::Reference { reference } => {
+                    let ref_name = reference.split('/').next_back().unwrap();
+                    ref_name.to_pascal_case()
+                }
+            },
+            ParameterSchemaOrContent::Content(_) => "unknown".to_string(),
+        }
     }
 }
 

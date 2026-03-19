@@ -1008,7 +1008,9 @@ impl PhpGenerator {
                             parent_class_name
                                 .zip(field_name)
                                 .and_then(|(parent, field)| {
-                                    self.inline_array_item_model_name(parent, field, item_schema)
+                                    self.inline_array_item_model_name(parent, field, schema).or_else(|| {
+                                        self.inline_array_item_enum_name(parent, field, schema)
+                                    })
                                 })
                                 .as_deref(),
                         ),

@@ -903,7 +903,7 @@ mod tests {
     #[test]
     fn test_service_file_header_and_imports() {
         let mut schema = create_test_schema("example.service");
-        let service = create_service("TestService", vec![("GetData", "Request", "Response", false, false)]);
+        let service = create_service("TestService", vec![("StreamData", "Request", "Response", false, true)]);
         schema.services.insert("TestService".to_string(), service);
 
         let generator = PythonProtobufGenerator;
@@ -929,6 +929,25 @@ mod tests {
         assert!(
             code.contains("from collections.abc import AsyncIterator"),
             "Must import AsyncIterator for streaming"
+        );
+    }
+
+    #[test]
+    fn test_service_file_header_omits_streaming_imports_for_unary_services() {
+        let mut schema = create_test_schema("example.service");
+        let service = create_service("TestService", vec![("GetData", "Request", "Response", false, false)]);
+        schema.services.insert("TestService".to_string(), service);
+
+        let generator = PythonProtobufGenerator;
+        let code = generator.generate_services(&schema).unwrap();
+
+        assert!(
+            !code.contains("from collections.abc import AsyncIterator"),
+            "Unary services should not import AsyncIterator"
+        );
+        assert!(
+            code.contains("if TYPE_CHECKING:"),
+            "Unary services should still guard grpc imports for lint cleanliness"
         );
     }
 

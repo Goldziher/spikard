@@ -342,6 +342,24 @@ fn test_python_generator_user_service_fixture_validates_with_quality_gates() {
 }
 
 #[test]
+fn test_python_generator_user_api_example_validates_with_quality_gates() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
+    let generator = PythonOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("Python OpenRPC generation should succeed for example schema");
+    let report = QualityValidator::new(TargetLanguage::Python)
+        .validate_all(&output)
+        .expect("Python OpenRPC validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Python OpenRPC code for example schema should validate cleanly: {report}"
+    );
+}
+
+#[test]
 fn test_python_generator_executable_imports() {
     let spec = single_method_spec("test");
     let generator = PythonOpenRpcGenerator;
@@ -361,6 +379,80 @@ fn test_rust_generator_emits_jsonrpc_router() {
     assert!(output.contains("pub async fn handle_user_get"));
     assert!(output.contains("pub async fn handle_jsonrpc_call"));
     assert!(output.contains("pub fn register_jsonrpc_route"));
+}
+
+#[test]
+fn test_rust_generator_resolves_component_refs_and_semantic_formats() {
+    let spec = user_service_spec();
+    let generator = RustOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(output.contains("pub struct User"));
+    assert!(output.contains("pub id: uuid::Uuid"));
+    assert!(output.contains("pub last_login_at: Option<chrono::DateTime<chrono::Utc>>"));
+    assert!(output.contains("pub created_at: Option<chrono::DateTime<chrono::Utc>>"));
+    assert!(output.contains("pub profile: Option<UserProfile>"));
+    assert!(output.contains("pub birth_date: Option<chrono::NaiveDate>"));
+    assert!(output.contains("pub type UsersGetByIdResult = User;"));
+    assert!(output.contains("pub user: CreateUserInput"));
+    assert!(!output.contains("pub type UsersGetByIdResult = Value;"));
+}
+
+#[test]
+fn test_rust_generator_user_service_fixture_validates_with_quality_gates() {
+    let spec = user_service_spec();
+    let generator = RustOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("Rust OpenRPC generation should succeed for user service fixture");
+    let report = QualityValidator::new(TargetLanguage::Rust)
+        .validate_all(&output)
+        .expect("Rust OpenRPC validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Rust OpenRPC code for user_service fixture should validate cleanly: {report}"
+    );
+}
+
+#[test]
+fn test_rust_generator_emits_named_nested_object_models_for_fixture_components() {
+    let spec = user_service_spec();
+    let generator = RustOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("Rust OpenRPC generation should succeed for user service fixture");
+
+    assert!(
+        output.contains("pub struct UserProfileSocialLinks"),
+        "component nested object fields should become named structs instead of Value"
+    );
+    assert!(
+        output.contains("pub social_links: Option<UserProfileSocialLinks>"),
+        "component fields should reference the generated nested struct"
+    );
+    assert!(
+        output.contains("pub struct UserProfilePreferences"),
+        "multiple nested object fields should emit their own named structs"
+    );
+    assert!(
+        output.contains("pub preferences: Option<UserProfilePreferences>"),
+        "component fields should stay strongly typed"
+    );
+}
+
+#[test]
+fn test_rust_generator_keeps_free_form_objects_as_value() {
+    let spec = user_service_spec();
+    let generator = RustOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("Rust OpenRPC generation should succeed for user service fixture");
+
+    assert!(
+        output.contains("pub metadata: Option<Value>"),
+        "free-form additionalProperties objects should remain Value instead of inventing a fake struct"
+    );
 }
 
 #[test]
@@ -475,6 +567,48 @@ fn test_typescript_generator_compiles() {
     assert!(output.contains("/**"), "Should have JSDoc comments");
     assert!(output.contains("type JSONRPCRequest"), "Should define JSON-RPC types");
     assert!(output.contains("type JSONRPCResponse"), "Should define response types");
+}
+
+#[test]
+fn test_typescript_generator_user_api_example_validates_with_quality_gates() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
+    let generator = TypeScriptOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).expect("TypeScript OpenRPC generation should succeed");
+    let report = QualityValidator::new(TargetLanguage::TypeScript)
+        .validate_all(&output)
+        .expect("TypeScript OpenRPC validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated TypeScript OpenRPC example code should validate cleanly: {report}"
+    );
+}
+
+#[test]
+fn test_typescript_generator_preserves_shaped_objects_and_optionality() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
+    let generator = TypeScriptOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("TypeScript OpenRPC generation should succeed for example schema");
+
+    assert!(output.contains("userData: z.object({"));
+    assert!(output.contains("role: z.enum([\"user\", \"admin\"]).optional()"));
+    assert!(output.contains("options: z.object({"));
+    assert!(output.contains("users: z.array(z.object({"));
+    assert!(output.contains("pagination: z.object({"));
+}
+
+#[test]
+fn test_typescript_generator_uses_unimplemented_stub_instead_of_any_result() {
+    let spec = single_method_spec("user.create");
+    let generator = TypeScriptOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(output.contains("throw new Error(\"TODO: Implement JSON-RPC method logic\");"));
+    assert!(!output.contains("return result as any"));
 }
 
 #[test]
@@ -809,6 +943,24 @@ fn test_ruby_generator_validates_with_quality_gates() {
 }
 
 #[test]
+fn test_ruby_generator_user_api_example_validates_with_quality_gates() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
+    let generator = RubyOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("Ruby OpenRPC generation should succeed for example schema");
+    let report = QualityValidator::new(TargetLanguage::Ruby)
+        .validate_all(&output)
+        .expect("Ruby OpenRPC validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Ruby OpenRPC code for example schema should validate cleanly: {report}"
+    );
+}
+
+#[test]
 fn test_elixir_generator_uses_spikard_router() {
     let spec = single_method_spec("user.get");
     let generator = ElixirOpenRpcGenerator;
@@ -910,6 +1062,63 @@ fn test_elixir_generator_resolves_component_refs_and_preserves_json_keys() {
             || output.contains("@type users_create_params :: %{required(:\"user\") => Types.create_user_input()}")
     );
     assert!(!output.contains("@type users_get_by_id_result :: term()"));
+}
+
+#[test]
+fn test_elixir_generator_omits_unused_types_alias_for_inline_methods() {
+    let mut spec = minimal_spec();
+    spec.components.schemas.insert(
+        "UnusedWidget".to_string(),
+        json!({
+            "type": "object",
+            "properties": {
+                "id": { "type": "string" }
+            }
+        }),
+    );
+    spec.methods = vec![OpenRpcMethod {
+        name: "widget.create".to_string(),
+        summary: Some("Create a widget".to_string()),
+        description: None,
+        params: vec![OpenRpcParam {
+            name: "name".to_string(),
+            description: None,
+            required: true,
+            schema: json!({ "type": "string" }),
+        }],
+        result: OpenRpcResult {
+            name: "widget".to_string(),
+            description: None,
+            schema: json!({
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" }
+                },
+                "required": ["id", "name"]
+            }),
+        },
+        errors: vec![],
+        examples: vec![],
+        tags: vec![],
+    }];
+
+    let generator = ElixirOpenRpcGenerator;
+    let output = generator.generate_handler_app(&spec).unwrap();
+
+    assert!(
+        !output.contains("alias TestApiJsonRpc.Types, as: Types"),
+        "Inline-only methods should not emit an unused Types alias"
+    );
+
+    let report = QualityValidator::new(TargetLanguage::Elixir)
+        .validate_all(&output)
+        .expect("Elixir OpenRPC validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Elixir OpenRPC code with unused component schemas should validate cleanly: {report}"
+    );
 }
 
 #[test]

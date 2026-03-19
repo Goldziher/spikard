@@ -66,9 +66,11 @@ fn test_rust_generate_enum_type() -> Result<()> {
 
     assert!(result.contains("async_graphql::Enum"), "Enum derive missing");
     assert!(result.contains("pub enum UserStatus"), "UserStatus enum not generated");
-    assert!(result.contains("ACTIVE"), "ACTIVE variant missing");
-    assert!(result.contains("INACTIVE"), "INACTIVE variant missing");
-    assert!(result.contains("PENDING"), "PENDING variant missing");
+    assert!(result.contains("#[graphql(name = \"ACTIVE\")]"), "ACTIVE GraphQL rename missing");
+    assert!(result.contains("#[serde(rename = \"ACTIVE\")]"), "ACTIVE serde rename missing");
+    assert!(result.contains("Active,"), "Active variant missing");
+    assert!(result.contains("Inactive,"), "Inactive variant missing");
+    assert!(result.contains("Pending,"), "Pending variant missing");
 
     Ok(())
 }
@@ -251,6 +253,11 @@ fn test_rust_generate_query_resolvers() -> Result<()> {
     assert!(result.contains("pub async fn user"), "user resolver missing");
     assert!(result.contains("pub async fn users"), "users resolver missing");
     assert!(result.contains("Result<"), "Result return type missing");
+    assert!(
+        result.contains("Err(async_graphql::Error::new(\"Implement query resolver for hello\"))"),
+        "query resolvers should use explicit error stubs instead of todo!()"
+    );
+    assert!(!result.contains("todo!("), "Rust GraphQL stubs should not panic with todo!()");
 
     Ok(())
 }
@@ -280,6 +287,11 @@ fn test_rust_generate_mutation_resolvers() -> Result<()> {
         result.contains("pub async fn update_user"),
         "updateUser resolver missing"
     );
+    assert!(
+        result.contains("Err(async_graphql::Error::new(\"Implement mutation resolver for createUser\"))"),
+        "mutation resolvers should use explicit error stubs instead of todo!()"
+    );
+    assert!(!result.contains("todo!("), "Rust GraphQL stubs should not panic with todo!()");
 
     Ok(())
 }
@@ -2174,6 +2186,57 @@ fn test_elixir_generated_graphql_with_subscription_validates() -> Result<()> {
     assert!(
         report.is_valid(),
         "generated Elixir GraphQL code should validate cleanly: {report}"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_elixir_generated_graphql_with_nested_input_types_validates() -> Result<()> {
+    let schema = r#"
+        interface Node {
+            id: ID!
+        }
+
+        enum Status {
+            ACTIVE
+            INACTIVE
+        }
+
+        input UserFilter {
+            search: String
+            limit: Int
+        }
+
+        type User implements Node {
+            id: ID!
+            name: String!
+            status: Status!
+        }
+
+        type Query {
+            hello: String!
+            user(id: ID!): User
+            users(filter: UserFilter): [User!]!
+        }
+
+        type Mutation {
+            createUser(name: String!, status: Status!): User!
+        }
+
+        type Subscription {
+            userCreated: User!
+        }
+    "#;
+
+    let result = generate_elixir_graphql(schema, "all")?;
+    let report = QualityValidator::new(TargetLanguage::Elixir)
+        .validate_all(&result)
+        .expect("Elixir GraphQL nested input validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Elixir GraphQL code with nested input types should validate cleanly: {report}"
     );
 
     Ok(())

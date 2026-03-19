@@ -590,6 +590,92 @@ fn typescript_nullable_properties_emit_nullable_optional_schemas() -> Result<()>
 }
 
 #[test]
+fn typescript_route_parameters_preserve_schema_types() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "typed_parameters.yaml", TYPED_PARAMETERS_OPENAPI);
+
+    let dto = DtoConfig {
+        node: NodeDtoStyle::Zod,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto)?;
+    assert!(
+        code.contains("_project_id: Path<number>"),
+        "integer path parameters should preserve number typing"
+    );
+    assert!(
+        code.contains("_status: Query<\"todo\" | \"in_progress\" | \"done\" | undefined>"),
+        "enum query parameters should preserve literal union typing"
+    );
+    assert!(
+        code.contains("_include_archived: Query<boolean | undefined>"),
+        "boolean query parameters should preserve boolean typing"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn typescript_openapi_auth_service_example_validates() -> Result<()> {
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+
+    let dto = DtoConfig {
+        node: NodeDtoStyle::Zod,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto)?;
+    let report = QualityValidator::new(TargetLanguage::TypeScript)
+        .validate_all(&code)
+        .expect("typescript openapi validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated TypeScript auth-service OpenAPI code should validate cleanly: {report}"
+    );
+    assert!(
+        !code.contains("Body<z."),
+        "route body generics should use TypeScript types, not zod expressions"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn typescript_openapi_auth_service_preserves_semantic_zod_and_union_bodies() -> Result<()> {
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+
+    let dto = DtoConfig {
+        node: NodeDtoStyle::Zod,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::TypeScript, &dto)?;
+
+    assert!(
+        code.contains("\tcreated_at: z.string().datetime(),"),
+        "date-time fields should emit semantic zod validators"
+    );
+    assert!(
+        code.contains("keys: z.array(z.object({"),
+        "shaped array item objects should remain shaped in zod schemas"
+    );
+    assert!(
+        code.contains("pagination: z.object({"),
+        "nested object properties should remain shaped in zod schemas"
+    );
+    assert!(
+        code.contains(
+            "Body<PasswordGrantRequest | ClientCredentialsGrantRequest | RefreshTokenGrantRequest>"
+        ),
+        "oneOf request bodies should preserve union types"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn ruby_generation_uses_dry_structs() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
@@ -802,6 +888,32 @@ fn ruby_openapi_generated_code_validates() -> Result<()> {
 }
 
 #[test]
+fn ruby_openapi_auth_service_example_validates() -> Result<()> {
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+
+    let dto = DtoConfig {
+        ruby: RubyDtoStyle::DrySchema,
+        ..Default::default()
+    };
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Ruby, &dto)?;
+    let report = QualityValidator::new(TargetLanguage::Ruby)
+        .validate_all(&code)
+        .expect("ruby openapi validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Ruby auth-service OpenAPI code should validate cleanly: {report}"
+    );
+    assert!(
+        code.contains("attribute :keys, Types::Strict::Array.of(Types.Instance(ApiKeyListResponseKeysItem))"),
+        "array-of-object properties should use generated named item models"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn elixir_openapi_generation_uses_spikard_router() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "inline_openapi.yaml", INLINE_OBJECT_OPENAPI);
@@ -942,6 +1054,104 @@ fn rust_generation_uses_spikard_app() -> Result<()> {
         code.contains("app.route(get(\"/hello\")"),
         "expected route registration using Spikard builder"
     );
+    Ok(())
+}
+
+#[test]
+fn rust_openapi_auth_service_preserves_named_inline_and_union_request_bodies() -> Result<()> {
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &DtoConfig::default())?;
+
+    assert!(
+        code.contains("pub struct GenerateApiKeyRequestBody"),
+        "inline object request bodies should generate named Rust structs"
+    );
+    assert!(
+        code.contains(".request_body::<GenerateApiKeyRequestBody>()"),
+        "route metadata should reference the generated inline request body struct"
+    );
+    assert!(
+        code.contains("pub enum IssueTokenRequestBody"),
+        "oneOf request bodies should generate a named untagged enum"
+    );
+    assert!(
+        code.contains("PasswordGrantRequest(PasswordGrantRequest)")
+            && code.contains("ClientCredentialsGrantRequest(ClientCredentialsGrantRequest)")
+            && code.contains("RefreshTokenGrantRequest(RefreshTokenGrantRequest)"),
+        "union body enum should preserve component-backed variants"
+    );
+    assert!(
+        code.contains(".request_body::<IssueTokenRequestBody>()"),
+        "route metadata should reference the generated union request body enum"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn rust_openapi_auth_service_generates_named_nested_component_models() -> Result<()> {
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &DtoConfig::default())?;
+
+    assert!(
+        code.contains("pub struct ApiKeyListResponseKeysItem"),
+        "array item objects should generate named nested Rust structs"
+    );
+    assert!(
+        code.contains("pub struct ApiKeyListResponsePagination"),
+        "nested object properties should generate named Rust structs"
+    );
+    assert!(
+        code.contains("pub keys: Option<Vec<ApiKeyListResponseKeysItem>>"),
+        "parent model should reference generated array item structs"
+    );
+    assert!(
+        code.contains("pub pagination: Option<ApiKeyListResponsePagination>"),
+        "parent model should reference generated nested object structs"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn rust_openapi_auth_service_example_validates() -> Result<()> {
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &DtoConfig::default())?;
+    let report = QualityValidator::new(TargetLanguage::Rust)
+        .validate_all(&code)
+        .expect("rust openapi validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Rust auth-service OpenAPI code should validate cleanly: {report}"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn rust_openapi_string_formats_use_semantic_types() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "string_formats_openapi.yaml", STRING_FORMATS_OPENAPI);
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &DtoConfig::default())?;
+
+    assert!(
+        code.contains("pub id: uuid::Uuid"),
+        "uuid schema fields should use uuid::Uuid"
+    );
+    assert!(
+        code.contains("pub starts_at: chrono::DateTime<chrono::Utc>"),
+        "date-time schema fields should use chrono::DateTime<Utc>"
+    );
+    assert!(
+        code.contains("pub event_date: chrono::NaiveDate"),
+        "date schema fields should use chrono::NaiveDate"
+    );
+
     Ok(())
 }
 
@@ -1091,7 +1301,7 @@ fn asyncapi_handler_generation_writes_rust_scaffold() -> Result<()> {
         CodegenOutcome::Files(_) => {
             let contents = fs::read_to_string(&output)?;
             assert!(
-                contents.contains("use spikard::{App, AppError, WebSocketHandler};"),
+                contents.contains("use spikard::{App, WebSocketHandler};"),
                 "expected WebSocket handler import in Rust scaffold"
             );
             assert!(

@@ -4,8 +4,10 @@ use super::RustDtoStyle;
 use crate::codegen::common::{TargetLanguage, sanitize_identifier_snake_case};
 use anyhow::Result;
 use heck::{ToPascalCase, ToSnakeCase};
-use openapiv3::{IntegerFormat, OpenAPI, Operation, ReferenceOr, Schema, SchemaKind, Type, VariantOrUnknownOrEmpty};
-use std::collections::BTreeSet;
+use openapiv3::{
+    IntegerFormat, OpenAPI, Operation, ReferenceOr, Schema, SchemaKind, StringFormat, Type, VariantOrUnknownOrEmpty,
+};
+use std::collections::{BTreeSet, HashSet};
 
 #[derive(Debug, Clone)]
 struct RustFieldSpec {
@@ -35,6 +37,7 @@ impl RustGenerator {
         output.push_str(&self.generate_header());
 
         output.push_str(&self.generate_models()?);
+        output.push_str(&self.generate_operation_models()?);
 
         let (handlers, registrations) = self.generate_handlers()?;
         output.push_str(&handlers);
@@ -120,18 +123,86 @@ use spikard::{{{}}};
         Ok(output)
     }
 
+    fn generate_operation_models(&self) -> Result<String> {
+        let mut output = String::new();
+        let mut emitted = HashSet::new();
+
+        for path_item_ref in self.spec.paths.paths.values() {
+            let ReferenceOr::Item(path_item) = path_item_ref else {
+                continue;
+            };
+
+            for operation in [
+                path_item.get.as_ref(),
+                path_item.post.as_ref(),
+                path_item.put.as_ref(),
+                path_item.delete.as_ref(),
+                path_item.patch.as_ref(),
+            ]
+            .into_iter()
+            .flatten()
+            {
+                if let Some((name, schema)) = self.request_body_inline_model(operation)
+                    && emitted.insert(name.clone())
+                {
+                    output.push_str(&self.generate_inline_operation_model(&name, schema)?);
+                    output.push('\n');
+                }
+
+                if let Some((name, schema)) = self.response_body_inline_model(operation)
+                    && emitted.insert(name.clone())
+                {
+                    output.push_str(&self.generate_inline_operation_model(&name, schema)?);
+                    output.push('\n');
+                }
+            }
+        }
+
+        Ok(output)
+    }
+
     fn generate_model_struct(&self, name: &str, schema: &Schema) -> Result<String> {
         let struct_name = name.to_pascal_case();
+        self.generate_named_struct_recursive(&struct_name, schema)
+    }
+
+    fn generate_named_struct_recursive(&self, struct_name: &str, schema: &Schema) -> Result<String> {
         let mut output = String::new();
+        let mut properties = Vec::new();
+        self.collect_object_properties(schema, &mut properties);
 
         if let Some(description) = &schema.schema_data.description {
             output.push_str(&render_doc_comment(description, 0));
         }
 
+        for (prop_name, prop_schema_ref, _required) in &properties {
+            match prop_schema_ref {
+                ReferenceOr::Item(prop_schema) => match &prop_schema.schema_kind {
+                    SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty() => {
+                        let nested_name = format!("{struct_name}{}", prop_name.to_pascal_case());
+                        output.push_str(&self.generate_named_struct_recursive(&nested_name, prop_schema)?);
+                        output.push('\n');
+                    }
+                    SchemaKind::Type(Type::Array(arr)) => {
+                        if let Some(ReferenceOr::Item(item_schema)) = &arr.items
+                            && let SchemaKind::Type(Type::Object(item_obj)) = &item_schema.schema_kind
+                            && !item_obj.properties.is_empty()
+                        {
+                            let nested_name = format!("{struct_name}{}Item", prop_name.to_pascal_case());
+                            output.push_str(&self.generate_named_struct_recursive(&nested_name, item_schema)?);
+                            output.push('\n');
+                        }
+                    }
+                    _ => {}
+                },
+                ReferenceOr::Reference { .. } => {}
+            }
+        }
+
         output.push_str("#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]\n");
         output.push_str(&format!("pub struct {struct_name} {{\n"));
 
-        let fields = self.collect_struct_fields(schema);
+        let fields = self.collect_struct_fields(struct_name, &properties);
         if fields.is_empty() {
             output.push_str("    // Empty struct\n");
         } else {
@@ -152,56 +223,90 @@ use spikard::{{{}}};
         Ok(output)
     }
 
-    fn collect_struct_fields(&self, schema: &Schema) -> Vec<RustFieldSpec> {
-        let mut fields = Vec::new();
-        self.collect_struct_fields_into(schema, &mut fields);
-        fields
-    }
-
-    fn collect_struct_fields_into(&self, schema: &Schema, fields: &mut Vec<RustFieldSpec>) {
+    fn collect_object_properties(
+        &self,
+        schema: &Schema,
+        properties: &mut Vec<(String, ReferenceOr<Box<Schema>>, bool)>,
+    ) {
         match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
                 for (prop_name, prop_schema_ref) in &obj.properties {
-                    if fields.iter().any(|field| field.original_name == *prop_name) {
+                    if properties.iter().any(|(existing_name, _, _)| existing_name == prop_name) {
                         continue;
                     }
-
-                    let is_required = obj.required.contains(prop_name);
-                    let field_name = sanitize_rust_identifier(prop_name);
-                    let type_hint = match prop_schema_ref {
-                        ReferenceOr::Item(prop_schema) => Self::schema_to_rust_type(prop_schema, !is_required),
-                        ReferenceOr::Reference { reference } => {
-                            let ref_name = reference.split('/').next_back().unwrap();
-                            let base_type = ref_name.to_pascal_case();
-                            if is_required {
-                                base_type
-                            } else {
-                                format!("Option<{base_type}>")
-                            }
-                        }
-                    };
-
-                    fields.push(RustFieldSpec {
-                        original_name: prop_name.clone(),
-                        field_name,
-                        type_hint,
-                        required: is_required,
-                    });
+                    properties.push((prop_name.clone(), prop_schema_ref.clone(), obj.required.contains(prop_name)));
                 }
             }
             SchemaKind::AllOf { all_of } => {
                 for schema_ref in all_of {
                     match schema_ref {
-                        ReferenceOr::Item(schema) => self.collect_struct_fields_into(schema, fields),
+                        ReferenceOr::Item(schema) => self.collect_object_properties(schema, properties),
                         ReferenceOr::Reference { reference } => {
                             if let Some(schema) = self.resolve_schema_reference(reference) {
-                                self.collect_struct_fields_into(schema, fields);
+                                self.collect_object_properties(schema, properties);
                             }
                         }
                     }
                 }
             }
             _ => {}
+        }
+    }
+
+    fn collect_struct_fields(
+        &self,
+        struct_name: &str,
+        properties: &[(String, ReferenceOr<Box<Schema>>, bool)],
+    ) -> Vec<RustFieldSpec> {
+        properties
+            .iter()
+            .map(|(prop_name, prop_schema_ref, is_required)| {
+                let field_name = sanitize_rust_identifier(prop_name);
+                let type_hint = match prop_schema_ref {
+                    ReferenceOr::Item(prop_schema) => self.inline_field_type(struct_name, prop_name, prop_schema, *is_required),
+                    ReferenceOr::Reference { reference } => {
+                        let ref_name = reference.split('/').next_back().unwrap();
+                        let base_type = ref_name.to_pascal_case();
+                        if *is_required {
+                            base_type
+                        } else {
+                            format!("Option<{base_type}>")
+                        }
+                    }
+                };
+
+                RustFieldSpec {
+                    original_name: prop_name.clone(),
+                    field_name,
+                    type_hint,
+                    required: *is_required,
+                }
+            })
+            .collect()
+    }
+
+    fn inline_field_type(&self, struct_name: &str, prop_name: &str, schema: &Schema, required: bool) -> String {
+        let base_type = match &schema.schema_kind {
+            SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty() => {
+                format!("{struct_name}{}", prop_name.to_pascal_case())
+            }
+            SchemaKind::Type(Type::Array(arr)) => {
+                if let Some(ReferenceOr::Item(item_schema)) = &arr.items
+                    && let SchemaKind::Type(Type::Object(item_obj)) = &item_schema.schema_kind
+                    && !item_obj.properties.is_empty()
+                {
+                    format!("Vec<{struct_name}{}Item>", prop_name.to_pascal_case())
+                } else {
+                    Self::schema_to_rust_type(schema, false)
+                }
+            }
+            _ => Self::schema_to_rust_type(schema, false),
+        };
+
+        if required {
+            base_type
+        } else {
+            format!("Option<{base_type}>")
         }
     }
 
@@ -233,10 +338,12 @@ use spikard::{{{}}};
     fn extract_request_body_type(&self, operation: &Operation) -> Option<String> {
         operation.request_body.as_ref().and_then(|body_ref| match body_ref {
             ReferenceOr::Item(request_body) => request_body.content.get("application/json").and_then(|media_type| {
-                media_type
-                    .schema
-                    .as_ref()
-                    .map(|schema_ref| self.extract_type_from_schema_ref(schema_ref))
+                media_type.schema.as_ref().map(|schema_ref| match schema_ref {
+                    ReferenceOr::Reference { .. } => self.extract_type_from_schema_ref(schema_ref),
+                    ReferenceOr::Item(schema) => self
+                        .request_body_inline_model(operation)
+                        .map_or_else(|| Self::schema_to_rust_type(schema, false), |(name, _)| name),
+                })
             }),
             ReferenceOr::Reference { reference } => {
                 let ref_name = reference.split('/').next_back().unwrap();
@@ -262,7 +369,12 @@ use spikard::{{{}}};
                     if let Some(content) = response.content.get("application/json")
                         && let Some(schema_ref) = &content.schema
                     {
-                        return Some(self.extract_type_from_schema_ref(schema_ref));
+                        return Some(match schema_ref {
+                            ReferenceOr::Reference { .. } => self.extract_type_from_schema_ref(schema_ref),
+                            ReferenceOr::Item(schema) => self
+                                .response_body_inline_model(operation)
+                                .map_or_else(|| Self::schema_to_rust_type(schema, false), |(name, _)| name),
+                        });
                     }
                 }
                 ReferenceOr::Reference { reference } => {
@@ -275,9 +387,98 @@ use spikard::{{{}}};
         None
     }
 
+    fn request_body_inline_model<'a>(&self, operation: &'a Operation) -> Option<(String, &'a Schema)> {
+        let operation_id = operation.operation_id.as_ref()?;
+        let body_ref = operation.request_body.as_ref()?;
+        let ReferenceOr::Item(request_body) = body_ref else {
+            return None;
+        };
+        let media_type = request_body.content.get("application/json")?;
+        let schema_ref = media_type.schema.as_ref()?;
+        let ReferenceOr::Item(schema) = schema_ref else {
+            return None;
+        };
+        if Self::schema_needs_named_inline_type(schema) {
+            Some((format!("{}RequestBody", operation_id.to_pascal_case()), schema))
+        } else {
+            None
+        }
+    }
+
+    fn response_body_inline_model<'a>(&self, operation: &'a Operation) -> Option<(String, &'a Schema)> {
+        use openapiv3::StatusCode;
+
+        let operation_id = operation.operation_id.as_ref()?;
+        let response_ref = operation
+            .responses
+            .responses
+            .get(&StatusCode::Code(200))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Code(201)))
+            .or_else(|| operation.responses.responses.get(&StatusCode::Range(2)))?;
+        let ReferenceOr::Item(response) = response_ref else {
+            return None;
+        };
+        let content = response.content.get("application/json")?;
+        let schema_ref = content.schema.as_ref()?;
+        let ReferenceOr::Item(schema) = schema_ref else {
+            return None;
+        };
+        if Self::schema_needs_named_inline_type(schema) {
+            Some((format!("{}ResponseBody", operation_id.to_pascal_case()), schema))
+        } else {
+            None
+        }
+    }
+
+    fn schema_needs_named_inline_type(schema: &Schema) -> bool {
+        matches!(
+            schema.schema_kind,
+            SchemaKind::Type(Type::Object(_))
+                | SchemaKind::AllOf { .. }
+                | SchemaKind::OneOf { .. }
+                | SchemaKind::AnyOf { .. }
+        )
+    }
+
+    fn generate_inline_operation_model(&self, name: &str, schema: &Schema) -> Result<String> {
+        match &schema.schema_kind {
+            SchemaKind::OneOf { one_of } | SchemaKind::AnyOf { any_of: one_of } => {
+                let mut output = String::new();
+                output.push_str("#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]\n");
+                output.push_str("#[serde(untagged)]\n");
+                output.push_str(&format!("pub enum {name} {{\n"));
+
+                for (index, variant) in one_of.iter().enumerate() {
+                    let (variant_name, variant_type) = match variant {
+                        ReferenceOr::Reference { reference } => {
+                            let ref_name = reference.split('/').next_back().unwrap();
+                            (ref_name.to_pascal_case(), ref_name.to_pascal_case())
+                        }
+                        ReferenceOr::Item(item_schema) => (
+                            format!("Variant{}", index + 1),
+                            Self::schema_to_rust_type(item_schema, false),
+                        ),
+                    };
+                    output.push_str(&format!("    {variant_name}({variant_type}),\n"));
+                }
+
+                output.push_str("}\n");
+                Ok(output)
+            }
+            _ => self.generate_model_struct(name, schema),
+        }
+    }
+
     fn schema_to_rust_type(schema: &Schema, optional: bool) -> String {
         let base_type = match &schema.schema_kind {
-            SchemaKind::Type(Type::String(_)) => "String".to_string(),
+            SchemaKind::Type(Type::String(string_type)) => match &string_type.format {
+                VariantOrUnknownOrEmpty::Item(StringFormat::Date) => "chrono::NaiveDate".to_string(),
+                VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => {
+                    "chrono::DateTime<chrono::Utc>".to_string()
+                }
+                VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => "uuid::Uuid".to_string(),
+                _ => "String".to_string(),
+            },
             SchemaKind::Type(Type::Number(_)) => "f64".to_string(),
             SchemaKind::Type(Type::Integer(int_type)) => match &int_type.format {
                 VariantOrUnknownOrEmpty::Item(IntegerFormat::Int32) => "i32".to_string(),
