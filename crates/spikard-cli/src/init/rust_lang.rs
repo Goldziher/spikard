@@ -14,6 +14,7 @@ impl ProjectScaffolder for RustScaffolder {
     #[allow(clippy::vec_init_then_push)]
     fn scaffold(&self, _project_dir: &Path, project_name: &str) -> Result<Vec<ScaffoldedFile>> {
         let kebab_name = Self::to_kebab_case(project_name);
+        let crate_name = kebab_name.replace('-', "_");
         let mut files = Vec::new();
 
         // Create Cargo.toml
@@ -21,9 +22,6 @@ impl ProjectScaffolder for RustScaffolder {
             PathBuf::from("Cargo.toml"),
             self.generate_cargo_toml(&kebab_name),
         ));
-
-        // Create an empty Cargo.lock scaffold
-        files.push(ScaffoldedFile::new(PathBuf::from("Cargo.lock"), String::new()));
 
         // Create src/main.rs
         files.push(ScaffoldedFile::new(
@@ -37,7 +35,7 @@ impl ProjectScaffolder for RustScaffolder {
         // Create tests/integration_test.rs
         files.push(ScaffoldedFile::new(
             PathBuf::from("tests/integration_test.rs"),
-            self.generate_integration_test(),
+            self.generate_integration_test(&crate_name),
         ));
 
         // Create .gitignore
@@ -58,7 +56,7 @@ impl ProjectScaffolder for RustScaffolder {
     fn next_steps(&self, project_name: &str) -> Vec<String> {
         vec![
             format!("cd {}", project_name),
-            "cargo build".to_string(),
+            "cargo test".to_string(),
             "cargo run".to_string(),
         ]
     }
@@ -83,19 +81,20 @@ impl RustScaffolder {
     }
 
     fn generate_cargo_toml(&self, kebab_name: &str) -> String {
+        let version = env!("CARGO_PKG_VERSION");
         format!(
             r#"[package]
 name = "{kebab_name}"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.75"
+rust-version = "1.85"
 authors = ["Your Name <you@example.com>"]
 license = "MIT"
 description = "A Spikard-powered HTTP application"
 repository = "https://github.com/yourusername/{kebab_name}"
 
 [dependencies]
-spikard-http = "0.6"
+spikard-http = "{version}"
 tokio = {{ version = "1", features = ["full"] }}
 serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"
@@ -193,32 +192,27 @@ mod tests {
         .to_string()
     }
 
-    fn generate_integration_test(&self) -> String {
-        r"//! Integration tests
+    fn generate_integration_test(&self, crate_name: &str) -> String {
+        format!(
+            r#"//! Integration tests
 //!
 //! Tests that verify the HTTP server and handlers work correctly.
 
-#[test]
-fn test_server_initialization() {
-    // Integration test example
-    // This would typically test the full HTTP stack
-    assert!(true);
-}
+use {crate_name}::health_handler;
 
 #[tokio::test]
-async fn test_health_endpoint() {
-    // You would start a test server here and make real HTTP requests
-    // Example using a test client
-    assert!(true);
-}
-"
-        .to_string()
+async fn test_health_handler_returns_expected_payload() {{
+    let response = health_handler().await.expect("health handler should succeed");
+    assert_eq!(response["status"], "healthy");
+    assert_eq!(response["message"], "Server is running");
+}}
+"#
+        )
     }
 
     fn generate_gitignore(&self) -> String {
         r"# Rust build artifacts
 /target/
-Cargo.lock
 
 # IDE
 .vscode/
@@ -376,7 +370,7 @@ mod tests {
 
         assert_eq!(steps.len(), 3);
         assert!(steps[0].contains("cd my-project"));
-        assert_eq!(steps[1], "cargo build");
+        assert_eq!(steps[1], "cargo test");
         assert_eq!(steps[2], "cargo run");
     }
 }

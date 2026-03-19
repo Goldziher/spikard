@@ -24,9 +24,6 @@ impl ProjectScaffolder for TypeScriptScaffolder {
             self.generate_package_json(&kebab_name),
         ));
 
-        // Create an empty pnpm-lock.yaml scaffold
-        files.push(ScaffoldedFile::new(PathBuf::from("pnpm-lock.yaml"), String::new()));
-
         // tsconfig.json
         files.push(ScaffoldedFile::new(
             PathBuf::from("tsconfig.json"),
@@ -54,6 +51,12 @@ impl ProjectScaffolder for TypeScriptScaffolder {
         // src/app.ts
         files.push(ScaffoldedFile::new(PathBuf::from("src/app.ts"), self.generate_app_ts()));
 
+        // src/server.ts
+        files.push(ScaffoldedFile::new(
+            PathBuf::from("src/server.ts"),
+            self.generate_server_ts(),
+        ));
+
         // tests/app.spec.ts
         files.push(ScaffoldedFile::new(
             PathBuf::from("tests/app.spec.ts"),
@@ -75,24 +78,25 @@ impl ProjectScaffolder for TypeScriptScaffolder {
 
 impl TypeScriptScaffolder {
     fn generate_package_json(&self, kebab_name: &str) -> String {
+        let version = env!("CARGO_PKG_VERSION");
         format!(
             r#"{{
 	"name": "{kebab_name}",
 	"version": "0.0.1",
 	"type": "module",
 	"description": "Spikard TypeScript application",
-	"main": "dist/app.js",
+	"main": "dist/server.js",
 	"scripts": {{
-		"dev": "tsx src/app.ts",
-		"start": "node dist/app.js",
+		"dev": "tsx src/server.ts",
+		"start": "node dist/server.js",
 		"build": "tsc",
 		"test": "vitest",
 		"test:run": "vitest run",
-		"lint": "biome lint src tests",
-		"format": "biome format src tests"
+		"lint": "biome check src tests",
+		"format": "biome format --write src tests"
 	}},
 	"dependencies": {{
-		"@spikard/node": "^0.6.0"
+		"@spikard/node": "^{version}"
 	}},
 	"devDependencies": {{
 		"@biomejs/biome": "^1.9.4",
@@ -102,7 +106,7 @@ impl TypeScriptScaffolder {
 		"vitest": "^1.0.0"
 	}},
 	"engines": {{
-		"node": ">=18"
+		"node": ">=20"
 	}}
 }}
 "#
@@ -172,7 +176,6 @@ export default defineConfig({
     fn generate_gitignore(&self) -> String {
         r"# Dependencies
 node_modules/
-pnpm-lock.yaml
 package-lock.json
 yarn.lock
 
@@ -214,7 +217,7 @@ A Spikard TypeScript application.
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20+
 - pnpm 10+
 
 ## Installation
@@ -294,7 +297,7 @@ pnpm format
 
 import { Spikard, get, post, type HandlerFunction } from '@spikard/node';
 
-const app = new Spikard();
+export const app = new Spikard();
 
 /**
  * Root endpoint - returns welcome message
@@ -339,6 +342,13 @@ const handleEcho: HandlerFunction = async (req) => {
 };
 post('/echo')(handleEcho);
 
+"
+        .to_string()
+    }
+
+    fn generate_server_ts(&self) -> String {
+        r"import { app } from './app';
+
 console.log('Starting Spikard TypeScript server on http://0.0.0.0:8000');
 console.log('Press Ctrl+C to stop\n');
 
@@ -348,32 +358,13 @@ app.run({ port: 8000, host: '0.0.0.0' });
     }
 
     fn generate_app_spec_ts(&self) -> String {
-        r"import { describe, it, expect } from 'vitest';
+        r"import { describe, expect, it } from 'vitest';
+import { app } from '../src/app';
 
 describe('Spikard App', () => {
-	it('should be importable', () => {
-		// Basic test to verify the app structure is valid
-		expect(true).toBe(true);
-	});
-
-	it('should define handler functions', () => {
-		// Test that handlers are properly defined
-		// Integration tests would test the actual HTTP behavior
-		expect(true).toBe(true);
-	});
-
-	describe('Health endpoint', () => {
-		it('should return health status', () => {
-			// Integration test for /health would go here
-			expect(true).toBe(true);
-		});
-	});
-
-	describe('Echo endpoint', () => {
-		it('should echo request body', () => {
-			// Integration test for /echo would go here
-			expect(true).toBe(true);
-		});
+	it('exports a configured app instance', () => {
+		expect(app).toBeDefined();
+		expect(typeof app.run).toBe('function');
 	});
 });
 "

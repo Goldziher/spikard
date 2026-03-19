@@ -25,6 +25,7 @@ impl PythonScaffolder {
 
     /// Generate pyproject.toml content
     fn generate_pyproject_toml(project_name: &str, _package_name: &str) -> String {
+        let version = env!("CARGO_PKG_VERSION");
         format!(
             r#"[project]
 name = "{project_name}"
@@ -32,33 +33,30 @@ version = "0.1.0"
 description = "A Spikard application"
 requires-python = ">=3.10"
 dependencies = [
-    "spikard>=0.6.0",
+    "spikard>={version}",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=8.0.0",
     "mypy>=1.8.0",
     "ruff>=0.3.0",
 ]
-
-[tool.uv.sources]
-spikard = {{ path = ".", editable = true }}
 "#
         )
     }
 
     /// Generate the main application module
-    fn generate_app_module(package_name: &str) -> String {
+    fn generate_app_module(_package_name: &str) -> String {
         format!(
             r#""""Main application module."""
-from spikard import App
+from spikard import ServerConfig, Spikard
 
-app = App()
+app = Spikard()
 
 @app.get("/health")
 async def health() -> dict[str, str]:
@@ -67,9 +65,7 @@ async def health() -> dict[str, str]:
 
 
 if __name__ == "__main__":
-    # Run the application
-    # For local development: uvicorn {package_name}.app:app --reload
-    pass
+    app.run(config=ServerConfig(host="127.0.0.1", port=8000))
 "#
         )
     }
@@ -138,7 +134,6 @@ env/
 *.swo
 *~
 .DS_Store
-uv.lock
 "
         .to_string()
     }
@@ -179,7 +174,7 @@ uv run pytest
 Run mypy to check types:
 
 ```bash
-uv run mypy {package_name}/
+uv run mypy src/{package_name}/
 ```
 
 ## Linting
@@ -187,8 +182,8 @@ uv run mypy {package_name}/
 Run ruff to lint code:
 
 ```bash
-uv run ruff check {package_name}/
-uv run ruff format {package_name}/
+uv run ruff check src/{package_name}/ tests/
+uv run ruff format src/{package_name}/ tests/
 ```
 
 ## Documentation
@@ -292,9 +287,10 @@ mod tests {
     #[test]
     fn test_pyproject_contains_spikard() {
         let content = PythonScaffolder::generate_pyproject_toml("test-app", "test_app");
-        assert!(content.contains("spikard>=0.6.0"));
+        assert!(content.contains("spikard>="));
         assert!(content.contains("pytest"));
         assert!(content.contains("mypy"));
+        assert!(!content.contains("[tool.uv.sources]"));
     }
 
     #[test]
@@ -303,5 +299,7 @@ mod tests {
         assert!(content.contains("@app.get(\"/health\")"));
         assert!(content.contains("status"));
         assert!(content.contains("ok"));
+        assert!(content.contains("Spikard()"));
+        assert!(content.contains("ServerConfig"));
     }
 }

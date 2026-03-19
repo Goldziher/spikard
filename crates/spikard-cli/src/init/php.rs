@@ -21,9 +21,6 @@ impl ProjectScaffolder for PhpScaffolder {
             self.generate_composer_json(project_name),
         ));
 
-        // Create an empty composer.lock scaffold
-        files.push(ScaffoldedFile::new(PathBuf::from("composer.lock"), String::new()));
-
         // Create phpstan.neon
         files.push(ScaffoldedFile::new(
             PathBuf::from("phpstan.neon"),
@@ -36,10 +33,16 @@ impl ProjectScaffolder for PhpScaffolder {
             self.generate_phpunit_xml(),
         ));
 
-        // Create src/App.php
+        // Create src/AppController.php
         files.push(ScaffoldedFile::new(
-            PathBuf::from("src/App.php"),
+            PathBuf::from("src/AppController.php"),
             self.generate_app_php(),
+        ));
+
+        // Create bin/server.php
+        files.push(ScaffoldedFile::new(
+            PathBuf::from("bin/server.php"),
+            self.generate_server_php(),
         ));
 
         // Create tests/AppTest.php
@@ -67,21 +70,23 @@ impl ProjectScaffolder for PhpScaffolder {
         vec![
             format!("cd {}", project_name),
             "composer install".to_string(),
-            "php src/App.php".to_string(),
+            "php bin/server.php".to_string(),
         ]
     }
 }
 
 impl PhpScaffolder {
     fn generate_composer_json(&self, project_name: &str) -> String {
+        let version = env!("CARGO_PKG_VERSION");
+        let package_name = project_name.replace('_', "-").to_lowercase();
         format!(
             r#"{{
-  "name": "{project_name}",
+  "name": "your-vendor/{package_name}",
   "description": "Spikard PHP application",
   "type": "project",
   "require": {{
     "php": "^8.2",
-    "spikard/spikard": "^0.6"
+    "spikard/spikard": "^{version}"
   }},
   "require-dev": {{
     "phpunit/phpunit": "^11.0",
@@ -103,7 +108,12 @@ impl PhpScaffolder {
       "email": "you@example.com"
     }}
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {{
+    "serve": "php bin/server.php",
+    "test": "vendor/bin/phpunit --configuration phpunit.xml",
+    "phpstan": "vendor/bin/phpstan analyse --configuration phpstan.neon"
+  }}
 }}
 "#
         )
@@ -157,9 +167,7 @@ declare(strict_types=1);
 
 namespace App;
 
-use Spikard\App;
 use Spikard\Attributes\Get;
-use Spikard\Config\ServerConfig;
 use Spikard\Http\Response;
 
 /**
@@ -185,6 +193,28 @@ final class AppController
         .to_string()
     }
 
+    fn generate_server_php(&self) -> String {
+        r#"<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use App\AppController;
+use Spikard\App;
+use Spikard\Config\ServerConfig;
+
+$config = new ServerConfig(port: 8000);
+$app = (new App($config))->registerController(new AppController());
+
+echo "Starting server on http://127.0.0.1:8000\n";
+echo "Press Ctrl+C to stop\n\n";
+
+$app->run();
+"#
+        .to_string()
+    }
+
     fn generate_app_test_php(&self) -> String {
         r"<?php
 
@@ -192,22 +222,21 @@ declare(strict_types=1);
 
 namespace App\Tests;
 
+use App\AppController;
 use PHPUnit\Framework\TestCase;
+use Spikard\Http\Response;
 
 /**
  * Tests for the main application
  */
 final class AppTest extends TestCase
 {
-    public function testApplicationCanBeCreated(): void
+    public function testControllerCreatesResponses(): void
     {
-        $this->assertTrue(true);
-    }
+        $controller = new AppController();
 
-    public function testHealthCheckEndpointExists(): void
-    {
-        // Integration test would go here
-        $this->assertTrue(true);
+        $this->assertInstanceOf(Response::class, $controller->health());
+        $this->assertInstanceOf(Response::class, $controller->index());
     }
 }
 "
@@ -217,7 +246,6 @@ final class AppTest extends TestCase
     fn generate_gitignore(&self) -> String {
         r"# Dependencies
 /vendor/
-composer.lock
 
 # IDE
 .vscode/
@@ -265,7 +293,7 @@ composer install
 ## Running the Application
 
 ```bash
-php src/App.php
+php bin/server.php
 ```
 
 The server will start on `http://127.0.0.1:8000`.
@@ -273,19 +301,19 @@ The server will start on `http://127.0.0.1:8000`.
 ## Testing
 
 ```bash
-composer run phpunit
+composer test
 ```
 
 ## Static Analysis
 
 ```bash
-composer run phpstan
+composer phpstan
 ```
 
 ## Next Steps
 
 1. Install dependencies: `composer install`
-2. Run the server: `php src/App.php`
+2. Run the server: `php bin/server.php`
 3. Make requests to `http://localhost:8000/health` to verify
 
 ## Documentation
@@ -306,9 +334,9 @@ mod tests {
         let scaffolder = PhpScaffolder;
         let content = scaffolder.generate_composer_json("test-app");
 
-        assert!(content.contains("\"test-app\""));
+        assert!(content.contains("\"your-vendor/test-app\""));
         assert!(content.contains("\"php\": \"^8.2\""));
-        assert!(content.contains("\"spikard/spikard\": \"^0.6\""));
+        assert!(content.contains("\"spikard/spikard\": \"^"));
         assert!(content.contains("\"psr-4\""));
     }
 
@@ -345,6 +373,6 @@ mod tests {
         assert_eq!(steps.len(), 3);
         assert!(steps[0].contains("cd my-project"));
         assert_eq!(steps[1], "composer install");
-        assert_eq!(steps[2], "php src/App.php");
+        assert_eq!(steps[2], "php bin/server.php");
     }
 }

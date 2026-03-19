@@ -124,8 +124,8 @@ fn test_init_python_app_module_content() -> anyhow::Result<()> {
     let content = std::fs::read_to_string(&app_path)?;
 
     // Verify app module contains required elements
-    assert!(content.contains("from spikard import App"));
-    assert!(content.contains("app = App()"));
+    assert!(content.contains("from spikard import ServerConfig, Spikard"));
+    assert!(content.contains("app = Spikard()"));
     assert!(content.contains("@app.get(\"/health\")"));
     assert!(content.contains("async def health"));
 
@@ -176,10 +176,10 @@ fn test_init_typescript_creates_all_files() -> anyhow::Result<()> {
     assert!(project_dir.join("package.json").exists());
     assert!(project_dir.join("tsconfig.json").exists());
     assert!(project_dir.join("vitest.config.ts").exists());
-    assert!(project_dir.join("pnpm-lock.yaml").exists());
     assert!(project_dir.join(".gitignore").exists());
     assert!(project_dir.join("README.md").exists());
     assert!(project_dir.join("src/app.ts").exists());
+    assert!(project_dir.join("src/server.ts").exists());
     assert!(project_dir.join("tests/app.spec.ts").exists());
 
     Ok(())
@@ -257,7 +257,8 @@ fn test_init_typescript_app_module_content() -> anyhow::Result<()> {
 
     // Verify app module structure
     assert!(content.contains("import"));
-    assert!(content.contains("app"));
+    assert!(content.contains("export const app = new Spikard()"));
+    assert!(!content.contains("app.run("));
 
     Ok(())
 }
@@ -327,11 +328,10 @@ fn test_init_rust_creates_all_files() -> anyhow::Result<()> {
     let response = InitEngine::execute(request)?;
 
     // Verify file count
-    assert!(response.files_created.len() >= 7);
+    assert!(response.files_created.len() >= 6);
 
     // Verify expected files exist
     assert!(project_dir.join("Cargo.toml").exists());
-    assert!(project_dir.join("Cargo.lock").exists());
     assert!(project_dir.join("src/main.rs").exists());
     assert!(project_dir.join("src/lib.rs").exists());
     assert!(project_dir.join("tests/integration_test.rs").exists());
@@ -433,7 +433,7 @@ fn test_init_rust_next_steps() -> anyhow::Result<()> {
     // Verify next steps
     assert!(response.next_steps.len() >= 3);
     assert!(response.next_steps[0].contains("cd rust_steps"));
-    assert!(response.next_steps.iter().any(|s| s.contains("cargo build")));
+    assert!(response.next_steps.iter().any(|s| s.contains("cargo test")));
     assert!(response.next_steps.iter().any(|s| s.contains("cargo run")));
 
     Ok(())
@@ -459,13 +459,13 @@ fn test_init_ruby_creates_all_files() -> anyhow::Result<()> {
 
     assert!(response.files_created.len() >= 10);
     assert!(project_dir.join("Gemfile").exists());
-    assert!(project_dir.join("Gemfile.lock").exists());
-    assert!(project_dir.join(".ruby-version").exists());
     assert!(project_dir.join(".gitignore").exists());
     assert!(project_dir.join("README.md").exists());
+    assert!(project_dir.join("bin/server").exists());
     assert!(project_dir.join("lib/my_api.rb").exists());
     assert!(project_dir.join("sig/my_api.rbs").exists());
     assert!(project_dir.join("spec/my_api_spec.rb").exists());
+    assert!(project_dir.join("spec/spec_helper.rb").exists());
     assert!(project_dir.join(".rspec").exists());
     assert!(project_dir.join("Rakefile").exists());
 
@@ -493,7 +493,7 @@ fn test_init_ruby_next_steps() -> anyhow::Result<()> {
         response
             .next_steps
             .iter()
-            .any(|s| s.contains("bundle exec ruby lib/ruby_steps.rb"))
+            .any(|s| s.contains("bundle exec ruby bin/server"))
     );
 
     Ok(())
@@ -522,10 +522,10 @@ fn test_init_php_creates_all_files() -> anyhow::Result<()> {
 
     // Verify expected files exist
     assert!(project_dir.join("composer.json").exists());
-    assert!(project_dir.join("composer.lock").exists());
     assert!(project_dir.join("phpstan.neon").exists());
     assert!(project_dir.join("phpunit.xml").exists());
-    assert!(project_dir.join("src/App.php").exists());
+    assert!(project_dir.join("src/AppController.php").exists());
+    assert!(project_dir.join("bin/server.php").exists());
     assert!(project_dir.join("tests/AppTest.php").exists());
     assert!(project_dir.join(".gitignore").exists());
     assert!(project_dir.join("README.md").exists());
@@ -576,13 +576,13 @@ fn test_init_php_app_class_content() -> anyhow::Result<()> {
 
     InitEngine::execute(request)?;
 
-    let app_php_path = project_dir.join("src/App.php");
+    let app_php_path = project_dir.join("src/AppController.php");
     let content = std::fs::read_to_string(&app_php_path)?;
 
     // Verify PHP file structure
     assert!(content.contains("<?php"));
     assert!(content.contains("declare(strict_types=1)"));
-    assert!(content.contains("class App"));
+    assert!(content.contains("final class AppController"));
 
     Ok(())
 }
@@ -605,6 +605,92 @@ fn test_init_php_next_steps() -> anyhow::Result<()> {
     assert!(response.next_steps.len() >= 2);
     assert!(response.next_steps[0].contains("cd php_steps"));
     assert!(response.next_steps.iter().any(|s| s.contains("composer")));
+    assert!(response.next_steps.iter().any(|s| s.contains("php bin/server.php")));
+
+    Ok(())
+}
+
+// ============================================================================
+// ELIXIR LANGUAGE SCAFFOLDER TESTS
+// ============================================================================
+
+#[test]
+fn test_init_elixir_creates_real_project_structure() -> anyhow::Result<()> {
+    let temp_dir = TempDir::new()?;
+    let project_dir = temp_dir.path().join("hello_elixir");
+
+    let request = InitRequest {
+        project_name: "hello_elixir".to_string(),
+        language: TargetLanguage::Elixir,
+        project_dir: project_dir.clone(),
+        schema_path: None,
+    };
+
+    let response = InitEngine::execute(request)?;
+
+    assert!(response.files_created.len() >= 7);
+    assert!(project_dir.join("mix.exs").exists());
+    assert!(project_dir.join(".formatter.exs").exists());
+    assert!(project_dir.join(".gitignore").exists());
+    assert!(project_dir.join("lib/hello_elixir.ex").exists());
+    assert!(project_dir.join("lib/hello_elixir/router.ex").exists());
+    assert!(project_dir.join("test/hello_elixir_test.exs").exists());
+    assert!(project_dir.join("test/test_helper.exs").exists());
+    assert!(project_dir.join("run.exs").exists());
+
+    Ok(())
+}
+
+#[test]
+fn test_init_elixir_creates_app_and_router_modules() -> anyhow::Result<()> {
+    let temp_dir = TempDir::new()?;
+    let project_dir = temp_dir.path().join("weather_service");
+
+    let request = InitRequest {
+        project_name: "weather_service".to_string(),
+        language: TargetLanguage::Elixir,
+        project_dir: project_dir.clone(),
+        schema_path: None,
+    };
+
+    InitEngine::execute(request)?;
+
+    let app_module = std::fs::read_to_string(project_dir.join("lib/weather_service.ex"))?;
+    let router_module = std::fs::read_to_string(project_dir.join("lib/weather_service/router.ex"))?;
+
+    assert!(app_module.contains("defmodule WeatherService do"));
+    assert!(app_module.contains("def start(opts \\\\ []) do"));
+    assert!(router_module.contains("defmodule WeatherService.Router do"));
+    assert!(router_module.contains("use Spikard.Router"));
+    assert!(router_module.contains("get(\"/health\", &health/1)"));
+
+    Ok(())
+}
+
+#[test]
+fn test_init_elixir_next_steps() -> anyhow::Result<()> {
+    let temp_dir = TempDir::new()?;
+    let project_dir = temp_dir.path().join("elixir_steps");
+
+    let request = InitRequest {
+        project_name: "elixir_steps".to_string(),
+        language: TargetLanguage::Elixir,
+        project_dir: project_dir.clone(),
+        schema_path: None,
+    };
+
+    let response = InitEngine::execute(request)?;
+
+    assert!(response.next_steps.len() >= 4);
+    assert!(response.next_steps[0].contains("cd elixir_steps"));
+    assert!(response.next_steps.iter().any(|s| s.contains("mix deps.get")));
+    assert!(response.next_steps.iter().any(|s| s.contains("mix test")));
+    assert!(
+        response
+            .next_steps
+            .iter()
+            .any(|s| s.contains("mix run --no-halt run.exs"))
+    );
 
     Ok(())
 }
@@ -839,7 +925,7 @@ fn test_init_all_languages_minimal_file_count() -> anyhow::Result<()> {
         schema_path: None,
     };
     let rs_response = InitEngine::execute(rs_request)?;
-    assert!(rs_response.files_created.len() >= 7);
+    assert!(rs_response.files_created.len() >= 6);
 
     // Test PHP
     let php_dir = temp_base.path().join("php_test");
@@ -851,6 +937,17 @@ fn test_init_all_languages_minimal_file_count() -> anyhow::Result<()> {
     };
     let php_response = InitEngine::execute(php_request)?;
     assert!(php_response.files_created.len() >= 8);
+
+    // Test Elixir
+    let ex_dir = temp_base.path().join("elixir_test");
+    let ex_request = InitRequest {
+        project_name: "elixir_test".to_string(),
+        language: TargetLanguage::Elixir,
+        project_dir: ex_dir,
+        schema_path: None,
+    };
+    let ex_response = InitEngine::execute(ex_request)?;
+    assert!(ex_response.files_created.len() >= 7);
 
     Ok(())
 }
