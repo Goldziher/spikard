@@ -22,10 +22,8 @@ impl ClientHandler for DummyClientHandler {
     }
 }
 
-async fn spawn_stdio_client() -> anyhow::Result<(
-    RunningService<RoleClient, DummyClientHandler>,
-    tokio::process::Child,
-)> {
+async fn spawn_stdio_client() -> anyhow::Result<(RunningService<RoleClient, DummyClientHandler>, tokio::process::Child)>
+{
     let mut child = TokioCommand::new(assert_cmd::cargo::cargo_bin!("spikard"))
         .arg("mcp")
         .stdin(Stdio::piped())
@@ -267,8 +265,16 @@ async fn spikard_mcp_stdio_init_project_creates_expected_structures_for_each_bin
         let project_dir = tmp.path().join(name);
 
         assert!(project_dir.exists(), "expected {} project root", language);
-        assert!(text.contains("\"files_created\""), "expected {} result payload", language);
-        assert!(text.contains("\"next_steps\""), "expected {} next_steps payload", language);
+        assert!(
+            text.contains("\"files_created\""),
+            "expected {} result payload",
+            language
+        );
+        assert!(
+            text.contains("\"next_steps\""),
+            "expected {} next_steps payload",
+            language
+        );
 
         for expected in expected_paths {
             assert!(

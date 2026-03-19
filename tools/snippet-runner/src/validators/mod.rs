@@ -144,4 +144,3 @@ impl WaitTimeout for std::process::Child {
         }
     }
 }
-

@@ -34,7 +34,11 @@ pub fn discover_snippets(dirs: &[PathBuf], language_filter: Option<&[Language]>)
         }
     }
 
-    snippets.sort_by(|left, right| left.path.cmp(&right.path).then(left.block_index.cmp(&right.block_index)));
+    snippets.sort_by(|left, right| {
+        left.path
+            .cmp(&right.path)
+            .then(left.block_index.cmp(&right.block_index))
+    });
     Ok(snippets)
 }
 

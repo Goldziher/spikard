@@ -111,4 +111,3 @@ fn truncate(value: &str, max: usize) -> String {
         format!("{}...", &value[..max.saturating_sub(3)])
     }
 }
-

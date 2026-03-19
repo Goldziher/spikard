@@ -134,4 +134,3 @@ fn validate_one(snippet: &Snippet, registry: &ValidatorRegistry, config: &Runner
         duration_ms,
     }
 }
-

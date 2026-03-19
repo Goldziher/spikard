@@ -157,7 +157,11 @@ impl SnippetValidator for PythonValidator {
         let snippet_path = dir.path().join("snippet.py");
         std::fs::write(&snippet_path, &code)?;
 
-        let python = if which::which("python3").is_ok() { "python3" } else { "python" };
+        let python = if which::which("python3").is_ok() {
+            "python3"
+        } else {
+            "python"
+        };
         let path = snippet_path.to_string_lossy().to_string();
 
         let mut command = match level {

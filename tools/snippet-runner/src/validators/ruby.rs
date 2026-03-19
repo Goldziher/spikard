@@ -59,4 +59,3 @@ impl SnippetValidator for RubyValidator {
 fn is_api_signature(code: &str) -> bool {
     code.lines().count() <= 3 && code.contains(" -> ")
 }
-

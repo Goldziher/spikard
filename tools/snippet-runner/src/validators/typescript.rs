@@ -126,10 +126,9 @@ impl SnippetValidator for TypeScriptValidator {
 
     fn is_dependency_error(&self, output: &str) -> bool {
         let patterns = [
-            "TS2307", "TS2304", "TS2305", "TS2306", "TS2322", "TS2345", "TS2339", "TS2351",
-            "TS2552", "TS2314", "TS2391", "TS2693", "TS7016", "TS2371", "TS2580", "TS1375",
-            "TS2792", "TS2503", "TS7006", "TS2769", "TS1128", "TS1005", "TS18046", "TS18047",
-            "TS2531", "TS2532", "TS2451",
+            "TS2307", "TS2304", "TS2305", "TS2306", "TS2322", "TS2345", "TS2339", "TS2351", "TS2552", "TS2314",
+            "TS2391", "TS2693", "TS7016", "TS2371", "TS2580", "TS1375", "TS2792", "TS2503", "TS7006", "TS2769",
+            "TS1128", "TS1005", "TS18046", "TS18047", "TS2531", "TS2532", "TS2451",
         ];
 
         let error_lines: Vec<&str> = output.lines().filter(|line| line.contains("error TS")).collect();

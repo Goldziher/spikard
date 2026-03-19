@@ -29,4 +29,3 @@ impl SnippetValidator for TomlValidator {
         ValidationLevel::Syntax
     }
 }
-

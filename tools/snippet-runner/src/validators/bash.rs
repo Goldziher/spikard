@@ -51,4 +51,3 @@ impl SnippetValidator for BashValidator {
         ValidationLevel::Run
     }
 }
-
