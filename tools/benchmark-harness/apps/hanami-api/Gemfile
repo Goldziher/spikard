@@ -18,4 +18,4 @@ gem 'rack', '~> 3.2'
 gem 'rackup', '~> 2.2'
 
 # JSON - Standard library JSON support
-gem 'json', '~> 2.9'
+gem 'json', '~> 2.19'
