@@ -63,7 +63,15 @@ tasks:
   readme:validate:
     desc: "Validate that generated READMEs match templates"
     cmds:
-      - python3 scripts/generate_readme.py --validate
+      - uv run python scripts/generate_readme.py --validate
+  docs:snippets:list:
+    desc: "List all discovered documentation snippets"
+    cmds:
+      - cargo run --package snippet-runner -- list --snippets docs
+  docs:snippets:validate:
+    desc: "Validate documentation snippets at syntax level"
+    cmds:
+      - cargo run --package snippet-runner -- validate --snippets docs --level syntax
   build:
     desc: "Build Rust core and language bindings"
     cmds:
@@ -250,6 +258,7 @@ tasks:
   docs:build:
     desc: "Build documentation"
     cmds:
+      - task: docs:snippets:validate
       - uv run mkdocs build --clean --strict
   docs:serve:
     desc: "Serve documentation locally"

@@ -1,0 +1,69 @@
+<!-- GENERATED FILE — DO NOT EDIT DIRECTLY. Run: task readme:generate -->
+
+# {{ title }}
+
+{% include 'partials/badges.md.jinja' %}
+
+{{ description }}
+
+{% include 'partials/features.md.jinja' %}
+
+## Supported Languages
+
+| Language | Runtime / Toolchain | Package Manager |
+|----------|---------------------|-----------------|
+{% for binding in supported_languages %}
+| {{ binding.name }} | {{ binding.version }} | {{ binding.package_manager }} |
+{% endfor %}
+
+## Installation
+
+```bash
+{{ install_command }}
+```
+
+## Quick Start
+
+{{ quick_start_content }}
+{% if mcp_content %}
+
+## MCP
+
+{{ mcp_content }}
+{% endif %}
+
+## Code Generation Support
+
+| Format | Generated Targets |
+|--------|-------------------|
+{% for entry in codegen_matrix %}
+| {{ entry.format }} | {{ entry.languages }} |
+{% endfor %}
+
+All generated output is validated before write-out, and `spikard init` starter projects now produce real, idiomatic project layouts for every supported binding.
+{% if benchmark_data %}
+
+{% include 'partials/performance.md.jinja' %}
+{% endif %}
+{% if development_content %}
+
+## Development
+
+{{ development_content }}
+{% endif %}
+{% if readme_links %}
+
+## Related READMEs
+
+{% for entry in readme_links %}
+- [{{ entry.title }}]({{ entry.path }}) - {{ entry.description }}
+{% endfor %}
+{% endif %}
+
+## Documentation
+
+- [spikard.dev]({{ project.docs_url }})
+- [Examples](examples/README.md)
+- [Schema fixtures](examples/schemas/README.md)
+
+{% include 'partials/footer.md.jinja' %}

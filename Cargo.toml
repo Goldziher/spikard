@@ -15,6 +15,7 @@ members = [
   "crates/spikard-rb",
   "crates/spikard-rb-macros",
   "tools/benchmark-harness",
+  "tools/snippet-runner",
 ]
 exclude = ["e2e/*", "examples/*", "tests/test_apps/*", "tools/test-generator"]
 

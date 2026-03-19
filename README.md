@@ -1,239 +1,162 @@
+<!-- GENERATED FILE — DO NOT EDIT DIRECTLY. Run: task readme:generate -->
+
 # Spikard
 
-A Rust-centric multi-language toolkit for building and validating typed web services. Generate type-safe API handlers from OpenAPI, GraphQL, gRPC/Protobuf, AsyncAPI, or JSON-RPC specifications and deploy to Python, TypeScript, Ruby, PHP, or Elixir.
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
+  <a href="https://spikard.dev">
+    <img src="https://img.shields.io/badge/docs-spikard.dev-007ec6" alt="Documentation">
+  </a>
+  <a href="https://crates.io/crates/spikard">
+    <img src="https://img.shields.io/crates/v/spikard.svg?color=007ec6" alt="Crates.io">
+  </a>
+  <a href="https://pypi.org/project/spikard/">
+    <img src="https://img.shields.io/pypi/v/spikard.svg?color=007ec6" alt="PyPI">
+  </a>
+  <a href="https://www.npmjs.com/package/@spikard/node">
+    <img src="https://img.shields.io/npm/v/@spikard/node.svg?color=007ec6" alt="npm">
+  </a>
+  <a href="https://rubygems.org/gems/spikard">
+    <img src="https://img.shields.io/gem/v/spikard.svg?color=007ec6" alt="RubyGems">
+  </a>
+  <a href="https://packagist.org/packages/spikard/spikard">
+    <img src="https://img.shields.io/packagist/v/spikard/spikard.svg?color=007ec6" alt="Packagist">
+  </a>
+  <a href="https://hex.pm/packages/spikard">
+    <img src="https://img.shields.io/hexpm/v/spikard.svg?color=007ec6" alt="Hex.pm">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-007ec6" alt="License">
+  </a>
+</div>
 
-[![Documentation](https://img.shields.io/badge/docs-spikard.dev-007ec6)](https://spikard.dev)
-[![Crates.io](https://img.shields.io/crates/v/spikard.svg?color=007ec6)](https://crates.io/crates/spikard)
-[![PyPI](https://img.shields.io/pypi/v/spikard.svg?color=007ec6)](https://pypi.org/project/spikard/)
-[![npm](https://img.shields.io/npm/v/@spikard/node.svg?color=007ec6)](https://www.npmjs.com/package/@spikard/node)
-[![Gem](https://img.shields.io/gem/v/spikard.svg?color=007ec6)](https://rubygems.org/gems/spikard)
-[![Packagist](https://img.shields.io/packagist/v/spikard/spikard.svg?color=007ec6)](https://packagist.org/packages/spikard/spikard)
-[![Hex.pm](https://img.shields.io/hexpm/v/spikard.svg?color=007ec6)](https://hex.pm/packages/spikard)
-[![License](https://img.shields.io/badge/license-MIT-007ec6.svg)](LICENSE)
+Rust-centric, codegen-first framework for building typed web services and generating idiomatic server scaffolds for Python, TypeScript, Rust, Ruby, PHP, and Elixir.
 
 ## Features
-
-- **Multi-Language Code Generation**: Generate type-safe handlers from OpenAPI 3.0.x, GraphQL SDL, gRPC/Protobuf, AsyncAPI 3.0.0, or OpenRPC 1.x specifications
-- **Project Scaffolding**: `spikard init` bootstraps starter projects with language-specific tooling
-- **Automatic Quality Validation**: Syntax, type checking, and linting automatically applied to generated code
-- **Zero-Copy Bindings**: Performance-optimized FFI layers (PyO3, napi-rs, magnus, ext-php-rs, Rustler)
-- **Tower-HTTP Runtime**: Complete HTTP/gRPC server with compression, rate limiting, authentication, and CORS
-- **Fixture-Driven Testing**: Comprehensive test coverage with JSON-based fixtures
+- **Codegen-first CLI** for OpenAPI 3.1, AsyncAPI 3.0, OpenRPC/JSON-RPC, GraphQL, and Protobuf/gRPC
+- **Agent-friendly MCP server** with CLI-equivalent project init and code generation tools
+- **Real starter projects** via `spikard init` for Python, TypeScript, Rust, Ruby, PHP, and Elixir
+- **Shared Rust runtime** with Tower HTTP middleware, WebSockets, SSE, and gRPC support
+- **Quality-validated output** with formatter, syntax, and lint/type checks for generated code
 
 ## Supported Languages
 
-| Language | Version | Package Manager |
-|----------|---------|-----------------|
+| Language | Runtime / Toolchain | Package Manager |
+|----------|---------------------|-----------------|
+| Rust | 1.85+ | cargo |
 | Python | 3.10+ | pip / uv |
 | TypeScript | 5.x | npm / pnpm / yarn |
-| Ruby | 3.2+ | bundler |
-| PHP | 8.2+ | Composer |
-| Elixir | 1.18+ | mix / hex |
-| Rust | 2024 | cargo |
+| Ruby | 3.2+ | gem / bundler |
+| PHP | 8.2+ | composer |
+| Elixir | 1.18+ / OTP 27+ | mix / hex |
 
-## Quick Start
-
-### Installation
+## Installation
 
 ```bash
 cargo install spikard-cli
 ```
 
-### Create a New Project
+## Quick Start
+
+Install the CLI, scaffold a real project, and generate typed handlers:
 
 ```bash
-spikard init --name my_api --language python
+spikard init my_api --lang python --dir .
 cd my_api
 uv sync
-python -m my_api.app
+uv run python -m my_api.app
 ```
 
-### Generate Handlers from Specification
+Generate code from a schema with the current command surface:
 
 ```bash
-# From OpenAPI
-spikard codegen --spec openapi.json --language python --output ./generated
+# OpenAPI 3.1
+spikard generate openapi examples/schemas/auth-service.openapi.yaml --lang python --output ./generated.py
 
-# From GraphQL schema
-spikard codegen --spec schema.graphql --language typescript --output ./src/generated
+# GraphQL
+spikard generate graphql examples/schemas/social.graphql --lang typescript --output ./src/generated.ts
 
-# From Protobuf schema
-spikard codegen --spec user_service.proto --language python --output ./generated
+# Protobuf / gRPC
+spikard generate protobuf examples/schemas/user-service.proto --lang rust --output ./src/generated.rs
 ```
 
-See [Init Command Guide](docs/getting-started/init-command.md) for detailed options.
+## MCP
 
-## Code Examples
+The CLI ships with an MCP server by default, exposing the same init and code generation surface over stdio:
 
-Generated handler patterns vary by language. See [examples/](examples/) for complete runnable projects.
-
-**Python:**
-```python
-from spikard import Spikard
-from spikard.config import ServerConfig
-
-app = Spikard()
-
-@app.get("/users/{user_id}")
-async def get_user(user_id: int) -> dict:
-    return {"id": user_id, "name": "Alice"}
-
-if __name__ == "__main__":
-    app.run(config=ServerConfig(port=8000))
+```bash
+spikard mcp
 ```
 
-**TypeScript:**
-```typescript
-import { Spikard, type Request } from "@spikard/node";
+That MCP surface includes `init_project`, `generate_openapi`, `generate_asyncapi_handlers`, `generate_jsonrpc`, `generate_graphql`, `generate_protobuf`, `generate_asyncapi_fixtures`, `generate_asyncapi_test_app`, `generate_asyncapi_bundle`, `validate_asyncapi`, and `get_features`.
 
-const app = new Spikard();
+For HTTP transport, build or install with the `mcp-http` feature and run:
 
-const getUser = async (req: Request) => {
-    return { id: req.params["userId"], name: "Alice" };
-};
-
-app.addRoute(
-    { method: "GET", path: "/users/:userId", handler_name: "getUser", is_async: true },
-    getUser
-);
-
-app.run({ port: 8000 });
+```bash
+cargo run -p spikard-cli --features mcp-http -- mcp --transport http --host 127.0.0.1 --port 3001
 ```
-
-**Ruby:**
-```ruby
-require "spikard"
-
-app = Spikard::App.new
-
-app.get "/users/:user_id" do |user_id:|
-  { id: user_id, name: "Alice" }
-end
-
-app.run(config: { port: 8000 })
-```
-
-**PHP:**
-```php
-use Spikard\App;
-use Spikard\Attributes\Get;
-
-class UserController {
-    #[Get('/users/{userId}')]
-    public function getUser(int $userId): array {
-        return ['id' => $userId, 'name' => 'Alice'];
-    }
-}
-
-$app = new App();
-$app->registerController(new UserController());
-$app->run();
-```
-
-**Elixir:**
-```elixir
-defmodule MyApp.Router do
-  use Spikard.Router
-
-  get "/users/:user_id", &get_user/1
-
-  defp get_user(request) do
-    user_id = Spikard.Request.get_path_param(request, "user_id")
-    Spikard.Response.json(%{id: user_id, name: "Alice"})
-  end
-end
-
-{:ok, _server} = Spikard.start(MyApp.Router, port: 8000)
-```
-
-## Benchmarks
-
-Average throughput across 34 workloads (JSON bodies, path/query params, multipart, urlencoded) at 100 concurrency. [Full results](docs/benchmarks/results.md) | [Methodology](docs/benchmarks/methodology.md)
-
-| Rank | Framework | Language | Avg RPS | P50 (ms) | P99 (ms) |
-|------|-----------|----------|--------:|----------:|----------:|
-| 1 | **spikard-rust** | Rust | 64,516 | 1.43 | 3.93 |
-| 2 | **spikard-bun** | Node | 49,460 | 2.18 | 4.21 |
-| 3 | **spikard-node** | Node | 46,160 | 2.18 | 3.35 |
-| 4 | trongate | PHP | 45,339 | 3.81 | 7.10 |
-| 5 | elysia | Node | 44,326 | 2.41 | 4.68 |
-| 6 | kito | Node | 36,958 | 4.94 | 12.86 |
-| 7 | fastify | Node | 19,167 | 6.74 | 14.76 |
-| 8 | **spikard-php** | PHP | 16,942 | 5.82 | 9.10 |
-| 9 | morojs | Node | 14,196 | 6.44 | 12.61 |
-| 10 | **spikard-python** | Python | 12,623 | 5.55 | 38.39 |
-| 11 | phalcon | PHP | 12,367 | 10.17 | 17.20 |
-| 12 | hono | Node | 10,928 | 10.91 | 18.62 |
-| 13 | litestar | Python | 8,032 | 14.62 | 19.18 |
-| 14 | **spikard-ruby** | Ruby | 7,151 | 14.62 | 18.98 |
-| 15 | fastapi | Python | 6,418 | 16.43 | 21.72 |
-| 16 | robyn | Python | 6,012 | 16.85 | 24.18 |
-| 17 | roda | Ruby | 5,038 | 26.89 | 35.61 |
-| 18 | hanami-api | Ruby | 5,032 | 76.10 | 414.35 |
-
-<details>
-<summary>Throughput leaderboard chart</summary>
-
-![Throughput Leaderboard](docs/assets/benchmarks/01-throughput-leaderboard.svg)
-</details>
 
 ## Code Generation Support
 
-Spikard generates type-safe handlers from multiple API specifications:
+| Format | Generated Targets |
+|--------|-------------------|
+| OpenAPI 3.1 | Python, TypeScript, Rust, Ruby, PHP, Elixir |
+| AsyncAPI 3.0 | Python, TypeScript, Rust, Ruby, PHP, Elixir |
+| OpenRPC / JSON-RPC | Python, TypeScript, Rust, Ruby, PHP, Elixir |
+| GraphQL SDL / introspection | Python, TypeScript, Rust, Ruby, PHP, Elixir |
+| Protobuf / gRPC | Python, TypeScript, Rust, Ruby, PHP, Elixir |
 
-| Format | Support | Languages |
-|--------|---------|-----------|
-| OpenAPI 3.0.x | ✅ | Python, TypeScript, Ruby, PHP |
-| GraphQL SDL | ✅ | Python, TypeScript, Ruby, PHP, Rust |
-| gRPC/Protobuf | ✅ | Python, TypeScript, Ruby, PHP, Rust |
-| AsyncAPI 3.0.0 | ✅ | Python, TypeScript, Ruby, PHP |
-| OpenRPC 1.x | ✅ | Python, TypeScript, Ruby, PHP |
+All generated output is validated before write-out, and `spikard init` starter projects now produce real, idiomatic project layouts for every supported binding.
 
-All generated code is automatically validated for syntax, types, and style before output.
+## Performance
+
+Benchmarked across 34 workloads at 100 concurrency ([methodology](docs/benchmarks/methodology.md)):
+
+| Framework | Avg RPS | P50 (ms) | P99 (ms) |
+|-----------|--------:|----------:|----------:|
+| **spikard-rust** | 64,516 | 1.43 | 3.93 |
+| spikard-bun | 49,460 | 2.18 | 4.21 |
+| spikard-node | 46,160 | 2.18 | 3.35 |
+| spikard-php | 16,942 | 5.82 | 9.1 |
+| spikard-python | 12,623 | 5.55 | 38.39 |
+| spikard-ruby | 7,151 | 14.62 | 18.98 |
+
+Spikard is **benchmarked against mature framework baselines across the supported bindings**.
+
+Key optimizations:
+- **Thin bindings** over a shared Rust core
+- **Zero-copy FFI paths** where the binding supports them
+- **Template-driven code generation** validated before files are written
 
 ## Development
 
-Install dependencies and build all language bindings:
+Use the task runner to keep the workspace aligned with CI:
 
 ```bash
-task setup      # Install all dependencies
-task build      # Build all language bindings
-task test       # Run all tests
-task lint       # Check code quality
-task format     # Apply formatting
+task setup
+task build
+task test
+task lint
+task readme:validate
 ```
 
-Language-specific commands:
+The authoritative README set is template-driven from `scripts/readme_config.yaml`, `scripts/readme_templates/`, and `scripts/readme_content/`.
 
-```bash
-task build:python    # Build Python bindings
-task build:node      # Build Node.js bindings
-task build:ruby      # Build Ruby bindings
-task build:php       # Build PHP bindings
-task build:elixir    # Build Elixir bindings
-task test:rust       # Run Rust tests
-task test:python     # Run Python tests
-task test:js         # Run TypeScript tests
-```
+## Related READMEs
+
+- [CLI](crates/spikard-cli/README.md) - init, generate, testing, validate-asyncapi, and MCP
+- [Rust crate](crates/spikard/README.md) - runtime API and tower-based HTTP stack
+- [Python package](packages/python/README.md) - PyO3 bindings and Python-first usage
+- [Node package](packages/node/README.md) - napi-rs bindings for TypeScript and Node.js
+- [Ruby package](packages/ruby/README.md) - Magnus bindings and Ruby DSL
+- [PHP package](packages/php/README.md) - ext-php-rs bindings and PHP framework API
+- [Elixir package](packages/elixir/README.md) - Rustler bindings and Elixir router API
 
 ## Documentation
 
-Visit [spikard.dev](https://spikard.dev) for full documentation, guides, and API reference.
-
-- See [examples/](examples/) for runnable sample projects in all languages
-
-## Architecture Highlights
-
-**Thin Binding Pattern:** All language bindings delegate heavy lifting to the Rust core. Bindings handle language-specific type conversions only; no business logic duplication ensures consistency across platforms.
-
-**Zero-Copy Serialization:** Direct PyO3 type construction eliminates JSON round-trips, providing 30-40% performance improvement in Python bindings.
-
-**Quality-First Generation:** Automatic syntax, type, and style validation applied to all generated code. 95%+ test coverage on core generators.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, development workflow, and code quality standards.
+- [spikard.dev](https://spikard.dev)
+- [Examples](examples/README.md)
+- [Schema fixtures](examples/schemas/README.md)
 
 ## License
 
-Licensed under the MIT License. See [LICENSE](LICENSE) file for details.
+MIT - See [LICENSE](LICENSE) for details

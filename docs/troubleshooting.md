@@ -305,9 +305,9 @@ Generated TypeScript files aren't in the expected location or the module resolut
 1. Verify code generation succeeded:
 ```bash
 spikard generate openapi \
-  --schema ./api.yaml \
-  --language typescript \
-  --output ./src/gen
+  ./api.yaml \
+  --lang typescript \
+  --output ./src/gen.ts
 ```
 
 2. Check `tsconfig.json` paths configuration:
@@ -362,10 +362,9 @@ user_class:
 2. Regenerate code with proper escaping:
 ```bash
 spikard generate openapi \
-  --schema ./api.yaml \
-  --language ruby \
-  --output ./lib/gen \
-  --validate
+  ./api.yaml \
+  --lang ruby \
+  --output ./lib/gen.rb
 ```
 
 3. If the issue persists, report the schema pattern to the Spikard team.
@@ -1210,7 +1209,7 @@ def call_with_retry(stub, request, max_retries=3):
 ### Problem 23: gRPC Metadata Not Propagated
 
 **Error Message:**
-```ruby
+```text
 NoMethodError: undefined method 'get' for nil:NilClass
   # When trying to access metadata
 ```
@@ -1444,13 +1443,10 @@ app.config.logger = Logger.new(STDOUT, level: :debug)
 ### Validate Schemas
 
 ```bash
-# OpenAPI
-spikard validate openapi --schema api.yaml
+# AsyncAPI
+spikard validate-asyncapi asyncapi.yaml
 
-# GraphQL
-spikard validate graphql --schema schema.graphql
-
-# Protobuf
+# Protobuf syntax
 protoc --descriptor_set_out=/dev/null user.proto
 ```
 

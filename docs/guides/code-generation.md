@@ -1,6 +1,6 @@
 # Code Generation Guide
 
-Spikard's code generator transforms API schemas into type-safe, production-ready handlers and DTOs for Python, TypeScript, Ruby, PHP, and Rust. Generated code integrates with Spikard's runtime and passes strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy).
+Spikard's code generator transforms API schemas into type-safe, production-ready handlers and DTOs for Python, TypeScript, Rust, Ruby, PHP, and Elixir. Generated code integrates with Spikard's runtime and passes strict quality tools (ruff/mypy, tsc, clippy, steep/rubocop, phpstan, mix format).
 
 This guide covers the complete workflow: schema to generated code to integration and validation.
 
@@ -21,7 +21,7 @@ This guide covers the complete workflow: schema to generated code to integration
 
 The `spikard generate` command is the entry point for all code generation. It follows a consistent pattern across all protocols:
 
-```bash
+```text
 spikard generate <protocol> <schema-path> --lang <language> [options]
 ```
 
@@ -45,24 +45,25 @@ Output Files
 
 ### Supported Protocols
 
-- **OpenAPI 3.0+**: REST APIs with request/response validation
-- **AsyncAPI 3.0.0**: WebSocket and Server-Sent Events
+- **OpenAPI 3.1**: REST APIs with request/response validation
+- **AsyncAPI 3.0**: WebSocket and Server-Sent Events
 - **GraphQL**: Schema-first GraphQL APIs with resolvers
 - **OpenRPC**: JSON-RPC 2.0 APIs
 - **Protobuf**: gRPC services with binary serialization
 
 ### Supported Languages
 
-All generators support these five target languages:
+All generators support these six target languages:
 - **Python**: Type hints (3.10+), dataclasses, mypy --strict compatible
 - **TypeScript**: Strict mode, interfaces, biome/eslint compatible
-- **Ruby**: RBS signatures, steep type checking
-- **PHP**: 8.1+, strict types, phpstan level max
 - **Rust**: Strongly-typed structs, cargo clippy clean
+- **Ruby**: RBS signatures, steep type checking
+- **PHP**: 8.2+, strict types, phpstan level max
+- **Elixir**: formatter-clean modules and router scaffolding
 
 ## OpenAPI Code Generation
 
-Generate type-safe REST API handlers from OpenAPI 3.0+ specifications.
+Generate type-safe REST API handlers from OpenAPI 3.1 specifications.
 
 ### Basic Usage
 
@@ -285,7 +286,7 @@ export async function createTodoHandler(
 
 ## AsyncAPI Code Generation
 
-Generate handlers for WebSocket and Server-Sent Events (SSE) from AsyncAPI 3.0.0 specs.
+Generate handlers for WebSocket and Server-Sent Events (SSE) from AsyncAPI 3.0 specs.
 
 ### WebSocket Example
 
@@ -611,7 +612,7 @@ Generate JSON-RPC 2.0 handlers from OpenRPC specifications.
 ### Basic Usage
 
 ```bash
-spikard generate openrpc user-api.openrpc.json --lang python --output ./generated/rpc_handlers.py
+spikard generate jsonrpc user-api.openrpc.json --lang python --output ./generated/rpc_handlers.py
 ```
 
 ### Example Schema
@@ -1381,7 +1382,7 @@ python3 -m py_compile ./generated/handlers.py
 
 ### Common Options (All Protocols)
 
-```bash
+```text
 spikard generate <protocol> <schema> [OPTIONS]
 
 Options:
@@ -1394,7 +1395,7 @@ Options:
 
 #### OpenAPI
 
-```bash
+```text
 spikard generate openapi <schema> [OPTIONS]
 
 Additional Options:
@@ -1403,7 +1404,7 @@ Additional Options:
 
 #### GraphQL
 
-```bash
+```text
 spikard generate graphql <schema> [OPTIONS]
 
 Additional Options:
@@ -1458,7 +1459,7 @@ Error: Failed to parse OpenAPI schema: Invalid reference #/components/schemas/Us
 **Solution:**
 - Validate schema with online tools (swagger.io, asyncapi.com)
 - Check that all `$ref` paths exist
-- Ensure schema version matches (OpenAPI 3.0+, AsyncAPI 3.0.0)
+- Ensure schema version matches (OpenAPI 3.1, AsyncAPI 3.0)
 - Use absolute references within the same file
 
 #### 2. Type Mapping Issues
@@ -1492,7 +1493,7 @@ generated/handlers.py:15: error: Missing return statement
 #### 4. Import Errors
 
 **Problem:**
-```python
+```text
 ImportError: cannot import name 'User' from 'generated.types'
 ```
 
@@ -1524,7 +1525,7 @@ Error: user_service.proto:5:10: "User" is not defined
 #### 6. Streaming Type Errors
 
 **Problem:**
-```typescript
+```text
 Type 'AsyncGenerator<User>' is not assignable to type 'Promise<User[]>'
 ```
 
@@ -1655,7 +1656,7 @@ git commit -m "feat: add user endpoints"
 
 ## Conclusion
 
-Spikard's code generator transforms schemas into production-ready, type-safe code across five languages. Generated code:
+Spikard's code generator transforms schemas into production-ready, type-safe code across six languages. Generated code:
 
 - Passes strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy)
 - Integrates with Spikard runtime

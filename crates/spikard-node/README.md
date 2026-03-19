@@ -60,4 +60,4 @@ cd crates/spikard-node && pnpm build
 
 ## License
 
-MIT - See [LICENSE](LICENSE) for details
+MIT - See [LICENSE](../../LICENSE) for details

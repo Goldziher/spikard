@@ -1,693 +1,246 @@
 # Init Command Reference
 
-Comprehensive guide to the `spikard init` command for all supported languages.
+Detailed reference for `spikard init`.
 
-## All Language Examples
-
-### TypeScript Project
+## Synopsis
 
 ```bash
-spikard init --name user_service --language typescript
+spikard init <project-name> --lang <language> [--dir <parent-directory>]
 ```
 
-Creates:
-```
-user_service/
-├── package.json                # Project metadata & dependencies
-├── pnpm-lock.yaml              # Locked dependencies
-├── tsconfig.json               # TypeScript configuration
-├── biome.json                  # Code quality config
-├── src/
-│   ├── app.ts                  # Main application
-│   ├── handlers.ts             # Example handlers
-│   └── models.ts               # Type definitions
-├── tests/
-│   └── handlers.spec.ts        # Example tests
-├── README.md
-└── .gitignore
-```
+## Arguments
 
-Next steps:
-```bash
-cd user_service
-pnpm install                    # Install dependencies
-pnpm run dev                    # Start development server
-pnpm test                       # Run tests
-pnpm build                      # Build for production
-```
+### `project-name`
 
-### Ruby Project
+Required positional project name. The scaffolder normalizes names to match the
+target binding's conventions:
 
-```bash
-spikard init --name user_service --language ruby
-```
+- Python: snake_case package/module names
+- TypeScript: kebab-case package names, `src/` layout
+- Rust: snake_case crate names
+- Ruby: snake_case gem/module file names
+- PHP: PascalCase project names with PSR-4-friendly structure
+- Elixir: snake_case OTP app names with generated module casing
 
-Creates:
-```
-user_service/
-├── Gemfile                     # Dependency specification
-├── Gemfile.lock                # Locked dependencies
-├── .ruby-version               # Ruby 3.2-4.x
-├── lib/
-│   └── user_service/
-│       ├── version.rb          # Version constant
-│       ├── app.rb              # Main application
-│       ├── handlers.rb         # Example handlers
-│       └── models.rb           # Data models
-├── sig/
-│   └── user_service.rbs        # Type signatures
-├── spec/
-│   ├── spec_helper.rb
-│   └── user_service_spec.rb    # Example tests
-├── README.md
-└── .gitignore
-```
+### `--lang`, `-l`
 
-Next steps:
-```bash
-cd user_service
-bundle install                  # Install dependencies
-bundle exec ruby lib/user_service/app.rb  # Run the app
-bundle exec rspec spec/         # Run tests
-```
+Required target language:
 
-### PHP Project
+- `python`
+- `typescript`
+- `rust`
+- `ruby`
+- `php`
+- `elixir`
+
+### `--dir`, `-d`
+
+Optional parent directory. The CLI creates `<dir>/<project-name>`.
+
+Examples:
 
 ```bash
-spikard init --name UserService --language php
+spikard init billing_api --lang rust --dir .
+spikard init user-service --lang typescript --dir ./services
 ```
 
-Creates:
-```
-UserService/
-├── composer.json               # Project metadata & dependencies
-├── composer.lock               # Locked dependencies
-├── .php-version                # PHP 8.2+
-├── src/
-│   └── UserService/
-│       ├── App.php             # Main application
-│       ├── Handlers.php        # Example handlers
-│       └── Models.php          # Data models
-├── tests/
-│   ├── bootstrap.php
-│   └── HandlersTest.php        # Example tests
-├── phpstan.neon                # Type checking config
-├── .php-cs-fixer.php           # Code style config
-├── README.md
-└── .gitignore
-```
+## What `init` Creates
 
-Next steps:
-```bash
-cd UserService
-composer install                # Install dependencies
-php src/UserService/App.php     # Run the app
-composer test                   # Run tests (PHPUnit)
-```
+`spikard init` is meant to produce a runnable starter project, not just an empty
+directory tree. Every scaffold includes:
 
-### Rust Project
-
-```bash
-spikard init --name user_service --language rust
-```
-
-Creates:
-```
-user_service/
-├── Cargo.toml                  # Project manifest
-├── Cargo.lock                  # Locked dependencies
-├── src/
-│   ├── main.rs                 # Binary entry point
-│   ├── lib.rs                  # Library root
-│   ├── handlers.rs             # Example handlers
-│   └── models.rs               # Data models
-├── tests/
-│   └── integration_test.rs     # Integration tests
-├── examples/
-│   └── basic.rs                # Example usage
-├── README.md
-└── .gitignore
-```
-
-Next steps:
-```bash
-cd user_service
-cargo build                     # Build the project
-cargo run                       # Run the application
-cargo test                      # Run tests
-cargo doc --open                # View documentation
-```
-
-## Project Names & Conventions
-
-The init command validates project names according to language conventions:
+- package/project manifest
+- `.gitignore`
+- `README.md`
+- runnable entrypoint
+- starter test
 
 ### Python
-- Must be a valid Python identifier: `user_service`, `api_v2`
-- Conventionally snake_case
-- Converted to snake_case if mixed case provided
-- Examples: `user_service`, `my_api`, `User-Service`
 
-### TypeScript/JavaScript
-- Must be a valid npm package name
-- Conventionally lowercase with hyphens: `user-service`, `api-v2`
-- Converted to kebab-case if snake_case provided
-- Examples: `user-service`, `my-api`, `api`
+```text
+<project>/
+├── pyproject.toml
+├── README.md
+├── src/<package>/
+│   ├── __init__.py
+│   └── app.py
+└── tests/test_app.py
+```
 
-### Ruby
-- Must be a valid constant: `UserService`, `ApiV2`
-- Conventionally PascalCase
-- Converted to PascalCase if snake_case provided
-- Examples: `UserService`, `MyApi`, `user-service`
+Notes:
 
-### PHP
-- Must be a valid class name: `UserService`, `ApiV2`
-- Conventionally PascalCase (PSR-4 compliance)
-- Converted to PascalCase if snake_case provided
-- Examples: `UserService`, `MyApi`, `user_service` (converted to UserService)
+- uses `pyproject.toml`
+- assumes `uv`
+- starter app is import-safe and runnable with `uv run python -m <package>.app`
+
+### TypeScript
+
+```text
+<project>/
+├── package.json
+├── tsconfig.json
+├── vitest.config.ts
+├── src/
+│   ├── app.ts
+│   └── server.ts
+└── tests/app.spec.ts
+```
+
+Notes:
+
+- uses `src/`
+- separates app construction from process startup
+- scaffold is ready for `pnpm install` and `pnpm exec tsc --noEmit`
 
 ### Rust
-- Must be a valid crate name: `user_service`, `api_v2`
-- Conventionally snake_case
-- Converted to snake_case if mixed case provided
-- Examples: `user_service`, `my_api`, `UserService` (converted to user_service)
 
-## Project Structure Documentation
-
-### Common Elements (All Languages)
-
-#### README.md
-Auto-generated with:
-- Project description
-- Quick start instructions
-- Available commands
-- Basic usage examples
-
-#### .gitignore
-Language-specific ignores:
-- Build artifacts
-- Dependency directories
-- IDE configuration
-- Environment files
-
-#### Example Handlers
-Each scaffolder includes:
-- **GET /health** - Health check endpoint
-- **POST /echo** - Echo request body (demonstration)
-- Type definitions for request/response
-- Error handling examples
-
-#### Example Tests
-Each scaffolder includes:
-- Health check test
-- Echo handler test
-- Pattern for adding more tests
-- Test configuration
-
-### Language-Specific Structure
-
-#### Python Projects
-```
-pyproject.toml          # PEP 517 standard format
-├── [project]          # Project metadata
-├── [build-system]     # uv/pip configuration
-├── [tool.mypy]        # Type checking config
-├── [tool.ruff]        # Linting config
-└── [tool.pytest]      # Testing config
-
-src/package/
-├── __init__.py        # Package initialization
-├── app.py             # Entry point & routing
-├── handlers.py        # Request handlers
-├── models.py          # Data models (msgspec.Struct)
-└── errors.py          # Error definitions
+```text
+<project>/
+├── Cargo.toml
+├── src/
+│   ├── lib.rs
+│   └── main.rs
+└── tests/integration_test.rs
 ```
 
-#### TypeScript Projects
-```
-tsconfig.json           # TypeScript strict mode
-├── compilerOptions
-│   ├── strict: true
-│   ├── noUncheckedIndexedAccess: true
-│   └── exactOptionalPropertyTypes: true
-└── include: ["src/**/*"]
+Notes:
 
-biome.json             # Linting & formatting
-├── linter { rules }
-└── formatter { options }
+- no fake `Cargo.lock`
+- current edition/rust-version pairing is valid
 
-src/
-├── app.ts             # Express/Fastify app setup
-├── handlers.ts        # Route handlers
-└── models.ts          # Types (strict TypeScript)
-```
+### Ruby
 
-#### Ruby Projects
-```
-Gemfile                 # Dependency specification
-├── source "https://rubygems.org"
-├── gem "spikard"
-├── gem "rspec", groups: [:development, :test]
-└── gem "rubocop", groups: [:development]
-
-.ruby-version           # Ruby version (3.2-4.x)
-
-sig/                    # Type signatures (RBS)
-├── project.rbs        # Type definitions
-└── generated/         # Generated signatures
-
-lib/package/
-├── version.rb         # Version constant
-├── app.rb             # Entry point
-├── handlers.rb        # Handlers
-└── models.rb          # Models
+```text
+<project>/
+├── Gemfile
+├── bin/server
+├── lib/<project>.rb
+├── sig/<project>.rbs
+└── spec/
+    ├── spec_helper.rb
+    └── <project>_spec.rb
 ```
 
-#### PHP Projects
-```
-composer.json           # PSR-4 autoloading
-├── name: "vendor/package"
-├── autoload { psr-4 }
-├── require { php-version }
-└── require-dev { dev-tools }
+Notes:
 
-phpstan.neon            # PHPStan config
-├── level: max
-└── paths
+- no forced `.ruby-version`
+- starter server uses `bin/server`
 
-src/Namespace/
-├── App.php            # Main application (strict_types=1)
-├── Handlers.php       # Handlers (typed properties/returns)
-└── Models.php         # Models (typed)
+### PHP
 
-tests/
-├── bootstrap.php      # PHPUnit bootstrap
-└── *Test.php          # Test classes
+```text
+<project>/
+├── composer.json
+├── phpstan.neon
+├── phpunit.xml
+├── src/AppController.php
+├── bin/server.php
+└── tests/AppTest.php
 ```
 
-#### Rust Projects
-```
-Cargo.toml              # Package manifest
-├── [package]
-├── [dependencies]
-└── [dev-dependencies]
+Notes:
 
-src/
-├── lib.rs             # Library root (if library)
-├── main.rs            # Binary entry point
-├── handlers.rs        # Handler implementations
-└── models.rs          # Data structures
-```
+- uses Composer-first structure
+- includes PHPStan and PHPUnit wiring
 
-## Schema Integration
+### Elixir
 
-The init command can optionally integrate an existing API schema:
-
-```bash
-spikard init \
-  --name my_api \
-  --language python \
-  --schema ./openapi.json
+```text
+<project>/
+├── mix.exs
+├── .formatter.exs
+├── lib/<app>.ex
+├── lib/<app>/router.ex
+├── run.exs
+└── test/
+    ├── test_helper.exs
+    └── <app>_test.exs
 ```
 
-When a schema is provided:
+Notes:
 
-1. **Validation**: Schema is validated against OpenAPI 3.0 spec
-2. **Integration**: Schema is copied to `schemas/` directory
-3. **Documentation**: Handler stubs are generated from schema
-4. **Next Steps**: Guidance on code generation is provided
+- formatter-clean output
+- starter app is runnable with `mix run run.exs`
 
-**Supported Schema Formats:**
-- OpenAPI 3.0.x (JSON or YAML)
-- GraphQL SDL (`.graphql` files)
-- AsyncAPI 3.0.0
-- OpenRPC 1.x
+## Name Handling
 
-**Generated Files:**
-```
-my_api/
-├── schemas/
-│   └── openapi.json         # Your uploaded schema
-├── handlers.py              # Auto-stubs for each endpoint
-├── models.py                # Models extracted from schema
-└── README.md                # Updated with schema info
-```
+The CLI accepts a user-facing name and normalizes it for the target binding.
+Examples:
 
-## Validation Rules
+| Input | Python | TypeScript | Rust | Ruby | PHP | Elixir |
+|------|--------|------------|------|------|-----|--------|
+| `UserService` | `user_service` | `user-service` | `user_service` | `user_service` | `UserService` | `user_service` |
+| `user-service` | `user_service` | `user-service` | `user_service` | `user_service` | `UserService` | `user_service` |
 
-### Project Name Validation
+## Current Limitation
 
-The init command validates project names:
+The CLI `init` command does not currently accept a schema path. If you need
+schema-aware automation:
 
-| Rule | Applies To | Error Example |
-|------|-----------|----------------|
-| Valid identifier | All languages | `123invalid` → InvalidProjectName |
-| Not reserved keyword | Python, Ruby, PHP | `class` → InvalidProjectName |
-| ASCII alphanumeric + `_-` | All languages | `café_api` → InvalidProjectName |
-| 3-50 characters | All languages | `a` → InvalidProjectName |
+1. run `spikard init`
+2. run `spikard generate ...` for the desired protocol
 
-### Directory Validation
+If you are integrating through MCP, the `init_project` tool can also accept a
+`schema_path` field on the MCP side.
 
-```bash
-# Creates: ./my_api/
-spikard init --name my_api --language python
-# OK if ./my_api/ doesn't exist
-
-# Fails if ./my_api/ already exists
-spikard init --name my_api --language python
-# DirectoryAlreadyExists: Directory './my_api' already exists
-
-# OK with different directory
-spikard init --name my_api --language python --project-dir ./projects
-# Creates: ./projects/my_api/
-```
-
-### Schema Path Validation
-
-```bash
-# OK if file exists
-spikard init --name my_api --language python --schema ./openapi.json
-
-# Fails if file doesn't exist
-spikard init --name my_api --language python --schema ./missing.json
-# SchemaPathNotFound: Schema file not found: ./missing.json
-```
-
-## Error Handling
-
-### Common Errors & Solutions
-
-#### `InvalidProjectName: "my-api" is not a valid Python identifier`
-- Python projects must use snake_case
-- Solution: Use `my_api` instead of `my-api`
-
-#### `DirectoryAlreadyExists: Directory './my_api' already exists`
-- The project directory already exists
-- Solution: Use a different name or remove the existing directory
-
-#### `SchemaPathNotFound: Schema file not found`
-- The provided schema file doesn't exist
-- Solution: Check the path and try again
-
-#### `LanguageNotSupported: Python is not yet supported`
-- This language doesn't support init yet (shouldn't happen with current release)
-- Solution: Choose from: python, typescript, ruby, php, rust
-
-## Next Steps Guidance
-
-After initialization, the command provides language-specific guidance:
+## Typical Flows
 
 ### Python
-```
-Project created: user_service
 
-Next steps:
-  1. cd user_service
-  2. uv sync                 # Install dependencies
-  3. python -m user_service.app  # Run the application
-  4. uv run pytest tests/    # Run tests
-
-Documentation:
-  - Project structure: README.md
-  - Type checking: mypy src/
-  - Code quality: ruff check src/
-
-For more info: https://spikard.dev
+```bash
+spikard init my_api --lang python --dir .
+cd my_api
+uv sync
+uv run python -m my_api.app
+uv run pytest
 ```
 
 ### TypeScript
-```
-Project created: user-service
 
-Next steps:
-  1. cd user-service
-  2. pnpm install           # Install dependencies
-  3. pnpm run dev           # Start dev server
-  4. pnpm test              # Run tests
-
-Documentation:
-  - Project structure: README.md
-  - Build: pnpm build
-  - Type checking: pnpm run type-check
-
-For more info: https://spikard.dev
-```
-
-### Ruby
-```
-Project created: UserService
-
-Next steps:
-  1. cd UserService
-  2. bundle install         # Install dependencies
-  3. bundle exec ruby lib/user_service/app.rb
-  4. bundle exec rspec spec/  # Run tests
-
-Documentation:
-  - Project structure: README.md
-  - Type checking: bundle exec steep check
-  - Code quality: bundle exec rubocop lib/
-
-For more info: https://spikard.dev
-```
-
-### PHP
-```
-Project created: UserService
-
-Next steps:
-  1. cd UserService
-  2. composer install       # Install dependencies
-  3. php src/UserService/App.php
-  4. composer test          # Run tests
-
-Documentation:
-  - Project structure: README.md
-  - Type checking: vendor/bin/phpstan analyze
-  - Code quality: vendor/bin/php-cs-fixer fix src/
-
-For more info: https://spikard.dev
+```bash
+spikard init my-api --lang typescript --dir .
+cd my-api
+pnpm install
+pnpm exec tsc --noEmit
+pnpm test
 ```
 
 ### Rust
-```
-Project created: user_service
 
-Next steps:
-  1. cd user_service
-  2. cargo build            # Build the project
-  3. cargo run              # Run the application
-  4. cargo test             # Run tests
-
-Documentation:
-  - Project structure: README.md
-  - Documentation: cargo doc --open
-  - Code quality: cargo clippy
-
-For more info: https://spikard.dev
-```
-
-## Development Workflow
-
-### Adding New Handlers
-
-#### Python
-```python
-# src/user_service/handlers.py
-from spikard import Handler, Request, Response
-
-@Handler("/api/users/{id}")
-async def get_user(request: Request) -> Response:
-    user_id = request.path_params["id"]
-    return Response({"id": user_id, "name": "Alice"})
-```
-
-#### TypeScript
-```typescript
-// src/handlers.ts
-import { Handler, Request, Response } from "spikard";
-
-export const getUser: Handler = async (request: Request) => {
-    const userId = request.params.id;
-    return new Response({ id: userId, name: "Alice" });
-};
-```
-
-#### Ruby
-```ruby
-# lib/user_service/handlers.rb
-class GetUserHandler
-  def initialize(request)
-    @request = request
-  end
-
-  def call
-    user_id = @request.path_params["id"]
-    { id: user_id, name: "Alice" }
-  end
-end
-```
-
-#### PHP
-```php
-<?php declare(strict_types=1);
-
-namespace UserService;
-
-class Handlers {
-    public function getUser(Request $request): Response {
-        $userId = $request->pathParams['id'];
-        return new Response(['id' => $userId, 'name' => 'Alice']);
-    }
-}
-```
-
-#### Rust
-```rust
-// src/handlers.rs
-use spikard::{Handler, Request, Response};
-
-pub async fn get_user(request: Request) -> Response {
-    let user_id = request.path_params.get("id");
-    Response::json(json!({"id": user_id, "name": "Alice"}))
-}
-```
-
-### Running Tests
-
-#### Python
 ```bash
-# Run all tests
-uv run pytest tests/
-
-# Run specific test file
-uv run pytest tests/test_handlers.py
-
-# With coverage
-uv run pytest --cov=src tests/
-```
-
-#### TypeScript
-```bash
-# Run all tests
-pnpm test
-
-# Watch mode
-pnpm test --watch
-
-# With coverage
-pnpm test --coverage
-```
-
-#### Ruby
-```bash
-# Run all tests
-bundle exec rspec spec/
-
-# Run specific file
-bundle exec rspec spec/user_service_spec.rb
-
-# With coverage
-bundle exec rspec --require coverage spec/
-```
-
-#### PHP
-```bash
-# Run all tests
-composer test
-
-# Run specific test
-composer test -- tests/HandlersTest.php
-
-# With coverage
-composer test -- --coverage
-```
-
-#### Rust
-```bash
-# Run all tests
+spikard init my_api --lang rust --dir .
+cd my_api
+cargo run
 cargo test
-
-# Run specific test
-cargo test test_get_user
-
-# With coverage
-cargo tarpaulin
 ```
 
-## Advanced Topics
+## Troubleshooting
 
-### Customizing Project Templates
+### Directory already exists
 
-To customize generated files, modify the scaffolder implementations in:
-```
-crates/spikard-cli/src/init/[language].rs
-```
+Pick a new name or remove the existing directory first:
 
-### Adding New Language Support
-
-To add support for a new language:
-
-1. Create `crates/spikard-cli/src/init/new_language.rs`
-2. Implement `ProjectScaffolder` trait
-3. Add to `TargetLanguage` enum
-4. Register in `InitEngine::scaffolder_for_language()`
-5. Add tests in `crates/spikard-cli/tests/`
-
-### CI/CD Integration
-
-Example GitHub Actions workflow:
-
-```yaml
-name: New Project Validation
-on: [workflow_dispatch]
-
-jobs:
-  test-init:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        language: [python, typescript, ruby, php, rust]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Initialize project
-        run: |
-          spikard init \
-            --name test_project \
-            --language ${{ matrix.language }} \
-            --project-dir ./test_projects
-      - name: Build and test
-        run: |
-          cd ./test_projects/test_project
-          # Language-specific build & test commands
-```
-
-## Related Documentation
-
-- [Code Generation Guide](../guides/code-generation.md)
-- [ADR-0004: Code Generation](../adr/0004-code-generation.md)
-- [Types Reference](../reference/types.md)
-
-## FAQ
-
-**Q: Can I initialize a project in an existing directory?**
-A: No, init creates a new directory to avoid conflicts. To use an existing directory, manually copy the generated files.
-
-**Q: What if my project name has special characters?**
-A: The init command will convert them to valid identifiers (e.g., `my-api` → `my_api` for Python).
-
-**Q: Can I use init with a monorepo structure?**
-A: Use `--project-dir` to specify the parent directory:
 ```bash
-spikard init --name service1 --language python --project-dir ./services
-spikard init --name service2 --language typescript --project-dir ./services
+spikard init my_api --lang python --dir .
 ```
 
-**Q: Are the generated files production-ready?**
-A: The scaffolded structure is ready for development. You'll need to add business logic, additional handlers, and configuration appropriate for your use case.
+### Wrong command shape
 
-**Q: How do I update the scaffolded project later?**
-A: The init command is for initial scaffolding. For code generation from schemas, use `spikard codegen`.
+The current CLI uses positional project names. These are invalid old forms:
 
-**Q: Can I contribute custom scaffolders?**
-A: Yes! Custom scaffolders should implement the ProjectScaffolder trait. See ADR-0004 for architecture details. Submit PR to the repository.
+```bash
+spikard init --name my_api --language python
+spikard init --name my_api --language python --schema openapi.yaml
+```
+
+Use:
+
+```bash
+spikard init my_api --lang python --dir .
+```
+
+## Related Docs
+
+- [Getting Started: Init](../getting-started/init-command.md)
+- [CLI Usage](../cli/usage.md)
+- [Code Generation Guide](../guides/code-generation.md)

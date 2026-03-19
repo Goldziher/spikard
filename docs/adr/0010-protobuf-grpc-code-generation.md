@@ -4,7 +4,7 @@
 
 ## Context
 
-Spikard needs to generate type-safe, idiomatic code from `.proto` files for gRPC service implementations across five languages (Python, TypeScript, Ruby, PHP, Rust). Unlike REST/GraphQL which have JSON-based schemas, protobuf uses a binary protocol with strictly-typed messages requiring:
+Spikard needs to generate type-safe, idiomatic code from `.proto` files for gRPC service implementations across six languages (Python, TypeScript, Rust, Ruby, PHP, Elixir). Unlike REST/GraphQL which have JSON-based schemas, protobuf uses a binary protocol with strictly-typed messages requiring:
 
 1. **Binary serialization support** - Integration with protobuf runtimes (google-protobuf, prost, etc.)
 2. **Four streaming modes** - Unary, server streaming, client streaming, bidirectional streaming
@@ -18,7 +18,7 @@ The generator must produce code that passes strict quality tools (mypy --strict,
 
 ### Architecture
 
-**CLI Entry Point**: `spikard generate protobuf --input schema.proto --output ./generated/`
+**CLI Entry Point**: `spikard generate protobuf schema.proto --lang rust --output ./src/generated.rs`
 
 **Generator Organization**: `crates/spikard-cli/src/codegen/protobuf/`
 ```

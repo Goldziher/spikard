@@ -6,30 +6,33 @@ Create a new Spikard project:
 spikard init my-project --lang python --dir .
 ```
 
-Supported languages: `python`, `typescript`, `rust`, `ruby`, `php`
+Supported languages: `python`, `typescript`, `rust`, `ruby`, `php`, `elixir`
 
 ### generate
 
 Generate code from API specifications:
 
 ```bash
-# OpenAPI 3.0+
-spikard generate openapi ./openapi.json --lang python --output ./generated
+# OpenAPI 3.1
+spikard generate openapi ./openapi.yaml --lang python --output ./generated.py
 
-# AsyncAPI 3.0.0
-spikard generate asyncapi ./asyncapi.json --lang python --output ./generated
+# AsyncAPI 3.0
+spikard generate asyncapi ./asyncapi.yaml --lang elixir --output ./lib/generated.ex
 
-# GraphQL
-spikard generate graphql ./schema.graphql --lang python --output ./generated
+# GraphQL SDL / introspection
+spikard generate graphql ./schema.graphql --lang typescript --output ./src/generated.ts
 
-# JSON-RPC 2.0
-spikard generate jsonrpc ./openrpc.json --lang python --output ./generated
+# OpenRPC / JSON-RPC
+spikard generate jsonrpc ./openrpc.json --lang ruby --output ./generated.rb
+
+# Protobuf / gRPC
+spikard generate protobuf ./service.proto --lang rust --output ./src/generated.rs
 
 # PHP DTOs
-spikard generate php-dto ./openapi.json --output ./src/Generated
+spikard generate php-dto --output ./src/Generated
 ```
 
-Supported target languages: `python`, `typescript`, `rust`, `ruby`, `php`
+Supported target languages: `python`, `typescript`, `rust`, `ruby`, `php`, `elixir`
 
 ### validate-asyncapi
 

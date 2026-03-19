@@ -43,19 +43,19 @@ The HandlerWrapper module provides convenience methods to reduce boilerplate:
 
 ```ruby
 # Handler that receives only the body
-app.post '/upload', &Spikard.wrap_body_handler do |body|
+app.post '/upload', &(Spikard.wrap_body_handler do |body|
   { filename: body[:file].filename }
-end
+end)
 
 # Handler receiving all params separately (explicit)
-app.post '/users/{id}', &Spikard.wrap_handler do |params, query, body|
+app.post '/users/{id}', &(Spikard.wrap_handler do |params, query, body|
   { user_id: params[:id], search: query[:q], name: body[:name] }
-end
+end)
 
 # Handler receiving a context hash
-app.post '/webhook', &Spikard.wrap_handler_with_context do |ctx|
+app.post '/webhook', &(Spikard.wrap_handler_with_context do |ctx|
   { params: ctx[:params], body: ctx[:body] }
-end
+end)
 ```
 
 ## Route Options

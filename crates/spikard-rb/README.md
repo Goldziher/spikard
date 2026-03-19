@@ -60,4 +60,4 @@ cd packages/ruby && bundle exec rake ext:build
 
 ## License
 
-MIT - See [LICENSE](LICENSE) for details
+MIT - See [LICENSE](../../LICENSE) for details

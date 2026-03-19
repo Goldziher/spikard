@@ -70,4 +70,4 @@ spikard-graphql = "0.12.0"
 
 ## License
 
-MIT - See [LICENSE](LICENSE) for details
+MIT - See [LICENSE](../../LICENSE) for details

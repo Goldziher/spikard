@@ -2,7 +2,7 @@ defmodule Spikard.OpenAPI do
   @moduledoc """
   OpenAPI specification configuration and generation for Spikard HTTP applications.
 
-  This module provides configuration helpers for generating OpenAPI 3.0 specifications
+  This module provides configuration helpers for generating OpenAPI 3.1 specifications
   from route definitions. The OpenAPI spec is automatically generated and served
   at a configurable endpoint (default: /openapi.json).
 
@@ -28,7 +28,7 @@ defmodule Spikard.OpenAPI do
   ## Endpoints
 
   When OpenAPI is enabled:
-  - `/openapi.json` - OpenAPI 3.0 specification in JSON format
+  - `/openapi.json` - OpenAPI 3.1 specification in JSON format
 
   ## Examples
 
@@ -183,7 +183,7 @@ defmodule Spikard.OpenAPI do
 
     ## Returns
 
-      A map of paths following OpenAPI 3.0 structure
+      A map of paths following OpenAPI 3.1 structure
 
     ## Examples
 

@@ -1,4 +1,4 @@
-"""Generate README files for spikard crates and packages from Jinja2 templates.
+"""Generate README files for spikard root, crates, and packages from Jinja2 templates.
 
 Uses scripts/readme_config.yaml for configuration and scripts/readme_templates/
 for Jinja2 templates. Section content is loaded from scripts/readme_content/.

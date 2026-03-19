@@ -385,37 +385,41 @@ async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
 
 **TypeScript:**
 ```typescript
-async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
-  if (request.methodName === 'CreateUser') {
-    const { email } = this.parseRequest(request.payload);
+class UserServiceHandler {
+  async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
+    if (request.methodName === 'CreateUser') {
+      const { email } = this.parseRequest(request.payload);
 
-    // Check for duplicates
-    const existing = await this.db.findByEmail(email);
-    if (existing) {
-      throw new GrpcError(
-        GrpcStatusCode.ALREADY_EXISTS,
-        `User with email '${email}' already exists`
-      );
+      // Check for duplicates
+      const existing = await this.db.findByEmail(email);
+      if (existing) {
+        throw new GrpcError(
+          GrpcStatusCode.ALREADY_EXISTS,
+          `User with email '${email}' already exists`
+        );
+      }
+
+      // Validate email format
+      if (!this.isValidEmail(email)) {
+        throw new GrpcError(
+          GrpcStatusCode.INVALID_ARGUMENT,
+          `Invalid email format: '${email}'`
+        );
+      }
+
+      // Check rate limits
+      if (await this.isRateLimited()) {
+        throw new GrpcError(
+          GrpcStatusCode.RESOURCE_EXHAUSTED,
+          'Too many requests. Please try again later.'
+        );
+      }
+
+      // Create user...
+      return { payload: Buffer.from(newUser.serialize()) };
     }
 
-    // Validate email format
-    if (!this.isValidEmail(email)) {
-      throw new GrpcError(
-        GrpcStatusCode.INVALID_ARGUMENT,
-        `Invalid email format: '${email}'`
-      );
-    }
-
-    // Check rate limits
-    if (await this.isRateLimited()) {
-      throw new GrpcError(
-        GrpcStatusCode.RESOURCE_EXHAUSTED,
-        'Too many requests. Please try again later.'
-      );
-    }
-
-    // Create user...
-    return { payload: Buffer.from(newUser.serialize()) };
+    throw new GrpcError(GrpcStatusCode.UNIMPLEMENTED, 'Method not implemented');
   }
 }
 ```

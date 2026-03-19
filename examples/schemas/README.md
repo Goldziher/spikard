@@ -361,7 +361,7 @@ The schemas align with:
 ## Schema Versions
 
 - **OpenAPI**: 3.1.0 (JSON Schema support, no YAML refs)
-- **AsyncAPI**: 3.0.0 (latest, better streaming support)
+- **AsyncAPI**: 3.0 (current supported line)
 - **JSON Schema**: 2020-12 (embedded in AsyncAPI 3.0)
 
 ---
@@ -369,7 +369,7 @@ The schemas align with:
 ## References
 
 - [OpenAPI 3.1.0 Specification](https://spec.openapis.org/oas/v3.1.0)
-- [AsyncAPI 3.0.0 Specification](https://www.asyncapi.com/en/docs/specifications/latest)
+- [AsyncAPI 3.0 Specification](https://www.asyncapi.com/en/docs/specifications/latest)
 - [RFC 9457 - Problem Details](https://www.rfc-editor.org/rfc/rfc9457.html)
 - [File Uploads Best Practices](https://www.speakeasy.com/openapi/content/file-uploads)
 - [AsyncAPI WebSocket Guide](https://www.asyncapi.com/blog/websocket-part1)

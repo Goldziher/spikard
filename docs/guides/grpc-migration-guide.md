@@ -489,9 +489,9 @@ message CreateUserResponse {
 ```bash
 # Generate Ruby gRPC handlers
 spikard generate protobuf \
-  --input user_service.proto \
-  --language ruby \
-  --output ./generated/
+  user_service.proto \
+  --lang ruby \
+  --output ./generated.rb
 
 # This creates:
 # - generated/user_service_pb.rb (message definitions)

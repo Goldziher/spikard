@@ -19,14 +19,17 @@ use Spikard\Grpc\Response;
 /**
  * Client streaming handler signature
  */
-public function handleClientStream(ClientStreamRequest $request): Response
+final class ExampleClientStreamHandler
 {
-    // $request->serviceName: string
-    // $request->methodName: string
-    // $request->metadata: array<string, string>
-    // $request->messages: string[]  // Array of serialized messages
+    public function handleClientStream(ClientStreamRequest $request): Response
+    {
+        // $request->serviceName: string
+        // $request->methodName: string
+        // $request->metadata: array<string, string>
+        // $request->messages: string[]  // Array of serialized messages
 
-    // Process all messages and return single response
+        // Process all messages and return single response
+    }
 }
 ```
 
@@ -160,18 +163,21 @@ use Spikard\Grpc\BidiStreamResponse;
 /**
  * Bidirectional streaming handler signature
  */
-public function handleBidiStream(BidiStreamRequest $request): BidiStreamResponse
+final class ExampleBidiStreamHandler
 {
-    // $request->serviceName: string
-    // $request->methodName: string
-    // $request->metadata: array<string, string>
-    // $request->messages: string[]  // Array of serialized input messages
+    public function handleBidiStream(BidiStreamRequest $request): BidiStreamResponse
+    {
+        // $request->serviceName: string
+        // $request->methodName: string
+        // $request->metadata: array<string, string>
+        // $request->messages: string[]  // Array of serialized input messages
 
-    // Process input messages and generate output messages
-    // return new BidiStreamResponse(
-    //     messages: string[],        // Array of serialized response messages
-    //     metadata: array<string, string>
-    // );
+        // Process input messages and generate output messages
+        // return new BidiStreamResponse(
+        //     messages: string[],        // Array of serialized response messages
+        //     metadata: array<string, string>
+        // );
+    }
 }
 ```
 

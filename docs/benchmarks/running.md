@@ -117,7 +117,7 @@ Compare multiple frameworks side-by-side:
 
 ### Common Options
 
-```bash
+```text
 --duration <SECS>        Benchmark duration per workload [default: 30]
 --concurrency <N>        Concurrent connections [default: 100]
 --warmup <SECS>          Warmup duration [default: 3]
@@ -129,7 +129,7 @@ Compare multiple frameworks side-by-side:
 
 Single framework benchmark:
 
-```bash
+```text
 benchmark-harness run [OPTIONS]
   --framework <NAME>     Framework name (required)
   --app-dir <PATH>       App directory path (required)
@@ -152,7 +152,7 @@ Example:
 
 Deep analysis with workload suites:
 
-```bash
+```text
 benchmark-harness profile [OPTIONS]
   --framework <NAME>     Framework to profile (required)
   --app-dir <PATH>       App directory (required)
@@ -185,7 +185,7 @@ Example with profiling:
 
 Statistical framework comparison:
 
-```bash
+```text
 benchmark-harness compare [OPTIONS]
   --frameworks <LIST>    Comma-separated framework names (required)
   --suite <SUITE>        Workload suite
@@ -204,6 +204,7 @@ Example:
   --significance 0.05 \
   --report results/python-frameworks.md \
   --output results/python-comparison
+```
 
 ### Consolidate Mode
 

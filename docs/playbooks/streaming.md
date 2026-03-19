@@ -155,6 +155,7 @@ async def events(request):
         app.logger.info("Stream cancelled")
     finally:
         app.logger.info("Stream cleanup complete")
+```
 
 ## WebSockets
 

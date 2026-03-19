@@ -920,7 +920,7 @@ task test
 **Solution**:
 1. Check error message; identify which language is incorrect
 2. Debug in failing language:
-   ```typescript
+   ```bash
    # TypeScript
    pnpm vitest run tests/grpc_fixtures.spec.ts --reporter=verbose
    ```

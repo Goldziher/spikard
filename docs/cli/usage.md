@@ -1,71 +1,96 @@
 # CLI Usage
 
-`spikard-cli` provides code generation, schema validation, and project scaffolding.
+`spikard` is a codegen-first CLI with project scaffolding, AsyncAPI testing
+helpers, validation, and an MCP server.
 
 ## Install
+
 ```bash
 cargo install spikard-cli
 ```
 
-## Commands
+## Top-Level Commands
 
-### Initialize a New Project
-
-Create an idiomatic project structure for your chosen language:
-
-```bash
-spikard init --name my_api --language python
+```text
+spikard init <name> --lang <language> [--dir <parent>]
+spikard generate <target> ...
+spikard testing asyncapi <target> ...
+spikard validate-asyncapi <schema>
+spikard features
+spikard mcp
 ```
 
-Supported languages: `python`, `typescript`, `ruby`, `php`, `rust`
+## Init
 
-**With Schema Integration:**
+Create a starter project for a supported binding:
+
 ```bash
-spikard init --name my_api --language python --schema openapi.yaml
+spikard init my_api --lang python --dir .
 ```
 
-Generates project structure + handlers from your schema.
+Supported languages: `python`, `typescript`, `rust`, `ruby`, `php`, `elixir`
 
-See `spikard init --help` for all options.
+## Generate
 
-### Generate Code from Schemas
+Generate code from a contract or schema:
 
-Generate type-safe handlers and DTOs from contracts:
-
-**GraphQL:**
 ```bash
-spikard generate graphql schema.graphql --lang python --target all
-spikard generate graphql schema.graphql --lang typescript --target types
+# OpenAPI
+spikard generate openapi openapi.yaml --lang python --output ./generated.py
+
+# AsyncAPI
+spikard generate asyncapi asyncapi.yaml --lang typescript --output ./src/handlers.ts
+
+# JSON-RPC from OpenRPC
+spikard generate jsonrpc rpc-spec.json --lang ruby --output ./lib/generated.rb
+
+# GraphQL
+spikard generate graphql schema.graphql --lang typescript --target all --output ./src/generated.ts
+
+# Protobuf / gRPC
+spikard generate protobuf user.proto --lang rust --output ./src/generated.rs
+
+# PHP DTO helpers
+spikard generate php-dto --output ./src/Generated
 ```
 
-**OpenAPI:**
+## AsyncAPI Testing Helpers
+
 ```bash
-spikard generate openapi openapi.yaml --lang python --output ./generated
+spikard testing asyncapi fixtures chat.asyncapi.yaml --output ./testing_data
+spikard testing asyncapi test-app chat.asyncapi.yaml --lang elixir --output ./e2e/elixir
+spikard testing asyncapi all chat.asyncapi.yaml --output ./generated
 ```
 
-**AsyncAPI:**
+## Validation
+
 ```bash
-spikard generate asyncapi asyncapi.yaml --lang typescript
+spikard validate-asyncapi chat.asyncapi.yaml
+spikard features
 ```
 
-**OpenRPC:**
+## MCP
+
+Start the MCP server over stdio:
+
 ```bash
-spikard generate openrpc rpc-spec.json --lang ruby
+spikard mcp
 ```
 
-All generated code passes strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy).
+With HTTP transport:
 
-### Run an App
+```bash
+cargo run -p spikard-cli --features mcp-http -- mcp --transport http --host 127.0.0.1 --port 3001
+```
 
-Runtime serving from the CLI is planned. Today, start apps with the binding APIs:
-- Python: `uv run python app.py`
-- TypeScript: `pnpm dev` or `node app.js`
-- Ruby: `bundle exec ruby app.rb`
-- PHP: `php app.php`
+## Runtime Note
+
+The CLI does not currently provide a generic `run` or `serve` command for
+applications. Start apps using the generated or binding-native entrypoints:
+
+- Python: `uv run python -m my_api.app`
+- TypeScript: `node src/server.ts` or the package's dev script
 - Rust: `cargo run`
-
-## Development Notes
-
-- Build locally: `cargo build -p spikard-cli` or `task build:cli`
-- Run tests: `cargo test -p spikard-cli`
-- Lint/format: `cargo clippy && cargo fmt`
+- Ruby: `bundle exec ruby bin/server`
+- PHP: `php bin/server.php`
+- Elixir: `mix run run.exs`
