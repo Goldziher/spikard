@@ -361,7 +361,9 @@ impl RustGenerator {
                     ));
                 } else {
                     code.push_str(&format!(") -> {return_type} {{\n"));
-                    code.push_str("        unreachable!(\"Enable result-based resolver stubs for safe scaffolding\")\n");
+                    code.push_str(
+                        "        unreachable!(\"Enable result-based resolver stubs for safe scaffolding\")\n",
+                    );
                 }
                 code.push_str("    }\n");
             }
@@ -397,7 +399,9 @@ impl RustGenerator {
                     ));
                 } else {
                     code.push_str(&format!(") -> {return_type} {{\n"));
-                    code.push_str("        unreachable!(\"Enable result-based resolver stubs for safe scaffolding\")\n");
+                    code.push_str(
+                        "        unreachable!(\"Enable result-based resolver stubs for safe scaffolding\")\n",
+                    );
                 }
                 code.push_str("    }\n");
             }

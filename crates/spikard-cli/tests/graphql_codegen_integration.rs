@@ -66,8 +66,14 @@ fn test_rust_generate_enum_type() -> Result<()> {
 
     assert!(result.contains("async_graphql::Enum"), "Enum derive missing");
     assert!(result.contains("pub enum UserStatus"), "UserStatus enum not generated");
-    assert!(result.contains("#[graphql(name = \"ACTIVE\")]"), "ACTIVE GraphQL rename missing");
-    assert!(result.contains("#[serde(rename = \"ACTIVE\")]"), "ACTIVE serde rename missing");
+    assert!(
+        result.contains("#[graphql(name = \"ACTIVE\")]"),
+        "ACTIVE GraphQL rename missing"
+    );
+    assert!(
+        result.contains("#[serde(rename = \"ACTIVE\")]"),
+        "ACTIVE serde rename missing"
+    );
     assert!(result.contains("Active,"), "Active variant missing");
     assert!(result.contains("Inactive,"), "Inactive variant missing");
     assert!(result.contains("Pending,"), "Pending variant missing");
@@ -257,7 +263,10 @@ fn test_rust_generate_query_resolvers() -> Result<()> {
         result.contains("Err(async_graphql::Error::new(\"Implement query resolver for hello\"))"),
         "query resolvers should use explicit error stubs instead of todo!()"
     );
-    assert!(!result.contains("todo!("), "Rust GraphQL stubs should not panic with todo!()");
+    assert!(
+        !result.contains("todo!("),
+        "Rust GraphQL stubs should not panic with todo!()"
+    );
 
     Ok(())
 }
@@ -291,7 +300,10 @@ fn test_rust_generate_mutation_resolvers() -> Result<()> {
         result.contains("Err(async_graphql::Error::new(\"Implement mutation resolver for createUser\"))"),
         "mutation resolvers should use explicit error stubs instead of todo!()"
     );
-    assert!(!result.contains("todo!("), "Rust GraphQL stubs should not panic with todo!()");
+    assert!(
+        !result.contains("todo!("),
+        "Rust GraphQL stubs should not panic with todo!()"
+    );
 
     Ok(())
 }

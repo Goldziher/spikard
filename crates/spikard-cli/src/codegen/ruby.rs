@@ -336,9 +336,7 @@ end
                             false,
                             parent_class_name
                                 .zip(field_name)
-                                .and_then(|(parent, field)| {
-                                    self.inline_array_item_model_name(parent, field, schema)
-                                })
+                                .and_then(|(parent, field)| self.inline_array_item_model_name(parent, field, schema))
                                 .as_deref(),
                         ),
                         Some(ReferenceOr::Reference { reference }) => {

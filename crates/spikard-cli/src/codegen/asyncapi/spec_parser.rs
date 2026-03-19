@@ -156,6 +156,7 @@ fn build_message_definition(
         Some(schema) => schema,
         None => return Ok(None),
     };
+    let schema = resolve_schema_tree(spec_doc, &schema, 32);
 
     let mut examples: Vec<Value> = Vec::new();
     for example in &message.examples {
@@ -435,6 +436,35 @@ fn normalize_schema_ref_value(value: Value) -> Value {
         return schema.clone();
     }
     value
+}
+
+fn resolve_schema_tree(document: &Value, schema: &Value, remaining_depth: usize) -> Value {
+    if remaining_depth == 0 {
+        return schema.clone();
+    }
+
+    if let Some(reference) = schema.get("$ref").and_then(Value::as_str)
+        && let Some(resolved) = resolve_ref_value(document, reference)
+    {
+        return resolve_schema_tree(document, &normalize_schema_ref_value(resolved), remaining_depth - 1);
+    }
+
+    match schema {
+        Value::Object(map) => {
+            let mut resolved = serde_json::Map::new();
+            for (key, value) in map {
+                resolved.insert(key.clone(), resolve_schema_tree(document, value, remaining_depth - 1));
+            }
+            Value::Object(resolved)
+        }
+        Value::Array(items) => Value::Array(
+            items
+                .iter()
+                .map(|item| resolve_schema_tree(document, item, remaining_depth - 1))
+                .collect(),
+        ),
+        _ => schema.clone(),
+    }
 }
 
 /// Resolve channel reference to channel path

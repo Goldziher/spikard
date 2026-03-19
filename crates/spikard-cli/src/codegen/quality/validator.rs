@@ -571,6 +571,22 @@ impl QualityValidator {
         fs::write(
             &spikard_stub_path,
             r#"declare module "spikard" {
+  export type RouteMetadata = {
+    method: string;
+    path: string;
+    handler_name: string;
+    is_async: boolean;
+  };
+
+  export type SpikardApp = {
+    routes: RouteMetadata[];
+    handlers: Record<string, unknown>;
+  };
+
+  export class StreamingResponse {
+    constructor(body?: unknown, init?: unknown);
+  }
+
   export class Spikard {
     start(config?: unknown): Promise<void>;
   }
@@ -751,6 +767,60 @@ end
 "#,
         )
         .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            spikard_dir.join("websocket.ex"),
+            r#"defmodule Spikard.WebSocket do
+  @callback handle_connect(term(), term()) :: {:ok, term()} | {:error, term()}
+  @callback handle_message(term(), term()) ::
+              {:reply, term(), term()} | {:noreply, term()} | {:error, term()}
+  @callback handle_disconnect(term(), term()) :: :ok | {:error, term()}
+
+  defmacro __using__(_opts) do
+    quote do
+      @behaviour Spikard.WebSocket
+
+      @impl true
+      def handle_connect(_ws, _opts), do: {:ok, nil}
+
+      @impl true
+      def handle_message(message, state), do: {:reply, message, state}
+
+      @impl true
+      def handle_disconnect(_ws, _state), do: :ok
+
+      defoverridable handle_connect: 2, handle_message: 2, handle_disconnect: 2
+    end
+  end
+end
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            spikard_dir.join("sse.ex"),
+            r#"defmodule Spikard.Sse.Event do
+  defstruct [:data, :event, :id]
+  @type t :: %__MODULE__{data: term(), event: String.t() | nil, id: String.t() | nil}
+end
+
+defmodule Spikard.Sse.Producer do
+  @callback init(term()) :: {:ok, term()} | {:error, term()}
+  @callback next_event(term()) ::
+              {:ok, Spikard.Sse.Event.t(), term()} | :done | :error
+
+  defmacro __using__(_opts) do
+    quote do
+      @behaviour Spikard.Sse.Producer
+
+      @impl true
+      def init(_opts), do: {:ok, nil}
+
+      defoverridable init: 1
+    end
+  end
+end
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
         fs::write(&generated_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
 
         Ok(ElixirTempProject {
@@ -773,6 +843,42 @@ final class Route
         public string $path,
         public array $methods = [],
     ) {}
+}
+
+namespace Spikard\Handlers;
+
+interface WebSocketHandlerInterface
+{
+    public function onConnect(): void;
+
+    public function onMessage(string $message): void;
+
+    public function onClose(int $code, ?string $reason = null): void;
+}
+
+interface SseEventProducerInterface
+{
+    /** @return \Generator<int, string, mixed, void> */
+    public function __invoke(): \Generator;
+}
+
+namespace Spikard;
+
+final class App
+{
+    public function addWebSocket(
+        string $path,
+        \Spikard\Handlers\WebSocketHandlerInterface $handler
+    ): self {
+        return $this;
+    }
+
+    public function addSse(
+        string $path,
+        \Spikard\Handlers\SseEventProducerInterface $producer
+    ): self {
+        return $this;
+    }
 }
 
 namespace Google\Protobuf\Internal;
@@ -972,8 +1078,8 @@ class Struct:
 
 def field(*, default: object = ..., name: str | None = None) -> Any: ...
 
-def convert(value: object, *, type: type[T]) -> T:
-    return cast(T, value)
+def convert(value: object, *, type: object) -> Any:
+    return value
 
 def to_builtins(value: object) -> object: ...
 "#,

@@ -215,15 +215,11 @@ import {{ z }} from "zod";
                 } else {
                     match &string_type.format {
                         VariantOrUnknownOrEmpty::Item(StringFormat::Date) => "z.string()".to_string(),
-                        VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => {
-                            "z.string().datetime()".to_string()
-                        }
+                        VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => "z.string().datetime()".to_string(),
                         VariantOrUnknownOrEmpty::Unknown(format) if format == "email" => {
                             "z.string().email()".to_string()
                         }
-                        VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => {
-                            "z.string().uuid()".to_string()
-                        }
+                        VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => "z.string().uuid()".to_string(),
                         _ => "z.string()".to_string(),
                     }
                 }
@@ -369,10 +365,7 @@ import {{ z }} from "zod";
                         .map(|(prop_name, prop_schema_ref)| {
                             let optional_marker = if obj.required.contains(prop_name) { "" } else { "?" };
                             let prop_type = match prop_schema_ref {
-                                ReferenceOr::Item(prop_schema) => Self::schema_to_typescript_type(
-                                    prop_schema,
-                                    false,
-                                ),
+                                ReferenceOr::Item(prop_schema) => Self::schema_to_typescript_type(prop_schema, false),
                                 ReferenceOr::Reference { reference } => {
                                     let ref_name = reference.split('/').next_back().unwrap();
                                     ref_name.to_pascal_case()

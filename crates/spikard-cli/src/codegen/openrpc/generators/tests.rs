@@ -574,7 +574,9 @@ fn test_typescript_generator_user_api_example_validates_with_quality_gates() {
     let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
     let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
     let generator = TypeScriptOpenRpcGenerator;
-    let output = generator.generate_handler_app(&spec).expect("TypeScript OpenRPC generation should succeed");
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("TypeScript OpenRPC generation should succeed");
     let report = QualityValidator::new(TargetLanguage::TypeScript)
         .validate_all(&output)
         .expect("TypeScript OpenRPC validation should run");

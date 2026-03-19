@@ -184,7 +184,8 @@ fn generate_named_schema(code: &mut String, spec: &OpenRpcSpec, type_name: &str,
         for (field_name, field_schema) in properties {
             let rust_name = rust_identifier(field_name);
             let required = required_fields.iter().any(|required_name| required_name == field_name);
-            let field_type = json_schema_to_rust_type_in_context(spec, field_schema, required, Some(type_name), Some(field_name));
+            let field_type =
+                json_schema_to_rust_type_in_context(spec, field_schema, required, Some(type_name), Some(field_name));
             if rust_name != *field_name {
                 code.push_str(&format!("    #[serde(rename = \"{}\")]\n", field_name));
             }
@@ -195,7 +196,10 @@ fn generate_named_schema(code: &mut String, spec: &OpenRpcSpec, type_name: &str,
         }
         code.push_str("}\n\n");
     } else {
-        code.push_str(&format!("pub type {type_name} = {};\n\n", json_schema_to_rust_type(spec, resolved, true)));
+        code.push_str(&format!(
+            "pub type {type_name} = {};\n\n",
+            json_schema_to_rust_type(spec, resolved, true)
+        ));
     }
 
     Ok(())
@@ -216,8 +220,13 @@ fn generate_rust_dtos(code: &mut String, spec: &OpenRpcSpec, method: &OpenRpcMet
     } else {
         for param in &method.params {
             let field_name = rust_identifier(&param.name);
-            let field_type =
-                json_schema_to_rust_type_in_context(spec, &param.schema, param.required, Some(&params_class), Some(&param.name));
+            let field_type = json_schema_to_rust_type_in_context(
+                spec,
+                &param.schema,
+                param.required,
+                Some(&params_class),
+                Some(&param.name),
+            );
             if field_name != param.name {
                 code.push_str(&format!("    #[serde(rename = \"{}\")]\n", param.name));
             }
@@ -244,8 +253,13 @@ fn generate_rust_dtos(code: &mut String, spec: &OpenRpcSpec, method: &OpenRpcMet
         for (field_name, field_schema) in properties {
             let rust_name = rust_identifier(field_name);
             let required = required_fields.iter().any(|required_name| required_name == field_name);
-            let field_type =
-                json_schema_to_rust_type_in_context(spec, field_schema, required, Some(&result_class), Some(field_name));
+            let field_type = json_schema_to_rust_type_in_context(
+                spec,
+                field_schema,
+                required,
+                Some(&result_class),
+                Some(field_name),
+            );
             if rust_name != *field_name {
                 code.push_str(&format!("    #[serde(rename = \"{}\")]\n", field_name));
             }
@@ -256,7 +270,10 @@ fn generate_rust_dtos(code: &mut String, spec: &OpenRpcSpec, method: &OpenRpcMet
         }
         code.push_str("}\n\n");
     } else {
-        code.push_str(&format!("pub type {result_class} = {};\n\n", json_schema_to_rust_type(spec, resolved_result, true)));
+        code.push_str(&format!(
+            "pub type {result_class} = {};\n\n",
+            json_schema_to_rust_type(spec, resolved_result, true)
+        ));
     }
 
     Ok(())
@@ -372,7 +389,9 @@ fn json_schema_to_rust_type_in_context(
                 .get("items")
                 .map(|items| {
                     if let (Some(parent_name), Some(field_name)) = (parent_name, field_name) {
-                        if schema_ref_name(items).is_none() && schema_has_named_object_shape(resolve_schema(spec, items)) {
+                        if schema_ref_name(items).is_none()
+                            && schema_has_named_object_shape(resolve_schema(spec, items))
+                        {
                             return format!("{parent_name}{}Item", field_name.to_pascal_case());
                         }
                     }

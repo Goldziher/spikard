@@ -21,10 +21,9 @@ impl OpenRpcGenerator for ElixirOpenRpcGenerator {
         let types_module_name = format!("{module_name}.Types");
         let has_component_types = !spec.components.schemas.is_empty();
         let needs_types_alias = has_component_types
-            && spec
-                .methods
-                .iter()
-                .any(|method| schema_uses_component_ref(&params_schema(method)) || schema_uses_component_ref(&method.result.schema));
+            && spec.methods.iter().any(|method| {
+                schema_uses_component_ref(&params_schema(method)) || schema_uses_component_ref(&method.result.schema)
+            });
 
         if has_component_types {
             code.push_str(&generate_types_module(spec, &types_module_name));

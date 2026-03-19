@@ -1,8 +1,8 @@
 use super::asyncapi::{Protocol, parse_asyncapi_schema};
 use super::asyncapi::{
-    generate_nodejs_handler_app, generate_nodejs_test_app, generate_php_handler_app, generate_php_test_app,
-    generate_python_handler_app, generate_python_test_app, generate_ruby_handler_app, generate_ruby_test_app,
-    generate_rust_handler_app,
+    generate_elixir_handler_app, generate_nodejs_handler_app, generate_nodejs_test_app, generate_php_handler_app,
+    generate_php_test_app, generate_python_handler_app, generate_python_test_app, generate_ruby_handler_app,
+    generate_ruby_test_app, generate_rust_handler_app,
 };
 use super::graphql::generators::GraphQLGenerator;
 use super::graphql::generators::elixir::ElixirGenerator;
@@ -275,7 +275,7 @@ impl CodegenEngine {
             TargetLanguage::Ruby => generate_ruby_handler_app(spec, protocol)?,
             TargetLanguage::Rust => generate_rust_handler_app(spec, protocol)?,
             TargetLanguage::Php => generate_php_handler_app(spec, protocol)?,
-            TargetLanguage::Elixir => bail!("Elixir is not supported for AsyncAPI handlers"),
+            TargetLanguage::Elixir => generate_elixir_handler_app(spec, protocol)?,
         };
         if validate {
             Self::validate_generated_code(language, &code)?;

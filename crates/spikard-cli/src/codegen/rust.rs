@@ -231,10 +231,17 @@ use spikard::{{{}}};
         match &schema.schema_kind {
             SchemaKind::Type(Type::Object(obj)) => {
                 for (prop_name, prop_schema_ref) in &obj.properties {
-                    if properties.iter().any(|(existing_name, _, _)| existing_name == prop_name) {
+                    if properties
+                        .iter()
+                        .any(|(existing_name, _, _)| existing_name == prop_name)
+                    {
                         continue;
                     }
-                    properties.push((prop_name.clone(), prop_schema_ref.clone(), obj.required.contains(prop_name)));
+                    properties.push((
+                        prop_name.clone(),
+                        prop_schema_ref.clone(),
+                        obj.required.contains(prop_name),
+                    ));
                 }
             }
             SchemaKind::AllOf { all_of } => {
@@ -263,7 +270,9 @@ use spikard::{{{}}};
             .map(|(prop_name, prop_schema_ref, is_required)| {
                 let field_name = sanitize_rust_identifier(prop_name);
                 let type_hint = match prop_schema_ref {
-                    ReferenceOr::Item(prop_schema) => self.inline_field_type(struct_name, prop_name, prop_schema, *is_required),
+                    ReferenceOr::Item(prop_schema) => {
+                        self.inline_field_type(struct_name, prop_name, prop_schema, *is_required)
+                    }
                     ReferenceOr::Reference { reference } => {
                         let ref_name = reference.split('/').next_back().unwrap();
                         let base_type = ref_name.to_pascal_case();
@@ -473,9 +482,7 @@ use spikard::{{{}}};
         let base_type = match &schema.schema_kind {
             SchemaKind::Type(Type::String(string_type)) => match &string_type.format {
                 VariantOrUnknownOrEmpty::Item(StringFormat::Date) => "chrono::NaiveDate".to_string(),
-                VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => {
-                    "chrono::DateTime<chrono::Utc>".to_string()
-                }
+                VariantOrUnknownOrEmpty::Item(StringFormat::DateTime) => "chrono::DateTime<chrono::Utc>".to_string(),
                 VariantOrUnknownOrEmpty::Unknown(format) if format == "uuid" => "uuid::Uuid".to_string(),
                 _ => "String".to_string(),
             },

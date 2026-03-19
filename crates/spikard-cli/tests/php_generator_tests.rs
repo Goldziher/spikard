@@ -374,8 +374,7 @@ fn php_openapi_generated_code_validates() {
 
 #[test]
 fn php_openapi_auth_service_example_validates() {
-    let schema_path =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
     let output = generate_from_openapi(&schema_path, TargetLanguage::Php, &DtoConfig::default()).expect("generate");
     let report = QualityValidator::new(TargetLanguage::Php)
         .validate_all(&output)

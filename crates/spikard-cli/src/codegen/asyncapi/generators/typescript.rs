@@ -1,9 +1,11 @@
 //! TypeScript `AsyncAPI` code generation.
 
 use anyhow::{Result, bail};
+use heck::ToPascalCase;
+use serde_json::Value;
 
-use super::base::sanitize_typescript_identifier;
-use super::{AsyncApiGenerator, ChannelInfo};
+use super::base::{sanitize_identifier, sanitize_typescript_identifier};
+use super::{AsyncApiGenerator, ChannelInfo, ChannelMessage};
 
 /// TypeScript `AsyncAPI` code generator
 pub struct TypeScriptAsyncApiGenerator;
@@ -83,7 +85,10 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
         let mut route_entries = Vec::new();
 
         for channel in channels {
-            let handler_name = format!("handle{}", camel_identifier(&channel.name));
+            if protocol == "websocket" {
+                code.push_str(&generate_channel_message_schemas(channel));
+            }
+            let handler_name = format!("handle{}", pascal_identifier(&channel.name));
             let message_description = if channel.messages.is_empty() {
                 "messages".to_string()
             } else {
@@ -92,14 +97,20 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
 
             match protocol {
                 "websocket" => {
+                    let payload_type = typescript_channel_payload_type(channel);
+                    let payload_schema = typescript_channel_payload_schema(channel);
                     code.push_str(&format!(
                         "async function {handler_name}(message: unknown): Promise<string> {{\n"
                     ));
-                    code.push_str(&format!(
-                        "  // TODO: Handle {} for {}\n",
-                        message_description, channel.path
-                    ));
-                    code.push_str("  return JSON.stringify(message);\n");
+                    code.push_str(&format!("  // Handles {} for {}\n", message_description, channel.path));
+                    if let (Some(payload_type), Some(payload_schema)) = (payload_type, payload_schema) {
+                        code.push_str(&format!(
+                            "  const parsed: {payload_type} = {payload_schema}.parse(message);\n"
+                        ));
+                        code.push_str("  return JSON.stringify(parsed);\n");
+                    } else {
+                        code.push_str("  return JSON.stringify(message);\n");
+                    }
                     code.push_str("}\n\n");
                 }
                 "sse" => {
@@ -142,9 +153,207 @@ fn camel_identifier(name: &str) -> String {
     sanitize_typescript_identifier(name)
 }
 
+fn pascal_identifier(name: &str) -> String {
+    sanitize_identifier(name).to_pascal_case()
+}
+
+fn generate_channel_message_schemas(channel: &ChannelInfo) -> String {
+    let mut code = String::new();
+
+    for message in &channel.message_definitions {
+        if let Some(schema) = &message.schema {
+            let type_name = typescript_message_type_name(channel, message);
+            let schema_name = typescript_message_schema_name(channel, message);
+            code.push_str(&generate_named_schema(&type_name, &schema_name, schema));
+            code.push('\n');
+        }
+    }
+
+    let schema_names = channel
+        .message_definitions
+        .iter()
+        .filter(|message| message.schema.is_some())
+        .map(|message| typescript_message_schema_name(channel, message))
+        .collect::<Vec<_>>();
+
+    if schema_names.len() > 1 {
+        let union_schema = typescript_channel_payload_schema(channel).unwrap();
+        let union_type = typescript_channel_payload_type(channel).unwrap();
+        code.push_str(&format!(
+            "const {union_schema} = z.union([{}]);\n",
+            schema_names.join(", ")
+        ));
+        code.push_str(&format!("type {union_type} = z.infer<typeof {union_schema}>;\n\n"));
+    }
+
+    code
+}
+
+fn typescript_channel_payload_type(channel: &ChannelInfo) -> Option<String> {
+    match channel.message_definitions.as_slice() {
+        [] => None,
+        [message] => message
+            .schema
+            .as_ref()
+            .map(|_| typescript_message_type_name(channel, message)),
+        _ => Some(format!("{}Message", channel.name.to_pascal_case())),
+    }
+}
+
+fn typescript_channel_payload_schema(channel: &ChannelInfo) -> Option<String> {
+    match channel.message_definitions.as_slice() {
+        [] => None,
+        [message] => message
+            .schema
+            .as_ref()
+            .map(|_| typescript_message_schema_name(channel, message)),
+        _ => Some(format!("{}MessageSchema", channel.name.to_pascal_case())),
+    }
+}
+
+fn typescript_message_type_name(channel: &ChannelInfo, message: &ChannelMessage) -> String {
+    format!(
+        "{}Payload",
+        format!("{}_{}", channel.name, message.schema_name).to_pascal_case()
+    )
+}
+
+fn typescript_message_schema_name(channel: &ChannelInfo, message: &ChannelMessage) -> String {
+    format!("{}Schema", typescript_message_type_name(channel, message))
+}
+
+fn generate_named_schema(type_name: &str, schema_name: &str, schema: &Value) -> String {
+    let mut code = String::new();
+
+    for (field_name, field_schema) in object_properties(schema) {
+        if schema_has_named_object_shape(field_schema) {
+            let nested_type = format!("{type_name}{}", field_name.to_pascal_case());
+            let nested_schema = format!("{nested_type}Schema");
+            code.push_str(&generate_named_schema(&nested_type, &nested_schema, field_schema));
+            code.push('\n');
+        } else if let Some(items) = field_schema.get("items")
+            && schema_has_named_object_shape(items)
+        {
+            let nested_type = format!("{type_name}{}Item", field_name.to_pascal_case());
+            let nested_schema = format!("{nested_type}Schema");
+            code.push_str(&generate_named_schema(&nested_type, &nested_schema, items));
+            code.push('\n');
+        }
+    }
+
+    code.push_str(&format!("const {schema_name} = z.object({{\n"));
+    if let Some(properties) = schema.get("properties").and_then(Value::as_object) {
+        let required = required_field_names(schema);
+        for (field_name, field_schema) in properties {
+            let property_name = if field_name.chars().all(|ch| ch.is_ascii_alphanumeric() || ch == '_') {
+                field_name.clone()
+            } else {
+                format!("{field_name:?}")
+            };
+            let is_required = required.iter().any(|required_name| required_name == field_name);
+            let field_type = schema_to_zod_type(type_name, field_name, field_schema);
+            if is_required {
+                code.push_str(&format!("  {property_name}: {field_type},\n"));
+            } else {
+                code.push_str(&format!("  {property_name}: {field_type}.optional(),\n"));
+            }
+        }
+    }
+    code.push_str("});\n");
+    code.push_str(&format!("type {type_name} = z.infer<typeof {schema_name}>;\n"));
+    code
+}
+
+fn schema_to_zod_type(parent_name: &str, field_name: &str, schema: &Value) -> String {
+    if let Some(const_value) = schema.get("const") {
+        return zod_literal(const_value);
+    }
+
+    if let Some(enum_values) = schema.get("enum").and_then(Value::as_array) {
+        let literals = enum_values
+            .iter()
+            .filter_map(|value| value.as_str().map(|value| format!("{value:?}")))
+            .collect::<Vec<_>>();
+        if !literals.is_empty() {
+            return format!("z.enum([{}])", literals.join(", "));
+        }
+    }
+
+    match schema.get("type").and_then(Value::as_str) {
+        Some("string") => match schema.get("format").and_then(Value::as_str) {
+            Some("uuid") => "z.string().uuid()".to_string(),
+            Some("date-time") => "z.string().datetime()".to_string(),
+            _ => "z.string()".to_string(),
+        },
+        Some("integer") => "z.number().int()".to_string(),
+        Some("number") => "z.number()".to_string(),
+        Some("boolean") => "z.boolean()".to_string(),
+        Some("array") => {
+            let item_type = schema
+                .get("items")
+                .map(|items| {
+                    if schema_has_named_object_shape(items) {
+                        format!("{}{}ItemSchema", parent_name, field_name.to_pascal_case())
+                    } else {
+                        schema_to_zod_type(parent_name, field_name, items)
+                    }
+                })
+                .unwrap_or_else(|| "z.unknown()".to_string());
+            format!("z.array({item_type})")
+        }
+        Some("object") => {
+            if schema_has_named_object_shape(schema) {
+                format!("{}{}Schema", parent_name, field_name.to_pascal_case())
+            } else {
+                "z.record(z.string(), z.unknown())".to_string()
+            }
+        }
+        _ => "z.unknown()".to_string(),
+    }
+}
+
+fn zod_literal(value: &Value) -> String {
+    match value {
+        Value::String(value) => format!("z.literal({value:?})"),
+        Value::Bool(value) => format!("z.literal({value})"),
+        Value::Number(value) => format!("z.literal({value})"),
+        _ => "z.unknown()".to_string(),
+    }
+}
+
+fn object_properties(schema: &Value) -> Vec<(&str, &Value)> {
+    schema
+        .get("properties")
+        .and_then(Value::as_object)
+        .map(|properties| properties.iter().map(|(key, value)| (key.as_str(), value)).collect())
+        .unwrap_or_default()
+}
+
+fn required_field_names(schema: &Value) -> Vec<String> {
+    schema
+        .get("required")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|value| value.as_str().map(str::to_string))
+        .collect()
+}
+
+fn schema_has_named_object_shape(schema: &Value) -> bool {
+    schema
+        .get("type")
+        .and_then(Value::as_str)
+        .is_some_and(|schema_type| schema_type == "object")
+        && schema
+            .get("properties")
+            .and_then(Value::as_object)
+            .is_some_and(|properties| !properties.is_empty())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     #[test]
     fn test_typescript_generator_test_app_websocket() {
@@ -153,6 +362,7 @@ mod tests {
             name: "chat".to_string(),
             path: "/chat".to_string(),
             messages: vec!["message".to_string()],
+            message_definitions: vec![],
         }];
 
         let code = generator.generate_test_app(&channels, "websocket").unwrap();
@@ -168,10 +378,47 @@ mod tests {
             name: "chat".to_string(),
             path: "/chat".to_string(),
             messages: vec!["message".to_string()],
+            message_definitions: vec![],
         }];
 
         let code = generator.generate_handler_app(&channels, "websocket").unwrap();
         assert!(code.contains("async function"));
         assert!(code.contains("routes"));
+    }
+
+    #[test]
+    fn test_typescript_generator_emits_typed_websocket_payload_models() {
+        let generator = TypeScriptAsyncApiGenerator;
+        let channels = vec![ChannelInfo {
+            name: "chat".to_string(),
+            path: "/chat".to_string(),
+            messages: vec!["chatEvent".to_string()],
+            message_definitions: vec![ChannelMessage {
+                name: "chatEvent".to_string(),
+                schema_name: "chat_chatEvent".to_string(),
+                schema: Some(json!({
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "chatEvent", "type": "string" },
+                        "body": { "type": "string" },
+                        "metadata": {
+                            "type": "object",
+                            "properties": {
+                                "roomId": { "type": "string", "format": "uuid" }
+                            }
+                        }
+                    },
+                    "required": ["type", "body"]
+                })),
+                examples: vec![],
+            }],
+        }];
+
+        let code = generator.generate_handler_app(&channels, "websocket").unwrap();
+        assert!(code.contains("const ") && code.contains("Schema = z.object"));
+        assert!(code.contains("z.literal(\"chatEvent\")"));
+        assert!(code.contains("z.string().uuid()"));
+        assert!(code.contains("const parsed: "));
+        assert!(code.contains(".parse(message);"));
     }
 }

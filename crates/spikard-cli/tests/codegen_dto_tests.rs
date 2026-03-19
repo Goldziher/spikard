@@ -666,9 +666,7 @@ fn typescript_openapi_auth_service_preserves_semantic_zod_and_union_bodies() -> 
         "nested object properties should remain shaped in zod schemas"
     );
     assert!(
-        code.contains(
-            "Body<PasswordGrantRequest | ClientCredentialsGrantRequest | RefreshTokenGrantRequest>"
-        ),
+        code.contains("Body<PasswordGrantRequest | ClientCredentialsGrantRequest | RefreshTokenGrantRequest>"),
         "oneOf request bodies should preserve union types"
     );
 
@@ -1276,7 +1274,10 @@ fn asyncapi_test_app_generation_writes_ruby_handler() -> Result<()> {
         contents.contains("def handle_websocket"),
         "expected websocket handler in Ruby app"
     );
-    assert!(contents.contains("Faye::WebSocket"), "expected Faye WebSocket usage");
+    assert!(
+        contents.contains("require 'faye/websocket'"),
+        "expected faye-websocket dependency in Ruby app"
+    );
 
     Ok(())
 }
@@ -1301,8 +1302,21 @@ fn asyncapi_handler_generation_writes_rust_scaffold() -> Result<()> {
         CodegenOutcome::Files(_) => {
             let contents = fs::read_to_string(&output)?;
             assert!(
+                contents.contains("use serde::{Deserialize, Serialize};"),
+                "expected serde imports for typed websocket payloads"
+            );
+            assert!(
                 contents.contains("use spikard::{App, WebSocketHandler};"),
                 "expected WebSocket handler import in Rust scaffold"
+            );
+            assert!(
+                contents.contains("pub struct ") && contents.contains("Payload"),
+                "expected generated websocket payload struct"
+            );
+            assert!(
+                contents.contains("let parsed: ")
+                    && contents.contains("Payload = serde_json::from_value(message).ok()?;"),
+                "expected typed websocket payload parsing"
             );
             assert!(
                 contents.contains("app.websocket(\"/chat\", ChatWebSocketHandler);"),
@@ -1316,7 +1330,7 @@ fn asyncapi_handler_generation_writes_rust_scaffold() -> Result<()> {
 }
 
 #[test]
-fn asyncapi_handler_generation_writes_php_scaffold() -> Result<()> {
+fn asyncapi_handler_generation_writes_php_typed_scaffold() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "asyncapi.yaml", SIMPLE_ASYNCAPI);
     let output = dir.path().join("handlers.php");
@@ -1335,8 +1349,317 @@ fn asyncapi_handler_generation_writes_php_scaffold() -> Result<()> {
         CodegenOutcome::Files(_) => {
             let contents = fs::read_to_string(&output)?;
             assert!(contents.contains("<?php"), "expected PHP file header");
+            assert!(
+                contents.contains("implements WebSocketHandlerInterface"),
+                "expected websocket handler interface"
+            );
+            assert!(
+                contents.contains("fromArray($payload)"),
+                "expected generated typed payload parsing"
+            );
+            assert!(
+                contents.contains("expectStringEnum($payload, 'type'"),
+                "expected const discriminator validation"
+            );
+            let report = QualityValidator::new(TargetLanguage::Php)
+                .validate_all(&contents)
+                .expect("php asyncapi validation should run");
+            assert!(
+                report.is_valid(),
+                "generated PHP AsyncAPI code should validate cleanly: {report}"
+            );
         }
         CodegenOutcome::InMemory(_) => panic!("PHP handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn asyncapi_handler_generation_writes_ruby_typed_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "asyncapi.yaml", SIMPLE_ASYNCAPI);
+    let output = dir.path().join("handlers.rb");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::Ruby,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(
+                contents.contains("class ChatHandler < Spikard::WebSocketHandler"),
+                "expected ruby websocket base class"
+            );
+            assert!(
+                contents.contains("AsyncApiTypes::") && contents.contains(".from_h(payload)"),
+                "expected generated typed payload parsing"
+            );
+            assert!(
+                contents.contains("Assertions.expect_string_enum(payload, :type"),
+                "expected const discriminator validation"
+            );
+            QualityValidator::new(TargetLanguage::Ruby)
+                .validate_syntax(&contents)
+                .expect("ruby asyncapi syntax validation should pass");
+            QualityValidator::new(TargetLanguage::Ruby)
+                .validate_lint(&contents)
+                .expect("ruby asyncapi lint validation should pass");
+        }
+        CodegenOutcome::InMemory(_) => panic!("Ruby handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn asyncapi_handler_generation_writes_python_typed_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "asyncapi.yaml", SIMPLE_ASYNCAPI);
+    let output = dir.path().join("handlers.py");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::Python,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(contents.contains("import msgspec"), "expected msgspec import");
+            assert!(
+                contents.contains("Payload(msgspec.Struct"),
+                "expected generated payload model"
+            );
+            assert!(
+                contents.contains("parsed: ") && contents.contains("msgspec.convert(message, type="),
+                "expected typed websocket parsing"
+            );
+            compile_python_file(&contents)?;
+        }
+        CodegenOutcome::InMemory(_) => panic!("Python handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn asyncapi_handler_generation_writes_typescript_typed_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "asyncapi.yaml", SIMPLE_ASYNCAPI);
+    let output = dir.path().join("handlers.ts");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::TypeScript,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(contents.contains("Schema = z.object"), "expected generated zod schema");
+            assert!(
+                contents.contains("async function handleChat("),
+                "expected PascalCase-based handler naming"
+            );
+            assert!(
+                contents.contains(".parse(message);"),
+                "expected typed websocket parsing"
+            );
+            let report = QualityValidator::new(TargetLanguage::TypeScript)
+                .validate_all(&contents)
+                .expect("typescript asyncapi validation should run");
+            assert!(
+                report.is_valid(),
+                "generated TypeScript AsyncAPI code should validate cleanly: {report}"
+            );
+        }
+        CodegenOutcome::InMemory(_) => panic!("TypeScript handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn asyncapi_handler_generation_writes_elixir_typed_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "asyncapi.yaml", SIMPLE_ASYNCAPI);
+    let output = dir.path().join("handlers.ex");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::Elixir,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(
+                contents.contains("use Spikard.WebSocket"),
+                "expected websocket behaviour usage"
+            );
+            assert!(
+                contents.contains("defmodule AsyncApiTypes.")
+                    && contents.contains("Payload do"),
+                "expected generated Elixir payload module"
+            );
+            assert!(
+                contents.contains("def websocket_routes do"),
+                "expected generated route metadata helper"
+            );
+            let report = QualityValidator::new(TargetLanguage::Elixir)
+                .validate_all(&contents)
+                .expect("elixir asyncapi validation should run");
+            assert!(
+                report.is_valid(),
+                "generated Elixir AsyncAPI code should validate cleanly: {report}"
+            );
+        }
+        CodegenOutcome::InMemory(_) => panic!("Elixir handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn asyncapi_chat_service_example_generates_php_typed_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/chat-service.asyncapi.yaml");
+    let output = dir.path().join("chat_handlers.php");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::Php,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(
+                contents.contains("interface ChatMessage"),
+                "expected typed channel union interface for multi-message channel"
+            );
+            assert!(
+                contents.contains("::matches($payload)"),
+                "expected discriminator-based payload selection"
+            );
+            let report = QualityValidator::new(TargetLanguage::Php)
+                .validate_all(&contents)
+                .expect("php asyncapi example validation should run");
+            assert!(
+                report.is_valid(),
+                "generated PHP AsyncAPI example should validate cleanly: {report}"
+            );
+        }
+        CodegenOutcome::InMemory(_) => panic!("PHP handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn asyncapi_chat_service_example_generates_elixir_typed_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/chat-service.asyncapi.yaml");
+    let output = dir.path().join("chat_handlers.ex");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::Elixir,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(
+                contents.contains("Enum.find_value(@payload_modules"),
+                "expected discriminator-based payload selection"
+            );
+            assert!(
+                contents.contains("defmodule ChatWebSocketHandler do"),
+                "expected runtime-aligned websocket handler scaffold"
+            );
+            let report = QualityValidator::new(TargetLanguage::Elixir)
+                .validate_all(&contents)
+                .expect("elixir asyncapi example validation should run");
+            assert!(
+                report.is_valid(),
+                "generated Elixir AsyncAPI example should validate cleanly: {report}"
+            );
+        }
+        CodegenOutcome::InMemory(_) => panic!("Elixir handler generation should emit files"),
+    }
+
+    Ok(())
+}
+
+#[test]
+fn asyncapi_chat_service_example_generates_ruby_typed_scaffold() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/chat-service.asyncapi.yaml");
+    let output = dir.path().join("chat_handlers.rb");
+
+    let request = CodegenRequest {
+        schema_path,
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncHandlers {
+            language: TargetLanguage::Ruby,
+            output: output.clone(),
+        },
+        dto: None,
+    };
+
+    match CodegenEngine::execute(request)? {
+        CodegenOutcome::Files(_) => {
+            let contents = fs::read_to_string(&output)?;
+            assert!(
+                contents.contains(".matches?(payload)"),
+                "expected discriminator-based payload selection"
+            );
+            assert!(
+                contents.contains("class ChatHandler < Spikard::WebSocketHandler"),
+                "expected runtime-aligned websocket handler scaffold"
+            );
+            QualityValidator::new(TargetLanguage::Ruby)
+                .validate_syntax(&contents)
+                .expect("ruby asyncapi example syntax validation should pass");
+            QualityValidator::new(TargetLanguage::Ruby)
+                .validate_lint(&contents)
+                .expect("ruby asyncapi example lint validation should pass");
+        }
+        CodegenOutcome::InMemory(_) => panic!("Ruby handler generation should emit files"),
     }
 
     Ok(())
@@ -1435,6 +1758,16 @@ def route(*args, **kwargs):
     def decorator(fn):
         return fn
     return decorator
+
+def websocket(*args, **kwargs):
+    def decorator(fn):
+        return fn
+    return decorator
+
+def sse(*args, **kwargs):
+    def decorator(fn):
+        return fn
+    return decorator
 "#,
     )?;
 
@@ -1459,6 +1792,15 @@ class Struct:
 
     def __class_getitem__(cls, item):
         return cls
+
+def field(*args, **kwargs):
+    return None
+
+def convert(value, type=None):
+    return value
+
+def to_builtins(value):
+    return value
 "#,
     )?;
 

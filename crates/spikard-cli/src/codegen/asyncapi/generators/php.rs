@@ -1,9 +1,11 @@
 //! PHP `AsyncAPI` code generation.
 
 use anyhow::{Result, bail};
+use heck::ToPascalCase;
+use serde_json::Value;
 
 use super::base::sanitize_identifier;
-use super::{AsyncApiGenerator, ChannelInfo};
+use super::{AsyncApiGenerator, ChannelInfo, ChannelMessage};
 
 /// PHP `AsyncAPI` code generator
 pub struct PhpAsyncApiGenerator;
@@ -142,18 +144,26 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
         code.push_str(&format!(" * Protocol: {protocol}\n"));
         code.push_str(" * Generated handler classes for each channel\n");
         code.push_str(" */\n\n");
+        code.push_str("use DateTimeImmutable;\n");
+        code.push_str("use DateTimeInterface;\n");
+        code.push_str("use JsonException;\n");
+        code.push_str("use RuntimeException;\n");
 
         match protocol {
             "websocket" | "ws" => {
-                code.push_str("use Spikard\\WebSocketHandlerInterface;\n\n");
+                code.push_str("use Spikard\\App;\n");
+                code.push_str("use Spikard\\Handlers\\WebSocketHandlerInterface;\n\n");
+                code.push_str(&generate_php_asyncapi_assertions());
 
                 for channel in channels {
+                    code.push_str(&generate_channel_message_models(channel));
                     let class_name = camel_identifier(&channel.name);
                     let message_description = if channel.messages.is_empty() {
                         "messages".to_string()
                     } else {
                         channel.messages.join(", ")
                     };
+                    let payload_type = php_channel_payload_type(channel).unwrap_or_else(|| "array".to_string());
 
                     code.push_str(&format!("/**\n * WebSocket handler for {}\n", channel.path));
                     code.push_str(&format!(" * Handles: {message_description}\n */\n"));
@@ -161,7 +171,6 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                         "final class {class_name}Handler implements WebSocketHandlerInterface\n"
                     ));
                     code.push_str("{\n");
-
                     code.push_str("    /**\n");
                     code.push_str("     * Called when WebSocket connection is established\n");
                     code.push_str("     */\n");
@@ -173,38 +182,73 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
 
                     code.push_str("    /**\n");
                     code.push_str("     * Handle incoming WebSocket message\n");
-                    code.push_str("     * @param array<string, mixed> $message\n");
-                    code.push_str("     * @return array<string, mixed>\n");
                     code.push_str("     */\n");
-                    code.push_str("    public function onMessage(array $message): array\n");
+                    code.push_str("    public function onMessage(string $message): void\n");
                     code.push_str("    {\n");
+                    code.push_str("        $payload = $this->parseMessage($message);\n");
                     code.push_str(&format!(
                         "        // TODO: Handle {} received on {}\n",
                         message_description, channel.path
                     ));
-                    code.push_str("        // Example: Echo back with timestamp\n");
-                    code.push_str("        return [\n");
-                    code.push_str("            'echo' => $message,\n");
-                    code.push_str("            'timestamp' => time(),\n");
-                    code.push_str(&format!("            'channel' => '{}',\n", &channel.path));
-                    code.push_str("        ];\n");
+                    code.push_str("        unset($payload);\n");
                     code.push_str("    }\n\n");
 
                     code.push_str("    /**\n");
                     code.push_str("     * Called when WebSocket connection closes\n");
                     code.push_str("     */\n");
-                    code.push_str("    public function onClose(): void\n");
+                    code.push_str("    public function onClose(int $code, ?string $reason = null): void\n");
                     code.push_str("    {\n");
                     code.push_str("        // TODO: Clean up connection resources\n");
+                    code.push_str("        unset($code, $reason);\n");
                     code.push_str("        error_log(\"WebSocket connection closed\");\n");
+                    code.push_str("    }\n\n");
+
+                    code.push_str("    /**\n");
+                    code.push_str("     * @throws JsonException|RuntimeException\n");
+                    code.push_str("     */\n");
+                    code.push_str(&format!(
+                        "    private function parseMessage(string $message): {payload_type}\n"
+                    ));
+                    code.push_str("    {\n");
+                    code.push_str("        $decoded = json_decode($message, true, 512, JSON_THROW_ON_ERROR);\n");
+                    code.push_str("        if (!is_array($decoded)) {\n");
+                    code.push_str("            throw new RuntimeException('Expected JSON object payload');\n");
+                    code.push_str("        }\n");
+                    code.push_str("        /** @var array<string, mixed> $payload */\n");
+                    code.push_str("        $payload = $decoded;\n");
+                    match channel.message_definitions.as_slice() {
+                        [] => {
+                            code.push_str("        return $payload;\n");
+                        }
+                        [message] => {
+                            let payload_class = php_message_type_name(channel, message);
+                            code.push_str(&format!("        return {payload_class}::fromArray($payload);\n"));
+                        }
+                        messages => {
+                            for message in messages.iter().filter(|message| message.schema.is_some()) {
+                                let payload_class = php_message_type_name(channel, message);
+                                code.push_str(&format!("        if ({payload_class}::matches($payload)) {{\n"));
+                                code.push_str(&format!("            return {payload_class}::fromArray($payload);\n"));
+                                code.push_str("        }\n");
+                            }
+                            code.push_str(&format!(
+                                "        throw new RuntimeException('Unsupported message payload for {}');\n",
+                                channel.path
+                            ));
+                        }
+                    }
                     code.push_str("    }\n");
                     code.push_str("}\n\n");
                 }
             }
             "sse" => {
-                code.push_str("use Spikard\\SseEventProducerInterface;\n\n");
+                code.push_str("use Generator;\n");
+                code.push_str("use Spikard\\App;\n");
+                code.push_str("use Spikard\\Handlers\\SseEventProducerInterface;\n\n");
+                code.push_str(&generate_php_asyncapi_assertions());
 
                 for channel in channels {
+                    code.push_str(&generate_channel_message_models(channel));
                     let class_name = camel_identifier(&channel.name);
                     let message_description = if channel.messages.is_empty() {
                         "events".to_string()
@@ -218,30 +262,32 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                         "final class {class_name}Producer implements SseEventProducerInterface\n"
                     ));
                     code.push_str("{\n");
-
                     code.push_str("    /**\n");
                     code.push_str("     * Produce SSE events\n");
-                    code.push_str("     * @return Generator<array{event: string, data: mixed}>\n");
+                    code.push_str("     * @return Generator<int, string, mixed, void>\n");
                     code.push_str("     */\n");
-                    code.push_str("    public function produce(): Generator\n");
+                    code.push_str("    public function __invoke(): Generator\n");
                     code.push_str("    {\n");
                     code.push_str(&format!(
                         "        // TODO: Implement event generation logic for {}\n",
                         channel.path
                     ));
-                    code.push_str("        // Example: Generate 10 events with 1 second interval\n");
-                    code.push_str("        for ($i = 0; $i < 10; $i++) {\n");
-                    code.push_str("            yield [\n");
-                    code.push_str("                'event' => 'message',\n");
-                    code.push_str("                'data' => [\n");
-                    code.push_str("                    'sequence' => $i,\n");
-                    code.push_str("                    'timestamp' => time(),\n");
-                    code.push_str(&format!("                    'channel' => '{}',\n", &channel.path));
-                    code.push_str(&format!("                    'type' => '{message_description}',\n"));
-                    code.push_str("                ],\n");
-                    code.push_str("            ];\n");
-                    code.push_str("            sleep(1);\n");
-                    code.push_str("        }\n");
+                    if let Some(message) = channel
+                        .message_definitions
+                        .iter()
+                        .find(|message| message.schema.is_some())
+                    {
+                        let payload_class = php_message_type_name(channel, message);
+                        code.push_str(&format!("        $event = {payload_class}::example();\n"));
+                        code.push_str(
+                            "        yield \"data: \" . json_encode($event->toArray(), JSON_THROW_ON_ERROR) . \"\\n\\n\";\n",
+                        );
+                    } else {
+                        code.push_str(&format!(
+                            "        yield \"data: \" . json_encode(['channel' => '{}', 'event' => 'replace-me'], JSON_THROW_ON_ERROR) . \"\\n\\n\";\n",
+                            channel.path
+                        ));
+                    }
                     code.push_str("    }\n");
                     code.push_str("}\n\n");
                 }
@@ -259,19 +305,22 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
         code.push_str("     */\n");
         code.push_str("    public static function register(object $app): void\n");
         code.push_str("    {\n");
+        code.push_str("        if (!$app instanceof App) {\n");
+        code.push_str("            throw new RuntimeException('Expected Spikard\\\\App instance');\n");
+        code.push_str("        }\n");
 
         for channel in channels {
             let class_name = camel_identifier(&channel.name);
             match protocol {
                 "websocket" | "ws" => {
                     code.push_str(&format!(
-                        "        $app->websocket('{}', new {}Handler());\n",
+                        "        $app = $app->addWebSocket('{}', new {}Handler());\n",
                         channel.path, class_name
                     ));
                 }
                 "sse" => {
                     code.push_str(&format!(
-                        "        $app->sse('{}', new {}Producer());\n",
+                        "        $app = $app->addSse('{}', new {}Producer());\n",
                         channel.path, class_name
                     ));
                 }
@@ -279,11 +328,13 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
             }
         }
 
+        code.push_str("        unset($app);\n");
         code.push_str("    }\n");
         code.push_str("}\n\n");
 
         code.push_str("// Application entry point\n");
-        code.push_str("if (PHP_SAPI === 'cli' && __FILE__ === realpath($_SERVER['SCRIPT_FILENAME'])) {\n");
+        code.push_str("$script = $_SERVER['SCRIPT_FILENAME'] ?? null;\n");
+        code.push_str("if (PHP_SAPI === 'cli' && is_string($script) && __FILE__ === realpath($script)) {\n");
         code.push_str("    // Uncomment to run the server:\n");
         code.push_str("    // $app = new Spikard\\App();\n");
         code.push_str("    // AsyncApiHandlers::register($app);\n");
@@ -312,6 +363,510 @@ fn camel_identifier(name: &str) -> String {
     }
 }
 
+fn generate_php_asyncapi_assertions() -> String {
+    let mut code = String::new();
+    code.push_str("/**\n");
+    code.push_str(" * Shared runtime assertions for generated AsyncAPI payload objects.\n");
+    code.push_str(" */\n");
+    code.push_str("trait AsyncApiTypeAssertions\n");
+    code.push_str("{\n");
+    code.push_str("    /** @param array<string, mixed> $payload */\n");
+    code.push_str("    private static function expectString(array $payload, string $key): string\n");
+    code.push_str("    {\n");
+    code.push_str("        $value = $payload[$key] ?? null;\n");
+    code.push_str("        if (!is_string($value)) {\n");
+    code.push_str("            throw new RuntimeException(\"Expected string for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        return $value;\n");
+    code.push_str("    }\n\n");
+    code.push_str("    /** @param array<string, mixed> $payload */\n");
+    code.push_str("    private static function expectInt(array $payload, string $key): int\n");
+    code.push_str("    {\n");
+    code.push_str("        $value = $payload[$key] ?? null;\n");
+    code.push_str("        if (!is_int($value)) {\n");
+    code.push_str("            throw new RuntimeException(\"Expected integer for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        return $value;\n");
+    code.push_str("    }\n\n");
+    code.push_str("    /** @param array<string, mixed> $payload */\n");
+    code.push_str("    private static function expectFloat(array $payload, string $key): float\n");
+    code.push_str("    {\n");
+    code.push_str("        $value = $payload[$key] ?? null;\n");
+    code.push_str("        if (!is_float($value) && !is_int($value)) {\n");
+    code.push_str("            throw new RuntimeException(\"Expected number for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        return (float) $value;\n");
+    code.push_str("    }\n\n");
+    code.push_str("    /** @param array<string, mixed> $payload */\n");
+    code.push_str("    private static function expectBool(array $payload, string $key): bool\n");
+    code.push_str("    {\n");
+    code.push_str("        $value = $payload[$key] ?? null;\n");
+    code.push_str("        if (!is_bool($value)) {\n");
+    code.push_str("            throw new RuntimeException(\"Expected boolean for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        return $value;\n");
+    code.push_str("    }\n\n");
+    code.push_str("    /** @param array<string, mixed> $payload\n");
+    code.push_str("     *  @return array<string, mixed>\n");
+    code.push_str("     */\n");
+    code.push_str("    private static function expectHash(array $payload, string $key): array\n");
+    code.push_str("    {\n");
+    code.push_str("        $value = $payload[$key] ?? null;\n");
+    code.push_str("        if (!is_array($value)) {\n");
+    code.push_str("            throw new RuntimeException(\"Expected object for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        if (array_is_list($value)) {\n");
+    code.push_str("            throw new RuntimeException(\"Expected object for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        /** @var array<string, mixed> $value */\n");
+    code.push_str("        return $value;\n");
+    code.push_str("    }\n\n");
+    code.push_str("    /** @param array<string, mixed> $payload\n");
+    code.push_str("     *  @return list<mixed>\n");
+    code.push_str("     */\n");
+    code.push_str("    private static function expectList(array $payload, string $key): array\n");
+    code.push_str("    {\n");
+    code.push_str("        $value = $payload[$key] ?? null;\n");
+    code.push_str("        if (!is_array($value)) {\n");
+    code.push_str("            throw new RuntimeException(\"Expected list for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        if (!array_is_list($value)) {\n");
+    code.push_str("            throw new RuntimeException(\"Expected list for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        /** @var list<mixed> $value */\n");
+    code.push_str("        return $value;\n");
+    code.push_str("    }\n\n");
+    code.push_str("    /** @param array<string, mixed> $payload\n");
+    code.push_str("     *  @return list<array<string, mixed>>\n");
+    code.push_str("     */\n");
+    code.push_str("    private static function expectHashList(array $payload, string $key): array\n");
+    code.push_str("    {\n");
+    code.push_str("        $items = self::expectList($payload, $key);\n");
+    code.push_str("        $result = [];\n");
+    code.push_str("        foreach ($items as $item) {\n");
+    code.push_str("            if (!is_array($item) || array_is_list($item)) {\n");
+    code.push_str("                throw new RuntimeException(\"Expected object list for {$key}\");\n");
+    code.push_str("            }\n");
+    code.push_str("            /** @var array<string, mixed> $item */\n");
+    code.push_str("            $result[] = $item;\n");
+    code.push_str("        }\n");
+    code.push_str("        /** @var list<array<string, mixed>> $result */\n");
+    code.push_str("        return $result;\n");
+    code.push_str("    }\n\n");
+    code.push_str("    /** @param array<string, mixed> $payload */\n");
+    code.push_str("    private static function expectDateTime(array $payload, string $key): DateTimeImmutable\n");
+    code.push_str("    {\n");
+    code.push_str("        return new DateTimeImmutable(self::expectString($payload, $key));\n");
+    code.push_str("    }\n\n");
+    code.push_str("    /** @param array<string, mixed> $payload\n");
+    code.push_str("     *  @param list<string> $allowed\n");
+    code.push_str("     */\n");
+    code.push_str(
+        "    private static function expectStringEnum(array $payload, string $key, array $allowed): string\n",
+    );
+    code.push_str("    {\n");
+    code.push_str("        $value = self::expectString($payload, $key);\n");
+    code.push_str("        if (!in_array($value, $allowed, true)) {\n");
+    code.push_str("            throw new RuntimeException(\"Unexpected value for {$key}\");\n");
+    code.push_str("        }\n");
+    code.push_str("        return $value;\n");
+    code.push_str("    }\n");
+    code.push_str("}\n\n");
+    code
+}
+
+fn generate_channel_message_models(channel: &ChannelInfo) -> String {
+    let mut code = String::new();
+
+    if channel.message_definitions.len() > 1 {
+        code.push_str(&format!("interface {} {{}}\n\n", php_channel_union_name(channel)));
+    }
+
+    for message in &channel.message_definitions {
+        if let Some(schema) = &message.schema {
+            let class_name = php_message_type_name(channel, message);
+            code.push_str(&generate_named_schema(
+                channel,
+                &class_name,
+                schema,
+                channel.message_definitions.len() > 1,
+            ));
+            code.push('\n');
+        }
+    }
+
+    code
+}
+
+fn php_channel_payload_type(channel: &ChannelInfo) -> Option<String> {
+    match channel.message_definitions.as_slice() {
+        [] => None,
+        [message] => message.schema.as_ref().map(|_| php_message_type_name(channel, message)),
+        _ => Some(php_channel_union_name(channel)),
+    }
+}
+
+fn php_channel_union_name(channel: &ChannelInfo) -> String {
+    format!("{}Message", channel.name.to_pascal_case())
+}
+
+fn php_message_type_name(channel: &ChannelInfo, message: &ChannelMessage) -> String {
+    format!(
+        "{}Payload",
+        format!("{}_{}", channel.name, message.schema_name).to_pascal_case()
+    )
+}
+
+fn generate_named_schema(channel: &ChannelInfo, class_name: &str, schema: &Value, implements_union: bool) -> String {
+    let mut code = String::new();
+
+    for (field_name, field_schema) in object_properties(schema) {
+        if schema_has_named_object_shape(field_schema) {
+            let nested_name = format!("{class_name}{}", field_name.to_pascal_case());
+            code.push_str(&generate_named_schema(channel, &nested_name, field_schema, false));
+            code.push('\n');
+        } else if let Some(items) = field_schema.get("items")
+            && schema_has_named_object_shape(items)
+        {
+            let nested_name = format!("{class_name}{}Item", field_name.to_pascal_case());
+            code.push_str(&generate_named_schema(channel, &nested_name, items, false));
+            code.push('\n');
+        }
+    }
+
+    code.push_str("final readonly class ");
+    code.push_str(class_name);
+    if implements_union {
+        code.push_str(" implements ");
+        code.push_str(&php_channel_union_name(channel));
+    }
+    code.push_str("\n{\n");
+    code.push_str("    use AsyncApiTypeAssertions;\n\n");
+
+    let properties = object_properties(schema);
+    let required = required_field_names(schema);
+    let mut constructor_properties = properties.clone();
+    constructor_properties
+        .sort_by_key(|(field_name, _)| !required.iter().any(|required_name| required_name == field_name));
+    code.push_str("    /**\n");
+    for (field_name, field_schema) in &properties {
+        let doc_type = schema_to_php_doc_type(class_name, field_name, field_schema, true);
+        code.push_str(&format!("     * @param {doc_type} ${field_name}\n"));
+    }
+    code.push_str("     */\n");
+    code.push_str("    public function __construct(\n");
+    for (index, (field_name, field_schema)) in constructor_properties.iter().enumerate() {
+        let is_required = required.iter().any(|required_name| required_name == field_name);
+        let native_type = schema_to_php_native_type(class_name, field_name, field_schema, is_required);
+        let comma = if index + 1 == constructor_properties.len() {
+            ""
+        } else {
+            ","
+        };
+        if is_required {
+            code.push_str(&format!("        public {native_type} ${field_name}{comma}\n"));
+        } else {
+            code.push_str(&format!("        public {native_type} ${field_name} = null{comma}\n"));
+        }
+    }
+    code.push_str("    ) {}\n\n");
+
+    code.push_str("    /** @param array<string, mixed> $payload */\n");
+    code.push_str("    public static function fromArray(array $payload): self\n");
+    code.push_str("    {\n");
+    code.push_str("        return new self(\n");
+    for (index, (field_name, field_schema)) in properties.iter().enumerate() {
+        let is_required = required.iter().any(|required_name| required_name == field_name);
+        let comma = if index + 1 == properties.len() { "" } else { "," };
+        let expr = schema_to_php_value_expr(class_name, field_name, field_schema, is_required);
+        code.push_str(&format!("            {field_name}: {expr}{comma}\n"));
+    }
+    code.push_str("        );\n");
+    code.push_str("    }\n\n");
+
+    code.push_str("    /** @param array<string, mixed> $payload */\n");
+    code.push_str("    public static function matches(array $payload): bool\n");
+    code.push_str("    {\n");
+    code.push_str("        try {\n");
+    code.push_str("            self::fromArray($payload);\n");
+    code.push_str("            return true;\n");
+    code.push_str("        } catch (RuntimeException) {\n");
+    code.push_str("            return false;\n");
+    code.push_str("        }\n");
+    code.push_str("    }\n\n");
+
+    code.push_str("    /** @return array<string, mixed> */\n");
+    code.push_str("    public function toArray(): array\n");
+    code.push_str("    {\n");
+    code.push_str("        return [\n");
+    for (field_name, field_schema) in &properties {
+        let is_required = required.iter().any(|required_name| required_name == field_name);
+        let expr = schema_to_php_serialize_expr(field_name, field_schema, is_required);
+        code.push_str(&format!("            '{field_name}' => {expr},\n"));
+    }
+    code.push_str("        ];\n");
+    code.push_str("    }\n\n");
+
+    code.push_str("    public static function example(): self\n");
+    code.push_str("    {\n");
+    code.push_str("        return new self(\n");
+    for (index, (field_name, field_schema)) in properties.iter().enumerate() {
+        let comma = if index + 1 == properties.len() { "" } else { "," };
+        let expr = schema_to_php_example_expr(class_name, field_name, field_schema);
+        code.push_str(&format!("            {field_name}: {expr}{comma}\n"));
+    }
+    code.push_str("        );\n");
+    code.push_str("    }\n");
+    code.push_str("}\n");
+
+    code
+}
+
+fn schema_to_php_native_type(parent_name: &str, field_name: &str, schema: &Value, required: bool) -> String {
+    let base = match schema.get("type").and_then(Value::as_str) {
+        Some("string") => match schema.get("format").and_then(Value::as_str) {
+            Some("date") | Some("date-time") => "DateTimeImmutable".to_string(),
+            _ => "string".to_string(),
+        },
+        Some("integer") => "int".to_string(),
+        Some("number") => "float".to_string(),
+        Some("boolean") => "bool".to_string(),
+        Some("array") => "array".to_string(),
+        Some("object") => {
+            if schema_has_named_object_shape(schema) {
+                format!("{parent_name}{}", field_name.to_pascal_case())
+            } else {
+                "array".to_string()
+            }
+        }
+        _ => "mixed".to_string(),
+    };
+
+    if required || base == "mixed" {
+        base
+    } else {
+        format!("?{base}")
+    }
+}
+
+fn schema_to_php_doc_type(parent_name: &str, field_name: &str, schema: &Value, required: bool) -> String {
+    let base = match schema.get("type").and_then(Value::as_str) {
+        Some("string") => match schema.get("format").and_then(Value::as_str) {
+            Some("date") | Some("date-time") => "DateTimeImmutable".to_string(),
+            _ => "string".to_string(),
+        },
+        Some("integer") => "int".to_string(),
+        Some("number") => "float".to_string(),
+        Some("boolean") => "bool".to_string(),
+        Some("array") => {
+            let item_type = schema
+                .get("items")
+                .map(|items| {
+                    if schema_has_named_object_shape(items) {
+                        format!("{parent_name}{}Item", field_name.to_pascal_case())
+                    } else {
+                        schema_to_php_doc_type(parent_name, field_name, items, true)
+                    }
+                })
+                .unwrap_or_else(|| "mixed".to_string());
+            format!("list<{item_type}>")
+        }
+        Some("object") => {
+            if schema_has_named_object_shape(schema) {
+                format!("{parent_name}{}", field_name.to_pascal_case())
+            } else {
+                "array<string, mixed>".to_string()
+            }
+        }
+        _ => "mixed".to_string(),
+    };
+
+    if required || base == "mixed" {
+        base
+    } else {
+        format!("{base}|null")
+    }
+}
+
+fn schema_to_php_value_expr(parent_name: &str, field_name: &str, schema: &Value, required: bool) -> String {
+    let inner = if let Some(enum_values) = schema.get("enum").and_then(Value::as_array) {
+        let literals = enum_values
+            .iter()
+            .filter_map(Value::as_str)
+            .map(|value| format!("'{value}'"))
+            .collect::<Vec<_>>();
+        if literals.is_empty() {
+            format!("self::expectString($payload, '{field_name}')")
+        } else {
+            format!(
+                "self::expectStringEnum($payload, '{field_name}', [{}])",
+                literals.join(", ")
+            )
+        }
+    } else if let Some(const_value) = schema.get("const").and_then(Value::as_str) {
+        format!("self::expectStringEnum($payload, '{field_name}', ['{const_value}'])")
+    } else {
+        match schema.get("type").and_then(Value::as_str) {
+            Some("string") => match schema.get("format").and_then(Value::as_str) {
+                Some("date") | Some("date-time") => format!("self::expectDateTime($payload, '{field_name}')"),
+                _ => format!("self::expectString($payload, '{field_name}')"),
+            },
+            Some("integer") => format!("self::expectInt($payload, '{field_name}')"),
+            Some("number") => format!("self::expectFloat($payload, '{field_name}')"),
+            Some("boolean") => format!("self::expectBool($payload, '{field_name}')"),
+            Some("array") => {
+                if let Some(items) = schema.get("items")
+                    && schema_has_named_object_shape(items)
+                {
+                    let item_class = format!("{parent_name}{}Item", field_name.to_pascal_case());
+                    format!(
+                        "array_map(static fn(array $item): {item_class} => {item_class}::fromArray($item), self::expectHashList($payload, '{field_name}'))"
+                    )
+                } else {
+                    format!("self::expectList($payload, '{field_name}')")
+                }
+            }
+            Some("object") => {
+                if schema_has_named_object_shape(schema) {
+                    let nested_class = format!("{parent_name}{}", field_name.to_pascal_case());
+                    format!("{nested_class}::fromArray(self::expectHash($payload, '{field_name}'))")
+                } else {
+                    format!("self::expectHash($payload, '{field_name}')")
+                }
+            }
+            _ => format!("$payload['{field_name}'] ?? null"),
+        }
+    };
+
+    if required {
+        inner
+    } else {
+        format!("array_key_exists('{field_name}', $payload) ? {inner} : null")
+    }
+}
+
+fn schema_to_php_serialize_expr(field_name: &str, schema: &Value, required: bool) -> String {
+    match schema.get("type").and_then(Value::as_str) {
+        Some("string") => match schema.get("format").and_then(Value::as_str) {
+            Some("date") => {
+                if required {
+                    format!("$this->{field_name}->format('Y-m-d')")
+                } else {
+                    format!("$this->{field_name}?->format('Y-m-d')")
+                }
+            }
+            Some("date-time") => {
+                if required {
+                    format!("$this->{field_name}->format(DateTimeInterface::ATOM)")
+                } else {
+                    format!("$this->{field_name}?->format(DateTimeInterface::ATOM)")
+                }
+            }
+            _ => format!("$this->{field_name}"),
+        },
+        Some("array") => {
+            if let Some(items) = schema.get("items")
+                && schema_has_named_object_shape(items)
+            {
+                return if required {
+                    format!("array_map(static fn($item) => $item->toArray(), $this->{field_name})")
+                } else {
+                    format!(
+                        "$this->{field_name} === null ? null : array_map(static fn($item) => $item->toArray(), $this->{field_name})"
+                    )
+                };
+            }
+            format!("$this->{field_name}")
+        }
+        Some("object") if schema_has_named_object_shape(schema) => {
+            if required {
+                format!("$this->{field_name}->toArray()")
+            } else {
+                format!("$this->{field_name}?->toArray()")
+            }
+        }
+        _ => format!("$this->{field_name}"),
+    }
+}
+
+fn schema_to_php_example_expr(parent_name: &str, field_name: &str, schema: &Value) -> String {
+    if let Some(const_value) = schema.get("const") {
+        return literal_php_value(const_value);
+    }
+    if let Some(enum_values) = schema.get("enum").and_then(Value::as_array)
+        && let Some(first) = enum_values.first()
+    {
+        return literal_php_value(first);
+    }
+
+    match schema.get("type").and_then(Value::as_str) {
+        Some("string") => match schema.get("format").and_then(Value::as_str) {
+            Some("date") => "new DateTimeImmutable('2025-01-01')".to_string(),
+            Some("date-time") => "new DateTimeImmutable('2025-01-01T00:00:00Z')".to_string(),
+            _ => format!("'{field_name}'"),
+        },
+        Some("integer") => "1".to_string(),
+        Some("number") => "1.0".to_string(),
+        Some("boolean") => "true".to_string(),
+        Some("array") => {
+            if let Some(items) = schema.get("items")
+                && schema_has_named_object_shape(items)
+            {
+                let item_class = format!("{parent_name}{}Item", field_name.to_pascal_case());
+                return format!("[{}::example()]", item_class);
+            }
+            "[]".to_string()
+        }
+        Some("object") => {
+            if schema_has_named_object_shape(schema) {
+                format!("{}{}::example()", parent_name, field_name.to_pascal_case())
+            } else {
+                "[]".to_string()
+            }
+        }
+        _ => "null".to_string(),
+    }
+}
+
+fn literal_php_value(value: &Value) -> String {
+    match value {
+        Value::String(value) => format!("'{value}'"),
+        Value::Bool(value) => value.to_string(),
+        Value::Number(value) => value.to_string(),
+        Value::Null => "null".to_string(),
+        _ => "null".to_string(),
+    }
+}
+
+fn object_properties(schema: &Value) -> Vec<(&str, &Value)> {
+    schema
+        .get("properties")
+        .and_then(Value::as_object)
+        .map(|properties| properties.iter().map(|(key, value)| (key.as_str(), value)).collect())
+        .unwrap_or_default()
+}
+
+fn required_field_names(schema: &Value) -> Vec<String> {
+    schema
+        .get("required")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(|value| value.as_str().map(str::to_string))
+        .collect()
+}
+
+fn schema_has_named_object_shape(schema: &Value) -> bool {
+    schema
+        .get("type")
+        .and_then(Value::as_str)
+        .is_some_and(|schema_type| schema_type == "object")
+        && schema
+            .get("properties")
+            .and_then(Value::as_object)
+            .is_some_and(|properties| !properties.is_empty())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -323,6 +878,7 @@ mod tests {
             name: "chat".to_string(),
             path: "/chat".to_string(),
             messages: vec!["message".to_string()],
+            message_definitions: vec![],
         }];
 
         let code = generator.generate_test_app(&channels, "websocket").unwrap();
@@ -338,11 +894,26 @@ mod tests {
             name: "chat".to_string(),
             path: "/chat".to_string(),
             messages: vec!["message".to_string()],
+            message_definitions: vec![ChannelMessage {
+                name: "chatEvent".to_string(),
+                schema_name: "chatEvent".to_string(),
+                schema: Some(serde_json::json!({
+                    "type": "object",
+                    "properties": {
+                        "type": { "const": "chatEvent" },
+                        "body": { "type": "string" }
+                    },
+                    "required": ["type", "body"]
+                })),
+                examples: vec![],
+            }],
         }];
 
         let code = generator.generate_handler_app(&channels, "websocket").unwrap();
         assert!(code.contains("AsyncApiHandlers"));
-        assert!(code.contains("public static function"));
+        assert!(code.contains("addWebSocket"));
+        assert!(code.contains("fromArray($payload)"));
+        assert!(code.contains("expectStringEnum"));
     }
 
     #[test]
@@ -352,6 +923,7 @@ mod tests {
             name: "chat".to_string(),
             path: "/chat".to_string(),
             messages: vec!["message".to_string()],
+            message_definitions: vec![],
         }];
 
         let err = generator.generate_test_app(&channels, "mqtt").unwrap_err().to_string();
