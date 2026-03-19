@@ -57,6 +57,60 @@ fn codegen_engine_generates_php_asyncapi_test_apps() {
 }
 
 #[test]
+fn codegen_engine_generates_rust_asyncapi_test_apps() {
+    let output_dir = tempdir().unwrap();
+    let out_file = output_dir.path().join("chat-service-asyncapi.rs");
+
+    let request = CodegenRequest {
+        schema_path: workspace_root().join("examples/schemas/chat-service.asyncapi.yaml"),
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncTestApp {
+            language: TargetLanguage::Rust,
+            output: out_file,
+        },
+        dto: None,
+    };
+
+    let outcome = CodegenEngine::execute_validated(request).expect("engine run");
+    let asset = match outcome {
+        spikard_cli::codegen::CodegenOutcome::Files(mut files) => files.pop().expect("asset"),
+        other @ spikard_cli::codegen::CodegenOutcome::InMemory(_) => panic!("expected files, got {other:?}"),
+    };
+
+    assert!(asset.path.exists(), "missing asset {}", asset.path.display());
+    let contents = std::fs::read_to_string(&asset.path).expect("read generated app");
+    assert!(contents.contains("tokio::main"));
+    assert!(contents.contains("Connecting to"));
+}
+
+#[test]
+fn codegen_engine_generates_elixir_asyncapi_test_apps() {
+    let output_dir = tempdir().unwrap();
+    let out_file = output_dir.path().join("chat-service-asyncapi.ex");
+
+    let request = CodegenRequest {
+        schema_path: workspace_root().join("examples/schemas/chat-service.asyncapi.yaml"),
+        schema_kind: SchemaKind::AsyncApi,
+        target: CodegenTargetKind::AsyncTestApp {
+            language: TargetLanguage::Elixir,
+            output: out_file,
+        },
+        dto: None,
+    };
+
+    let outcome = CodegenEngine::execute_validated(request).expect("engine run");
+    let asset = match outcome {
+        spikard_cli::codegen::CodegenOutcome::Files(mut files) => files.pop().expect("asset"),
+        other @ spikard_cli::codegen::CodegenOutcome::InMemory(_) => panic!("expected files, got {other:?}"),
+    };
+
+    assert!(asset.path.exists(), "missing asset {}", asset.path.display());
+    let contents = std::fs::read_to_string(&asset.path).expect("read generated app");
+    assert!(contents.contains("defmodule AsyncApiTestClient do"));
+    assert!(contents.contains("AsyncApiFixtures.websocket_fixtures()"));
+}
+
+#[test]
 fn codegen_engine_asyncapi_all_writes_fixtures_and_apps() {
     let out_dir = tempdir().unwrap();
 
@@ -81,6 +135,16 @@ fn codegen_engine_asyncapi_all_writes_fixtures_and_apps() {
         assets
             .iter()
             .any(|a| a.description.contains("AsyncAPI test app") && a.path.extension().is_some_and(|ext| ext == "php"))
+    );
+    assert!(
+        assets
+            .iter()
+            .any(|a| a.description.contains("AsyncAPI test app") && a.path.extension().is_some_and(|ext| ext == "rs"))
+    );
+    assert!(
+        assets
+            .iter()
+            .any(|a| a.description.contains("AsyncAPI test app") && a.path.extension().is_some_and(|ext| ext == "ex"))
     );
 
     for asset in assets {

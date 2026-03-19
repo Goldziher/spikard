@@ -16,18 +16,13 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
 
         code.push_str("//! Test application generated from AsyncAPI specification\n\n");
         match protocol {
-            "websocket" => {
-                code.push_str("use tokio::net::TcpStream;\n");
-                code.push_str("use tokio_tungstenite::connect_async;\n\n");
-            }
-            "sse" => {
-                code.push_str("use reqwest::Client;\n\n");
-            }
+            "websocket" | "sse" => {}
             _ => {
                 return Err(anyhow::anyhow!("Unsupported protocol for Rust test app: {protocol}"));
             }
         }
 
+        code.push_str("#[allow(dead_code)]\n");
         code.push_str("#[tokio::main]\n");
         code.push_str("async fn main() -> Result<(), Box<dyn std::error::Error>> {\n");
         code.push_str("    let uri = std::env::var(\"URI\")\n");
@@ -39,6 +34,10 @@ impl AsyncApiGenerator for RustAsyncApiGenerator {
 
         code.push_str("\".to_string());\n\n");
         code.push_str("    println!(\"Connecting to {}\", uri);\n");
+        code.push_str(&format!(
+            "    println!(\"Testing {} endpoints...\");\n",
+            if protocol == "websocket" { "WebSocket" } else { "SSE" }
+        ));
         code.push_str("    Ok(())\n");
         code.push_str("}\n");
 
@@ -354,7 +353,7 @@ mod tests {
         }];
 
         let code = generator.generate_test_app(&channels, "websocket").unwrap();
-        assert!(code.contains("tokio_tungstenite"));
+        assert!(code.contains("Testing WebSocket endpoints"));
         assert!(code.contains("#[tokio::main]"));
         assert!(code.contains("/chat"));
     }

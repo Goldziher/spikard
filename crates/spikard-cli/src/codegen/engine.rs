@@ -1,8 +1,8 @@
 use super::asyncapi::{Protocol, parse_asyncapi_schema};
 use super::asyncapi::{
-    generate_elixir_handler_app, generate_nodejs_handler_app, generate_nodejs_test_app, generate_php_handler_app,
-    generate_php_test_app, generate_python_handler_app, generate_python_test_app, generate_ruby_handler_app,
-    generate_ruby_test_app, generate_rust_handler_app,
+    generate_elixir_handler_app, generate_elixir_test_app, generate_nodejs_handler_app, generate_nodejs_test_app,
+    generate_php_handler_app, generate_php_test_app, generate_python_handler_app, generate_python_test_app,
+    generate_ruby_handler_app, generate_ruby_test_app, generate_rust_handler_app, generate_rust_test_app,
 };
 use super::graphql::generators::GraphQLGenerator;
 use super::graphql::generators::elixir::ElixirGenerator;
@@ -246,14 +246,10 @@ impl CodegenEngine {
         let code = match language {
             TargetLanguage::Python => generate_python_test_app(spec, protocol)?,
             TargetLanguage::TypeScript => generate_nodejs_test_app(spec, protocol)?,
+            TargetLanguage::Rust => generate_rust_test_app(spec, protocol)?,
             TargetLanguage::Ruby => generate_ruby_test_app(spec, protocol)?,
             TargetLanguage::Php => generate_php_test_app(spec, protocol)?,
-            TargetLanguage::Elixir => {
-                bail!("Elixir is not supported for AsyncAPI test apps");
-            }
-            other => {
-                bail!("{other:?} is not supported for AsyncAPI test apps");
-            }
+            TargetLanguage::Elixir => generate_elixir_test_app(spec, protocol)?,
         };
         if validate {
             Self::validate_generated_code(language, &code)?;
@@ -317,6 +313,15 @@ impl CodegenEngine {
         )?;
         assets.push(node_asset);
 
+        let rust_asset = Self::generate_asyncapi_app(
+            spec,
+            protocol,
+            TargetLanguage::Rust,
+            &app_dir.join(format!("{base_name}-asyncapi.rs")),
+            validate,
+        )?;
+        assets.push(rust_asset);
+
         let ruby_asset = Self::generate_asyncapi_app(
             spec,
             protocol,
@@ -334,6 +339,15 @@ impl CodegenEngine {
             validate,
         )?;
         assets.push(php_asset);
+
+        let elixir_asset = Self::generate_asyncapi_app(
+            spec,
+            protocol,
+            TargetLanguage::Elixir,
+            &app_dir.join(format!("{base_name}-asyncapi.ex")),
+            validate,
+        )?;
+        assets.push(elixir_asset);
 
         Ok(assets)
     }

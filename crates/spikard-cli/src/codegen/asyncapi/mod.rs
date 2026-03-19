@@ -203,6 +203,32 @@ pub fn generate_php_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Resul
     generator.generate_test_app(&channels, protocol_str)
 }
 
+/// Generate Rust test application from `AsyncAPI` spec
+pub fn generate_rust_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
+    let channels = extract_channel_info(spec)?;
+    let protocol_str = match protocol {
+        Protocol::WebSocket => "websocket",
+        Protocol::Sse => "sse",
+        other => bail!("Unsupported protocol for Rust test app: {other:?}"),
+    };
+
+    let generator = RustAsyncApiGenerator;
+    generator.generate_test_app(&channels, protocol_str)
+}
+
+/// Generate Elixir test application from `AsyncAPI` spec
+pub fn generate_elixir_test_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
+    let channels = extract_channel_info(spec)?;
+    let protocol_str = match protocol {
+        Protocol::WebSocket => "websocket",
+        Protocol::Sse => "sse",
+        other => bail!("Unsupported protocol for Elixir test app: {other:?}"),
+    };
+
+    let generator = ElixirAsyncApiGenerator;
+    generator.generate_test_app(&channels, protocol_str)
+}
+
 /// Generate Python handler scaffolding from `AsyncAPI` spec
 pub fn generate_python_handler_app(spec: &AsyncApiV3Spec, protocol: Protocol) -> Result<String> {
     let channels = extract_channel_info(spec)?;

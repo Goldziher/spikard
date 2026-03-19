@@ -13,8 +13,92 @@ use super::{AsyncApiGenerator, ChannelInfo, ChannelMessage};
 pub struct ElixirAsyncApiGenerator;
 
 impl AsyncApiGenerator for ElixirAsyncApiGenerator {
-    fn generate_test_app(&self, _channels: &[ChannelInfo], protocol: &str) -> Result<String> {
-        bail!("Unsupported protocol for Elixir test app: {protocol}");
+    fn generate_test_app(&self, channels: &[ChannelInfo], protocol: &str) -> Result<String> {
+        if channels.is_empty() {
+            bail!("AsyncAPI spec does not define any channels");
+        }
+
+        match protocol {
+            "websocket" | "sse" => {}
+            other => bail!("Protocol {other} is not supported for Elixir test app generation"),
+        }
+
+        let mut code = String::new();
+        code.push_str(&generate_assertions_module());
+        code.push('\n');
+
+        for channel in channels {
+            code.push_str(&generate_channel_message_models(channel));
+        }
+
+        code.push_str("defmodule AsyncApiFixtures do\n");
+        code.push_str("  @moduledoc false\n\n");
+        match protocol {
+            "websocket" => {
+                code.push_str("  @spec websocket_fixtures() :: [map()]\n");
+                code.push_str("  def websocket_fixtures do\n");
+                code.push_str("    [\n");
+                let fixture_entries = generate_fixture_entries(channels);
+                for (index, entry) in fixture_entries.iter().enumerate() {
+                    let suffix = if index + 1 == fixture_entries.len() { "" } else { "," };
+                    code.push_str("      ");
+                    code.push_str(entry);
+                    code.push_str(suffix);
+                    code.push('\n');
+                }
+                code.push_str("    ]\n");
+                code.push_str("  end\n");
+            }
+            "sse" => {
+                code.push_str("  @spec sse_fixtures() :: [map()]\n");
+                code.push_str("  def sse_fixtures do\n");
+                code.push_str("    [\n");
+                let fixture_entries = generate_fixture_entries(channels);
+                for (index, entry) in fixture_entries.iter().enumerate() {
+                    let suffix = if index + 1 == fixture_entries.len() { "" } else { "," };
+                    code.push_str("      ");
+                    code.push_str(entry);
+                    code.push_str(suffix);
+                    code.push('\n');
+                }
+                code.push_str("    ]\n");
+                code.push_str("  end\n");
+            }
+            _ => {}
+        }
+        code.push_str("end\n\n");
+
+        code.push_str("defmodule AsyncApiTestClient do\n");
+        code.push_str("  @moduledoc false\n\n");
+        code.push_str("  alias AsyncApiFixtures\n\n");
+        code.push_str("  @spec base_uri() :: String.t()\n");
+        code.push_str(&format!(
+            "  def base_uri, do: System.get_env(\"URI\") || \"{}://localhost:8000\"\n\n",
+            if protocol == "websocket" { "ws" } else { "http" }
+        ));
+        code.push_str("  @spec run() :: :ok\n");
+        code.push_str("  def run do\n");
+        code.push_str(&format!(
+            "    IO.puts(\"Testing {} endpoints...\")\n",
+            if protocol == "websocket" { "WebSocket" } else { "SSE" }
+        ));
+        code.push_str(&format!(
+            "    Enum.each(AsyncApiFixtures.{}_fixtures(), &print_fixture/1)\n",
+            protocol
+        ));
+        code.push_str("    :ok\n");
+        code.push_str("  end\n\n");
+        code.push_str("  @spec print_fixture(map()) :: :ok\n");
+        code.push_str("  defp print_fixture(fixture) do\n");
+        code.push_str("    uri = base_uri() <> Map.fetch!(fixture, :path)\n");
+        code.push_str("    label = Map.get(fixture, :message, \"anonymous\")\n");
+        code.push_str("    IO.puts(\"Preparing #{label} for #{uri}\")\n");
+        code.push_str("    IO.inspect(Map.fetch!(fixture, :payload), label: \"Payload\")\n");
+        code.push_str("    :ok\n");
+        code.push_str("  end\n");
+        code.push_str("end\n");
+
+        Ok(format_elixir(&code))
     }
 
     fn generate_handler_app(&self, channels: &[ChannelInfo], protocol: &str) -> Result<String> {
@@ -28,91 +112,8 @@ impl AsyncApiGenerator for ElixirAsyncApiGenerator {
         }
 
         let mut code = String::new();
-        code.push_str("defmodule AsyncApiTypes.Assertions do\n");
-        code.push_str("  @moduledoc false\n\n");
-        code.push_str("  @spec expect_field(map(), String.t(), (term() -> {:ok, term()} | {:error, String.t()})) ::\n");
-        code.push_str("          {:ok, term()} | {:error, String.t()}\n");
-        code.push_str("  def expect_field(payload, key, coercer) when is_map(payload) do\n");
-        code.push_str("    case Map.fetch(payload, key) do\n");
-        code.push_str("      {:ok, value} -> coercer.(value)\n");
-        code.push_str("      :error -> {:error, \"Missing required field #{key}\"}\n");
-        code.push_str("    end\n");
-        code.push_str("  end\n\n");
-        code.push_str(
-            "  @spec optional_field(map(), String.t(), (term() -> {:ok, term()} | {:error, String.t()})) ::\n",
-        );
-        code.push_str("          {:ok, term() | nil} | {:error, String.t()}\n");
-        code.push_str("  def optional_field(payload, key, coercer) when is_map(payload) do\n");
-        code.push_str("    case Map.fetch(payload, key) do\n");
-        code.push_str("      {:ok, nil} -> {:ok, nil}\n");
-        code.push_str("      {:ok, value} -> coercer.(value)\n");
-        code.push_str("      :error -> {:ok, nil}\n");
-        code.push_str("    end\n");
-        code.push_str("  end\n\n");
-        code.push_str("  @spec coerce_string(term()) :: {:ok, String.t()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_string(value) when is_binary(value), do: {:ok, value}\n");
-        code.push_str("  def coerce_string(_value), do: {:error, \"Expected string value\"}\n\n");
-        code.push_str("  @spec coerce_integer(term()) :: {:ok, integer()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_integer(value) when is_integer(value), do: {:ok, value}\n");
-        code.push_str("  def coerce_integer(_value), do: {:error, \"Expected integer value\"}\n\n");
-        code.push_str("  @spec coerce_float(term()) :: {:ok, float()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_float(value) when is_float(value), do: {:ok, value}\n");
-        code.push_str("  def coerce_float(value) when is_integer(value), do: {:ok, value * 1.0}\n");
-        code.push_str("  def coerce_float(_value), do: {:error, \"Expected number value\"}\n\n");
-        code.push_str("  @spec coerce_boolean(term()) :: {:ok, boolean()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_boolean(value) when is_boolean(value), do: {:ok, value}\n");
-        code.push_str("  def coerce_boolean(_value), do: {:error, \"Expected boolean value\"}\n\n");
-        code.push_str("  @spec coerce_map(term()) :: {:ok, map()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_map(value) when is_map(value), do: {:ok, value}\n");
-        code.push_str("  def coerce_map(_value), do: {:error, \"Expected object value\"}\n\n");
-        code.push_str("  @spec coerce_date(term()) :: {:ok, Date.t()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_date(value) when is_binary(value) do\n");
-        code.push_str("    case Date.from_iso8601(value) do\n");
-        code.push_str("      {:ok, parsed} -> {:ok, parsed}\n");
-        code.push_str("      {:error, _reason} -> {:error, \"Expected ISO 8601 date string\"}\n");
-        code.push_str("    end\n");
-        code.push_str("  end\n\n");
-        code.push_str("  def coerce_date(_value), do: {:error, \"Expected ISO 8601 date string\"}\n\n");
-        code.push_str("  @spec coerce_datetime(term()) :: {:ok, DateTime.t()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_datetime(value) when is_binary(value) do\n");
-        code.push_str("    case DateTime.from_iso8601(value) do\n");
-        code.push_str("      {:ok, parsed, _offset} -> {:ok, parsed}\n");
-        code.push_str("      {:error, _reason} -> {:error, \"Expected ISO 8601 datetime string\"}\n");
-        code.push_str("    end\n");
-        code.push_str("  end\n\n");
-        code.push_str("  def coerce_datetime(_value), do: {:error, \"Expected ISO 8601 datetime string\"}\n\n");
-        code.push_str("  @spec coerce_string_enum(term(), [String.t()]) :: {:ok, String.t()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_string_enum(value, allowed) when is_binary(value) do\n");
-        code.push_str("    if value in allowed do\n");
-        code.push_str("      {:ok, value}\n");
-        code.push_str("    else\n");
-        code.push_str("      {:error, \"Unexpected enum value #{inspect(value)}\"}\n");
-        code.push_str("    end\n");
-        code.push_str("  end\n\n");
-        code.push_str("  def coerce_string_enum(_value, _allowed), do: {:error, \"Expected string enum value\"}\n\n");
-        code.push_str("  @spec coerce_object(term(), module()) :: {:ok, term()} | {:error, String.t()}\n");
-        code.push_str("  def coerce_object(value, module) when is_map(value), do: module.from_map(value)\n");
-        code.push_str("  def coerce_object(_value, _module), do: {:error, \"Expected object value\"}\n\n");
-        code.push_str("  @spec coerce_list(term(), (term() -> {:ok, term()} | {:error, String.t()})) ::\n");
-        code.push_str("          {:ok, [term()]} | {:error, String.t()}\n");
-        code.push_str("  def coerce_list(values, coercer) when is_list(values) do\n");
-        code.push_str("    values\n");
-        code.push_str("    |> Enum.reduce_while({:ok, []}, fn value, {:ok, acc} ->\n");
-        code.push_str("      case coercer.(value) do\n");
-        code.push_str("        {:ok, coerced} -> {:cont, {:ok, [coerced | acc]}}\n");
-        code.push_str("        {:error, reason} -> {:halt, {:error, reason}}\n");
-        code.push_str("      end\n");
-        code.push_str("    end)\n");
-        code.push_str("    |> case do\n");
-        code.push_str("      {:ok, coerced} -> {:ok, Enum.reverse(coerced)}\n");
-        code.push_str("      {:error, reason} -> {:error, reason}\n");
-        code.push_str("    end\n");
-        code.push_str("  end\n\n");
-        code.push_str("  def coerce_list(_value, _coercer), do: {:error, \"Expected list value\"}\n\n");
-        code.push_str("  @spec put_if_present(map(), String.t(), term()) :: map()\n");
-        code.push_str("  def put_if_present(map, _key, nil), do: map\n");
-        code.push_str("  def put_if_present(map, key, value), do: Map.put(map, key, value)\n");
-        code.push_str("end\n\n");
+        code.push_str(&generate_assertions_module());
+        code.push('\n');
 
         for channel in channels {
             code.push_str(&generate_channel_message_models(channel));
@@ -179,6 +180,125 @@ fn generate_channel_message_models(channel: &ChannelInfo) -> String {
         }
     }
 
+    code
+}
+
+fn generate_fixture_entries(channels: &[ChannelInfo]) -> Vec<String> {
+    let mut entries = Vec::new();
+
+    for channel in channels {
+        let typed_messages = channel
+            .message_definitions
+            .iter()
+            .filter(|message| message.schema.is_some())
+            .collect::<Vec<_>>();
+
+        if typed_messages.is_empty() {
+            entries.push(format!(
+                "%{{path: \"{}\", message: nil, payload: %{{}}}}",
+                escape_string(&channel.path)
+            ));
+            continue;
+        }
+
+        for message in typed_messages {
+            let module_name = elixir_message_module_name(channel, message);
+            entries.push(format!(
+                "%{{path: \"{}\", message: \"{}\", payload: AsyncApiTypes.{module_name}.example() |> AsyncApiTypes.{module_name}.to_map()}}",
+                escape_string(&channel.path),
+                escape_string(&message.name)
+            ));
+        }
+    }
+
+    entries
+}
+
+fn generate_assertions_module() -> String {
+    let mut code = String::new();
+    code.push_str("defmodule AsyncApiTypes.Assertions do\n");
+    code.push_str("  @moduledoc false\n\n");
+    code.push_str("  @spec expect_field(map(), String.t(), (term() -> {:ok, term()} | {:error, String.t()})) ::\n");
+    code.push_str("          {:ok, term()} | {:error, String.t()}\n");
+    code.push_str("  def expect_field(payload, key, coercer) when is_map(payload) do\n");
+    code.push_str("    case Map.fetch(payload, key) do\n");
+    code.push_str("      {:ok, value} -> coercer.(value)\n");
+    code.push_str("      :error -> {:error, \"Missing required field #{key}\"}\n");
+    code.push_str("    end\n");
+    code.push_str("  end\n\n");
+    code.push_str("  @spec optional_field(map(), String.t(), (term() -> {:ok, term()} | {:error, String.t()})) ::\n");
+    code.push_str("          {:ok, term() | nil} | {:error, String.t()}\n");
+    code.push_str("  def optional_field(payload, key, coercer) when is_map(payload) do\n");
+    code.push_str("    case Map.fetch(payload, key) do\n");
+    code.push_str("      {:ok, nil} -> {:ok, nil}\n");
+    code.push_str("      {:ok, value} -> coercer.(value)\n");
+    code.push_str("      :error -> {:ok, nil}\n");
+    code.push_str("    end\n");
+    code.push_str("  end\n\n");
+    code.push_str("  @spec coerce_string(term()) :: {:ok, String.t()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_string(value) when is_binary(value), do: {:ok, value}\n");
+    code.push_str("  def coerce_string(_value), do: {:error, \"Expected string value\"}\n\n");
+    code.push_str("  @spec coerce_integer(term()) :: {:ok, integer()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_integer(value) when is_integer(value), do: {:ok, value}\n");
+    code.push_str("  def coerce_integer(_value), do: {:error, \"Expected integer value\"}\n\n");
+    code.push_str("  @spec coerce_float(term()) :: {:ok, float()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_float(value) when is_float(value), do: {:ok, value}\n");
+    code.push_str("  def coerce_float(value) when is_integer(value), do: {:ok, value * 1.0}\n");
+    code.push_str("  def coerce_float(_value), do: {:error, \"Expected number value\"}\n\n");
+    code.push_str("  @spec coerce_boolean(term()) :: {:ok, boolean()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_boolean(value) when is_boolean(value), do: {:ok, value}\n");
+    code.push_str("  def coerce_boolean(_value), do: {:error, \"Expected boolean value\"}\n\n");
+    code.push_str("  @spec coerce_map(term()) :: {:ok, map()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_map(value) when is_map(value), do: {:ok, value}\n");
+    code.push_str("  def coerce_map(_value), do: {:error, \"Expected object value\"}\n\n");
+    code.push_str("  @spec coerce_date(term()) :: {:ok, Date.t()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_date(value) when is_binary(value) do\n");
+    code.push_str("    case Date.from_iso8601(value) do\n");
+    code.push_str("      {:ok, parsed} -> {:ok, parsed}\n");
+    code.push_str("      {:error, _reason} -> {:error, \"Expected ISO 8601 date string\"}\n");
+    code.push_str("    end\n");
+    code.push_str("  end\n\n");
+    code.push_str("  def coerce_date(_value), do: {:error, \"Expected ISO 8601 date string\"}\n\n");
+    code.push_str("  @spec coerce_datetime(term()) :: {:ok, DateTime.t()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_datetime(value) when is_binary(value) do\n");
+    code.push_str("    case DateTime.from_iso8601(value) do\n");
+    code.push_str("      {:ok, parsed, _offset} -> {:ok, parsed}\n");
+    code.push_str("      {:error, _reason} -> {:error, \"Expected ISO 8601 datetime string\"}\n");
+    code.push_str("    end\n");
+    code.push_str("  end\n\n");
+    code.push_str("  def coerce_datetime(_value), do: {:error, \"Expected ISO 8601 datetime string\"}\n\n");
+    code.push_str("  @spec coerce_string_enum(term(), [String.t()]) :: {:ok, String.t()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_string_enum(value, allowed) when is_binary(value) do\n");
+    code.push_str("    if value in allowed do\n");
+    code.push_str("      {:ok, value}\n");
+    code.push_str("    else\n");
+    code.push_str("      {:error, \"Unexpected enum value #{inspect(value)}\"}\n");
+    code.push_str("    end\n");
+    code.push_str("  end\n\n");
+    code.push_str("  def coerce_string_enum(_value, _allowed), do: {:error, \"Expected string enum value\"}\n\n");
+    code.push_str("  @spec coerce_object(term(), module()) :: {:ok, term()} | {:error, String.t()}\n");
+    code.push_str("  def coerce_object(value, module) when is_map(value), do: module.from_map(value)\n");
+    code.push_str("  def coerce_object(_value, _module), do: {:error, \"Expected object value\"}\n\n");
+    code.push_str("  @spec coerce_list(term(), (term() -> {:ok, term()} | {:error, String.t()})) ::\n");
+    code.push_str("          {:ok, [term()]} | {:error, String.t()}\n");
+    code.push_str("  def coerce_list(values, coercer) when is_list(values) do\n");
+    code.push_str("    values\n");
+    code.push_str("    |> Enum.reduce_while({:ok, []}, fn value, {:ok, acc} ->\n");
+    code.push_str("      case coercer.(value) do\n");
+    code.push_str("        {:ok, coerced} -> {:cont, {:ok, [coerced | acc]}}\n");
+    code.push_str("        {:error, reason} -> {:halt, {:error, reason}}\n");
+    code.push_str("      end\n");
+    code.push_str("    end)\n");
+    code.push_str("    |> case do\n");
+    code.push_str("      {:ok, coerced} -> {:ok, Enum.reverse(coerced)}\n");
+    code.push_str("      {:error, reason} -> {:error, reason}\n");
+    code.push_str("    end\n");
+    code.push_str("  end\n\n");
+    code.push_str("  def coerce_list(_value, _coercer), do: {:error, \"Expected list value\"}\n\n");
+    code.push_str("  @spec put_if_present(map(), String.t(), term()) :: map()\n");
+    code.push_str("  def put_if_present(map, _key, nil), do: map\n");
+    code.push_str("  def put_if_present(map, key, value), do: Map.put(map, key, value)\n");
+    code.push_str("end\n");
     code
 }
 

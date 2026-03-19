@@ -1521,8 +1521,7 @@ fn asyncapi_handler_generation_writes_elixir_typed_scaffold() -> Result<()> {
                 "expected websocket behaviour usage"
             );
             assert!(
-                contents.contains("defmodule AsyncApiTypes.")
-                    && contents.contains("Payload do"),
+                contents.contains("defmodule AsyncApiTypes.") && contents.contains("Payload do"),
                 "expected generated Elixir payload module"
             );
             assert!(
