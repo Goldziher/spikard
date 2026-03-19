@@ -7,66 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-19
+
+### Added
+
+- **CLI-equivalent MCP server**: Added `spikard mcp` with typed tools for project initialization, OpenAPI/AsyncAPI/OpenRPC/GraphQL/Protobuf code generation, AsyncAPI testing helpers, schema validation, and feature discovery.
+- **First-class Elixir codegen and runtime support**: Added Elixir project scaffolding plus Elixir OpenAPI, OpenRPC/JSON-RPC, GraphQL, Protobuf/gRPC, and AsyncAPI generation, along with a real Elixir gRPC runtime path for unary and streaming services.
+- **Full AsyncAPI test-app parity**: Added Rust and Elixir AsyncAPI test-app and bundle generation so fixtures, handlers, test apps, and bundled outputs now cover Python, TypeScript, Rust, Ruby, PHP, and Elixir.
+- **Documentation snippet validation**: Added the `snippet-runner` workspace tool and documentation snippet validation commands, enabling syntax-level validation of polyglot docs examples.
+
+### Changed
+
+- **`spikard init` now creates real starter projects**: Initialization now produces idiomatic, runnable project layouts for every binding. Python uses `pyproject.toml` with `uv`, TypeScript uses `package.json` + `tsconfig.json` + `src/`, Rust uses a valid Cargo app scaffold, Ruby and PHP include runnable server entrypoints, and Elixir now generates a proper Mix application structure.
+- **Code generation is now validator-backed across bindings**: The CLI codegen path now enforces syntax/type/lint validation for generated output and has been hardened across all supported schema families: OpenAPI 3.1, AsyncAPI, OpenRPC/JSON-RPC, GraphQL, and Protobuf/gRPC.
+- **Generated output is more idiomatic across languages**: Generated Rust, Python, TypeScript, Ruby, PHP, and Elixir code now uses stronger schema-derived typing, cleaner naming, binding-appropriate project structure, and lint-/format-clean defaults out of the box.
+- **README maintenance is template-driven**: The root README and package/crate READMEs are now generated from shared templates, keeping CLI/MCP/codegen surface documentation aligned across the repo.
+
 ### Fixed
 
-- **Rust protobuf code generation**: The CLI now generates Rust message structs, enums, and tonic-style service traits for `spikard generate protobuf --lang rust` instead of failing at runtime.
-- **Python auto-reload runtime**: `Spikard.run(reload=True)` now starts a parent reloader process that watches Python source files and restarts the child server on changes instead of silently ignoring the flag.
-- **Python async server startup**: `Spikard.serve()` now calls a real `_spikard.run_server_async(...)` implementation instead of importing a missing extension symbol.
-- **Python async upload file I/O**: `UploadFile.aread()`, `aseek()`, `awrite()`, and `aclose()` now offload rolled-to-disk `SpooledTemporaryFile` operations through `asyncio.to_thread(...)` instead of blocking the event loop while still keeping the in-memory fast path synchronous.
-- **Elixir install docs**: Updated Elixir installation docs and package README to reflect the actual `RustlerPrecompiled` distribution model. Normal installs use precompiled NIFs, and Rust is only required when forcing a source build.
-- **Python test client transport selection**: The shared test client now keeps plain HTTP requests on axum-test's in-memory transport and only initializes a real socket-backed server for WebSocket/GraphQL subscription flows. Python multipart and other HTTP-only tests no longer fail just because a Tokio runtime exists.
-- **Python 3.14 asyncio cleanup**: The Python binding no longer installs `uvloop.EventLoopPolicy()` globally during async runtime bootstrap. Spikard now creates a `uvloop` loop directly on Python < 3.14 and falls back to standard `asyncio` loops on Python 3.14+, removing the `AbstractEventLoopPolicy` / `set_event_loop_policy` deprecation warnings on test-client startup.
-- **Ruby test app lifecycle hook generation**: The internal test-app generator now registers generated Ruby lifecycle hooks with `Spikard::App` instead of emitting unreferenced lambdas, so Ruby fixture apps correctly exercise `on_request`, `pre_validation`, `pre_handler`, `on_response`, and `on_error` middleware behavior.
-- **PHP `Spikard\\Server` lifecycle hook wiring**: `setLifecycleHooks(...)` on the native PHP server class now populates `ServerConfig.lifecycle_hooks` instead of storing hooks in an unused side field, so lifecycle hooks execute when the server is started through that API.
-- **CLI codegen placeholder cleanup**: Removed unused placeholder-only GraphQL and Protobuf generator scaffolding from `spikard-cli` so the module surface reflects only the wired generators used by the CLI engine.
-- **Ruby `spikard init` wiring**: The init engine now routes `TargetLanguage::Ruby` to the existing Ruby scaffolder instead of returning a not-supported error, and integration tests now cover Ruby project bootstrapping.
-- **Python binding install docs**: Updated Python binding troubleshooting docs to reflect the wheel-first distribution model. Rust is now documented as source-build-only instead of a universal install prerequisite.
-- **Node/config docs clarity**: Updated TypeScript binding troubleshooting docs to document prebuilt native binaries for normal installs and source-build-only Rust requirements, and clarified that `workers` is an explicit Tokio worker thread count (default `1`) rather than an automatic CPU-based setting.
-- **Python README examples link**: Fixed the generated Python package README examples list so the GraphQL item points to a real GraphQL schema (`examples/schemas/social.graphql`) instead of an unrelated AsyncAPI file.
-- **Node gRPC app registration**: Node applications can now mount unary gRPC service handlers through `app.addGrpcService(...)` / `app.useGrpc(...)`, and the Rust HTTP runtime now routes registered gRPC traffic through the shared server stack.
-- **Python gRPC app registration**: Python applications can now mount unary gRPC service handlers through `app.add_grpc_service(...)` / `app.use_grpc(...)`, and the Rust HTTP runtime now routes registered gRPC traffic through the shared server stack.
-- **Ruby gRPC app registration**: Ruby applications can now mount unary gRPC service handlers through `app.add_grpc_service(...)` / `app.use_grpc(...)`, and the Rust HTTP runtime now routes registered gRPC traffic through the shared server stack.
-- **PHP gRPC app registration**: PHP applications can now mount unary gRPC service handlers through `addGrpcService(...)` / `useGrpc(...)`, and the Rust HTTP runtime now routes registered gRPC traffic through the shared server stack.
-- **Binding route metadata preservation**: Python, Ruby, and Elixir server startup paths now build routers with explicit route metadata so OpenAPI generation and other metadata-driven runtime features keep request/response/parameter schemas instead of silently dropping them.
-- **Rust `Server::with_handlers(...)` metadata preservation**: The public Rust helper now reconstructs route metadata from compiled validators so direct Rust consumers keep OpenAPI request/response/parameter schemas instead of dropping them.
-- **gRPC streaming terminal status propagation**: Server-streaming and bidirectional gRPC responses now terminate with real `grpc-status` / `grpc-message` trailers on both success and mid-stream failure instead of silently dropping the terminal status.
-- **gRPC request compression support**: Client-streaming and bidirectional gRPC request parsing now supports compressed request frames when `grpc-encoding: gzip` is provided, enforces header/config validation for compressed frames, and returns structured `INVALID_ARGUMENT` / `UNIMPLEMENTED` / `RESOURCE_EXHAUSTED` status codes for invalid or unsupported compression paths.
-- **gRPC wire framing compliance**: Unary and server-streaming requests now decode standard 5-byte gRPC message frames (including configured request compression handling), and unary/client-streaming/server-streaming/bidirectional responses now emit properly framed gRPC message payloads instead of raw protobuf bytes.
-- **Python gRPC streaming test placeholders**: Replaced placeholder-only streaming and cancellation tests with concrete server-stream, client-stream, and bidirectional cancellation behavior assertions in the Python gRPC suite.
-- **gRPC default streaming fallbacks**: The default `GrpcHandler` implementations for `call_server_stream`, `call_client_stream`, and `call_bidi_stream` now adapt unary handlers instead of returning `UNIMPLEMENTED`, requiring exactly one request message for unary-adapted client/bidi streams.
-- **Ruby/PHP gRPC status normalization**: Ruby and PHP gRPC response helpers and low-level response metadata paths now normalize named status aliases like `UNAUTHENTICATED` to numeric `grpc-status` metadata, keeping helper ergonomics without violating gRPC wire semantics.
-- **`workers` runtime semantics**: Binding-managed server runtimes now honor `workers` as the Tokio runtime worker thread count instead of treating it as a no-op, and the PHP binding now enforces the same `workers >= 1` contract as the other bindings.
-- **DI factory builder error handling**: `FactoryDependencyBuilder::build()` now returns a structured `DependencyError` when no factory function is configured instead of panicking at runtime.
-- **Python startup API cleanup**: Removed `host=`, `port=`, and `workers=` keyword overrides from `Spikard.run()` and removed `host=` / `port=` overrides from `Spikard.serve()`. Python startup now uses explicit `ServerConfig` objects only.
-- **Python codegen startup alignment**: Python OpenAPI and OpenRPC code generators now emit `ServerConfig`-based startup examples instead of the removed `app.run(host=..., port=...)` form.
-- **Node gRPC service registry parity**: The TypeScript package now exposes a `GrpcService` registry helper, and the gRPC docs/snippets have been corrected to use the real Node public API instead of nonexistent `app.registerGrpcHandler(...)` / `addGrpcService(...)` methods.
-- **Node mixed-mode gRPC registration**: The TypeScript package and Node runtime now register gRPC handlers per service method and RPC mode, so a single gRPC service can mix unary, server-streaming, client-streaming, and bidirectional-streaming methods in one `GrpcService`.
-- **Node server-streaming gRPC payloads**: Node `handleServerStream(...)` handlers now return `{ messages: Buffer[] }`, and the Rust bridge emits each buffer as an ordered gRPC stream message instead of collapsing server-streaming handlers to a single unary-like payload.
-- **Node native route DI metadata wiring**: The Node native route ingestion path now preserves `handler_dependencies` from route metadata (with DI no-op fallback parity) instead of dropping dependencies during route registration.
-- **Core placeholder comment cleanup**: Removed stale placeholder/TODO wording from core router and gRPC config comments so implementation notes reflect the current runtime behavior.
-- **Gap-scan signal cleanup**: Removed stale TODO/placeholder comments from CLI feature-flag notes and binding lint configs so repo-wide implementation gap scans only surface actionable runtime/codegen work.
-- **Node task wiring**: Fixed `Taskfile.yaml` so `build:node` targets the real `crates/spikard-node` NAPI package, and Node lint/format tasks no longer try to run TypeScript tooling against the unrelated Rust-only `packages/node/native/src` tree.
-- **Node app lint compatibility**: Cleaned up the active Node app gRPC registration tests and method signatures so the `node:lint:check` task passes its `Biome` phase against the current TypeScript sources.
-- **Node/Ruby startup API cleanup**: Removed the Node `ServerOptions` compatibility type and Ruby `app.run(host:, port:)` fallback. Both bindings now use explicit server configuration objects only.
-- **AsyncAPI support docs**: Corrected the README, init reference, and code generation guide to document the implemented AsyncAPI 3.0.0 support instead of stale AsyncAPI 2.x wording.
-- **Ruby nested dependency resolution**: The Ruby DI handler wrapper now resolves `depends_on` chains recursively, detects missing and circular dependencies, and honors singleton/request caching when invoking factory dependencies.
-- **gRPC testing ADR docs**: Updated the testing infrastructure ADR to reflect the existing multi-language `e2e/` gRPC coverage instead of documenting end-to-end coverage as future work.
-- **PHP AsyncAPI test app generation**: The CLI now exposes PHP for AsyncAPI test-app generation and `asyncapi --all` bundles, matching the existing PHP AsyncAPI generator support already advertised in the docs.
-- **Architecture/runtime docs**: Updated stale architecture and feature docs to reflect current OpenRPC/Protobuf code generation, Python auto-reload support, and Ruby WebSocket support.
-- **AsyncAPI PHP protocol errors**: The PHP AsyncAPI generator now rejects unsupported test-app protocols during generation instead of emitting a runtime stub that fails later.
-- **GraphQL introspection JSON parsing**: The CLI now accepts GraphQL introspection JSON for code generation instead of advertising `.json` support and then failing with a placeholder parser error.
-- **Protobuf import resolution**: `spikard generate protobuf` now accepts repeated `--include <path>` flags and recursively merges imported local `.proto` definitions during code generation instead of ignoring documented import search paths.
-- **CLI codegen docs**: Corrected the code-generation guide and ADRs to match the current CLI surface, including real output-path semantics and removal of undocumented flags like `--no-validate`, `--force`, and `--proto3-optional`.
-- **Rust quality validation**: The public CLI `QualityValidator` now validates Rust code inside a real temporary Cargo crate, so Rust syntax, type, and clippy checks no longer fail by passing a raw `.rs` file to `cargo --manifest-path`.
-- **CLI codegen quality-gate wiring**: `spikard generate ...` now runs the generated source through the language-specific quality validator before returning output, so the documented syntax/type/lint gates are enforced by the real CLI path instead of remaining unwired utility code.
-- **PHP binary installer**: The Composer installer now downloads packaged PHP extension tarballs from GitHub releases, extracts the native library, installs it to a local extension directory, and writes an activation INI file when a writable scan directory is available.
-- **PHP Composer auto-install**: The PHP package now ships a Composer plugin that runs the native extension installer for dependency consumers, using the consumer project root as the install target instead of relying on package-local scripts that Composer never executes for dependencies.
-- **PHP release assets**: Tagged publish workflows now upload packaged PHP extension tarballs to the GitHub release so the PHP installer has real downloadable artifacts to resolve.
-- **Internal TypeScript fixture generator**: `tools/test-generator --lang typescript` now generates the same Node/Vitest-backed TypeScript e2e app and test suite as the documented internal workflow instead of stopping at a placeholder `TODO`.
-- **Node gRPC streaming examples**: Updated the Node gRPC example docs/comments to describe the current runtime tradeoffs rather than claiming the server-side registration surface is still pending future work.
-- **GraphQL server API docs**: Updated GraphQL documentation to match the breaking removal of `Server::new(...)/run()` and point to `Server::with_handlers_and_metadata(...)/run_with_config(...)`.
-- **JSON-RPC OpenRPC runtime docs**: The JSON-RPC runtime now serves `/openrpc.json` from registered method metadata, and the examples have been updated to match the implemented endpoint.
-- **OpenRPC CLI docs**: The init/codegen reference now reflects that OpenRPC 1.x schemas are supported instead of documenting them as a future enhancement.
+- **Cross-binding codegen parity gaps**: Closed numerous real generation issues across OpenAPI, OpenRPC, GraphQL, Protobuf, and AsyncAPI, including nested object typing, enum handling, semantic date/UUID types, inline model promotion, streaming service scaffolding, and generated file composition for `all` targets.
+- **MCP/CLI parity and defaults**: MCP tool defaults now match CLI defaults for init and core codegen commands, and the MCP surface is now covered by parity tests plus live stdio round-trip smoke tests.
+- **gRPC runtime behavior across bindings**: Fixed gRPC registration, wire framing, request compression, stream termination, status propagation, mixed-mode service handling, and helper/status normalization across the shared runtime and Node, Python, Ruby, PHP, and Elixir bindings.
+- **Binding startup/runtime correctness**: Fixed Python auto-reload, async startup, upload-file async I/O, Python 3.14 loop handling, Node/Ruby startup API cleanup, lifecycle hook wiring in PHP and generated Ruby apps, route metadata preservation, and DI error handling.
+- **Docs and install guidance**: Corrected installation, runtime, and codegen docs to match the shipped surface, including wheel/prebuilt guidance, AsyncAPI 3 support, OpenRPC support, GraphQL introspection JSON support, Protobuf include paths, and current startup/config APIs.
 
 ## [0.12.0] - 2026-02-28
 

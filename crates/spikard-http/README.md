@@ -45,7 +45,7 @@ High-performance HTTP server for Spikard with a complete tower-http middleware s
 
 ```toml
 [dependencies]
-spikard-http = "0.12.0"
+spikard-http = "0.13.0"
 ```
 
 ## Quick Start

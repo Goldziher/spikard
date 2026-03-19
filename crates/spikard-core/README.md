@@ -44,7 +44,7 @@ Shared transport-agnostic primitives and types for building Spikard runtimes acr
 
 ```toml
 [dependencies]
-spikard-core = "0.12.0"
+spikard-core = "0.13.0"
 ```
 
 ## Quick Start

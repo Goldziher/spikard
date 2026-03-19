@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test application that validates the published `spikard/spikard` Composer package (v0.12.0) works correctly in a real PHP environment.
+Test application that validates the published `spikard/spikard` Composer package (v0.13.0) works correctly in a real PHP environment.
 
 ## Setup
 

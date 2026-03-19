@@ -47,7 +47,7 @@ Add `spikard` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:spikard, "~> 0.12.0"}
+    {:spikard, "~> 0.13.0"}
   ]
 end
 ```

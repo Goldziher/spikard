@@ -43,7 +43,7 @@ GraphQL support for Spikard with async-graphql integration, schema building, and
 
 ```toml
 [dependencies]
-spikard-graphql = "0.12.0"
+spikard-graphql = "0.13.0"
 ```
 
 ## Quick Start

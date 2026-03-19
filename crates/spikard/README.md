@@ -47,7 +47,7 @@ High-performance HTTP framework built on Axum and Tower-HTTP with type-safe rout
 
 ```toml
 [dependencies]
-spikard = "0.12.0"
+spikard = "0.13.0"
 ```
 
 ## Quick Start

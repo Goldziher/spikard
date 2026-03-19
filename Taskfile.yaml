@@ -55,11 +55,11 @@ tasks:
   version:sync:
     desc: "Sync all package versions to the workspace version"
     cmds:
-      - python3 scripts/sync_versions.py{{if .VERSION}} {{.VERSION}}{{end}}
+      - uv run python scripts/sync_versions.py{{if .VERSION}} {{.VERSION}}{{end}}
   readme:generate:
     desc: "Generate all README files from Jinja2 templates"
     cmds:
-      - python3 scripts/generate_readme.py
+      - uv run python scripts/generate_readme.py
   readme:validate:
     desc: "Validate that generated READMEs match templates"
     cmds:
@@ -647,7 +647,7 @@ tasks:
   version:sync:php:
     desc: "Sync PHP package version to workspace version"
     cmds:
-      - python3 scripts/sync_versions.py
+      - uv run python scripts/sync_versions.py
 
   build:rust:
     desc: "Build Rust workspace in release mode"
@@ -679,7 +679,7 @@ tasks:
     dir: crates/spikard-py
     cmds:
       - uv run maturin build --release --out ../../target/wheels
-      - uv pip install --force-reinstall ../../target/wheels/spikard_bindings-0.12.0-cp310-abi3-macosx_11_0_arm64.whl
+      - uv pip install --force-reinstall ../../target/wheels/spikard_bindings-0.13.0-cp310-abi3-macosx_11_0_arm64.whl
 
   build:local:python:
     desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"

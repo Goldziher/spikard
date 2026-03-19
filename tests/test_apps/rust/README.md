@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Test application that validates the published `spikard` crate (v0.12.0) works correctly in a standalone Rust project.
+Test application that validates the published `spikard` crate (v0.13.0) works correctly in a standalone Rust project.
 
 ## Setup
 

@@ -233,7 +233,8 @@ def update_path_list(
 def update_cargo_files(version: str, changed_files: list[Path]) -> None:
     """Update Cargo.toml files and collect changed paths."""
     for cargo_path in REPO_ROOT.rglob("Cargo.toml"):
-        if "target" in cargo_path.parts or "node_modules" in cargo_path.parts:
+        ignored_parts = {"target", "node_modules", ".cache", "vendor", ".venv"}
+        if ignored_parts.intersection(cargo_path.parts):
             continue
         if update_cargo_versions(cargo_path, version):
             changed_files.append(cargo_path.relative_to(REPO_ROOT))
