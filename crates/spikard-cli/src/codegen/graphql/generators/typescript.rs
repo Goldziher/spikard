@@ -488,6 +488,8 @@ impl GraphQLGenerator for TypeScriptGenerator {
         // SDL as a template literal with proper escaping
         body.push_str("// TODO: Import your resolvers module:\n");
         body.push_str("// import { resolvers } from './resolvers';\n\n");
+        body.push_str("export type Resolvers = Record<string, unknown>;\n");
+        body.push_str("const resolvers: Resolvers = {};\n\n");
         body.push_str("/**\n");
         body.push_str(" * GraphQL Schema Definition Language (SDL)\n");
         body.push_str(" *\n");
@@ -526,9 +528,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
         body.push_str(" * string might be needed directly.\n");
         body.push_str(" */\n");
         body.push_str("export { typeDefs };\n\n");
-
-        // Export type
-        body.push_str("export type { resolvers as Resolvers };\n");
 
         sections.push(Section::Body(body));
 

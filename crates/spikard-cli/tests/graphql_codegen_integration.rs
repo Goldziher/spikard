@@ -1399,6 +1399,32 @@ fn test_typescript_complete_schema() -> Result<()> {
 }
 
 #[test]
+fn test_typescript_generated_graphql_validates() -> Result<()> {
+    let schema = r#"
+        type Query {
+            hello: String!
+        }
+
+        type User {
+            id: ID!
+            name: String!
+        }
+    "#;
+
+    let result = generate_typescript_graphql(schema, "all")?;
+    let report = QualityValidator::new(TargetLanguage::TypeScript)
+        .validate_all(&result)
+        .expect("TypeScript GraphQL validation should run");
+
+    assert!(
+        report.is_valid(),
+        "TypeScript GraphQL output should validate cleanly: {report}"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_typescript_mutation_resolver() -> Result<()> {
     let schema = r#"
         type User { id: ID! name: String! }

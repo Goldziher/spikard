@@ -550,6 +550,9 @@ impl QualityValidator {
         let config_path = workdir.path().join("tsconfig.json");
         let spikard_stub_path = workdir.path().join("spikard.d.ts");
         let zod_stub_path = workdir.path().join("zod.d.ts");
+        let graphql_stub_path = workdir.path().join("graphql.d.ts");
+        let graphql_tools_stub_path = workdir.path().join("graphql-tools-schema.d.ts");
+        let protobufjs_stub_path = workdir.path().join("protobufjs.d.ts");
 
         fs::write(&entry_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
         fs::write(
@@ -563,7 +566,14 @@ impl QualityValidator {
     "skipLibCheck": true,
     "noEmit": true
   },
-  "files": ["generated.ts", "spikard.d.ts", "zod.d.ts"]
+  "files": [
+    "generated.ts",
+    "spikard.d.ts",
+    "zod.d.ts",
+    "graphql.d.ts",
+    "graphql-tools-schema.d.ts",
+    "protobufjs.d.ts"
+  ]
 }
 "#,
         )
@@ -609,6 +619,34 @@ impl QualityValidator {
   }
 
   export const z: any;
+}
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            &graphql_stub_path,
+            r#"declare module "graphql" {
+  export interface GraphQLResolveInfo {}
+}
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            &graphql_tools_stub_path,
+            r#"declare module "@graphql-tools/schema" {
+  export function makeExecutableSchema(config: {
+    typeDefs: string;
+    resolvers: unknown;
+  }): unknown;
+}
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            &protobufjs_stub_path,
+            r#"declare module "protobufjs" {
+  const protobuf: Record<string, unknown>;
+  export = protobuf;
 }
 "#,
         )
