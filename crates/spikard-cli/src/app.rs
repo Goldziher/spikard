@@ -92,6 +92,11 @@ pub fn feature_summary() -> FeatureSummary {
         rust_core: true,
         language_bindings: vec![
             LanguageBinding {
+                name: "Rust".to_string(),
+                install_hint: "cargo add spikard".to_string(),
+                usage_hint: "cargo run".to_string(),
+            },
+            LanguageBinding {
                 name: "Python".to_string(),
                 install_hint: "pip install spikard".to_string(),
                 usage_hint: "python server.py".to_string(),
@@ -105,6 +110,16 @@ pub fn feature_summary() -> FeatureSummary {
                 name: "Ruby".to_string(),
                 install_hint: "gem install spikard".to_string(),
                 usage_hint: "ruby app.rb".to_string(),
+            },
+            LanguageBinding {
+                name: "PHP".to_string(),
+                install_hint: "composer require spikard/spikard".to_string(),
+                usage_hint: "php src/App.php".to_string(),
+            },
+            LanguageBinding {
+                name: "Elixir".to_string(),
+                install_hint: "mix deps.get".to_string(),
+                usage_hint: "iex -S mix".to_string(),
             },
         ],
         documentation_url: "https://spikard.dev".to_string(),

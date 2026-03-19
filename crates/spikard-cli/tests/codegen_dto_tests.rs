@@ -394,6 +394,97 @@ fn ruby_openapi_generated_code_validates() -> Result<()> {
 }
 
 #[test]
+fn elixir_openapi_generation_uses_spikard_router() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "inline_openapi.yaml", INLINE_OBJECT_OPENAPI);
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Elixir, &DtoConfig::default())?;
+
+    assert!(
+        code.contains("use Spikard.Router"),
+        "expected Spikard.Router in generated output"
+    );
+    assert!(
+        code.contains("post(\"/widgets\""),
+        "expected Elixir route macro for POST endpoint"
+    );
+    assert!(
+        code.contains("request_schema: @create_widget_request_schema"),
+        "expected request schema metadata on generated route"
+    );
+    assert!(
+        code.contains("response_schema: @create_widget_response_schema"),
+        "expected response schema metadata on generated route"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn elixir_openapi_path_params_use_spikard_router_syntax() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(
+        dir.path(),
+        "openapi.yaml",
+        r##"
+openapi: 3.1.0
+info:
+  title: Users API
+  version: "1.0.0"
+paths:
+  /users/{id}:
+    get:
+      operationId: getUser
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                required:
+                  - id
+"##,
+    );
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Elixir, &DtoConfig::default())?;
+    assert!(code.contains("get(\"/users/:id\""), "expected :param route syntax");
+    assert!(
+        code.contains("Spikard.Request.get_path_param(request, \"id\")"),
+        "expected handler to pull path params through Spikard.Request"
+    );
+
+    Ok(())
+}
+
+#[test]
+fn elixir_openapi_generated_code_validates() -> Result<()> {
+    let dir = tempdir()?;
+    let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);
+
+    let code = generate_from_openapi(&schema_path, TargetLanguage::Elixir, &DtoConfig::default())?;
+    let report = QualityValidator::new(TargetLanguage::Elixir)
+        .validate_all(&code)
+        .expect("elixir openapi validation should run");
+
+    assert!(
+        report.is_valid(),
+        "generated Elixir OpenAPI code should validate cleanly: {report}"
+    );
+
+    Ok(())
+}
+
+#[test]
 fn rust_generation_uses_spikard_app() -> Result<()> {
     let dir = tempdir()?;
     let schema_path = write_temp_file(dir.path(), "openapi.yaml", SIMPLE_OPENAPI);

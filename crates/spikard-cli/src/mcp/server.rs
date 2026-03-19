@@ -106,7 +106,7 @@ impl SpikardMcp {
                 output: params
                     .output
                     .map(PathBuf::from)
-                    .unwrap_or_else(|| PathBuf::from("handlers.py")),
+                    .unwrap_or_else(|| default_jsonrpc_output(language)),
             },
             dto: None,
         })
@@ -433,9 +433,10 @@ fn parse_target_language(language: &str) -> Result<TargetLanguage, rmcp::ErrorDa
         "rust" => Ok(TargetLanguage::Rust),
         "ruby" => Ok(TargetLanguage::Ruby),
         "php" => Ok(TargetLanguage::Php),
+        "elixir" => Ok(TargetLanguage::Elixir),
         other => Err(rmcp::ErrorData::invalid_params(
             format!(
-                "Unsupported language '{}'. Use python, typescript, rust, ruby, or php.",
+                "Unsupported language '{}'. Use python, typescript, rust, ruby, php, or elixir.",
                 other
             ),
             None,
@@ -483,8 +484,21 @@ fn default_graphql_output(language: TargetLanguage) -> PathBuf {
         TargetLanguage::Rust => "rs",
         TargetLanguage::Ruby => "rb",
         TargetLanguage::Php => "php",
+        TargetLanguage::Elixir => "ex",
     };
     PathBuf::from(format!("generated.{ext}"))
+}
+
+fn default_jsonrpc_output(language: TargetLanguage) -> PathBuf {
+    let ext = match language {
+        TargetLanguage::Python => "py",
+        TargetLanguage::TypeScript => "ts",
+        TargetLanguage::Rust => "rs",
+        TargetLanguage::Ruby => "rb",
+        TargetLanguage::Php => "php",
+        TargetLanguage::Elixir => "ex",
+    };
+    PathBuf::from(format!("handlers.{ext}"))
 }
 
 #[cfg(test)]

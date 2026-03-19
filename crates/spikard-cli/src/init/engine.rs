@@ -241,6 +241,7 @@ impl InitEngine {
             TargetLanguage::Rust => Box::new(super::rust_lang::RustScaffolder),
             TargetLanguage::Ruby => Box::new(super::ruby::RubyScaffolder),
             TargetLanguage::Php => Box::new(super::php::PhpScaffolder),
+            TargetLanguage::Elixir => Box::new(super::elixir::ElixirScaffolder),
         }
     }
 
@@ -400,6 +401,24 @@ impl InitEngine {
                     });
                 }
             }
+            TargetLanguage::Elixir => {
+                if !project_name
+                    .chars()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
+                {
+                    bail!(InitError::InvalidProjectName {
+                        name: project_name.to_string(),
+                        reason: "Elixir project names must contain only lowercase letters, digits, and underscores"
+                            .to_string(),
+                    });
+                }
+                if project_name.starts_with(|c: char| c.is_ascii_digit()) {
+                    bail!(InitError::InvalidProjectName {
+                        name: project_name.to_string(),
+                        reason: "Elixir project names cannot start with a digit".to_string(),
+                    });
+                }
+            }
         }
 
         Ok(())
@@ -521,5 +540,16 @@ mod tests {
     #[test]
     fn test_validate_php_project_name_invalid() {
         assert!(InitEngine::validate_project_name("2api", TargetLanguage::Php).is_err());
+    }
+
+    #[test]
+    fn test_validate_elixir_project_name_valid() {
+        assert!(InitEngine::validate_project_name("my_api", TargetLanguage::Elixir).is_ok());
+    }
+
+    #[test]
+    fn test_validate_elixir_project_name_invalid() {
+        assert!(InitEngine::validate_project_name("MyApi", TargetLanguage::Elixir).is_err());
+        assert!(InitEngine::validate_project_name("2api", TargetLanguage::Elixir).is_err());
     }
 }

@@ -36,6 +36,7 @@
 //! # Ok::<(), anyhow::Error>(())
 //! ```
 
+pub mod elixir;
 pub mod engine;
 pub mod php;
 pub mod python;
@@ -44,6 +45,7 @@ pub mod rust_lang;
 pub mod scaffolder;
 pub mod typescript;
 
+pub use elixir::ElixirScaffolder;
 pub use engine::{InitEngine, InitError, InitRequest, InitResponse};
 pub use php::PhpScaffolder;
 pub use python::PythonScaffolder;

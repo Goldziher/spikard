@@ -3,6 +3,7 @@
 mod asyncapi;
 mod base;
 pub mod common;
+mod elixir;
 mod engine;
 pub mod formatters;
 mod graphql;
@@ -25,6 +26,7 @@ pub use asyncapi::{
     generate_ruby_test_app, generate_rust_handler_app, parse_asyncapi_schema,
 };
 pub use base::OpenApiGenerator;
+pub use elixir::ElixirGenerator;
 pub use engine::{CodegenEngine, CodegenOutcome, CodegenRequest, CodegenTargetKind, GeneratedAsset, SchemaKind};
 pub use formatters::{Formatter, HeaderMetadata, Import, PythonFormatter, RubyFormatter, Section, TypeScriptFormatter};
 pub use graphql::{
@@ -64,6 +66,7 @@ pub enum TargetLanguage {
     Rust,
     Ruby,
     Php,
+    Elixir,
 }
 
 /// DTO configuration per language.
@@ -74,6 +77,7 @@ pub struct DtoConfig {
     pub ruby: RubyDtoStyle,
     pub rust: RustDtoStyle,
     pub php: PhpDtoStyle,
+    pub elixir: ElixirDtoStyle,
 }
 
 impl Default for DtoConfig {
@@ -84,6 +88,7 @@ impl Default for DtoConfig {
             ruby: RubyDtoStyle::DrySchema,
             rust: RustDtoStyle::SerdeStruct,
             php: PhpDtoStyle::ReadonlyClass,
+            elixir: ElixirDtoStyle::Typespecs,
         }
     }
 }
@@ -114,6 +119,11 @@ pub enum PhpDtoStyle {
     ReadonlyClass,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ElixirDtoStyle {
+    Typespecs,
+}
+
 /// Generate server code from an `OpenAPI` schema file
 pub fn generate_from_openapi(schema_path: &Path, target_lang: TargetLanguage, dto: &DtoConfig) -> Result<String> {
     let spec = parse_openapi_schema(schema_path)?;
@@ -137,6 +147,10 @@ pub fn generate_from_openapi(schema_path: &Path, target_lang: TargetLanguage, dt
         }
         TargetLanguage::Php => {
             let generator = PhpGenerator::new(spec, dto.php);
+            generator.generate()?
+        }
+        TargetLanguage::Elixir => {
+            let generator = ElixirGenerator::new(spec, dto.elixir);
             generator.generate()?
         }
     };

@@ -198,6 +198,7 @@ impl CodegenEngine {
                     TargetLanguage::Ruby => super::protobuf::generate_ruby_protobuf(&schema, &proto_target)?,
                     TargetLanguage::Php => super::protobuf::generate_php_protobuf(&schema, &proto_target)?,
                     TargetLanguage::Rust => super::protobuf::generate_rust_protobuf(&schema, &proto_target)?,
+                    TargetLanguage::Elixir => bail!("Elixir Protobuf codegen is not implemented yet"),
                 };
                 if validate {
                     Self::validate_generated_code(*language, &code)?;
@@ -245,6 +246,9 @@ impl CodegenEngine {
             TargetLanguage::TypeScript => generate_nodejs_test_app(spec, protocol)?,
             TargetLanguage::Ruby => generate_ruby_test_app(spec, protocol)?,
             TargetLanguage::Php => generate_php_test_app(spec, protocol)?,
+            TargetLanguage::Elixir => {
+                bail!("Elixir is not supported for AsyncAPI test apps");
+            }
             other => {
                 bail!("{other:?} is not supported for AsyncAPI test apps");
             }
@@ -269,6 +273,7 @@ impl CodegenEngine {
             TargetLanguage::Ruby => generate_ruby_handler_app(spec, protocol)?,
             TargetLanguage::Rust => generate_rust_handler_app(spec, protocol)?,
             TargetLanguage::Php => generate_php_handler_app(spec, protocol)?,
+            TargetLanguage::Elixir => bail!("Elixir is not supported for AsyncAPI handlers"),
         };
         if validate {
             Self::validate_generated_code(language, &code)?;
@@ -343,6 +348,7 @@ impl CodegenEngine {
             TargetLanguage::Rust => generate_openrpc_rust_handler(spec)?,
             TargetLanguage::Ruby => generate_openrpc_ruby_handler(spec)?,
             TargetLanguage::Php => generate_openrpc_php_handler(spec)?,
+            TargetLanguage::Elixir => bail!("Elixir OpenRPC codegen is not implemented yet"),
         };
         if validate {
             Self::validate_generated_code(language, &code)?;
@@ -414,6 +420,7 @@ impl CodegenEngine {
                     _ => generator.generate_complete(&parsed_schema)?,
                 }
             }
+            TargetLanguage::Elixir => bail!("Elixir GraphQL codegen is not implemented yet"),
         };
         if validate {
             Self::validate_generated_code(language, &code)?;
@@ -482,6 +489,7 @@ const fn language_name(language: TargetLanguage) -> &'static str {
         TargetLanguage::Rust => "Rust",
         TargetLanguage::Ruby => "Ruby",
         TargetLanguage::Php => "PHP",
+        TargetLanguage::Elixir => "Elixir",
     }
 }
 

@@ -87,6 +87,8 @@ enum InitLanguage {
     Ruby,
     #[value(name = "php")]
     Php,
+    #[value(name = "elixir")]
+    Elixir,
 }
 
 impl From<InitLanguage> for TargetLanguage {
@@ -97,6 +99,7 @@ impl From<InitLanguage> for TargetLanguage {
             InitLanguage::Rust => Self::Rust,
             InitLanguage::Ruby => Self::Ruby,
             InitLanguage::Php => Self::Php,
+            InitLanguage::Elixir => Self::Elixir,
         }
     }
 }
@@ -275,6 +278,8 @@ enum GenerateLanguage {
     Ruby,
     #[value(name = "php")]
     Php,
+    #[value(name = "elixir")]
+    Elixir,
 }
 
 impl From<GenerateLanguage> for codegen::TargetLanguage {
@@ -285,6 +290,7 @@ impl From<GenerateLanguage> for codegen::TargetLanguage {
             GenerateLanguage::Rust => Self::Rust,
             GenerateLanguage::Ruby => Self::Ruby,
             GenerateLanguage::Php => Self::Php,
+            GenerateLanguage::Elixir => Self::Elixir,
         }
     }
 }
@@ -312,8 +318,35 @@ fn apply_dto_selection(config: &mut DtoConfig, lang: GenerateLanguage, dto: DtoA
             DtoArg::ReadonlyClass => config.php = codegen::PhpDtoStyle::ReadonlyClass,
             _ => bail!("DTO '{dto:?}' is not supported for PHP"),
         },
+        GenerateLanguage::Elixir => bail!("DTO '{dto:?}' is not supported for Elixir"),
     }
     Ok(())
+}
+
+fn default_jsonrpc_output(lang: GenerateLanguage) -> PathBuf {
+    let ext = match lang {
+        GenerateLanguage::Python => "py",
+        GenerateLanguage::TypeScript => "ts",
+        GenerateLanguage::Rust => "rs",
+        GenerateLanguage::Ruby => "rb",
+        GenerateLanguage::Php => "php",
+        GenerateLanguage::Elixir => "ex",
+    };
+
+    PathBuf::from(format!("handlers.{ext}"))
+}
+
+fn default_graphql_output(lang: GenerateLanguage) -> PathBuf {
+    let ext = match lang {
+        GenerateLanguage::Python => "py",
+        GenerateLanguage::TypeScript => "ts",
+        GenerateLanguage::Rust => "rs",
+        GenerateLanguage::Ruby => "rb",
+        GenerateLanguage::Php => "php",
+        GenerateLanguage::Elixir => "ex",
+    };
+
+    PathBuf::from(format!("generated.{ext}"))
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -446,7 +479,7 @@ fn run(cli: Cli) -> Result<()> {
                     schema_kind: SchemaKind::OpenRpc,
                     target: CodegenTargetKind::JsonRpcHandlers {
                         language: args.lang.into(),
-                        output: args.output.unwrap_or_else(|| PathBuf::from("handlers.py")),
+                        output: args.output.unwrap_or_else(|| default_jsonrpc_output(args.lang)),
                     },
                     dto: None,
                 };
@@ -462,16 +495,7 @@ fn run(cli: Cli) -> Result<()> {
                 if let Some(ref path) = args.output {
                     println!("  Output: {}", path.display());
                 }
-                let output_path = args.output.clone().unwrap_or_else(|| {
-                    let ext = match args.lang {
-                        GenerateLanguage::Python => ".py",
-                        GenerateLanguage::TypeScript => ".ts",
-                        GenerateLanguage::Rust => ".rs",
-                        GenerateLanguage::Ruby => ".rb",
-                        GenerateLanguage::Php => ".php",
-                    };
-                    PathBuf::from(format!("generated{ext}"))
-                });
+                let output_path = args.output.clone().unwrap_or_else(|| default_graphql_output(args.lang));
 
                 let request = CodegenRequest {
                     schema_path: args.schema.clone(),

@@ -225,6 +225,16 @@ impl QualityValidator {
                 self.run_tool("php", &["-l", file.path().to_str().unwrap()], code)
                     .map(|_| ())
             }
+            TargetLanguage::Elixir => {
+                let project = self.write_temp_elixir_project(code)?;
+                self.run_tool_in_dir(
+                    "mix",
+                    &["compile", "--warnings-as-errors"],
+                    project.workdir.path(),
+                    code,
+                )
+                .map(|_| ())
+            }
         }
     }
 
@@ -305,6 +315,7 @@ impl QualityValidator {
                 // PHP doesn't have a separate type checker; covered by lint
                 Ok(())
             }
+            TargetLanguage::Elixir => Ok(()),
         }
     }
 
@@ -375,6 +386,26 @@ impl QualityValidator {
                         bootstrap.path().to_str().unwrap(),
                         file.path().to_str().unwrap(),
                     ],
+                    code,
+                )
+                .map(|_| ())
+            }
+            TargetLanguage::Elixir => {
+                let project = self.write_temp_elixir_project(code)?;
+                let generated = project.generated_path.strip_prefix(project.workdir.path()).unwrap();
+                self.run_tool_in_dir(
+                    "mix",
+                    &[
+                        "format",
+                        "--check-formatted",
+                        generated.to_str().unwrap(),
+                        "mix.exs",
+                        ".formatter.exs",
+                        "lib/spikard/router.ex",
+                        "lib/spikard/request.ex",
+                        "lib/spikard/response.ex",
+                    ],
+                    project.workdir.path(),
                     code,
                 )
                 .map(|_| ())
@@ -574,6 +605,112 @@ impl QualityValidator {
         })
     }
 
+    fn write_temp_elixir_project(&self, code: &str) -> Result<ElixirTempProject, QualityError> {
+        let workdir = tempdir().map_err(|e| QualityError::IoError(e.to_string()))?;
+        let mix_exs = workdir.path().join("mix.exs");
+        let formatter = workdir.path().join(".formatter.exs");
+        let lib_dir = workdir.path().join("lib");
+        let spikard_dir = lib_dir.join("spikard");
+        let generated_path = lib_dir.join("generated.ex");
+
+        fs::create_dir_all(&spikard_dir).map_err(|e| QualityError::IoError(e.to_string()))?;
+
+        fs::write(
+            &mix_exs,
+            r#"defmodule GeneratedValidation.MixProject do
+  use Mix.Project
+
+  def project do
+    [
+      app: :generated_validation,
+      version: "0.1.0",
+      elixir: "~> 1.19",
+      deps: []
+    ]
+  end
+end
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            &formatter,
+            r#"[
+  inputs: ["{mix,.formatter}.exs", "{config,lib,test}/**/*.{ex,exs}"],
+  line_length: 120
+]
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            spikard_dir.join("router.ex"),
+            r#"defmodule Spikard.Router do
+  defmacro __using__(_opts) do
+    quote do
+      import Spikard.Router
+      Module.register_attribute(__MODULE__, :spikard_routes, accumulate: true)
+    end
+  end
+
+  for method <- ~w(get post put patch delete)a do
+    defmacro unquote(method)(path, handler, opts \\ []) do
+      quote do
+        @spikard_routes {unquote(path), unquote(handler), unquote(opts)}
+      end
+    end
+  end
+end
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            spikard_dir.join("request.ex"),
+            r#"defmodule Spikard.Request do
+  @type t :: map()
+
+  @spec get_path_param(t(), String.t()) :: term()
+  def get_path_param(_request, _key), do: nil
+
+  @spec get_query_param(t(), String.t()) :: term()
+  def get_query_param(_request, _key), do: nil
+
+  @spec get_header(t(), String.t()) :: term()
+  def get_header(_request, _key), do: nil
+
+  @spec get_cookie(t(), String.t()) :: term()
+  def get_cookie(_request, _key), do: nil
+
+  @spec get_body(t()) :: term()
+  def get_body(_request), do: nil
+end
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(
+            spikard_dir.join("response.ex"),
+            r#"defmodule Spikard.Response do
+  @type t :: %{status: non_neg_integer(), headers: [{String.t(), String.t()}], body: term()}
+
+  @spec json(term(), keyword()) :: t()
+  def json(body, opts \\ []) do
+    %{status: Keyword.get(opts, :status, 200), headers: [{"content-type", "application/json"}], body: body}
+  end
+
+  @spec status(non_neg_integer()) :: t()
+  def status(code) do
+    %{status: code, headers: [], body: nil}
+  end
+end
+"#,
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+        fs::write(&generated_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
+
+        Ok(ElixirTempProject {
+            workdir,
+            generated_path,
+        })
+    }
+
     fn write_php_validation_bootstrap(&self) -> Result<NamedTempFile, QualityError> {
         self.write_temp_file(
             r#"<?php
@@ -766,6 +903,11 @@ struct PythonTempProject {
     workdir: TempDir,
     entry_path: PathBuf,
     stub_path: PathBuf,
+}
+
+struct ElixirTempProject {
+    workdir: TempDir,
+    generated_path: PathBuf,
 }
 
 fn write_python_validation_stubs(root: &Path) -> Result<(), QualityError> {
@@ -967,6 +1109,9 @@ mod tests {
 
         let validator = QualityValidator::new(TargetLanguage::TypeScript);
         assert_eq!(validator.language, TargetLanguage::TypeScript);
+
+        let validator = QualityValidator::new(TargetLanguage::Elixir);
+        assert_eq!(validator.language, TargetLanguage::Elixir);
     }
 
     #[test]
