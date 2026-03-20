@@ -27,6 +27,11 @@ on:
         required: false
         type: boolean
         default: false
+      republish:
+        description: "Delete and re-create the tag on current HEAD before publishing"
+        required: false
+        type: boolean
+        default: false
   repository_dispatch:
     types: [publish-release]
 
@@ -43,7 +48,7 @@ jobs:
     name: Prepare metadata
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
       version: ${{ steps.meta.outputs.version }}
@@ -68,6 +73,25 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Retag for republish
+        if: ${{ inputs.republish == true || github.event.client_payload.republish == true }}
+        env:
+          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ -z "${TAG}" ]]; then
+            echo "::error::republish requires a tag input"
+            exit 1
+          fi
+          sha="$(git rev-parse HEAD)"
+          echo "::notice::Republish requested - deleting and re-creating tag ${TAG} on ${sha:0:8}"
+          gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG}" -X DELETE 2>/dev/null || true
+          gh api "repos/${GITHUB_REPOSITORY}/git/refs" \
+            -f "ref=refs/tags/${TAG}" \
+            -f "sha=${sha}" --silent
+          git tag -d "${TAG}" 2>/dev/null || true
+          git tag -a "${TAG}" -m "${TAG}" "${sha}"
 
       - name: Validate tag and compute version
         id: meta
