@@ -38,6 +38,12 @@ namespace :ext do
   end
 end
 
+desc 'Vendor internal Rust crates for the Ruby package'
+task :vendor do
+  vendor_script = File.expand_path('../../scripts/ci/ruby/vendor-crates.sh', __dir__)
+  sh "bash #{vendor_script}"
+end
+
 task default: ['spec']
 
 desc 'Alias for ext:build (used by CI)'

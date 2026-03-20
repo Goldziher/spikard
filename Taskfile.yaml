@@ -464,9 +464,8 @@ tasks:
 
   elixir:vendor:
     desc: "Vendor Rust NIF source into native/spikard_elixir"
-    dir: packages/elixir
     cmds:
-      - ./scripts/vendor_nif.sh
+      - ./scripts/ci/elixir/vendor-nif.sh
 
   elixir:build:
     desc: "Build Elixir with NIF"

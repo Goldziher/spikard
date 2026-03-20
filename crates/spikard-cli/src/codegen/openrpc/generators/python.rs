@@ -31,7 +31,7 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         let mut code = String::new();
         let mut state = PythonGenerationState::new();
 
-        code.push_str("# ruff: noqa: INP001, F401\n");
+        code.push_str("# ruff: noqa: INP001\n");
         code.push_str("\"\"\"JSON-RPC 2.0 handlers generated from OpenRPC specification.\n\n");
         code.push_str("Generated from: ");
         code.push_str(&spec.info.title);

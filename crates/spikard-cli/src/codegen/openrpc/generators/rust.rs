@@ -210,7 +210,7 @@ fn generate_rust_dtos(code: &mut String, spec: &OpenRpcSpec, method: &OpenRpcMet
     let result_class = get_result_class_name(&method.name);
 
     for param in &method.params {
-        emit_nested_object_types(code, spec, &params_class, &param.schema)?;
+        emit_inline_field_types(code, spec, &params_class, &param.name, &param.schema)?;
     }
     code.push_str(&format!("/// Parameters for `{}`.\n", method.name));
     code.push_str("#[derive(Debug, Clone, Deserialize, JsonSchema)]\n");
@@ -283,24 +283,36 @@ fn emit_nested_object_types(code: &mut String, spec: &OpenRpcSpec, parent_name: 
     let resolved = resolve_schema(spec, schema);
     if let Some(properties) = resolved.get("properties").and_then(Value::as_object) {
         for (field_name, field_schema) in properties {
-            if schema_ref_name(field_schema).is_some() {
-                continue;
-            }
+            emit_inline_field_types(code, spec, parent_name, field_name, field_schema)?;
+        }
+    }
 
-            let nested_schema = resolve_schema(spec, field_schema);
-            if schema_has_named_object_shape(nested_schema) {
-                let nested_name = format!("{parent_name}{}", field_name.to_pascal_case());
-                generate_named_schema(code, spec, &nested_name, nested_schema)?;
-                continue;
-            }
+    Ok(())
+}
 
-            if let Some(items) = nested_schema.get("items") {
-                let resolved_items = resolve_schema(spec, items);
-                if schema_ref_name(items).is_none() && schema_has_named_object_shape(resolved_items) {
-                    let nested_name = format!("{parent_name}{}Item", field_name.to_pascal_case());
-                    generate_named_schema(code, spec, &nested_name, resolved_items)?;
-                }
-            }
+fn emit_inline_field_types(
+    code: &mut String,
+    spec: &OpenRpcSpec,
+    parent_name: &str,
+    field_name: &str,
+    schema: &Value,
+) -> Result<()> {
+    if schema_ref_name(schema).is_some() {
+        return Ok(());
+    }
+
+    let resolved = resolve_schema(spec, schema);
+    if schema_has_named_object_shape(resolved) {
+        let nested_name = format!("{parent_name}{}", field_name.to_pascal_case());
+        generate_named_schema(code, spec, &nested_name, resolved)?;
+        return Ok(());
+    }
+
+    if let Some(items) = resolved.get("items") {
+        let resolved_items = resolve_schema(spec, items);
+        if schema_ref_name(items).is_none() && schema_has_named_object_shape(resolved_items) {
+            let nested_name = format!("{parent_name}{}Item", field_name.to_pascal_case());
+            generate_named_schema(code, spec, &nested_name, resolved_items)?;
         }
     }
 

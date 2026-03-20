@@ -576,7 +576,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          targets: ${{ matrix.settings.target }}
+          target: ${{ matrix.settings.target }}
 
       - name: Add Rust target
         if: ${{ matrix.settings.rust_target != '' }}
@@ -704,7 +704,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          targets: ${{ matrix.target }}
+          target: ${{ matrix.target }}
 
       - name: Add compilation target
         run: rustup target add ${{ matrix.target }}
@@ -900,12 +900,12 @@ jobs:
       - name: Vendor Rust crates
         if: runner.os != 'Windows'
         shell: bash
-        run: bash packages/ruby/scripts/ci/ruby/vendor-crates.sh
+        run: bash scripts/ci/ruby/vendor-crates.sh
 
       - name: Vendor Rust crates (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: bash packages/ruby/scripts/ci/ruby/vendor-crates.sh
+        run: bash scripts/ci/ruby/vendor-crates.sh
 
       - name: Build gem (Unix)
         if: runner.os != 'Windows'
@@ -1188,7 +1188,7 @@ jobs:
 
       - name: Configure trusted publishing credentials
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: rubygems/configure-rubygems-credentials@v1
+        uses: rubygems/configure-rubygems-credentials@v1.0.0
 
       - name: Publish gems
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
@@ -1513,8 +1513,7 @@ jobs:
           toolchain: stable
 
       - name: Vendor NIF source
-        working-directory: packages/elixir
-        run: bash scripts/vendor_nif.sh
+        run: bash scripts/ci/elixir/vendor-nif.sh
 
       - name: Install Hex and Rebar
         working-directory: packages/elixir

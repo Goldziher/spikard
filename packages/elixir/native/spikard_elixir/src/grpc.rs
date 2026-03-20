@@ -67,7 +67,10 @@ impl ElixirGrpcHandler {
     }
 }
 
-pub fn build_registry(grpc_service_defs: Term, handler_runner_pid: LocalPid) -> Result<Option<Arc<GrpcRegistry>>, String> {
+pub fn build_registry(
+    grpc_service_defs: Term,
+    handler_runner_pid: LocalPid,
+) -> Result<Option<Arc<GrpcRegistry>>, String> {
     let Some(service_iter) = MapIterator::new(grpc_service_defs) else {
         return Ok(None);
     };
@@ -75,10 +78,10 @@ pub fn build_registry(grpc_service_defs: Term, handler_runner_pid: LocalPid) -> 
     let mut registry = GrpcRegistry::new();
 
     for (service_term, methods_term) in service_iter {
-        let service_name = decode_term_string(service_term)
-            .map_err(|_| "gRPC service names must be strings or atoms".to_string())?;
-        let methods_iter =
-            MapIterator::new(methods_term).ok_or_else(|| format!("gRPC service {service_name} must map to a method map"))?;
+        let service_name =
+            decode_term_string(service_term).map_err(|_| "gRPC service names must be strings or atoms".to_string())?;
+        let methods_iter = MapIterator::new(methods_term)
+            .ok_or_else(|| format!("gRPC service {service_name} must map to a method map"))?;
 
         let handler = Arc::new(ElixirGrpcHandler::new(handler_runner_pid, service_name.clone()));
 
@@ -404,7 +407,9 @@ fn decode_grpc_reply(_env: Env<'_>, response_term: Term<'_>) -> Result<ElixirGrp
         return Ok(ElixirGrpcReply::Unary { payload, metadata });
     }
 
-    if let Ok((tag, messages)) = response_term.decode::<(Atom, Vec<Term>)>() && tag == atoms::stream() {
+    if let Ok((tag, messages)) = response_term.decode::<(Atom, Vec<Term>)>()
+        && tag == atoms::stream()
+    {
         let mut decoded_messages = Vec::with_capacity(messages.len());
         for message_term in messages {
             let message = decode_binary(message_term)?;
@@ -419,7 +424,8 @@ fn decode_grpc_reply(_env: Env<'_>, response_term: Term<'_>) -> Result<ElixirGrp
     if let Ok((tag, code_term, message_term, _metadata_term)) = response_term.decode::<(Atom, Term, Term, Term)>()
         && tag == atoms::error()
     {
-        let code = decode_term_string(code_term).map_err(|_| "gRPC error codes must be strings, atoms, or integers".to_string())?;
+        let code = decode_term_string(code_term)
+            .map_err(|_| "gRPC error codes must be strings, atoms, or integers".to_string())?;
         let message =
             decode_term_string(message_term).map_err(|_| "gRPC error messages must be strings".to_string())?;
         return Ok(ElixirGrpcReply::Error { code, message });
@@ -524,10 +530,7 @@ fn hashmap_to_metadata_map(map: &HashMap<String, String>) -> Result<MetadataMap,
         let metadata_value = value
             .parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
             .map_err(|err| {
-                tonic::Status::invalid_argument(format!(
-                    "Invalid metadata value for key '{}': {}",
-                    key, err
-                ))
+                tonic::Status::invalid_argument(format!("Invalid metadata value for key '{}': {}", key, err))
             })?;
         metadata.insert(metadata_key, metadata_value);
     }
@@ -554,8 +557,7 @@ fn decode_string_map(term: Term<'_>) -> Result<HashMap<String, String>, String> 
 
     let mut map = HashMap::new();
     for (key_term, value_term) in iter {
-        let key =
-            decode_term_string(key_term).map_err(|_| "metadata keys must be strings or atoms".to_string())?;
+        let key = decode_term_string(key_term).map_err(|_| "metadata keys must be strings or atoms".to_string())?;
         let value =
             decode_term_string(value_term).map_err(|_| format!("metadata value for key '{}' must be a string", key))?;
         map.insert(key, value);
@@ -593,7 +595,10 @@ mod tests {
 
     #[test]
     fn maps_grpc_error_codes() {
-        assert_eq!(grpc_error_to_status("unimplemented", "x").code(), tonic::Code::Unimplemented);
+        assert_eq!(
+            grpc_error_to_status("unimplemented", "x").code(),
+            tonic::Code::Unimplemented
+        );
         assert_eq!(grpc_error_to_status("14", "x").code(), tonic::Code::Unavailable);
         assert_eq!(grpc_error_to_status("bogus", "x").code(), tonic::Code::Internal);
     }

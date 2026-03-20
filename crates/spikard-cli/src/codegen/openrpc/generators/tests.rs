@@ -456,6 +456,29 @@ fn test_rust_generator_keeps_free_form_objects_as_value() {
 }
 
 #[test]
+fn test_rust_generator_emits_named_inline_param_models_for_openrpc_example() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let spec = parse_openrpc_schema(&fixture).expect("user-api OpenRPC example should parse");
+    let generator = RustOpenRpcGenerator;
+    let output = generator
+        .generate_handler_app(&spec)
+        .expect("Rust OpenRPC generation should succeed for inline-param example");
+
+    assert!(
+        output.contains("pub struct UserCreateParamsUserData"),
+        "required inline object params should emit named structs before they are referenced"
+    );
+    assert!(
+        output.contains("pub struct UserUpdateParamsUpdates"),
+        "multiple inline object params should each emit their own named structs"
+    );
+    assert!(
+        output.contains("pub struct UserListParamsOptions"),
+        "optional inline object params should also emit named structs"
+    );
+}
+
+#[test]
 fn test_typescript_generator_zod_schemas() {
     let spec = single_method_spec("test_method");
     let generator = TypeScriptOpenRpcGenerator;

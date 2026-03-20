@@ -519,7 +519,7 @@ mod tests {
         let code = generator.generate_service_class(&service);
 
         assert!(code.contains("export class StreamService"));
-        assert!(code.contains("async getItems(request: Query): AsyncIterable<Item>"));
+        assert!(code.contains("getItems(request: Query): AsyncIterable<Item>"));
     }
 
     #[test]

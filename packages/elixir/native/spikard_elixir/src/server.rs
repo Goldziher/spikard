@@ -672,18 +672,15 @@ pub fn start_server<'a>(
 
     // Build the router
     let app_router = match grpc_registry {
-        Some(registry) => match Server::with_handlers_metadata_and_grpc(
-            config.clone(),
-            routes_with_handlers,
-            metadata,
-            registry,
-        ) {
-            Ok(router) => router,
-            Err(e) => {
-                let error_msg = format!("Failed to build router: {}", e);
-                return Ok(struct_error(env, atoms::router_build_failed(), &error_msg));
+        Some(registry) => {
+            match Server::with_handlers_metadata_and_grpc(config.clone(), routes_with_handlers, metadata, registry) {
+                Ok(router) => router,
+                Err(e) => {
+                    let error_msg = format!("Failed to build router: {}", e);
+                    return Ok(struct_error(env, atoms::router_build_failed(), &error_msg));
+                }
             }
-        },
+        }
         None => match Server::with_handlers_and_metadata(config.clone(), routes_with_handlers, metadata) {
             Ok(router) => router,
             Err(e) => {
