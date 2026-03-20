@@ -236,6 +236,23 @@ jobs:
               ;;
           esac
 
+  npm-already-published:
+    name: npm already published summary
+    needs: [prepare, check-npm-node]
+    if: >-
+      ${{
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_node == 'true' &&
+        needs.prepare.outputs.force_republish != 'true' &&
+        needs.check-npm-node.outputs.exists == 'true'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Write summary
+        run: echo "Node packages for version ${{ needs.prepare.outputs.version }} already published on npm - skipped." >> "$GITHUB_STEP_SUMMARY"
+
   rubygems-already-published:
     name: RubyGems already published summary
     needs: [prepare, check-rubygems]
@@ -303,6 +320,23 @@ jobs:
       - name: Check Hex.pm for existing version
         id: check
         run: bash scripts/publish/check_hex.sh "${{ needs.prepare.outputs.version }}"
+
+  hex-already-published:
+    name: Hex.pm already published summary
+    needs: [prepare, check-hex]
+    if: >-
+      ${{
+        needs.prepare.outputs.is_tag == 'true' &&
+        needs.prepare.outputs.release_elixir == 'true' &&
+        needs.prepare.outputs.force_republish != 'true' &&
+        needs.check-hex.outputs.exists == 'true'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Write summary
+        run: echo "Package spikard@${{ needs.prepare.outputs.version }} already published on Hex.pm - skipped." >> "$GITHUB_STEP_SUMMARY"
 
   check-packagist:
     name: Check if PHP package exists on Packagist
