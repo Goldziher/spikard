@@ -1,5 +1,5 @@
 $schema: https://raw.githubusercontent.com/Goldziher/ai-rulez/main/schema/ai-rules-v3.schema.json
-description: Rust-centric multi-language HTTP framework providing core library, CLI, and tower-http runtime with polyglot bindings (Python/TypeScript/Ruby/PHP/WASM). Type-safe web service toolkit with fixture-driven testing across all platforms.
+description: Rust-centric multi-language HTTP framework providing core library, CLI, and tower-http runtime with polyglot bindings (Python/TypeScript/Ruby/PHP/Elixir). Type-safe web service toolkit with fixture-driven testing across all platforms.
 gitignore: true
 name: spikard
 
@@ -26,10 +26,10 @@ builtins:
   - napi-rs
   - ruby
   - magnus
-  - go
-  - java
-  - csharp
-  - wasm
+  - php
+  - ext-php-rs
+  - elixir
+  - rustler
   - security
   - git-workflow
   - code-quality
