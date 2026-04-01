@@ -2654,7 +2654,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-bindings-shared"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "axum",
  "bytes",
@@ -2673,7 +2673,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "anyhow",
  "base64",
@@ -2697,7 +2697,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "ahash",
  "anyhow",
@@ -2745,7 +2745,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "async-stream",
  "axum",
@@ -2777,7 +2777,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb-ext"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "magnus",
  "spikard-rb",
@@ -2785,7 +2785,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb-macros"
-version = "0.12.0"
+version = "0.13.0"
 dependencies = [
  "proc-macro2",
  "quote",

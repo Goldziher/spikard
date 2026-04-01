@@ -1,19 +1,19 @@
-# spikard - Python Bindings
+# spikard - Node.js Bindings
 
 Polyglot web framework powered by Rust
 
 ## Installation
 
 ```bash
-pip install spikard
+npm install @spikard/node
 ```
 
 ## Quick Start
 
-```python
-import spikard
+```typescript
+import { /* ... */ } from '@spikard/node';
 
-# TODO: add usage example
+// TODO: add usage example
 ```
 
 ## Documentation
