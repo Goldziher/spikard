@@ -1,0 +1,36 @@
+languages = ["python", "node", "ruby", "php", "elixir"]
+
+[crate]
+name = "spikard"
+core_import = "spikard"
+sources = ["crates/spikard/src/lib.rs"]
+version_from = "Cargo.toml"
+workspace_root = "."
+
+[python]
+module_name = "_spikard"
+
+[python.stubs]
+output = "packages/python/spikard/"
+
+[node]
+package_name = "@spikard/node"
+
+[ruby]
+gem_name = "spikard"
+
+[ruby.stubs]
+output = "packages/ruby/sig/"
+
+[php]
+extension_name = "spikard"
+
+[elixir]
+app_name = "spikard"
+
+[scaffold]
+description = "Polyglot web framework powered by Rust"
+license = "MIT"
+repository = "https://github.com/kreuzberg-dev/spikard"
+authors = ["Kreuzberg Team"]
+keywords = ["web", "framework", "http", "api"]
