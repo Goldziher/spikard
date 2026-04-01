@@ -6,6 +6,13 @@ core_import = "spikard"
 sources = ["crates/spikard/src/lib.rs"]
 version_from = "Cargo.toml"
 workspace_root = "."
+skip_core_import = true
+
+# Spikard's binding types are defined in custom modules, not extracted.
+# Use sentinel to prevent generating extracted types.
+[include]
+types = ["__none__"]
+functions = ["__none__"]
 
 [python]
 module_name = "_spikard"
@@ -27,6 +34,33 @@ extension_name = "spikard"
 
 [elixir]
 app_name = "spikard"
+
+[custom_modules]
+python = ["server", "handler", "handler_request", "request", "response", "response_interpreter", "lifecycle", "di", "websocket", "sse", "testing", "background", "conversion", "grpc", "graphql"]
+
+[custom_registrations.python]
+classes = [
+    "request::PyRequest",
+    "handler_request::PyHandlerRequest",
+    "response::Response",
+    "response::StreamingResponse",
+    "testing::client::TestClient",
+    "testing::client::TestResponse",
+    "testing::websocket::WebSocketTestConnection",
+    "testing::websocket::WebSocketMessage",
+    "testing::sse::SseStream",
+    "testing::sse::SseEvent",
+]
+functions = [
+    "server::create_test_client",
+    "server::run_server",
+    "server::run_server_async",
+    "server::process",
+    "background::background_run",
+]
+init_calls = [
+    "grpc::init_module(m)?;",
+]
 
 [scaffold]
 description = "Polyglot web framework powered by Rust"
