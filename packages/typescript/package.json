@@ -1,0 +1,33 @@
+{
+  "name": "@spikard/node",
+  "version": "0.13.0",
+  "description": "Polyglot web framework powered by Rust",
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "repository": "https://github.com/kreuzberg-dev/spikard",
+  "author": "Kreuzberg Team",
+  "keywords": ["web", "framework", "http", "api"],
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "**/*.node"
+  ],
+  "scripts": {
+    "build": "napi build --release",
+    "build:debug": "napi build",
+    "test": "node -e \"console.log('Add test command')\""
+  },
+  "napi": {
+    "name": "spikard",
+    "triples": [
+      "x86_64-unknown-linux-gnu",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc"
+    ]
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.0.0"
+  }
+}
