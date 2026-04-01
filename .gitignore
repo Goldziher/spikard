@@ -234,4 +234,3 @@ tools/benchmark-harness/apps/phalcon/.env.local
 tools/benchmark-harness/apps/phalcon/logs/
 tools/benchmark-harness/apps/phalcon/cache/
 tools/benchmark-harness/apps/phalcon/tmp/
-.skif/

@@ -1,14 +1,62 @@
 [package]
 name = "spikard-php"
-version = "0.13.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
 
 [lib]
-crate-type = ["cdylib"]
+name = "spikard_php"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[lints]
+workspace = true
+
+[features]
+default = []
+extension-module = [
+  "dep:ext-php-rs",
+  "dep:spikard-http",
+  "dep:axum",
+  "dep:axum-test",
+  "dep:urlencoding",
+  "dep:bytes",
+  "dep:spikard-bindings-shared",
+  "dep:tonic",
+]
 
 [dependencies]
-spikard = { path = "../../crates/spikard" }
-ext-php-rs = "0.13"
+spikard = { workspace = true }
+spikard-core = { workspace = true }
+spikard-http = { path = "../spikard-http", optional = true, features = ["di"] }
+spikard-bindings-shared = { path = "../spikard-bindings-shared", optional = true }
+axum = { workspace = true, optional = true }
+axum-test = { version = "19", optional = true }
+urlencoding = { version = "2.1", optional = true }
+bytes = { version = "1", optional = true }
+tower = { workspace = true }
+ext-php-rs = { version = "0.15", features = [
+  "runtime",
+], default-features = false, optional = true }
+once_cell = "1.21"
+serde_json = { version = "1", features = ["preserve_order"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
+anyhow = "1.0"
+tokio = { workspace = true, features = [
+  "rt",
+  "rt-multi-thread",
+  "macros",
+  "sync",
+] }
+tonic = { version = "0.14", optional = true }
+tracing = "0.1"
+hyper = "1"
+http-body-util = "0.1"
+url = "2"
+async-stream = "0.3"
+http = { workspace = true }
+futures = "0.3"
+
+[package.metadata.cargo-machete]
+ignored = ["anyhow", "axum-test", "hyper"]
