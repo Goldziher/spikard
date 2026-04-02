@@ -103,7 +103,7 @@ GEM
       protocol-http (~> 0.58)
       rack (>= 1.0)
     protocol-url (0.4.0)
-    rack (3.2.5)
+    rack (3.2.6)
     rackup (2.3.1)
       rack (>= 3)
     roda (3.102.0)
