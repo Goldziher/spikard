@@ -127,7 +127,7 @@ impl NativeTestClient {
         let mut route_metadata_vec = Vec::with_capacity(metadata.len());
 
         for meta in metadata.clone() {
-            crate::validate_route_metadata(ruby, &meta)?;
+            crate::app::validate_route_metadata(ruby, &meta)?;
             let route = Route::from_metadata(meta.clone(), &schema_registry)
                 .map_err(|err| Error::new(ruby.exception_runtime_error(), format!("Failed to build route: {err}")))?;
             let handler_value = crate::conversion::fetch_handler(ruby, &handlers_hash, &meta.handler_name)?;

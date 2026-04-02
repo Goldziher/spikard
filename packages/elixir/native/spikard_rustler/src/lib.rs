@@ -3,40 +3,26 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::missing_errors_doc)]
 
-use napi::*;
-use napi_derive::napi;
+use rustler::prelude::*;
 use std::collections::HashMap;
-use serde_json;
 use spikard;
 
-pub mod server;
+pub mod atoms;
 
-pub mod background;
+pub mod conversion;
 
-pub mod conversion_tests;
-
-pub mod di;
-
-pub mod graphql;
+pub mod error;
 
 pub mod grpc;
 
 pub mod handler;
 
-pub mod handler_input;
-
-pub mod handler_output;
-
 pub mod lifecycle;
 
-pub mod response;
-
-pub mod test_client;
-
-pub mod test_sse;
-
-pub mod test_websocket;
+pub mod server;
 
 pub mod testing;
 
 pub mod websocket;
+
+rustler::init!("elixir_module", []);

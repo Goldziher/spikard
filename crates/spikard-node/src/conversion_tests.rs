@@ -13,7 +13,8 @@
 //! are NOT tested here because they require a Node.js runtime. Those tests belong
 //! in packages/node/tests/ as JavaScript integration tests.
 
-use crate::{HandlerInput, HandlerOutput};
+use crate::handler_input::HandlerInput;
+use crate::handler_output::HandlerOutput;
 use serde_json::{Value, json};
 use spikard_http::RequestData;
 use std::collections::HashMap;

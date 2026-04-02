@@ -473,7 +473,7 @@ impl TestClient {
         let mut route_patterns: Vec<RoutePattern> = Vec::new();
 
         let mut server_config = if let Some(cfg) = config {
-            crate::extract_server_config(&cfg)?
+            crate::server::extract_server_config(&cfg)?
         } else {
             spikard_http::ServerConfig {
                 compression: None,

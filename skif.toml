@@ -37,6 +37,9 @@ app_name = "spikard"
 
 [custom_modules]
 python = ["server", "handler", "handler_request", "request", "response", "response_interpreter", "lifecycle", "di", "websocket", "sse", "testing", "background", "conversion", "grpc", "graphql"]
+node = ["server", "background", "conversion_tests", "di", "graphql", "grpc", "handler", "handler_input", "handler_output", "lifecycle", "response", "test_client", "test_sse", "test_websocket", "testing", "websocket"]
+ruby = ["app", "background", "config", "conversion", "di", "grpc", "gvl", "handler", "integration", "lifecycle", "metadata", "request", "runtime", "server", "sse", "testing", "websocket"]
+elixir = ["atoms", "conversion", "error", "grpc", "handler", "lifecycle", "server", "testing", "websocket"]
 
 [custom_registrations.python]
 classes = [
