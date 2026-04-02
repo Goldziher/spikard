@@ -54,7 +54,7 @@ fn init_python() {
 
         pyo3::append_to_inittab!(spikard_pymodule);
         Python::initialize();
-        let _ = _spikard::init_python_event_loop();
+        let _ = _spikard::handler::init_python_event_loop();
     });
 }
 
@@ -106,11 +106,11 @@ fn module_from_code<'py>(py: Python<'py>, code: &str, filename: &str, module_nam
 
 /// Build a Python handler from code string
 fn build_python_handler(code: &str, function_name: &str, is_async: bool) -> Arc<dyn Handler> {
-    let python_handler = Python::attach(|py| -> PyResult<_spikard::PythonHandler> {
+    let python_handler = Python::attach(|py| -> PyResult<_spikard::handler::PythonHandler> {
         let module = module_from_code(py, code, "test.py", "test");
         let handler_fn = module.getattr(function_name)?;
         let handler_py: Py<PyAny> = handler_fn.into();
-        Ok(_spikard::PythonHandler::new(handler_py, is_async, None, None, None))
+        Ok(_spikard::handler::PythonHandler::new(handler_py, is_async, None, None, None))
     })
     .expect("failed to build Python handler");
 
@@ -388,14 +388,14 @@ def handler(path_params, query_params, body, headers, cookies):
 async fn test_event_loop_initialization_idempotence() {
     init_python();
 
-    let result1 = _spikard::init_python_event_loop();
+    let result1 = _spikard::handler::init_python_event_loop();
     assert!(
         result1.is_ok() || result1.as_ref().unwrap_err().to_string().contains("already"),
         "first init_python_event_loop should succeed or indicate already initialized: {:?}",
         result1
     );
 
-    let result2 = _spikard::init_python_event_loop();
+    let result2 = _spikard::handler::init_python_event_loop();
     assert!(
         result2.is_ok() || result2.as_ref().unwrap_err().to_string().contains("already"),
         "second init_python_event_loop should also succeed or indicate already initialized (idempotent): {:?}",
@@ -477,14 +477,14 @@ def handler(path_params, query_params, body, headers, cookies):
 async fn test_async_event_loop_initialization_and_usage() {
     init_python();
 
-    let init1 = _spikard::init_python_event_loop();
+    let init1 = _spikard::handler::init_python_event_loop();
     assert!(
         init1.is_ok() || init1.as_ref().unwrap_err().to_string().contains("already"),
         "first init should succeed or indicate already initialized: {:?}",
         init1
     );
 
-    let init2 = _spikard::init_python_event_loop();
+    let init2 = _spikard::handler::init_python_event_loop();
     assert!(
         init2.is_ok() || init2.as_ref().unwrap_err().to_string().contains("already"),
         "second init should be idempotent: {:?}",

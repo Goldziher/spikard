@@ -6,6 +6,7 @@
 use magnus::{function, method, prelude::*, Error, Ruby};
 use std::collections::HashMap;
 use spikard;
+use std::sync::Arc;
 
 pub mod app;
 
@@ -41,10 +42,615 @@ pub mod testing;
 
 pub mod websocket;
 
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::CorsConfig")]
+pub struct CorsConfig {
+    pub allowed_origins: Vec<String>,
+    pub allowed_methods: Vec<String>,
+    pub allowed_headers: Vec<String>,
+    pub expose_headers: Option<Vec<String>>,
+    pub max_age: Option<u32>,
+    pub allow_credentials: Option<bool>,
+    pub methods_joined_cache: String,
+    pub headers_joined_cache: String,
+}
+
+impl CorsConfig {
+    fn new(
+            allowed_origins: Vec<String>,
+            allowed_methods: Vec<String>,
+            allowed_headers: Vec<String>,
+            methods_joined_cache: String,
+            headers_joined_cache: String,
+            expose_headers: Option<Vec<String>>,
+            max_age: Option<u32>,
+            allow_credentials: Option<bool>,
+        ) -> Self {
+            Self { allowed_origins, allowed_methods, allowed_headers, expose_headers, max_age, allow_credentials, methods_joined_cache, headers_joined_cache }
+        }
+
+    fn allowed_origins(&self) -> Vec<String> {
+            self.allowed_origins.clone()
+        }
+
+    fn allowed_methods(&self) -> Vec<String> {
+            self.allowed_methods.clone()
+        }
+
+    fn allowed_headers(&self) -> Vec<String> {
+            self.allowed_headers.clone()
+        }
+
+    fn expose_headers(&self) -> Option<Vec<String>> {
+            self.expose_headers.clone()
+        }
+
+    fn max_age(&self) -> Option<u32> {
+            self.max_age
+        }
+
+    fn allow_credentials(&self) -> Option<bool> {
+            self.allow_credentials
+        }
+
+    fn methods_joined_cache(&self) -> String {
+            self.methods_joined_cache.clone()
+        }
+
+    fn headers_joined_cache(&self) -> String {
+            self.headers_joined_cache.clone()
+        }
+
+    fn allowed_methods_joined(&self, ) -> String {
+            todo!("call into core")
+        }
+
+    fn allowed_headers_joined(&self, ) -> String {
+            todo!("call into core")
+        }
+
+    fn is_origin_allowed(&self, origin: String) -> bool {
+            todo!("call into core")
+        }
+
+    fn is_method_allowed(&self, method: String) -> bool {
+            todo!("call into core")
+        }
+
+    fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
+            todo!("call into core")
+        }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::CompressionConfig")]
+pub struct CompressionConfig {
+    pub gzip: bool,
+    pub brotli: bool,
+    pub min_size: usize,
+    pub quality: u32,
+}
+
+impl CompressionConfig {
+    fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> Self {
+            Self { gzip, brotli, min_size, quality }
+        }
+
+    fn gzip(&self) -> bool {
+            self.gzip
+        }
+
+    fn brotli(&self) -> bool {
+            self.brotli
+        }
+
+    fn min_size(&self) -> usize {
+            self.min_size
+        }
+
+    fn quality(&self) -> u32 {
+            self.quality
+        }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::RateLimitConfig")]
+pub struct RateLimitConfig {
+    pub per_second: u64,
+    pub burst: u32,
+    pub ip_based: bool,
+}
+
+impl RateLimitConfig {
+    fn new(per_second: u64, burst: u32, ip_based: bool) -> Self {
+            Self { per_second, burst, ip_based }
+        }
+
+    fn per_second(&self) -> u64 {
+            self.per_second
+        }
+
+    fn burst(&self) -> u32 {
+            self.burst
+        }
+
+    fn ip_based(&self) -> bool {
+            self.ip_based
+        }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::LifecycleHooks")]
+pub struct LifecycleHooks {
+    inner: std::sync::Arc<spikard::LifecycleHooks>,
+}
+
+impl LifecycleHooks {
+    fn is_empty(&self, ) -> bool {
+            todo!("delegate to self.inner")
+        }
+
+    fn add_on_request(&self, hook: String) -> () {
+            todo!("delegate to self.inner")
+        }
+
+    fn add_pre_validation(&self, hook: String) -> () {
+            todo!("delegate to self.inner")
+        }
+
+    fn add_pre_handler(&self, hook: String) -> () {
+            todo!("delegate to self.inner")
+        }
+
+    fn add_on_response(&self, hook: String) -> () {
+            todo!("delegate to self.inner")
+        }
+
+    fn add_on_error(&self, hook: String) -> () {
+            todo!("delegate to self.inner")
+        }
+
+    fn execute_on_request_async(&self, req: String) -> Result<String, Error> {
+            let rt = tokio::runtime::Runtime::new()
+                .map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))?;
+            rt.block_on(async {
+                todo!("delegate to self.inner")
+            }).map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))
+        }
+
+    fn execute_pre_validation_async(&self, req: String) -> Result<String, Error> {
+            let rt = tokio::runtime::Runtime::new()
+                .map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))?;
+            rt.block_on(async {
+                todo!("delegate to self.inner")
+            }).map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))
+        }
+
+    fn execute_pre_handler_async(&self, req: String) -> Result<String, Error> {
+            let rt = tokio::runtime::Runtime::new()
+                .map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))?;
+            rt.block_on(async {
+                todo!("delegate to self.inner")
+            }).map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))
+        }
+
+    fn execute_on_response_async(&self, resp: String) -> Result<String, Error> {
+            let rt = tokio::runtime::Runtime::new()
+                .map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))?;
+            rt.block_on(async {
+                todo!("delegate to self.inner")
+            }).map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))
+        }
+
+    fn execute_on_error_async(&self, resp: String) -> Result<String, Error> {
+            let rt = tokio::runtime::Runtime::new()
+                .map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))?;
+            rt.block_on(async {
+                todo!("delegate to self.inner")
+            }).map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))
+        }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::LifecycleHooksBuilder")]
+pub struct LifecycleHooksBuilder {
+    inner: std::sync::Arc<spikard::LifecycleHooksBuilder>,
+}
+
+impl LifecycleHooksBuilder {
+    fn on_request(&self, hook: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn pre_validation(&self, hook: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn pre_handler(&self, hook: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn on_response(&self, hook: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn on_error(&self, hook: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn build(&self, ) -> LifecycleHooks {
+            todo!("delegate to self.inner")
+        }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::SseEvent")]
+pub struct SseEvent {
+    pub event_type: Option<String>,
+    pub data: String,
+    pub id: Option<String>,
+    pub retry: Option<u64>,
+}
+
+impl SseEvent {
+    fn new(data: String, event_type: Option<String>, id: Option<String>, retry: Option<u64>) -> Self {
+            Self { event_type, data, id, retry }
+        }
+
+    fn event_type(&self) -> Option<String> {
+            self.event_type.clone()
+        }
+
+    fn data(&self) -> String {
+            self.data.clone()
+        }
+
+    fn id(&self) -> Option<String> {
+            self.id.clone()
+        }
+
+    fn retry(&self) -> Option<u64> {
+            self.retry
+        }
+
+    fn with_id(&self, id: String) -> String {
+            todo!("call into core")
+        }
+
+    fn with_retry(&self, retry_ms: u64) -> String {
+            todo!("call into core")
+        }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::StaticFilesConfig")]
+pub struct StaticFilesConfig {
+    pub directory: String,
+    pub route_prefix: String,
+    pub index_file: bool,
+    pub cache_control: Option<String>,
+}
+
+impl StaticFilesConfig {
+    fn new(directory: String, route_prefix: String, index_file: bool, cache_control: Option<String>) -> Self {
+            Self { directory, route_prefix, index_file, cache_control }
+        }
+
+    fn directory(&self) -> String {
+            self.directory.clone()
+        }
+
+    fn route_prefix(&self) -> String {
+            self.route_prefix.clone()
+        }
+
+    fn index_file(&self) -> bool {
+            self.index_file
+        }
+
+    fn cache_control(&self) -> Option<String> {
+            self.cache_control.clone()
+        }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::App")]
+pub struct App {
+    inner: std::sync::Arc<spikard::App>,
+}
+
+impl App {
+    fn config(&self, config: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn merge_axum_router(&self, router: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn attach_axum_router(&self, router: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn into_router(&self, ) -> Result<String, Error> {
+            todo!("delegate to self.inner")
+        }
+
+    fn run_async(&self, ) -> Result<(), Error> {
+            let rt = tokio::runtime::Runtime::new()
+                .map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))?;
+            rt.block_on(async {
+                todo!("delegate to self.inner")
+            }).map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))
+        }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Kreuzberg::RouteBuilder")]
+pub struct RouteBuilder {
+    inner: std::sync::Arc<spikard::RouteBuilder>,
+}
+
+impl RouteBuilder {
+    fn handler_name(&self, name: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn request_schema_json(&self, schema: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn response_schema_json(&self, schema: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn params_schema_json(&self, schema: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn file_params_json(&self, schema: String) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn cors(&self, cors: CorsConfig) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn sync(&self, ) -> String {
+            todo!("delegate to self.inner")
+        }
+
+    fn handler_dependencies(&self, dependencies: Vec<String>) -> String {
+            todo!("delegate to self.inner")
+        }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Method {
+    Get,
+    Post,
+    Put,
+    Patch,
+    Delete,
+    Head,
+    Options,
+    Trace,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum HandlerResponse {
+    Response,
+    Stream,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum AppError {
+    Route,
+    Server,
+    Decode,
+}
+
+fn validate_jsonrpc_method_name(name: String) -> Result<(), Error> {
+    todo!("call into core")
+}
+
+fn handle_preflight(headers: String, cors_config: CorsConfig) -> Result<String, Error> {
+    todo!("call into core")
+}
+
+fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {
+    todo!("call into core")
+}
+
+fn validate_cors_request(headers: String, cors_config: CorsConfig) -> Result<(), Error> {
+    todo!("call into core")
+}
+
+impl From<CompressionConfig> for spikard::CompressionConfig {
+    fn from(val: CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard::CompressionConfig> for CompressionConfig {
+    fn from(val: spikard::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard::RateLimitConfig {
+    fn from(val: RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard::RateLimitConfig> for RateLimitConfig {
+    fn from(val: spikard::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<StaticFilesConfig> for spikard::StaticFilesConfig {
+    fn from(val: StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<spikard::StaticFilesConfig> for StaticFilesConfig {
+    fn from(val: spikard::StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<Method> for spikard::Method {
+    fn from(val: Method) -> Self {
+        match val {
+            Method::Get => Self::Get,
+            Method::Post => Self::Post,
+            Method::Put => Self::Put,
+            Method::Patch => Self::Patch,
+            Method::Delete => Self::Delete,
+            Method::Head => Self::Head,
+            Method::Options => Self::Options,
+            Method::Trace => Self::Trace,
+        }
+    }
+}
+
+impl From<spikard::Method> for Method {
+    fn from(val: spikard::Method) -> Self {
+        match val {
+            spikard::Method::Get => Self::Get,
+            spikard::Method::Post => Self::Post,
+            spikard::Method::Put => Self::Put,
+            spikard::Method::Patch => Self::Patch,
+            spikard::Method::Delete => Self::Delete,
+            spikard::Method::Head => Self::Head,
+            spikard::Method::Options => Self::Options,
+            spikard::Method::Trace => Self::Trace,
+        }
+    }
+}
+
 #[magnus::init]
 fn init(ruby: &Ruby) -> Result<(), Error> {
     let module = ruby.define_module("Spikard")?;
 
+    let class = module.define_class("CorsConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(CorsConfig::new, 8))?;
+    class.define_method("allowed_origins", method!(CorsConfig::allowed_origins, 0))?;
+    class.define_method("allowed_methods", method!(CorsConfig::allowed_methods, 0))?;
+    class.define_method("allowed_headers", method!(CorsConfig::allowed_headers, 0))?;
+    class.define_method("expose_headers", method!(CorsConfig::expose_headers, 0))?;
+    class.define_method("max_age", method!(CorsConfig::max_age, 0))?;
+    class.define_method("allow_credentials", method!(CorsConfig::allow_credentials, 0))?;
+    class.define_method("methods_joined_cache", method!(CorsConfig::methods_joined_cache, 0))?;
+    class.define_method("headers_joined_cache", method!(CorsConfig::headers_joined_cache, 0))?;
+    class.define_method("allowed_methods_joined", method!(CorsConfig::allowed_methods_joined, 0))?;
+    class.define_method("allowed_headers_joined", method!(CorsConfig::allowed_headers_joined, 0))?;
+    class.define_method("is_origin_allowed", method!(CorsConfig::is_origin_allowed, 1))?;
+    class.define_method("is_method_allowed", method!(CorsConfig::is_method_allowed, 1))?;
+    class.define_method("are_headers_allowed", method!(CorsConfig::are_headers_allowed, 1))?;
+
+    let class = module.define_class("CompressionConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(CompressionConfig::new, 4))?;
+    class.define_method("gzip", method!(CompressionConfig::gzip, 0))?;
+    class.define_method("brotli", method!(CompressionConfig::brotli, 0))?;
+    class.define_method("min_size", method!(CompressionConfig::min_size, 0))?;
+    class.define_method("quality", method!(CompressionConfig::quality, 0))?;
+
+    let class = module.define_class("RateLimitConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(RateLimitConfig::new, 3))?;
+    class.define_method("per_second", method!(RateLimitConfig::per_second, 0))?;
+    class.define_method("burst", method!(RateLimitConfig::burst, 0))?;
+    class.define_method("ip_based", method!(RateLimitConfig::ip_based, 0))?;
+
+    let class = module.define_class("LifecycleHooks", ruby.class_object())?;
+    class.define_method("is_empty", method!(LifecycleHooks::is_empty, 0))?;
+    class.define_method("add_on_request", method!(LifecycleHooks::add_on_request, 1))?;
+    class.define_method("add_pre_validation", method!(LifecycleHooks::add_pre_validation, 1))?;
+    class.define_method("add_pre_handler", method!(LifecycleHooks::add_pre_handler, 1))?;
+    class.define_method("add_on_response", method!(LifecycleHooks::add_on_response, 1))?;
+    class.define_method("add_on_error", method!(LifecycleHooks::add_on_error, 1))?;
+    class.define_method("execute_on_request_async", method!(LifecycleHooks::execute_on_request_async, 1))?;
+    class.define_method("execute_pre_validation_async", method!(LifecycleHooks::execute_pre_validation_async, 1))?;
+    class.define_method("execute_pre_handler_async", method!(LifecycleHooks::execute_pre_handler_async, 1))?;
+    class.define_method("execute_on_response_async", method!(LifecycleHooks::execute_on_response_async, 1))?;
+    class.define_method("execute_on_error_async", method!(LifecycleHooks::execute_on_error_async, 1))?;
+
+    let class = module.define_class("LifecycleHooksBuilder", ruby.class_object())?;
+    class.define_method("on_request", method!(LifecycleHooksBuilder::on_request, 1))?;
+    class.define_method("pre_validation", method!(LifecycleHooksBuilder::pre_validation, 1))?;
+    class.define_method("pre_handler", method!(LifecycleHooksBuilder::pre_handler, 1))?;
+    class.define_method("on_response", method!(LifecycleHooksBuilder::on_response, 1))?;
+    class.define_method("on_error", method!(LifecycleHooksBuilder::on_error, 1))?;
+    class.define_method("build", method!(LifecycleHooksBuilder::build, 0))?;
+
+    let class = module.define_class("SseEvent", ruby.class_object())?;
+    class.define_singleton_method("new", function!(SseEvent::new, 4))?;
+    class.define_method("event_type", method!(SseEvent::event_type, 0))?;
+    class.define_method("data", method!(SseEvent::data, 0))?;
+    class.define_method("id", method!(SseEvent::id, 0))?;
+    class.define_method("retry", method!(SseEvent::retry, 0))?;
+    class.define_method("with_id", method!(SseEvent::with_id, 1))?;
+    class.define_method("with_retry", method!(SseEvent::with_retry, 1))?;
+
+    let class = module.define_class("StaticFilesConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(StaticFilesConfig::new, 4))?;
+    class.define_method("directory", method!(StaticFilesConfig::directory, 0))?;
+    class.define_method("route_prefix", method!(StaticFilesConfig::route_prefix, 0))?;
+    class.define_method("index_file", method!(StaticFilesConfig::index_file, 0))?;
+    class.define_method("cache_control", method!(StaticFilesConfig::cache_control, 0))?;
+
+    let class = module.define_class("App", ruby.class_object())?;
+    class.define_method("config", method!(App::config, 1))?;
+    class.define_method("merge_axum_router", method!(App::merge_axum_router, 1))?;
+    class.define_method("attach_axum_router", method!(App::attach_axum_router, 1))?;
+    class.define_method("into_router", method!(App::into_router, 0))?;
+    class.define_method("run_async", method!(App::run_async, 0))?;
+
+    let class = module.define_class("RouteBuilder", ruby.class_object())?;
+    class.define_method("handler_name", method!(RouteBuilder::handler_name, 1))?;
+    class.define_method("request_schema_json", method!(RouteBuilder::request_schema_json, 1))?;
+    class.define_method("response_schema_json", method!(RouteBuilder::response_schema_json, 1))?;
+    class.define_method("params_schema_json", method!(RouteBuilder::params_schema_json, 1))?;
+    class.define_method("file_params_json", method!(RouteBuilder::file_params_json, 1))?;
+    class.define_method("cors", method!(RouteBuilder::cors, 1))?;
+    class.define_method("sync", method!(RouteBuilder::sync, 0))?;
+    class.define_method("handler_dependencies", method!(RouteBuilder::handler_dependencies, 1))?;
+
+    module.define_module_function("validate_jsonrpc_method_name", function!(validate_jsonrpc_method_name, 1))?;
+    module.define_module_function("handle_preflight", function!(handle_preflight, 2))?;
+    module.define_module_function("add_cors_headers", function!(add_cors_headers, 3))?;
+    module.define_module_function("validate_cors_request", function!(validate_cors_request, 2))?;
 
     Ok(())
 }

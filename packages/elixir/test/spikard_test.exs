@@ -47,7 +47,7 @@ defmodule SpikardTest do
     end
 
     test "validates routes is required" do
-      assert {:error, "Missing required option: :routes"} = Spikard.start(port: 4000)
+      assert {:error, "Missing required option: :routes or :grpc"} = Spikard.start(port: 4000)
     end
 
     test "validates routes must be a list" do

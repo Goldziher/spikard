@@ -6,13 +6,12 @@ core_import = "spikard"
 sources = ["crates/spikard/src/lib.rs"]
 version_from = "Cargo.toml"
 workspace_root = "."
-skip_core_import = true
+skip_core_import = false
 
-# Spikard's binding types are defined in custom modules, not extracted.
-# Use sentinel to prevent generating extracted types.
-[include]
-types = ["__none__"]
-functions = ["__none__"]
+[exclude]
+# Trait objects not dyn-compatible (have generic methods), types with private fields,
+# and types containing non-Sync fields — these are handled in custom modules.
+types = ["SseEventProducer", "WebSocketHandler", "IntoHandler", "HandlerResult", "RequestContext", "UploadFile", "ServerConfig", "TestServer"]
 
 [python]
 module_name = "_spikard"
@@ -31,6 +30,7 @@ output = "packages/ruby/sig/"
 
 [php]
 extension_name = "spikard"
+feature_gate = "extension-module"
 
 [elixir]
 app_name = "spikard"
@@ -39,6 +39,7 @@ app_name = "spikard"
 python = ["server", "handler", "handler_request", "request", "response", "response_interpreter", "lifecycle", "di", "websocket", "sse", "testing", "background", "conversion", "grpc", "graphql"]
 node = ["server", "background", "conversion_tests", "di", "graphql", "grpc", "handler", "handler_input", "handler_output", "lifecycle", "response", "test_client", "test_sse", "test_websocket", "testing", "websocket"]
 ruby = ["app", "background", "config", "conversion", "di", "grpc", "gvl", "handler", "integration", "lifecycle", "metadata", "request", "runtime", "server", "sse", "testing", "websocket"]
+php = ["php"]
 elixir = ["atoms", "conversion", "error", "grpc", "handler", "lifecycle", "server", "testing", "websocket"]
 
 [custom_registrations.python]

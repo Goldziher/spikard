@@ -1,77 +1,419 @@
-#![deny(clippy::unwrap_used)]
-#![allow(clippy::similar_names)] // Common in FFI code
-#![allow(clippy::missing_errors_doc)] // Many FFI functions return Result
-#![allow(clippy::doc_markdown)] // FFI types don't need backticks
-#![allow(clippy::missing_const_for_fn)] // FFI functions can't be const
-#![allow(clippy::too_many_arguments)] // FFI bridge functions often need many parameters
-#![allow(clippy::too_many_lines)] // FFI wrappers accumulate code
-#![allow(clippy::unused_self)] // ext-php-rs methods may not use self
-#![allow(clippy::unnecessary_wraps)] // PHP patterns require Result wrappers
-#![allow(clippy::must_use_candidate)] // FFI constructors follow Rust patterns
-#![allow(clippy::struct_excessive_bools)] // FFI configs use multiple bools
-#![allow(clippy::fn_params_excessive_bools)] // FFI builders pass multiple bools
-#![allow(clippy::items_after_statements)] // Common in Rust code
-#![allow(clippy::if_not_else)] // FFI code style preference
-#![allow(clippy::redundant_clone)] // May be necessary in FFI boundary
-#![allow(clippy::uninlined_format_args)] // FFI error messages
-#![allow(clippy::cast_lossless)] // Type conversions in FFI
-#![allow(clippy::option_if_let_else)] // FFI error handling patterns
-#![allow(clippy::missing_panics_doc)] // Runtime server panics acceptable in server context
-#![allow(clippy::unused_async)] // Async trait methods may not await
-#![allow(clippy::non_std_lazy_statics)] // using_once_cell pattern
-#![allow(clippy::ptr_as_ptr)] // Raw pointer casts in FFI code
-#![allow(clippy::ptr_cast_constness)] // Cast constness for FFI interop
-#![allow(clippy::significant_drop_tightening)] // Drop timing in FFI bridges
-#![allow(clippy::trivially_copy_pass_by_ref)] // FFI compatibility
-#![allow(clippy::cast_possible_wrap)] // Cast wrapping in FFI
-#![allow(clippy::cast_possible_truncation)] // Type size differences in FFI
-#![allow(clippy::used_underscore_binding)] // Internal FFI code
-#![allow(clippy::redundant_closure)] // FFI closure patterns
-#![allow(clippy::explicit_iter_loop)] // FFI iteration style
-#![allow(clippy::cast_sign_loss)] // Unsigned/signed casts in FFI
-#![allow(clippy::map_unwrap_or)] // Idiomatic Option/Result handling
-#![allow(clippy::implicit_clone)] // String conversions in FFI
-#![allow(clippy::ref_option_ref)] // Reference patterns in FFI
-#![allow(clippy::should_implement_trait)] // FFI trait implementation
-#![allow(clippy::match_like_matches_macro)] // FFI match patterns
-#![allow(clippy::match_bool)] // Boolean matching in FFI
-#![allow(clippy::format_push_string)] // String formatting in FFI
-#![allow(clippy::option_option)] // Option nesting in FFI
-#![allow(clippy::enum_variant_names)] // FFI variant naming
-#![allow(clippy::identity_op)] // FFI operations
-#![allow(clippy::filter_next)] // Filter operations in FFI
-#![allow(clippy::manual_let_else)] // Let-else patterns in FFI
-#![allow(clippy::if_then_some_else_none)] // If-then-some patterns
-#![allow(clippy::clone_on_copy)] // Clone on copy types in FFI
-#![allow(clippy::unit_arg)] // Unit argument handling
-#![allow(clippy::impl_trait_in_params)] // Trait parameters in FFI
-#![allow(clippy::match_same_arms)] // Identical match arms
-#![allow(clippy::needless_pass_by_value)] // FFI argument passing style
-#![allow(clippy::ref_as_ptr)] // Explicit pointer casts in FFI
-#![allow(clippy::while_let_on_iterator)] // Iterator patterns in FFI
-#![allow(clippy::redundant_closure_for_method_calls)] // Closure patterns in FFI
-#![allow(clippy::as_ptr_cast_mut)] // Raw pointer casting in FFI
-#![allow(clippy::match_wildcard_for_single_variants)] // Wildcard patterns in FFI
-#![allow(clippy::ignored_unit_patterns)] // Unit pattern handling in FFI
-#![allow(clippy::option_as_ref_deref)] // Option reference patterns
-#![allow(clippy::semicolon_if_nothing_returned)] // Return statement consistency
-#![allow(clippy::map_identity)] // Identity mapping patterns
-#![cfg_attr(
-    all(windows, target_env = "msvc", feature = "extension-module"),
-    feature(abi_vectorcall)
-)]
-#[cfg(feature = "extension-module")]
-mod php;
+#![cfg(feature = "extension-module")]
+#![cfg_attr(all(windows, target_env = "msvc", feature = "extension-module"), feature(abi_vectorcall))]
 
-#[cfg(feature = "extension-module")]
-pub use php::*;
+use ext_php_rs::prelude::*;
+use std::collections::HashMap;
+use spikard;
+use std::sync::Arc;
 
-#[cfg(not(feature = "extension-module"))]
-pub fn spikard_version() -> &'static str {
-    env!("CARGO_PKG_VERSION")
+pub mod php;
+
+static WORKER_RUNTIME: std::sync::LazyLock<tokio::runtime::Runtime> = std::sync::LazyLock::new(|| {
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .expect("Failed to create Tokio runtime")
+});
+
+#[derive(Clone)]
+#[php_class]
+pub struct CorsConfig {
+    pub allowed_origins: Vec<String>,
+    pub allowed_methods: Vec<String>,
+    pub allowed_headers: Vec<String>,
+    pub expose_headers: Option<Vec<String>>,
+    pub max_age: Option<u32>,
+    pub allow_credentials: Option<bool>,
+    pub methods_joined_cache: String,
+    pub headers_joined_cache: String,
 }
 
-#[cfg(not(feature = "extension-module"))]
-pub fn spikard_echo_response(body: &str) -> String {
-    body.to_string()
+#[php_impl]
+impl CorsConfig {
+    pub fn __construct(
+            allowed_origins: Vec<String>,
+            allowed_methods: Vec<String>,
+            allowed_headers: Vec<String>,
+            methods_joined_cache: String,
+            headers_joined_cache: String,
+            expose_headers: Option<Vec<String>>,
+            max_age: Option<u32>,
+            allow_credentials: Option<bool>,
+        ) -> Self {
+        Self { allowed_origins, allowed_methods, allowed_headers, expose_headers, max_age, allow_credentials, methods_joined_cache, headers_joined_cache }
+    }
+
+    pub fn allowed_methods_joined(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn allowed_headers_joined(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn is_origin_allowed(&self) -> bool {
+        todo!("call into core implementation")
+    }
+
+    pub fn is_method_allowed(&self) -> bool {
+        todo!("call into core implementation")
+    }
+
+    pub fn are_headers_allowed(&self) -> bool {
+        todo!("call into core implementation")
+    }
+
+    pub fn default() -> String {
+        todo!("call into core implementation")
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+pub struct CompressionConfig {
+    pub gzip: bool,
+    pub brotli: bool,
+    pub min_size: i64,
+    pub quality: u32,
+}
+
+#[php_impl]
+impl CompressionConfig {
+    pub fn __construct(gzip: bool, brotli: bool, min_size: i64, quality: u32) -> Self {
+        Self { gzip, brotli, min_size, quality }
+    }
+
+    pub fn default() -> String {
+        todo!("call into core implementation")
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+pub struct RateLimitConfig {
+    pub per_second: i64,
+    pub burst: u32,
+    pub ip_based: bool,
+}
+
+#[php_impl]
+impl RateLimitConfig {
+    pub fn __construct(per_second: i64, burst: u32, ip_based: bool) -> Self {
+        Self { per_second, burst, ip_based }
+    }
+
+    pub fn default() -> String {
+        todo!("call into core implementation")
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+pub struct LifecycleHooks {
+    inner: std::sync::Arc<spikard::LifecycleHooks>,
+}
+
+#[php_impl]
+impl LifecycleHooks {
+    pub fn is_empty(&self) -> bool {
+        todo!("call into core implementation")
+    }
+
+    pub fn add_on_request(&self) -> () {
+        todo!("call into core implementation")
+    }
+
+    pub fn add_pre_validation(&self) -> () {
+        todo!("call into core implementation")
+    }
+
+    pub fn add_pre_handler(&self) -> () {
+        todo!("call into core implementation")
+    }
+
+    pub fn add_on_response(&self) -> () {
+        todo!("call into core implementation")
+    }
+
+    pub fn add_on_error(&self) -> () {
+        todo!("call into core implementation")
+    }
+
+    pub fn execute_on_request_async(&self) -> PhpResult<String> {
+        todo!("wire up execute_on_request_async")
+    }
+
+    pub fn execute_pre_validation_async(&self) -> PhpResult<String> {
+        todo!("wire up execute_pre_validation_async")
+    }
+
+    pub fn execute_pre_handler_async(&self) -> PhpResult<String> {
+        todo!("wire up execute_pre_handler_async")
+    }
+
+    pub fn execute_on_response_async(&self) -> PhpResult<String> {
+        todo!("wire up execute_on_response_async")
+    }
+
+    pub fn execute_on_error_async(&self) -> PhpResult<String> {
+        todo!("wire up execute_on_error_async")
+    }
+
+    pub fn builder() -> LifecycleHooksBuilder {
+        todo!("call into core implementation")
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+pub struct LifecycleHooksBuilder {
+    inner: std::sync::Arc<spikard::LifecycleHooksBuilder>,
+}
+
+#[php_impl]
+impl LifecycleHooksBuilder {
+    pub fn on_request(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn pre_validation(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn pre_handler(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn on_response(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn on_error(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn build(&self) -> LifecycleHooks {
+        todo!("call into core implementation")
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+pub struct SseEvent {
+    pub event_type: Option<String>,
+    pub data: String,
+    pub id: Option<String>,
+    pub retry: Option<i64>,
+}
+
+#[php_impl]
+impl SseEvent {
+    pub fn __construct(data: String, event_type: Option<String>, id: Option<String>, retry: Option<i64>) -> Self {
+        Self { event_type, data, id, retry }
+    }
+
+    pub fn with_id(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn with_retry(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn with_type() -> String {
+        todo!("call into core implementation")
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+pub struct StaticFilesConfig {
+    pub directory: String,
+    pub route_prefix: String,
+    pub index_file: bool,
+    pub cache_control: Option<String>,
+}
+
+#[php_impl]
+impl StaticFilesConfig {
+    pub fn __construct(directory: String, route_prefix: String, index_file: bool, cache_control: Option<String>) -> Self {
+        Self { directory, route_prefix, index_file, cache_control }
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+pub struct App {
+    inner: std::sync::Arc<spikard::App>,
+}
+
+#[php_impl]
+impl App {
+    pub fn config(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn merge_axum_router(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn attach_axum_router(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn into_router(&self) -> PhpResult<String> {
+        todo!("call into core implementation")
+    }
+
+    pub fn run_async(&self) -> PhpResult<()> {
+        todo!("wire up run_async")
+    }
+
+    pub fn default() -> String {
+        todo!("call into core implementation")
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+pub struct RouteBuilder {
+    inner: std::sync::Arc<spikard::RouteBuilder>,
+}
+
+#[php_impl]
+impl RouteBuilder {
+    pub fn handler_name(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn request_schema_json(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn response_schema_json(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn params_schema_json(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn file_params_json(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn cors(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn sync(&self) -> String {
+        todo!("call into core implementation")
+    }
+
+    pub fn handler_dependencies(&self) -> String {
+        todo!("call into core implementation")
+    }
+}
+
+// Method enum values
+pub const METHOD_GET: &str = "Get";
+pub const METHOD_POST: &str = "Post";
+pub const METHOD_PUT: &str = "Put";
+pub const METHOD_PATCH: &str = "Patch";
+pub const METHOD_DELETE: &str = "Delete";
+pub const METHOD_HEAD: &str = "Head";
+pub const METHOD_OPTIONS: &str = "Options";
+pub const METHOD_TRACE: &str = "Trace";
+
+// HandlerResponse enum values
+pub const HANDLERRESPONSE_RESPONSE: &str = "Response";
+pub const HANDLERRESPONSE_STREAM: &str = "Stream";
+
+// AppError enum values
+pub const APPERROR_ROUTE: &str = "Route";
+pub const APPERROR_SERVER: &str = "Server";
+pub const APPERROR_DECODE: &str = "Decode";
+
+#[php_function]
+pub fn validate_jsonrpc_method_name() -> PhpResult<()> {
+    todo!("call into core")
+}
+
+#[php_function]
+pub fn handle_preflight() -> PhpResult<String> {
+    todo!("call into core")
+}
+
+#[php_function]
+pub fn add_cors_headers() -> () {
+    todo!("call into core")
+}
+
+#[php_function]
+pub fn validate_cors_request() -> PhpResult<()> {
+    todo!("call into core")
+}
+
+impl From<CompressionConfig> for spikard::CompressionConfig {
+    fn from(val: CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size as usize,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard::CompressionConfig> for CompressionConfig {
+    fn from(val: spikard::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size as i64,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard::RateLimitConfig {
+    fn from(val: RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second as u64,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard::RateLimitConfig> for RateLimitConfig {
+    fn from(val: spikard::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second as i64,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<StaticFilesConfig> for spikard::StaticFilesConfig {
+    fn from(val: StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<spikard::StaticFilesConfig> for StaticFilesConfig {
+    fn from(val: spikard::StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
 }

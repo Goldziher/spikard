@@ -8,6 +8,7 @@ use napi_derive::napi;
 use std::collections::HashMap;
 use serde_json;
 use spikard;
+use std::sync::Arc;
 
 pub mod server;
 
@@ -40,3 +41,411 @@ pub mod test_websocket;
 pub mod testing;
 
 pub mod websocket;
+
+static WORKER_POOL: std::sync::LazyLock<tokio::runtime::Runtime> = std::sync::LazyLock::new(|| {
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .expect("Failed to create Tokio runtime")
+});
+
+#[derive(Clone)]
+#[napi(object)]
+pub struct JsCorsConfig {
+    #[napi(js_name = "allowedOrigins")]
+    pub allowed_origins: Vec<String>,
+    #[napi(js_name = "allowedMethods")]
+    pub allowed_methods: Vec<String>,
+    #[napi(js_name = "allowedHeaders")]
+    pub allowed_headers: Vec<String>,
+    #[napi(js_name = "exposeHeaders")]
+    pub expose_headers: Option<Vec<String>>,
+    #[napi(js_name = "maxAge")]
+    pub max_age: Option<u32>,
+    #[napi(js_name = "allowCredentials")]
+    pub allow_credentials: Option<bool>,
+    #[napi(js_name = "methodsJoinedCache")]
+    pub methods_joined_cache: String,
+    #[napi(js_name = "headersJoinedCache")]
+    pub headers_joined_cache: String,
+}
+
+#[derive(Clone)]
+#[napi(object)]
+pub struct JsCompressionConfig {
+    pub gzip: bool,
+    pub brotli: bool,
+    #[napi(js_name = "minSize")]
+    pub min_size: i64,
+    pub quality: u32,
+}
+
+#[derive(Clone)]
+#[napi(object)]
+pub struct JsRateLimitConfig {
+    #[napi(js_name = "perSecond")]
+    pub per_second: i64,
+    pub burst: u32,
+    #[napi(js_name = "ipBased")]
+    pub ip_based: bool,
+}
+
+#[derive(Clone)]
+#[napi]
+pub struct JsLifecycleHooks {
+    inner: std::sync::Arc<spikard::LifecycleHooks>,
+}
+
+#[napi]
+impl JsLifecycleHooks {
+    #[napi(js_name = "isEmpty")]
+    pub fn is_empty(&self, ) -> bool {
+        self.inner.is_empty()
+    }
+
+    #[napi(js_name = "addOnRequest")]
+    pub fn add_on_request(&self, hook: String) -> () {
+        todo!("wire up add_on_request")
+    }
+
+    #[napi(js_name = "addPreValidation")]
+    pub fn add_pre_validation(&self, hook: String) -> () {
+        todo!("wire up add_pre_validation")
+    }
+
+    #[napi(js_name = "addPreHandler")]
+    pub fn add_pre_handler(&self, hook: String) -> () {
+        todo!("wire up add_pre_handler")
+    }
+
+    #[napi(js_name = "addOnResponse")]
+    pub fn add_on_response(&self, hook: String) -> () {
+        todo!("wire up add_on_response")
+    }
+
+    #[napi(js_name = "addOnError")]
+    pub fn add_on_error(&self, hook: String) -> () {
+        todo!("wire up add_on_error")
+    }
+
+    #[napi(js_name = "executeOnRequest")]
+    pub async fn execute_on_request(&self, req: String) -> Result<String> {
+        todo!("wire up execute_on_request")
+    }
+
+    #[napi(js_name = "executePreValidation")]
+    pub async fn execute_pre_validation(&self, req: String) -> Result<String> {
+        todo!("wire up execute_pre_validation")
+    }
+
+    #[napi(js_name = "executePreHandler")]
+    pub async fn execute_pre_handler(&self, req: String) -> Result<String> {
+        todo!("wire up execute_pre_handler")
+    }
+
+    #[napi(js_name = "executeOnResponse")]
+    pub async fn execute_on_response(&self, resp: String) -> Result<String> {
+        todo!("wire up execute_on_response")
+    }
+
+    #[napi(js_name = "executeOnError")]
+    pub async fn execute_on_error(&self, resp: String) -> Result<String> {
+        todo!("wire up execute_on_error")
+    }
+
+    #[napi]
+    pub fn builder() -> JsLifecycleHooksBuilder {
+        todo!("call into core")
+    }
+}
+
+#[derive(Clone)]
+#[napi]
+pub struct JsLifecycleHooksBuilder {
+    inner: std::sync::Arc<spikard::LifecycleHooksBuilder>,
+}
+
+#[napi]
+impl JsLifecycleHooksBuilder {
+    #[napi(js_name = "onRequest")]
+    pub fn on_request(&self, hook: String) -> String {
+        todo!("wire up on_request")
+    }
+
+    #[napi(js_name = "preValidation")]
+    pub fn pre_validation(&self, hook: String) -> String {
+        todo!("wire up pre_validation")
+    }
+
+    #[napi(js_name = "preHandler")]
+    pub fn pre_handler(&self, hook: String) -> String {
+        todo!("wire up pre_handler")
+    }
+
+    #[napi(js_name = "onResponse")]
+    pub fn on_response(&self, hook: String) -> String {
+        todo!("wire up on_response")
+    }
+
+    #[napi(js_name = "onError")]
+    pub fn on_error(&self, hook: String) -> String {
+        todo!("wire up on_error")
+    }
+
+    #[napi]
+    pub fn build(&self, ) -> JsLifecycleHooks {
+        todo!("wire up build")
+    }
+}
+
+#[derive(Clone)]
+#[napi(object)]
+pub struct JsSseEvent {
+    #[napi(js_name = "eventType")]
+    pub event_type: Option<String>,
+    pub data: String,
+    pub id: Option<String>,
+    pub retry: Option<i64>,
+}
+
+#[derive(Clone)]
+#[napi(object)]
+pub struct JsStaticFilesConfig {
+    pub directory: String,
+    #[napi(js_name = "routePrefix")]
+    pub route_prefix: String,
+    #[napi(js_name = "indexFile")]
+    pub index_file: bool,
+    #[napi(js_name = "cacheControl")]
+    pub cache_control: Option<String>,
+}
+
+#[derive(Clone)]
+#[napi]
+pub struct JsApp {
+    inner: std::sync::Arc<spikard::App>,
+}
+
+#[napi]
+impl JsApp {
+    #[napi]
+    pub fn config(&self, config: String) -> String {
+        todo!("wire up config")
+    }
+
+    #[napi(js_name = "mergeAxumRouter")]
+    pub fn merge_axum_router(&self, router: String) -> String {
+        todo!("wire up merge_axum_router")
+    }
+
+    #[napi(js_name = "attachAxumRouter")]
+    pub fn attach_axum_router(&self, router: String) -> String {
+        todo!("wire up attach_axum_router")
+    }
+
+    #[napi(js_name = "intoRouter")]
+    pub fn into_router(&self, ) -> Result<String> {
+        todo!("wire up into_router")
+    }
+
+    #[napi]
+    pub async fn run(&self, ) -> Result<()> {
+        todo!("wire up run")
+    }
+
+    #[napi]
+    pub fn default() -> String {
+        todo!("call into core")
+    }
+}
+
+#[derive(Clone)]
+#[napi]
+pub struct JsRouteBuilder {
+    inner: std::sync::Arc<spikard::RouteBuilder>,
+}
+
+#[napi]
+impl JsRouteBuilder {
+    #[napi(js_name = "handlerName")]
+    pub fn handler_name(&self, name: String) -> String {
+        todo!("wire up handler_name")
+    }
+
+    #[napi(js_name = "requestSchemaJson")]
+    pub fn request_schema_json(&self, schema: String) -> String {
+        todo!("wire up request_schema_json")
+    }
+
+    #[napi(js_name = "responseSchemaJson")]
+    pub fn response_schema_json(&self, schema: String) -> String {
+        todo!("wire up response_schema_json")
+    }
+
+    #[napi(js_name = "paramsSchemaJson")]
+    pub fn params_schema_json(&self, schema: String) -> String {
+        todo!("wire up params_schema_json")
+    }
+
+    #[napi(js_name = "fileParamsJson")]
+    pub fn file_params_json(&self, schema: String) -> String {
+        todo!("wire up file_params_json")
+    }
+
+    #[napi]
+    pub fn cors(&self, cors: JsCorsConfig) -> String {
+        todo!("wire up cors")
+    }
+
+    #[napi]
+    pub fn sync(&self, ) -> String {
+        todo!("wire up sync")
+    }
+
+    #[napi(js_name = "handlerDependencies")]
+    pub fn handler_dependencies(&self, dependencies: Vec<String>) -> String {
+        todo!("wire up handler_dependencies")
+    }
+}
+
+#[napi(string_enum)]
+#[derive(Clone)]
+pub enum JsMethod {
+    Get,
+    Post,
+    Put,
+    Patch,
+    Delete,
+    Head,
+    Options,
+    Trace,
+}
+
+#[napi(string_enum)]
+#[derive(Clone)]
+pub enum JsHandlerResponse {
+    Response,
+    Stream,
+}
+
+#[napi(string_enum)]
+#[derive(Clone)]
+pub enum JsAppError {
+    Route,
+    Server,
+    Decode,
+}
+
+#[napi(js_name = "validateJsonrpcMethodName")]
+pub fn validate_jsonrpc_method_name(name: String) -> Result<()> {
+    todo!("call into core")
+}
+
+#[napi(js_name = "handlePreflight")]
+pub fn handle_preflight(headers: String, cors_config: JsCorsConfig) -> Result<String> {
+    todo!("call into core")
+}
+
+#[napi(js_name = "addCorsHeaders")]
+pub fn add_cors_headers(response: String, origin: String, cors_config: JsCorsConfig) -> () {
+    todo!("call into core")
+}
+
+#[napi(js_name = "validateCorsRequest")]
+pub fn validate_cors_request(headers: String, cors_config: JsCorsConfig) -> Result<()> {
+    todo!("call into core")
+}
+
+impl From<JsCompressionConfig> for spikard::CompressionConfig {
+    fn from(val: JsCompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size as usize,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard::CompressionConfig> for JsCompressionConfig {
+    fn from(val: spikard::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size as i64,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<JsRateLimitConfig> for spikard::RateLimitConfig {
+    fn from(val: JsRateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second as u64,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard::RateLimitConfig> for JsRateLimitConfig {
+    fn from(val: spikard::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second as i64,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<JsStaticFilesConfig> for spikard::StaticFilesConfig {
+    fn from(val: JsStaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<spikard::StaticFilesConfig> for JsStaticFilesConfig {
+    fn from(val: spikard::StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<JsMethod> for spikard::Method {
+    fn from(val: JsMethod) -> Self {
+        match val {
+            JsMethod::Get => Self::Get,
+            JsMethod::Post => Self::Post,
+            JsMethod::Put => Self::Put,
+            JsMethod::Patch => Self::Patch,
+            JsMethod::Delete => Self::Delete,
+            JsMethod::Head => Self::Head,
+            JsMethod::Options => Self::Options,
+            JsMethod::Trace => Self::Trace,
+        }
+    }
+}
+
+impl From<spikard::Method> for JsMethod {
+    fn from(val: spikard::Method) -> Self {
+        match val {
+            spikard::Method::Get => Self::Get,
+            spikard::Method::Post => Self::Post,
+            spikard::Method::Put => Self::Put,
+            spikard::Method::Patch => Self::Patch,
+            spikard::Method::Delete => Self::Delete,
+            spikard::Method::Head => Self::Head,
+            spikard::Method::Options => Self::Options,
+            spikard::Method::Trace => Self::Trace,
+        }
+    }
+}

@@ -7,6 +7,9 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3::exceptions::PyRuntimeError;
 use std::collections::HashMap;
+use spikard;
+use pyo3_async_runtimes;
+use std::sync::Arc;
 
 pub mod server;
 
@@ -99,8 +102,543 @@ impl LanguageHandler for PyHandlerBridge {
     }
 }
 
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct CorsConfig {
+    #[pyo3(get)]
+    pub allowed_origins: Vec<String>,
+    #[pyo3(get)]
+    pub allowed_methods: Vec<String>,
+    #[pyo3(get)]
+    pub allowed_headers: Vec<String>,
+    #[pyo3(get)]
+    pub expose_headers: Option<Vec<String>>,
+    #[pyo3(get)]
+    pub max_age: Option<u32>,
+    #[pyo3(get)]
+    pub allow_credentials: Option<bool>,
+    #[pyo3(get)]
+    pub methods_joined_cache: String,
+    #[pyo3(get)]
+    pub headers_joined_cache: String,
+}
+
+#[pymethods]
+impl CorsConfig {
+        #[pyo3(signature = (allowed_origins, allowed_methods, allowed_headers, methods_joined_cache, headers_joined_cache, expose_headers=None, max_age=None, allow_credentials=None))]
+    #[new]
+    pub fn new(
+        allowed_origins: Vec<String>,
+        allowed_methods: Vec<String>,
+        allowed_headers: Vec<String>,
+        methods_joined_cache: String,
+        headers_joined_cache: String,
+        expose_headers: Option<Vec<String>>,
+        max_age: Option<u32>,
+        allow_credentials: Option<bool>,
+    ) -> Self {
+        Self { allowed_origins, allowed_methods, allowed_headers, expose_headers, max_age, allow_credentials, methods_joined_cache, headers_joined_cache }
+    }
+
+        #[pyo3(signature = ())]
+    pub fn allowed_methods_joined(&self) -> String {
+        todo!("wire up CorsConfig.allowed_methods_joined")
+    }
+
+        #[pyo3(signature = ())]
+    pub fn allowed_headers_joined(&self) -> String {
+        todo!("wire up CorsConfig.allowed_headers_joined")
+    }
+
+        #[pyo3(signature = (origin))]
+    pub fn is_origin_allowed(&self, origin: String) -> bool {
+        todo!("wire up CorsConfig.is_origin_allowed")
+    }
+
+        #[pyo3(signature = (method))]
+    pub fn is_method_allowed(&self, method: String) -> bool {
+        todo!("wire up CorsConfig.is_method_allowed")
+    }
+
+        #[pyo3(signature = (requested))]
+    pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
+        todo!("wire up CorsConfig.are_headers_allowed")
+    }
+
+    #[staticmethod]
+        #[pyo3(signature = ())]
+    pub fn default() -> String {
+        todo!("wire up CorsConfig::default")
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct CompressionConfig {
+    #[pyo3(get)]
+    pub gzip: bool,
+    #[pyo3(get)]
+    pub brotli: bool,
+    #[pyo3(get)]
+    pub min_size: usize,
+    #[pyo3(get)]
+    pub quality: u32,
+}
+
+#[pymethods]
+impl CompressionConfig {
+        #[pyo3(signature = (gzip, brotli, min_size, quality))]
+    #[new]
+    pub fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> Self {
+        Self { gzip, brotli, min_size, quality }
+    }
+
+    #[staticmethod]
+        #[pyo3(signature = ())]
+    pub fn default() -> String {
+        todo!("wire up CompressionConfig::default")
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct RateLimitConfig {
+    #[pyo3(get)]
+    pub per_second: u64,
+    #[pyo3(get)]
+    pub burst: u32,
+    #[pyo3(get)]
+    pub ip_based: bool,
+}
+
+#[pymethods]
+impl RateLimitConfig {
+        #[pyo3(signature = (per_second, burst, ip_based))]
+    #[new]
+    pub fn new(per_second: u64, burst: u32, ip_based: bool) -> Self {
+        Self { per_second, burst, ip_based }
+    }
+
+    #[staticmethod]
+        #[pyo3(signature = ())]
+    pub fn default() -> String {
+        todo!("wire up RateLimitConfig::default")
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct LifecycleHooks {
+    inner: std::sync::Arc<spikard::LifecycleHooks>,
+}
+
+#[pymethods]
+impl LifecycleHooks {
+        #[pyo3(signature = ())]
+    pub fn is_empty(&self) -> bool {
+        self.inner.is_empty()
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn add_on_request(&self, hook: String) -> () {
+        todo!("wire up LifecycleHooks.add_on_request")
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn add_pre_validation(&self, hook: String) -> () {
+        todo!("wire up LifecycleHooks.add_pre_validation")
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn add_pre_handler(&self, hook: String) -> () {
+        todo!("wire up LifecycleHooks.add_pre_handler")
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn add_on_response(&self, hook: String) -> () {
+        todo!("wire up LifecycleHooks.add_on_response")
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn add_on_error(&self, hook: String) -> () {
+        todo!("wire up LifecycleHooks.add_on_error")
+    }
+
+        #[pyo3(signature = (req))]
+    pub fn execute_on_request(&self, py: Python<'_>, req: String) -> PyResult<String> {
+        todo!("wire up LifecycleHooks.execute_on_request")
+    }
+
+        #[pyo3(signature = (req))]
+    pub fn execute_pre_validation(&self, py: Python<'_>, req: String) -> PyResult<String> {
+        todo!("wire up LifecycleHooks.execute_pre_validation")
+    }
+
+        #[pyo3(signature = (req))]
+    pub fn execute_pre_handler(&self, py: Python<'_>, req: String) -> PyResult<String> {
+        todo!("wire up LifecycleHooks.execute_pre_handler")
+    }
+
+        #[pyo3(signature = (resp))]
+    pub fn execute_on_response(&self, py: Python<'_>, resp: String) -> PyResult<String> {
+        todo!("wire up LifecycleHooks.execute_on_response")
+    }
+
+        #[pyo3(signature = (resp))]
+    pub fn execute_on_error(&self, py: Python<'_>, resp: String) -> PyResult<String> {
+        todo!("wire up LifecycleHooks.execute_on_error")
+    }
+
+    #[staticmethod]
+        #[pyo3(signature = ())]
+    pub fn builder() -> LifecycleHooksBuilder {
+        todo!("wire up LifecycleHooks::builder")
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct LifecycleHooksBuilder {
+    inner: std::sync::Arc<spikard::LifecycleHooksBuilder>,
+}
+
+#[pymethods]
+impl LifecycleHooksBuilder {
+        #[pyo3(signature = (hook))]
+    pub fn on_request(&self, hook: String) -> String {
+        todo!("wire up LifecycleHooksBuilder.on_request")
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn pre_validation(&self, hook: String) -> String {
+        todo!("wire up LifecycleHooksBuilder.pre_validation")
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn pre_handler(&self, hook: String) -> String {
+        todo!("wire up LifecycleHooksBuilder.pre_handler")
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn on_response(&self, hook: String) -> String {
+        todo!("wire up LifecycleHooksBuilder.on_response")
+    }
+
+        #[pyo3(signature = (hook))]
+    pub fn on_error(&self, hook: String) -> String {
+        todo!("wire up LifecycleHooksBuilder.on_error")
+    }
+
+        #[pyo3(signature = ())]
+    pub fn build(&self) -> LifecycleHooks {
+        todo!("wire up LifecycleHooksBuilder.build")
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct SseEvent {
+    #[pyo3(get)]
+    pub event_type: Option<String>,
+    #[pyo3(get)]
+    pub data: String,
+    #[pyo3(get)]
+    pub id: Option<String>,
+    #[pyo3(get)]
+    pub retry: Option<u64>,
+}
+
+#[pymethods]
+impl SseEvent {
+        #[pyo3(signature = (data, event_type=None, id=None, retry=None))]
+    #[new]
+    pub fn new(data: String, event_type: Option<String>, id: Option<String>, retry: Option<u64>) -> Self {
+        Self { event_type, data, id, retry }
+    }
+
+        #[pyo3(signature = (id))]
+    pub fn with_id(&self, id: String) -> String {
+        todo!("wire up SseEvent.with_id")
+    }
+
+        #[pyo3(signature = (retry_ms))]
+    pub fn with_retry(&self, retry_ms: u64) -> String {
+        todo!("wire up SseEvent.with_retry")
+    }
+
+    #[staticmethod]
+        #[pyo3(signature = (event_type, data))]
+    pub fn with_type(event_type: String, data: String) -> String {
+        todo!("wire up SseEvent::with_type")
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct StaticFilesConfig {
+    #[pyo3(get)]
+    pub directory: String,
+    #[pyo3(get)]
+    pub route_prefix: String,
+    #[pyo3(get)]
+    pub index_file: bool,
+    #[pyo3(get)]
+    pub cache_control: Option<String>,
+}
+
+#[pymethods]
+impl StaticFilesConfig {
+        #[pyo3(signature = (directory, route_prefix, index_file, cache_control=None))]
+    #[new]
+    pub fn new(directory: String, route_prefix: String, index_file: bool, cache_control: Option<String>) -> Self {
+        Self { directory, route_prefix, index_file, cache_control }
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct App {
+    inner: std::sync::Arc<spikard::App>,
+}
+
+#[pymethods]
+impl App {
+        #[pyo3(signature = (config))]
+    pub fn config(&self, config: String) -> String {
+        todo!("wire up App.config")
+    }
+
+        #[pyo3(signature = (router))]
+    pub fn merge_axum_router(&self, router: String) -> String {
+        todo!("wire up App.merge_axum_router")
+    }
+
+        #[pyo3(signature = (router))]
+    pub fn attach_axum_router(&self, router: String) -> String {
+        todo!("wire up App.attach_axum_router")
+    }
+
+        #[pyo3(signature = ())]
+    pub fn into_router(&self) -> PyResult<String> {
+        todo!("wire up App.into_router")
+    }
+
+        #[pyo3(signature = ())]
+    pub fn run(&self, py: Python<'_>) -> PyResult<()> {
+        todo!("wire up App.run")
+    }
+
+    #[staticmethod]
+        #[pyo3(signature = ())]
+    pub fn default() -> String {
+        todo!("wire up App::default")
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen)]
+pub struct RouteBuilder {
+    inner: std::sync::Arc<spikard::RouteBuilder>,
+}
+
+#[pymethods]
+impl RouteBuilder {
+        #[pyo3(signature = (name))]
+    pub fn handler_name(&self, name: String) -> String {
+        todo!("wire up RouteBuilder.handler_name")
+    }
+
+        #[pyo3(signature = (schema))]
+    pub fn request_schema_json(&self, schema: String) -> String {
+        todo!("wire up RouteBuilder.request_schema_json")
+    }
+
+        #[pyo3(signature = (schema))]
+    pub fn response_schema_json(&self, schema: String) -> String {
+        todo!("wire up RouteBuilder.response_schema_json")
+    }
+
+        #[pyo3(signature = (schema))]
+    pub fn params_schema_json(&self, schema: String) -> String {
+        todo!("wire up RouteBuilder.params_schema_json")
+    }
+
+        #[pyo3(signature = (schema))]
+    pub fn file_params_json(&self, schema: String) -> String {
+        todo!("wire up RouteBuilder.file_params_json")
+    }
+
+        #[pyo3(signature = (cors))]
+    pub fn cors(&self, cors: CorsConfig) -> String {
+        todo!("wire up RouteBuilder.cors")
+    }
+
+        #[pyo3(signature = ())]
+    pub fn sync(&self) -> String {
+        todo!("wire up RouteBuilder.sync")
+    }
+
+        #[pyo3(signature = (dependencies))]
+    pub fn handler_dependencies(&self, dependencies: Vec<String>) -> String {
+        todo!("wire up RouteBuilder.handler_dependencies")
+    }
+}
+
+#[derive(Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum Method {
+    Get = 0,
+    Post = 1,
+    Put = 2,
+    Patch = 3,
+    Delete = 4,
+    Head = 5,
+    Options = 6,
+    Trace = 7,
+}
+
+#[derive(Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum HandlerResponse {
+    Response = 0,
+    Stream = 1,
+}
+
+#[derive(Clone, PartialEq)]
+#[pyclass(eq, eq_int)]
+pub enum AppError {
+    Route = 0,
+    Server = 1,
+    Decode = 2,
+}
+
+#[pyfunction]
+    #[pyo3(signature = (name))]
+pub fn validate_jsonrpc_method_name(name: String) -> PyResult<()> {
+    todo!("wire up validate_jsonrpc_method_name")
+}
+
+#[pyfunction]
+    #[pyo3(signature = (headers, cors_config))]
+pub fn handle_preflight(headers: String, cors_config: CorsConfig) -> PyResult<String> {
+    todo!("wire up handle_preflight")
+}
+
+#[pyfunction]
+    #[pyo3(signature = (response, origin, cors_config))]
+pub fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {
+    todo!("wire up add_cors_headers")
+}
+
+#[pyfunction]
+    #[pyo3(signature = (headers, cors_config))]
+pub fn validate_cors_request(headers: String, cors_config: CorsConfig) -> PyResult<()> {
+    todo!("wire up validate_cors_request")
+}
+
+impl From<CompressionConfig> for spikard::CompressionConfig {
+    fn from(val: CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard::CompressionConfig> for CompressionConfig {
+    fn from(val: spikard::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard::RateLimitConfig {
+    fn from(val: RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard::RateLimitConfig> for RateLimitConfig {
+    fn from(val: spikard::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<StaticFilesConfig> for spikard::StaticFilesConfig {
+    fn from(val: StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<spikard::StaticFilesConfig> for StaticFilesConfig {
+    fn from(val: spikard::StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<Method> for spikard::Method {
+    fn from(val: Method) -> Self {
+        match val {
+            Method::Get => Self::Get,
+            Method::Post => Self::Post,
+            Method::Put => Self::Put,
+            Method::Patch => Self::Patch,
+            Method::Delete => Self::Delete,
+            Method::Head => Self::Head,
+            Method::Options => Self::Options,
+            Method::Trace => Self::Trace,
+        }
+    }
+}
+
+impl From<spikard::Method> for Method {
+    fn from(val: spikard::Method) -> Self {
+        match val {
+            spikard::Method::Get => Self::Get,
+            spikard::Method::Post => Self::Post,
+            spikard::Method::Put => Self::Put,
+            spikard::Method::Patch => Self::Patch,
+            spikard::Method::Delete => Self::Delete,
+            spikard::Method::Head => Self::Head,
+            spikard::Method::Options => Self::Options,
+            spikard::Method::Trace => Self::Trace,
+        }
+    }
+}
+
+#[pyfunction]
+pub fn init_async_runtime() -> PyResult<()> {
+    // Tokio runtime auto-initializes on first future_into_py call
+    Ok(())
+}
+
 #[pymodule]
-fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
+pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(init_async_runtime, m)?)?;
     m.add_class::<request::PyRequest>()?;
     m.add_class::<handler_request::PyHandlerRequest>()?;
     m.add_class::<response::Response>()?;
@@ -117,5 +655,21 @@ fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(server::process, m)?)?;
     m.add_function(wrap_pyfunction!(background::background_run, m)?)?;
     grpc::init_module(m)?;
+    m.add_class::<CorsConfig>()?;
+    m.add_class::<CompressionConfig>()?;
+    m.add_class::<RateLimitConfig>()?;
+    m.add_class::<LifecycleHooks>()?;
+    m.add_class::<LifecycleHooksBuilder>()?;
+    m.add_class::<SseEvent>()?;
+    m.add_class::<StaticFilesConfig>()?;
+    m.add_class::<App>()?;
+    m.add_class::<RouteBuilder>()?;
+    m.add_class::<Method>()?;
+    m.add_class::<HandlerResponse>()?;
+    m.add_class::<AppError>()?;
+    m.add_function(wrap_pyfunction!(validate_jsonrpc_method_name, m)?)?;
+    m.add_function(wrap_pyfunction!(handle_preflight, m)?)?;
+    m.add_function(wrap_pyfunction!(add_cors_headers, m)?)?;
+    m.add_function(wrap_pyfunction!(validate_cors_request, m)?)?;
     Ok(())
 }

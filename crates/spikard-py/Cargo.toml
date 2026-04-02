@@ -21,6 +21,7 @@ doctest = false
 workspace = true
 
 [dependencies]
+spikard = { path = "../spikard" }
 spikard-core = { path = "../spikard-core", features = ["di"] }
 spikard-http = { path = "../spikard-http", features = ["di"] }
 spikard-bindings-shared = { path = "../spikard-bindings-shared" }

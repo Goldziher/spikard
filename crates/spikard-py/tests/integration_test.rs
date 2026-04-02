@@ -40,7 +40,7 @@ fn init_python() {
 
         pyo3::append_to_inittab!(spikard_pymodule);
         Python::initialize();
-        let _ = _spikard::init_python_event_loop();
+        let _ = _spikard::handler::init_python_event_loop();
     });
 }
 
@@ -146,11 +146,11 @@ def handler(body: Payload):
 }
 
 fn build_python_handler(code: &str, function: &str, is_async: bool) -> Arc<dyn Handler> {
-    let python_handler = Python::attach(|py| -> PyResult<_spikard::PythonHandler> {
+    let python_handler = Python::attach(|py| -> PyResult<_spikard::handler::PythonHandler> {
         let module = module_from_code(py, code, "test.py", "test");
         let handler_fn = module.getattr(function)?;
         let handler_py: Py<PyAny> = handler_fn.into();
-        Ok(_spikard::PythonHandler::new(handler_py, is_async, None, None, None))
+        Ok(_spikard::handler::PythonHandler::new(handler_py, is_async, None, None, None))
     })
     .expect("failed to build Python handler");
 
@@ -161,7 +161,7 @@ fn build_python_handler(code: &str, function: &str, is_async: bool) -> Arc<dyn H
 fn test_python_handler_creation() {
     init_python();
 
-    let python_handler = Python::attach(|py| -> PyResult<_spikard::PythonHandler> {
+    let python_handler = Python::attach(|py| -> PyResult<_spikard::handler::PythonHandler> {
         let code = r#"
 def simple_handler(path_params, query_params, body, headers, cookies):
     return {"status_code": 200, "body": {"message": "Hello"}}
@@ -171,7 +171,7 @@ def simple_handler(path_params, query_params, body, headers, cookies):
         let handler_fn = module.getattr("simple_handler")?;
         let handler_py: Py<PyAny> = handler_fn.into();
 
-        Ok(_spikard::PythonHandler::new(handler_py, false, None, None, None))
+        Ok(_spikard::handler::PythonHandler::new(handler_py, false, None, None, None))
     })
     .expect("failed to build Python handler");
 
@@ -427,10 +427,10 @@ def echo_handler(path_params, query_params, body, headers, cookies):
 fn test_event_loop_initialization() {
     init_python();
 
-    let result = _spikard::init_python_event_loop();
+    let result = _spikard::handler::init_python_event_loop();
     assert!(result.is_ok());
 
-    let result2 = _spikard::init_python_event_loop();
+    let result2 = _spikard::handler::init_python_event_loop();
     assert!(result2.is_ok());
 }
 
@@ -494,7 +494,7 @@ app.register_route(
         let module = module_from_code(py, code, "test_app.py", "test_app");
         let app = module.getattr("app")?;
 
-        _spikard::extract_routes_from_app(py, &app)
+        _spikard::server::extract_routes_from_app(py, &app)
     })
     .expect("failed to extract routes");
 

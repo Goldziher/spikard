@@ -6,6 +6,7 @@
 use rustler::prelude::*;
 use std::collections::HashMap;
 use spikard;
+use std::sync::Arc;
 
 pub mod atoms;
 
@@ -25,4 +26,467 @@ pub mod testing;
 
 pub mod websocket;
 
-rustler::init!("elixir_module", []);
+#[derive(Clone, Debug)]
+#[rustler::NifStruct(module = "Spikard")]
+pub struct CorsConfig {
+    pub allowed_origins: Vec<String>,
+    pub allowed_methods: Vec<String>,
+    pub allowed_headers: Vec<String>,
+    pub expose_headers: Option<Vec<String>>,
+    pub max_age: Option<u32>,
+    pub allow_credentials: Option<bool>,
+    pub methods_joined_cache: String,
+    pub headers_joined_cache: String,
+}
+
+#[derive(Clone, Debug)]
+#[rustler::NifStruct(module = "Spikard")]
+pub struct CompressionConfig {
+    pub gzip: bool,
+    pub brotli: bool,
+    pub min_size: usize,
+    pub quality: u32,
+}
+
+#[derive(Clone, Debug)]
+#[rustler::NifStruct(module = "Spikard")]
+pub struct RateLimitConfig {
+    pub per_second: u64,
+    pub burst: u32,
+    pub ip_based: bool,
+}
+
+#[derive(Clone)]
+pub struct LifecycleHooks {
+    inner: std::sync::Arc<spikard::LifecycleHooks>,
+}
+
+impl rustler::Resource for LifecycleHooks {}
+
+#[derive(Clone)]
+pub struct LifecycleHooksBuilder {
+    inner: std::sync::Arc<spikard::LifecycleHooksBuilder>,
+}
+
+impl rustler::Resource for LifecycleHooksBuilder {}
+
+#[derive(Clone, Debug)]
+#[rustler::NifStruct(module = "Spikard")]
+pub struct SseEvent {
+    pub event_type: Option<String>,
+    pub data: String,
+    pub id: Option<String>,
+    pub retry: Option<u64>,
+}
+
+#[derive(Clone, Debug)]
+#[rustler::NifStruct(module = "Spikard")]
+pub struct StaticFilesConfig {
+    pub directory: String,
+    pub route_prefix: String,
+    pub index_file: bool,
+    pub cache_control: Option<String>,
+}
+
+#[derive(Clone)]
+pub struct App {
+    inner: std::sync::Arc<spikard::App>,
+}
+
+impl rustler::Resource for App {}
+
+#[derive(Clone)]
+pub struct RouteBuilder {
+    inner: std::sync::Arc<spikard::RouteBuilder>,
+}
+
+impl rustler::Resource for RouteBuilder {}
+
+#[derive(NifUnitEnum)]
+#[derive(Clone, Copy)]
+pub enum Method {
+    Get,
+    Post,
+    Put,
+    Patch,
+    Delete,
+    Head,
+    Options,
+    Trace,
+}
+
+#[derive(NifUnitEnum)]
+#[derive(Clone, Copy)]
+pub enum HandlerResponse {
+    Response,
+    Stream,
+}
+
+#[derive(NifUnitEnum)]
+#[derive(Clone, Copy)]
+pub enum AppError {
+    Route,
+    Server,
+    Decode,
+}
+
+#[rustler::nif]
+pub fn validate_jsonrpc_method_name(name: String) -> Result<(), String> {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn handle_preflight(headers: String, cors_config: CorsConfig) -> Result<String, String> {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn validate_cors_request(headers: String, cors_config: CorsConfig) -> Result<(), String> {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn corsconfig_allowed_methods_joined(resource: ResourceArc<CorsConfig>) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn corsconfig_allowed_headers_joined(resource: ResourceArc<CorsConfig>) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn corsconfig_is_origin_allowed(resource: ResourceArc<CorsConfig>, origin: String) -> bool {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn corsconfig_is_method_allowed(resource: ResourceArc<CorsConfig>, method: String) -> bool {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn corsconfig_are_headers_allowed(resource: ResourceArc<CorsConfig>, requested: Vec<String>) -> bool {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn corsconfig_default() -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn compressionconfig_default() -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn ratelimitconfig_default() -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooks_builder() -> LifecycleHooksBuilder {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooks_is_empty(resource: ResourceArc<LifecycleHooks>) -> bool {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooks_add_on_request(resource: ResourceArc<LifecycleHooks>, hook: String) -> () {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooks_add_pre_validation(resource: ResourceArc<LifecycleHooks>, hook: String) -> () {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooks_add_pre_handler(resource: ResourceArc<LifecycleHooks>, hook: String) -> () {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooks_add_on_response(resource: ResourceArc<LifecycleHooks>, hook: String) -> () {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooks_add_on_error(resource: ResourceArc<LifecycleHooks>, hook: String) -> () {
+    todo!("call into core")
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn lifecyclehooks_execute_on_request_async(resource: ResourceArc<LifecycleHooks>, req: String) -> Result<String, String> {
+    let rt = tokio::runtime::Runtime::new()
+        .map_err(|e| e.to_string())?;
+    rt.block_on(async {
+        todo!("call into core")
+    }).map_err(|e| e.to_string())
+        .map(ExtractionResult::from)
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn lifecyclehooks_execute_pre_validation_async(resource: ResourceArc<LifecycleHooks>, req: String) -> Result<String, String> {
+    let rt = tokio::runtime::Runtime::new()
+        .map_err(|e| e.to_string())?;
+    rt.block_on(async {
+        todo!("call into core")
+    }).map_err(|e| e.to_string())
+        .map(ExtractionResult::from)
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn lifecyclehooks_execute_pre_handler_async(resource: ResourceArc<LifecycleHooks>, req: String) -> Result<String, String> {
+    let rt = tokio::runtime::Runtime::new()
+        .map_err(|e| e.to_string())?;
+    rt.block_on(async {
+        todo!("call into core")
+    }).map_err(|e| e.to_string())
+        .map(ExtractionResult::from)
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn lifecyclehooks_execute_on_response_async(resource: ResourceArc<LifecycleHooks>, resp: String) -> Result<String, String> {
+    let rt = tokio::runtime::Runtime::new()
+        .map_err(|e| e.to_string())?;
+    rt.block_on(async {
+        todo!("call into core")
+    }).map_err(|e| e.to_string())
+        .map(ExtractionResult::from)
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn lifecyclehooks_execute_on_error_async(resource: ResourceArc<LifecycleHooks>, resp: String) -> Result<String, String> {
+    let rt = tokio::runtime::Runtime::new()
+        .map_err(|e| e.to_string())?;
+    rt.block_on(async {
+        todo!("call into core")
+    }).map_err(|e| e.to_string())
+        .map(ExtractionResult::from)
+}
+
+#[rustler::nif]
+pub fn lifecyclehooksbuilder_on_request(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooksbuilder_pre_validation(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooksbuilder_pre_handler(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooksbuilder_on_response(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooksbuilder_on_error(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn lifecyclehooksbuilder_build(resource: ResourceArc<LifecycleHooksBuilder>) -> LifecycleHooks {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn sseevent_with_type(event_type: String, data: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn sseevent_with_id(resource: ResourceArc<SseEvent>, id: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn sseevent_with_retry(resource: ResourceArc<SseEvent>, retry_ms: u64) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn app_config(resource: ResourceArc<App>, config: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn app_merge_axum_router(resource: ResourceArc<App>, router: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn app_attach_axum_router(resource: ResourceArc<App>, router: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn app_into_router(resource: ResourceArc<App>) -> Result<String, String> {
+    todo!("call into core")
+}
+
+#[rustler::nif(schedule = "DirtyCpu")]
+pub fn app_run_async(resource: ResourceArc<App>) -> Result<(), String> {
+    let rt = tokio::runtime::Runtime::new()
+        .map_err(|e| e.to_string())?;
+    rt.block_on(async {
+        todo!("call into core")
+    }).map_err(|e| e.to_string())
+        .map(ExtractionResult::from)
+}
+
+#[rustler::nif]
+pub fn app_default() -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn routebuilder_handler_name(resource: ResourceArc<RouteBuilder>, name: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn routebuilder_request_schema_json(resource: ResourceArc<RouteBuilder>, schema: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn routebuilder_response_schema_json(resource: ResourceArc<RouteBuilder>, schema: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn routebuilder_params_schema_json(resource: ResourceArc<RouteBuilder>, schema: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn routebuilder_file_params_json(resource: ResourceArc<RouteBuilder>, schema: String) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn routebuilder_cors(resource: ResourceArc<RouteBuilder>, cors: CorsConfig) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn routebuilder_sync(resource: ResourceArc<RouteBuilder>) -> String {
+    todo!("call into core")
+}
+
+#[rustler::nif]
+pub fn routebuilder_handler_dependencies(resource: ResourceArc<RouteBuilder>, dependencies: Vec<String>) -> String {
+    todo!("call into core")
+}
+
+impl From<CompressionConfig> for spikard::CompressionConfig {
+    fn from(val: CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard::CompressionConfig> for CompressionConfig {
+    fn from(val: spikard::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard::RateLimitConfig {
+    fn from(val: RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard::RateLimitConfig> for RateLimitConfig {
+    fn from(val: spikard::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<StaticFilesConfig> for spikard::StaticFilesConfig {
+    fn from(val: StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<spikard::StaticFilesConfig> for StaticFilesConfig {
+    fn from(val: spikard::StaticFilesConfig) -> Self {
+        Self {
+            directory: val.directory,
+            route_prefix: val.route_prefix,
+            index_file: val.index_file,
+            cache_control: val.cache_control,
+        }
+    }
+}
+
+impl From<Method> for spikard::Method {
+    fn from(val: Method) -> Self {
+        match val {
+            Method::Get => Self::Get,
+            Method::Post => Self::Post,
+            Method::Put => Self::Put,
+            Method::Patch => Self::Patch,
+            Method::Delete => Self::Delete,
+            Method::Head => Self::Head,
+            Method::Options => Self::Options,
+            Method::Trace => Self::Trace,
+        }
+    }
+}
+
+impl From<spikard::Method> for Method {
+    fn from(val: spikard::Method) -> Self {
+        match val {
+            spikard::Method::Get => Self::Get,
+            spikard::Method::Post => Self::Post,
+            spikard::Method::Put => Self::Put,
+            spikard::Method::Patch => Self::Patch,
+            spikard::Method::Delete => Self::Delete,
+            spikard::Method::Head => Self::Head,
+            spikard::Method::Options => Self::Options,
+            spikard::Method::Trace => Self::Trace,
+        }
+    }
+}
+
+rustler::init!("elixir_module", [validate_jsonrpc_method_name, handle_preflight, add_cors_headers, validate_cors_request, corsconfig_allowed_methods_joined, corsconfig_allowed_headers_joined, corsconfig_is_origin_allowed, corsconfig_is_method_allowed, corsconfig_are_headers_allowed, corsconfig_default, compressionconfig_default, ratelimitconfig_default, lifecyclehooks_builder, lifecyclehooks_is_empty, lifecyclehooks_add_on_request, lifecyclehooks_add_pre_validation, lifecyclehooks_add_pre_handler, lifecyclehooks_add_on_response, lifecyclehooks_add_on_error, lifecyclehooks_execute_on_request_async, lifecyclehooks_execute_pre_validation_async, lifecyclehooks_execute_pre_handler_async, lifecyclehooks_execute_on_response_async, lifecyclehooks_execute_on_error_async, lifecyclehooksbuilder_on_request, lifecyclehooksbuilder_pre_validation, lifecyclehooksbuilder_pre_handler, lifecyclehooksbuilder_on_response, lifecyclehooksbuilder_on_error, lifecyclehooksbuilder_build, sseevent_with_type, sseevent_with_id, sseevent_with_retry, app_config, app_merge_axum_router, app_attach_axum_router, app_into_router, app_run_async, app_default, routebuilder_handler_name, routebuilder_request_schema_json, routebuilder_response_schema_json, routebuilder_params_schema_json, routebuilder_file_params_json, routebuilder_cors, routebuilder_sync, routebuilder_handler_dependencies]);
