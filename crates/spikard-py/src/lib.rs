@@ -38,6 +38,67 @@ pub mod grpc;
 
 pub mod graphql;
 
+use pyo3::prelude::*;
+use spikard_bindings_shared::handler_base::{LanguageHandler, HandlerError};
+
+/// Generated FFI bridge for LanguageHandler trait — Python implementation.
+pub struct PyHandlerBridge {
+    callback: Py<PyAny>,
+    is_async: bool,
+}
+
+impl PyHandlerBridge {
+    /// Create a new bridge from a Python callable.
+    pub fn new(py: Python<'_>, callback: &Bound<'_, pyo3::PyAny>) -> PyResult<Self> {
+        let is_async = py.import("inspect")?
+            .call_method1("iscoroutinefunction", (callback,))?
+            .is_truthy()
+            .unwrap_or(false);
+        Ok(Self {
+            callback: callback.clone().unbind(),
+            is_async,
+        })
+    }
+}
+
+impl LanguageHandler for PyHandlerBridge {
+    type Input = Py<PyAny>;
+    type Output = Py<PyAny>;
+
+    fn prepare_request(&self, request_data: &spikard_http::handler_trait::RequestData) -> Result<Self::Input, HandlerError> {
+        todo!("convert RequestData to Python object")
+    }
+
+    fn interpret_response(&self, output: Self::Output) -> Result<axum::http::Response<axum::body::Body>, HandlerError> {
+        todo!("convert Python response to HTTP Response")
+    }
+
+    fn invoke_handler(&self, input: Self::Input) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Output, HandlerError>> + Send + '_>> {
+        let callback = Python::attach(|py| self.callback.clone_ref(py));
+        let is_async = self.is_async;
+        Box::pin(async move {
+            let join_result = tokio::task::spawn_blocking(move || -> Result<Py<PyAny>, HandlerError> {
+                Python::attach(|py| {
+                    let result = callback.call1(py, (input,))
+                        .map_err(|e| HandlerError::Execution(e.to_string()))?;
+                    if is_async {
+                        let asyncio = py.import("asyncio")
+                            .map_err(|e| HandlerError::Execution(e.to_string()))?;
+                        let event_loop = asyncio.call_method0("new_event_loop")
+                            .map_err(|e| HandlerError::Execution(e.to_string()))?;
+                        let awaited = event_loop.call_method1("run_until_complete", (result.bind(py),))
+                            .map_err(|e| HandlerError::Execution(e.to_string()))?;
+                        Ok(awaited.unbind())
+                    } else {
+                        Ok(result)
+                    }
+                })
+            }).await.map_err(|e| HandlerError::Execution(e.to_string()))?;
+            join_result
+        })
+    }
+}
+
 #[pymodule]
 fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<request::PyRequest>()?;

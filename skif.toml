@@ -65,6 +65,18 @@ init_calls = [
     "grpc::init_module(m)?;",
 ]
 
+# Generate handler bridge — implements LanguageHandler trait for each language
+[[adapters]]
+name = "handler"
+pattern = "callback_bridge"
+core_path = "spikard_bindings_shared::handler_base::LanguageHandler"
+trait_name = "LanguageHandler"
+trait_method = "invoke_handler"
+params = [{ name = "input", type = "Self::Input" }]
+returns = "Self::Output"
+error_type = "HandlerError"
+detect_async = true
+
 [scaffold]
 description = "Polyglot web framework powered by Rust"
 license = "MIT"
