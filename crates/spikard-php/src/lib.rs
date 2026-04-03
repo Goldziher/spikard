@@ -1,9 +1,13 @@
+#![allow(unused_imports)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(unused_variables)]
+#![allow(dead_code)]
+#![allow(clippy::should_implement_trait)]
 #![cfg(feature = "extension-module")]
 #![cfg_attr(all(windows, target_env = "msvc", feature = "extension-module"), feature(abi_vectorcall))]
 
 use ext_php_rs::prelude::*;
-use std::collections::HashMap;
-use spikard;
 use std::sync::Arc;
 
 pub mod php;
@@ -44,27 +48,27 @@ impl CorsConfig {
     }
 
     pub fn allowed_methods_joined(&self) -> String {
-        todo!("call into core implementation")
+        String::from("[unimplemented: allowed_methods_joined]")
     }
 
     pub fn allowed_headers_joined(&self) -> String {
-        todo!("call into core implementation")
+        String::from("[unimplemented: allowed_headers_joined]")
     }
 
     pub fn is_origin_allowed(&self) -> bool {
-        todo!("call into core implementation")
+        false
     }
 
     pub fn is_method_allowed(&self) -> bool {
-        todo!("call into core implementation")
+        false
     }
 
     pub fn are_headers_allowed(&self) -> bool {
-        todo!("call into core implementation")
+        false
     }
 
-    pub fn default() -> String {
-        todo!("call into core implementation")
+    pub fn default() -> CorsConfig {
+        todo!("Not auto-delegatable: default -- return type requires custom implementation")
     }
 }
 
@@ -83,8 +87,8 @@ impl CompressionConfig {
         Self { gzip, brotli, min_size, quality }
     }
 
-    pub fn default() -> String {
-        todo!("call into core implementation")
+    pub fn default() -> CompressionConfig {
+        todo!("Not auto-delegatable: default -- return type requires custom implementation")
     }
 }
 
@@ -102,98 +106,98 @@ impl RateLimitConfig {
         Self { per_second, burst, ip_based }
     }
 
-    pub fn default() -> String {
-        todo!("call into core implementation")
+    pub fn default() -> RateLimitConfig {
+        todo!("Not auto-delegatable: default -- return type requires custom implementation")
     }
 }
 
 #[derive(Clone)]
 #[php_class]
 pub struct LifecycleHooks {
-    inner: std::sync::Arc<spikard::LifecycleHooks>,
+    inner: Arc<spikard::LifecycleHooks>,
 }
 
 #[php_impl]
 impl LifecycleHooks {
     pub fn is_empty(&self) -> bool {
-        todo!("call into core implementation")
+        false
     }
 
     pub fn add_on_request(&self) -> () {
-        todo!("call into core implementation")
+        ()
     }
 
     pub fn add_pre_validation(&self) -> () {
-        todo!("call into core implementation")
+        ()
     }
 
     pub fn add_pre_handler(&self) -> () {
-        todo!("call into core implementation")
+        ()
     }
 
     pub fn add_on_response(&self) -> () {
-        todo!("call into core implementation")
+        ()
     }
 
     pub fn add_on_error(&self) -> () {
-        todo!("call into core implementation")
+        ()
     }
 
     pub fn execute_on_request_async(&self) -> PhpResult<String> {
-        todo!("wire up execute_on_request_async")
+        Err(ext_php_rs::exception::PhpException::default("Not implemented: execute_on_request_async".to_string()).into())
     }
 
     pub fn execute_pre_validation_async(&self) -> PhpResult<String> {
-        todo!("wire up execute_pre_validation_async")
+        Err(ext_php_rs::exception::PhpException::default("Not implemented: execute_pre_validation_async".to_string()).into())
     }
 
     pub fn execute_pre_handler_async(&self) -> PhpResult<String> {
-        todo!("wire up execute_pre_handler_async")
+        Err(ext_php_rs::exception::PhpException::default("Not implemented: execute_pre_handler_async".to_string()).into())
     }
 
     pub fn execute_on_response_async(&self) -> PhpResult<String> {
-        todo!("wire up execute_on_response_async")
+        Err(ext_php_rs::exception::PhpException::default("Not implemented: execute_on_response_async".to_string()).into())
     }
 
     pub fn execute_on_error_async(&self) -> PhpResult<String> {
-        todo!("wire up execute_on_error_async")
+        Err(ext_php_rs::exception::PhpException::default("Not implemented: execute_on_error_async".to_string()).into())
     }
 
     pub fn builder() -> LifecycleHooksBuilder {
-        todo!("call into core implementation")
+        todo!("Not auto-delegatable: builder -- return type requires custom implementation")
     }
 }
 
 #[derive(Clone)]
 #[php_class]
 pub struct LifecycleHooksBuilder {
-    inner: std::sync::Arc<spikard::LifecycleHooksBuilder>,
+    inner: Arc<spikard::LifecycleHooksBuilder>,
 }
 
 #[php_impl]
 impl LifecycleHooksBuilder {
-    pub fn on_request(&self) -> String {
-        todo!("call into core implementation")
+    pub fn on_request(&self) -> LifecycleHooksBuilder {
+        todo!("Not auto-delegatable: on_request -- return type requires custom implementation")
     }
 
-    pub fn pre_validation(&self) -> String {
-        todo!("call into core implementation")
+    pub fn pre_validation(&self) -> LifecycleHooksBuilder {
+        todo!("Not auto-delegatable: pre_validation -- return type requires custom implementation")
     }
 
-    pub fn pre_handler(&self) -> String {
-        todo!("call into core implementation")
+    pub fn pre_handler(&self) -> LifecycleHooksBuilder {
+        todo!("Not auto-delegatable: pre_handler -- return type requires custom implementation")
     }
 
-    pub fn on_response(&self) -> String {
-        todo!("call into core implementation")
+    pub fn on_response(&self) -> LifecycleHooksBuilder {
+        todo!("Not auto-delegatable: on_response -- return type requires custom implementation")
     }
 
-    pub fn on_error(&self) -> String {
-        todo!("call into core implementation")
+    pub fn on_error(&self) -> LifecycleHooksBuilder {
+        todo!("Not auto-delegatable: on_error -- return type requires custom implementation")
     }
 
     pub fn build(&self) -> LifecycleHooks {
-        todo!("call into core implementation")
+        todo!("Not auto-delegatable: build -- return type requires custom implementation")
     }
 }
 
@@ -212,16 +216,16 @@ impl SseEvent {
         Self { event_type, data, id, retry }
     }
 
-    pub fn with_id(&self) -> String {
-        todo!("call into core implementation")
+    pub fn with_id(&self) -> SseEvent {
+        todo!("Not auto-delegatable: with_id -- return type requires custom implementation")
     }
 
-    pub fn with_retry(&self) -> String {
-        todo!("call into core implementation")
+    pub fn with_retry(&self) -> SseEvent {
+        todo!("Not auto-delegatable: with_retry -- return type requires custom implementation")
     }
 
-    pub fn with_type() -> String {
-        todo!("call into core implementation")
+    pub fn with_type() -> SseEvent {
+        todo!("Not auto-delegatable: with_type -- return type requires custom implementation")
     }
 }
 
@@ -244,74 +248,70 @@ impl StaticFilesConfig {
 #[derive(Clone)]
 #[php_class]
 pub struct App {
-    inner: std::sync::Arc<spikard::App>,
+    inner: Arc<spikard::App>,
 }
 
 #[php_impl]
 impl App {
-    pub fn config(&self) -> String {
-        todo!("call into core implementation")
+    pub fn config(&self) -> App {
+        todo!("Not auto-delegatable: config -- return type requires custom implementation")
     }
 
-    pub fn merge_axum_router(&self) -> String {
-        todo!("call into core implementation")
+    pub fn merge_axum_router(&self) -> App {
+        todo!("Not auto-delegatable: merge_axum_router -- return type requires custom implementation")
     }
 
-    pub fn attach_axum_router(&self) -> String {
-        todo!("call into core implementation")
+    pub fn attach_axum_router(&self) -> App {
+        todo!("Not auto-delegatable: attach_axum_router -- return type requires custom implementation")
     }
 
     pub fn into_router(&self) -> PhpResult<String> {
-        todo!("call into core implementation")
+        Err(ext_php_rs::exception::PhpException::default("Not implemented: into_router".to_string()).into())
     }
 
     pub fn run_async(&self) -> PhpResult<()> {
-        todo!("wire up run_async")
+        Err(ext_php_rs::exception::PhpException::default("Not implemented: run_async".to_string()).into())
     }
 
-    pub fn default() -> String {
-        todo!("call into core implementation")
+    pub fn default() -> App {
+        todo!("Not auto-delegatable: default -- return type requires custom implementation")
     }
 }
 
 #[derive(Clone)]
 #[php_class]
 pub struct RouteBuilder {
-    inner: std::sync::Arc<spikard::RouteBuilder>,
+    inner: Arc<spikard::RouteBuilder>,
 }
 
 #[php_impl]
 impl RouteBuilder {
-    pub fn handler_name(&self) -> String {
-        todo!("call into core implementation")
+    pub fn handler_name(&self) -> RouteBuilder {
+        todo!("Not auto-delegatable: handler_name -- return type requires custom implementation")
     }
 
-    pub fn request_schema_json(&self) -> String {
-        todo!("call into core implementation")
+    pub fn request_schema_json(&self) -> RouteBuilder {
+        todo!("Not auto-delegatable: request_schema_json -- return type requires custom implementation")
     }
 
-    pub fn response_schema_json(&self) -> String {
-        todo!("call into core implementation")
+    pub fn response_schema_json(&self) -> RouteBuilder {
+        todo!("Not auto-delegatable: response_schema_json -- return type requires custom implementation")
     }
 
-    pub fn params_schema_json(&self) -> String {
-        todo!("call into core implementation")
+    pub fn params_schema_json(&self) -> RouteBuilder {
+        todo!("Not auto-delegatable: params_schema_json -- return type requires custom implementation")
     }
 
-    pub fn file_params_json(&self) -> String {
-        todo!("call into core implementation")
+    pub fn file_params_json(&self) -> RouteBuilder {
+        todo!("Not auto-delegatable: file_params_json -- return type requires custom implementation")
     }
 
-    pub fn cors(&self) -> String {
-        todo!("call into core implementation")
+    pub fn cors(&self) -> RouteBuilder {
+        todo!("Not auto-delegatable: cors -- return type requires custom implementation")
     }
 
-    pub fn sync(&self) -> String {
-        todo!("call into core implementation")
-    }
-
-    pub fn handler_dependencies(&self) -> String {
-        todo!("call into core implementation")
+    pub fn sync(&self) -> RouteBuilder {
+        todo!("Not auto-delegatable: sync -- return type requires custom implementation")
     }
 }
 
@@ -336,22 +336,22 @@ pub const APPERROR_DECODE: &str = "Decode";
 
 #[php_function]
 pub fn validate_jsonrpc_method_name() -> PhpResult<()> {
-    todo!("call into core")
+    Err(ext_php_rs::exception::PhpException::default("Not implemented: validate_jsonrpc_method_name".to_string()).into())
 }
 
 #[php_function]
 pub fn handle_preflight() -> PhpResult<String> {
-    todo!("call into core")
+    Err(ext_php_rs::exception::PhpException::default("Not implemented: handle_preflight".to_string()).into())
 }
 
 #[php_function]
 pub fn add_cors_headers() -> () {
-    todo!("call into core")
+    ()
 }
 
 #[php_function]
 pub fn validate_cors_request() -> PhpResult<()> {
-    todo!("call into core")
+    Err(ext_php_rs::exception::PhpException::default("Not implemented: validate_cors_request".to_string()).into())
 }
 
 impl From<CompressionConfig> for spikard::CompressionConfig {
