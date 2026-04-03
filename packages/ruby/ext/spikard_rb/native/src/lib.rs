@@ -3,7 +3,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::missing_errors_doc)]
 
-use magnus::{function, method, prelude::*, Error, Ruby};
+use magnus::{function, method, prelude::*, Error, Ruby, IntoValueFromNative, try_convert::TryConvertOwned};
 use std::collections::HashMap;
 use spikard;
 use std::sync::Arc;
@@ -54,6 +54,16 @@ pub struct CorsConfig {
     pub methods_joined_cache: String,
     pub headers_joined_cache: String,
 }
+
+unsafe impl IntoValueFromNative for CorsConfig {}
+
+impl magnus::TryConvert for CorsConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &CorsConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for CorsConfig {}
 
 impl CorsConfig {
     fn new(
@@ -131,6 +141,16 @@ pub struct CompressionConfig {
     pub quality: u32,
 }
 
+unsafe impl IntoValueFromNative for CompressionConfig {}
+
+impl magnus::TryConvert for CompressionConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &CompressionConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for CompressionConfig {}
+
 impl CompressionConfig {
     fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> Self {
             Self { gzip, brotli, min_size, quality }
@@ -161,6 +181,16 @@ pub struct RateLimitConfig {
     pub ip_based: bool,
 }
 
+unsafe impl IntoValueFromNative for RateLimitConfig {}
+
+impl magnus::TryConvert for RateLimitConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &RateLimitConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for RateLimitConfig {}
+
 impl RateLimitConfig {
     fn new(per_second: u64, burst: u32, ip_based: bool) -> Self {
             Self { per_second, burst, ip_based }
@@ -184,6 +214,16 @@ impl RateLimitConfig {
 pub struct LifecycleHooks {
     inner: std::sync::Arc<spikard::LifecycleHooks>,
 }
+
+unsafe impl IntoValueFromNative for LifecycleHooks {}
+
+impl magnus::TryConvert for LifecycleHooks {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &LifecycleHooks = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for LifecycleHooks {}
 
 impl LifecycleHooks {
     fn is_empty(&self, ) -> bool {
@@ -257,6 +297,16 @@ pub struct LifecycleHooksBuilder {
     inner: std::sync::Arc<spikard::LifecycleHooksBuilder>,
 }
 
+unsafe impl IntoValueFromNative for LifecycleHooksBuilder {}
+
+impl magnus::TryConvert for LifecycleHooksBuilder {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &LifecycleHooksBuilder = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for LifecycleHooksBuilder {}
+
 impl LifecycleHooksBuilder {
     fn on_request(&self, hook: String) -> String {
             todo!("delegate to self.inner")
@@ -291,6 +341,16 @@ pub struct SseEvent {
     pub id: Option<String>,
     pub retry: Option<u64>,
 }
+
+unsafe impl IntoValueFromNative for SseEvent {}
+
+impl magnus::TryConvert for SseEvent {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &SseEvent = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for SseEvent {}
 
 impl SseEvent {
     fn new(data: String, event_type: Option<String>, id: Option<String>, retry: Option<u64>) -> Self {
@@ -331,6 +391,16 @@ pub struct StaticFilesConfig {
     pub cache_control: Option<String>,
 }
 
+unsafe impl IntoValueFromNative for StaticFilesConfig {}
+
+impl magnus::TryConvert for StaticFilesConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &StaticFilesConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for StaticFilesConfig {}
+
 impl StaticFilesConfig {
     fn new(directory: String, route_prefix: String, index_file: bool, cache_control: Option<String>) -> Self {
             Self { directory, route_prefix, index_file, cache_control }
@@ -358,6 +428,16 @@ impl StaticFilesConfig {
 pub struct App {
     inner: std::sync::Arc<spikard::App>,
 }
+
+unsafe impl IntoValueFromNative for App {}
+
+impl magnus::TryConvert for App {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &App = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for App {}
 
 impl App {
     fn config(&self, config: String) -> String {
@@ -390,6 +470,16 @@ impl App {
 pub struct RouteBuilder {
     inner: std::sync::Arc<spikard::RouteBuilder>,
 }
+
+unsafe impl IntoValueFromNative for RouteBuilder {}
+
+impl magnus::TryConvert for RouteBuilder {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &RouteBuilder = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for RouteBuilder {}
 
 impl RouteBuilder {
     fn handler_name(&self, name: String) -> String {
@@ -425,7 +515,7 @@ impl RouteBuilder {
         }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Method {
     Get,
     Post,
@@ -437,18 +527,113 @@ pub enum Method {
     Trace,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+impl magnus::IntoValue for Method {
+    fn into_value_with(self, handle: &Ruby) -> magnus::Value {
+        let sym = match self {
+            Method::Get => "get",
+            Method::Post => "post",
+            Method::Put => "put",
+            Method::Patch => "patch",
+            Method::Delete => "delete",
+            Method::Head => "head",
+            Method::Options => "options",
+            Method::Trace => "trace",
+        };
+        handle.to_symbol(sym).into_value_with(handle)
+    }
+}
+
+impl magnus::TryConvert for Method {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let s: String = magnus::TryConvert::try_convert(val)?;
+        match s.as_str() {
+            "get" => Ok(Method::Get),
+            "post" => Ok(Method::Post),
+            "put" => Ok(Method::Put),
+            "patch" => Ok(Method::Patch),
+            "delete" => Ok(Method::Delete),
+            "head" => Ok(Method::Head),
+            "options" => Ok(Method::Options),
+            "trace" => Ok(Method::Trace),
+            other => Err(magnus::Error::new(
+                unsafe { Ruby::get_unchecked() }.exception_arg_error(),
+                format!("invalid Method value: {other}"),
+            )),
+        }
+    }
+}
+
+unsafe impl IntoValueFromNative for Method {}
+unsafe impl TryConvertOwned for Method {}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum HandlerResponse {
     Response,
     Stream,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+impl magnus::IntoValue for HandlerResponse {
+    fn into_value_with(self, handle: &Ruby) -> magnus::Value {
+        let sym = match self {
+            HandlerResponse::Response => "response",
+            HandlerResponse::Stream => "stream",
+        };
+        handle.to_symbol(sym).into_value_with(handle)
+    }
+}
+
+impl magnus::TryConvert for HandlerResponse {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let s: String = magnus::TryConvert::try_convert(val)?;
+        match s.as_str() {
+            "response" => Ok(HandlerResponse::Response),
+            "stream" => Ok(HandlerResponse::Stream),
+            other => Err(magnus::Error::new(
+                unsafe { Ruby::get_unchecked() }.exception_arg_error(),
+                format!("invalid HandlerResponse value: {other}"),
+            )),
+        }
+    }
+}
+
+unsafe impl IntoValueFromNative for HandlerResponse {}
+unsafe impl TryConvertOwned for HandlerResponse {}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum AppError {
     Route,
     Server,
     Decode,
 }
+
+impl magnus::IntoValue for AppError {
+    fn into_value_with(self, handle: &Ruby) -> magnus::Value {
+        let sym = match self {
+            AppError::Route => "route",
+            AppError::Server => "server",
+            AppError::Decode => "decode",
+        };
+        handle.to_symbol(sym).into_value_with(handle)
+    }
+}
+
+impl magnus::TryConvert for AppError {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let s: String = magnus::TryConvert::try_convert(val)?;
+        match s.as_str() {
+            "route" => Ok(AppError::Route),
+            "server" => Ok(AppError::Server),
+            "decode" => Ok(AppError::Decode),
+            other => Err(magnus::Error::new(
+                unsafe { Ruby::get_unchecked() }.exception_arg_error(),
+                format!("invalid AppError value: {other}"),
+            )),
+        }
+    }
+}
+
+unsafe impl IntoValueFromNative for AppError {}
+unsafe impl TryConvertOwned for AppError {}
 
 fn validate_jsonrpc_method_name(name: String) -> Result<(), Error> {
     todo!("call into core")
@@ -464,100 +649,6 @@ fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -
 
 fn validate_cors_request(headers: String, cors_config: CorsConfig) -> Result<(), Error> {
     todo!("call into core")
-}
-
-impl From<CompressionConfig> for spikard::CompressionConfig {
-    fn from(val: CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<spikard::CompressionConfig> for CompressionConfig {
-    fn from(val: spikard::CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<RateLimitConfig> for spikard::RateLimitConfig {
-    fn from(val: RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<spikard::RateLimitConfig> for RateLimitConfig {
-    fn from(val: spikard::RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<StaticFilesConfig> for spikard::StaticFilesConfig {
-    fn from(val: StaticFilesConfig) -> Self {
-        Self {
-            directory: val.directory,
-            route_prefix: val.route_prefix,
-            index_file: val.index_file,
-            cache_control: val.cache_control,
-        }
-    }
-}
-
-impl From<spikard::StaticFilesConfig> for StaticFilesConfig {
-    fn from(val: spikard::StaticFilesConfig) -> Self {
-        Self {
-            directory: val.directory,
-            route_prefix: val.route_prefix,
-            index_file: val.index_file,
-            cache_control: val.cache_control,
-        }
-    }
-}
-
-impl From<Method> for spikard::Method {
-    fn from(val: Method) -> Self {
-        match val {
-            Method::Get => Self::Get,
-            Method::Post => Self::Post,
-            Method::Put => Self::Put,
-            Method::Patch => Self::Patch,
-            Method::Delete => Self::Delete,
-            Method::Head => Self::Head,
-            Method::Options => Self::Options,
-            Method::Trace => Self::Trace,
-        }
-    }
-}
-
-impl From<spikard::Method> for Method {
-    fn from(val: spikard::Method) -> Self {
-        match val {
-            spikard::Method::Get => Self::Get,
-            spikard::Method::Post => Self::Post,
-            spikard::Method::Put => Self::Put,
-            spikard::Method::Patch => Self::Patch,
-            spikard::Method::Delete => Self::Delete,
-            spikard::Method::Head => Self::Head,
-            spikard::Method::Options => Self::Options,
-            spikard::Method::Trace => Self::Trace,
-        }
-    }
 }
 
 #[magnus::init]

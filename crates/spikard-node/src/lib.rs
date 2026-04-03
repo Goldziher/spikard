@@ -449,3 +449,23 @@ impl From<spikard::Method> for JsMethod {
         }
     }
 }
+
+impl From<JsAppError> for spikard::AppError {
+    fn from(val: JsAppError) -> Self {
+        match val {
+            JsAppError::Route => Self::Route(Default::default()),
+            JsAppError::Server => Self::Server(Default::default()),
+            JsAppError::Decode => Self::Decode(Default::default()),
+        }
+    }
+}
+
+impl From<spikard::AppError> for JsAppError {
+    fn from(val: spikard::AppError) -> Self {
+        match val {
+            spikard::AppError::Route(..) => Self::Route,
+            spikard::AppError::Server(..) => Self::Server,
+            spikard::AppError::Decode(..) => Self::Decode,
+        }
+    }
+}

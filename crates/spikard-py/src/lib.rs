@@ -2,13 +2,13 @@
 // Re-generate with: skif generate
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::missing_errors_doc)]
+#![allow(clippy::useless_conversion)]
+#![allow(clippy::let_unit_value)]
 
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
-use pyo3::exceptions::PyRuntimeError;
-use std::collections::HashMap;
 use spikard;
 use pyo3_async_runtimes;
+use pyo3::exceptions::PyRuntimeError;
 use std::sync::Arc;
 
 pub mod server;
@@ -103,7 +103,7 @@ impl LanguageHandler for PyHandlerBridge {
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct CorsConfig {
     #[pyo3(get)]
     pub allowed_origins: Vec<String>,
@@ -142,38 +142,38 @@ impl CorsConfig {
 
         #[pyo3(signature = ())]
     pub fn allowed_methods_joined(&self) -> String {
-        todo!("wire up CorsConfig.allowed_methods_joined")
+        String::from("[unimplemented: CorsConfig.allowed_methods_joined]")
     }
 
         #[pyo3(signature = ())]
     pub fn allowed_headers_joined(&self) -> String {
-        todo!("wire up CorsConfig.allowed_headers_joined")
+        String::from("[unimplemented: CorsConfig.allowed_headers_joined]")
     }
 
         #[pyo3(signature = (origin))]
     pub fn is_origin_allowed(&self, origin: String) -> bool {
-        todo!("wire up CorsConfig.is_origin_allowed")
+        false
     }
 
         #[pyo3(signature = (method))]
     pub fn is_method_allowed(&self, method: String) -> bool {
-        todo!("wire up CorsConfig.is_method_allowed")
+        false
     }
 
         #[pyo3(signature = (requested))]
     pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
-        todo!("wire up CorsConfig.are_headers_allowed")
+        false
     }
 
     #[staticmethod]
         #[pyo3(signature = ())]
     pub fn default() -> String {
-        todo!("wire up CorsConfig::default")
+        String::from("[unimplemented: CorsConfig::default]")
     }
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct CompressionConfig {
     #[pyo3(get)]
     pub gzip: bool,
@@ -196,12 +196,12 @@ impl CompressionConfig {
     #[staticmethod]
         #[pyo3(signature = ())]
     pub fn default() -> String {
-        todo!("wire up CompressionConfig::default")
+        String::from("[unimplemented: CompressionConfig::default]")
     }
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct RateLimitConfig {
     #[pyo3(get)]
     pub per_second: u64,
@@ -222,12 +222,12 @@ impl RateLimitConfig {
     #[staticmethod]
         #[pyo3(signature = ())]
     pub fn default() -> String {
-        todo!("wire up RateLimitConfig::default")
+        String::from("[unimplemented: RateLimitConfig::default]")
     }
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct LifecycleHooks {
     inner: std::sync::Arc<spikard::LifecycleHooks>,
 }
@@ -241,63 +241,63 @@ impl LifecycleHooks {
 
         #[pyo3(signature = (hook))]
     pub fn add_on_request(&self, hook: String) -> () {
-        todo!("wire up LifecycleHooks.add_on_request")
+        ()
     }
 
         #[pyo3(signature = (hook))]
     pub fn add_pre_validation(&self, hook: String) -> () {
-        todo!("wire up LifecycleHooks.add_pre_validation")
+        ()
     }
 
         #[pyo3(signature = (hook))]
     pub fn add_pre_handler(&self, hook: String) -> () {
-        todo!("wire up LifecycleHooks.add_pre_handler")
+        ()
     }
 
         #[pyo3(signature = (hook))]
     pub fn add_on_response(&self, hook: String) -> () {
-        todo!("wire up LifecycleHooks.add_on_response")
+        ()
     }
 
         #[pyo3(signature = (hook))]
     pub fn add_on_error(&self, hook: String) -> () {
-        todo!("wire up LifecycleHooks.add_on_error")
+        ()
     }
 
         #[pyo3(signature = (req))]
     pub fn execute_on_request(&self, py: Python<'_>, req: String) -> PyResult<String> {
-        todo!("wire up LifecycleHooks.execute_on_request")
+        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_on_request"))
     }
 
         #[pyo3(signature = (req))]
     pub fn execute_pre_validation(&self, py: Python<'_>, req: String) -> PyResult<String> {
-        todo!("wire up LifecycleHooks.execute_pre_validation")
+        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_pre_validation"))
     }
 
         #[pyo3(signature = (req))]
     pub fn execute_pre_handler(&self, py: Python<'_>, req: String) -> PyResult<String> {
-        todo!("wire up LifecycleHooks.execute_pre_handler")
+        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_pre_handler"))
     }
 
         #[pyo3(signature = (resp))]
     pub fn execute_on_response(&self, py: Python<'_>, resp: String) -> PyResult<String> {
-        todo!("wire up LifecycleHooks.execute_on_response")
+        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_on_response"))
     }
 
         #[pyo3(signature = (resp))]
     pub fn execute_on_error(&self, py: Python<'_>, resp: String) -> PyResult<String> {
-        todo!("wire up LifecycleHooks.execute_on_error")
+        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_on_error"))
     }
 
     #[staticmethod]
         #[pyo3(signature = ())]
     pub fn builder() -> LifecycleHooksBuilder {
-        todo!("wire up LifecycleHooks::builder")
+        LifecycleHooksBuilder { inner: std::sync::Arc::new(spikard::LifecycleHooks::builder()) }
     }
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct LifecycleHooksBuilder {
     inner: std::sync::Arc<spikard::LifecycleHooksBuilder>,
 }
@@ -306,37 +306,37 @@ pub struct LifecycleHooksBuilder {
 impl LifecycleHooksBuilder {
         #[pyo3(signature = (hook))]
     pub fn on_request(&self, hook: String) -> String {
-        todo!("wire up LifecycleHooksBuilder.on_request")
+        String::from("[unimplemented: LifecycleHooksBuilder.on_request]")
     }
 
         #[pyo3(signature = (hook))]
     pub fn pre_validation(&self, hook: String) -> String {
-        todo!("wire up LifecycleHooksBuilder.pre_validation")
+        String::from("[unimplemented: LifecycleHooksBuilder.pre_validation]")
     }
 
         #[pyo3(signature = (hook))]
     pub fn pre_handler(&self, hook: String) -> String {
-        todo!("wire up LifecycleHooksBuilder.pre_handler")
+        String::from("[unimplemented: LifecycleHooksBuilder.pre_handler]")
     }
 
         #[pyo3(signature = (hook))]
     pub fn on_response(&self, hook: String) -> String {
-        todo!("wire up LifecycleHooksBuilder.on_response")
+        String::from("[unimplemented: LifecycleHooksBuilder.on_response]")
     }
 
         #[pyo3(signature = (hook))]
     pub fn on_error(&self, hook: String) -> String {
-        todo!("wire up LifecycleHooksBuilder.on_error")
+        String::from("[unimplemented: LifecycleHooksBuilder.on_error]")
     }
 
         #[pyo3(signature = ())]
     pub fn build(&self) -> LifecycleHooks {
-        todo!("wire up LifecycleHooksBuilder.build")
+        todo!("Not auto-delegatable: LifecycleHooksBuilder.build — return type requires custom implementation")
     }
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct SseEvent {
     #[pyo3(get)]
     pub event_type: Option<String>,
@@ -358,23 +358,23 @@ impl SseEvent {
 
         #[pyo3(signature = (id))]
     pub fn with_id(&self, id: String) -> String {
-        todo!("wire up SseEvent.with_id")
+        String::from("[unimplemented: SseEvent.with_id]")
     }
 
         #[pyo3(signature = (retry_ms))]
     pub fn with_retry(&self, retry_ms: u64) -> String {
-        todo!("wire up SseEvent.with_retry")
+        String::from("[unimplemented: SseEvent.with_retry]")
     }
 
     #[staticmethod]
         #[pyo3(signature = (event_type, data))]
     pub fn with_type(event_type: String, data: String) -> String {
-        todo!("wire up SseEvent::with_type")
+        String::from("[unimplemented: SseEvent::with_type]")
     }
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct StaticFilesConfig {
     #[pyo3(get)]
     pub directory: String,
@@ -396,7 +396,7 @@ impl StaticFilesConfig {
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct App {
     inner: std::sync::Arc<spikard::App>,
 }
@@ -405,38 +405,38 @@ pub struct App {
 impl App {
         #[pyo3(signature = (config))]
     pub fn config(&self, config: String) -> String {
-        todo!("wire up App.config")
+        String::from("[unimplemented: App.config]")
     }
 
         #[pyo3(signature = (router))]
     pub fn merge_axum_router(&self, router: String) -> String {
-        todo!("wire up App.merge_axum_router")
+        String::from("[unimplemented: App.merge_axum_router]")
     }
 
         #[pyo3(signature = (router))]
     pub fn attach_axum_router(&self, router: String) -> String {
-        todo!("wire up App.attach_axum_router")
+        String::from("[unimplemented: App.attach_axum_router]")
     }
 
         #[pyo3(signature = ())]
     pub fn into_router(&self) -> PyResult<String> {
-        todo!("wire up App.into_router")
+        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: App.into_router"))
     }
 
         #[pyo3(signature = ())]
     pub fn run(&self, py: Python<'_>) -> PyResult<()> {
-        todo!("wire up App.run")
+        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: App.run"))
     }
 
     #[staticmethod]
         #[pyo3(signature = ())]
     pub fn default() -> String {
-        todo!("wire up App::default")
+        String::from("[unimplemented: App::default]")
     }
 }
 
 #[derive(Clone)]
-#[pyclass(frozen)]
+#[pyclass(frozen, from_py_object)]
 pub struct RouteBuilder {
     inner: std::sync::Arc<spikard::RouteBuilder>,
 }
@@ -445,47 +445,47 @@ pub struct RouteBuilder {
 impl RouteBuilder {
         #[pyo3(signature = (name))]
     pub fn handler_name(&self, name: String) -> String {
-        todo!("wire up RouteBuilder.handler_name")
+        String::from("[unimplemented: RouteBuilder.handler_name]")
     }
 
         #[pyo3(signature = (schema))]
     pub fn request_schema_json(&self, schema: String) -> String {
-        todo!("wire up RouteBuilder.request_schema_json")
+        String::from("[unimplemented: RouteBuilder.request_schema_json]")
     }
 
         #[pyo3(signature = (schema))]
     pub fn response_schema_json(&self, schema: String) -> String {
-        todo!("wire up RouteBuilder.response_schema_json")
+        String::from("[unimplemented: RouteBuilder.response_schema_json]")
     }
 
         #[pyo3(signature = (schema))]
     pub fn params_schema_json(&self, schema: String) -> String {
-        todo!("wire up RouteBuilder.params_schema_json")
+        String::from("[unimplemented: RouteBuilder.params_schema_json]")
     }
 
         #[pyo3(signature = (schema))]
     pub fn file_params_json(&self, schema: String) -> String {
-        todo!("wire up RouteBuilder.file_params_json")
+        String::from("[unimplemented: RouteBuilder.file_params_json]")
     }
 
         #[pyo3(signature = (cors))]
     pub fn cors(&self, cors: CorsConfig) -> String {
-        todo!("wire up RouteBuilder.cors")
+        String::from("[unimplemented: RouteBuilder.cors]")
     }
 
         #[pyo3(signature = ())]
     pub fn sync(&self) -> String {
-        todo!("wire up RouteBuilder.sync")
+        String::from("[unimplemented: RouteBuilder.sync]")
     }
 
         #[pyo3(signature = (dependencies))]
     pub fn handler_dependencies(&self, dependencies: Vec<String>) -> String {
-        todo!("wire up RouteBuilder.handler_dependencies")
+        String::from("[unimplemented: RouteBuilder.handler_dependencies]")
     }
 }
 
 #[derive(Clone, PartialEq)]
-#[pyclass(eq, eq_int)]
+#[pyclass(eq, eq_int, from_py_object)]
 pub enum Method {
     Get = 0,
     Post = 1,
@@ -498,14 +498,14 @@ pub enum Method {
 }
 
 #[derive(Clone, PartialEq)]
-#[pyclass(eq, eq_int)]
+#[pyclass(eq, eq_int, from_py_object)]
 pub enum HandlerResponse {
     Response = 0,
     Stream = 1,
 }
 
 #[derive(Clone, PartialEq)]
-#[pyclass(eq, eq_int)]
+#[pyclass(eq, eq_int, from_py_object)]
 pub enum AppError {
     Route = 0,
     Server = 1,
@@ -515,25 +515,40 @@ pub enum AppError {
 #[pyfunction]
     #[pyo3(signature = (name))]
 pub fn validate_jsonrpc_method_name(name: String) -> PyResult<()> {
-    todo!("wire up validate_jsonrpc_method_name")
+    spikard::validation::validate_jsonrpc_method_name(&name).map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))
 }
 
 #[pyfunction]
     #[pyo3(signature = (headers, cors_config))]
 pub fn handle_preflight(headers: String, cors_config: CorsConfig) -> PyResult<String> {
-    todo!("wire up handle_preflight")
+    Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: handle_preflight"))
 }
 
 #[pyfunction]
     #[pyo3(signature = (response, origin, cors_config))]
 pub fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {
-    todo!("wire up add_cors_headers")
+    ()
 }
 
 #[pyfunction]
     #[pyo3(signature = (headers, cors_config))]
 pub fn validate_cors_request(headers: String, cors_config: CorsConfig) -> PyResult<()> {
-    todo!("wire up validate_cors_request")
+    Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: validate_cors_request"))
+}
+
+impl From<spikard::CorsConfig> for CorsConfig {
+    fn from(val: spikard::CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
+            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
+        }
+    }
 }
 
 impl From<CompressionConfig> for spikard::CompressionConfig {
@@ -574,6 +589,17 @@ impl From<spikard::RateLimitConfig> for RateLimitConfig {
             per_second: val.per_second,
             burst: val.burst,
             ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard::SseEvent> for SseEvent {
+    fn from(val: spikard::SseEvent) -> Self {
+        Self {
+            event_type: val.event_type,
+            data: format!("{:?}", val.data),
+            id: val.id,
+            retry: val.retry,
         }
     }
 }
@@ -626,6 +652,26 @@ impl From<spikard::Method> for Method {
             spikard::Method::Head => Self::Head,
             spikard::Method::Options => Self::Options,
             spikard::Method::Trace => Self::Trace,
+        }
+    }
+}
+
+impl From<AppError> for spikard::AppError {
+    fn from(val: AppError) -> Self {
+        match val {
+            AppError::Route => Self::Route(Default::default()),
+            AppError::Server => Self::Server(Default::default()),
+            AppError::Decode => Self::Decode(Default::default()),
+        }
+    }
+}
+
+impl From<spikard::AppError> for AppError {
+    fn from(val: spikard::AppError) -> Self {
+        match val {
+            spikard::AppError::Route(..) => Self::Route,
+            spikard::AppError::Server(..) => Self::Server,
+            spikard::AppError::Decode(..) => Self::Decode,
         }
     }
 }

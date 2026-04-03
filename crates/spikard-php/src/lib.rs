@@ -15,7 +15,7 @@ static WORKER_RUNTIME: std::sync::LazyLock<tokio::runtime::Runtime> = std::sync:
         .expect("Failed to create Tokio runtime")
 });
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize)]
 #[php_class]
 pub struct CorsConfig {
     pub allowed_origins: Vec<String>,
@@ -68,7 +68,7 @@ impl CorsConfig {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize)]
 #[php_class]
 pub struct CompressionConfig {
     pub gzip: bool,
@@ -88,7 +88,7 @@ impl CompressionConfig {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize)]
 #[php_class]
 pub struct RateLimitConfig {
     pub per_second: i64,
@@ -197,7 +197,7 @@ impl LifecycleHooksBuilder {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize)]
 #[php_class]
 pub struct SseEvent {
     pub event_type: Option<String>,
@@ -225,7 +225,7 @@ impl SseEvent {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize)]
 #[php_class]
 pub struct StaticFilesConfig {
     pub directory: String,

@@ -3,7 +3,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::missing_errors_doc)]
 
-use rustler::prelude::*;
+use rustler::{Env, Term, NifResult, ResourceArc};
 use std::collections::HashMap;
 use spikard;
 use std::sync::Arc;
@@ -26,8 +26,8 @@ pub mod testing;
 
 pub mod websocket;
 
-#[derive(Clone, Debug)]
-#[rustler::NifStruct(module = "Spikard")]
+#[derive(Debug, Clone, rustler::NifStruct)]
+#[module = "Spikard.CorsConfig"]
 pub struct CorsConfig {
     pub allowed_origins: Vec<String>,
     pub allowed_methods: Vec<String>,
@@ -39,8 +39,8 @@ pub struct CorsConfig {
     pub headers_joined_cache: String,
 }
 
-#[derive(Clone, Debug)]
-#[rustler::NifStruct(module = "Spikard")]
+#[derive(Debug, Clone, rustler::NifStruct)]
+#[module = "Spikard.CompressionConfig"]
 pub struct CompressionConfig {
     pub gzip: bool,
     pub brotli: bool,
@@ -48,8 +48,8 @@ pub struct CompressionConfig {
     pub quality: u32,
 }
 
-#[derive(Clone, Debug)]
-#[rustler::NifStruct(module = "Spikard")]
+#[derive(Debug, Clone, rustler::NifStruct)]
+#[module = "Spikard.RateLimitConfig"]
 pub struct RateLimitConfig {
     pub per_second: u64,
     pub burst: u32,
@@ -70,8 +70,8 @@ pub struct LifecycleHooksBuilder {
 
 impl rustler::Resource for LifecycleHooksBuilder {}
 
-#[derive(Clone, Debug)]
-#[rustler::NifStruct(module = "Spikard")]
+#[derive(Debug, Clone, rustler::NifStruct)]
+#[module = "Spikard.SseEvent"]
 pub struct SseEvent {
     pub event_type: Option<String>,
     pub data: String,
@@ -79,8 +79,8 @@ pub struct SseEvent {
     pub retry: Option<u64>,
 }
 
-#[derive(Clone, Debug)]
-#[rustler::NifStruct(module = "Spikard")]
+#[derive(Debug, Clone, rustler::NifStruct)]
+#[module = "Spikard.StaticFilesConfig"]
 pub struct StaticFilesConfig {
     pub directory: String,
     pub route_prefix: String,
@@ -102,8 +102,7 @@ pub struct RouteBuilder {
 
 impl rustler::Resource for RouteBuilder {}
 
-#[derive(NifUnitEnum)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, rustler::NifUnitEnum)]
 pub enum Method {
     Get,
     Post,
@@ -115,15 +114,13 @@ pub enum Method {
     Trace,
 }
 
-#[derive(NifUnitEnum)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, rustler::NifUnitEnum)]
 pub enum HandlerResponse {
     Response,
     Stream,
 }
 
-#[derive(NifUnitEnum)]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy, rustler::NifUnitEnum)]
 pub enum AppError {
     Route,
     Server,
@@ -151,27 +148,27 @@ pub fn validate_cors_request(headers: String, cors_config: CorsConfig) -> Result
 }
 
 #[rustler::nif]
-pub fn corsconfig_allowed_methods_joined(resource: ResourceArc<CorsConfig>) -> String {
+pub fn corsconfig_allowed_methods_joined(obj: CorsConfig) -> String {
     todo!("call into core")
 }
 
 #[rustler::nif]
-pub fn corsconfig_allowed_headers_joined(resource: ResourceArc<CorsConfig>) -> String {
+pub fn corsconfig_allowed_headers_joined(obj: CorsConfig) -> String {
     todo!("call into core")
 }
 
 #[rustler::nif]
-pub fn corsconfig_is_origin_allowed(resource: ResourceArc<CorsConfig>, origin: String) -> bool {
+pub fn corsconfig_is_origin_allowed(obj: CorsConfig, origin: String) -> bool {
     todo!("call into core")
 }
 
 #[rustler::nif]
-pub fn corsconfig_is_method_allowed(resource: ResourceArc<CorsConfig>, method: String) -> bool {
+pub fn corsconfig_is_method_allowed(obj: CorsConfig, method: String) -> bool {
     todo!("call into core")
 }
 
 #[rustler::nif]
-pub fn corsconfig_are_headers_allowed(resource: ResourceArc<CorsConfig>, requested: Vec<String>) -> bool {
+pub fn corsconfig_are_headers_allowed(obj: CorsConfig, requested: Vec<String>) -> bool {
     todo!("call into core")
 }
 
@@ -191,7 +188,7 @@ pub fn ratelimitconfig_default() -> String {
 }
 
 #[rustler::nif]
-pub fn lifecyclehooks_builder() -> LifecycleHooksBuilder {
+pub fn lifecyclehooks_builder() -> ResourceArc<LifecycleHooksBuilder> {
     todo!("call into core")
 }
 
@@ -301,7 +298,7 @@ pub fn lifecyclehooksbuilder_on_error(resource: ResourceArc<LifecycleHooksBuilde
 }
 
 #[rustler::nif]
-pub fn lifecyclehooksbuilder_build(resource: ResourceArc<LifecycleHooksBuilder>) -> LifecycleHooks {
+pub fn lifecyclehooksbuilder_build(resource: ResourceArc<LifecycleHooksBuilder>) -> ResourceArc<LifecycleHooks> {
     todo!("call into core")
 }
 
@@ -311,12 +308,12 @@ pub fn sseevent_with_type(event_type: String, data: String) -> String {
 }
 
 #[rustler::nif]
-pub fn sseevent_with_id(resource: ResourceArc<SseEvent>, id: String) -> String {
+pub fn sseevent_with_id(obj: SseEvent, id: String) -> String {
     todo!("call into core")
 }
 
 #[rustler::nif]
-pub fn sseevent_with_retry(resource: ResourceArc<SseEvent>, retry_ms: u64) -> String {
+pub fn sseevent_with_retry(obj: SseEvent, retry_ms: u64) -> String {
     todo!("call into core")
 }
 
@@ -485,6 +482,26 @@ impl From<spikard::Method> for Method {
             spikard::Method::Head => Self::Head,
             spikard::Method::Options => Self::Options,
             spikard::Method::Trace => Self::Trace,
+        }
+    }
+}
+
+impl From<AppError> for spikard::AppError {
+    fn from(val: AppError) -> Self {
+        match val {
+            AppError::Route => Self::Route(Default::default()),
+            AppError::Server => Self::Server(Default::default()),
+            AppError::Decode => Self::Decode(Default::default()),
+        }
+    }
+}
+
+impl From<spikard::AppError> for AppError {
+    fn from(val: spikard::AppError) -> Self {
+        match val {
+            spikard::AppError::Route(..) => Self::Route,
+            spikard::AppError::Server(..) => Self::Server,
+            spikard::AppError::Decode(..) => Self::Decode,
         }
     }
 }
