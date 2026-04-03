@@ -44,13 +44,6 @@ pub mod testing;
 
 pub mod websocket;
 
-static WORKER_POOL: std::sync::LazyLock<tokio::runtime::Runtime> = std::sync::LazyLock::new(|| {
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .expect("Failed to create Tokio runtime")
-});
-
 #[derive(Clone)]
 #[napi(object)]
 pub struct JsCorsConfig {
@@ -130,73 +123,9 @@ impl JsLifecycleHooks {
         ()
     }
 
-    #[napi(js_name = "executeOnRequest")]
-    pub async fn execute_on_request(&self, req: String) -> Result<String> {
-        Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: execute_on_request"))
-    }
-
-    #[napi(js_name = "executePreValidation")]
-    pub async fn execute_pre_validation(&self, req: String) -> Result<String> {
-        Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: execute_pre_validation"))
-    }
-
-    #[napi(js_name = "executePreHandler")]
-    pub async fn execute_pre_handler(&self, req: String) -> Result<String> {
-        Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: execute_pre_handler"))
-    }
-
-    #[napi(js_name = "executeOnResponse")]
-    pub async fn execute_on_response(&self, resp: String) -> Result<String> {
-        Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: execute_on_response"))
-    }
-
-    #[napi(js_name = "executeOnError")]
-    pub async fn execute_on_error(&self, resp: String) -> Result<String> {
-        Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: execute_on_error"))
-    }
-
     #[napi]
-    pub fn builder() -> JsLifecycleHooksBuilder {
-        todo!("Not auto-delegatable: builder -- return type requires custom implementation")
-    }
-}
-
-#[derive(Clone)]
-#[napi]
-pub struct JsLifecycleHooksBuilder {
-    inner: Arc<spikard::LifecycleHooksBuilder>,
-}
-
-#[napi]
-impl JsLifecycleHooksBuilder {
-    #[napi(js_name = "onRequest")]
-    pub fn on_request(&self, hook: String) -> JsLifecycleHooksBuilder {
-        todo!("Not auto-delegatable: on_request -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "preValidation")]
-    pub fn pre_validation(&self, hook: String) -> JsLifecycleHooksBuilder {
-        todo!("Not auto-delegatable: pre_validation -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "preHandler")]
-    pub fn pre_handler(&self, hook: String) -> JsLifecycleHooksBuilder {
-        todo!("Not auto-delegatable: pre_handler -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "onResponse")]
-    pub fn on_response(&self, hook: String) -> JsLifecycleHooksBuilder {
-        todo!("Not auto-delegatable: on_response -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "onError")]
-    pub fn on_error(&self, hook: String) -> JsLifecycleHooksBuilder {
-        todo!("Not auto-delegatable: on_error -- return type requires custom implementation")
-    }
-
-    #[napi]
-    pub fn build(&self, ) -> JsLifecycleHooks {
-        todo!("Not auto-delegatable: build -- return type requires custom implementation")
+    pub fn builder() -> String {
+        String::from("[unimplemented: builder]")
     }
 }
 
@@ -231,77 +160,8 @@ pub struct JsApp {
 #[napi]
 impl JsApp {
     #[napi]
-    pub fn config(&self, config: String) -> JsApp {
-        todo!("Not auto-delegatable: config -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "mergeAxumRouter")]
-    pub fn merge_axum_router(&self, router: String) -> JsApp {
-        todo!("Not auto-delegatable: merge_axum_router -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "attachAxumRouter")]
-    pub fn attach_axum_router(&self, router: String) -> JsApp {
-        todo!("Not auto-delegatable: attach_axum_router -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "intoRouter")]
-    pub fn into_router(&self, ) -> Result<String> {
-        Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: into_router"))
-    }
-
-    #[napi]
-    pub async fn run(&self, ) -> Result<()> {
-        Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: run"))
-    }
-
-    #[napi]
     pub fn default() -> JsApp {
         todo!("Not auto-delegatable: default -- return type requires custom implementation")
-    }
-}
-
-#[derive(Clone)]
-#[napi]
-pub struct JsRouteBuilder {
-    inner: Arc<spikard::RouteBuilder>,
-}
-
-#[napi]
-impl JsRouteBuilder {
-    #[napi(js_name = "handlerName")]
-    pub fn handler_name(&self, name: String) -> JsRouteBuilder {
-        todo!("Not auto-delegatable: handler_name -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "requestSchemaJson")]
-    pub fn request_schema_json(&self, schema: String) -> JsRouteBuilder {
-        todo!("Not auto-delegatable: request_schema_json -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "responseSchemaJson")]
-    pub fn response_schema_json(&self, schema: String) -> JsRouteBuilder {
-        todo!("Not auto-delegatable: response_schema_json -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "paramsSchemaJson")]
-    pub fn params_schema_json(&self, schema: String) -> JsRouteBuilder {
-        todo!("Not auto-delegatable: params_schema_json -- return type requires custom implementation")
-    }
-
-    #[napi(js_name = "fileParamsJson")]
-    pub fn file_params_json(&self, schema: String) -> JsRouteBuilder {
-        todo!("Not auto-delegatable: file_params_json -- return type requires custom implementation")
-    }
-
-    #[napi]
-    pub fn cors(&self, cors: JsCorsConfig) -> JsRouteBuilder {
-        todo!("Not auto-delegatable: cors -- return type requires custom implementation")
-    }
-
-    #[napi]
-    pub fn sync(&self, ) -> JsRouteBuilder {
-        todo!("Not auto-delegatable: sync -- return type requires custom implementation")
     }
 }
 
@@ -338,19 +198,9 @@ pub fn validate_jsonrpc_method_name(name: String) -> Result<()> {
     Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: validate_jsonrpc_method_name"))
 }
 
-#[napi(js_name = "handlePreflight")]
-pub fn handle_preflight(headers: String, cors_config: JsCorsConfig) -> Result<String> {
-    Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: handle_preflight"))
-}
-
 #[napi(js_name = "addCorsHeaders")]
 pub fn add_cors_headers(response: String, origin: String, cors_config: JsCorsConfig) -> () {
     ()
-}
-
-#[napi(js_name = "validateCorsRequest")]
-pub fn validate_cors_request(headers: String, cors_config: JsCorsConfig) -> Result<()> {
-    Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: validate_cors_request"))
 }
 
 impl From<JsCompressionConfig> for spikard::CompressionConfig {

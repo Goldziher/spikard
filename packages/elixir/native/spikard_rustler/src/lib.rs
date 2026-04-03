@@ -65,13 +65,6 @@ pub struct LifecycleHooks {
 
 impl rustler::Resource for LifecycleHooks {}
 
-#[derive(Clone)]
-pub struct LifecycleHooksBuilder {
-    inner: Arc<spikard::LifecycleHooksBuilder>,
-}
-
-impl rustler::Resource for LifecycleHooksBuilder {}
-
 #[derive(Debug, Clone, rustler::NifStruct)]
 #[module = "Spikard.SseEvent"]
 pub struct SseEvent {
@@ -96,13 +89,6 @@ pub struct App {
 }
 
 impl rustler::Resource for App {}
-
-#[derive(Clone)]
-pub struct RouteBuilder {
-    inner: Arc<spikard::RouteBuilder>,
-}
-
-impl rustler::Resource for RouteBuilder {}
 
 #[derive(Debug, Clone, Copy, rustler::NifUnitEnum)]
 pub enum Method {
@@ -135,18 +121,8 @@ pub fn validate_jsonrpc_method_name(name: String) -> Result<(), String> {
 }
 
 #[rustler::nif]
-pub fn handle_preflight(headers: String, cors_config: CorsConfig) -> Result<String, String> {
-    Err(String::from("Not implemented: handle_preflight"))
-}
-
-#[rustler::nif]
 pub fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {
     ()
-}
-
-#[rustler::nif]
-pub fn validate_cors_request(headers: String, cors_config: CorsConfig) -> Result<(), String> {
-    Err(String::from("Not implemented: validate_cors_request"))
 }
 
 #[rustler::nif]
@@ -190,8 +166,8 @@ pub fn ratelimitconfig_default() -> RateLimitConfig {
 }
 
 #[rustler::nif]
-pub fn lifecyclehooks_builder() -> ResourceArc<LifecycleHooksBuilder> {
-    todo!("Not auto-delegatable: lifecyclehooks_builder -- return type requires custom implementation")
+pub fn lifecyclehooks_builder() -> String {
+    String::from("[unimplemented: lifecyclehooks_builder]")
 }
 
 #[rustler::nif]
@@ -224,66 +200,6 @@ pub fn lifecyclehooks_add_on_error(resource: ResourceArc<LifecycleHooks>, hook: 
     ()
 }
 
-#[rustler::nif(schedule = "DirtyCpu")]
-pub fn lifecyclehooks_execute_on_request_async(resource: ResourceArc<LifecycleHooks>, req: String) -> Result<String, String> {
-    Err(String::from("Not implemented: lifecyclehooks_execute_on_request_async"))
-}
-
-#[rustler::nif(schedule = "DirtyCpu")]
-pub fn lifecyclehooks_execute_pre_validation_async(resource: ResourceArc<LifecycleHooks>, req: String) -> Result<String, String> {
-    Err(String::from("Not implemented: lifecyclehooks_execute_pre_validation_async"))
-}
-
-#[rustler::nif(schedule = "DirtyCpu")]
-pub fn lifecyclehooks_execute_pre_handler_async(resource: ResourceArc<LifecycleHooks>, req: String) -> Result<String, String> {
-    Err(String::from("Not implemented: lifecyclehooks_execute_pre_handler_async"))
-}
-
-#[rustler::nif(schedule = "DirtyCpu")]
-pub fn lifecyclehooks_execute_on_response_async(resource: ResourceArc<LifecycleHooks>, resp: String) -> Result<String, String> {
-    Err(String::from("Not implemented: lifecyclehooks_execute_on_response_async"))
-}
-
-#[rustler::nif(schedule = "DirtyCpu")]
-pub fn lifecyclehooks_execute_on_error_async(resource: ResourceArc<LifecycleHooks>, resp: String) -> Result<String, String> {
-    Err(String::from("Not implemented: lifecyclehooks_execute_on_error_async"))
-}
-
-#[rustler::nif]
-pub fn lifecyclehooksbuilder_on_request(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> ResourceArc<LifecycleHooksBuilder> {
-    todo!("Not auto-delegatable: lifecyclehooksbuilder_on_request -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn lifecyclehooksbuilder_pre_validation(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> ResourceArc<LifecycleHooksBuilder> {
-    todo!("Not auto-delegatable: lifecyclehooksbuilder_pre_validation -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn lifecyclehooksbuilder_pre_handler(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> ResourceArc<LifecycleHooksBuilder> {
-    todo!("Not auto-delegatable: lifecyclehooksbuilder_pre_handler -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn lifecyclehooksbuilder_on_response(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> ResourceArc<LifecycleHooksBuilder> {
-    todo!("Not auto-delegatable: lifecyclehooksbuilder_on_response -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn lifecyclehooksbuilder_on_error(resource: ResourceArc<LifecycleHooksBuilder>, hook: String) -> ResourceArc<LifecycleHooksBuilder> {
-    todo!("Not auto-delegatable: lifecyclehooksbuilder_on_error -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn lifecyclehooksbuilder_build(resource: ResourceArc<LifecycleHooksBuilder>) -> ResourceArc<LifecycleHooks> {
-    todo!("Not auto-delegatable: lifecyclehooksbuilder_build -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn sseevent_with_type(event_type: String, data: String) -> SseEvent {
-    todo!("Not auto-delegatable: sseevent_with_type -- return type requires custom implementation")
-}
-
 #[rustler::nif]
 pub fn sseevent_with_id(obj: SseEvent, id: String) -> SseEvent {
     todo!("Not auto-delegatable: sseevent_with_id -- return type requires custom implementation")
@@ -295,68 +211,8 @@ pub fn sseevent_with_retry(obj: SseEvent, retry_ms: u64) -> SseEvent {
 }
 
 #[rustler::nif]
-pub fn app_config(resource: ResourceArc<App>, config: String) -> ResourceArc<App> {
-    todo!("Not auto-delegatable: app_config -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn app_merge_axum_router(resource: ResourceArc<App>, router: String) -> ResourceArc<App> {
-    todo!("Not auto-delegatable: app_merge_axum_router -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn app_attach_axum_router(resource: ResourceArc<App>, router: String) -> ResourceArc<App> {
-    todo!("Not auto-delegatable: app_attach_axum_router -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn app_into_router(resource: ResourceArc<App>) -> Result<String, String> {
-    Err(String::from("Not implemented: app_into_router"))
-}
-
-#[rustler::nif(schedule = "DirtyCpu")]
-pub fn app_run_async(resource: ResourceArc<App>) -> Result<(), String> {
-    Err(String::from("Not implemented: app_run_async"))
-}
-
-#[rustler::nif]
 pub fn app_default() -> ResourceArc<App> {
     todo!("Not auto-delegatable: app_default -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn routebuilder_handler_name(resource: ResourceArc<RouteBuilder>, name: String) -> ResourceArc<RouteBuilder> {
-    todo!("Not auto-delegatable: routebuilder_handler_name -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn routebuilder_request_schema_json(resource: ResourceArc<RouteBuilder>, schema: String) -> ResourceArc<RouteBuilder> {
-    todo!("Not auto-delegatable: routebuilder_request_schema_json -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn routebuilder_response_schema_json(resource: ResourceArc<RouteBuilder>, schema: String) -> ResourceArc<RouteBuilder> {
-    todo!("Not auto-delegatable: routebuilder_response_schema_json -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn routebuilder_params_schema_json(resource: ResourceArc<RouteBuilder>, schema: String) -> ResourceArc<RouteBuilder> {
-    todo!("Not auto-delegatable: routebuilder_params_schema_json -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn routebuilder_file_params_json(resource: ResourceArc<RouteBuilder>, schema: String) -> ResourceArc<RouteBuilder> {
-    todo!("Not auto-delegatable: routebuilder_file_params_json -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn routebuilder_cors(resource: ResourceArc<RouteBuilder>, cors: CorsConfig) -> ResourceArc<RouteBuilder> {
-    todo!("Not auto-delegatable: routebuilder_cors -- return type requires custom implementation")
-}
-
-#[rustler::nif]
-pub fn routebuilder_sync(resource: ResourceArc<RouteBuilder>) -> ResourceArc<RouteBuilder> {
-    todo!("Not auto-delegatable: routebuilder_sync -- return type requires custom implementation")
 }
 
 impl From<CompressionConfig> for spikard::CompressionConfig {
@@ -473,4 +329,4 @@ impl From<spikard::AppError> for AppError {
     }
 }
 
-rustler::init!("elixir_module", [validate_jsonrpc_method_name, handle_preflight, add_cors_headers, validate_cors_request, corsconfig_allowed_methods_joined, corsconfig_allowed_headers_joined, corsconfig_is_origin_allowed, corsconfig_is_method_allowed, corsconfig_are_headers_allowed, corsconfig_default, compressionconfig_default, ratelimitconfig_default, lifecyclehooks_builder, lifecyclehooks_is_empty, lifecyclehooks_add_on_request, lifecyclehooks_add_pre_validation, lifecyclehooks_add_pre_handler, lifecyclehooks_add_on_response, lifecyclehooks_add_on_error, lifecyclehooks_execute_on_request_async, lifecyclehooks_execute_pre_validation_async, lifecyclehooks_execute_pre_handler_async, lifecyclehooks_execute_on_response_async, lifecyclehooks_execute_on_error_async, lifecyclehooksbuilder_on_request, lifecyclehooksbuilder_pre_validation, lifecyclehooksbuilder_pre_handler, lifecyclehooksbuilder_on_response, lifecyclehooksbuilder_on_error, lifecyclehooksbuilder_build, sseevent_with_type, sseevent_with_id, sseevent_with_retry, app_config, app_merge_axum_router, app_attach_axum_router, app_into_router, app_run_async, app_default, routebuilder_handler_name, routebuilder_request_schema_json, routebuilder_response_schema_json, routebuilder_params_schema_json, routebuilder_file_params_json, routebuilder_cors, routebuilder_sync]);
+rustler::init!("elixir_module", [validate_jsonrpc_method_name, add_cors_headers, corsconfig_allowed_methods_joined, corsconfig_allowed_headers_joined, corsconfig_is_origin_allowed, corsconfig_is_method_allowed, corsconfig_are_headers_allowed, corsconfig_default, compressionconfig_default, ratelimitconfig_default, lifecyclehooks_builder, lifecyclehooks_is_empty, lifecyclehooks_add_on_request, lifecyclehooks_add_pre_validation, lifecyclehooks_add_pre_handler, lifecyclehooks_add_on_response, lifecyclehooks_add_on_error, sseevent_with_id, sseevent_with_retry, app_default]);

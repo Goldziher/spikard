@@ -11,7 +11,22 @@ skip_core_import = false
 [exclude]
 # Trait objects not dyn-compatible (have generic methods), types with private fields,
 # and types containing non-Sync fields — these are handled in custom modules.
-types = ["SseEventProducer", "WebSocketHandler", "IntoHandler", "HandlerResult", "RequestContext", "UploadFile", "ServerConfig", "TestServer"]
+types = ["SseEventProducer", "WebSocketHandler", "IntoHandler", "HandlerResult", "RequestContext", "UploadFile", "ServerConfig", "TestServer", "LifecycleHooksBuilder", "RouteBuilder", "PyHandlerBridge"]
+functions = ["handle_preflight", "validate_cors_request"]
+# Methods with non-FFI params (Router, HeaderMap, closures) or non-Default return types
+methods = [
+    "SseEvent.with_type",           # data param is serde_json::Value (sanitized)
+    "App.config",                   # config param is non-FFI type
+    "App.merge_axum_router",        # router param is axum::Router
+    "App.attach_axum_router",       # router param is axum::Router
+    "App.into_router",              # owned receiver, returns Router
+    "App.run",                      # async owned receiver
+    "LifecycleHooks.execute_on_request",     # params are sanitized callbacks
+    "LifecycleHooks.execute_pre_validation", # params are sanitized callbacks
+    "LifecycleHooks.execute_pre_handler",    # params are sanitized callbacks
+    "LifecycleHooks.execute_on_response",    # params are sanitized callbacks
+    "LifecycleHooks.execute_on_error",       # params are sanitized callbacks
+]
 
 [python]
 module_name = "_spikard"

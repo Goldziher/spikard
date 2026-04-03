@@ -10,8 +10,6 @@
 #![allow(clippy::should_implement_trait)]
 
 use pyo3::prelude::*;
-use pyo3_async_runtimes;
-use pyo3::exceptions::PyRuntimeError;
 use std::sync::Arc;
 
 pub mod server;
@@ -72,11 +70,11 @@ impl LanguageHandler for PyHandlerBridge {
     type Output = Py<PyAny>;
 
     fn prepare_request(&self, request_data: &spikard_http::handler_trait::RequestData) -> Result<Self::Input, HandlerError> {
-        todo!("convert RequestData to Python object")
+        Err(HandlerError::Execution("prepare_request not implemented for PyHandlerBridge".into()))
     }
 
     fn interpret_response(&self, output: Self::Output) -> Result<axum::http::Response<axum::body::Body>, HandlerError> {
-        todo!("convert Python response to HTTP Response")
+        Err(HandlerError::Execution("interpret_response not implemented for PyHandlerBridge".into()))
     }
 
     fn invoke_handler(&self, input: Self::Input) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<Self::Output, HandlerError>> + Send + '_>> {
@@ -307,74 +305,10 @@ impl LifecycleHooks {
         ()
     }
 
-        #[pyo3(signature = (req))]
-    pub fn execute_on_request<'py>(&self, py: Python<'py>, req: String) -> PyResult<Bound<'py, PyAny>> {
-        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_on_request"))
-    }
-
-        #[pyo3(signature = (req))]
-    pub fn execute_pre_validation<'py>(&self, py: Python<'py>, req: String) -> PyResult<Bound<'py, PyAny>> {
-        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_pre_validation"))
-    }
-
-        #[pyo3(signature = (req))]
-    pub fn execute_pre_handler<'py>(&self, py: Python<'py>, req: String) -> PyResult<Bound<'py, PyAny>> {
-        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_pre_handler"))
-    }
-
-        #[pyo3(signature = (resp))]
-    pub fn execute_on_response<'py>(&self, py: Python<'py>, resp: String) -> PyResult<Bound<'py, PyAny>> {
-        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_on_response"))
-    }
-
-        #[pyo3(signature = (resp))]
-    pub fn execute_on_error<'py>(&self, py: Python<'py>, resp: String) -> PyResult<Bound<'py, PyAny>> {
-        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: LifecycleHooks.execute_on_error"))
-    }
-
     #[staticmethod]
         #[pyo3(signature = ())]
-    pub fn builder() -> LifecycleHooksBuilder {
-        LifecycleHooksBuilder { inner: Arc::new(spikard::LifecycleHooks::builder()) }
-    }
-}
-
-#[derive(Clone)]
-#[pyclass(frozen, from_py_object)]
-pub struct LifecycleHooksBuilder {
-    inner: Arc<spikard::LifecycleHooksBuilder>,
-}
-
-#[pymethods]
-impl LifecycleHooksBuilder {
-        #[pyo3(signature = (hook))]
-    pub fn on_request(&self, hook: String) -> LifecycleHooksBuilder {
-        todo!("Not auto-delegatable: LifecycleHooksBuilder.on_request — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (hook))]
-    pub fn pre_validation(&self, hook: String) -> LifecycleHooksBuilder {
-        todo!("Not auto-delegatable: LifecycleHooksBuilder.pre_validation — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (hook))]
-    pub fn pre_handler(&self, hook: String) -> LifecycleHooksBuilder {
-        todo!("Not auto-delegatable: LifecycleHooksBuilder.pre_handler — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (hook))]
-    pub fn on_response(&self, hook: String) -> LifecycleHooksBuilder {
-        todo!("Not auto-delegatable: LifecycleHooksBuilder.on_response — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (hook))]
-    pub fn on_error(&self, hook: String) -> LifecycleHooksBuilder {
-        todo!("Not auto-delegatable: LifecycleHooksBuilder.on_error — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = ())]
-    pub fn build(&self) -> LifecycleHooks {
-        todo!("Not auto-delegatable: LifecycleHooksBuilder.build — return type requires custom implementation")
+    pub fn builder() -> String {
+        String::from("[unimplemented: LifecycleHooks::builder]")
     }
 }
 
@@ -420,12 +354,6 @@ impl SseEvent {
         };
         core_self.with_retry(retry_ms).into()
     }
-
-    #[staticmethod]
-        #[pyo3(signature = (event_type, data))]
-    pub fn with_type(event_type: String, data: String) -> SseEvent {
-        todo!("Not auto-delegatable: SseEvent::with_type — return type requires custom implementation")
-    }
 }
 
 #[derive(Clone)]
@@ -458,79 +386,10 @@ pub struct App {
 
 #[pymethods]
 impl App {
-        #[pyo3(signature = (config))]
-    pub fn config(&self, config: String) -> App {
-        todo!("Not auto-delegatable: App.config — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (router))]
-    pub fn merge_axum_router(&self, router: String) -> App {
-        todo!("Not auto-delegatable: App.merge_axum_router — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (router))]
-    pub fn attach_axum_router(&self, router: String) -> App {
-        todo!("Not auto-delegatable: App.attach_axum_router — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = ())]
-    pub fn into_router(&self) -> PyResult<String> {
-        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: App.into_router"))
-    }
-
-        #[pyo3(signature = ())]
-    pub fn run<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
-        Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: App.run"))
-    }
-
     #[staticmethod]
         #[pyo3(signature = ())]
     pub fn default() -> App {
         Self { inner: Arc::new(spikard::App::default()) }
-    }
-}
-
-#[derive(Clone)]
-#[pyclass(frozen, from_py_object)]
-pub struct RouteBuilder {
-    inner: Arc<spikard::RouteBuilder>,
-}
-
-#[pymethods]
-impl RouteBuilder {
-        #[pyo3(signature = (name))]
-    pub fn handler_name(&self, name: String) -> RouteBuilder {
-        todo!("Not auto-delegatable: RouteBuilder.handler_name — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (schema))]
-    pub fn request_schema_json(&self, schema: String) -> RouteBuilder {
-        todo!("Not auto-delegatable: RouteBuilder.request_schema_json — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (schema))]
-    pub fn response_schema_json(&self, schema: String) -> RouteBuilder {
-        todo!("Not auto-delegatable: RouteBuilder.response_schema_json — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (schema))]
-    pub fn params_schema_json(&self, schema: String) -> RouteBuilder {
-        todo!("Not auto-delegatable: RouteBuilder.params_schema_json — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (schema))]
-    pub fn file_params_json(&self, schema: String) -> RouteBuilder {
-        todo!("Not auto-delegatable: RouteBuilder.file_params_json — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = (cors))]
-    pub fn cors(&self, cors: CorsConfig) -> RouteBuilder {
-        todo!("Not auto-delegatable: RouteBuilder.cors — return type requires custom implementation")
-    }
-
-        #[pyo3(signature = ())]
-    pub fn sync(&self) -> RouteBuilder {
-        todo!("Not auto-delegatable: RouteBuilder.sync — return type requires custom implementation")
     }
 }
 
@@ -569,21 +428,9 @@ pub fn validate_jsonrpc_method_name(name: String) -> PyResult<()> {
 }
 
 #[pyfunction]
-    #[pyo3(signature = (headers, cors_config))]
-pub fn handle_preflight(headers: String, cors_config: CorsConfig) -> PyResult<String> {
-    Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: handle_preflight"))
-}
-
-#[pyfunction]
     #[pyo3(signature = (response, origin, cors_config))]
 pub fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {
     ()
-}
-
-#[pyfunction]
-    #[pyo3(signature = (headers, cors_config))]
-pub fn validate_cors_request(headers: String, cors_config: CorsConfig) -> PyResult<()> {
-    Err(pyo3::exceptions::PyNotImplementedError::new_err("Not implemented: validate_cors_request"))
 }
 
 impl From<spikard::CorsConfig> for CorsConfig {
@@ -726,15 +573,8 @@ impl From<spikard::AppError> for AppError {
     }
 }
 
-#[pyfunction]
-pub fn init_async_runtime() -> PyResult<()> {
-    // Tokio runtime auto-initializes on first future_into_py call
-    Ok(())
-}
-
 #[pymodule]
 pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(init_async_runtime, m)?)?;
     m.add_class::<request::PyRequest>()?;
     m.add_class::<handler_request::PyHandlerRequest>()?;
     m.add_class::<response::Response>()?;
@@ -755,17 +595,13 @@ pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<CompressionConfig>()?;
     m.add_class::<RateLimitConfig>()?;
     m.add_class::<LifecycleHooks>()?;
-    m.add_class::<LifecycleHooksBuilder>()?;
     m.add_class::<SseEvent>()?;
     m.add_class::<StaticFilesConfig>()?;
     m.add_class::<App>()?;
-    m.add_class::<RouteBuilder>()?;
     m.add_class::<Method>()?;
     m.add_class::<HandlerResponse>()?;
     m.add_class::<AppError>()?;
     m.add_function(wrap_pyfunction!(validate_jsonrpc_method_name, m)?)?;
-    m.add_function(wrap_pyfunction!(handle_preflight, m)?)?;
     m.add_function(wrap_pyfunction!(add_cors_headers, m)?)?;
-    m.add_function(wrap_pyfunction!(validate_cors_request, m)?)?;
     Ok(())
 }

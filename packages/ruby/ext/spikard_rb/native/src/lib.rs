@@ -251,68 +251,6 @@ impl LifecycleHooks {
     fn add_on_error(&self, hook: String) -> () {
             ()
         }
-
-    fn execute_on_request_async(&self, req: String) -> Result<String, Error> {
-            Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: execute_on_request_async"))
-        }
-
-    fn execute_pre_validation_async(&self, req: String) -> Result<String, Error> {
-            Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: execute_pre_validation_async"))
-        }
-
-    fn execute_pre_handler_async(&self, req: String) -> Result<String, Error> {
-            Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: execute_pre_handler_async"))
-        }
-
-    fn execute_on_response_async(&self, resp: String) -> Result<String, Error> {
-            Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: execute_on_response_async"))
-        }
-
-    fn execute_on_error_async(&self, resp: String) -> Result<String, Error> {
-            Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: execute_on_error_async"))
-        }
-}
-
-#[derive(Clone)]
-#[magnus::wrap(class = "Kreuzberg::LifecycleHooksBuilder")]
-pub struct LifecycleHooksBuilder {
-    inner: Arc<spikard::LifecycleHooksBuilder>,
-}
-
-unsafe impl IntoValueFromNative for LifecycleHooksBuilder {}
-
-impl magnus::TryConvert for LifecycleHooksBuilder {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &LifecycleHooksBuilder = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for LifecycleHooksBuilder {}
-
-impl LifecycleHooksBuilder {
-    fn on_request(&self, hook: String) -> LifecycleHooksBuilder {
-            todo!("Not auto-delegatable: on_request -- return type requires custom implementation")
-        }
-
-    fn pre_validation(&self, hook: String) -> LifecycleHooksBuilder {
-            todo!("Not auto-delegatable: pre_validation -- return type requires custom implementation")
-        }
-
-    fn pre_handler(&self, hook: String) -> LifecycleHooksBuilder {
-            todo!("Not auto-delegatable: pre_handler -- return type requires custom implementation")
-        }
-
-    fn on_response(&self, hook: String) -> LifecycleHooksBuilder {
-            todo!("Not auto-delegatable: on_response -- return type requires custom implementation")
-        }
-
-    fn on_error(&self, hook: String) -> LifecycleHooksBuilder {
-            todo!("Not auto-delegatable: on_error -- return type requires custom implementation")
-        }
-
-    fn build(&self, ) -> LifecycleHooks {
-            todo!("Not auto-delegatable: build -- return type requires custom implementation")
-        }
 }
 
 #[derive(Clone)]
@@ -422,71 +360,6 @@ impl magnus::TryConvert for App {
 unsafe impl TryConvertOwned for App {}
 
 impl App {
-    fn config(&self, config: String) -> App {
-            todo!("Not auto-delegatable: config -- return type requires custom implementation")
-        }
-
-    fn merge_axum_router(&self, router: String) -> App {
-            todo!("Not auto-delegatable: merge_axum_router -- return type requires custom implementation")
-        }
-
-    fn attach_axum_router(&self, router: String) -> App {
-            todo!("Not auto-delegatable: attach_axum_router -- return type requires custom implementation")
-        }
-
-    fn into_router(&self, ) -> Result<String, Error> {
-            Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: into_router"))
-        }
-
-    fn run_async(&self, ) -> Result<(), Error> {
-            Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: run_async"))
-        }
-}
-
-#[derive(Clone)]
-#[magnus::wrap(class = "Kreuzberg::RouteBuilder")]
-pub struct RouteBuilder {
-    inner: Arc<spikard::RouteBuilder>,
-}
-
-unsafe impl IntoValueFromNative for RouteBuilder {}
-
-impl magnus::TryConvert for RouteBuilder {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &RouteBuilder = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for RouteBuilder {}
-
-impl RouteBuilder {
-    fn handler_name(&self, name: String) -> RouteBuilder {
-            todo!("Not auto-delegatable: handler_name -- return type requires custom implementation")
-        }
-
-    fn request_schema_json(&self, schema: String) -> RouteBuilder {
-            todo!("Not auto-delegatable: request_schema_json -- return type requires custom implementation")
-        }
-
-    fn response_schema_json(&self, schema: String) -> RouteBuilder {
-            todo!("Not auto-delegatable: response_schema_json -- return type requires custom implementation")
-        }
-
-    fn params_schema_json(&self, schema: String) -> RouteBuilder {
-            todo!("Not auto-delegatable: params_schema_json -- return type requires custom implementation")
-        }
-
-    fn file_params_json(&self, schema: String) -> RouteBuilder {
-            todo!("Not auto-delegatable: file_params_json -- return type requires custom implementation")
-        }
-
-    fn cors(&self, cors: CorsConfig) -> RouteBuilder {
-            todo!("Not auto-delegatable: cors -- return type requires custom implementation")
-        }
-
-    fn sync(&self, ) -> RouteBuilder {
-            todo!("Not auto-delegatable: sync -- return type requires custom implementation")
-        }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -613,16 +486,8 @@ fn validate_jsonrpc_method_name(name: String) -> Result<(), Error> {
     Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: validate_jsonrpc_method_name"))
 }
 
-fn handle_preflight(headers: String, cors_config: CorsConfig) -> Result<String, Error> {
-    Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: handle_preflight"))
-}
-
 fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {
     ()
-}
-
-fn validate_cors_request(headers: String, cors_config: CorsConfig) -> Result<(), Error> {
-    Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: validate_cors_request"))
 }
 
 #[magnus::init]
@@ -665,19 +530,6 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("add_pre_handler", method!(LifecycleHooks::add_pre_handler, 1))?;
     class.define_method("add_on_response", method!(LifecycleHooks::add_on_response, 1))?;
     class.define_method("add_on_error", method!(LifecycleHooks::add_on_error, 1))?;
-    class.define_method("execute_on_request_async", method!(LifecycleHooks::execute_on_request_async, 1))?;
-    class.define_method("execute_pre_validation_async", method!(LifecycleHooks::execute_pre_validation_async, 1))?;
-    class.define_method("execute_pre_handler_async", method!(LifecycleHooks::execute_pre_handler_async, 1))?;
-    class.define_method("execute_on_response_async", method!(LifecycleHooks::execute_on_response_async, 1))?;
-    class.define_method("execute_on_error_async", method!(LifecycleHooks::execute_on_error_async, 1))?;
-
-    let class = module.define_class("LifecycleHooksBuilder", ruby.class_object())?;
-    class.define_method("on_request", method!(LifecycleHooksBuilder::on_request, 1))?;
-    class.define_method("pre_validation", method!(LifecycleHooksBuilder::pre_validation, 1))?;
-    class.define_method("pre_handler", method!(LifecycleHooksBuilder::pre_handler, 1))?;
-    class.define_method("on_response", method!(LifecycleHooksBuilder::on_response, 1))?;
-    class.define_method("on_error", method!(LifecycleHooksBuilder::on_error, 1))?;
-    class.define_method("build", method!(LifecycleHooksBuilder::build, 0))?;
 
     let class = module.define_class("SseEvent", ruby.class_object())?;
     class.define_singleton_method("new", function!(SseEvent::new, 4))?;
@@ -696,25 +548,9 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("cache_control", method!(StaticFilesConfig::cache_control, 0))?;
 
     let class = module.define_class("App", ruby.class_object())?;
-    class.define_method("config", method!(App::config, 1))?;
-    class.define_method("merge_axum_router", method!(App::merge_axum_router, 1))?;
-    class.define_method("attach_axum_router", method!(App::attach_axum_router, 1))?;
-    class.define_method("into_router", method!(App::into_router, 0))?;
-    class.define_method("run_async", method!(App::run_async, 0))?;
-
-    let class = module.define_class("RouteBuilder", ruby.class_object())?;
-    class.define_method("handler_name", method!(RouteBuilder::handler_name, 1))?;
-    class.define_method("request_schema_json", method!(RouteBuilder::request_schema_json, 1))?;
-    class.define_method("response_schema_json", method!(RouteBuilder::response_schema_json, 1))?;
-    class.define_method("params_schema_json", method!(RouteBuilder::params_schema_json, 1))?;
-    class.define_method("file_params_json", method!(RouteBuilder::file_params_json, 1))?;
-    class.define_method("cors", method!(RouteBuilder::cors, 1))?;
-    class.define_method("sync", method!(RouteBuilder::sync, 0))?;
 
     module.define_module_function("validate_jsonrpc_method_name", function!(validate_jsonrpc_method_name, 1))?;
-    module.define_module_function("handle_preflight", function!(handle_preflight, 2))?;
     module.define_module_function("add_cors_headers", function!(add_cors_headers, 3))?;
-    module.define_module_function("validate_cors_request", function!(validate_cors_request, 2))?;
 
     Ok(())
 }
