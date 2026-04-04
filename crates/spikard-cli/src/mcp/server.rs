@@ -877,7 +877,18 @@ mod tests {
         match (tool_result, app_result) {
             (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
                 assert_eq!(tool_files.len(), app_files.len());
-                assert_eq!(read_file_map(tool_tmp.path())?, read_file_map(app_tmp.path())?);
+                // Compare JSON values semantically (key order may differ between runs)
+                let tool_map = read_file_map(tool_tmp.path())?;
+                let app_map = read_file_map(app_tmp.path())?;
+                assert_eq!(tool_map.len(), app_map.len());
+                for (key, tool_content) in &tool_map {
+                    let app_content = app_map.get(key).unwrap_or_else(|| panic!("missing key: {key:?}"));
+                    let tool_json: serde_json::Value = serde_json::from_str(tool_content)
+                        .unwrap_or_else(|_| serde_json::Value::String(tool_content.clone()));
+                    let app_json: serde_json::Value = serde_json::from_str(app_content)
+                        .unwrap_or_else(|_| serde_json::Value::String(app_content.clone()));
+                    assert_eq!(tool_json, app_json, "JSON mismatch for {key:?}");
+                }
             }
             _ => panic!("expected file-based AsyncAPI fixture generation results"),
         }
