@@ -10,6 +10,7 @@
 #![allow(clippy::should_implement_trait)]
 
 use pyo3::prelude::*;
+use spikard::Default;
 use std::sync::Arc;
 
 pub mod server;

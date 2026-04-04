@@ -8,6 +8,8 @@
 #![cfg_attr(all(windows, target_env = "msvc", feature = "extension-module"), feature(abi_vectorcall))]
 
 use ext_php_rs::prelude::*;
+use serde_json;
+use spikard::Default;
 use std::sync::Arc;
 
 pub mod php;
@@ -223,6 +225,21 @@ pub fn add_cors_headers() -> () {
     ()
 }
 
+impl From<spikard::CorsConfig> for CorsConfig {
+    fn from(val: spikard::CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
+            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
+        }
+    }
+}
+
 impl From<CompressionConfig> for spikard::CompressionConfig {
     fn from(val: CompressionConfig) -> Self {
         Self {
@@ -261,6 +278,17 @@ impl From<spikard::RateLimitConfig> for RateLimitConfig {
             per_second: val.per_second as i64,
             burst: val.burst,
             ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard::SseEvent> for SseEvent {
+    fn from(val: spikard::SseEvent) -> Self {
+        Self {
+            event_type: val.event_type,
+            data: format!("{:?}", val.data),
+            id: val.id,
+            retry: val.retry.map(|v| v as i64),
         }
     }
 }

@@ -10,6 +10,7 @@
 use napi::*;
 use napi_derive::napi;
 use serde_json;
+use spikard::Default;
 use std::sync::Arc;
 
 pub mod server;
