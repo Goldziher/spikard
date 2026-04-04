@@ -114,19 +114,59 @@ impl CorsConfig {
         }
 
     fn allowed_methods_joined(&self, ) -> String {
-            String::from("[unimplemented: allowed_methods_joined]")
+            let core_self = spikard::CorsConfig {
+                allowed_origins: self.allowed_origins.clone(),
+                allowed_methods: self.allowed_methods.clone(),
+                allowed_headers: self.allowed_headers.clone(),
+                expose_headers: self.expose_headers.clone(),
+                max_age: self.max_age,
+                allow_credentials: self.allow_credentials,
+                methods_joined_cache: Default::default(),
+                headers_joined_cache: Default::default(),
+            };
+            core_self.allowed_methods_joined().into()
         }
 
     fn allowed_headers_joined(&self, ) -> String {
-            String::from("[unimplemented: allowed_headers_joined]")
+            let core_self = spikard::CorsConfig {
+                allowed_origins: self.allowed_origins.clone(),
+                allowed_methods: self.allowed_methods.clone(),
+                allowed_headers: self.allowed_headers.clone(),
+                expose_headers: self.expose_headers.clone(),
+                max_age: self.max_age,
+                allow_credentials: self.allow_credentials,
+                methods_joined_cache: Default::default(),
+                headers_joined_cache: Default::default(),
+            };
+            core_self.allowed_headers_joined().into()
         }
 
     fn is_origin_allowed(&self, origin: String) -> bool {
-            false
+            let core_self = spikard::CorsConfig {
+                allowed_origins: self.allowed_origins.clone(),
+                allowed_methods: self.allowed_methods.clone(),
+                allowed_headers: self.allowed_headers.clone(),
+                expose_headers: self.expose_headers.clone(),
+                max_age: self.max_age,
+                allow_credentials: self.allow_credentials,
+                methods_joined_cache: Default::default(),
+                headers_joined_cache: Default::default(),
+            };
+            core_self.is_origin_allowed(&origin)
         }
 
     fn is_method_allowed(&self, method: String) -> bool {
-            false
+            let core_self = spikard::CorsConfig {
+                allowed_origins: self.allowed_origins.clone(),
+                allowed_methods: self.allowed_methods.clone(),
+                allowed_headers: self.allowed_headers.clone(),
+                expose_headers: self.expose_headers.clone(),
+                max_age: self.max_age,
+                allow_credentials: self.allow_credentials,
+                methods_joined_cache: Default::default(),
+                headers_joined_cache: Default::default(),
+            };
+            core_self.is_method_allowed(&method)
         }
 
     fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
@@ -229,7 +269,7 @@ unsafe impl TryConvertOwned for LifecycleHooks {}
 
 impl LifecycleHooks {
     fn is_empty(&self, ) -> bool {
-            false
+            self.inner.is_empty()
         }
 
     fn add_on_request(&self, hook: String) -> () {
@@ -294,11 +334,23 @@ impl SseEvent {
         }
 
     fn with_id(&self, id: String) -> SseEvent {
-            todo!("Not auto-delegatable: with_id -- return type requires custom implementation")
+            let core_self = spikard::SseEvent {
+                event_type: self.event_type.clone(),
+                data: Default::default(),
+                id: self.id.clone(),
+                retry: self.retry,
+            };
+            core_self.with_id(&id).into()
         }
 
     fn with_retry(&self, retry_ms: u64) -> SseEvent {
-            todo!("Not auto-delegatable: with_retry -- return type requires custom implementation")
+            let core_self = spikard::SseEvent {
+                event_type: self.event_type.clone(),
+                data: Default::default(),
+                id: self.id.clone(),
+                retry: self.retry,
+            };
+            core_self.with_retry(retry_ms).into()
         }
 }
 
@@ -483,7 +535,8 @@ unsafe impl IntoValueFromNative for AppError {}
 unsafe impl TryConvertOwned for AppError {}
 
 fn validate_jsonrpc_method_name(name: String) -> Result<(), Error> {
-    Err(magnus::Error::new(magnus::exception::runtime_error(), "Not implemented: validate_jsonrpc_method_name"))
+    let result = spikard::validate_jsonrpc_method_name(&name).map_err(|e| magnus::Error::new(magnus::exception::runtime_error(), e.to_string()))?;
+    Ok(result)
 }
 
 fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {

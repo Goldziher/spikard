@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 pub mod php;
 
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, serde::Deserialize, serde::Serialize)]
 #[php_class]
 pub struct CorsConfig {
     pub allowed_origins: Vec<String>,
@@ -42,31 +42,71 @@ impl CorsConfig {
     }
 
     pub fn allowed_methods_joined(&self) -> String {
-        String::from("[unimplemented: allowed_methods_joined]")
+        let core_self = spikard::CorsConfig {
+                allowed_origins: self.allowed_origins.clone(),
+                allowed_methods: self.allowed_methods.clone(),
+                allowed_headers: self.allowed_headers.clone(),
+                expose_headers: self.expose_headers.clone(),
+                max_age: self.max_age,
+                allow_credentials: self.allow_credentials,
+                methods_joined_cache: Default::default(),
+                headers_joined_cache: Default::default(),
+            };
+            core_self.allowed_methods_joined().into()
     }
 
     pub fn allowed_headers_joined(&self) -> String {
-        String::from("[unimplemented: allowed_headers_joined]")
+        let core_self = spikard::CorsConfig {
+                allowed_origins: self.allowed_origins.clone(),
+                allowed_methods: self.allowed_methods.clone(),
+                allowed_headers: self.allowed_headers.clone(),
+                expose_headers: self.expose_headers.clone(),
+                max_age: self.max_age,
+                allow_credentials: self.allow_credentials,
+                methods_joined_cache: Default::default(),
+                headers_joined_cache: Default::default(),
+            };
+            core_self.allowed_headers_joined().into()
     }
 
-    pub fn is_origin_allowed(&self) -> bool {
-        false
+    pub fn is_origin_allowed(&self, origin: String) -> bool {
+        let core_self = spikard::CorsConfig {
+                allowed_origins: self.allowed_origins.clone(),
+                allowed_methods: self.allowed_methods.clone(),
+                allowed_headers: self.allowed_headers.clone(),
+                expose_headers: self.expose_headers.clone(),
+                max_age: self.max_age,
+                allow_credentials: self.allow_credentials,
+                methods_joined_cache: Default::default(),
+                headers_joined_cache: Default::default(),
+            };
+            core_self.is_origin_allowed(&origin)
     }
 
-    pub fn is_method_allowed(&self) -> bool {
-        false
+    pub fn is_method_allowed(&self, method: String) -> bool {
+        let core_self = spikard::CorsConfig {
+                allowed_origins: self.allowed_origins.clone(),
+                allowed_methods: self.allowed_methods.clone(),
+                allowed_headers: self.allowed_headers.clone(),
+                expose_headers: self.expose_headers.clone(),
+                max_age: self.max_age,
+                allow_credentials: self.allow_credentials,
+                methods_joined_cache: Default::default(),
+                headers_joined_cache: Default::default(),
+            };
+            core_self.is_method_allowed(&method)
     }
 
-    pub fn are_headers_allowed(&self) -> bool {
+    pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
         false
     }
 
     pub fn default() -> CorsConfig {
-        todo!("Not auto-delegatable: default -- return type requires custom implementation")
+        spikard::CorsConfig::default().into()
     }
 }
 
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, serde::Deserialize, serde::Serialize)]
 #[php_class]
 pub struct CompressionConfig {
     pub gzip: bool,
@@ -82,11 +122,11 @@ impl CompressionConfig {
     }
 
     pub fn default() -> CompressionConfig {
-        todo!("Not auto-delegatable: default -- return type requires custom implementation")
+        spikard::CompressionConfig::default().into()
     }
 }
 
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, serde::Deserialize, serde::Serialize)]
 #[php_class]
 pub struct RateLimitConfig {
     pub per_second: i64,
@@ -101,7 +141,7 @@ impl RateLimitConfig {
     }
 
     pub fn default() -> RateLimitConfig {
-        todo!("Not auto-delegatable: default -- return type requires custom implementation")
+        spikard::RateLimitConfig::default().into()
     }
 }
 
@@ -114,26 +154,26 @@ pub struct LifecycleHooks {
 #[php_impl]
 impl LifecycleHooks {
     pub fn is_empty(&self) -> bool {
-        false
+        self.inner.is_empty()
     }
 
-    pub fn add_on_request(&self) -> () {
+    pub fn add_on_request(&self, hook: String) -> () {
         ()
     }
 
-    pub fn add_pre_validation(&self) -> () {
+    pub fn add_pre_validation(&self, hook: String) -> () {
         ()
     }
 
-    pub fn add_pre_handler(&self) -> () {
+    pub fn add_pre_handler(&self, hook: String) -> () {
         ()
     }
 
-    pub fn add_on_response(&self) -> () {
+    pub fn add_on_response(&self, hook: String) -> () {
         ()
     }
 
-    pub fn add_on_error(&self) -> () {
+    pub fn add_on_error(&self, hook: String) -> () {
         ()
     }
 
@@ -142,7 +182,7 @@ impl LifecycleHooks {
     }
 }
 
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, serde::Deserialize, serde::Serialize)]
 #[php_class]
 pub struct SseEvent {
     pub event_type: Option<String>,
@@ -157,16 +197,28 @@ impl SseEvent {
         Self { event_type, data, id, retry }
     }
 
-    pub fn with_id(&self) -> SseEvent {
-        todo!("Not auto-delegatable: with_id -- return type requires custom implementation")
+    pub fn with_id(&self, id: String) -> SseEvent {
+        let core_self = spikard::SseEvent {
+                event_type: self.event_type.clone(),
+                data: Default::default(),
+                id: self.id.clone(),
+                retry: self.retry,
+            };
+            core_self.with_id(&id).into()
     }
 
-    pub fn with_retry(&self) -> SseEvent {
-        todo!("Not auto-delegatable: with_retry -- return type requires custom implementation")
+    pub fn with_retry(&self, retry_ms: i64) -> SseEvent {
+        let core_self = spikard::SseEvent {
+                event_type: self.event_type.clone(),
+                data: Default::default(),
+                id: self.id.clone(),
+                retry: self.retry,
+            };
+            core_self.with_retry(retry_ms).into()
     }
 }
 
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, serde::Deserialize, serde::Serialize)]
 #[php_class]
 pub struct StaticFilesConfig {
     pub directory: String,
@@ -191,7 +243,7 @@ pub struct App {
 #[php_impl]
 impl App {
     pub fn default() -> App {
-        todo!("Not auto-delegatable: default -- return type requires custom implementation")
+        Self { inner: Arc::new(spikard::App::default()) }
     }
 }
 
@@ -215,12 +267,13 @@ pub const APPERROR_SERVER: &str = "Server";
 pub const APPERROR_DECODE: &str = "Decode";
 
 #[php_function]
-pub fn validate_jsonrpc_method_name() -> PhpResult<()> {
-    Err(ext_php_rs::exception::PhpException::default("Not implemented: validate_jsonrpc_method_name".to_string()).into())
+pub fn validate_jsonrpc_method_name(name: String) -> PhpResult<()> {
+    let result = spikard::validate_jsonrpc_method_name(&name).map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
+    Ok(result)
 }
 
 #[php_function]
-pub fn add_cors_headers() -> () {
+pub fn add_cors_headers(response: String, origin: String, cors_config: CorsConfig) -> () {
     ()
 }
 

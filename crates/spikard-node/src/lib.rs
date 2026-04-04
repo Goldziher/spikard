@@ -125,7 +125,7 @@ impl JsLifecycleHooks {
 
     #[napi]
     pub fn builder() -> String {
-        String::from("[unimplemented: builder]")
+        String::from("[unimplemented: LifecycleHooks::builder]")
     }
 }
 
@@ -161,7 +161,7 @@ pub struct JsApp {
 impl JsApp {
     #[napi]
     pub fn default() -> JsApp {
-        todo!("Not auto-delegatable: default -- return type requires custom implementation")
+        Self { inner: Arc::new(spikard::App::default()) }
     }
 }
 
@@ -195,7 +195,7 @@ pub enum JsAppError {
 
 #[napi(js_name = "validateJsonrpcMethodName")]
 pub fn validate_jsonrpc_method_name(name: String) -> Result<()> {
-    Err(napi::Error::new(napi::Status::GenericFailure, "Not implemented: validate_jsonrpc_method_name"))
+    spikard::validation::validate_jsonrpc_method_name(&name).map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))
 }
 
 #[napi(js_name = "addCorsHeaders")]

@@ -117,7 +117,8 @@ pub enum AppError {
 
 #[rustler::nif]
 pub fn validate_jsonrpc_method_name(name: String) -> Result<(), String> {
-    Err(String::from("Not implemented: validate_jsonrpc_method_name"))
+    let result = spikard::validate_jsonrpc_method_name(&name).map_err(|e| e.to_string())?;
+    Ok(result)
 }
 
 #[rustler::nif]
@@ -127,42 +128,42 @@ pub fn add_cors_headers(response: String, origin: String, cors_config: CorsConfi
 
 #[rustler::nif]
 pub fn corsconfig_allowed_methods_joined(obj: CorsConfig) -> String {
-    String::from("[unimplemented: corsconfig_allowed_methods_joined]")
+    spikard::CorsConfig::from(obj).allowed_methods_joined().into()
 }
 
 #[rustler::nif]
 pub fn corsconfig_allowed_headers_joined(obj: CorsConfig) -> String {
-    String::from("[unimplemented: corsconfig_allowed_headers_joined]")
+    spikard::CorsConfig::from(obj).allowed_headers_joined().into()
 }
 
 #[rustler::nif]
 pub fn corsconfig_is_origin_allowed(obj: CorsConfig, origin: String) -> bool {
-    false
+    spikard::CorsConfig::from(obj).is_origin_allowed(&origin)
 }
 
 #[rustler::nif]
 pub fn corsconfig_is_method_allowed(obj: CorsConfig, method: String) -> bool {
-    false
+    spikard::CorsConfig::from(obj).is_method_allowed(&method)
 }
 
 #[rustler::nif]
 pub fn corsconfig_are_headers_allowed(obj: CorsConfig, requested: Vec<String>) -> bool {
-    false
+    spikard::CorsConfig::from(obj).are_headers_allowed(requested)
 }
 
 #[rustler::nif]
 pub fn corsconfig_default() -> CorsConfig {
-    todo!("Not auto-delegatable: corsconfig_default -- return type requires custom implementation")
+    spikard::CorsConfig::from(obj).default().into()
 }
 
 #[rustler::nif]
 pub fn compressionconfig_default() -> CompressionConfig {
-    todo!("Not auto-delegatable: compressionconfig_default -- return type requires custom implementation")
+    spikard::CompressionConfig::from(obj).default().into()
 }
 
 #[rustler::nif]
 pub fn ratelimitconfig_default() -> RateLimitConfig {
-    todo!("Not auto-delegatable: ratelimitconfig_default -- return type requires custom implementation")
+    spikard::RateLimitConfig::from(obj).default().into()
 }
 
 #[rustler::nif]
@@ -172,7 +173,7 @@ pub fn lifecyclehooks_builder() -> String {
 
 #[rustler::nif]
 pub fn lifecyclehooks_is_empty(resource: ResourceArc<LifecycleHooks>) -> bool {
-    false
+    resource.inner.is_empty()
 }
 
 #[rustler::nif]
@@ -202,17 +203,17 @@ pub fn lifecyclehooks_add_on_error(resource: ResourceArc<LifecycleHooks>, hook: 
 
 #[rustler::nif]
 pub fn sseevent_with_id(obj: SseEvent, id: String) -> SseEvent {
-    todo!("Not auto-delegatable: sseevent_with_id -- return type requires custom implementation")
+    spikard::SseEvent::from(obj).with_id(&id).into()
 }
 
 #[rustler::nif]
 pub fn sseevent_with_retry(obj: SseEvent, retry_ms: u64) -> SseEvent {
-    todo!("Not auto-delegatable: sseevent_with_retry -- return type requires custom implementation")
+    spikard::SseEvent::from(obj).with_retry(retry_ms).into()
 }
 
 #[rustler::nif]
 pub fn app_default() -> ResourceArc<App> {
-    todo!("Not auto-delegatable: app_default -- return type requires custom implementation")
+    ResourceArc::new(App { inner: Arc::new(resource.inner.default()) })
 }
 
 impl From<CompressionConfig> for spikard::CompressionConfig {
