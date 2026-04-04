@@ -9,7 +9,6 @@
 
 use ext_php_rs::prelude::*;
 use serde_json;
-use spikard::Default;
 use std::sync::Arc;
 
 pub mod php;

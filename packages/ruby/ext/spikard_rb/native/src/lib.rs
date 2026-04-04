@@ -8,7 +8,6 @@
 #![allow(clippy::should_implement_trait)]
 
 use magnus::{function, method, prelude::*, Error, Ruby, IntoValueFromNative, try_convert::TryConvertOwned};
-use spikard::Default;
 use std::sync::Arc;
 
 pub mod app;

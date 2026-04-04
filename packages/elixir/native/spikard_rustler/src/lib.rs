@@ -8,7 +8,6 @@
 #![allow(clippy::should_implement_trait)]
 
 use rustler::{Env, Term, NifResult, ResourceArc};
-use spikard::Default;
 use std::sync::Arc;
 
 pub mod atoms;
