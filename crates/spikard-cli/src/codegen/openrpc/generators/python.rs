@@ -28,9 +28,98 @@ impl PythonGenerationState {
 
 impl OpenRpcGenerator for PythonOpenRpcGenerator {
     fn generate_handler_app(&self, spec: &OpenRpcSpec) -> Result<String> {
-        let mut code = String::new();
+        let mut body = String::new();
         let mut state = PythonGenerationState::new();
 
+        body.push_str("# ============================================================================\n");
+        body.push_str("# Shared Component DTOs\n");
+        body.push_str("# ============================================================================\n\n");
+
+        generate_component_dtos(&mut body, spec, &mut state)?;
+
+        body.push_str("# ============================================================================\n");
+        body.push_str("# Data Transfer Objects (DTOs)\n");
+        body.push_str("# ============================================================================\n\n");
+
+        for method in &spec.methods {
+            generate_python_dtos(&mut body, spec, method, &mut state)?;
+        }
+
+        body.push_str("# ============================================================================\n");
+        body.push_str("# JSON-RPC Method Handlers\n");
+        body.push_str("# ============================================================================\n\n");
+
+        for method in &spec.methods {
+            generate_python_handler(&mut body, spec, method)?;
+        }
+
+        body.push_str("# ============================================================================\n");
+        body.push_str("# Method Router\n");
+        body.push_str("# ============================================================================\n\n");
+
+        body.push_str(
+            "async def handle_jsonrpc_call(method_name: str, params: object, request_id: object) -> dict[str, object]:\n",
+        );
+        body.push_str("    \"\"\"Route JSON-RPC method calls to appropriate handlers.\"\"\"\n");
+        body.push_str("    try:\n");
+        body.push_str("        _ = params\n");
+
+        for method in &spec.methods {
+            let handler_name = handler_name_for_method(&method.name);
+            body.push_str(&format!("        if method_name == \"{}\":\n", method.name));
+            if method.params.is_empty() {
+                body.push_str(&format!(
+                    "            return {{\"jsonrpc\": \"2.0\", \"result\": msgspec.to_builtins(await {handler_name}()), \"id\": request_id}}\n"
+                ));
+            } else {
+                let params_class = get_method_params_class_name(&method.name);
+                body.push_str(&format!(
+                    "            return {{\"jsonrpc\": \"2.0\", \"result\": msgspec.to_builtins(await {handler_name}(msgspec.convert(params if params is not None else {{}}, type={params_class}))), \"id\": request_id}}\n"
+                ));
+            }
+        }
+
+        body.push_str("        return {\n");
+        body.push_str("            \"jsonrpc\": \"2.0\",\n");
+        body.push_str("            \"error\": {\"code\": -32601, \"message\": \"Method not found\"},\n");
+        body.push_str("            \"id\": request_id,\n");
+        body.push_str("        }\n");
+        body.push_str("    except Exception as e:\n");
+        body.push_str("        return {\n");
+        body.push_str("            \"jsonrpc\": \"2.0\",\n");
+        body.push_str(
+            "            \"error\": {\"code\": -32603, \"message\": \"Internal error\", \"data\": str(e)},\n",
+        );
+        body.push_str("            \"id\": request_id,\n");
+        body.push_str("        }\n\n");
+
+        body.push_str("# ============================================================================\n");
+        body.push_str("# Example Usage\n");
+        body.push_str("# ============================================================================\n\n");
+
+        body.push_str("if __name__ == \"__main__\":\n");
+        body.push_str("    from spikard import Spikard\n\n");
+
+        body.push_str("    app = Spikard()\n\n");
+
+        body.push_str("    @app.post(\"/rpc\")\n");
+        body.push_str("    async def rpc_handler(request: dict[str, object]) -> dict[str, object]:\n");
+        body.push_str("        \"\"\"JSON-RPC 2.0 entrypoint.\"\"\"\n");
+        body.push_str("        method = request.get(\"method\")\n");
+        body.push_str("        if not isinstance(method, str):\n");
+        body.push_str("            return {\n");
+        body.push_str("                \"jsonrpc\": \"2.0\",\n");
+        body.push_str("                \"error\": {\"code\": -32600, \"message\": \"Invalid request\"},\n");
+        body.push_str("                \"id\": request.get(\"id\"),\n");
+        body.push_str("            }\n");
+        body.push_str("        params = request.get(\"params\")\n");
+        body.push_str("        request_id = request.get(\"id\")\n");
+        body.push_str("        return await handle_jsonrpc_call(method, params, request_id)\n\n");
+
+        body.push_str("    # Call `app.run(...)` to start the JSON-RPC server.\n");
+
+        // Build header with conditional imports based on what the body actually uses
+        let mut code = String::new();
         code.push_str("# ruff: noqa: INP001\n");
         code.push_str("\"\"\"JSON-RPC 2.0 handlers generated from OpenRPC specification.\n\n");
         code.push_str("Generated from: ");
@@ -40,97 +129,40 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("\n\"\"\"\n\n");
         code.push_str("from __future__ import annotations\n\n");
 
-        code.push_str("from datetime import date, datetime\n");
-        code.push_str("from typing import Literal\n");
-        code.push_str("from uuid import UUID\n\n");
+        let needs_date = body.contains(": date\n")
+            || body.contains(": date |")
+            || body.contains(": date =")
+            || body.contains("[date]")
+            || body.contains("date.fromisoformat");
+        let needs_datetime = body.contains(": datetime") || body.contains("datetime.fromisoformat");
+        let mut has_stdlib_imports = false;
+        if needs_date && needs_datetime {
+            code.push_str("from datetime import date, datetime\n");
+            has_stdlib_imports = true;
+        } else if needs_date {
+            code.push_str("from datetime import date\n");
+            has_stdlib_imports = true;
+        } else if needs_datetime {
+            code.push_str("from datetime import datetime\n");
+            has_stdlib_imports = true;
+        }
+
+        if body.contains("Literal[") {
+            code.push_str("from typing import Literal\n");
+            has_stdlib_imports = true;
+        }
+
+        if body.contains("UUID") {
+            code.push_str("from uuid import UUID\n");
+            has_stdlib_imports = true;
+        }
+
+        if has_stdlib_imports {
+            code.push('\n');
+        }
         code.push_str("import msgspec\n\n");
 
-        code.push_str("# ============================================================================\n");
-        code.push_str("# Shared Component DTOs\n");
-        code.push_str("# ============================================================================\n\n");
-
-        generate_component_dtos(&mut code, spec, &mut state)?;
-
-        code.push_str("# ============================================================================\n");
-        code.push_str("# Data Transfer Objects (DTOs)\n");
-        code.push_str("# ============================================================================\n\n");
-
-        for method in &spec.methods {
-            generate_python_dtos(&mut code, spec, method, &mut state)?;
-        }
-
-        code.push_str("# ============================================================================\n");
-        code.push_str("# JSON-RPC Method Handlers\n");
-        code.push_str("# ============================================================================\n\n");
-
-        for method in &spec.methods {
-            generate_python_handler(&mut code, spec, method)?;
-        }
-
-        code.push_str("# ============================================================================\n");
-        code.push_str("# Method Router\n");
-        code.push_str("# ============================================================================\n\n");
-
-        code.push_str(
-            "async def handle_jsonrpc_call(method_name: str, params: object, request_id: object) -> dict[str, object]:\n",
-        );
-        code.push_str("    \"\"\"Route JSON-RPC method calls to appropriate handlers.\"\"\"\n");
-        code.push_str("    try:\n");
-        code.push_str("        _ = params\n");
-
-        for method in &spec.methods {
-            let handler_name = handler_name_for_method(&method.name);
-            code.push_str(&format!("        if method_name == \"{}\":\n", method.name));
-            if method.params.is_empty() {
-                code.push_str(&format!(
-                    "            return {{\"jsonrpc\": \"2.0\", \"result\": msgspec.to_builtins(await {handler_name}()), \"id\": request_id}}\n"
-                ));
-            } else {
-                let params_class = get_method_params_class_name(&method.name);
-                code.push_str(&format!(
-                    "            return {{\"jsonrpc\": \"2.0\", \"result\": msgspec.to_builtins(await {handler_name}(msgspec.convert(params if params is not None else {{}}, type={params_class}))), \"id\": request_id}}\n"
-                ));
-            }
-        }
-
-        code.push_str("        return {\n");
-        code.push_str("            \"jsonrpc\": \"2.0\",\n");
-        code.push_str("            \"error\": {\"code\": -32601, \"message\": \"Method not found\"},\n");
-        code.push_str("            \"id\": request_id,\n");
-        code.push_str("        }\n");
-        code.push_str("    except Exception as e:\n");
-        code.push_str("        return {\n");
-        code.push_str("            \"jsonrpc\": \"2.0\",\n");
-        code.push_str(
-            "            \"error\": {\"code\": -32603, \"message\": \"Internal error\", \"data\": str(e)},\n",
-        );
-        code.push_str("            \"id\": request_id,\n");
-        code.push_str("        }\n\n");
-
-        code.push_str("# ============================================================================\n");
-        code.push_str("# Example Usage\n");
-        code.push_str("# ============================================================================\n\n");
-
-        code.push_str("if __name__ == \"__main__\":\n");
-        code.push_str("    from spikard import Spikard\n\n");
-
-        code.push_str("    app = Spikard()\n\n");
-
-        code.push_str("    @app.post(\"/rpc\")\n");
-        code.push_str("    async def rpc_handler(request: dict[str, object]) -> dict[str, object]:\n");
-        code.push_str("        \"\"\"JSON-RPC 2.0 entrypoint.\"\"\"\n");
-        code.push_str("        method = request.get(\"method\")\n");
-        code.push_str("        if not isinstance(method, str):\n");
-        code.push_str("            return {\n");
-        code.push_str("                \"jsonrpc\": \"2.0\",\n");
-        code.push_str("                \"error\": {\"code\": -32600, \"message\": \"Invalid request\"},\n");
-        code.push_str("                \"id\": request.get(\"id\"),\n");
-        code.push_str("            }\n");
-        code.push_str("        params = request.get(\"params\")\n");
-        code.push_str("        request_id = request.get(\"id\")\n");
-        code.push_str("        return await handle_jsonrpc_call(method, params, request_id)\n\n");
-
-        code.push_str("    # Call `app.run(...)` to start the JSON-RPC server.\n");
+        code.push_str(&body);
 
         Ok(code)
     }
