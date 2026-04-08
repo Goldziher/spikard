@@ -32,7 +32,7 @@ spikard-core.workspace = true
 futures-util = "0.3"
 futures = "0.3"
 jsonschema.workspace = true
-serde_qs = "1.0"
+serde_qs = "1.1"
 lazy_static = "1.5"
 lru = "0.16"
 regex = "1"
@@ -41,12 +41,12 @@ urlencoding = "2.1"
 url = "2.5"
 mime = "0.3"
 jiff = "0.2"
-uuid = "1.22"
+uuid = "1.23"
 ahash = "0.8"
 bytes = "1.11"
 http-body-util = "0.1"
 http-body = "1.0"
-axum-test = { version = "19", features = ["ws"] }
+axum-test = { version = "20", features = ["ws"] }
 anyhow = "1.0"
 cookie = "0.18"
 flate2.workspace = true

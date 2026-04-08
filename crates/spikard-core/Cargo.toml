@@ -30,10 +30,10 @@ flate2.workspace = true
 brotli = "8.0"
 http.workspace = true
 base64 = "0.22"
-serde_qs = "1.0"
+serde_qs = "1.1"
 url = "2.5"
 jiff = "0.2"
-uuid = "1.22"
+uuid = "1.23"
 indexmap = "2.13"
 tokio = { version = "1", optional = true, default-features = false, features = [
   "rt",

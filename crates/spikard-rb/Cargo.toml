@@ -28,14 +28,14 @@ spikard-http = { path = "../spikard-http", features = ["di"] }
 spikard-bindings-shared = { path = "../spikard-bindings-shared" }
 spikard-rb-macros = { path = "../spikard-rb-macros" }
 axum = { workspace = true }
-axum-test = "19"
+axum-test = "20"
 bytes = "1.11"
 cookie = "0.18"
 tokio = { workspace = true }
 tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
 tungstenite = "0.29"
 tracing = "0.1"
-serde_qs = "1.0"
+serde_qs = "1.1"
 urlencoding = "2.1"
 once_cell = "1.21"
 async-stream = "0.3"

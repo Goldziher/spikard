@@ -9,12 +9,12 @@
 		"dev": "tsx watch server.ts"
 	},
 	"dependencies": {
-		"@morojs/moro": "^1.7.21"
+		"@morojs/moro": "^1.7.22"
 	},
 	"devDependencies": {
-		"@types/node": "^25.5.0",
+		"@types/node": "^25.5.2",
 		"tsx": "^4.21.0",
-		"typescript": "^5.9.3"
+		"typescript": "^6.0.2"
 	},
 	"engines": {
 		"node": ">=20.0.0"

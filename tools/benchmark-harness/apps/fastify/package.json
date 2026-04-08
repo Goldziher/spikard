@@ -10,13 +10,13 @@
 	},
 	"dependencies": {
 		"@fastify/formbody": "^8.0.2",
-		"@fastify/multipart": "^9.4.0",
-		"fastify": "^5.8.2"
+		"@fastify/multipart": "^10.0.0",
+		"fastify": "^5.8.4"
 	},
 	"devDependencies": {
-		"@types/node": "^25.5.0",
+		"@types/node": "^25.5.2",
 		"tsx": "^4.21.0",
-		"typescript": "^5.9.3"
+		"typescript": "^6.0.2"
 	},
 	"engines": {
 		"node": ">=20.0.0"

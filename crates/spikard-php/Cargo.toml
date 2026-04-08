@@ -32,7 +32,7 @@ spikard-core = { workspace = true }
 spikard-http = { path = "../spikard-http", optional = true, features = ["di"] }
 spikard-bindings-shared = { path = "../spikard-bindings-shared", optional = true }
 axum = { workspace = true, optional = true }
-axum-test = { version = "19", optional = true }
+axum-test = { version = "20", optional = true }
 urlencoding = { version = "2.1", optional = true }
 bytes = { version = "1", optional = true }
 tower = { workspace = true }

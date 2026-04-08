@@ -8,7 +8,7 @@
 		"test:watch": "vitest"
 	},
 	"dependencies": {
-		"@spikard/node": "0.12.0"
+		"@spikard/node": "0.13.0"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
@@ -19,9 +19,9 @@
 		]
 	},
 	"devDependencies": {
-		"@types/node": "^25.5.0",
+		"@types/node": "^25.5.2",
 		"tsx": "^4.21.0",
-		"typescript": "^5.9.3",
-		"vitest": "^4.1.0"
+		"typescript": "^6.0.2",
+		"vitest": "^4.1.3"
 	}
 }

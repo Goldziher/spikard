@@ -55,8 +55,8 @@ classifiers = [
 ]
 dependencies = [
   "cloudpickle>=3.1.2",
-  "granian>=2.7.2",
-  "grpcio>=1.78",
+  "granian>=2.7.3",
+  "grpcio>=1.80.0",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
   "msgspec>=0.19",
