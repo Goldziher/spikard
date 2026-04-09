@@ -39,21 +39,25 @@ Compare multiple frameworks:
 ## What We Measure
 
 ### Throughput
+
 - **Requests per second (RPS)**: Primary performance indicator
 - **Bytes per second**: Network throughput
 - **Success rate**: Percentage of successful requests
 
 ### Latency Distribution
+
 - **Mean and median latency**: Average and typical request times
 - **Percentiles**: p50, p90, p95, p99, p99.9 for understanding tail latency
 - **Min/max latency**: Latency range
 
 ### Resource Utilization
+
 - **CPU usage**: Average, peak, and p95 CPU percentage
 - **Memory consumption**: Resident set size in MB
 - **Startup metrics**: Process spawn time, time to first response
 
 ### Language-Specific Profiling
+
 - **Python**: GIL wait time, GIL contention, FFI overhead, GC statistics
 - **Node.js**: V8 heap usage, event loop lag, GC time
 - **Ruby**: GC count and time, heap pages, live objects
@@ -75,6 +79,7 @@ Deep analysis of a single framework implementation across multiple workload suit
 ```
 
 Use for:
+
 - Optimizing framework performance
 - Identifying bottlenecks
 - Measuring validation overhead
@@ -93,6 +98,7 @@ Statistical comparison of multiple frameworks with significance testing.
 ```
 
 Use for:
+
 - Framework selection decisions
 - Validating performance claims
 - Cross-framework comparisons
@@ -121,11 +127,13 @@ A key feature of the benchmark system is measuring the cost of runtime type vali
 - **Raw**: Direct JSON parsing without validation
 
 Example pairs:
+
 - `spikard-python` vs `spikard-raw`
 - `fastapi` vs `fastapi-raw`
 - `express` vs `express-raw`
 
 Typical validation overhead:
+
 - **msgspec (Spikard, Litestar)**: ~15% overhead
 - **Pydantic (FastAPI)**: ~40% overhead
 - **Zod (Express)**: ~25% overhead
@@ -198,6 +206,7 @@ Benchmarks produce structured JSON output for automated analysis:
 ```
 
 This schema supports:
+
 - Historical trend analysis
 - Performance regression detection
 - Automated report generation
@@ -249,11 +258,13 @@ The harness automatically detects and uses available load generators:
 - **bombardier**: Go-based alternative with similar features
 
 Install oha:
+
 ```bash
 cargo install oha
 ```
 
 Or bombardier:
+
 ```bash
 go install github.com/codesenberg/bombardier@latest
 ```

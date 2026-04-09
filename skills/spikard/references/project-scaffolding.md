@@ -9,6 +9,7 @@ spikard init my_service --lang python --dir .
 ```
 
 Supported languages:
+
 - `python`
 - `typescript`
 - `rust`
@@ -16,11 +17,13 @@ Supported languages:
 - `php`
 
 Behavior:
+
 - The project directory is `DIR/NAME`.
 - The response includes the created files and next steps.
 - Naming rules are enforced by language-specific scaffolders, so invalid project names should be fixed at the source instead of patched after generation.
 
 Use scaffolding first when:
+
 - starting a new service
 - creating language-specific examples
 - building a generator regression fixture

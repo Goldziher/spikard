@@ -2,7 +2,9 @@
 name: openrpc-support
 priority: high
 ---
+
 OpenRPC (JSON-RPC) support must:
+
 - Parse OpenRPC method definitions
 - Generate type-safe method handlers
 - Validate method parameters against schema

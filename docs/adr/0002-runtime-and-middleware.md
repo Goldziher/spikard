@@ -1,11 +1,14 @@
 # ADR 0002: HTTP Runtime and Middleware Pipeline
+
 **Status**: Accepted
 **Date**: 2025-11-20
 
 ## Context
+
 Spikard’s runtime must provide consistent HTTP behavior—routing, validation, middleware, and lifecycle hooks—across all bindings while prioritizing performance and standards compliance.
 
 ## Decision
+
 - **Runtime stack**: `crates/spikard-http` builds on tokio + hyper + axum + tower. Routing uses axum-style patterns (e.g., `/users/{id}`) with typed parameter extraction for strings, numbers, UUIDs, dates, and booleans.
 - **Middleware order (in Rust)**:
   1. Request ID (configurable header + UUID)
@@ -21,11 +24,13 @@ Spikard’s runtime must provide consistent HTTP behavior—routing, validation,
 - **Static files**: Served via tower-http with ETag/Last-Modified and optional precompressed assets when configured.
 
 ## Consequences
+
 - All bindings must forward `ServerConfig` and related middleware configs without altering order or defaults.
 - Hook registration in bindings must avoid overhead when no hooks are registered (Rust keeps fast-path checks).
 - Middleware additions must update fixtures, configs, and e2e suites across languages.
 
 ## References
+
 - Runtime: `crates/spikard-http`
 - Configs: `crates/spikard-core/src/config.rs`, language wrappers in `packages/*/`
 - Fixtures: `testing_data/validation_errors`, `testing_data/*_limits`, `testing_data/cors`, `testing_data/static_files`, `testing_data/rate_limit`

@@ -3,7 +3,6 @@ priority: high
 description: "Ruby Bindings Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high

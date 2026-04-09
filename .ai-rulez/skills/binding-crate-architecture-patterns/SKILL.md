@@ -3,7 +3,6 @@ priority: high
 description: "Binding Crate Architecture Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high
@@ -24,7 +23,7 @@ Binding crates expose Rust libraries to host languages. Each binding framework h
 
 **Pattern**: `{lib}-{language}` or `{lib}-{shortcode}`
 
-```
+```text
 html-to-markdown-py        # PyO3 → Python
 html-to-markdown-node      # NAPI-RS → Node.js/TypeScript
 html-to-markdown-rb        # Magnus → Ruby
@@ -45,7 +44,7 @@ description = "Python bindings for HTML to Markdown conversion"
 
 **Directory structure**:
 
-```
+```text
 crates/html-to-markdown-py/
 ├── src/
 │   ├── lib.rs              # PyO3 module definition
@@ -113,7 +112,7 @@ fn to_py_error(err: html_to_markdown::Error) -> PyErr {
 
 **Directory structure**:
 
-```
+```text
 crates/html-to-markdown-node/
 ├── src/
 │   ├── lib.rs              # NAPI module
@@ -196,7 +195,7 @@ export class HtmlConverter {
 
 **Directory structure**:
 
-```
+```text
 crates/html-to-markdown-rb/
 ├── src/
 │   ├── lib.rs
@@ -246,7 +245,7 @@ pub fn init() -> magnus::Result<()> {
 
 **Directory structure**:
 
-```
+```text
 crates/html-to-markdown-php/
 ├── src/
 │   ├── lib.rs

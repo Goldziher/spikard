@@ -5,7 +5,9 @@ This directory contains comprehensive integration tests for the spikard-bindings
 ## Test Structure
 
 ### 1. Unit Tests (in `src/` modules)
+
 Each module includes inline unit tests covering basic functionality:
+
 - **102 unit tests** total across all modules
 - Test basic API surface, happy paths, and common edge cases
 - Located in `#[cfg(test)] mod tests` blocks within each module
@@ -13,7 +15,9 @@ Each module includes inline unit tests covering basic functionality:
 ### 2. Integration Test Suites
 
 #### `handler_base_integration.rs` (10 tests)
+
 Comprehensive integration tests for the `handler_base` module:
+
 - **Coverage achieved**: 40/40 lines (100%)
 - Tests validation error paths
 - Tests parameter validation integration
@@ -21,13 +25,16 @@ Comprehensive integration tests for the `handler_base` module:
 - Tests builder pattern with multiple validators
 
 Key scenarios:
+
 - Validation errors from SchemaValidator
 - Parameter validation failures
 - Handler execution error paths
 - Builder pattern chaining
 
 #### `error_response_edge_cases.rs` (19 tests)
+
 Edge case tests for the `error_response` module:
+
 - **Coverage achieved**: 44/48 lines (91.67%)
 - Tests all status code convenience methods
 - Tests complex nested error details
@@ -35,13 +42,16 @@ Edge case tests for the `error_response` module:
 - Tests ProblemDetails with extensions and instance
 
 Key scenarios:
+
 - Unicode and special characters in error messages
 - Null values and complex JSON structures
 - All HTTP status code builders
 - RFC 9457 Problem Details format
 
 #### `full_coverage.rs` (12 tests)
+
 Full-coverage tests across all modules:
+
 - Tests all remaining code paths
 - Comprehensive lifecycle hook tests
 - Full validation helper coverage
@@ -49,6 +59,7 @@ Full-coverage tests across all modules:
 - Conversion trait implementations
 
 Key scenarios:
+
 - All lifecycle hook types
 - Header and body validation with all field types
 - Test client configuration and metadata
@@ -72,6 +83,7 @@ Key scenarios:
 ## Uncovered Lines
 
 Only 4 lines remain uncovered, all in `error_response.rs`:
+
 - Lines 131-132: Serialization fallback for ValidationError
 - Lines 156-157: Serialization fallback for ProblemDetails
 
@@ -93,6 +105,7 @@ cargo tarpaulin --package spikard-bindings-shared --out Html
 ## Test Philosophy
 
 These tests follow spikard project conventions:
+
 - ✅ Use `pretty_assertions` for clear diffs
 - ✅ Test both success and error paths
 - ✅ Use fixtures from `testing_data/` where applicable

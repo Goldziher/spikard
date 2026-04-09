@@ -42,6 +42,7 @@ Located in `/crates/spikard-http/src/middleware/`:
 ### Server Configuration
 
 **ServerConfig** exposes:
+
 - Middleware configuration (CompressionConfig, RateLimitConfig, StaticFilesConfig)
 - TLS/SSL settings
 - Graceful shutdown timeouts
@@ -76,6 +77,7 @@ Located in `/crates/spikard-http/src/middleware/`:
 ## Testing
 
 Comprehensive tests in `/crates/spikard-http/tests/`:
+
 - `server_middleware_behavior.rs` - Middleware ordering and composition
 - `server_auth_middleware_behavior.rs` - Authentication flows
 - `middleware_stack_integration.rs` - Full stack integration

@@ -25,6 +25,7 @@ end
 ```
 
 The `Spikard.Request` struct provides access to:
+
 - `get_path_param(request, key)` - Path parameters
 - `get_query_param(request, key, default)` - Query parameters
 - `get_header(request, name)` - Request headers (case-insensitive)

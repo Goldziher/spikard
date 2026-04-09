@@ -32,6 +32,7 @@
 High-performance HTTP framework for Node.js powered by a Rust core. Provides type-safe routing, validation, middleware, and testing via napi-rs bindings with zero-copy JSON conversion.
 
 ## Features
+
 - **Rust-Powered Performance**: Native speed via Tokio with dedicated thread pool
 - **Full TypeScript Support**: Auto-generated types from napi-rs FFI bindings
 - **Zero-Copy JSON**: Direct conversion without serialization overhead
@@ -96,6 +97,7 @@ app.addRoute(
 
 app.run({ port: 8000 });
 ```
+
 ## Routing & Schemas
 
 Routes support Zod validation (recommended) or raw JSON Schema:
@@ -173,6 +175,7 @@ get("/search")(async (req) => {
 ## Advanced Features
 
 **File Uploads:**
+
 ```typescript
 post("/upload")(async (req) => {
   const body = req.json<{ file: UploadFile }>();
@@ -181,6 +184,7 @@ post("/upload")(async (req) => {
 ```
 
 **Streaming Responses:**
+
 ```typescript
 get("/stream")(async function* () {
   for (let i = 0; i < 10; i++) {
@@ -250,6 +254,7 @@ Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/ben
 Spikard is **1.2x faster than Kito and 2.4x faster than Fastify**.
 
 Key optimizations:
+
 - **napi-rs** zero-copy FFI bindings
 - **Dedicated Tokio runtime** without blocking Node event loop
 - **Zero-copy JSON** conversion (30-40% faster than JSON.parse)

@@ -20,7 +20,7 @@ Fixtures are stored in `testing_data/protobuf/streaming/` organized by streaming
 
 Spikard follows a rigorous 5-layer testing pyramid with fixtures as the authoritative layer:
 
-```
+```text
      Layer 5: E2E Integration Tests (Multi-Language)
               ↑ All 33+ fixtures run in Python, TypeScript, Ruby, PHP
      Layer 4: Cross-Language Behavior Tests ← fixtures drive these
@@ -34,6 +34,7 @@ Spikard follows a rigorous 5-layer testing pyramid with fixtures as the authorit
 ```
 
 **Key Design Principles**:
+
 - Layer 1 (Rust) is comprehensive (95%+ coverage); layers 2-5 validate bindings, not logic
 - Fixtures connect Layer 4 to Layer 5; all languages must pass identically
 - Fixture validation (schema check) is the gate before any language-specific testing
@@ -61,28 +62,34 @@ Each fixture is a JSON file conforming to `testing_data/protobuf/streaming/schem
 ```
 
 ### name
+
 Human-readable test case identifier. Used in test output and parametrization IDs.
 
 **Example**: `"Server streaming - empty stream"`
 
 ### description
+
 Detailed explanation of what the test validates. Should describe the behavior and why it matters.
 
 **Example**:
-```
+
+```text
 "Tests server streaming RPC that returns an empty stream.
  The server opens the stream but sends no messages before completing successfully."
 ```
 
 ### category
+
 Classification of the streaming pattern being tested.
 
 **Valid Values**: `server_streaming`, `client_streaming`, `bidirectional_streaming`, `error`
 
 ### protobuf
+
 Complete protobuf schema including messages and service definitions.
 
 **Structure**:
+
 ```json
 {
   "package": "example.v1",
@@ -134,14 +141,17 @@ Complete protobuf schema including messages and service definitions.
 ```
 
 ### handler
+
 Configuration specifying which service/method the fixture tests.
 
 **Fields**:
+
 - `service`: Fully qualified service name (package + service)
 - `method`: RPC method name
 - `timeout_ms` (optional): Timeout in milliseconds
 
 **Example**:
+
 ```json
 {
   "service": "example.v1.StreamService",
@@ -151,9 +161,11 @@ Configuration specifying which service/method the fixture tests.
 ```
 
 ### request
+
 Input data for the RPC call. Structure varies by streaming mode.
 
 **For Unary/Server Streaming** (single message):
+
 ```json
 {
   "metadata": {
@@ -167,6 +179,7 @@ Input data for the RPC call. Structure varies by streaming mode.
 ```
 
 **For Client Streaming** (stream of messages):
+
 ```json
 {
   "metadata": {
@@ -181,6 +194,7 @@ Input data for the RPC call. Structure varies by streaming mode.
 ```
 
 **For Large Streams** (auto-generated):
+
 ```json
 {
   "metadata": {},
@@ -191,9 +205,11 @@ Input data for the RPC call. Structure varies by streaming mode.
 ```
 
 ### expected_response
+
 Expected outcome of the RPC call.
 
 **For Successful Unary/Client Streaming** (single response):
+
 ```json
 {
   "status_code": "OK",
@@ -204,6 +220,7 @@ Expected outcome of the RPC call.
 ```
 
 **For Successful Server/Bidirectional Streaming** (stream):
+
 ```json
 {
   "status_code": "OK",
@@ -215,6 +232,7 @@ Expected outcome of the RPC call.
 ```
 
 **For Error Cases**:
+
 ```json
 {
   "status_code": "INVALID_ARGUMENT",
@@ -226,6 +244,7 @@ Expected outcome of the RPC call.
 ```
 
 ### tags
+
 Array of strings for test categorization and filtering.
 
 **Common Tags**: `server_streaming`, `client_streaming`, `bidirectional_streaming`, `error`, `empty`, `large_payload`, `metadata`, `unicode`, `edge_cases`, `performance`
@@ -241,6 +260,7 @@ Array of strings for test categorization and filtering.
 #### 1. Determine Category and Location
 
 First, identify which streaming pattern and error type:
+
 - **Server Streaming**: `/testing_data/protobuf/streaming/server/`
 - **Client Streaming**: `/testing_data/protobuf/streaming/client/`
 - **Bidirectional**: `/testing_data/protobuf/streaming/bidirectional/`
@@ -251,6 +271,7 @@ First, identify which streaming pattern and error type:
 Name the file descriptively: `{number}_{category}_{scenario}.json`
 
 **Numbering Convention**:
+
 - Server: 20-29
 - Client: 30-39
 - Bidirectional: 40-49
@@ -340,7 +361,8 @@ task validate:fixtures
 ```
 
 Expected output:
-```
+
+```text
 ✓ All fixtures valid
 ```
 
@@ -602,6 +624,7 @@ Specify RPC timeout in milliseconds via `handler.timeout_ms`:
 ```
 
 Test framework converts to seconds before passing to client:
+
 ```python
 timeout = timeout_ms / 1000 if timeout_ms else None
 await client.execute_server_streaming(..., timeout=timeout)
@@ -715,12 +738,14 @@ All language bindings must pass **identical fixtures**. If a fixture passes in P
 ### Ensuring Parity
 
 1. **Run all languages in same test suite**:
+
    ```bash
    task test:grpc:fixtures
    ```
 
 2. **Verify identical results**:
-   ```
+
+   ```text
    Python: 33 tests passed
    TypeScript: 33 tests passed
    Ruby: 33 tests passed
@@ -735,6 +760,7 @@ All language bindings must pass **identical fixtures**. If a fixture passes in P
 ### Example Parity Variance
 
 Acceptable (documented in fixture):
+
 ```json
 {
   "tags": ["server_streaming", "parity:type_coercion"],
@@ -743,6 +769,7 @@ Acceptable (documented in fixture):
 ```
 
 Unacceptable (must be fixed):
+
 ```json
 {
   "expected_response": {
@@ -774,7 +801,8 @@ task verify:coverage
 ```
 
 Expected output:
-```
+
+```text
 Coverage Results:
   ✓ PASS Python: 80%+
   ✓ PASS TypeScript: 80%+
@@ -787,6 +815,7 @@ Coverage Results:
 If coverage is below threshold:
 
 1. **Identify uncovered lines**:
+
    ```bash
    cd packages/python
    pytest --cov=spikard_py --cov-report=html
@@ -800,6 +829,7 @@ If coverage is below threshold:
    - Streaming mode combinations
 
 3. **Re-run coverage verification**:
+
    ```bash
    task verify:coverage
    ```
@@ -813,6 +843,7 @@ If coverage is below threshold:
 On every push to `main` or PR:
 
 1. **Validate all fixtures** against schema:
+
    ```yaml
    validate-fixtures:
      runs-on: ubuntu-latest
@@ -821,6 +852,7 @@ On every push to `main` or PR:
    ```
 
 2. **Run fixture tests** in each language:
+
    ```yaml
    test-python:
      runs-on: ubuntu-latest
@@ -831,6 +863,7 @@ On every push to `main` or PR:
    ```
 
 3. **Enforce coverage thresholds**:
+
    ```yaml
    coverage:
      runs-on: ubuntu-latest
@@ -842,6 +875,7 @@ On every push to `main` or PR:
 ### CI Triggering
 
 Fixtures tests run on:
+
 - Push to `main` branch
 - Pull requests modifying:
   - `crates/spikard-http/src/grpc/**`
@@ -875,6 +909,7 @@ task test
 **Problem**: `task validate:fixtures` fails with schema error.
 
 **Solution**:
+
 1. Check fixture JSON syntax: `jq < testing_data/protobuf/streaming/server/20_*.json`
 2. Verify required fields: `name`, `description`, `category`, `protobuf`, `handler`, `request`, `expected_response`, `tags`
 3. Ensure category is valid: `server_streaming`, `client_streaming`, `bidirectional_streaming`, `error`
@@ -885,6 +920,7 @@ task test
 **Problem**: Fixture tests work on macOS but fail on Linux CI.
 
 **Solution**:
+
 1. Check for OS-specific paths or line endings
 2. Verify timezone-dependent code (if using timestamps)
 3. Run CI locally: `act` (GitHub Actions locally)
@@ -895,6 +931,7 @@ task test
 **Problem**: Python tests report 75% coverage; need 80%.
 
 **Solution**:
+
 1. Identify uncovered lines: `pytest --cov-report=html`
 2. Add fixtures for uncovered scenarios:
    - Error cases (CANCELLED, INTERNAL, etc.)
@@ -908,6 +945,7 @@ task test
 **Problem**: `pytest` reports timeout expired mid-stream.
 
 **Solution**:
+
 1. Increase fixture timeout: `"timeout_ms": 30000` (30 seconds)
 2. Check gRPC server is running and healthy
 3. Verify no blocking operations in handler
@@ -918,17 +956,22 @@ task test
 **Problem**: Python passes fixture but TypeScript fails same fixture.
 
 **Solution**:
+
 1. Check error message; identify which language is incorrect
 2. Debug in failing language:
+
    ```bash
    # TypeScript
    pnpm vitest run tests/grpc_fixtures.spec.ts --reporter=verbose
    ```
+
 3. Compare against Python behavior:
+
    ```bash
    # Python
    pytest tests/test_grpc_fixtures.py::test_server_streaming_fixture -vv
    ```
+
 4. Review binding code in failing language (PyO3 vs NAPI-RS vs Magnus vs ext-php-rs)
 5. File issue if binding is incorrect; document if intentional divergence
 
@@ -937,6 +980,7 @@ task test
 **Problem**: Fixture with `stream_generator` fails; generator not invoked.
 
 **Solution**:
+
 1. Verify generator syntax in fixture: `"stream_generator": "sequential counter from 1 to N"`
 2. Check `stream_size` is specified: `"stream_size": 100`
 3. Ensure generator is recognized in test client:
@@ -944,6 +988,7 @@ task test
    - `random` → random values
    - `timestamp` → timestamps
 4. Debug generator expansion:
+
    ```python
    from test_grpc_fixtures import generate_stream
    stream = generate_stream("sequential counter", 10)
@@ -962,6 +1007,7 @@ task test
 ## Quick Reference
 
 ### Create New Fixture
+
 ```bash
 cat > testing_data/protobuf/streaming/{category}/{number}_{name}.json << 'EOF'
 {
@@ -975,16 +1021,19 @@ task validate:fixtures
 ```
 
 ### Run All Tests
+
 ```bash
 task test:grpc:fixtures
 ```
 
 ### Check Coverage
+
 ```bash
 task verify:coverage
 ```
 
 ### Debug Specific Fixture
+
 ```bash
 # Python
 pytest tests/test_grpc_fixtures.py -k "fixture_name" -vv
@@ -994,6 +1043,7 @@ pnpm vitest run -t "fixture_name"
 ```
 
 ### Add Stream Generator
+
 ```json
 {
   "stream_generator": "sequential counter",
@@ -1002,6 +1052,7 @@ pnpm vitest run -t "fixture_name"
 ```
 
 ### Add Error Case
+
 ```json
 {
   "expected_response": {

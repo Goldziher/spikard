@@ -23,6 +23,7 @@ Build high-performance, type-safe gRPC services with Spikard. This guide covers 
 --8<-- "grpc/proto/user_service_basic.md"
 
 **Key concepts**:
+
 1. **`syntax = "proto3"`**: Required (Spikard only supports proto3)
 2. **`package`**: Namespace for types (use versioning: `v1`, `v2`)
 3. **Field numbers**: Unique identifiers (1-536870911) that must never change
@@ -163,7 +164,7 @@ Complete examples of client streaming and bidirectional streaming handlers:
 
 ### Project Structure
 
-```
+```text
 project/
 +-- proto/
 |   +-- user/v1/

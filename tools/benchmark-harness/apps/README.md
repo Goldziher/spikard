@@ -2,7 +2,7 @@
 
 This directory contains minimal HTTP servers for benchmarking different frameworks and language bindings.
 
-## ⚠️  IMPORTANT: Schema-Driven Generation
+## ⚠️ IMPORTANT: Schema-Driven Generation
 
 **DO NOT manually edit the Spikard benchmark applications!**
 
@@ -43,7 +43,7 @@ cp ../benchmark-harness/apps/spikard-python/server.py \
 
 ## Structure
 
-```
+```text
 apps/
 ├── spikard-rust/       # Generated from testing_data (uses spikard-http crate)
 ├── spikard-python/     # Generated from testing_data (uses spikard Python bindings)
@@ -56,6 +56,7 @@ apps/
 ## Implementation Notes
 
 ### Spikard Apps (Generated)
+
 - **Source**: Automatically generated from `../../testing_data/` fixtures
 - **Rust**: Uses Axum routing with `spikard-http` dependency (routes-only benchmark without full middleware stack)
 - **Python**: Uses the full Spikard Python bindings (PyO3) with decorators and complete middleware
@@ -65,6 +66,7 @@ apps/
 - **DO NOT EDIT**: These files will be overwritten when regenerated
 
 ### Baseline Apps (Hand-Written)
+
 - **FastAPI** and **Fastify** are hand-written comparison baselines
 - These can be edited as needed for fair comparisons
 - They should match the same endpoint patterns as the generated Spikard apps
@@ -72,6 +74,7 @@ apps/
 ## Running Servers
 
 ### Spikard Rust
+
 ```bash
 cd apps/spikard-rust
 cargo build --release
@@ -79,6 +82,7 @@ cargo build --release
 ```
 
 ### Spikard Python
+
 ```bash
 cd tools/benchmark-harness
 # Sync/async variant (same code, async handlers)
@@ -87,6 +91,7 @@ PYTHONPATH=../../packages/python ../../target/release/spikard run \
 ```
 
 ### FastAPI
+
 ```bash
 cd apps/fastapi
 python server.py 8000

@@ -94,11 +94,13 @@ service.register_handler('myapp.UserService', handler)
 ## Testing
 
 ### Rust Tests
+
 ```bash
 cargo test --package spikard-rb --lib grpc
 ```
 
 ### Ruby Tests
+
 ```bash
 cd packages/ruby
 bundle exec rspec spec/grpc_spec.rb
@@ -107,11 +109,13 @@ bundle exec rspec spec/grpc_spec.rb
 ## Dependencies
 
 ### Rust
+
 - `tonic`: gRPC framework and types
 - `bytes`: Efficient byte buffer
 - `magnus`: Ruby FFI
 
 ### Ruby
+
 - `google-protobuf`: Protobuf serialization (required by applications)
 
 ## Future Enhancements

@@ -16,6 +16,7 @@ Spikard currently lacks a dependency injection (DI) system, requiring developers
 5. **Cross-language inconsistency** - Each binding (Python, Node, Ruby, PHP) implements its own patterns
 
 We need a DI system that is:
+
 - **Simple** - Minimal API surface (like Fastify's decoration pattern)
 - **Flexible** - Type-driven resolution with nested dependencies (like Litestar)
 - **Cross-language** - Same semantics across Python, TypeScript, Ruby, PHP, WASM
@@ -93,6 +94,7 @@ We need a DI system that is:
 **Chosen option:** **Option 2 - Custom DI on Axum State**
 
 We will implement a custom dependency injection system built on Axum's `State<T>` pattern, combining:
+
 - **Fastify's simplicity** - Minimal API (`provide_value`, `provide_factory`)
 - **Litestar's power** - Type-driven resolution, dependency graphs, batched parallel execution
 - **Rust's type safety** - Compile-time checks, zero-cost abstractions
@@ -130,6 +132,7 @@ pub trait Dependency: Send + Sync {
 ```
 
 **Design rationale:**
+
 - `Send + Sync` required for async/multi-threaded handlers
 - Returns `Arc<dyn Any>` for type erasure (containers store heterogeneous types)
 - Takes `resolved` dependencies for nested resolution
@@ -146,11 +149,13 @@ pub struct DependencyContainer {
 ```
 
 **Key methods:**
+
 - `register(key, dependency)` - Add dependency, detect cycles
 - `resolve_for_handler(deps, request, data)` - Resolve batches in parallel
 - `get<T>(key)` - Type-safe retrieval with downcast
 
 **Design rationale:**
+
 - `DependencyGraph` enables topological sorting for parallel resolution
 - Singleton cache shared across requests (Arc<RwLock<>>)
 - Cycle detection at registration time (fail fast)
@@ -164,11 +169,13 @@ struct DependencyGraph {
 ```
 
 **Key methods:**
+
 - `add_dependency(key, depends_on)` - Add edge, check for cycles
 - `calculate_batches(keys)` - Topological sort into parallel batches
 - `has_cycle_with(new_key, new_deps)` - DFS cycle detection
 
 **Design rationale:**
+
 - Batched resolution enables parallelism (like Litestar)
 - Dependencies with no sub-deps resolve in first batch
 - Each batch can execute concurrently (tokio::spawn tasks)
@@ -193,6 +200,7 @@ pub struct FactoryDependency {
 ```
 
 **Design rationale:**
+
 - `ValueDependency` for static values (config, constants)
 - `FactoryDependency` for dynamic creation (DB connections, sessions)
 - Factory can be async and depend on other dependencies
@@ -239,6 +247,7 @@ impl Handler for DependencyInjectingHandler {
 ```
 
 **Design rationale:**
+
 - Wraps existing handler (composition over inheritance)
 - Follows `ValidatingHandler` pattern already in codebase
 - Cleanup happens after handler completes (generator pattern)
@@ -281,6 +290,7 @@ impl ServerConfigBuilder {
 ```
 
 **Design rationale:**
+
 - Builder pattern for ergonomic registration
 - Two simple methods match Fastify/Litestar patterns
 - Type inference reduces boilerplate
@@ -312,6 +322,7 @@ async def get_users(db: AsyncSession) -> list[User]:
 ```
 
 **Design rationale:**
+
 - `Provide` wrapper matches Litestar API
 - Generator pattern for cleanup (Pythonic)
 - Type hints enable auto-injection
@@ -339,6 +350,7 @@ app.get('/users', async (request, { db }: { db: Database }) => {
 ```
 
 **Design rationale:**
+
 - Object destructuring for dependency access
 - TypeScript types for safety
 - Optional decorator support (future)
@@ -364,6 +376,7 @@ end
 ```
 
 **Design rationale:**
+
 - Keyword arguments (idiomatic Ruby)
 - Blocks and procs supported
 - Symbol keys (Ruby convention)
@@ -405,6 +418,7 @@ $app = $app->registerController(UsersController::class);
 ```
 
 **Design rationale:**
+
 - Constructor property promotion (modern PHP)
 - Typed parameters for type safety
 - Closure-based factories
@@ -440,6 +454,7 @@ let config = ServerConfig::builder()
 ```
 
 **Performance characteristics:**
+
 - Independent dependencies resolve concurrently
 - Singleton cache eliminates repeated resolution (Arc clone only)
 - Per-request cache avoids duplicate work within request
@@ -447,6 +462,7 @@ let config = ServerConfig::builder()
 ### Benchmarking Plan
 
 Compare:
+
 1. Handler without DI (baseline)
 2. Handler with DI but no dependencies (overhead check)
 3. Handler with 1 dependency (simple case)
@@ -480,6 +496,7 @@ Compare:
 ### Fixture-Driven Tests
 
 Create `testing_data/di/` fixtures:
+
 - `basic_value/` - Simple value injection
 - `factory/` - Factory dependency
 - `singleton/` - Singleton caching
@@ -488,6 +505,7 @@ Create `testing_data/di/` fixtures:
 - `cleanup/` - Generator cleanup
 
 Each fixture includes:
+
 - `schema.json` - Expected structure
 - `input.json` - Request data
 - `expected.json` - Expected response
@@ -531,6 +549,7 @@ Each fixture includes:
 ### Adding DI to Existing App
 
 **Before:**
+
 ```rust
 #[derive(Clone)]
 struct AppState {
@@ -548,6 +567,7 @@ let app = Router::new()
 ```
 
 **After:**
+
 ```rust
 let config = ServerConfig::builder()
     .provide_value("db", Arc::new(DatabasePool::new()))
@@ -613,12 +633,14 @@ async fn handler(db: Arc<DatabasePool>) -> String {
 ### vs Litestar DI
 
 **Similarities:**
+
 - Type-driven resolution
 - Dependency graph with batched execution
 - Generator pattern for cleanup
 - `Provide` wrapper class
 
 **Differences:**
+
 - Spikard: Rust-first (cross-language)
 - Litestar: Python-only (runtime reflection)
 - Spikard: Explicit keys + optional type-based
@@ -627,11 +649,13 @@ async fn handler(db: Arc<DatabasePool>) -> String {
 ### vs Fastify Decorators
 
 **Similarities:**
+
 - Simple API (`decorate` ≈ `provide_value`)
 - Plugin-based encapsulation
 - Property-based access
 
 **Differences:**
+
 - Spikard: Dependency graph, nested resolution
 - Fastify: Flat decoration (no nesting)
 - Spikard: Type-safe extractors
@@ -640,11 +664,13 @@ async fn handler(db: Arc<DatabasePool>) -> String {
 ### vs Shaku
 
 **Similarities:**
+
 - Compile-time DI
 - Components (singletons) + Providers (factories)
 - Module organization
 
 **Differences:**
+
 - Spikard: Runtime resolution with compile-time types
 - Shaku: Compile-time resolution (macro expansion)
 - Spikard: Cross-language bindings

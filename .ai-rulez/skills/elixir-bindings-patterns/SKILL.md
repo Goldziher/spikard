@@ -3,7 +3,6 @@ priority: high
 description: "Elixir Bindings Patterns (Rustler NIF)"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high

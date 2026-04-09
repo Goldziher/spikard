@@ -37,6 +37,7 @@ curl -X POST http://localhost:8000/rpc \
 ```
 
 Response:
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -62,6 +63,7 @@ curl -X POST http://localhost:8000/rpc \
 ```
 
 Response:
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -89,6 +91,7 @@ curl -X POST http://localhost:8000/rpc \
 ```
 
 Response:
+
 ```json
 {
   "jsonrpc": "2.0",
@@ -108,6 +111,7 @@ curl http://localhost:8000/health
 ```
 
 Response:
+
 ```json
 {
   "status": "healthy"
@@ -144,6 +148,7 @@ $app->post('/rpc', jsonrpc_method: $methodInfo, function ($email, $name) {
 ### Method Naming Rules
 
 Method names must follow these rules:
+
 - Non-empty string
 - Alphanumeric characters, dots (.), underscores (_), and hyphens (-)
 - Cannot start with a dot or hyphen
@@ -156,6 +161,7 @@ Valid examples: `math.add`, `user.create`, `get_user_by_id`, `myMethod`
 ## Validation
 
 The framework automatically validates:
+
 - Method names (alphanumeric, dots, underscores only)
 - Parameter schemas (if provided)
 - Result schemas (if provided)

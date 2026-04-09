@@ -38,11 +38,13 @@ The server will start on `http://0.0.0.0:8000`
 ## Testing the Routes
 
 ### Root endpoint
+
 ```bash
 curl http://localhost:8000/
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Hello from Spikard Node!",
@@ -51,11 +53,13 @@ curl http://localhost:8000/
 ```
 
 ### Health check
+
 ```bash
 curl http://localhost:8000/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -64,11 +68,13 @@ curl http://localhost:8000/health
 ```
 
 ### Get user by ID
+
 ```bash
 curl http://localhost:8000/users/42
 ```
 
 **Response:**
+
 ```json
 {
   "user_id": "42",
@@ -77,6 +83,7 @@ curl http://localhost:8000/users/42
 ```
 
 ### Echo endpoint
+
 ```bash
 curl -X POST http://localhost:8000/echo \
   -H "Content-Type: application/json" \
@@ -84,6 +91,7 @@ curl -X POST http://localhost:8000/echo \
 ```
 
 **Response:**
+
 ```json
 {
   "echoed": true,
@@ -96,7 +104,7 @@ curl -X POST http://localhost:8000/echo \
 
 ## Code Structure
 
-```
+```text
 node-simple/
 ├── src/
 │   └── server.ts         # Main application with route handlers
@@ -108,6 +116,7 @@ node-simple/
 ## Next Steps
 
 For more advanced examples, see:
+
 - [`examples/node/`](../node/) - Progressive tutorial examples (validation, streaming, WebSockets, lifecycle hooks)
 - [`packages/node/README.md`](../../packages/node/README.md) - Full Node.js binding documentation
 - [`docs/adr/`](../../docs/adr/) - Architecture Decision Records
@@ -148,6 +157,7 @@ post("/echo")(async function handleEcho(req) {
 ### Response Types
 
 Handlers can return:
+
 - Plain objects (automatically serialized to JSON)
 - Strings (returned as text/plain)
 - Response objects with custom status codes and headers
@@ -156,4 +166,4 @@ Handlers can return:
 
 - **Full API**: [packages/node/README.md](../../packages/node/README.md)
 - **Examples**: [examples/node/](../node/)
-- **Issues**: https://github.com/Goldziher/spikard/issues
+- **Issues**: <https://github.com/Goldziher/spikard/issues>

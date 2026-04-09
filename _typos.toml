@@ -1,0 +1,34 @@
+[files]
+extend-exclude = [
+    "docs/assets/benchmarks/*.html",
+]
+
+[default.extend-words]
+# Intentional test data: short strings for min_length validation tests
+fo = "fo"
+Fo = "Fo"
+FO = "FO"
+# Intentional test data: "café" split by unicode escaping
+caf = "caf"
+Caf = "Caf"
+# Intentional test data: misspelled field name for validation error tests
+nam = "nam"
+# Intentional test data: misspelled method name for JSON-RPC error tests
+Userr = "Userr"
+lsit = "lsit"
+# Intentional test data: boolean case variation "TrUe"
+Ue = "Ue"
+# C/C++ AST cursor kind CXCursor_ParmDecl
+Parm = "Parm"
+# Correct English: plural of enumerable
+enumerables = "enumerables"
+Enumerables = "Enumerables"
+# Minified JS variables
+hte = "hte"
+Hte = "Hte"
+tre = "tre"
+Tre = "Tre"
+ure = "ure"
+fre = "fre"
+bre = "bre"
+wre = "wre"

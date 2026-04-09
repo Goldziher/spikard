@@ -8,7 +8,7 @@ Spikard's Python bindings use PyO3 to provide a Pythonic API for building web se
 
 ## Architecture Diagram
 
-```
+```text
 +-------------------------------------------------------------+
 |                    Spikard Application                       |
 |                  (packages/python/spikard/)                  |
@@ -45,7 +45,8 @@ Spikard's Python bindings use PyO3 to provide a Pythonic API for building web se
 
 The current architecture uses `pyo3_async_runtimes::tokio::into_future()` to convert Python coroutines directly into Rust futures on the Tokio runtime. This eliminates the previous design's dedicated event loop thread and `run_coroutine_threadsafe` overhead.
 
-### Key Design:
+### Key Design
+
 - **TaskLocals** are initialized once in a `OnceCell` at server startup
 - Python coroutines are converted to Tokio futures via `into_future()`
 - The GIL is acquired only to call into Python, then released during async I/O
@@ -55,7 +56,7 @@ The current architecture uses `pyo3_async_runtimes::tokio::into_future()` to con
 
 ### Asynchronous Handler Flow
 
-```
+```text
 HTTP Request
     |
 Axum Router (Tokio)
@@ -75,7 +76,7 @@ HTTP Response
 
 ### Synchronous Handler Flow
 
-```
+```text
 HTTP Request
     |
 Axum Router (Tokio)
@@ -129,12 +130,14 @@ Type-based DI is the recommended pattern. Dependencies keyed by type are stored 
 ## Code References
 
 ### Rust Implementation
+
 - **Async handler execution**: `crates/spikard-py/src/handler.rs`
 - **JSON conversion**: `crates/spikard-py/src/handler.rs:json_to_python()`
 - **Python handler trait**: `crates/spikard-py/src/handler.rs:PythonHandler`
 - **Server entry point**: `crates/spikard-py/src/lib.rs:run_server()`
 
 ### Python API
+
 - **Application class**: `packages/python/spikard/app.py:Spikard`
 - **Router**: `packages/python/spikard/routing.py:Router`
 - **DI**: `packages/python/spikard/di.py:Provide`

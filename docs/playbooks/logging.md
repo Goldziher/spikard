@@ -75,6 +75,7 @@ Standardize request IDs, structured logs, and tracing across bindings.
     ```
 
 ## Tips
+
 - Forward `x-request-id` from clients or generate one; include it in logs and errors.
 - Prefer structured logs (JSON) and tracing exporters (OTel) where available.
 - Keep log volume low in hot paths; push verbose data to debug-only logs.

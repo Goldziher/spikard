@@ -32,6 +32,7 @@ Shared transport-agnostic primitives and types for building Spikard runtimes acr
 </div>
 
 ## Features
+
 - **Transport-agnostic** request/response models
 - **JSON Schema validation** via jsonschema crate
 - **Gzip and Brotli** compression/decompression
@@ -114,7 +115,7 @@ validate_body(&body, &schema)?;
 
 `spikard-core` sits at the foundation of the Spikard architecture:
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  Language Bindings                  │
 │  (Python, Node, Ruby, PHP, Elixir)  │

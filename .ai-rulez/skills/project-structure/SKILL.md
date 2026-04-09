@@ -3,14 +3,13 @@ priority: medium
 description: "Project Structure & Conventions"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: medium
 
 # Project Structure & Conventions
 
-```
+```text
 html-to-markdown/
 ├── crates/
 │   ├── html-to-markdown/           # Core Rust library (main logic)

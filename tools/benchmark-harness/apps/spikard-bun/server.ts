@@ -10,7 +10,6 @@
 import { createRequire } from "node:module";
 import process from "node:process";
 import { readFileSync } from "node:fs";
-import { writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -77,47 +76,6 @@ function parameterSchema(key: string): unknown {
 
 function responseSchema(key: string): unknown {
 	return responseSchemas[key];
-}
-
-type BunMetricsSnapshot = {
-	heap_used_mb: number;
-	gc_time_ms: number | null;
-};
-
-const profilingEnabled = process.env.SPIKARD_PROFILE_ENABLED === "1" || Boolean(process.env.SPIKARD_NODE_METRICS_FILE);
-
-function resolveMetricsPath(): string {
-	const envPath = process.env.SPIKARD_NODE_METRICS_FILE;
-	return envPath && envPath.length > 0 ? envPath : `/tmp/bun-metrics-${process.pid}.json`;
-}
-
-function startMetricsCollector(): void {
-	const flush = async (): Promise<void> => {
-		try {
-			const heap = process.memoryUsage();
-			const snapshot: BunMetricsSnapshot = {
-				heap_used_mb: heap.heapUsed / (1024 * 1024),
-				gc_time_ms: null,
-			};
-			await writeFile(resolveMetricsPath(), JSON.stringify(snapshot, null, 2), "utf8");
-		} catch {
-			// Best-effort only.
-		}
-	};
-
-	process.once("SIGTERM", () => {
-		void flush().finally(() => process.exit(0));
-	});
-	process.once("SIGINT", () => {
-		void flush().finally(() => process.exit(0));
-	});
-	process.once("beforeExit", () => {
-		void flush();
-	});
-}
-
-if (profilingEnabled) {
-	startMetricsCollector();
 }
 
 function registerRoute(

@@ -21,9 +21,11 @@ The DI system enables handlers to declare dependencies that are automatically re
 Basic dependency injection patterns that form the foundation of the DI system.
 
 #### 01_value_dependency_success.json
+
 **Purpose:** Tests simple value injection (config, constants)
 
 **Dependencies:**
+
 - `app_name`: String value "SpikardApp"
 - `version`: String value "1.0.0"
 - `max_connections`: Integer value 100
@@ -35,9 +37,11 @@ Basic dependency injection patterns that form the foundation of the DI system.
 ---
 
 #### 02_factory_dependency_success.json
+
 **Purpose:** Tests factory dependency that creates instances on-demand
 
 **Dependencies:**
+
 - `timestamp_generator`: Factory that creates timestamps
 
 **Expected:** Handler receives timestamp from factory. Each request gets a new timestamp (not cached).
@@ -47,9 +51,11 @@ Basic dependency injection patterns that form the foundation of the DI system.
 ---
 
 #### 03_async_factory_success.json
+
 **Purpose:** Tests async factory that creates resources asynchronously
 
 **Dependencies:**
+
 - `db_pool`: Async factory that creates database pool
 
 **Expected:** Handler receives connected database pool. Pool is cached within request (cacheable=true).
@@ -59,15 +65,18 @@ Basic dependency injection patterns that form the foundation of the DI system.
 ---
 
 #### 04_nested_dependencies_success.json
+
 **Purpose:** Tests 3-level dependency resolution with parallel batching
 
 **Dependencies:**
+
 - `config`: Value (no dependencies)
 - `db_pool`: Async factory (depends on `config`)
 - `cache`: Async factory (depends on `config`)
 - `auth_service`: Factory (depends on `db_pool` and `cache`)
 
 **Resolution Order:**
+
 1. Batch 1: `config` (no dependencies, resolved first)
 2. Batch 2: `db_pool`, `cache` (both depend on config, **resolved in parallel**)
 3. Batch 3: `auth_service` (depends on batch 2, resolved last)
@@ -79,9 +88,11 @@ Basic dependency injection patterns that form the foundation of the DI system.
 ---
 
 #### 05_singleton_caching_success.json
+
 **Purpose:** Tests singleton dependency shared across all requests
 
 **Dependencies:**
+
 - `app_counter`: Factory with `singleton=true`
 
 **Expected:** First request creates counter with UUID. **Subsequent requests receive SAME instance** (same UUID, incremented count).
@@ -89,15 +100,18 @@ Basic dependency injection patterns that form the foundation of the DI system.
 **Test Pattern:** Singleton caching (global shared state)
 
 **Multi-Request Test:** Make 3 requests, verify:
+
 - All have same `counter_id` (UUID)
 - `count` increments: 1, 2, 3
 
 ---
 
 #### 06_per_request_caching_success.json
+
 **Purpose:** Tests per-request caching where dependency is reused within a single request
 
 **Dependencies:**
+
 - `request_id_generator`: Factory with `cacheable=true, singleton=false`
 
 **Handler Uses:** Dependency twice in same request
@@ -113,13 +127,16 @@ Basic dependency injection patterns that form the foundation of the DI system.
 Error handling and validation for dependency injection system.
 
 #### 07_circular_dependency_error.json
+
 **Purpose:** Tests circular dependency detection (A → B, B → A)
 
 **Dependencies:**
+
 - `service_a`: Factory depends on `service_b`
 - `service_b`: Factory depends on `service_a`
 
 **Expected:** 500 error with structured error response:
+
 ```json
 {
   "type": "https://spikard.dev/errors/dependency-error",
@@ -139,6 +156,7 @@ Error handling and validation for dependency injection system.
 ---
 
 #### 08_missing_dependency_error.json
+
 **Purpose:** Tests error when handler requires unregistered dependency
 
 **Dependencies:** (empty)
@@ -146,6 +164,7 @@ Error handling and validation for dependency injection system.
 **Handler Requires:** `non_existent_service`
 
 **Expected:** 500 error with:
+
 ```json
 {
   "type": "https://spikard.dev/errors/dependency-error",
@@ -162,14 +181,17 @@ Error handling and validation for dependency injection system.
 ---
 
 #### 09_type_mismatch_error.json
+
 **Purpose:** Tests error when handler expects different type than provided
 
 **Dependencies:**
+
 - `config`: String value "string_config"
 
 **Handler Expects:** Object type for `config`
 
 **Expected:** 500 error with:
+
 ```json
 {
   "errors": [{
@@ -190,16 +212,20 @@ Error handling and validation for dependency injection system.
 Cleanup and resource lifecycle management.
 
 #### 10_cleanup_after_request.json
+
 **Purpose:** Tests generator pattern cleanup (Python yield, etc.)
 
 **Dependencies:**
+
 - `db_session`: Async factory with `cleanup=true`
 
 **Background State Tracking:**
+
 - State endpoint: `/api/cleanup-state`
 - Expected events: `["session_opened", "session_closed"]`
 
 **Flow:**
+
 1. Request arrives
 2. Factory creates session → records "session_opened"
 3. Handler executes
@@ -213,17 +239,21 @@ Cleanup and resource lifecycle management.
 ---
 
 #### 11_multiple_dependencies_cleanup.json
+
 **Purpose:** Tests cleanup order for multiple dependencies with cleanup
 
 **Dependencies:**
+
 - `db_connection`: Async factory with cleanup
 - `cache_connection`: Async factory with cleanup
 - `session`: Factory with cleanup (depends on db and cache)
 
 **Background State Tracking:**
+
 - Expected events: `["db_opened", "cache_opened", "session_opened", "session_closed", "cache_closed", "db_closed"]`
 
 **Cleanup Order:** **Reverse of resolution order** (like destructors)
+
 1. Resolution: config → db + cache → session
 2. Cleanup: session → cache → db
 
@@ -236,13 +266,16 @@ Cleanup and resource lifecycle management.
 Language-specific dependency injection patterns.
 
 #### 12_python_type_injection.json
+
 **Purpose:** Tests Python type annotation-based injection
 
 **Dependencies:**
+
 - `database_pool`: Object with `python_type="DatabasePool"`
 - `cache_client`: Object with `python_type="CacheClient"`
 
 **Python Handler:**
+
 ```python
 async def handler(db: DatabasePool, cache: CacheClient):
     # Dependencies injected by matching type hints
@@ -255,13 +288,16 @@ async def handler(db: DatabasePool, cache: CacheClient):
 ---
 
 #### 13_python_name_injection.json
+
 **Purpose:** Tests Python parameter name-based injection
 
 **Dependencies:**
+
 - `db_pool`: Object
 - `cache`: Object
 
 **Python Handler:**
+
 ```python
 def handler(db_pool, cache):
     # Dependencies injected by matching parameter names
@@ -274,13 +310,16 @@ def handler(db_pool, cache):
 ---
 
 #### 14_node_destructuring.json
+
 **Purpose:** Tests Node.js/TypeScript object destructuring injection
 
 **Dependencies:**
+
 - `db`: Database object
 - `logger`: Logger object
 
 **TypeScript Handler:**
+
 ```typescript
 async (request, { db, logger }: { db: Database, logger: Logger }) => {
   // Dependencies injected via object destructuring
@@ -294,13 +333,16 @@ async (request, { db, logger }: { db: Database, logger: Logger }) => {
 ---
 
 #### 15_ruby_keyword_args.json
+
 **Purpose:** Tests Ruby keyword argument injection
 
 **Dependencies:**
+
 - `db_pool`: Database pool object
 - `session`: Session object
 
 **Ruby Handler:**
+
 ```ruby
 def handler(request, db_pool:, session:)
   # Dependencies injected as keyword arguments
@@ -318,12 +360,15 @@ end
 Complex DI patterns and integrations.
 
 #### 16_dependency_override.json
+
 **Purpose:** Tests route-level dependency override for testing/mocking
 
 **Dependencies:**
+
 - `api_key_validator`: App-level with `mode="production"`
 
 **Route Overrides:**
+
 - `api_key_validator`: Route-level with `mode="test"`
 
 **Expected:** Handler receives route-level override (mode="test"), not app-level.
@@ -335,14 +380,17 @@ Complex DI patterns and integrations.
 ---
 
 #### 17_mixed_singleton_and_request.json
+
 **Purpose:** Tests mixing singleton and per-request caching strategies
 
 **Dependencies:**
+
 - `app_config`: Value, `singleton=true` (shared across all requests)
 - `db_pool`: Factory, `singleton=true` (shared globally)
 - `request_context`: Factory, `singleton=false, cacheable=true` (per-request)
 
 **Multi-Request Test:**
+
 - Request 1: Creates all dependencies, records UUIDs
 - Request 2: Same `app_config` and `db_pool` UUIDs, **different** `request_context` UUID
 - Request 3: Same pattern
@@ -352,17 +400,21 @@ Complex DI patterns and integrations.
 ---
 
 #### 18_dependency_in_lifecycle_hook.json
+
 **Purpose:** Tests accessing dependencies in lifecycle hooks (onRequest, preHandler)
 
 **Dependencies:**
+
 - `auth_service`: Authentication service
 - `logger`: Logger service
 
 **Lifecycle Hooks:**
+
 - `onRequest`: Uses `logger` dependency
 - `preHandler`: Uses `auth_service` dependency
 
 **Flow:**
+
 1. Request arrives
 2. Resolve dependencies
 3. `onRequest` hook executes (with logger)
@@ -425,6 +477,7 @@ Route-level dependency overrides:
 ### handler.injection_strategy
 
 Language-specific injection pattern:
+
 - `"name"` - Python parameter name matching
 - `"type"` - Python type annotation matching
 - `"destructure"` - Node.js/TypeScript object destructuring
@@ -559,6 +612,7 @@ When adding new DI features:
 ## Questions & Support
 
 For questions about DI fixtures:
+
 - See `IMPLEMENTATION_PLAN.md` for architecture details
 - See `docs/adr/0008-dependency-injection.md` for design rationale
 - Check existing fixtures for patterns

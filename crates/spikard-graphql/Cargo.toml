@@ -12,31 +12,31 @@ categories = ["web-programming::http-server", "web-programming"]
 documentation = "https://docs.rs/spikard-graphql"
 readme = "README.md"
 
-[dependencies]
-spikard-http = { workspace = true }
-spikard-core = { workspace = true }
-tokio.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-thiserror.workspace = true
-tower.workspace = true
-http.workspace = true
-tracing.workspace = true
-axum = { version = "0.8" }
-futures = "0.3"
-bytes = "1.11"
-async-graphql = "7"
-
-[lints]
-workspace = true
+[package.metadata.cargo-machete]
+ignored = ["bytes", "futures", "spikard-core", "tower", "tracing"]
 
 [features]
 default = []
 subscription = []
 
+[dependencies]
+async-graphql = "7"
+axum = { version = "0.8" }
+bytes = "1.11"
+futures = "0.3"
+http.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+spikard-core = { workspace = true }
+spikard-http = { workspace = true }
+thiserror.workspace = true
+tokio.workspace = true
+tower.workspace = true
+tracing.workspace = true
+
 [dev-dependencies]
 doc-comment = "0.3"
 tokio-test = "0.4"
 
-[package.metadata.cargo-machete]
-ignored = ["bytes", "futures", "spikard-core", "tower", "tracing"]
+[lints]
+workspace = true

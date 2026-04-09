@@ -12,12 +12,14 @@ spikard validate-asyncapi SCHEMA
 ```
 
 Working rules:
+
 - Validate suspect AsyncAPI documents before generating broad bundles.
 - Keep fixture output and generated test apps aligned with the same schema revision.
 - Prefer temporary directories or isolated output roots in tests so generated artifacts can be asserted directly.
 - When modifying generator behavior, compare generated file names and contents across CLI and MCP paths.
 
 Good validation targets:
+
 - expected file count
 - expected file names
 - non-empty generated files

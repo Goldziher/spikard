@@ -371,7 +371,7 @@ Error scenarios are documented in `testing_data/validation_errors/` with fixture
 
 ### Example Fixture Structure
 
-```
+```text
 testing_data/validation_errors/
 ├── schema.json                    # JSON Schema for error payloads
 ├── missing_field.json             # Example: missing required field

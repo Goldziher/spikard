@@ -6,6 +6,7 @@ This directory contains runnable examples demonstrating Spikard PHP bindings fea
 
 1. PHP 8.2+ with the Spikard extension loaded
 2. Composer dependencies installed:
+
    ```bash
    cd packages/php
    composer install
@@ -28,14 +29,17 @@ curl http://127.0.0.1:8000
 ## Examples
 
 ### 01. Hello World (`01-hello-world.php`)
+
 The simplest possible Spikard application. Single route returning plain text.
 
 **Features:**
+
 - Basic server configuration
 - Simple GET route
 - Text response
 
 **Try:**
+
 ```bash
 php 01-hello-world.php
 curl http://127.0.0.1:8000
@@ -44,15 +48,18 @@ curl http://127.0.0.1:8000
 ---
 
 ### 02. JSON API (`02-json-api.php`)
+
 REST API with JSON request/response handling.
 
 **Features:**
+
 - JSON responses
 - JSON request body parsing
 - Multiple HTTP methods (GET, POST)
 - Input validation
 
 **Try:**
+
 ```bash
 php 02-json-api.php
 
@@ -68,15 +75,18 @@ curl -X POST http://127.0.0.1:8000/users \
 ---
 
 ### 03. Background Tasks (`03-background-tasks.php`)
+
 Offload slow work to background tasks without blocking responses.
 
 **Features:**
+
 - `BackgroundTask::run()` for async work
 - Fire-and-forget execution
 - Immediate HTTP responses
 - Graceful shutdown
 
 **Try:**
+
 ```bash
 php 03-background-tasks.php
 
@@ -91,15 +101,18 @@ curl -X POST http://127.0.0.1:8000/users \
 ---
 
 ### 04. Server-Sent Events (`04-streaming-sse.php`)
+
 Real-time server-to-client streaming using SSE.
 
 **Features:**
+
 - `StreamingResponse::sse()` helper
 - PHP Generator for event streaming
 - Automatic SSE formatting
 - Browser EventSource client
 
 **Try:**
+
 ```bash
 php 04-streaming-sse.php
 
@@ -113,15 +126,18 @@ curl http://127.0.0.1:8000/events
 ---
 
 ### 05. Dependency Injection (`05-dependency-injection.php`)
+
 Register and resolve dependencies using the DI container.
 
 **Features:**
+
 - Value dependencies (singletons)
 - Factory dependencies with `Provide`
 - Dependency resolution with `dependsOn`
 - DI container configuration
 
 **Try:**
+
 ```bash
 php 05-dependency-injection.php
 curl http://127.0.0.1:8000/users
@@ -151,6 +167,7 @@ curl http://127.0.0.1:8000/users
 ## More Examples
 
 Additional examples planned:
+
 - Path parameters and routing
 - Query parameters
 - Headers and cookies
@@ -165,4 +182,4 @@ Additional examples planned:
 
 - Documentation: `packages/php/README.md`
 - Tests: `e2e/php/`
-- Issues: https://github.com/Goldziher/spikard/issues
+- Issues: <https://github.com/Goldziher/spikard/issues>

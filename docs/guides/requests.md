@@ -47,6 +47,7 @@ Handlers receive a context object tailored to each binding but backed by the sam
     --8<-- "snippets/rust/response_basic.md"
 
 ## Tips
+
 - Use DTOs/schemas so validation runs before your handler executes.
 - Prefer returning plain values/structs; the runtime will serialize and set content types.
 - For streaming/WebSocket/SSE, see the streaming section in the concepts docs.

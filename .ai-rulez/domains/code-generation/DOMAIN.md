@@ -104,6 +104,7 @@ Located in `/testing_data/`:
 5. **Binding registers** with HTTP server
 
 Each binding (Python, Node, Ruby, PHP, WASM) has language-specific code generation:
+
 - Type definitions from schemas
 - Parameter validators
 - Response serializers

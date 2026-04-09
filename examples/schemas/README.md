@@ -7,7 +7,9 @@ Comprehensive OpenAPI 3.1 and AsyncAPI 3.0 schemas demonstrating all of Spikard'
 This suite includes 5 focused, production-ready schemas that collectively showcase Spikard's features:
 
 ### 1. **todo-api.openapi.yaml** - REST CRUD with Validation
+
 Core REST API demonstrating:
+
 - CRUD operations (GET, POST, PUT, DELETE)
 - Request/response validation with JSON Schema
 - Path parameters (UUID-based IDs)
@@ -19,6 +21,7 @@ Core REST API demonstrating:
 - Lifecycle hooks: `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 
 **Showcased Spikard Features:**
+
 - Header validation (Authorization)
 - Request body schema validation
 - Response validation
@@ -28,6 +31,7 @@ Core REST API demonstrating:
 - Lifecycle hooks for logging/monitoring
 
 **Example Endpoints:**
+
 - `GET /todos` - List todos with filters
 - `POST /todos` - Create new todo
 - `GET /todos/{id}` - Get todo by ID
@@ -37,7 +41,9 @@ Core REST API demonstrating:
 ---
 
 ### 2. **file-service.openapi.yaml** - File Operations
+
 REST API for file handling demonstrating:
+
 - Multipart form-data uploads
 - File size validation
 - MIME type restrictions
@@ -48,6 +54,7 @@ REST API for file handling demonstrating:
 - Multiple status codes for upload scenarios (202 Accepted, 413 Payload Too Large)
 
 **Showcased Spikard Features:**
+
 - Multipart/form-data parsing
 - Streaming responses
 - Large payload handling
@@ -58,6 +65,7 @@ REST API for file handling demonstrating:
 - File type validation
 
 **Example Endpoints:**
+
 - `POST /files/upload` - Upload file with multipart
 - `GET /files/{fileId}` - Download file
 - `GET /files/{fileId}/info` - Get file metadata
@@ -67,7 +75,9 @@ REST API for file handling demonstrating:
 ---
 
 ### 3. **chat-service.asyncapi.yaml** - WebSocket Bidirectional
+
 Async messaging API demonstrating:
+
 - WebSocket protocol (wss/ws)
 - Bidirectional message exchange
 - Channel subscription
@@ -78,6 +88,7 @@ Async messaging API demonstrating:
 - Connection state management
 
 **Showcased Spikard Features:**
+
 - WebSocket handler implementation
 - Event-driven patterns
 - Lifecycle hooks: `onRequest` (connection validation), `onResponse` (disconnect handling)
@@ -87,6 +98,7 @@ Async messaging API demonstrating:
 - Multiple message types on single channel
 
 **Example Messages:**
+
 - `chatMessage` - User sends message
 - `userJoined` - User joins chat
 - `userLeft` - User leaves chat
@@ -97,7 +109,9 @@ Async messaging API demonstrating:
 ---
 
 ### 4. **events-stream.asyncapi.yaml** - Server-Sent Events
+
 Async API demonstrating:
+
 - Server-Sent Events (SSE) protocol (https with sse)
 - One-way server-to-client streaming
 - Event type multiplexing
@@ -108,6 +122,7 @@ Async API demonstrating:
 - Automatic subscription management
 
 **Showcased Spikard Features:**
+
 - Server-Sent Events handler implementation
 - Streaming responses
 - Connection pooling
@@ -117,6 +132,7 @@ Async API demonstrating:
 - Lifecycle hooks: `onRequest` (filter validation), `onResponse` (cleanup)
 
 **Example Events:**
+
 - `systemAlert` - Critical system events
 - `userNotification` - User-specific notifications
 - `statusUpdate` - Service status changes
@@ -126,7 +142,9 @@ Async API demonstrating:
 ---
 
 ### 5. **auth-service.openapi.yaml** - Authentication & Security
+
 REST API demonstrating advanced security patterns:
+
 - API key authentication (header, query)
 - Bearer token (JWT) authentication
 - OAuth 2.0 code flow
@@ -138,6 +156,7 @@ REST API demonstrating advanced security patterns:
 - Audit logging patterns
 
 **Showcased Spikard Features:**
+
 - Multiple auth schemes on same endpoint
 - Header validation (Authorization)
 - Query parameter validation
@@ -147,6 +166,7 @@ REST API demonstrating advanced security patterns:
 - Rate limiting per authenticated user
 
 **Example Endpoints:**
+
 - `POST /auth/api-keys` - Generate API key
 - `GET /auth/api-keys` - List API keys
 - `DELETE /auth/api-keys/{keyId}` - Revoke API key
@@ -159,7 +179,9 @@ REST API demonstrating advanced security patterns:
 ## Key Design Patterns
 
 ### Error Handling (RFC 9457)
+
 All schemas use consistent error response format:
+
 ```json
 {
   "type": "about:blank",
@@ -178,29 +200,36 @@ All schemas use consistent error response format:
 ```
 
 ### Authentication Headers
+
 - Bearer tokens: `Authorization: Bearer {token}`
 - API keys: `X-API-Key: {key}` or query param `?api_key={key}`
 - Session cookies: `Cookie: session_id={value}`
 
 ### Pagination
+
 Common query parameters for list endpoints:
+
 - `?page=1&limit=20` - Pagination
 - `?sort=created_at&order=desc` - Sorting
 - `?filter[status]=active` - Filtering
 
 ### Rate Limiting Headers
+
 Response headers:
+
 - `X-RateLimit-Limit: 100`
 - `X-RateLimit-Remaining: 45`
 - `X-RateLimit-Reset: 1702588800`
 
 ### Request Validation
+
 - Path parameters: UUID, numeric IDs, slugs
 - Query parameters: typed, constrained with min/max/pattern
 - Request bodies: JSON Schema with required fields, constraints
 - Headers: Content-Type, Authorization, custom headers
 
 ### Response Schemas
+
 - Success: 2xx with appropriate data
 - Validation errors: 400/422 with field-level errors
 - Auth errors: 401/403 with auth-specific messages
@@ -208,7 +237,9 @@ Response headers:
 - Server errors: 500 with request ID for debugging
 
 ### Lifecycle Hook Integration
+
 All schemas document where lifecycle hooks apply:
+
 - `onRequest`: Connection validation, feature flags, custom headers
 - `preValidation`: Early auth checks, schema selection
 - `preHandler`: Data enrichment, dependency injection
@@ -222,6 +253,7 @@ All schemas document where lifecycle hooks apply:
 ### REST (OpenAPI 3.1)
 
 #### Request Features
+
 - [x] Path parameters (typed: UUID, int, string)
 - [x] Query parameters (typed, constrained, optional)
 - [x] Headers (Authorization, Content-Type, custom)
@@ -232,6 +264,7 @@ All schemas document where lifecycle hooks apply:
 - [x] Conditional requests (If-Modified-Since, ETag)
 
 #### Response Features
+
 - [x] Multiple status codes per endpoint
 - [x] Different response schemas per status
 - [x] Headers (X-RateLimit-*, ETag, Cache-Control)
@@ -239,6 +272,7 @@ All schemas document where lifecycle hooks apply:
 - [x] Binary content (application/octet-stream)
 
 #### Validation
+
 - [x] Required fields
 - [x] Type constraints (string, number, boolean)
 - [x] String constraints (minLength, maxLength, pattern)
@@ -250,6 +284,7 @@ All schemas document where lifecycle hooks apply:
 - [x] Discriminator for polymorphic types
 
 #### Security
+
 - [x] Bearer token (Authorization header)
 - [x] API key (header and query)
 - [x] Multiple auth schemes
@@ -257,6 +292,7 @@ All schemas document where lifecycle hooks apply:
 - [x] Auth on specific endpoints only
 
 #### Error Handling
+
 - [x] RFC 9457 problem details format
 - [x] Field-level validation errors
 - [x] Custom error codes
@@ -264,6 +300,7 @@ All schemas document where lifecycle hooks apply:
 - [x] Request ID for tracing
 
 #### Middleware Features
+
 - [x] Rate limiting (response headers)
 - [x] Compression (gzip, brotli)
 - [x] Request ID generation
@@ -274,6 +311,7 @@ All schemas document where lifecycle hooks apply:
 ### Async (AsyncAPI 3.0)
 
 #### WebSocket Features
+
 - [x] Bidirectional messaging
 - [x] User presence (join/leave)
 - [x] Message acknowledgments
@@ -284,6 +322,7 @@ All schemas document where lifecycle hooks apply:
 - [x] Batch operations
 
 #### SSE Features
+
 - [x] Server-to-client streaming
 - [x] Multiple event types
 - [x] Event filtering
@@ -293,6 +332,7 @@ All schemas document where lifecycle hooks apply:
 - [x] Automatic subscription
 
 #### Message Validation
+
 - [x] Required fields
 - [x] Type constraints
 - [x] Enum values
@@ -300,6 +340,7 @@ All schemas document where lifecycle hooks apply:
 - [x] Payload examples
 
 #### Lifecycle Integration
+
 - [x] Connection validation (onRequest)
 - [x] Disconnect cleanup (onResponse)
 - [x] Message validation (preValidation)
@@ -338,6 +379,7 @@ Each schema serves as:
 5. **Test Fixture Reference**: Validates against testing_data JSON files
 
 The schemas align with:
+
 - `testing_data/headers/*.json` - Request header validation
 - `testing_data/cookies/*.json` - Cookie validation
 - `testing_data/json_bodies/*.json` - Request body validation

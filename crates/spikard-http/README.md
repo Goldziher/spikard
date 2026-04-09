@@ -32,6 +32,7 @@ High-performance HTTP server for Spikard with a complete tower-http middleware s
 </div>
 
 ## Features
+
 - **Axum-based routing** with zero-allocation path matching
 - **Tower middleware stack**: compression, rate limiting, timeouts, CORS, request IDs, auth
 - **JSON Schema validation** for request/response

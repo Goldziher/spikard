@@ -6,6 +6,7 @@ This directory contains runnable examples demonstrating Spikard Ruby bindings fe
 
 1. Ruby 3.2+
 2. Spikard Ruby gem installed:
+
    ```bash
    cd packages/ruby
    bundle install
@@ -28,12 +29,14 @@ Then visit `http://127.0.0.1:8000` in your browser or use curl.
 The simplest possible Spikard application with basic routes.
 
 **Features:**
+
 - Basic server configuration
 - Simple GET routes
 - Text and JSON responses
 - POST endpoint with body parsing
 
 **Try:**
+
 ```bash
 ruby examples/ruby/01_basic_server.rb
 
@@ -52,6 +55,7 @@ curl -X POST http://127.0.0.1:8000/echo \
 REST API with JSON request body validation, query parameters, and path parameters.
 
 **Features:**
+
 - JSON request/response handling
 - Query parameter parsing
 - Path parameters extraction
@@ -60,6 +64,7 @@ REST API with JSON request body validation, query parameters, and path parameter
 - DELETE endpoint
 
 **Try:**
+
 ```bash
 ruby examples/ruby/02_validation.rb
 
@@ -89,6 +94,7 @@ curl -X DELETE http://127.0.0.1:8000/users/1
 Real-time server-to-client streaming for large datasets and Server-Sent Events (SSE).
 
 **Features:**
+
 - Streaming large datasets efficiently
 - Server-Sent Events (SSE) for real-time updates
 - Different streaming formats (NDJSON, CSV, SSE)
@@ -96,6 +102,7 @@ Real-time server-to-client streaming for large datasets and Server-Sent Events (
 - Streaming response helper
 
 **Try:**
+
 ```bash
 ruby examples/ruby/03_streaming.rb
 
@@ -119,6 +126,7 @@ curl http://127.0.0.1:8000/stream/csv
 Bidirectional WebSocket communication and advanced SSE patterns.
 
 **Features:**
+
 - WebSocket chat example
 - WebSocket notifications stream
 - Thread-safe message handling
@@ -127,6 +135,7 @@ Bidirectional WebSocket communication and advanced SSE patterns.
 - Browser-based interactive demo
 
 **Try:**
+
 ```bash
 ruby examples/ruby/04_websocket_sse.rb
 
@@ -141,6 +150,7 @@ ruby examples/ruby/04_websocket_sse.rb
 Demonstrate lifecycle hooks for logging, authentication, and response transformation.
 
 **Features:**
+
 - Request/response logging
 - Authentication with Bearer tokens
 - Request ID tracking
@@ -150,6 +160,7 @@ Demonstrate lifecycle hooks for logging, authentication, and response transforma
 - Hook short-circuiting
 
 **Try:**
+
 ```bash
 ruby examples/ruby/05_lifecycle_hooks.rb
 
@@ -287,4 +298,4 @@ end
 
 - Documentation: `packages/ruby/README.md`
 - Tests: `packages/ruby/spec/`
-- Issues: https://github.com/Goldziher/spikard/issues
+- Issues: <https://github.com/Goldziher/spikard/issues>

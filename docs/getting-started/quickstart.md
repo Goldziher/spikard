@@ -63,6 +63,7 @@ Build the same minimal service in each binding. Choose a tab, copy the snippet, 
     inside your crate/binary, then hit `http://localhost:8000/users/1`
 
 ## Next steps
+
 - Add middleware (logging, auth, tracing) with the same signature in every binding.
 - Wire JSON Schema validation so request/response contracts stay enforced.
 - Deploy using the Rust binary, the CLI, or container images (see [Deployment](../guides/deployment.md)).

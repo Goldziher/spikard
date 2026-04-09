@@ -145,14 +145,12 @@ fn cli_init_command_creates_expected_project_structures_for_each_binding() -> Re
         ])?;
 
         let project_dir = tmp.path().join(project_name);
-        assert!(project_dir.exists(), "expected {} project root", lang);
+        assert!(project_dir.exists(), "expected {lang} project root");
 
         for expected in expected_paths {
             assert!(
                 project_dir.join(expected).exists(),
-                "expected {} to create {}",
-                lang,
-                expected
+                "expected {lang} to create {expected}"
             );
         }
     }

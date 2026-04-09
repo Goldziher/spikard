@@ -3,7 +3,6 @@ priority: critical
 description: "Go 1.25+ Standards"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: critical

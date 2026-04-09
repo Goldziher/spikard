@@ -3,7 +3,6 @@ priority: critical
 description: "Error Handling Strategy"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: critical

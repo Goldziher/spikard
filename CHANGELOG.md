@@ -201,6 +201,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Migration Guide
 
 For existing unary handlers:
+
 ```rust
 // Before
 if !handler.supports_streaming_requests() {
@@ -216,6 +217,7 @@ match handler.rpc_mode() {
 ```
 
 For implementing server streaming:
+
 ```rust
 fn rpc_mode(&self) -> RpcMode {
     RpcMode::ServerStreaming
@@ -230,7 +232,6 @@ fn call_server_stream(
     })
 }
 ```
-
 
 - **gRPC Client Streaming Support**: Full implementation of gRPC client streaming mode
   - `call_client_stream()` trait method for handlers receiving message streams
@@ -499,6 +500,7 @@ fn call_bidi_stream(
 ## [0.6.2] - 2025-12-28
 
 ### Fixed
+
 - Version bump and test app updates for consistency
 
 ## [0.6.1] - Previous Release
@@ -510,7 +512,8 @@ See git history for detailed changes.
 ## Project Structure
 
 ### Codegen Modules
-```
+
+```text
 crates/spikard-cli/src/codegen/
 ├── common/              # Shared utilities (case conversion, escaping, sanitization)
 ├── quality/             # Quality validation framework
@@ -523,7 +526,8 @@ crates/spikard-cli/src/codegen/
 ```
 
 ### Init Module
-```
+
+```text
 crates/spikard-cli/src/init/
 ├── engine.rs            # Core initialization orchestration
 ├── scaffolder.rs        # ProjectScaffolder trait
@@ -541,6 +545,7 @@ When adding new features or generators:
 5. Run `task test` to ensure quality gates pass
 
 For detailed guidelines, see:
+
 - [Code Generation Architecture](docs/adr/0004-code-generation.md)
 - [Project Initialization Guide](docs/init-command.md)
 - [Codegen Modernization](docs/codegen-modernization.md)

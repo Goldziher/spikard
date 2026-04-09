@@ -67,6 +67,7 @@ end
 ```
 
 Supported options:
+
 - `request_schema` - Dry::Schema for request validation
 - `response_schema` - Dry::Schema for response validation
 - `parameter_schema` - Dry::Schema for path parameters
@@ -104,6 +105,7 @@ end
 ```
 
 Response methods:
+
 - `content` - Response body (Hash, Array, or String)
 - `status_code` - HTTP status code (default: 200)
 - `headers` - Hash of response headers
@@ -165,6 +167,7 @@ end
 ```
 
 UploadFile API:
+
 - `filename` - Original filename from the client
 - `content_type` - MIME type
 - `size` - File size in bytes
@@ -223,6 +226,7 @@ app.run(config: config)
 ### RateLimitConfig
 
 Uses Generic Cell Rate Algorithm (GCRA):
+
 - `per_second` - Requests per second
 - `burst` - Burst allowance for temporary spikes
 - `ip_based` - Apply per IP address (default: true)
@@ -315,6 +319,7 @@ end
 ```
 
 WebSocketHandler API:
+
 - `handle_message(message)` - Process incoming JSON message, return response or nil
 - `on_connect` - Called when client connects (optional override)
 - `on_disconnect` - Called when client disconnects (optional override)
@@ -358,11 +363,13 @@ end
 ```
 
 SseEventProducer API:
+
 - `next_event` - Generate the next event; return SseEvent or nil to end stream (required)
 - `on_connect` - Called when client connects (optional override)
 - `on_disconnect` - Called when client disconnects (optional override)
 
 SseEvent API:
+
 - `data` - Hash to JSON serialize
 - `event_type` - Optional event type string
 - `id` - Optional event ID for client reconnection
@@ -397,12 +404,14 @@ end
 ```
 
 gRPC::Request API:
+
 - `service_name` - Fully qualified service name (e.g., "mypackage.UserService")
 - `method_name` - Method name (e.g., "GetUser")
 - `payload` - Binary string containing serialized protobuf message
 - `metadata` - Hash of gRPC metadata (headers)
 
 gRPC::Response API:
+
 - `new(payload:)` - Create response with protobuf payload
 - `metadata=` - Set response metadata
 - `error(message, metadata = {})` - Static method to create error response
@@ -450,6 +459,7 @@ end
 ```
 
 Hook signature:
+
 - Hooks receive a request or response object
 - Return the (possibly modified) object to continue
 - Return a Spikard::Response to short-circuit processing
@@ -517,6 +527,7 @@ client.close
 ```
 
 TestClient methods:
+
 - `get(path, headers:, body:, json:, data:, raw_body:, files:, query:, cookies:)` - GET request
 - `post(path, ...)` - POST request
 - `put(path, ...)` - PUT request
@@ -548,6 +559,7 @@ puts events.first  # => parsed JSON from first event
 ```
 
 Response methods:
+
 - `status_code` / `status` - HTTP status code
 - `headers` - Hash of response headers
 - `body_bytes` - Raw response body as bytes
@@ -567,11 +579,13 @@ app.run(config: config)
 ```
 
 Requirements:
+
 - Ruby 3.2+ (check with `ruby --version`)
 - Rust toolchain (for building native extension)
 - Build the native extension: `bundle exec rake ext:build`
 
 Deployment checklist:
+
 - Ensure `spikard_rb` native extension is built for the target platform
 - Set environment variables for configuration (optional)
 - Run `ruby app.rb` or use a process manager (systemd, supervisord, etc.)

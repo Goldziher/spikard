@@ -3,7 +3,6 @@ priority: critical
 description: "Elixir 1.14+ with ExDoc & Credo"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: critical

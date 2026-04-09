@@ -185,6 +185,7 @@ Test your upload handlers with different scenarios:
 - **Temporary file cleanup**: Ensure temporary files are deleted after processing or on errors
 
 ## Tips
+
 - Enforce size/type limits via middleware or schema where supported.
 - For large uploads, stream chunks instead of reading all bytes into memory.
 - Return metadata (filename, size, type) and store bytes in durable storage.

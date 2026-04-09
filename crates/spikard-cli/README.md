@@ -32,6 +32,7 @@ CLI and MCP server for Spikard applications: project scaffolding, code generatio
 </div>
 
 ## Features
+
 - **Project scaffolding** with `spikard init`
 - **CLI-equivalent MCP server** via `spikard mcp`
 - **Code generation** from OpenAPI, GraphQL, gRPC/Protobuf, AsyncAPI, and OpenRPC

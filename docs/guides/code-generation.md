@@ -27,7 +27,7 @@ spikard generate <protocol> <schema-path> --lang <language> [options]
 
 ### Generation Workflow
 
-```
+```text
 Schema File
     ↓
 Parse & Validate Schema
@@ -54,6 +54,7 @@ Output Files
 ### Supported Languages
 
 All generators support these six target languages:
+
 - **Python**: Type hints (3.10+), dataclasses, mypy --strict compatible
 - **TypeScript**: Strict mode, interfaces, biome/eslint compatible
 - **Rust**: Strongly-typed structs, cargo clippy clean
@@ -737,6 +738,7 @@ Generate type-safe gRPC service handlers from `.proto` files. This is the most d
 ### Architecture
 
 Spikard's protobuf generator produces code that integrates with existing gRPC runtime:
+
 - **No standalone server**: Integrates with Spikard HTTP server
 - **Binary serialization**: Uses language-specific protobuf libraries
 - **Four streaming modes**: Unary, server streaming, client streaming, bidirectional
@@ -1213,7 +1215,7 @@ Generated files follow language-specific conventions:
 
 ### Python
 
-```
+```text
 generated/
 ├── __init__.py
 ├── types.py              # DTOs/models
@@ -1226,7 +1228,7 @@ generated/
 
 ### TypeScript
 
-```
+```text
 src/generated/
 ├── types.ts              # Interfaces/types
 ├── handlers.ts           # Handler functions
@@ -1237,7 +1239,7 @@ src/generated/
 
 ### Ruby
 
-```
+```text
 lib/generated/
 ├── types.rb
 ├── handlers.rb
@@ -1248,7 +1250,7 @@ lib/generated/
 
 ### PHP
 
-```
+```text
 src/Generated/
 ├── Types/
 │   ├── User.php
@@ -1263,7 +1265,7 @@ src/Generated/
 
 ### Rust
 
-```
+```text
 src/generated/
 ├── mod.rs
 ├── types.rs
@@ -1292,6 +1294,7 @@ ruff format --check generated/
 ```
 
 **Common Issues:**
+
 - Missing type hints → Add explicit return types
 - `Optional` not imported → Generator adds automatically
 - Mutable default arguments → Use `field(default_factory=list)`
@@ -1310,6 +1313,7 @@ eslint src/generated/
 ```
 
 **Common Issues:**
+
 - `any` types → Generator uses strict types
 - Missing null checks → Uses `T | undefined` for optionals
 - Unused imports → Generator only imports what's needed
@@ -1328,6 +1332,7 @@ rubocop lib/generated/
 ```
 
 **Common Issues:**
+
 - Type signature mismatches → Check RBS files
 - Missing method definitions → Regenerate code
 - Style violations → Use `rubocop -a` to auto-fix
@@ -1346,6 +1351,7 @@ php-cs-fixer fix --dry-run src/Generated/
 ```
 
 **Common Issues:**
+
 - Missing type declarations → Generator uses strict types
 - Nullable type handling → Uses `?Type` syntax
 - PSR-12 violations → Generator follows PSR-12
@@ -1364,6 +1370,7 @@ cargo fmt -- --check
 ```
 
 **Common Issues:**
+
 - Unused variables → Prefix with `_` or remove
 - Missing trait bounds → Generator adds required bounds
 - Lifetime issues → Generator uses appropriate lifetimes
@@ -1452,11 +1459,13 @@ spikard generate protobuf api.proto --lang python --include ./protos --output ./
 #### 1. Schema Parsing Errors
 
 **Problem:**
-```
+
+```text
 Error: Failed to parse OpenAPI schema: Invalid reference #/components/schemas/User
 ```
 
 **Solution:**
+
 - Validate schema with online tools (swagger.io, asyncapi.com)
 - Check that all `$ref` paths exist
 - Ensure schema version matches (OpenAPI 3.1, AsyncAPI 3.0)
@@ -1465,26 +1474,32 @@ Error: Failed to parse OpenAPI schema: Invalid reference #/components/schemas/Us
 #### 2. Type Mapping Issues
 
 **Problem:**
-```
+
+```text
 Error: Cannot map protobuf type 'google.protobuf.Timestamp' to Python
 ```
 
 **Solution:**
+
 - Import well-known types in proto file:
+
   ```protobuf
   import "google/protobuf/timestamp.proto";
   ```
+
 - Use built-in proto3 types when possible
 - Check generator supports the proto type
 
 #### 3. Generated Code Validation Failures
 
 **Problem:**
-```
+
+```text
 generated/handlers.py:15: error: Missing return statement
 ```
 
 **Solution:**
+
 - Review generated code for TODOs
 - Implement required handler logic
 - Run the relevant language toolchain directly against the generated file
@@ -1493,11 +1508,13 @@ generated/handlers.py:15: error: Missing return statement
 #### 4. Import Errors
 
 **Problem:**
+
 ```text
 ImportError: cannot import name 'User' from 'generated.types'
 ```
 
 **Solution:**
+
 - Check generated files exist at expected paths
 - Verify `__init__.py` files exist (Python)
 - Check module exports (TypeScript/JavaScript)
@@ -1506,18 +1523,23 @@ ImportError: cannot import name 'User' from 'generated.types'
 #### 5. Protobuf Compilation Errors
 
 **Problem:**
-```
+
+```text
 Error: user_service.proto:5:10: "User" is not defined
 ```
 
 **Solution:**
+
 - Define messages before using them
 - Check package names match
 - Add import statements for external protos:
+
   ```protobuf
   import "common/types.proto";
   ```
+
 - Use `--include` flag for import paths:
+
   ```bash
   spikard generate protobuf api.proto --include ./protos --output ./generated/api_pb.py
   ```
@@ -1525,17 +1547,22 @@ Error: user_service.proto:5:10: "User" is not defined
 #### 6. Streaming Type Errors
 
 **Problem:**
+
 ```text
 Type 'AsyncGenerator<User>' is not assignable to type 'Promise<User[]>'
 ```
 
 **Solution:**
+
 - Server streaming returns `AsyncGenerator` not `Promise`
 - Update handler signature:
+
   ```typescript
   async function* listUsers(): AsyncGenerator<User>
   ```
+
 - For client code, collect stream:
+
   ```typescript
   const users: User[] = [];
   for await (const user of stream) {
@@ -1546,11 +1573,13 @@ Type 'AsyncGenerator<User>' is not assignable to type 'Promise<User[]>'
 #### 7. Output Path Issues
 
 **Problem:**
-```
+
+```text
 Error: Permission denied: ./generated/handlers.py
 ```
 
 **Solution:**
+
 - Check write permissions on the parent directory
 - Pass a file path, not a directory path
 - Avoid writing to system directories
@@ -1558,11 +1587,13 @@ Error: Permission denied: ./generated/handlers.py
 ### Debugging Tips
 
 1. **Enable verbose output:**
+
    ```bash
    RUST_LOG=debug spikard generate openapi api.yaml --lang python
    ```
 
 2. **Validate schema separately:**
+
    ```bash
    # OpenAPI
    npx @apidevtools/swagger-cli validate openapi.yaml
@@ -1572,16 +1603,19 @@ Error: Permission denied: ./generated/handlers.py
    ```
 
 3. **Generate to a scratch file for inspection:**
+
    ```bash
    spikard generate openapi api.yaml --output test.py
    ```
 
 4. **Check generator version:**
+
    ```bash
    spikard --version
    ```
 
 5. **Use example schemas:**
+
    ```bash
    # Test with known-good schema
    spikard generate openapi examples/schemas/todo-api.openapi.yaml --lang python
@@ -1589,9 +1623,9 @@ Error: Permission denied: ./generated/handlers.py
 
 ### Getting Help
 
-- **Documentation**: https://github.com/Goldziher/spikard/docs
+- **Documentation**: <https://github.com/Goldziher/spikard/docs>
 - **Examples**: See `examples/schemas/` directory
-- **Issues**: https://github.com/Goldziher/spikard/issues
+- **Issues**: <https://github.com/Goldziher/spikard/issues>
 - **ADRs**: `docs/adr/0004-code-generation.md`, `docs/adr/0010-protobuf-grpc-code-generation.md`
 
 ## Best Practices
@@ -1614,7 +1648,7 @@ Error: Permission denied: ./generated/handlers.py
 
 ### Project Organization
 
-```
+```text
 my-api/
 ├── schemas/              # API schemas (version controlled)
 │   ├── openapi.yaml
@@ -1666,6 +1700,7 @@ Spikard's code generator transforms schemas into production-ready, type-safe cod
 Start with simple schemas, validate early, and use quality tools to catch issues before production.
 
 For more details, see:
+
 - [ADR 0004: Code Generation Architecture](../adr/0004-code-generation.md)
 - [ADR 0010: Protobuf/gRPC Code Generation](../adr/0010-protobuf-grpc-code-generation.md)
 - [Configuration Guide](configuration.md)

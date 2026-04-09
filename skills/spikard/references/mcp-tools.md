@@ -5,6 +5,7 @@ Tool surface exposed by `spikard mcp`:
 ## `init_project`
 
 Params:
+
 - `name`: project name
 - `language`: `python`, `typescript`, `rust`, `ruby`, or `php`
 - `directory`: optional base directory, default `.` before appending `name`
@@ -15,12 +16,14 @@ Returns created files and next steps.
 ## `generate_openapi`
 
 Params:
+
 - `schema`
 - `language`
 - `output`: optional
 - `dto`: optional
 
 Supported DTO values:
+
 - Python: `dataclass`, `msgspec`
 - TypeScript: `zod`
 - Ruby: `dry_schema`
@@ -30,6 +33,7 @@ Supported DTO values:
 ## `generate_asyncapi_handlers`
 
 Params:
+
 - `schema`
 - `language`
 - `output`
@@ -38,6 +42,7 @@ Params:
 ## `generate_jsonrpc`
 
 Params:
+
 - `schema`
 - `language`
 - `output`: optional
@@ -47,6 +52,7 @@ If `output` is omitted, the current implementation uses the CLI default path beh
 ## `generate_graphql`
 
 Params:
+
 - `schema`
 - `language`
 - `output`: optional
@@ -55,6 +61,7 @@ Params:
 ## `generate_protobuf`
 
 Params:
+
 - `schema`
 - `language`
 - `output`
@@ -64,17 +71,20 @@ Params:
 ## `generate_php_dto`
 
 Params:
+
 - `output`: optional, default `src/Generated`
 
 ## `generate_asyncapi_fixtures`
 
 Params:
+
 - `schema`
 - `output`: optional, default `testing_data`
 
 ## `generate_asyncapi_test_app`
 
 Params:
+
 - `schema`
 - `language`
 - `output`
@@ -82,12 +92,14 @@ Params:
 ## `generate_asyncapi_bundle`
 
 Params:
+
 - `schema`
 - `output`: optional, default `.`
 
 ## `validate_asyncapi`
 
 Params:
+
 - `schema`
 
 Returns a structured summary with title, version, primary protocol, and channel count.

@@ -125,6 +125,7 @@ return GrpcResponse(payload=resp_pb.SerializeToString())
 #### 3. Async Generator Patterns
 
 **Server Streaming** - Yield responses:
+
 ```python
 async def handle_server_stream(self, request):
     for item in database.query():
@@ -133,6 +134,7 @@ async def handle_server_stream(self, request):
 ```
 
 **Client Streaming** - Consume requests:
+
 ```python
 async def handle_client_stream(self, request_stream):
     items = []
@@ -146,6 +148,7 @@ async def handle_client_stream(self, request_stream):
 ```
 
 **Bidirectional Streaming** - Process concurrently:
+
 ```python
 async def handle_bidi_stream(self, request_stream):
     async for request in request_stream:

@@ -32,6 +32,7 @@
 High-performance PHP bindings for Spikard. Build REST APIs, WebSockets, and SSE services with modern PHP 8.2+ patterns backed by a Rust core via ext-php-rs.
 
 ## Key Features
+
 - **ext-php-rs FFI**: Zero-copy data exchange between PHP and Rust
 - **Type-safe**: PHP 8.2+ with strict types and PHPStan level max
 - **Multiple protocols**: HTTP/1.1, WebSockets, Server-Sent Events
@@ -110,6 +111,7 @@ $config = new ServerConfig(port: 8000);
 $app = (new App($config))->registerController(new UserController());
 $app->run();
 ```
+
 ## Usage
 
 Composer installs Spikard as a Composer plugin and runs the bundled native extension installer automatically.

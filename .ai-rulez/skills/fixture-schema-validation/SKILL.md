@@ -102,168 +102,168 @@ Reference: `/Users/naamanhirschfeld/workspace/spikard/testing_data/`
 ### Middleware & Feature Fixtures (12 directories)
 
 10. **auth/** - 6+ fixtures
-   - JWT authentication (valid/invalid signatures)
-   - API Key authentication (valid/missing keys)
-   - Basic authentication (username:password)
-   - Bearer tokens
-   - Authorization header validation
-   - 401 Unauthorized responses
+    - JWT authentication (valid/invalid signatures)
+    - API Key authentication (valid/missing keys)
+    - Basic authentication (username:password)
+    - Bearer tokens
+    - Authorization header validation
+    - 401 Unauthorized responses
 
 11. **cors/** - 5+ fixtures
-   - CORS preflight (OPTIONS) requests
-   - Origin validation (allowed/disallowed)
-   - Allowed methods (`Access-Control-Allow-Methods`)
-   - Allowed headers (`Access-Control-Allow-Headers`)
-   - Credentials support (`Access-Control-Allow-Credentials`)
-   - Max-Age caching directive
-   - Wildcard origin handling
+    - CORS preflight (OPTIONS) requests
+    - Origin validation (allowed/disallowed)
+    - Allowed methods (`Access-Control-Allow-Methods`)
+    - Allowed headers (`Access-Control-Allow-Headers`)
+    - Credentials support (`Access-Control-Allow-Credentials`)
+    - Max-Age caching directive
+    - Wildcard origin handling
 
 12. **compression/** - 5+ fixtures
-   - Gzip compression enabled
-   - Brotli compression enabled
-   - Content-Encoding negotiation
-   - Minimum size threshold enforcement
-   - Uncompressed fallback
-   - Accept-Encoding header parsing
+    - Gzip compression enabled
+    - Brotli compression enabled
+    - Content-Encoding negotiation
+    - Minimum size threshold enforcement
+    - Uncompressed fallback
+    - Accept-Encoding header parsing
 
 13. **rate_limit/** - 10+ fixtures
-   - Per-IP rate limiting (token bucket)
-   - Per-user rate limiting (via header/token)
-   - Burst allowance
-   - 429 Too Many Requests response
-   - Retry-After header
-   - Rate limit reset timing
-   - Concurrent requests handling
+    - Per-IP rate limiting (token bucket)
+    - Per-user rate limiting (via header/token)
+    - Burst allowance
+    - 429 Too Many Requests response
+    - Retry-After header
+    - Rate limit reset timing
+    - Concurrent requests handling
 
 14. **request_id/** - 5+ fixtures
-   - X-Request-ID generation (UUID v4)
-   - X-Request-ID propagation to response
-   - Client-provided request ID acceptance
-   - Request ID header naming
-   - Request tracing across middleware
+    - X-Request-ID generation (UUID v4)
+    - X-Request-ID propagation to response
+    - Client-provided request ID acceptance
+    - Request ID header naming
+    - Request tracing across middleware
 
 15. **request_timeout/** - 5+ fixtures
-   - Requests exceeding timeout limit
-   - 408 Request Timeout response
-   - Timeout enforcement across handlers
-   - Partial response handling
-   - Graceful cleanup on timeout
+    - Requests exceeding timeout limit
+    - 408 Request Timeout response
+    - Timeout enforcement across handlers
+    - Partial response handling
+    - Graceful cleanup on timeout
 
 16. **body_limits/** - 5+ fixtures
-   - Request body under limit (pass)
-   - Request body at limit boundary
-   - Request body exceeding limit (413 Payload Too Large)
-   - Content-Length validation
-   - Streaming body handling
+    - Request body under limit (pass)
+    - Request body at limit boundary
+    - Request body exceeding limit (413 Payload Too Large)
+    - Content-Length validation
+    - Streaming body handling
 
 17. **background/** - 3+ fixtures
-   - Background task scheduling
-   - Task completion verification
-   - Task error handling
-   - Async task status tracking
+    - Background task scheduling
+    - Task completion verification
+    - Task error handling
+    - Async task status tracking
 
 ### Advanced Feature Fixtures (8+ directories)
 
 18. **lifecycle_hooks/** - 10+ fixtures
-   - onRequest hook execution
-   - preValidation hook (pre-schema validation)
-   - preHandler hook (pre-handler execution)
-   - onResponse hook (post-handler response transformation)
-   - onError hook (error handling and transformation)
-   - Hook execution order validation
-   - Hook error handling and propagation
+    - onRequest hook execution
+    - preValidation hook (pre-schema validation)
+    - preHandler hook (pre-handler execution)
+    - onResponse hook (post-handler response transformation)
+    - onError hook (error handling and transformation)
+    - Hook execution order validation
+    - Hook error handling and propagation
 
 19. **graphql/** - 8+ fixtures
-   - GraphQL query execution
-   - GraphQL mutation support
-   - GraphQL subscription support
-   - Query validation and errors
-   - Fragment support
-   - Variable substitution
-   - Introspection queries
-   - Schema definition execution
+    - GraphQL query execution
+    - GraphQL mutation support
+    - GraphQL subscription support
+    - Query validation and errors
+    - Fragment support
+    - Variable substitution
+    - Introspection queries
+    - Schema definition execution
 
 20. **jsonrpc/** - 6+ fixtures
-   - JSON-RPC 2.0 request format
-   - Method invocation
-   - Parameter passing (positional and named)
-   - Error responses (-32600 to -32700)
-   - Batch requests
-   - Notification requests (no id field)
+    - JSON-RPC 2.0 request format
+    - Method invocation
+    - Parameter passing (positional and named)
+    - Error responses (-32600 to -32700)
+    - Batch requests
+    - Notification requests (no id field)
 
 21. **websocket/** - 5+ fixtures
-   - WebSocket upgrade (101 Switching Protocols)
-   - Message framing
-   - Text and binary messages
-   - Connection cleanup
-   - Error handling in WebSocket
+    - WebSocket upgrade (101 Switching Protocols)
+    - Message framing
+    - Text and binary messages
+    - Connection cleanup
+    - Error handling in WebSocket
 
 22. **sse/** - 5+ fixtures
-   - Server-Sent Events stream
-   - Multiple event types
-   - Event ID tracking
-   - Automatic reconnection
-   - Stream termination
+    - Server-Sent Events stream
+    - Multiple event types
+    - Event ID tracking
+    - Automatic reconnection
+    - Stream termination
 
 23. **streaming/** - 5+ fixtures
-   - Chunked Transfer-Encoding
-   - HTTP/2 streaming
-   - Large file response
-   - Stream error recovery
-   - Backpressure handling
+    - Chunked Transfer-Encoding
+    - HTTP/2 streaming
+    - Large file response
+    - Stream error recovery
+    - Backpressure handling
 
 24. **static_files/** - 3+ fixtures
-   - File serving (HTML, CSS, JS)
-   - MIME type detection
-   - File not found (404)
-   - Directory listing behavior
+    - File serving (HTML, CSS, JS)
+    - MIME type detection
+    - File not found (404)
+    - Directory listing behavior
 
 25. **multipart/** - 8+ fixtures
-   - File upload with boundary
-   - Multiple file upload
-   - Form fields + files
-   - File metadata extraction
-   - Large file streaming
-   - Nested multipart structures
-   - Content-Type preservation per field
+    - File upload with boundary
+    - Multiple file upload
+    - Form fields + files
+    - File metadata extraction
+    - Large file streaming
+    - Nested multipart structures
+    - Content-Type preservation per field
 
 26. **edge_cases/** - 15+ fixtures
-   - Deeply nested JSON objects (100+ levels)
-   - Large payloads (10MB+)
-   - Unicode/emoji in all fields
-   - Special characters and escaping
-   - Null bytes and binary data
-   - Duplicate header keys
-   - Empty request/response bodies
-   - Malformed requests (recovery)
-   - Concurrent requests
-   - Rapid request succession
+    - Deeply nested JSON objects (100+ levels)
+    - Large payloads (10MB+)
+    - Unicode/emoji in all fields
+    - Special characters and escaping
+    - Null bytes and binary data
+    - Duplicate header keys
+    - Empty request/response bodies
+    - Malformed requests (recovery)
+    - Concurrent requests
+    - Rapid request succession
 
 27. **openapi_schemas/** - 10+ fixtures
-   - Complete OpenAPI 3.0.x documents
-   - Security scheme definitions
-   - Server objects with variables
-   - Parameter definitions (path, query, header)
-   - Request/response schema references
-   - Example payloads
+    - Complete OpenAPI 3.0.x documents
+    - Security scheme definitions
+    - Server objects with variables
+    - Parameter definitions (path, query, header)
+    - Request/response schema references
+    - Example payloads
 
 28. **asyncapi_schemas/** - 5+ fixtures
-   - AsyncAPI 2.0.0 documents
-   - Channel definitions
-   - Message schemas
-   - Server definitions with variables
-   - Subscription examples
+    - AsyncAPI 2.0.0 documents
+    - Channel definitions
+    - Message schemas
+    - Server definitions with variables
+    - Subscription examples
 
 29. **di/** - 5+ fixtures
-   - Dependency injection lifecycle
-   - Singleton vs per-request dependencies
-   - Dependency resolution order
-   - Circular dependency detection
-   - Async factory functions
+    - Dependency injection lifecycle
+    - Singleton vs per-request dependencies
+    - Dependency resolution order
+    - Circular dependency detection
+    - Async factory functions
 
 30. **scripts/** - 0 fixtures
-   - Generation/validation scripts
-   - Not test fixtures themselves
+    - Generation/validation scripts
+    - Not test fixtures themselves
 
 ## Fixture Schema Format
 
@@ -455,14 +455,16 @@ spikard test --fixtures testing_data/ --lang typescript
 2. Create JSON file matching `00-FIXTURE-SCHEMA.json`
 3. Include test case name in filename (kebab-case): `01-user-creation-valid.json`
 4. Run fixture validator:
+
    ```bash
    spikard validate-fixtures testing_data/json_bodies/01-user-creation-valid.json
    ```
+
 5. If valid, add to test suite (auto-discovered by test harness)
 
 ### Fixture Naming Convention
 
-```
+```text
 {category}/{number:02d}-{test-case-name}.json
                        └─ kebab-case
 
@@ -529,12 +531,14 @@ Examples:
 ## Fixture Metrics
 
 **Current Coverage (35+ directories):**
+
 - Total fixture files: 1000+
 - Average per category: 30 fixtures
 - Largest category: `edge_cases` (50+ fixtures)
 - Smallest category: `scripts` (0 fixtures, metadata only)
 
 **Code coverage:**
+
 - Request validation: 99%
 - Response formatting: 98%
 - Middleware chains: 97%
@@ -542,6 +546,7 @@ Examples:
 - Async patterns: 85%
 
 ## Related Skills
+
 - `code-generator-design` - Generates fixtures from OpenAPI spec
 - `tower-middleware-patterns` - Fixtures validate middleware behavior
 - `handler-trait-design` - Fixtures validate handler responses

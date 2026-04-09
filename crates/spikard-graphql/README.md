@@ -32,6 +32,7 @@ GraphQL support for Spikard with async-graphql integration, schema building, and
 </div>
 
 ## Features
+
 - **GraphQL execution**: queries, mutations, and optional subscriptions
 - **Fluent schema builder** API with Query, Mutation, and Subscription types
 - **HTTP integration** via Spikard's Handler trait

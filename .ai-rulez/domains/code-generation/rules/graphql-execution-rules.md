@@ -2,7 +2,9 @@
 name: graphql-execution-rules
 priority: high
 ---
+
 GraphQL execution must:
+
 - Parse SDL schemas correctly
 - Execute queries with proper field resolution
 - Validate mutations with input type schemas

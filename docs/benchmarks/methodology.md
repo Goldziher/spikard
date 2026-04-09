@@ -120,17 +120,19 @@ For selected frameworks, we maintain two variants:
 - **Raw**: Direct JSON parsing with no validation (`json.loads()`, `JSON.parse()`)
 
 Examples:
+
 - `fastapi` vs `fastapi-raw`
 - `express` vs `express-raw`
 - `spikard-python` vs `spikard-raw`
 
 ### Overhead Calculation
 
-```
+```text
 validation_overhead = (raw_rps - validated_rps) / raw_rps * 100
 ```
 
 **Typical results**:
+
 - FastAPI with Pydantic: ~40% overhead
 - Spikard with msgspec: ~15% overhead
 - Express with Zod: ~25% overhead
@@ -143,11 +145,12 @@ This quantifies the performance cost of type safety and helps users make informe
 
 **Requests per second (RPS)**: The primary performance indicator.
 
-```
+```text
 RPS = successful_requests / benchmark_duration_seconds
 ```
 
 Higher is better. Typical ranges:
+
 - 100k+ RPS: Native Rust/Go frameworks with minimal overhead
 - 50k-100k RPS: Optimized Python/Node frameworks
 - 10k-50k RPS: Standard Python frameworks (Django, Flask)
@@ -155,7 +158,7 @@ Higher is better. Typical ranges:
 
 **Bytes per second**: Network throughput including headers and body.
 
-```
+```text
 Bytes/sec = (total_bytes_sent + total_bytes_received) / duration_seconds
 ```
 
@@ -163,7 +166,7 @@ Useful for comparing large payload workloads where network I/O dominates.
 
 **Success rate**: Percentage of requests that completed successfully.
 
-```
+```text
 Success_rate = successful_requests / total_requests * 100
 ```
 
@@ -182,10 +185,12 @@ Latency percentiles answer different questions:
 **Why percentiles matter**: Mean latency can be misleading when a few slow requests skew the average. p99 latency is often 10x the median.
 
 **Example interpretation**:
-```
+
+```text
 median: 2.5ms
 p99: 45ms
 ```
+
 This means most requests are fast (2.5ms), but 1% of users experience 18x slower responses (45ms). This might indicate GC pauses or lock contention.
 
 ### Resource Utilization
@@ -203,17 +208,20 @@ Tracks heap allocations, object creation, and memory leaks. Sharp increases duri
 ### Language-Specific Profiling
 
 **Python metrics** (collected with py-spy):
+
 - **GIL wait time**: Time spent waiting for Python's Global Interpreter Lock
 - **GIL contention**: Percentage of time blocked on GIL (higher = more threading overhead)
 - **FFI overhead**: Time spent crossing Python/Rust boundary
 - **GC collections/time**: Garbage collector impact
 
 **Node.js metrics** (collected with clinic.js):
+
 - **V8 heap usage**: Memory allocated by JavaScript objects
 - **Event loop lag**: Delay in processing new events (higher = slower async handling)
 - **GC time**: V8 garbage collection overhead
 
 **Ruby metrics** (collected with stackprof):
+
 - **GC count/time**: Frequency and duration of garbage collection
 - **Heap pages**: Memory allocated by Ruby VM
 - **Live objects**: Number of objects in memory
@@ -229,6 +237,7 @@ Tests whether two frameworks have significantly different mean performance.
 **Alternative hypothesis (H₁)**: Frameworks have different mean RPS.
 
 **Result interpretation**:
+
 - p < 0.05: Reject null hypothesis, difference is statistically significant
 - p ≥ 0.05: Cannot reject null hypothesis, difference may be random
 
@@ -236,18 +245,20 @@ Tests whether two frameworks have significantly different mean performance.
 
 Measures the magnitude of performance difference in standard deviation units.
 
-```
+```text
 d = (mean_A - mean_B) / pooled_standard_deviation
 ```
 
 **Interpretation**:
+
 - d < 0.2: Trivial difference
 - d = 0.2-0.5: Small difference
 - d = 0.5-0.8: Medium difference
 - d > 0.8: Large difference
 
 **Example**:
-```
+
+```text
 Framework A: 50,000 RPS (σ = 1,000)
 Framework B: 45,000 RPS (σ = 1,200)
 Cohen's d = 4.5 (very large effect)
@@ -272,6 +283,7 @@ oha -z 30s -c 100 --latency-correction --disable-keepalive http://localhost:8000
 ```
 
 Parameters:
+
 - `-z 30s`: Run for 30 seconds
 - `-c 100`: 100 concurrent connections
 - `--latency-correction`: Adjust for coordinated omission
@@ -280,6 +292,7 @@ Parameters:
 ### Warmup Period
 
 Before measurement, a 3-second warmup period runs to:
+
 - Populate caches
 - Trigger JIT compilation
 - Stabilize CPU frequency
@@ -288,6 +301,7 @@ Before measurement, a 3-second warmup period runs to:
 ### Server Process Management
 
 Each framework application:
+
 1. Spawns in isolated process
 2. Waits for HTTP readiness (port listening)
 3. Receives warmup traffic

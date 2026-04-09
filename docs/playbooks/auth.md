@@ -25,6 +25,7 @@ Add lightweight auth/guard logic across bindings. Prefer middleware/hooks for cr
     --8<-- "snippets/rust/auth_layer.md"
 
 ## Tips
+
 - Normalize header casing before checks (bindings expose lowercased headers).
 - Short-circuit unauthorized requests with a structured body.
 - Add per-route middleware for sensitive endpoints (admin, payments).

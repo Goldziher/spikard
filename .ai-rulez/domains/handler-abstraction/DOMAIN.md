@@ -45,6 +45,7 @@ pub struct RequestData {
 ```
 
 **Key characteristics:**
+
 - **Arc-based** for cheap cloning across FFI
 - **raw_body preferred** for language bindings (avoid double-parsing)
 - **validated_params** from ParameterValidator, not raw query/path
@@ -182,6 +183,7 @@ impl Handler for DependencyInjectingHandler {
 ```
 
 **Features:**
+
 - Request-scoped dependency resolution
 - Type-safe dependency graph
 - Zero-cost when disabled
@@ -207,6 +209,7 @@ impl Server {
 ```
 
 **Registration flow:**
+
 1. Language binding creates Handler implementation
 2. Wraps in Arc for thread-safety
 3. Registers with route definition
@@ -248,6 +251,7 @@ pub enum HandlerError {
 ```
 
 Converts to HTTP status codes:
+
 - ValidationError → 400 Bad Request
 - NotFound → 404 Not Found
 - Unauthorized → 401 Unauthorized

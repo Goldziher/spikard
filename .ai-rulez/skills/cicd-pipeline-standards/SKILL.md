@@ -3,7 +3,6 @@ priority: critical
 description: "CI/CD Pipeline Standards"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: critical
@@ -21,6 +20,7 @@ ______________________________________________________________________
 - Workflows now ALWAYS use `task` commands, never direct script calls
 - All CI workflows automatically set `BUILD_PROFILE=ci`
 - Example workflow structure:
+
   ```yaml
   - name: Setup
     run: task setup

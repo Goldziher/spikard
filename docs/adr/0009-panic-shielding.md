@@ -8,6 +8,7 @@
 Spikard's bindings cross FFI boundaries into Python, Node.js, Ruby, and PHP. Rust panics that cross these boundaries cause undefined behavior, process crashes, or memory corruption in the host language runtime. Panic shielding is critical to maintain stability and convert fatal errors into structured, serializable error payloads that all languages understand.
 
 The challenge is twofold:
+
 1. **Catch panics before they escape**: All Rust code exposed to FFI must wrap panics using `std::panic::catch_unwind`.
 2. **Convert to structured payloads**: Caught panics must translate to the canonical error format `{ error, code, details }` matching `StructuredError` in `crates/spikard-core/src/errors.rs` and fixtures in `testing_data/validation_errors/schema.json`.
 
@@ -27,6 +28,7 @@ where
 ```
 
 This function:
+
 - Accepts any closure that produces `T` and is `UnwindSafe`
 - Returns `Result<T, StructuredError>` with structured error on panic
 - Maps all panics to code `"panic"` and error `"Unexpected panic in Rust code"`
@@ -113,7 +115,6 @@ match result {
 }
 ```
 
-
 ### Panic Handling in HTTP Handlers
 
 The `spikard-http` server's handler invocation also wraps panic shielding:
@@ -153,12 +154,14 @@ This matches the RFC 9457-compatible `ProblemDetails` struct and aligns with `te
 ## Consequences
 
 ### Benefits
+
 - **No undefined behavior**: Panics never cross FFI boundaries.
 - **Consistent error handling**: All languages receive structured error JSON.
 - **Debugging clarity**: Error code `"panic"` identifies panic vs. domain errors.
 - **Test coverage**: Panic scenarios can be validated with `testing_data/panic_handling` fixtures.
 
 ### Obligations
+
 - **All FFI entry points must shield**: Every Python/Node/Ruby/PHP/WASM entry that calls Rust must wrap panics.
 - **New bindings must follow pattern**: Any new FFI binding (e.g., Java via JNI) must implement panic shielding.
 - **Panic fixtures**: New panic handling scenarios should be added to `testing_data/panic_handling` with assertions in `packages/python/tests/test_all_fixtures.py`.
@@ -186,4 +189,4 @@ This matches the RFC 9457-compatible `ProblemDetails` struct and aligns with `te
 - **HTTP runtime**: `crates/spikard-http/src/server/handler.rs`
 - **Error format**: `testing_data/validation_errors/schema.json`
 - **Related ADRs**: [ADR 0001](0001-architecture-and-principles.md) (Architecture), [ADR 0005](0005-lifecycle-hooks.md) (Lifecycle Hooks)
-- **RFC 9457**: Problem Details for HTTP APIs (https://tools.ietf.org/html/rfc9457)
+- **RFC 9457**: Problem Details for HTTP APIs (<https://tools.ietf.org/html/rfc9457>)

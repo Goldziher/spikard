@@ -3,7 +3,6 @@ priority: high
 description: "Go Bindings Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high

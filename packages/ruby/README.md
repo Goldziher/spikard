@@ -32,6 +32,7 @@
 Ruby bindings for Spikard: a Rust-centric web framework with type-safe code generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage Sinatra-style routing with zero-copy FFI performance.
 
 ## Key Features
+
 - **Type-safe with RBS**: Full RBS type definitions for Steep type checking
 - **Zero-copy FFI**: Magnus/rb-sys bindings eliminate serialization overhead
 - **Sinatra-style routing**: Familiar `get`, `post`, `put`, `patch`, `delete` DSL
@@ -81,6 +82,7 @@ app.run(config: { port: 8000 })
 ```
 
 The `request` hash provides access to:
+
 - `request[:method]` - HTTP method
 - `request[:path]` - URL path
 - `request[:path_params]` - Path parameters
@@ -88,6 +90,7 @@ The `request` hash provides access to:
 - `request[:headers]` - Request headers
 - `request[:cookies]` - Request cookies
 - `request[:body]` - Parsed request body
+
 ## Validation
 
 Pass a `request_schema` to validate incoming JSON:
@@ -264,6 +267,7 @@ client.close
 ## Examples
 
 **Examples & Code Generation:**
+
 - [Runnable Examples](../../examples/) - Ruby, Python, TypeScript, PHP, Elixir, and Rust
 - [Code Generation Guide](../../examples/README.md) - Generate from OpenAPI, GraphQL, AsyncAPI, OpenRPC, Protobuf
 

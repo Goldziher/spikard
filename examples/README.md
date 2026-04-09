@@ -41,6 +41,7 @@ cd rust-lifecycle-hooks && cargo run --example lifecycle
 ## Schemas
 
 All examples reference OpenAPI and AsyncAPI specs in `schemas/`:
+
 - **todo-api.openapi.yaml** - REST CRUD with validation
 - **file-service.openapi.yaml** - Multipart uploads, streaming
 - **chat-service.asyncapi.yaml** - WebSocket bidirectional
@@ -61,6 +62,7 @@ task test:elixir
 ```
 
 Tests validate against fixtures in `testing_data/`:
+
 - `headers/` - Header validation
 - `cookies/` - Cookie handling
 - `json_bodies/` - Request bodies

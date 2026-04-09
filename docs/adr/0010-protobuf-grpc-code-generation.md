@@ -1,4 +1,5 @@
 # ADR 0010: Protobuf/gRPC Code Generation Architecture
+
 **Status**: Accepted
 **Date**: 2025-12-31
 
@@ -21,7 +22,8 @@ The generator must produce code that passes strict quality tools (mypy --strict,
 **CLI Entry Point**: `spikard generate protobuf schema.proto --lang rust --output ./src/generated.rs`
 
 **Generator Organization**: `crates/spikard-cli/src/codegen/protobuf/`
-```
+
+```text
 protobuf/
 ├── spec_parser.rs           # Proto3 schema parser (uses prost-reflect)
 ├── type_mapper.rs           # Proto3 → language type mapping
@@ -82,6 +84,7 @@ protobuf/
 ### Generated Code Structure
 
 **Python Example** (`user_service_pb.py`):
+
 ```python
 """Generated from user.proto - DO NOT EDIT"""
 from dataclasses import dataclass
@@ -107,6 +110,7 @@ class User:
 ```
 
 **TypeScript Example** (`user_service_pb.ts`):
+
 ```typescript
 // Generated from user.proto - DO NOT EDIT
 import { Message } from 'protobufjs';
@@ -128,6 +132,7 @@ export function serializeUser(user: User): Message { /*...*/ }
 ### Quality Validation
 
 All generated code must pass:
+
 - **Python**: `mypy --strict`, `ruff check`
 - **TypeScript**: `tsc --noEmit`, `biome check`
 - **Ruby**: `steep check`, `rubocop`
@@ -141,6 +146,7 @@ Quality tests run in `crates/spikard-cli/tests/protobuf_quality.rs` using fixtur
 Handlers integrate with existing gRPC runtime traits:
 
 **Python**:
+
 ```python
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
 
@@ -153,6 +159,7 @@ class UserServiceHandler(GrpcHandler):
 ```
 
 **Rust**:
+
 ```rust
 use spikard_http::grpc::{GrpcHandler, GrpcRequest, GrpcResponse};
 
@@ -177,6 +184,7 @@ impl GrpcHandler for UserServiceHandler {
 ## Consequences
 
 **Benefits**:
+
 - Type-safe protobuf message handling across all languages
 - Generated code passes strictest quality tools
 - Integration with existing Spikard gRPC runtime
@@ -184,17 +192,20 @@ impl GrpcHandler for UserServiceHandler {
 - Reuses shared codegen utilities (case conversion, escaping, formatters)
 
 **Trade-offs**:
+
 - Requires language-specific protobuf runtime dependencies
 - Binary protocol adds complexity vs JSON
 - Limited to proto3 (no proto2 support)
 - Must maintain compatibility with multiple protobuf library versions
 
 **Performance**:
+
 - Binary serialization is ~3-5x smaller than JSON
 - Faster parsing than JSON (no string→number conversion)
 - Zero-copy optimizations in Rust with `prost` + `Bytes`
 
 **Maintenance**:
+
 - Update type mappings when protobuf spec evolves
 - Keep quality validators in sync with protobuf library updates
 - Test fixtures must cover all proto3 features (nested messages, oneof, maps, etc.)
@@ -206,4 +217,4 @@ impl GrpcHandler for UserServiceHandler {
 - Type mapper: `crates/spikard-cli/src/codegen/protobuf/type_mapper.rs`
 - Quality tests: `crates/spikard-cli/tests/protobuf_quality.rs`
 - Runtime integration: `crates/spikard-http/src/grpc/`
-- Proto3 spec: https://protobuf.dev/programming-guides/proto3/
+- Proto3 spec: <https://protobuf.dev/programming-guides/proto3/>

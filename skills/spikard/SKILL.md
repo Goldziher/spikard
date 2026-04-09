@@ -16,6 +16,7 @@ metadata:
 Spikard is a Rust-centric framework with polyglot bindings and a codegen-first CLI. For agent workflows, prefer the MCP server because it exposes the same scaffolding, generation, validation, and fixture flows as structured tools instead of shell output.
 
 Use this skill when the task involves:
+
 - Scaffolding a new Spikard project
 - Generating handlers or types from API schemas
 - Building AsyncAPI fixtures or language-specific test apps
@@ -33,6 +34,7 @@ spikard mcp
 Default transport is `stdio`. HTTP transport exists behind the `mcp-http` Cargo feature and is not the default workflow.
 
 Use the MCP tools for:
+
 - `init_project`
 - `generate_openapi`
 - `generate_asyncapi_handlers`
@@ -53,6 +55,7 @@ Read [references/mcp-tools.md](references/mcp-tools.md) when you need parameter 
 If MCP is unavailable, use the CLI directly. The CLI and MCP are backed by the same typed application layer in `crates/spikard-cli/src/app.rs`, so behavior should match.
 
 Read:
+
 - [references/cli-reference.md](references/cli-reference.md) for command syntax
 - [references/codegen-workflows.md](references/codegen-workflows.md) for schema-to-code workflows
 - [references/project-scaffolding.md](references/project-scaffolding.md) for `spikard init`

@@ -3,7 +3,6 @@ priority: medium
 description: "Rust Core Architecture"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: medium

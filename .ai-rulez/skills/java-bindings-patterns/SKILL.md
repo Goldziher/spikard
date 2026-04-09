@@ -3,7 +3,6 @@ priority: high
 description: "Java Bindings Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high

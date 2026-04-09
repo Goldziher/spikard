@@ -6,6 +6,7 @@ This directory contains runnable examples demonstrating Spikard Node.js bindings
 
 1. Node.js 18+ with TypeScript support
 2. Install dependencies:
+
    ```bash
    cd examples/node
    pnpm install
@@ -43,11 +44,13 @@ Then visit `http://127.0.0.1:8000` in your browser or use curl.
 The simplest possible Spikard application with two routes.
 
 **Features:**
+
 - Basic server configuration
 - Simple GET routes
 - Response helpers for text and JSON
 
 **Try:**
+
 ```bash
 pnpm basic
 
@@ -63,6 +66,7 @@ curl http://127.0.0.1:8000/health
 REST API with JSON request body validation, query parameters, and path parameters.
 
 **Features:**
+
 - JSON request/response handling
 - Query parameter parsing
 - Path parameters extraction
@@ -70,6 +74,7 @@ REST API with JSON request body validation, query parameters, and path parameter
 - HTTP status codes (201, 400, 404)
 
 **Try:**
+
 ```bash
 pnpm validation
 
@@ -96,6 +101,7 @@ curl -X POST http://127.0.0.1:8000/users \
 Real-time server-to-client streaming for large datasets and Server-Sent Events (SSE).
 
 **Features:**
+
 - Streaming large datasets efficiently
 - Server-Sent Events (SSE) for real-time updates
 - Different streaming formats (NDJSON, CSV, SSE)
@@ -103,6 +109,7 @@ Real-time server-to-client streaming for large datasets and Server-Sent Events (
 - Generator-based streaming
 
 **Try:**
+
 ```bash
 pnpm streaming
 
@@ -126,6 +133,7 @@ curl http://127.0.0.1:8000/stream/csv
 Bidirectional WebSocket communication and advanced SSE patterns.
 
 **Features:**
+
 - WebSocket chat example
 - WebSocket notifications stream
 - SSE-based history replay
@@ -133,6 +141,7 @@ Bidirectional WebSocket communication and advanced SSE patterns.
 - Browser-based interactive demo
 
 **Try:**
+
 ```bash
 pnpm websocket
 
@@ -147,6 +156,7 @@ pnpm websocket
 Demonstrate lifecycle hooks for logging, authentication, and response transformation.
 
 **Features:**
+
 - Request/response logging
 - Authentication with Bearer tokens
 - Request ID tracking
@@ -156,6 +166,7 @@ Demonstrate lifecycle hooks for logging, authentication, and response transforma
 - Hook short-circuiting
 
 **Try:**
+
 ```bash
 pnpm hooks
 
@@ -201,6 +212,7 @@ curl -H "Authorization: Bearer bob:secret" http://127.0.0.1:8000/admin/stats  # 
 ## Next Steps
 
 For more advanced examples, check:
+
 - `packages/node/src/` - Full TypeScript source code
 - `docs/adr/` - Architecture Decision Records
 - `packages/node/README.md` - Complete Node.js binding documentation
@@ -256,4 +268,4 @@ return new StreamingResponse(generateData());
 
 - Documentation: `packages/node/README.md`
 - Tests: `packages/node/src/testing.spec.ts`
-- Issues: https://github.com/Goldziher/spikard/issues
+- Issues: <https://github.com/Goldziher/spikard/issues>

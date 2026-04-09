@@ -1,21 +1,21 @@
 [workspace]
 resolver = "2"
 members = [
-  "crates/spikard",
-  "crates/spikard-bindings-shared",
-  "crates/spikard-cli",
-  "crates/spikard-codegen",
-  "crates/spikard-core",
-  "crates/spikard-elixir",
-  "crates/spikard-graphql",
-  "crates/spikard-http",
-  "crates/spikard-php",
-  "crates/spikard-py",
-  "crates/spikard-node",
-  "crates/spikard-rb",
-  "crates/spikard-rb-macros",
-  "tools/benchmark-harness",
-  "tools/snippet-runner",
+    "crates/spikard",
+    "crates/spikard-bindings-shared",
+    "crates/spikard-cli",
+    "crates/spikard-codegen",
+    "crates/spikard-core",
+    "crates/spikard-elixir",
+    "crates/spikard-graphql",
+    "crates/spikard-http",
+    "crates/spikard-node",
+    "crates/spikard-php",
+    "crates/spikard-py",
+    "crates/spikard-rb",
+    "crates/spikard-rb-macros",
+    "tools/benchmark-harness",
+    "tools/snippet-runner",
 ]
 exclude = ["e2e/*", "examples/*", "tests/test_apps/*", "tools/test-generator"]
 
@@ -28,62 +28,62 @@ repository = "https://github.com/Goldziher/spikard"
 homepage = "https://github.com/Goldziher/spikard"
 
 [workspace.dependencies]
-# Core library
-spikard = { version = "0.13.0", path = "crates/spikard" }
-spikard-core = { version = "0.13.0", path = "crates/spikard-core" }
-spikard-http = { version = "0.13.0", path = "crates/spikard-http" }
-spikard-graphql = { version = "0.13.0", path = "crates/spikard-graphql" }
 
-# Python bindings
-pyo3 = { version = "0.28", features = ["abi3-py310"] }
-pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
+# HTTP dependencies
+axum = "0.8"
 
 # CLI dependencies
 clap = { version = "4.6", features = ["derive"] }
 clap_complete = "4.6"
 clap_mangen = "0.3"
+flate2 = { version = "1.1", default-features = false, features = [
+    "rust_backend",
+] }
+http = "1.4"
+jsonschema = { version = "0.45", default-features = false }
+jsonwebtoken = { version = "10.3", features = ["use_pem", "rust_crypto"] }
+prost = "0.14"
+prost-types = "0.14"
 
-# HTTP dependencies
-axum = "0.8"
+# Python bindings
+pyo3 = { version = "0.28", features = ["abi3-py310"] }
+pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# Core library
+spikard = { version = "0.13.0", path = "crates/spikard" }
+spikard-core = { version = "0.13.0", path = "crates/spikard-core" }
+spikard-graphql = { version = "0.13.0", path = "crates/spikard-graphql" }
+spikard-http = { version = "0.13.0", path = "crates/spikard-http" }
+
+# Utilities
+thiserror = "2.0"
 tokio = { version = "1", features = ["full"] }
+
+# gRPC dependencies
+tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
 tower = "0.5"
 tower-http = { version = "0.6.8", features = [
-  "trace",
-  "request-id",
-  "compression-gzip",
-  "compression-br",
-  "timeout",
-  "limit",
-  "fs",
-  "set-header",
-  "sensitive-headers",
+    "trace",
+    "request-id",
+    "compression-gzip",
+    "compression-br",
+    "timeout",
+    "limit",
+    "fs",
+    "set-header",
+    "sensitive-headers",
 ] }
 
 # Middleware and auth
 "tower_governor" = "0.8"
-jsonwebtoken = { version = "10.3", features = ["use_pem", "rust_crypto"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # OpenAPI
 utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
-utoipa-swagger-ui = { version = "9", features = ["axum", "vendored"] }
 utoipa-redoc = { version = "6", features = ["axum"] }
-
-# gRPC dependencies
-tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
-prost = "0.14"
-prost-types = "0.14"
-
-# Utilities
-thiserror = "2.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-http = "1.4"
-jsonschema = { version = "0.45", default-features = false }
-flate2 = { version = "1.1", default-features = false, features = [
-  "rust_backend",
-] }
+utoipa-swagger-ui = { version = "9", features = ["axum", "vendored"] }
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "allow", check-cfg = ['cfg(tarpaulin_include)'] }

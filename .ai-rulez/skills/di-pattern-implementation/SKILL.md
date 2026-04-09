@@ -51,6 +51,7 @@ cargo build --all-features
 ```
 
 **Benefits:**
+
 - Zero overhead when DI not used (not compiled in)
 - Minimal feature coupling
 - Language bindings can selectively enable DI
@@ -312,6 +313,7 @@ app.provide("db", Provide(
 ```
 
 **Use cases:**
+
 - Database connection pools
 - Cache clients
 - Configuration objects
@@ -337,6 +339,7 @@ app.provide("transaction", Provide(
 ```
 
 **Use cases:**
+
 - Database transactions
 - Request-scoped sessions
 - Temporary buffers
@@ -348,7 +351,7 @@ app.provide("transaction", Provide(
 
 ### Resolution Order
 
-```
+```text
 DI Graph Analysis:
   config (no deps)
   ↓
@@ -382,6 +385,7 @@ container.provide_factory("b", factory_b, DependencyLifetime::Singleton)?;
 ```
 
 **Resolution:**
+
 1. Build dependency graph
 2. Topological sort
 3. Detect cycles (error if found)
@@ -653,6 +657,7 @@ cargo build --no-default-features
 - Async factory execution
 
 ## Related Skills
+
 - `handler-trait-design` - Handlers receive DI-resolved dependencies
 - `request-response-lifecycle` - DI executes within lifecycle
 - `async-runtime-integration` - DI resolution is async via Tokio

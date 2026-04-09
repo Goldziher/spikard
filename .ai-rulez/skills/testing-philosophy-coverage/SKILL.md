@@ -3,7 +3,6 @@ priority: critical
 description: "Testing Philosophy & Coverage"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: critical

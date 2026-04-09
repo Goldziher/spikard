@@ -32,6 +32,7 @@ High-performance HTTP framework built on Axum and Tower-HTTP with type-safe rout
 </div>
 
 ## Features
+
 - **Type-safe routing** with path parameter extraction and compile-time validation
 - **JSON Schema validation** via schemars with automatic OpenAPI generation
 - **WebSocket and SSE** (Server-Sent Events) support
@@ -392,27 +393,35 @@ let app = App::new()
 Spikard is available for multiple languages:
 
 ### Python
+
 ```bash
 pip install spikard
 ```
+
 See [spikard-py](../spikard-py/README.md) for details.
 
 ### Node.js / TypeScript
+
 ```bash
 npm install spikard
 ```
+
 See [spikard-node](../spikard-node/README.md) for details.
 
 ### Ruby
+
 ```bash
 gem install spikard
 ```
+
 See [spikard-rb](../spikard-rb/README.md) for details.
 
 ### PHP
+
 ```bash
 composer require spikard/spikard
 ```
+
 See [spikard-php](../spikard-php/README.md) for details.
 
 ## Performance

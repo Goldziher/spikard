@@ -8,48 +8,44 @@ repository.workspace = true
 homepage.workspace = true
 description = "Shared transport-agnostic primitives for Spikard runtimes"
 keywords = ["http", "web", "framework", "validation", "middleware"]
-categories = [
-  "web-programming::http-server",
-  "web-programming",
-  "development-tools",
-]
+categories = ["web-programming::http-server", "web-programming", "development-tools"]
 documentation = "https://docs.rs/spikard-core"
 readme = "README.md"
 
-[lints]
-workspace = true
-
-[dependencies]
-serde.workspace = true
-serde_json.workspace = true
-tracing.workspace = true
-anyhow = "1.0"
-jsonschema.workspace = true
-regex = "1"
-flate2.workspace = true
-brotli = "8.0"
-http.workspace = true
-base64 = "0.22"
-serde_qs = "1.1"
-url = "2.5"
-jiff = "0.2"
-uuid = "1.23"
-indexmap = "2.13"
-tokio = { version = "1", optional = true, default-features = false, features = [
-  "rt",
-  "macros",
-  "sync",
-  "time",
-] }
-bytes = { version = "1.11", optional = true }
-thiserror = { workspace = true }
+[package.metadata.cargo-machete]
+ignored = ["base64", "serde_qs", "tracing", "url"]
 
 [features]
 default = []
 di = ["dep:tokio", "dep:bytes"]
 
+[dependencies]
+anyhow = "1.0"
+base64 = "0.22"
+brotli = "8.0"
+bytes = { version = "1.11", optional = true }
+flate2.workspace = true
+http.workspace = true
+indexmap = "2.13"
+jiff = "0.2"
+jsonschema.workspace = true
+regex = "1"
+serde.workspace = true
+serde_json.workspace = true
+serde_qs = "1.1"
+thiserror = { workspace = true }
+tokio = { version = "1", optional = true, default-features = false, features = [
+    "rt",
+    "macros",
+    "sync",
+    "time",
+] }
+tracing.workspace = true
+url = "2.5"
+uuid = "1.23"
+
 [dev-dependencies]
 tokio-test = "0.4"
 
-[package.metadata.cargo-machete]
-ignored = ["base64", "serde_qs", "tracing", "url"]
+[lints]
+workspace = true

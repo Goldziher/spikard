@@ -11,7 +11,7 @@ The benchmark harness is a Rust-based CLI tool that orchestrates performance tes
 1. **Profile Mode** - Deep performance analysis of a single framework with optional language-specific profiling
 2. **Compare Mode** - Statistical comparison of multiple frameworks running the same workload suite
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Benchmark Harness CLI                    │
 │                     (src/main.rs)                           │
@@ -50,6 +50,7 @@ The benchmark harness is a Rust-based CLI tool that orchestrates performance tes
 The framework detection system maintains a registry of all supported frameworks and auto-detects which framework is present in a given directory.
 
 **Registry Structure:**
+
 ```rust
 pub struct FrameworkConfig {
     pub name: String,              // "spikard-rust-validation", "fastapi"
@@ -61,12 +62,14 @@ pub struct FrameworkConfig {
 ```
 
 **Detection Algorithm:**
+
 1. Scans directory for framework-specific marker files
 2. Ranks matches by specificity (number of detect_files)
 3. Returns most specific match to avoid false positives
 4. Errors if no framework detected or directory doesn't exist
 
 **Supported Frameworks (37 total):**
+
 - Spikard validation: `spikard-rust-validation`, `spikard-python-validation`, `spikard-node-validation`, `spikard-bun-validation`, `spikard-ruby-validation`, `spikard-php-validation`
 - Spikard raw: `spikard-rust-raw`, `spikard-python-raw`, `spikard-node-raw`, `spikard-bun-raw`, `spikard-ruby-raw`, `spikard-php-raw`
 - Python validated: `fastapi-uvicorn-validation`, `fastapi-granian-validation`, `fastapi-python`, `litestar-uvicorn`, `litestar-granian`, `robyn-validation`
@@ -77,6 +80,7 @@ pub struct FrameworkConfig {
 - Baseline: `axum-baseline`
 
 **Usage:**
+
 ```rust
 use benchmark_harness::framework::detect_framework;
 
@@ -116,6 +120,7 @@ pub async fn health_check(url: &str, max_attempts: usize) -> Result<()>
 ```
 
 **Server Startup Flow:**
+
 1. Detect or use provided framework
 2. Optionally run build command (`cargo build --release`, `composer install`)
 3. Substitute `{port}` placeholder in start command
@@ -124,6 +129,7 @@ pub async fn health_check(url: &str, max_attempts: usize) -> Result<()>
 6. Return `ServerHandle` on success
 
 **Graceful Shutdown (Unix):**
+
 1. Send `SIGTERM` to process
 2. Poll `try_wait()` for up to 5 seconds
 3. Fall back to `SIGKILL` if unresponsive
@@ -134,6 +140,7 @@ pub async fn health_check(url: &str, max_attempts: usize) -> Result<()>
 Abstracts over multiple load testing tools (currently supports `oha` and `bombardier`).
 
 **Configuration:**
+
 ```rust
 pub struct LoadTestConfig {
     pub base_url: String,
@@ -150,12 +157,14 @@ pub enum LoadGeneratorType {
 
 **Fixture Support:**
 The harness can test specific endpoints using fixtures from `testing_data/`:
+
 - Constructs URL from fixture route and query params
 - Sets HTTP method from fixture
 - Injects headers from fixture
 - Sends JSON body if present
 
 **Example oha Command Construction:**
+
 ```bash
 oha \
   --output-format json \
@@ -168,6 +177,7 @@ oha \
 ```
 
 **Output Parsing:**
+
 - Parses JSON output from `oha`
 - Extracts latency percentiles (p50, p90, p95, p99, p99.9)
 - Calculates throughput metrics (RPS, bytes/sec, success rate)
@@ -178,6 +188,7 @@ oha \
 Tracks CPU and memory usage of server processes during benchmarks.
 
 **Implementation:**
+
 ```rust
 pub struct ResourceMonitor {
     pid: u32,
@@ -203,12 +214,14 @@ impl ResourceMonitor {
 ```
 
 **Monitoring Strategy:**
+
 1. Uses `sysinfo` crate for cross-platform CPU/memory queries
 2. Spawns background task that samples at specified interval (typically 50-100ms)
 3. Stores samples in Vec for later analysis
 4. Calculates mean, peak, and p95 values across samples
 
 **Metrics Calculated:**
+
 - `avg_cpu_percent`: Mean CPU usage
 - `peak_cpu_percent`: Maximum CPU usage
 - `p95_cpu_percent`: 95th percentile CPU
@@ -219,6 +232,7 @@ impl ResourceMonitor {
 Defines structured workload specifications for different HTTP patterns.
 
 **Workload Categories:**
+
 ```rust
 pub enum WorkloadCategory {
     JsonBodies,   // Small to very large JSON payloads
@@ -260,6 +274,7 @@ WorkloadPresets::path_params()
 Loads and manages test fixtures from `testing_data/` directory.
 
 **Fixture Schema:**
+
 ```rust
 pub struct Fixture {
     pub name: String,
@@ -288,6 +303,7 @@ pub struct Request {
 ```
 
 **Fixture Loading:**
+
 ```rust
 // Load single fixture
 let fixture = Fixture::from_file("testing_data/json_bodies/small.json")?;
@@ -305,6 +321,7 @@ let json_fixtures = manager.by_category("json_bodies");
 Orchestrates the complete benchmark process for a single framework.
 
 **Configuration:**
+
 ```rust
 pub struct RunnerConfig {
     pub framework: String,
@@ -353,6 +370,7 @@ pub struct RunnerConfig {
    - Classify route types for analysis
 
 **Route Type Classification:**
+
 ```rust
 pub enum RouteType {
     GetSimple,          // GET / (no params)
@@ -376,7 +394,8 @@ pub enum RouteType {
 Deep analysis of a single framework across multiple workloads.
 
 **Structure:**
-```
+
+```text
 src/profile/
 ├── mod.rs       - ProfileRunner orchestration
 ├── runner.rs    - Workload suite execution
@@ -387,6 +406,7 @@ src/profile/
 ```
 
 **Configuration:**
+
 ```rust
 pub struct ProfileRunnerConfig {
     pub framework: String,
@@ -402,6 +422,7 @@ pub struct ProfileRunnerConfig {
 ```
 
 **Profile Result Schema:**
+
 ```rust
 pub struct ProfileResult {
     pub framework: FrameworkInfo,
@@ -428,6 +449,7 @@ pub struct WorkloadResult {
 ```
 
 **Execution Flow:**
+
 1. Determine workload suite (all, json-bodies, query-params, etc.)
 2. Start optional language-specific profiler
 3. For each workload in suite:
@@ -446,7 +468,8 @@ pub struct WorkloadResult {
 Statistical comparison of multiple frameworks.
 
 **Structure:**
-```
+
+```text
 src/compare/
 ├── mod.rs       - CompareRunner orchestration
 ├── runner.rs    - Multi-framework execution
@@ -454,6 +477,7 @@ src/compare/
 ```
 
 **Configuration:**
+
 ```rust
 pub struct CompareConfig {
     pub frameworks: Vec<String>,
@@ -468,6 +492,7 @@ pub struct CompareConfig {
 ```
 
 **Execution Flow:**
+
 1. Validate frameworks (≥2 required)
 2. Create output directory
 3. For each framework:
@@ -498,6 +523,7 @@ pub fn cohens_d(
 ```
 
 **Comparison Result Schema:**
+
 ```rust
 pub struct CompareResult {
     pub metadata: Metadata,
@@ -532,6 +558,7 @@ pub struct PairwiseComparison {
 Defines all data structures for JSON output.
 
 **Key Modules:**
+
 - `mod.rs` - Top-level types, metadata collection
 - `profile.rs` - Profile mode results
 - `compare.rs` - Compare mode results
@@ -653,6 +680,7 @@ benchmark-harness profile \
 ```
 
 **Available Suites:**
+
 - `all` - All workloads (default)
 - `json-bodies` - JSON serialization (4 workloads)
 - `path-params` - Path parameter extraction (3 workloads)
@@ -682,6 +710,7 @@ benchmark-harness compare \
 ```
 
 **Output:**
+
 - `compare_results.json` - Structured comparison data
 - `compare_report.md` - Markdown summary with tables
 - Individual profile JSONs for each framework
@@ -819,7 +848,7 @@ FrameworkConfig::new(
 
 2. **Create App Directory Structure**:
 
-```
+```text
 apps/new-framework/
 ├── server.py              # Server entrypoint
 ├── requirements.txt       # Dependencies (if applicable)
@@ -829,6 +858,7 @@ apps/new-framework/
 3. **Implement Required Endpoints**:
 
 Your server must:
+
 - Respond to `GET /` (health check)
 - Accept port from command-line argument or environment variable
 - Implement fixtures matching `testing_data/` structure
@@ -955,9 +985,11 @@ Key external dependencies:
 - **hostname** - Hostname detection
 
 Platform-specific:
+
 - **libc** (0.2) - Unix signals (SIGTERM)
 
 Dev dependencies:
+
 - **tempfile** (3.x) - Temporary directories for tests
 - **axum** (0.8) - Test HTTP server
 
@@ -978,6 +1010,7 @@ Dev dependencies:
 ### Monitoring Overhead
 
 Resource monitoring has minimal impact:
+
 - Sampling interval: 50-100ms (configurable)
 - Uses `sysinfo` which reads `/proc` on Linux, syscalls on macOS
 - Background task doesn't block benchmark execution
@@ -993,6 +1026,7 @@ Resource monitoring has minimal impact:
 ### Warmup Strategy
 
 Warmup is critical for fair comparisons:
+
 - JIT compilation (Python bytecode, Node V8, Ruby MJIT)
 - HTTP connection pool initialization
 - Cache warming (route tables, middleware)
@@ -1001,6 +1035,7 @@ Warmup is critical for fair comparisons:
 ### Statistical Sample Size
 
 For valid statistical comparisons:
+
 - Minimum 1000 requests per workload
 - Duration ≥30s recommended
 - Higher concurrency increases sample size
@@ -1010,11 +1045,12 @@ For valid statistical comparisons:
 
 ### Framework Not Detected
 
-```
+```text
 Error: No framework detected in apps/my-app
 ```
 
 **Solution:**
+
 1. Check detect files exist: `ls apps/my-app/`
 2. Verify file names match registry (case-sensitive)
 3. Use explicit `--framework` flag
@@ -1022,11 +1058,12 @@ Error: No framework detected in apps/my-app
 
 ### Server Fails to Start
 
-```
+```text
 Error: Server failed to start: Health check failed after 30 attempts
 ```
 
 **Solution:**
+
 1. Check server logs: `cat /tmp/benchmark-server-*.log`
 2. Verify port is available: `lsof -i :8000`
 3. Test server manually: `cd apps/my-app && python server.py 8000`
@@ -1034,11 +1071,12 @@ Error: Server failed to start: Health check failed after 30 attempts
 
 ### Load Generator Not Found
 
-```
+```text
 Error: Load generator not found: oha
 ```
 
 **Solution:**
+
 ```bash
 # Install oha
 cargo install oha
@@ -1057,6 +1095,7 @@ benchmark-harness check-tools
 ### High Memory Usage
 
 If monitoring shows unexpectedly high memory:
+
 1. Check for memory leaks in application
 2. Reduce concurrency
 3. Enable GC logging (Python: `gc.set_debug(gc.DEBUG_STATS)`)
@@ -1065,6 +1104,7 @@ If monitoring shows unexpectedly high memory:
 ### Inconsistent Results
 
 For reproducible benchmarks:
+
 1. Use warmup period (≥10s)
 2. Run on dedicated/idle machine
 3. Disable CPU frequency scaling

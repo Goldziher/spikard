@@ -3,7 +3,6 @@ priority: high
 description: "Workspace Structure & Project Organization"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high

@@ -204,16 +204,17 @@ pub async fn start_server(config: ServerConfig) -> Result<ServerHandle> {
     cmd.stdout(Stdio::null()).stderr(Stdio::piped());
 
     #[cfg(unix)]
-    let stop_signal = if executable.contains("python")
-        || executable == "uv"
-        || executable.ends_with("/python")
-        || executable.contains("py-spy")
-        || executable == "php"
-        || executable.ends_with("/php")
-    {
-        libc::SIGINT
-    } else {
-        libc::SIGTERM
+    let stop_signal = {
+        let fw = &framework_config.name;
+        if fw.contains("python")
+            || fw.contains("spikard-py")
+            || matches!(fw.as_str(), "fastapi" | "litestar" | "robyn" | "turboapi")
+            || fw.contains("php")
+        {
+            libc::SIGINT
+        } else {
+            libc::SIGTERM
+        }
     };
 
     #[cfg(unix)]

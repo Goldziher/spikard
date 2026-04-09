@@ -3,7 +3,6 @@ priority: critical
 description: "TypeScript Bindings Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: critical

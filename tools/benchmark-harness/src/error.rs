@@ -32,7 +32,7 @@ pub enum Error {
     LoadGeneratorFailed(String),
 
     #[error(
-        "Framework not found: {0}\n\nEnsure the framework app directory exists in one of:\n  - benchmarks/{0}\n  - e2e/{{language}}\n  - examples/{0}\n\nFor Spikard bindings, check e2e/python, e2e/node, e2e/ruby"
+        "Framework not found: {0}\n\nEnsure the framework app directory exists in one of:\n  - tools/benchmark-harness/apps/{0}\n  - benchmarks/{0}\n  - e2e/{{language}} (for spikard-* bindings)\n  - examples/{0}"
     )]
     FrameworkNotFound(String),
 

@@ -1,0 +1,10 @@
+[project]
+name = "turboapi-benchmark"
+version = "0.1.0"
+description = "turboAPI benchmark application (raw + validated endpoints)"
+requires-python = ">=3.14"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.14",
+]
+dependencies = ["turboapi", "dhi"]

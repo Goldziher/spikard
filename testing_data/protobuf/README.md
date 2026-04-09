@@ -109,22 +109,26 @@ Each fixture follows the template from Phase 2.2:
 ## Fixture Categories
 
 ### 1. Message Type Coverage
+
 - **Scalar Types**: int32, string, double, bool, bytes, int64
 - **Custom Types**: Nested messages, enums
 - **Field Labels**: required, optional, repeated
 
 ### 2. Service Patterns
+
 - **Unary**: Simple request-response
 - **Server Streaming**: Single request, multiple responses
 - **Client Streaming**: Multiple requests, single response
 - **Bidirectional**: Multiple requests and responses
 
 ### 3. Error Handling
+
 - Status codes: OK, INVALID_ARGUMENT, NOT_FOUND, INTERNAL, etc.
 - Error messages and codes
 - Validation error patterns
 
 ### 4. Metadata
+
 - Authorization headers
 - Custom headers (trace IDs, etc.)
 - Request/response metadata handling

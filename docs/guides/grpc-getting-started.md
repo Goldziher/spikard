@@ -48,6 +48,7 @@ Create `user_service.proto`:
 --8<-- "grpc/proto/userservice.md"
 
 **Proto3 Key Concepts**:
+
 - **messages**: Data structures (like structs/classes)
 - **fields**: Each has a type, name, and unique number
 - **optional**: Field may or may not be present

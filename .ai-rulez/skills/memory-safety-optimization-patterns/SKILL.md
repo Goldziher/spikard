@@ -3,7 +3,6 @@ priority: high
 description: "Memory Safety & Optimization Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high

@@ -74,7 +74,7 @@ impl FrameworkConfig {
 
 /// Registry of all supported frameworks
 fn framework_registry() -> Vec<FrameworkConfig> {
-    let mut frameworks = vec![
+    let frameworks = vec![
         // --- Spikard bindings (generated benchmark apps) ---
         FrameworkConfig::new(
             "spikard-python",
@@ -140,6 +140,13 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             "uv run python server.py {port}",
             None,
         ),
+        FrameworkConfig::new(
+            "turboapi",
+            vec!["server.py".to_string()],
+            None,
+            "python3.14t server.py {port}",
+            None,
+        ),
         // --- Third-party Node/Bun frameworks ---
         FrameworkConfig::new(
             "fastify",
@@ -160,35 +167,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             vec!["server.ts".to_string()],
             None,
             "bun run server.ts {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "morojs",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "kito",
-            vec!["server.ts".to_string()],
-            None,
-            "pnpm run start -- {port}",
-            None,
-        ),
-        // --- Third-party Ruby frameworks ---
-        FrameworkConfig::new(
-            "hanami-api",
-            vec!["server.rb".to_string()],
-            None,
-            "bundle exec ruby server.rb {port}",
-            None,
-        ),
-        FrameworkConfig::new(
-            "roda",
-            vec!["server.rb".to_string()],
-            None,
-            "bundle exec ruby server.rb {port}",
             None,
         ),
         // --- Elixir frameworks ---
@@ -214,27 +192,6 @@ fn framework_registry() -> Vec<FrameworkConfig> {
             None,
         ),
     ];
-
-    // Third-party PHP frameworks -- always registered so detection and
-    // explicit --framework lookups succeed even when the PHP extensions
-    // (openswoole, phalcon) are not installed. The server will fail at
-    // startup when the extension is missing; the harness handles that
-    // gracefully via health-check timeouts.
-    frameworks.push(FrameworkConfig::new(
-        "trongate",
-        vec!["server.php".to_string(), "composer.json".to_string()],
-        Some("composer install --no-dev --optimize-autoloader".to_string()),
-        "php server.php {port}",
-        None,
-    ));
-
-    frameworks.push(FrameworkConfig::new(
-        "phalcon",
-        vec!["server.php".to_string(), "composer.json".to_string()],
-        Some("composer install --no-dev --optimize-autoloader".to_string()),
-        "php server.php {port}",
-        None,
-    ));
 
     frameworks
 }
@@ -383,25 +340,17 @@ mod tests {
         assert!(names.contains(&"fastapi"));
         assert!(names.contains(&"litestar"));
         assert!(names.contains(&"robyn"));
+        assert!(names.contains(&"turboapi"));
 
         assert!(names.contains(&"fastify"));
         assert!(names.contains(&"hono"));
         assert!(names.contains(&"elysia"));
-        assert!(names.contains(&"morojs"));
-        assert!(names.contains(&"kito"));
-
-        assert!(names.contains(&"hanami-api"));
-        assert!(names.contains(&"roda"));
-
-        // phalcon and trongate are always registered regardless of PHP extensions
-        assert!(names.contains(&"trongate"));
-        assert!(names.contains(&"phalcon"));
 
         assert!(names.contains(&"spikard-elixir"));
         assert!(names.contains(&"plug-bandit"));
         assert!(names.contains(&"phoenix"));
 
-        assert_eq!(registry.len(), 21);
+        assert_eq!(registry.len(), 16);
     }
 
     #[test]
@@ -459,7 +408,7 @@ mod tests {
     #[test]
     fn test_list_frameworks() {
         let frameworks = list_frameworks();
-        assert_eq!(frameworks.len(), 21);
+        assert_eq!(frameworks.len(), 16);
     }
 
     #[test]

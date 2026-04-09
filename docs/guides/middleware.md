@@ -102,7 +102,7 @@ Normalize headers, coerce parameters, inject tenant/feature flags, or apply rate
 
 Middleware executes in the order it's registered. Request middleware runs top-to-bottom, response middleware runs bottom-to-top:
 
-```
+```text
 Request flow:
   → Middleware 1 (observability: log request)
     → Middleware 2 (auth: verify token)

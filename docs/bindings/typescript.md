@@ -297,6 +297,7 @@ await sse.close();
 ```
 
 `TestClient` methods:
+
 - `get(path, options?): Promise<TestResponse>`
 - `post(path, options?): Promise<TestResponse>`
 - `put(path, options?): Promise<TestResponse>`
@@ -351,10 +352,12 @@ app.addRoute(
 ```
 
 ## Deployment
+
 - Local: `node app.js`/`ts-node app.ts`; set `PORT` via `app.run({ port })`.
 - Containers: build native module ahead of time (`pnpm build:native`) to avoid runtime compilation.
 
 ## Troubleshooting
+
 - Requires Node 20+.
 - Normal installs use prebuilt native binaries for supported targets.
 - Rust is only required when building the native module from source.

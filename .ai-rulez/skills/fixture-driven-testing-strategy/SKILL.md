@@ -3,7 +3,6 @@ priority: high
 description: "Fixture-Driven Testing Strategy"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high
@@ -19,7 +18,7 @@ ______________________________________________________________________
 
 Example directory structure:
 
-```
+```text
 project/
 ├── crates/
 │   ├── core/

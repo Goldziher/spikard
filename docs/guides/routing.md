@@ -47,6 +47,7 @@ Routing is uniform across bindings: create an app, register routes with typed pa
     --8<-- "snippets/rust/path_params.md"
 
 ## Best practices
+
 - Keep handlers small and pure; push IO into services.
 - Prefer DTOs for shared schemas so codegen can derive OpenAPI/AsyncAPI.
 - Use per-route middleware when sensitive endpoints need extra auth/logging.

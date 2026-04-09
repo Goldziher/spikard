@@ -58,6 +58,7 @@ Standardize errors so clients can rely on status codes and payload shape.
     ```
 
 ## Tips
+
 - Prefer structured bodies (RFC 9457 style) with `type`, `title`, `detail`, `status` fields.
 - Propagate request IDs in errors for tracing.
 - Short-circuit auth/validation failures in middleware when possible.

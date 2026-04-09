@@ -50,6 +50,7 @@ pub struct HandlerResponse {
 
 - **Location:** `packages/node/native/src/handler.rs` lines 19-130
 - **Implementation:**
+
   ```rust
   pub struct NodeHandler {
       handler_name: String,
@@ -62,6 +63,7 @@ pub struct HandlerResponse {
       >>,
   }
   ```
+
 - **Serialization:**
   1. Rust `RequestData` → JSON string via serde_json
   2. Call JavaScript handler with JSON string
@@ -93,6 +95,7 @@ pub struct HandlerResponse {
   - UUID/datetime → ISO 8601 strings
   - Decimal → float conversion
 - **Request Binding:**
+
   ```python
   @app.get('/users/{id}')
   async def get_user(request, id: int):
@@ -101,6 +104,7 @@ pub struct HandlerResponse {
           'body': {'user_id': id}
       }
   ```
+
 - **Special Fields:**
   - `request.method` - HTTP method (GET, POST, etc.)
   - `request.path` - matched route path
@@ -121,6 +125,7 @@ pub struct HandlerResponse {
   2. FFI calls to `spikard-rb` Rust crate
   3. JSON serialization for request/response
 - **Request Binding:**
+
   ```ruby
   app.get '/items' do |request|
     {
@@ -226,6 +231,7 @@ pub struct HandlerResponse {
 All bindings use method-specific decorators/functions:
 
 - **Node.js:** `get()`, `post()`, `put()`, `patch()`, `delete()`, `head()`, `options()`
+
   ```typescript
   import { Spikard, get, post } from 'spikard';
 
@@ -235,6 +241,7 @@ All bindings use method-specific decorators/functions:
   ```
 
 - **Python:** `@app.get()`, `@app.post()`, etc.
+
   ```python
   @app.get('/users/{id}')
   async def get_user(request):
@@ -242,6 +249,7 @@ All bindings use method-specific decorators/functions:
   ```
 
 - **Ruby:** `app.get()`, `app.post()`, etc.
+
   ```ruby
   app.get('/users/{id}') do |request|
     { status: 200, body: {...} }
@@ -260,6 +268,7 @@ pub struct Route {
 ```
 
 Path parameters extracted via regex matching:
+
 - `:param` syntax in Node.js → `{param}` in Rust
 - `{param}` syntax in Python/Ruby → preserved
 - Colon-style parameters converted to Rust regex patterns
@@ -306,11 +315,13 @@ Path parameters extracted via regex matching:
 ### Unit Tests
 
 **Node.js:** `/Users/naamanhirschfeld/workspace/spikard/packages/node/src/handler-wrapper.spec.ts`
+
 - Test ThreadsafeFunction call behavior
 - Test response parsing (status, headers, body)
 - Test error handling and Promise rejection
 
 **Python:** `/Users/naamanhirschfeld/workspace/spikard/packages/python/tests/`
+
 - Test async handler execution
 - Test request binding and parameter extraction
 - Test response serialization
@@ -334,6 +345,7 @@ assert response.status == 200
 ### Fixture-Driven Tests
 
 Load from `testing_data/*/` directories:
+
 - Test all HTTP methods
 - Test all status codes
 - Test various request/response payloads
@@ -344,11 +356,13 @@ Load from `testing_data/*/` directories:
 All handlers must return:
 
 1. **Success (2xx):**
+
    ```json
    { "status": 200, "body": {...} }
    ```
 
 2. **Client Error (4xx):**
+
    ```json
    {
      "status": 400,
@@ -362,6 +376,7 @@ All handlers must return:
    ```
 
 3. **Server Error (5xx):**
+
    ```json
    {
      "status": 500,
@@ -383,6 +398,7 @@ All handlers must return:
 - **Composable** with middleware and lifecycle hooks
 
 ## Related Skills
+
 - `tower-middleware-patterns` - Middleware provides RequestData
 - `request-response-lifecycle` - Lifecycle hooks wrap handlers
 - `di-pattern-implementation` - Dependency injection via RequestData extensions

@@ -3,7 +3,6 @@ priority: critical
 description: "Core Principles"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: critical

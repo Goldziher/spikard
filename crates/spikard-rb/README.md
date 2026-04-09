@@ -38,6 +38,7 @@ High-performance Ruby bindings for Spikard HTTP framework via Magnus.
 This crate provides the Rust-side Magnus bindings that power the Ruby package. All HTTP handling, middleware, and validation runs in Rust; this crate translates between the Ruby runtime and the Spikard core.
 
 ## Architecture Highlights
+
 - **Zero-overhead FFI** via Magnus
 - **rb-sys** for modern Ruby 3.2-4.x integration
 - **Idiomatic Ruby** blocks and procs

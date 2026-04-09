@@ -17,6 +17,7 @@ This guide covers comprehensive error handling in Spikard's gRPC implementation 
 Spikard's gRPC runtime provides automatic error handling and status code mapping across the FFI boundary. When your handler throws an exception, it's automatically converted to the appropriate gRPC status code based on the exception type and language conventions.
 
 **Key Features:**
+
 - Automatic exception-to-status-code mapping per language
 - Custom error classes for precise control
 - Error metadata support
@@ -91,6 +92,7 @@ class UserService:
 ```
 
 **Python Exception Mapping:**
+
 - `ValueError` → `INVALID_ARGUMENT`
 - `PermissionError` → `PERMISSION_DENIED`
 - `NotImplementedError` → `UNIMPLEMENTED`
@@ -160,6 +162,7 @@ class UserServiceHandler implements GrpcHandler {
 ```
 
 **TypeScript Error Mapping:**
+
 - `GrpcError` with specific code → Specified status code
 - Standard `Error` → `INTERNAL`
 
@@ -205,6 +208,7 @@ end
 ```
 
 **Ruby Exception Classes:**
+
 - `Spikard::Grpc::InvalidArgumentError` → `INVALID_ARGUMENT`
 - `Spikard::Grpc::PermissionDeniedError` → `PERMISSION_DENIED`
 - `Spikard::Grpc::NotFoundError` → `NOT_FOUND`
@@ -275,6 +279,7 @@ class UserServiceHandler extends Handler
 ```
 
 **PHP Exception Mapping:**
+
 - `Spikard\Grpc\Exceptions\InvalidArgumentException` → `INVALID_ARGUMENT`
 - `Spikard\Grpc\Exceptions\PermissionDeniedException` → `PERMISSION_DENIED`
 - `Spikard\Grpc\Exceptions\NotFoundException` → `NOT_FOUND`
@@ -289,6 +294,7 @@ class UserServiceHandler extends Handler
 All languages support passing detailed error messages that are preserved across the FFI boundary:
 
 **Python:**
+
 ```python
 # Multi-line error messages
 raise ValueError(
@@ -303,6 +309,7 @@ raise PermissionError("Usuario no autorizado: acceso denegado")
 ```
 
 **TypeScript:**
+
 ```typescript
 // Detailed error messages
 throw new GrpcError(
@@ -322,6 +329,7 @@ throw new GrpcError(
 ```
 
 **Ruby:**
+
 ```ruby
 # Detailed error with interpolation
 raise Spikard::Grpc::InvalidArgumentError,
@@ -337,6 +345,7 @@ raise Spikard::Grpc::ResourceExhaustedError,
 ```
 
 **PHP:**
+
 ```php
 // Multi-line detailed error
 throw new InvalidArgumentException(
@@ -357,6 +366,7 @@ throw new ResourceExhaustedException(
 Use appropriate status codes based on error conditions:
 
 **Python:**
+
 ```python
 async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
     if request.method_name == "UpdateUser":
@@ -384,6 +394,7 @@ async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
 ```
 
 **TypeScript:**
+
 ```typescript
 class UserServiceHandler {
   async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
@@ -429,6 +440,7 @@ class UserServiceHandler {
 While the current implementation focuses on error messages, you can include contextual information in the error message itself:
 
 **Python:**
+
 ```python
 # Include field-specific validation errors
 def validate_user_data(data):
@@ -449,6 +461,7 @@ def validate_user_data(data):
 ```
 
 **TypeScript:**
+
 ```typescript
 // Include operation context in error messages
 class OrderService implements GrpcHandler {
@@ -479,6 +492,7 @@ class OrderService implements GrpcHandler {
 Test your error handling thoroughly across all status codes:
 
 **Python (pytest):**
+
 ```python
 import pytest
 from spikard import GrpcRequest, GrpcResponse
@@ -537,6 +551,7 @@ async def test_error_message_preservation():
 ```
 
 **TypeScript (Vitest):**
+
 ```typescript
 import { describe, it, expect } from 'vitest';
 import { GrpcError, GrpcStatusCode } from 'spikard';
@@ -593,6 +608,7 @@ describe('UserServiceHandler', () => {
 ```
 
 **Ruby (RSpec):**
+
 ```ruby
 RSpec.describe UserServiceHandler do
   describe '#handle_request' do
@@ -642,6 +658,7 @@ end
 ```
 
 **PHP (PHPUnit):**
+
 ```php
 use PHPUnit\Framework\TestCase;
 use Spikard\Grpc\Exceptions\InvalidArgumentException;
@@ -698,6 +715,7 @@ class UserServiceHandlerTest extends TestCase
 Test error propagation through the entire gRPC stack:
 
 **Python:**
+
 ```python
 @pytest.mark.asyncio
 async def test_grpc_error_propagation():

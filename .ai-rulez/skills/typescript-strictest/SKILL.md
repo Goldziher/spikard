@@ -5,7 +5,7 @@ description: "TypeScript Strictest Standards"
 
 # TypeScript Strictest Standards
 
-**TypeScript 5.x · Strictest typing · No any/object · Generics required · Tests next to source**
+__TypeScript 5.x · Strictest typing · No any/object · Generics required · Tests next to source__
 
 - Enable ALL strict flags: strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes
 - Ban any and object types; use unknown with guards, Record<string, unknown>

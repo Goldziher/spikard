@@ -19,6 +19,7 @@ spikard features
 ```
 
 Notes:
+
 - `spikard mcp` starts the stdio MCP server.
 - `generate openapi` and `generate jsonrpc` can emit in-memory output when no `--output` is supplied.
 - `generate asyncapi`, `generate protobuf`, and AsyncAPI test-app generation require explicit output paths.

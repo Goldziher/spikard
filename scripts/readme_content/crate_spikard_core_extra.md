@@ -11,7 +11,7 @@
 
 `spikard-core` sits at the foundation of the Spikard architecture:
 
-```
+```text
 ┌─────────────────────────────────────┐
 │  Language Bindings                  │
 │  (Python, Node, Ruby, PHP, Elixir)  │

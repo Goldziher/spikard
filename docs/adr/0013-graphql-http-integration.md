@@ -13,6 +13,7 @@
 Spikard provides a multi-language toolkit for building typed web services. GraphQL is a popular query language and runtime for APIs that complements REST and JSON-RPC. The spikard-graphql crate already provides a high-level GraphQL implementation with async-graphql integration, but it was not formally integrated with the spikard-http HTTP server.
 
 This ADR documents how GraphQL support is integrated into Spikard's HTTP runtime while maintaining:
+
 - Zero circular dependencies in the crate dependency graph
 - Compatibility with tower-http middleware stack
 - The Handler trait abstraction for language-agnostic routing
@@ -62,7 +63,7 @@ We integrate GraphQL with spikard-http by:
 
 ### Request Flow
 
-```
+```text
 HTTP POST /graphql
     ↓
 Tower-HTTP Middleware (compression, rate limiting, auth, etc.)
@@ -138,19 +139,25 @@ The integration is validated through:
 ## Alternative Approaches Considered
 
 ### 1. Add GraphQL as optional feature in spikard-http
+
 **Rejected** because:
+
 - Creates optional dependency coupling
 - spikard-http doesn't own GraphQL domain
 - Adds bloat to spikard-http if feature is enabled
 
 ### 2. Create separate spikard-http-graphql crate
+
 **Rejected** because:
+
 - GraphQL already depends on spikard-http
 - Would create unnecessary indirection
 - Splits related functionality across crates
 
 ### 3. Keep everything in spikard-graphql (chosen)
+
 **Selected** because:
+
 - spikard-graphql already depends on spikard-http
 - Clean separation: routing helpers in domain crate
 - No circular dependencies

@@ -44,6 +44,7 @@ cargo run -p rust-lifecycle-hooks-example
 ## Testing the Endpoints
 
 ### Public Endpoint (No Auth Required)
+
 ```bash
 curl http://localhost:3000/public/hello
 ```
@@ -51,6 +52,7 @@ curl http://localhost:3000/public/hello
 Expected: 200 OK with JSON response
 
 ### Protected Endpoint (Requires Auth)
+
 ```bash
 # With valid user token
 curl -H 'Authorization: Bearer user-token' http://localhost:3000/api/profile
@@ -63,6 +65,7 @@ curl http://localhost:3000/api/profile
 ```
 
 ### Admin Endpoint (Requires Admin Role)
+
 ```bash
 # With admin token (should succeed)
 curl -H 'Authorization: Bearer admin-token' http://localhost:3000/admin/dashboard
@@ -80,6 +83,7 @@ curl -H 'Authorization: Bearer user-token' http://localhost:3000/admin/dashboard
 ## Key Concepts
 
 ### Builder Pattern
+
 ```rust
 let hooks = LifecycleHooks::builder()
     .on_request(request_hook("logger", |req| async move { ... }))
@@ -89,6 +93,7 @@ let hooks = LifecycleHooks::builder()
 ```
 
 ### Request Context with Axum Extensions
+
 ```rust
 // In hook: Store context
 req.extensions_mut().insert(RequestContext {
@@ -105,6 +110,7 @@ async fn handler(Extension(ctx): Extension<RequestContext>) -> Json<Value> {
 ```
 
 ### Short-Circuit Pattern
+
 ```rust
 request_hook("auth", |req| async move {
     if !authorized(&req) {

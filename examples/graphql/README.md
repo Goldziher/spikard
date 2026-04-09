@@ -55,7 +55,7 @@ The GraphQL handler integrates with:
 
 ## Architecture
 
-```
+```text
 Client
   |
   v
@@ -75,6 +75,7 @@ GraphQL Schema
 ```
 
 The GraphQL handler is a thin adapter that:
+
 1. Parses the incoming HTTP request
 2. Extracts the GraphQL query and variables
 3. Executes the query via the GraphQL executor

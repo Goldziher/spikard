@@ -20,6 +20,7 @@ app.run(config: { port: 8000 })
 ```
 
 The `request` hash provides access to:
+
 - `request[:method]` - HTTP method
 - `request[:path]` - URL path
 - `request[:path_params]` - Path parameters

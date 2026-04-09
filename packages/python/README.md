@@ -32,6 +32,7 @@
 High-performance Python web framework backed by a Rust core. Build REST APIs, WebSockets, and SSE services with FastAPI/Litestar-style decorators powered by Tokio, Hyper, and Tower middleware.
 
 ## Features
+
 - **Multiple route styles:** FastAPI-style (`@app.get()`) or Litestar-style (`@get()`)
 - **Automatic validation:** msgspec (default), Pydantic v2, dataclasses, TypedDict, NamedTuple
 - **Request/response streaming:** WebSockets, Server-Sent Events, multipart uploads
@@ -49,6 +50,7 @@ pip install spikard
 Pre-built wheels available for macOS, Linux, Windows. Building from source requires Rust 1.75+.
 
 **Development:**
+
 ```bash
 cd packages/python && uv sync
 ```
@@ -85,6 +87,7 @@ if __name__ == "__main__":
 ## Core Concepts
 
 **Route Decorators:**
+
 ```python
 from spikard import Spikard, get, post
 
@@ -101,6 +104,7 @@ async def create_user(user: User):
 ```
 
 **Validation with msgspec (recommended):**
+
 ```python
 from msgspec import Struct
 
@@ -114,6 +118,7 @@ async def create_user(user: User):
 ```
 
 **Dependency Injection:**
+
 ```python
 from spikard.di import Provide
 
@@ -131,6 +136,7 @@ async def get_data(pool: DatabasePool) -> dict:
 ```
 
 **WebSockets:**
+
 ```python
 from spikard import websocket
 
@@ -140,6 +146,7 @@ async def chat_endpoint(message: dict) -> dict | None:
 ```
 
 **Server-Sent Events:**
+
 ```python
 from spikard import sse
 
@@ -150,6 +157,7 @@ async def stream():
 ```
 
 **Lifecycle Hooks:**
+
 ```python
 @app.pre_validation
 async def check_auth(request):
@@ -157,6 +165,7 @@ async def check_auth(request):
         return Response({"error": "Unauthorized"}, 401)
     return request
 ```
+
 ## Configuration
 
 ```python
@@ -190,6 +199,7 @@ Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/ben
 Spikard is **1.6x faster than Litestar (throughput-based; see full results for latency breakdown), 2.0x faster than FastAPI, and 2.1x faster than Robyn (also Rust-backed)**.
 
 Key optimizations:
+
 - Zero-copy PyO3 type conversion (no JSON round-trips)
 - Rust-powered HTTP server (Tokio + Hyper)
 - GIL-friendly async design with `pyo3_async_runtimes`
@@ -213,6 +223,7 @@ See the main documentation for WebSocket and SSE testing.
 ## Examples
 
 Runnable examples with dependency injection and database integration:
+
 - [Python examples](../../examples/python/)
 - [GraphQL schema support](../../examples/schemas/social.graphql)
 - [OpenAPI code generation](../../examples/schemas/todo-api.openapi.yaml)

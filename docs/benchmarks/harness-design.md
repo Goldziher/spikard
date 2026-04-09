@@ -21,6 +21,7 @@ The Spikard benchmark harness has two distinct use cases:
 **Goal:** Identify optimization opportunities in Spikard implementations
 
 **Characteristics:**
+
 - Deep profiling (CPU, memory, GIL, FFI overhead)
 - Per-language metrics (Python: GIL wait time, Node: V8 heap, Ruby: GC stats)
 - Flamegraphs and trace data
@@ -28,6 +29,7 @@ The Spikard benchmark harness has two distinct use cases:
 - Granular per-endpoint breakdown
 
 **Example:**
+
 ```bash
 # Profile Python bindings with all workloads
 benchmark-harness profile \
@@ -46,6 +48,7 @@ benchmark-harness profile \
 ```
 
 **Output Schema:**
+
 ```json
 {
   "mode": "profile",
@@ -150,6 +153,7 @@ benchmark-harness profile \
 **Goal:** Compare Spikard against other frameworks in the same ecosystem
 
 **Characteristics:**
+
 - Multiple frameworks tested with identical workloads
 - Apples-to-apples comparison
 - Statistical significance testing
@@ -157,6 +161,7 @@ benchmark-harness profile \
 - Framework-specific metadata (versions, runtimes)
 
 **Example:**
+
 ```bash
 # Compare Python frameworks
 benchmark-harness compare \
@@ -172,6 +177,7 @@ benchmark-harness compare \
 ```
 
 **Output Schema:**
+
 ```json
 {
   "mode": "compare",
@@ -277,6 +283,7 @@ benchmark-harness compare \
 7. **`mixed`** - Realistic API patterns (future)
 
 **Custom Suites:**
+
 ```toml
 # custom-suite.toml
 name = "api-crud"
@@ -307,7 +314,7 @@ category = "json-bodies"
 
 ## CLI Design
 
-```
+```text
 benchmark-harness <MODE> [OPTIONS]
 
 Modes:
@@ -349,18 +356,21 @@ Run Mode (Legacy):
 ## Implementation Plan
 
 ### Phase 1: Schema & Data Model (Current)
+
 - [ ] Define complete JSON schema
 - [ ] Create Rust structs for all result types
 - [ ] Add serialization/deserialization tests
 - [ ] Document schema with JSON Schema spec
 
 ### Phase 2: Workload Suite System
+
 - [ ] Implement `WorkloadSuite` trait
 - [ ] Add built-in suite definitions
 - [ ] Custom suite loader (TOML)
 - [ ] Suite validation
 
 ### Phase 3: Profile Mode
+
 - [ ] Implement profiling runner
 - [ ] Python profiler integration (py-spy)
 - [ ] Node profiler integration (--prof)
@@ -368,12 +378,14 @@ Run Mode (Legacy):
 - [ ] Rust baseline comparison
 
 ### Phase 4: Compare Mode
+
 - [ ] Multi-framework orchestration
 - [ ] Parallel benchmark execution
 - [ ] Statistical analysis (t-test)
 - [ ] Markdown report generation
 
 ### Phase 5: CI Integration
+
 - [ ] GitHub Actions workflow
 - [ ] Artifact storage
 - [ ] Historical trend analysis
@@ -452,12 +464,14 @@ jobs:
 ## Analytics & Visualization (Future)
 
 **Data Aggregation:**
+
 - Time-series database (InfluxDB/TimescaleDB)
 - Aggregate results from CI artifacts
 - Track performance over time
 - Detect regressions automatically
 
 **Dashboards:**
+
 - Grafana dashboards showing:
   - RPS trends over time
   - Latency percentiles by workload
@@ -465,6 +479,7 @@ jobs:
   - Resource utilization patterns
 
 **Automated Reports:**
+
 - Weekly performance summaries
 - Release performance comparisons
 - Optimization impact analysis
@@ -474,7 +489,7 @@ jobs:
 
 ## File Structure
 
-```
+```text
 tools/benchmark-harness/
 ├── src/
 │   ├── main.rs                  # CLI entry point

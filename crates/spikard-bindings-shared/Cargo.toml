@@ -7,23 +7,16 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 
-[lints]
-workspace = true
-
-[dependencies]
-serde = { workspace = true }
-serde_json.workspace = true
-simd-json = "0.17"
-axum.workspace = true
-tokio.workspace = true
-thiserror.workspace = true
-spikard-core = { workspace = true, features = ["di"] }
-spikard-http = { workspace = true, features = ["di"] }
-tracing.workspace = true
-http.workspace = true
-http-body-util = "0.1"
-tonic = "0.14"
-bytes = "1.11"
+[package.metadata.cargo-machete]
+ignored = [
+    "ext-php-rs",
+    "magnus",
+    "napi",
+    "napi-derive",
+    "pyo3",
+    "pyo3-async-runtimes",
+    "serde",
+]
 
 [features]
 default = []
@@ -32,15 +25,28 @@ node-support = ["napi", "napi-derive"]
 ruby-support = ["magnus"]
 php-support = ["ext-php-rs"]
 
-[dependencies.pyo3]
-version = "0.28"
-optional = true
-features = ["abi3-py310"]
+[dependencies]
+axum.workspace = true
+bytes = "1.11"
+http.workspace = true
+http-body-util = "0.1"
+serde = { workspace = true }
+serde_json.workspace = true
+simd-json = "0.17"
+spikard-core = { workspace = true, features = ["di"] }
+spikard-http = { workspace = true, features = ["di"] }
+thiserror.workspace = true
+tokio.workspace = true
+tonic = "0.14"
+tracing.workspace = true
 
-[dependencies.pyo3-async-runtimes]
-version = "0.28"
+[dependencies.ext-php-rs]
+version = "0.15"
 optional = true
-features = ["tokio-runtime"]
+
+[dependencies.magnus]
+version = "0.8.2"
+optional = true
 
 [dependencies.napi]
 version = "3"
@@ -52,24 +58,18 @@ features = ["napi9", "async"]
 version = "3"
 optional = true
 
-[dependencies.magnus]
-version = "0.8.2"
+[dependencies.pyo3]
+version = "0.28"
 optional = true
+features = ["abi3-py310"]
 
-[dependencies.ext-php-rs]
-version = "0.15"
+[dependencies.pyo3-async-runtimes]
+version = "0.28"
 optional = true
+features = ["tokio-runtime"]
 
 [dev-dependencies]
 pretty_assertions = "1.4"
 
-[package.metadata.cargo-machete]
-ignored = [
-  "ext-php-rs",
-  "magnus",
-  "napi",
-  "napi-derive",
-  "pyo3",
-  "pyo3-async-runtimes",
-  "serde",
-]
+[lints]
+workspace = true

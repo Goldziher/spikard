@@ -7,61 +7,61 @@ license.workspace = true
 repository.workspace = true
 homepage.workspace = true
 
+[package.metadata.cargo-machete]
+ignored = ["anyhow", "rand"]
+
 [[bin]]
 name = "benchmark-harness"
 path = "src/main.rs"
 
-[lints]
-workspace = true
-
 [dependencies]
-# Async runtime
-tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+
+# Utilities
+chrono = { version = "0.4", features = ["serde"] }
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+futures-util = "0.3"
+glob = "0.3"
+hostname = "0.4"
+num_cpus = "1"
+rand = "0.10"
+
+# HTTP client for health checks
+reqwest = { version = "0.13", features = ["json", "stream"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# CLI
-clap = { version = "4", features = ["derive"] }
-
-# HTTP client for health checks
-reqwest = { version = "0.13", features = ["json", "stream"] }
+# Statistics
+statrs = "0.18"
 
 # System monitoring
 sysinfo = "0.38"
 
-# Process management
-which = "8"
-
 # Error handling
 thiserror = "2"
-anyhow = "1"
-
-# Utilities
-chrono = { version = "0.4", features = ["serde"] }
-glob = "0.3"
-futures-util = "0.3"
+# Async runtime
+tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = "0.29"
-rand = "0.10"
 urlencoding = "2.1"
-hostname = "0.4"
-num_cpus = "1"
 uuid = { version = "1", features = ["v4"] }
 
-# Statistics
-statrs = "0.18"
-
-[target.'cfg(unix)'.dependencies]
-libc = "0.2"
+# Process management
+which = "8"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 inferno = "0.12"
 
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 [dev-dependencies]
+axum = "0.8"
 tempfile = "3"
 tokio = { version = "1", features = ["test-util", "macros", "rt-multi-thread"] }
-axum = "0.8"
 
-[package.metadata.cargo-machete]
-ignored = ["anyhow", "rand"]
+[lints]
+workspace = true

@@ -38,6 +38,7 @@ Rustler NIF crate for Spikard's Elixir bindings.
 This crate provides the Rust-side Rustler bindings that power the Elixir package. All HTTP handling, middleware, and validation runs in Rust; this crate translates between the Elixir runtime and the Spikard core.
 
 ## Architecture Highlights
+
 - **Zero-copy NIFs** via Rustler
 - **Safe FFI**: all NIF functions return Result types
 - **Compile-time** NIF module validation

@@ -17,7 +17,7 @@ Reference: `/Users/naamanhirschfeld/workspace/spikard/crates/spikard-http/src/li
 
 ### Hook Execution Order
 
-```
+```text
 HTTP Request
   ↓
 [1] onRequest Hook
@@ -67,6 +67,7 @@ pub enum HookResult<Req, Resp> {
 **Language Bindings:**
 
 **Node.js:**
+
 ```typescript
 app.onRequest(async (request) => {
   console.log(`${request.method} ${request.path}`);
@@ -77,6 +78,7 @@ app.onRequest(async (request) => {
 ```
 
 **Python:**
+
 ```python
 @app.onRequest()
 async def log_request(request):
@@ -86,6 +88,7 @@ async def log_request(request):
 ```
 
 **Ruby:**
+
 ```ruby
 app.on_request do |request|
   puts "#{request.method} #{request.path}"
@@ -95,6 +98,7 @@ end
 ```
 
 **Use Cases:**
+
 - Request logging and monitoring
 - Request ID propagation to logs
 - Custom header injection
@@ -121,6 +125,7 @@ pub trait LifecycleHook<Req, Resp> {
 **Language Bindings:**
 
 **Node.js:**
+
 ```typescript
 app.preValidation(async (request) => {
   // Normalize request data before validation
@@ -132,6 +137,7 @@ app.preValidation(async (request) => {
 ```
 
 **Python:**
+
 ```python
 @app.preValidation()
 async def normalize_request(request):
@@ -141,6 +147,7 @@ async def normalize_request(request):
 ```
 
 **Use Cases:**
+
 - Data normalization (lowercase email, trim whitespace)
 - Default value injection
 - Request enrichment with derived fields
@@ -158,6 +165,7 @@ async def normalize_request(request):
 **Language Bindings:**
 
 **Node.js:**
+
 ```typescript
 app.preHandler(async (request) => {
   // Last chance to modify request
@@ -167,6 +175,7 @@ app.preHandler(async (request) => {
 ```
 
 **Python:**
+
 ```python
 @app.preHandler()
 async def setup_handler_context(request):
@@ -175,6 +184,7 @@ async def setup_handler_context(request):
 ```
 
 **Use Cases:**
+
 - Performance timing setup
 - Request context binding (user, session, etc.)
 - Final authorization checks
@@ -202,6 +212,7 @@ pub trait LifecycleHook<Req, Resp> {
 **Language Bindings:**
 
 **Node.js:**
+
 ```typescript
 app.onResponse(async (request, response) => {
   // Add headers, modify body, etc.
@@ -220,6 +231,7 @@ app.onResponse(async (request, response) => {
 ```
 
 **Python:**
+
 ```python
 @app.onResponse()
 async def enrich_response(request, response):
@@ -236,6 +248,7 @@ async def enrich_response(request, response):
 ```
 
 **Use Cases:**
+
 - Response logging and monitoring
 - Add timing headers (X-Response-Time)
 - Response body wrapping (envelope pattern)
@@ -264,6 +277,7 @@ pub trait LifecycleHook<Req, Resp> {
 **Language Bindings:**
 
 **Node.js:**
+
 ```typescript
 app.onError(async (request, error) => {
   console.error(`Error handling ${request.method} ${request.path}:`, error);
@@ -284,6 +298,7 @@ app.onError(async (request, error) => {
 ```
 
 **Python:**
+
 ```python
 @app.onError()
 async def handle_error(request, error):
@@ -305,6 +320,7 @@ async def handle_error(request, error):
 ```
 
 **Use Cases:**
+
 - Custom error formatting and messaging
 - Error logging with context
 - Sensitive error hiding (production vs development)
@@ -319,6 +335,7 @@ async def handle_error(request, error):
 ### Global Hooks
 
 **Node.js:**
+
 ```typescript
 const app = new Spikard();
 
@@ -334,6 +351,7 @@ app.get('/users')(async (request) => {
 ### Route-Specific Hooks
 
 **Python:**
+
 ```python
 app = Spikard()
 
@@ -359,6 +377,7 @@ async def admin_only(request):
 ### Async Execution
 
 All hooks are async, allowing:
+
 - Database queries (fetch user from request ID)
 - External API calls (audit logging service)
 - Resource initialization (connection pools)
@@ -414,6 +433,7 @@ async function getProfile(request) {
 ```
 
 **Extension Lifecycle:**
+
 1. Created when request arrives
 2. Populated by hooks and middleware
 3. Accessible in handler
@@ -560,6 +580,7 @@ impl LifecycleHook for NodeLifecycleHook {
 ### Unit Tests
 
 **Node.js:**
+
 ```typescript
 test('onRequest hook modifies request', async () => {
   const app = new Spikard();
@@ -577,6 +598,7 @@ test('onRequest hook modifies request', async () => {
 ```
 
 **Python:**
+
 ```python
 def test_onRequest_hook_modifies_request():
     app = Spikard()
@@ -632,6 +654,7 @@ def test_onRequest_hook_modifies_request():
 - **Parallelizable:** Independent hooks could run concurrently (future optimization)
 
 ## Related Skills
+
 - `handler-trait-design` - Handler receives RequestData from hooks
 - `tower-middleware-patterns` - Hooks execute after middleware
 - `async-runtime-integration` - Hooks run on async runtime

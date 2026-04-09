@@ -264,24 +264,17 @@ async fn spikard_mcp_stdio_init_project_creates_expected_structures_for_each_bin
             .expect("expected text tool result");
         let project_dir = tmp.path().join(name);
 
-        assert!(project_dir.exists(), "expected {} project root", language);
-        assert!(
-            text.contains("\"files_created\""),
-            "expected {} result payload",
-            language
-        );
+        assert!(project_dir.exists(), "expected {language} project root");
+        assert!(text.contains("\"files_created\""), "expected {language} result payload");
         assert!(
             text.contains("\"next_steps\""),
-            "expected {} next_steps payload",
-            language
+            "expected {language} next_steps payload"
         );
 
         for expected in expected_paths {
             assert!(
                 project_dir.join(expected).exists(),
-                "expected {} to create {}",
-                language,
-                expected
+                "expected {language} to create {expected}"
             );
         }
     }

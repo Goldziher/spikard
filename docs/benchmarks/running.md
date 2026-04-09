@@ -7,11 +7,13 @@ This guide explains how to run Spikard benchmarks locally, interpret results, an
 ### Required Tools
 
 1. **Rust toolchain** (1.70+)
+
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
 
 2. **Load generator** (oha or bombardier)
+
    ```bash
    # Preferred: oha (Rust-based)
    cargo install oha
@@ -139,6 +141,7 @@ benchmark-harness run [OPTIONS]
 ```
 
 Example:
+
 ```bash
 ./target/release/benchmark-harness run \
   --framework spikard-python \
@@ -163,6 +166,7 @@ benchmark-harness profile [OPTIONS]
 ```
 
 Example with profiling:
+
 ```bash
 # Python with py-spy profiling
 ./target/release/benchmark-harness profile \
@@ -195,6 +199,7 @@ benchmark-harness compare [OPTIONS]
 ```
 
 Example:
+
 ```bash
 ./target/release/benchmark-harness compare \
   --frameworks spikard-python,fastapi,litestar,robyn \
@@ -218,7 +223,8 @@ Aggregate multiple profile results into a single consolidated report:
 ```
 
 This generates aggregated stats across runs (mean/median/stddev/CI) per framework and per workload.
-```
+
+```text
 
 ## Workload Suites
 
@@ -281,20 +287,24 @@ Available suites (use with `--suite` flag):
 ### Key Metrics
 
 **Requests per second (RPS)**:
+
 - Primary performance indicator
 - Higher is better
 - Compare within language ecosystems
 
 **Success rate**:
+
 - Must be 1.0 (100%) for valid results
 - Lower values indicate errors or crashes
 
 **Latency percentiles**:
+
 - `p50` (median): Typical request latency
 - `p99`: 99% of requests complete within this time
 - `p99.9`: Extreme outliers
 
 **Resource usage**:
+
 - `cpu.avg_percent`: Average CPU utilization
 - `memory.avg_mb`: Average memory consumption
 
@@ -335,6 +345,7 @@ Available suites (use with `--suite` flag):
 
 1. **Close unnecessary applications**: Browsers, IDEs, and background services can skew results
 2. **Disable CPU throttling**: Set CPU governor to performance mode
+
    ```bash
    # Linux
    sudo cpupower frequency-set -g performance
@@ -342,6 +353,7 @@ Available suites (use with `--suite` flag):
    # macOS
    sudo pmset -a cpufreq high
    ```
+
 3. **Monitor temperature**: Ensure CPU doesn't thermal throttle during benchmarks
 4. **Use dedicated hardware**: Avoid running benchmarks on development machines
 
@@ -375,7 +387,7 @@ Your framework must implement all workload endpoints. See `tools/benchmark-harne
 
 **Minimum required endpoints**:
 
-```
+```text
 POST /json/small          - 86 byte JSON response
 POST /json/medium         - 5 KB JSON response
 POST /json/large          - 52 KB JSON response
@@ -446,6 +458,7 @@ cp -r apps/my-framework apps/my-framework-raw
 ### 7. Document
 
 Add entry to `apps/README.md` with:
+
 - Framework description
 - Dependencies and versions
 - Setup instructions
@@ -468,12 +481,14 @@ lsof -ti:8000 | xargs kill -9
 ### "Framework failed to start"
 
 Check app logs:
+
 ```bash
 cd apps/my-framework
 python main.py  # Run manually to see errors
 ```
 
 Common causes:
+
 - Missing dependencies
 - Wrong Python/Node version
 - Port already in use
@@ -482,6 +497,7 @@ Common causes:
 ### "Success rate < 100%"
 
 Framework is returning errors. Check:
+
 1. Endpoint implementations match expected schemas
 2. Validation isn't rejecting valid requests
 3. Server isn't crashing under load
@@ -489,12 +505,14 @@ Framework is returning errors. Check:
 ### "Inconsistent results between runs"
 
 Multiple factors can cause variance:
+
 1. CPU thermal throttling
 2. Background processes
 3. Network buffering
 4. Garbage collection timing
 
 Solutions:
+
 - Run longer benchmarks (60s+)
 - Close background apps
 - Run multiple iterations

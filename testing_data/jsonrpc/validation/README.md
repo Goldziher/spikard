@@ -11,6 +11,7 @@ This directory contains 5 fixture files with 59 total test cases covering JSON S
 ### 1. schema_validation.json (13 test cases)
 
 Tests field-level JSON Schema validation constraints:
+
 - **Valid inputs**: All required/optional fields with valid values
 - **String validation**: minLength (≥2), maxLength (≤50)
 - **Number validation**: minimum (≥0), maximum (≤150)
@@ -19,6 +20,7 @@ Tests field-level JSON Schema validation constraints:
 - **Multiple errors**: Comprehensive error aggregation
 
 **Schema Example**:
+
 ```json
 {
   "name": {"type": "string", "minLength": 2, "maxLength": 50},
@@ -29,6 +31,7 @@ Tests field-level JSON Schema validation constraints:
 ```
 
 **Key Test Cases**:
+
 - ✓ valid_input_all_fields
 - ✓ valid_input_required_only
 - ✗ name_too_short (1 char)
@@ -45,6 +48,7 @@ Tests field-level JSON Schema validation constraints:
 ### 2. type_coercion.json (11 test cases)
 
 Tests strict type checking without implicit coercion:
+
 - String to number rejection
 - Number to string rejection
 - String boolean ("true") rejection
@@ -54,6 +58,7 @@ Tests strict type checking without implicit coercion:
 - Edge cases (zero, false, empty string)
 
 **Key Test Cases**:
+
 - ✓ valid_types
 - ✗ string_number_rejected ("25" for integer)
 - ✗ number_string_rejected (123 for string)
@@ -69,6 +74,7 @@ Tests strict type checking without implicit coercion:
 ### 3. required_fields.json (10 test cases)
 
 Tests required field enforcement:
+
 - All required fields present
 - Single missing field
 - Multiple missing fields
@@ -78,6 +84,7 @@ Tests required field enforcement:
 - Optional fields handling
 
 **Schema**:
+
 ```json
 {
   "required": ["id", "name", "email"],
@@ -91,6 +98,7 @@ Tests required field enforcement:
 ```
 
 **Key Test Cases**:
+
 - ✓ all_required_present
 - ✓ required_only_present
 - ✗ missing_id
@@ -104,6 +112,7 @@ Tests required field enforcement:
 ### 4. extra_fields.json (10 test cases)
 
 Tests additionalProperties constraint handling:
+
 - Valid exact fields (no extras)
 - Single extra field rejection
 - Multiple extra fields rejection
@@ -113,11 +122,13 @@ Tests additionalProperties constraint handling:
 - Special characters in field names
 
 **Schema Variants**:
+
 - `additionalPropertiesFalse`: Strict, no extra fields allowed
 - `additionalPropertiesTrue`: Permissive, extras allowed
 - `additionalPropertiesDefault`: Default JSON Schema behavior
 
 **Key Test Cases**:
+
 - ✓ valid_exact_fields (additionalPropertiesFalse)
 - ✓ valid_with_optional_field (additionalPropertiesTrue)
 - ✗ one_extra_field_rejected
@@ -131,6 +142,7 @@ Tests additionalProperties constraint handling:
 ### 5. nested_objects.json (15 test cases)
 
 Tests deeply nested object validation:
+
 - Valid nested structures (3+ levels deep)
 - Missing required nested fields with path tracking
 - Invalid patterns in nested values
@@ -141,6 +153,7 @@ Tests deeply nested object validation:
 - 6-level deep nesting
 
 **Schema**:
+
 ```json
 {
   "type": "object",
@@ -171,6 +184,7 @@ Tests deeply nested object validation:
 ```
 
 **Key Test Cases**:
+
 - ✓ valid_nested_structure
 - ✓ valid_nested_with_optional_fields
 - ✗ missing_nested_street
@@ -295,7 +309,7 @@ fn test_schema_validation_from_fixtures() {
 
 ## File Sizes
 
-```
+```text
 schema_validation.json    5.7 KB  (13 test cases)
 type_coercion.json        4.1 KB  (11 test cases)
 required_fields.json      4.6 KB  (10 test cases)

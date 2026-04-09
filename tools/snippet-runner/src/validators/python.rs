@@ -217,13 +217,13 @@ mod tests {
 
     #[test]
     fn preserves_multiline_async_signature_lines() {
-        let code = r#"class UserServiceHandler:
+        let code = r"class UserServiceHandler:
     async def CreateUsers(
         self, request_iterator
     ) -> CreateUsersResponse:
         created_users = []
         return created_users
-"#;
+";
 
         let patched = PythonValidator::patch_code(code);
         assert!(patched.contains(") -> CreateUsersResponse:"));

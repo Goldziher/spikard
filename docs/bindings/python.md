@@ -40,6 +40,7 @@ app.include_router(users)
 ```
 
 ## Validation
+
 - **msgspec (default)**: fastest; use `Struct` types for request/response validation.
 - **Pydantic v2 / dataclasses / TypedDict / attrs**: auto-detected when used as handler params.
 
@@ -341,6 +342,7 @@ async def upload_file(body: FileUpload):
 ```
 
 UploadFile supports both sync and async operations:
+
 - `read(size=-1)` / `aread(size=-1)` - Read file contents
 - `write(data)` / `awrite(data)` - Write data
 - `seek(offset, whence=0)` / `aseek(offset, whence=0)` - Seek to position
@@ -363,6 +365,7 @@ async def chat_handler(message: dict) -> dict | None:
 ```
 
 WebSocket handlers receive JSON messages and can return dicts to send as responses:
+
 - The handler is called with the parsed JSON `message`
 - Return a `dict` to send a JSON response, or `None` to send nothing
 
@@ -438,12 +441,14 @@ class UserServiceHandler(GrpcHandler):
 ```
 
 GrpcRequest attributes:
+
 - `payload` - Serialized protobuf bytes
 - `method_name` - Name of the method called
 - `service_name` - Name of the service
 - `metadata` - Request metadata dict
 
 GrpcResponse attributes:
+
 - `payload` - Serialized protobuf response bytes
 - `metadata` - Optional response metadata dict
 
@@ -464,6 +469,7 @@ async def test_get_user():
 ```
 
 TestResponse methods:
+
 - `status_code` - HTTP status code
 - `headers` - Response headers dict
 - `bytes()` - Response body as bytes

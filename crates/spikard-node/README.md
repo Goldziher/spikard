@@ -38,6 +38,7 @@ High-performance Node.js bindings for Spikard HTTP framework via napi-rs.
 This crate provides the Rust-side napi-rs bindings that power the TypeScript/Node.js package. All HTTP handling, middleware, and validation runs in Rust; this crate translates between the TypeScript/Node.js runtime and the Spikard core.
 
 ## Architecture Highlights
+
 - **Zero-copy FFI** via napi-rs
 - **ThreadsafeFunction** for async JavaScript callbacks
 - **Dedicated Tokio runtime** (does not block Node event loop)

@@ -6,6 +6,7 @@ description: "PHP 8.2+ with PHPStan & PSR Standards"
 # PHP 8.2+ with PHPStan & PSR Standards
 
 **PHP 8.2+ · ext-php-rs FFI · PSR compliance · PHPStan · Composer**
+
 - PHP 8.2+ with .php-version; strict_types=1 in all files
 - ext-php-rs for Rust FFI bindings; maintain type safety across boundary
 - PSR compliance: PSR-4 (autoloading), PSR-12 (coding style), PSR-7 (HTTP)

@@ -8,24 +8,24 @@ repository.workspace = true
 homepage.workspace = true
 publish = false
 
-[[bin]]
-name = "snippet-runner"
-path = "src/main.rs"
-
 [lib]
 name = "snippet_runner"
 path = "src/lib.rs"
 
-[lints]
-workspace = true
+[[bin]]
+name = "snippet-runner"
+path = "src/main.rs"
 
 [dependencies]
 clap.workspace = true
+rayon = "1.11"
 serde.workspace = true
 serde_json.workspace = true
-thiserror.workspace = true
 tempfile = "3.27"
-rayon = "1.11"
+thiserror.workspace = true
 toml = "1.1"
 walkdir = "2.5"
 which = "8"
+
+[lints]
+workspace = true

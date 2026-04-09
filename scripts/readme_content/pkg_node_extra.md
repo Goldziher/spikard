@@ -75,6 +75,7 @@ get("/search")(async (req) => {
 ## Advanced Features
 
 **File Uploads:**
+
 ```typescript
 post("/upload")(async (req) => {
   const body = req.json<{ file: UploadFile }>();
@@ -83,6 +84,7 @@ post("/upload")(async (req) => {
 ```
 
 **Streaming Responses:**
+
 ```typescript
 get("/stream")(async function* () {
   for (let i = 0; i < 10; i++) {

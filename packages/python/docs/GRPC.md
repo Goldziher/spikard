@@ -31,7 +31,7 @@ pip install grpcio-tools
 
 The Python gRPC binding follows Spikard's language-agnostic handler pattern with full async support:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │  Python gRPC Handler (implements GrpcHandler protocol)  │
 ├─────────────────────────────────────────────────────────┤
@@ -1126,6 +1126,7 @@ class BenchmarkedHandler:
 **Problem**: Handler is registered but not receiving requests
 
 **Solutions**:
+
 - Ensure service name is fully qualified (contains a dot, e.g., `"example.UserService"`)
 - Verify handler is registered before the runtime starts accepting requests
 - Check service name matches exactly in request routing
@@ -1136,6 +1137,7 @@ class BenchmarkedHandler:
 **Problem**: Errors when deserializing or serializing protobuf messages
 
 **Solutions**:
+
 - Ensure payloads are valid protobuf binary data
 - Use `ParseFromString()` not `Parse()` (which expects text format)
 - Check protobuf library version matches generated code
@@ -1147,6 +1149,7 @@ class BenchmarkedHandler:
 **Problem**: Metadata not accessible or not being set correctly
 
 **Solutions**:
+
 - Metadata keys are case-sensitive (use exact case)
 - Use `request.get_metadata(key)` not `request.metadata[key]`
 - Set response metadata via `response.metadata[key] = value`
@@ -1157,6 +1160,7 @@ class BenchmarkedHandler:
 **Problem**: Coroutine errors or event loop issues
 
 **Solutions**:
+
 - Ensure handler method is defined with `async def`
 - Use `await` for all async operations
 - Don't mix sync and async code without `asyncio.to_thread()`
@@ -1167,6 +1171,7 @@ class BenchmarkedHandler:
 **Problem**: MyPy or type checker errors
 
 **Solutions**:
+
 - Import types from `typing` module: `from typing import Protocol`
 - Use proper type hints: `async def handle_request(self, request: GrpcRequest) -> GrpcResponse:`
 - Check that handler implements `GrpcHandler` protocol

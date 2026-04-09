@@ -38,6 +38,7 @@ High-performance Python bindings for Spikard HTTP framework via PyO3.
 This crate provides the Rust-side PyO3 bindings that power the Python package. All HTTP handling, middleware, and validation runs in Rust; this crate translates between the Python runtime and the Spikard core.
 
 ## Architecture Highlights
+
 - **Async handler execution** via `pyo3_async_runtimes` (25-30x faster than spawn_blocking)
 - **Zero-copy JSON conversion** (30-40% faster than json.loads)
 - **GIL-efficient**: released before async awaits

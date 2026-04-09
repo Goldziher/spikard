@@ -90,12 +90,11 @@ fastify.post("/multipart/small", async (request: FastifyRequest, _reply: Fastify
 	for await (const part of parts) {
 		if (part.type === "file" && part.fieldname.startsWith("file")) {
 			files_received++;
-			const chunks: Buffer[] = [];
+			let partBytes = 0;
 			for await (const chunk of part.file) {
-				chunks.push(chunk);
+				partBytes += chunk.length;
 			}
-			const buffer = Buffer.concat(chunks);
-			total_bytes += buffer.length;
+			total_bytes += partBytes;
 		}
 	}
 
@@ -110,12 +109,11 @@ fastify.post("/multipart/medium", async (request: FastifyRequest, _reply: Fastif
 	for await (const part of parts) {
 		if (part.type === "file" && part.fieldname.startsWith("file")) {
 			files_received++;
-			const chunks: Buffer[] = [];
+			let partBytes = 0;
 			for await (const chunk of part.file) {
-				chunks.push(chunk);
+				partBytes += chunk.length;
 			}
-			const buffer = Buffer.concat(chunks);
-			total_bytes += buffer.length;
+			total_bytes += partBytes;
 		}
 	}
 
@@ -130,12 +128,11 @@ fastify.post("/multipart/large", async (request: FastifyRequest, _reply: Fastify
 	for await (const part of parts) {
 		if (part.type === "file" && part.fieldname.startsWith("file")) {
 			files_received++;
-			const chunks: Buffer[] = [];
+			let partBytes = 0;
 			for await (const chunk of part.file) {
-				chunks.push(chunk);
+				partBytes += chunk.length;
 			}
-			const buffer = Buffer.concat(chunks);
-			total_bytes += buffer.length;
+			total_bytes += partBytes;
 		}
 	}
 
@@ -396,12 +393,11 @@ fastify.post("/validated/multipart/small", async (request, reply) => {
 	for await (const part of parts) {
 		if (part.type === "file" && part.fieldname.startsWith("file")) {
 			files_received++;
-			const chunks: Buffer[] = [];
+			let partBytes = 0;
 			for await (const chunk of part.file) {
-				chunks.push(chunk);
+				partBytes += chunk.length;
 			}
-			const buffer = Buffer.concat(chunks);
-			total_bytes += buffer.length;
+			total_bytes += partBytes;
 		}
 	}
 
@@ -421,12 +417,11 @@ fastify.post("/validated/multipart/medium", async (request, reply) => {
 	for await (const part of parts) {
 		if (part.type === "file" && part.fieldname.startsWith("file")) {
 			files_received++;
-			const chunks: Buffer[] = [];
+			let partBytes = 0;
 			for await (const chunk of part.file) {
-				chunks.push(chunk);
+				partBytes += chunk.length;
 			}
-			const buffer = Buffer.concat(chunks);
-			total_bytes += buffer.length;
+			total_bytes += partBytes;
 		}
 	}
 
@@ -446,12 +441,11 @@ fastify.post("/validated/multipart/large", async (request, reply) => {
 	for await (const part of parts) {
 		if (part.type === "file" && part.fieldname.startsWith("file")) {
 			files_received++;
-			const chunks: Buffer[] = [];
+			let partBytes = 0;
 			for await (const chunk of part.file) {
-				chunks.push(chunk);
+				partBytes += chunk.length;
 			}
-			const buffer = Buffer.concat(chunks);
-			total_bytes += buffer.length;
+			total_bytes += partBytes;
 		}
 	}
 

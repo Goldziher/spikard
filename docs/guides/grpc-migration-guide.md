@@ -21,6 +21,7 @@
 Adding gRPC to an existing REST or WebSocket application is a common migration pattern. Unlike frameworks that require separate servers or ports, Spikard leverages HTTP/2's multiplexing capabilities to run both REST and gRPC on the same server instance, simplifying deployment and reducing operational complexity.
 
 This guide demonstrates how to:
+
 - Add gRPC services to existing HTTP servers
 - Configure routing for mixed protocol traffic
 - Understand the performance trade-offs
@@ -60,7 +61,7 @@ HTTP/2 allows multiple request-response streams to share a single TCP connection
 
 ### Protocol Detection Flow
 
-```
+```text
 Client Request
      |
      v
@@ -91,12 +92,14 @@ Spikard's routing is content-type aware and requires no special configuration fo
 The server automatically routes requests based on the path structure and content type:
 
 **REST Routing**:
-```
+
+```text
 GET /users/123 → Matches route pattern: /users/:id
 ```
 
 **gRPC Routing**:
-```
+
+```text
 POST /com.example.UserService/GetUser → Matches service/method pattern
 ```
 
@@ -125,6 +128,7 @@ Examples: `/users/:id`, `/api/v1/orders`, `/health`
 
 **gRPC paths**: Structured as `/{package}.{service}/{method}`
 Examples:
+
 - `/com.example.api.UserService/GetUser`
 - `/api.v1.OrderService/CreateOrder`
 - `/auth.AuthService/Login`
@@ -352,6 +356,7 @@ grpc_app.run
 ```
 
 **Trade-offs**:
+
 - Pro: Easier network policy management
 - Pro: Clearer separation in load balancer configs
 - Con: Double resource usage (2x processes)
@@ -397,6 +402,7 @@ static_resources:
 ```
 
 **When to use**:
+
 - Advanced routing requirements (A/B testing, canary deployments)
 - Need for protocol transformation (gRPC-Web → gRPC)
 - Enterprise security policies (mTLS termination)
@@ -609,12 +615,14 @@ app.run
 ### Step 6: Test Both Protocols
 
 **Test REST endpoint**:
+
 ```bash
 curl http://localhost:8080/users/123
 # Response: {"id":123,"name":"Alice","email":"alice@example.com"}
 ```
 
 **Test gRPC endpoint**:
+
 ```bash
 # Using grpcurl
 grpcurl -plaintext \
@@ -685,7 +693,7 @@ HTTP/2 adds minimal overhead compared to HTTP/1.1:
 
 **Per-Connection Memory** (approximate):
 
-```
+```text
 REST HTTP/1.1:  16KB buffer × 100 connections = 1.6MB
 REST HTTP/2:    8KB buffer × 1 connection = 8KB
 gRPC HTTP/2:    8KB buffer × 1 connection = 8KB
@@ -696,6 +704,7 @@ gRPC uses **200x less memory** for the same concurrency level.
 ### When to Choose gRPC vs REST
 
 **Use gRPC when**:
+
 - High throughput requirements (>1000 req/s)
 - Binary data transfer (files, images)
 - Streaming data (real-time updates)
@@ -703,12 +712,14 @@ gRPC uses **200x less memory** for the same concurrency level.
 - Mobile clients (battery/bandwidth critical)
 
 **Use REST when**:
+
 - Browser clients (gRPC-Web adds complexity)
 - Public APIs (REST is more accessible)
 - Simple CRUD operations
 - Third-party integrations (REST is universal)
 
 **Use Both when**:
+
 - Migrating from REST to gRPC
 - Supporting diverse client ecosystems
 - Backend services need gRPC, frontend needs REST
@@ -738,6 +749,7 @@ This happens transparently with zero configuration.
 - WebSocket connections (HTTP/1.1 upgrade)
 
 Example:
+
 ```ruby
 app.get("/health")  # REST
 app.websocket("/chat")  # WebSocket
@@ -759,6 +771,7 @@ config = Spikard::ServerConfig.new(
 ```
 
 This configuration affects:
+
 - REST endpoints → Headers checked, responses compressed
 - gRPC services → Metadata checked, payloads compressed
 - WebSocket connections → Headers checked during handshake
@@ -778,13 +791,15 @@ No breaking changes required.
 Use the same authentication mechanism for both protocols. JWT example:
 
 **REST Request**:
-```
+
+```text
 GET /users/123
 Authorization: Bearer <jwt-token>
 ```
 
 **gRPC Request**:
-```
+
+```text
 Metadata: authorization: Bearer <jwt-token>
 ```
 
@@ -800,6 +815,7 @@ config = Spikard::ServerConfig.new(
 ```
 
 The server checks:
+
 - REST: `Authorization` HTTP header
 - gRPC: `authorization` metadata field
 
@@ -811,11 +827,12 @@ Same validation, different transport.
 
 Begin your gRPC migration with internal microservice communication:
 
-```
+```text
 [Web Frontend] --REST--> [API Gateway] --gRPC--> [Backend Services]
 ```
 
 **Benefits**:
+
 - Control both client and server
 - Easier debugging
 - Performance gains where they matter most
@@ -835,7 +852,8 @@ service UserService {
 ```
 
 **Migration path**:
-```
+
+```text
 v1: Current production
 v2: New features, backward compatible
 v3: Breaking changes (when v1 clients deprecated)
@@ -904,6 +922,7 @@ end
 ```
 
 This helps you:
+
 - Measure migration progress
 - Identify clients to upgrade
 - Plan deprecation timelines
@@ -962,6 +981,7 @@ Adding gRPC to existing REST/WebSocket applications in Spikard is straightforwar
 5. **Performance Gains**: 70% smaller payloads, 2-3x faster serialization, 200x less memory
 
 **Next Steps**:
+
 - [Protobuf Code Generation](../adr/0010-protobuf-grpc-code-generation.md)
 - [Middleware Configuration](./middleware.md)
 - [Testing gRPC Services](./testing.md)

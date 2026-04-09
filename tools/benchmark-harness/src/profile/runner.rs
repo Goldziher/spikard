@@ -1047,6 +1047,7 @@ impl ProfileRunner {
     }
 
     fn detect_language(&self) -> String {
+        // File-based detection (primary - works when app_dir is correct)
         if self.config.app_dir.join("server.py").exists() {
             "python".to_string()
         } else if self.config.app_dir.join("server.ts").exists() {
@@ -1055,12 +1056,31 @@ impl ProfileRunner {
             "ruby".to_string()
         } else if self.config.app_dir.join("server.php").exists() {
             "php".to_string()
-        } else if self.config.framework.contains("node") {
+        } else if self.config.app_dir.join("mix.exs").exists() {
+            "elixir".to_string()
+        // Framework name-based fallback (covers third-party frameworks)
+        } else if self.config.framework.contains("python")
+            || matches!(
+                self.config.framework.as_str(),
+                "fastapi" | "litestar" | "robyn" | "turboapi"
+            )
+        {
+            "python".to_string()
+        } else if self.config.framework.contains("node") || matches!(self.config.framework.as_str(), "fastify" | "hono")
+        {
+            "node".to_string()
+        } else if self.config.framework.contains("bun") || self.config.framework == "elysia" {
             "node".to_string()
         } else if self.config.framework.contains("ruby") {
             "ruby".to_string()
+        } else if self.config.framework.contains("php") {
+            "php".to_string()
         } else if self.config.framework.contains("rust") {
             "rust".to_string()
+        } else if self.config.framework.contains("elixir")
+            || matches!(self.config.framework.as_str(), "plug-bandit" | "phoenix")
+        {
+            "elixir".to_string()
         } else {
             "unknown".to_string()
         }

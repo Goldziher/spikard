@@ -5,16 +5,16 @@ edition = "2024"
 license = "MIT"
 publish = false
 
+[package.metadata.cargo-machete]
+ignored = ["proc-macro2"]
+
 [lib]
 proc-macro = true
-
-[lints]
-workspace = true
 
 [dependencies]
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full"] }
 
-[package.metadata.cargo-machete]
-ignored = ["proc-macro2"]
+[lints]
+workspace = true

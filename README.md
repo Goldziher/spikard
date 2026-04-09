@@ -32,6 +32,7 @@
 Rust-centric, codegen-first framework for building typed web services and generating idiomatic server scaffolds for Python, TypeScript, Rust, Ruby, PHP, and Elixir.
 
 ## Features
+
 - **Codegen-first CLI** for OpenAPI 3.1, AsyncAPI 3.0, OpenRPC/JSON-RPC, GraphQL, and Protobuf/gRPC
 - **Agent-friendly MCP server** with CLI-equivalent project init and code generation tools
 - **Real starter projects** via `spikard init` for Python, TypeScript, Rust, Ruby, PHP, and Elixir
@@ -123,6 +124,7 @@ Benchmarked across 34 workloads at 100 concurrency ([methodology](docs/benchmark
 Spikard is **benchmarked against mature framework baselines across the supported bindings**.
 
 Key optimizations:
+
 - **Thin bindings** over a shared Rust core
 - **Zero-copy FFI paths** where the binding supports them
 - **Template-driven code generation** validated before files are written

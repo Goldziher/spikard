@@ -3,7 +3,6 @@ priority: high
 description: "Rust Module Organization & Public API Design"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high
@@ -21,7 +20,7 @@ ______________________________________________________________________
 
 ## Module Hierarchy Example
 
-```
+```text
 src/
 ├── lib.rs                    # Root: re-exports public API
 ├── parsing/                  # Feature module

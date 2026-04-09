@@ -1,4 +1,5 @@
 # ADR 0011: gRPC FFI Bindings Strategy
+
 **Status**: Accepted
 **Date**: 2025-12-31
 
@@ -19,12 +20,14 @@ Each language has different FFI mechanisms (PyO3, napi-rs, Magnus, ext-php-rs) w
 ### Architecture
 
 **Shared FFI Core**: `crates/spikard-bindings-shared/src/grpc_metadata.rs`
+
 - Common metadata conversion logic (MetadataMap ↔ HashMap)
 - gRPC status code constants and mappings
 - Reused across all language bindings
 
 **Language-Specific Bindings**:
-```
+
+```text
 crates/
 ├── spikard-py/src/grpc/        # Python (PyO3)
 ├── spikard-node/src/grpc/      # Node.js (napi-rs)
@@ -59,7 +62,8 @@ crates/
 ### FFI Type Mapping
 
 **Request/Response Flow**:
-```
+
+```text
 Language Handler
     ↓ (binary payload)
 FFI Boundary (PyGrpcRequest, RubyGrpcRequest, etc.)
@@ -74,6 +78,7 @@ Language Handler
 **Data Structures**:
 
 **Rust Core** (`spikard-http/src/grpc/mod.rs`):
+
 ```rust
 pub struct GrpcRequestData {
     pub service_name: String,
@@ -89,6 +94,7 @@ pub struct GrpcResponseData {
 ```
 
 **Python Binding** (`spikard-py/src/grpc/handler.rs`):
+
 ```rust
 #[pyclass]
 pub struct PyGrpcRequest {
@@ -120,6 +126,7 @@ impl PyGrpcRequest {
 ```
 
 **Ruby Binding** (`spikard-rb/src/grpc/handler.rs`):
+
 ```rust
 #[magnus::wrap(class = "Spikard::Grpc::Request")]
 pub struct RubyGrpcRequest {
@@ -151,11 +158,13 @@ impl RubyGrpcRequest {
 **Current State**: Unary RPC only (request → response)
 
 **Future Expansion**:
+
 1. **Server Streaming**: Return iterator/generator from handler
 2. **Client Streaming**: Accept iterator/generator as request
 3. **Bidirectional**: Both request and response as async iterators
 
 **Design Constraints**:
+
 - PyO3: Async generators via `async_generator` crate
 - napi-rs: AsyncIterator support in Node.js
 - Magnus: Ruby Enumerator for lazy iteration
@@ -166,6 +175,7 @@ impl RubyGrpcRequest {
 **Exception → Status Code Mapping**:
 
 **Python** (`pyerr_to_grpc_status`):
+
 ```rust
 fn pyerr_to_grpc_status(err: PyErr) -> tonic::Status {
     Python::with_gil(|py| {
@@ -184,6 +194,7 @@ fn pyerr_to_grpc_status(err: PyErr) -> tonic::Status {
 ```
 
 **TypeScript** (custom Error classes):
+
 ```typescript
 export class GrpcInvalidArgumentError extends Error {
   status = 'INVALID_ARGUMENT';
@@ -195,6 +206,7 @@ export class GrpcPermissionDeniedError extends Error {
 ```
 
 **Ruby** (exception hierarchy):
+
 ```ruby
 module Spikard::Grpc
   class Error < StandardError
@@ -210,21 +222,25 @@ end
 ### Memory Management
 
 **Python (PyO3)**:
+
 - GIL handling: Acquire only when needed
 - Bytes to/from Python: `PyBytes::new()` copies, `as_bytes()` borrows
 - Reference counting: PyO3 handles automatically
 
 **Ruby (Magnus)**:
+
 - GC marking: Custom `mark()` functions for Rust-owned Ruby values
 - String handling: `str_from_slice()` creates Ruby String
 - Opaque values for storing Ruby objects in Rust structs
 
 **Node.js (napi-rs)**:
+
 - V8 isolate management: Automatic via napi-rs
 - Buffer handling: `Buffer::from()` for zero-copy where possible
 - Threadsafe functions for async callbacks
 
 **PHP (ext-php-rs)**:
+
 - Zend engine integration: Manual refcount management
 - String handling: `ZendStr` wrapper
 - Object lifecycle tied to PHP GC
@@ -232,6 +248,7 @@ end
 ## Consequences
 
 **Benefits**:
+
 - **Single Runtime**: One Tonic-based runtime serves all languages
 - **Type Safety**: Rust compiler catches FFI boundary issues
 - **Performance**: Minimal FFI overhead (binary payloads, no parsing)
@@ -239,23 +256,27 @@ end
 - **Maintainability**: Shared logic in `spikard-bindings-shared`
 
 **Trade-offs**:
+
 - **Complex FFI Code**: Each language requires custom bridging
 - **Testing Burden**: Must test each language binding independently
 - **Async Challenges**: Blocking languages (Ruby, PHP) require thread pool
 - **Version Compatibility**: Must track FFI framework versions (PyO3, Magnus, etc.)
 
 **Performance Characteristics**:
+
 - **FFI Call Overhead**: ~50-100ns per boundary crossing
 - **Binary Data**: Zero-copy in Rust, copy required for language objects
 - **Metadata Conversion**: O(n) HashMap construction per request/response
 - **GIL Impact (Python)**: Minimal - only held during FFI calls, released during Rust async
 
 **Security**:
+
 - No unsafe code in FFI layer except for controlled lifetime extensions
 - All user input (payloads, metadata) treated as untrusted
 - Panic shielding prevents Rust panics from crashing language runtime
 
 **Known Limitations**:
+
 - **Streaming**: Not yet implemented for any language
 - **Compression**: gRPC compression not exposed via FFI
 - **Deadlines/Timeouts**: Not propagated across FFI boundary

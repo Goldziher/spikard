@@ -18,6 +18,7 @@ This comprehensive guide covers common issues encountered when working with Spik
 ### Problem 1: OpenAPI - Missing Required Field in Request Body
 
 **Error Message:**
+
 ```json
 {
   "type": "https://spikard.dev/errors/validation-error",
@@ -41,6 +42,7 @@ The client is submitting a request missing a field marked as `required` in the O
 **Solution:**
 
 1. Check your OpenAPI schema definition:
+
 ```yaml
 components:
   schemas:
@@ -57,6 +59,7 @@ components:
 ```
 
 2. Ensure the client includes all required fields:
+
 ```typescript
 // TypeScript client
 const response = await fetch('/users', {
@@ -70,6 +73,7 @@ const response = await fetch('/users', {
 ```
 
 **Prevention Tips:**
+
 - Use OpenAPI documentation generators to share API contracts with clients
 - Enable request validation in development to catch issues early
 - Consider providing default values for optional fields in your schema
@@ -80,6 +84,7 @@ const response = await fetch('/users', {
 ### Problem 2: GraphQL - Invalid Query Syntax
 
 **Error Message:**
+
 ```json
 {
   "errors": [
@@ -121,6 +126,7 @@ query GetUser {
 ```
 
 **Prevention Tips:**
+
 - Use GraphQL IDE tools (GraphiQL, GraphQL Playground) with syntax highlighting
 - Enable query validation in your GraphQL client
 - Use typed GraphQL clients (like Apollo Client with code generation)
@@ -131,7 +137,8 @@ query GetUser {
 ### Problem 3: Protobuf - Message Type Not Found
 
 **Error Message:**
-```
+
+```text
 Error: Message type 'example.v1.UserRequest' not found in descriptor pool
 ```
 
@@ -141,6 +148,7 @@ The protobuf message type referenced in your code doesn't exist in the compiled 
 **Solution:**
 
 1. Verify your `.proto` file package and message definitions:
+
 ```protobuf
 syntax = "proto3";
 
@@ -153,6 +161,7 @@ message UserRequest {
 ```
 
 2. Ensure you're importing the correct generated code:
+
 ```python
 # Python
 from example.v1 import user_pb2
@@ -168,6 +177,7 @@ const request = UserRequest.create({ id: "123", name: "John" });
 ```
 
 **Prevention Tips:**
+
 - Use consistent package naming across all `.proto` files
 - Regenerate protobuf code after schema changes
 - Verify import paths match your project structure
@@ -178,6 +188,7 @@ const request = UserRequest.create({ id: "123", name: "John" });
 ### Problem 4: String Length Constraint Violation
 
 **Error Message:**
+
 ```json
 {
   "type": "https://spikard.dev/errors/validation-error",
@@ -199,6 +210,7 @@ Input string doesn't meet the minimum or maximum length constraints defined in t
 **Solution:**
 
 1. Check schema constraints:
+
 ```yaml
 # OpenAPI
 password:
@@ -208,6 +220,7 @@ password:
 ```
 
 2. Validate input before submission:
+
 ```python
 # Python
 def validate_password(password: str) -> bool:
@@ -219,6 +232,7 @@ def validate_password(password: str) -> bool:
 ```
 
 **Prevention Tips:**
+
 - Display constraint information in UI forms
 - Implement client-side validation matching server rules
 - Provide clear error messages indicating the constraints
@@ -229,6 +243,7 @@ def validate_password(password: str) -> bool:
 ### Problem 5: Enum Value Not in Allowed List
 
 **Error Message:**
+
 ```json
 {
   "type": "enum",
@@ -244,6 +259,7 @@ The provided value doesn't match any of the allowed enum values defined in the s
 **Solution:**
 
 1. Review allowed enum values:
+
 ```yaml
 # OpenAPI
 status:
@@ -255,6 +271,7 @@ status:
 ```
 
 2. Use type-safe enums in code:
+
 ```typescript
 // TypeScript
 enum UserStatus {
@@ -281,6 +298,7 @@ request = {"status": UserStatus.ACTIVE.value}
 ```
 
 **Prevention Tips:**
+
 - Generate client code from schemas to get type-safe enums
 - Use autocomplete-enabled dropdowns in UI
 - Document enum values in API documentation
@@ -293,7 +311,8 @@ request = {"status": UserStatus.ACTIVE.value}
 ### Problem 6: TypeScript - Module Resolution Failure
 
 **Error Message:**
-```
+
+```text
 Error: Cannot find module './gen/models' or its corresponding type declarations.
 ```
 
@@ -303,6 +322,7 @@ Generated TypeScript files aren't in the expected location or the module resolut
 **Solution:**
 
 1. Verify code generation succeeded:
+
 ```bash
 spikard generate openapi \
   ./api.yaml \
@@ -311,6 +331,7 @@ spikard generate openapi \
 ```
 
 2. Check `tsconfig.json` paths configuration:
+
 ```json
 {
   "compilerOptions": {
@@ -323,12 +344,14 @@ spikard generate openapi \
 ```
 
 3. Verify generated files exist:
+
 ```bash
 ls -la src/gen/
 # Should show index.ts, models.ts, etc.
 ```
 
 **Prevention Tips:**
+
 - Add generated code directories to `.gitignore`
 - Use consistent output paths across the team
 - Document code generation steps in README
@@ -339,7 +362,8 @@ ls -la src/gen/
 ### Problem 7: Ruby - Syntax Error in Generated Code
 
 **Error Message:**
-```
+
+```text
 SyntaxError: unexpected token at 'def handle_request('
 ```
 
@@ -349,6 +373,7 @@ The code generator produced invalid Ruby syntax, often due to schema edge cases 
 **Solution:**
 
 1. Check for reserved keywords or special characters:
+
 ```yaml
 # PROBLEMATIC
 class:  # 'class' is reserved in Ruby
@@ -360,6 +385,7 @@ user_class:
 ```
 
 2. Regenerate code with proper escaping:
+
 ```bash
 spikard generate openapi \
   ./api.yaml \
@@ -370,6 +396,7 @@ spikard generate openapi \
 3. If the issue persists, report the schema pattern to the Spikard team.
 
 **Prevention Tips:**
+
 - Avoid using language-reserved keywords in schema field names
 - Use `snake_case` for field names consistently
 - Run syntax validation immediately after generation
@@ -380,7 +407,8 @@ spikard generate openapi \
 ### Problem 8: Python - Import Error for Generated Protobuf
 
 **Error Message:**
-```
+
+```text
 ImportError: cannot import name 'UserServiceStub' from 'gen.user_pb2_grpc'
 ```
 
@@ -390,6 +418,7 @@ The gRPC Python code wasn't generated or is out of sync with the `.proto` files.
 **Solution:**
 
 1. Regenerate gRPC Python code:
+
 ```bash
 python -m grpc_tools.protoc \
   --proto_path=. \
@@ -399,12 +428,14 @@ python -m grpc_tools.protoc \
 ```
 
 2. Verify both `*_pb2.py` and `*_pb2_grpc.py` files exist:
+
 ```bash
 ls gen/
 # Should show: user_pb2.py and user_pb2_grpc.py
 ```
 
 3. Check import paths:
+
 ```python
 # Use relative imports if in package
 from .gen import user_pb2, user_pb2_grpc
@@ -414,6 +445,7 @@ from gen import user_pb2, user_pb2_grpc
 ```
 
 **Prevention Tips:**
+
 - Add protobuf compilation to build scripts
 - Use consistent proto file organization
 - Version control `.proto` files, not generated code
@@ -426,7 +458,8 @@ from gen import user_pb2, user_pb2_grpc
 ### Problem 9: Python - mypy Type Error
 
 **Error Message:**
-```
+
+```text
 error: Incompatible return value type (got "dict[str, Any]", expected "UserResponse")
 ```
 
@@ -454,6 +487,7 @@ def get_user(user_id: str) -> UserResponse:
 ```
 
 **Prevention Tips:**
+
 - Enable mypy in pre-commit hooks
 - Use `--strict` mode during development
 - Generate type stubs from OpenAPI schemas
@@ -464,7 +498,8 @@ def get_user(user_id: str) -> UserResponse:
 ### Problem 10: TypeScript - tsc Compilation Error
 
 **Error Message:**
-```
+
+```text
 error TS2322: Type 'string | undefined' is not assignable to type 'string'.
 ```
 
@@ -499,6 +534,7 @@ function processUser(user: User) {
 ```
 
 **Prevention Tips:**
+
 - Enable `strictNullChecks` in `tsconfig.json`
 - Use non-nullable types in schemas where appropriate
 - Apply consistent null-handling patterns
@@ -509,7 +545,8 @@ function processUser(user: User) {
 ### Problem 11: Ruby - Steep Type Mismatch
 
 **Error Message:**
-```
+
+```text
 Type mismatch: expected `String` but got `String | nil`
 ```
 
@@ -541,6 +578,7 @@ end
 ```
 
 **Prevention Tips:**
+
 - Use RBS type definitions
 - Enable Steep in CI pipeline
 - Use Sorbet for runtime type checking
@@ -551,7 +589,8 @@ end
 ### Problem 12: PHP - PHPStan Level Max Error
 
 **Error Message:**
-```
+
+```text
 Property App\Models\User::$email has no type specified.
 ```
 
@@ -594,6 +633,7 @@ class User
 ```
 
 **Prevention Tips:**
+
 - Use PHP 8.1+ for property types
 - Specify formats in OpenAPI schema
 - Run PHPStan with `--level=max` locally
@@ -604,7 +644,8 @@ class User
 ### Problem 13: Rust - Clippy Warnings as Errors
 
 **Error Message:**
-```
+
+```text
 error: this function has too many arguments (8/7)
   --> src/handlers.rs:42:1
 ```
@@ -643,6 +684,7 @@ fn handle_user(req: UserRequest) -> Result<Response> {
 ```
 
 **Prevention Tips:**
+
 - Group related parameters into structs
 - Use the builder pattern for complex requests
 - Run `cargo clippy` before committing
@@ -655,7 +697,8 @@ fn handle_user(req: UserRequest) -> Result<Response> {
 ### Problem 14: CORS Preflight Request Failing
 
 **Error Message (Browser Console):**
-```
+
+```text
 Access to fetch at 'https://api.example.com/users' from origin 'http://localhost:3000'
 has been blocked by CORS policy: Response to preflight request doesn't pass access
 control check: No 'Access-Control-Allow-Origin' header is present.
@@ -704,6 +747,7 @@ app.config.cors.allowed_methods = ['GET', 'POST', 'PUT', 'DELETE']
 ```
 
 **Prevention Tips:**
+
 - Enable CORS in development mode
 - Use environment-specific CORS configurations
 - Test with actual frontend URLs, not just curl
@@ -714,6 +758,7 @@ app.config.cors.allowed_methods = ['GET', 'POST', 'PUT', 'DELETE']
 ### Problem 15: Authentication Token Validation Failure
 
 **Error Message:**
+
 ```json
 {
   "type": "https://spikard.dev/errors/authentication-error",
@@ -729,6 +774,7 @@ The JWT token is expired, malformed, or signed with wrong secret.
 **Solution:**
 
 1. Verify token structure and expiration:
+
 ```python
 # Python
 import jwt
@@ -752,6 +798,7 @@ def verify_token(token: str) -> dict:
 ```
 
 2. Include valid token in requests:
+
 ```typescript
 // TypeScript
 const response = await fetch('/api/users', {
@@ -762,6 +809,7 @@ const response = await fetch('/api/users', {
 ```
 
 **Prevention Tips:**
+
 - Use standard JWT libraries (don't roll your own)
 - Set reasonable token expiration times
 - Implement token refresh mechanisms
@@ -773,6 +821,7 @@ const response = await fetch('/api/users', {
 ### Problem 16: Request Body Too Large
 
 **Error Message:**
+
 ```json
 {
   "type": "https://spikard.dev/errors/bad-request",
@@ -788,6 +837,7 @@ The request payload exceeds the configured body size limit.
 **Solution:**
 
 1. Increase body size limit if appropriate:
+
 ```python
 # Python
 app.config.max_body_size = 10 * 1024 * 1024  # 10MB
@@ -801,6 +851,7 @@ const app = new App({
 ```
 
 2. Or use streaming for large uploads:
+
 ```python
 # Python
 from spikard import UploadFile
@@ -811,6 +862,7 @@ async def upload_file(file: UploadFile):
 ```
 
 **Prevention Tips:**
+
 - Set appropriate limits for your use case
 - Use streaming for large file uploads
 - Implement chunked uploads for very large files
@@ -823,6 +875,7 @@ async def upload_file(file: UploadFile):
 ### Problem 17: Handler Timeout
 
 **Error Message:**
+
 ```json
 {
   "type": "https://spikard.dev/errors/internal-server-error",
@@ -838,6 +891,7 @@ The handler takes longer than the configured timeout to execute, usually due to 
 **Solution:**
 
 1. Optimize slow operations:
+
 ```python
 # SLOW - sequential database calls
 async def get_user_data(user_id: str):
@@ -859,11 +913,13 @@ async def get_user_data(user_id: str):
 ```
 
 2. Or increase timeout for specific endpoints:
+
 ```python
 app.config.request_timeout = 60  # 60 seconds
 ```
 
 3. Use background tasks for long operations:
+
 ```python
 from spikard import BackgroundTask
 
@@ -882,6 +938,7 @@ async def upload_handler(file: UploadFile):
 ```
 
 **Prevention Tips:**
+
 - Profile handler performance
 - Add database query indexes
 - Use caching for frequently accessed data
@@ -893,7 +950,8 @@ async def upload_handler(file: UploadFile):
 ### Problem 18: Dependency Injection Failure
 
 **Error Message:**
-```
+
+```text
 RuntimeError: No provider registered for type 'Database' in dependency injection container
 ```
 
@@ -946,6 +1004,7 @@ app.get('/users/:id', async (req, { db }: { db: Database }) => {
 ```
 
 **Prevention Tips:**
+
 - Register all providers at application startup
 - Use dependency interfaces for testability
 - Validate DI configuration before deployment
@@ -956,7 +1015,8 @@ app.get('/users/:id', async (req, { db }: { db: Database }) => {
 ### Problem 19: Streaming Response Connection Closed
 
 **Error Message (Logs):**
-```
+
+```text
 Error: Connection closed while streaming response after sending 1024 bytes
 ```
 
@@ -995,6 +1055,7 @@ async def sse_handler():
 ```
 
 **Prevention Tips:**
+
 - Implement proper error handling in generators
 - Add heartbeat messages to detect dead connections
 - Set appropriate timeout for streaming responses
@@ -1005,7 +1066,8 @@ async def sse_handler():
 ### Problem 20: Memory Leak with WebSocket Connections
 
 **Error Message:**
-```
+
+```text
 MemoryError: Unable to allocate memory for WebSocket buffers.
 Currently tracking 10000 active connections.
 ```
@@ -1070,6 +1132,7 @@ async function websocketHandler(ws: WebSocket) {
 ```
 
 **Prevention Tips:**
+
 - Set connection limits
 - Implement heartbeat/ping-pong to detect dead connections
 - Add connection timeout
@@ -1083,7 +1146,8 @@ async function websocketHandler(ws: WebSocket) {
 ### Problem 21: Protobuf Serialization Error
 
 **Error Message:**
-```
+
+```text
 grpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:
     status = StatusCode.INVALID_ARGUMENT
     details = "Failed to parse request proto: invalid wire type"
@@ -1095,12 +1159,14 @@ The client is sending a protobuf message that doesn't match the expected schema,
 **Solution:**
 
 1. Ensure client and server use same `.proto` files:
+
 ```bash
 # Regenerate both client and server code
 protoc --python_out=. --grpc_python_out=. user.proto
 ```
 
 2. Verify message creation:
+
 ```python
 # Python
 import user_pb2
@@ -1116,6 +1182,7 @@ request = user_pb2.GetUserRequest(**{"id": "user_123"})
 ```
 
 3. Check for breaking changes in `.proto`:
+
 ```protobuf
 // OLD
 message UserRequest {
@@ -1134,6 +1201,7 @@ message UserRequest {
 ```
 
 **Prevention Tips:**
+
 - Version your `.proto` files
 - Never change field numbers
 - Use reserved fields for deleted fields
@@ -1145,7 +1213,8 @@ message UserRequest {
 ### Problem 22: gRPC Status Code UNAVAILABLE
 
 **Error Message:**
-```
+
+```text
 grpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:
     status = StatusCode.UNAVAILABLE
     details = "failed to connect to all addresses"
@@ -1157,6 +1226,7 @@ The gRPC server is not running, the address is incorrect, or there's a network c
 **Solution:**
 
 1. Verify server is running:
+
 ```bash
 # Check if server is listening
 lsof -i :50051
@@ -1166,6 +1236,7 @@ netstat -an | grep 50051
 ```
 
 2. Check connection configuration:
+
 ```python
 # Python
 import grpc
@@ -1180,6 +1251,7 @@ stub = UserServiceStub(channel)
 ```
 
 3. Add retry logic:
+
 ```python
 # Python
 import grpc
@@ -1198,6 +1270,7 @@ def call_with_retry(stub, request, max_retries=3):
 ```
 
 **Prevention Tips:**
+
 - Use health check endpoints
 - Implement connection pooling
 - Add circuit breakers for resilience
@@ -1209,6 +1282,7 @@ def call_with_retry(stub, request, max_retries=3):
 ### Problem 23: gRPC Metadata Not Propagated
 
 **Error Message:**
+
 ```text
 NoMethodError: undefined method 'get' for nil:NilClass
   # When trying to access metadata
@@ -1220,6 +1294,7 @@ gRPC metadata (headers) aren't being properly set or accessed on the client or s
 **Solution:**
 
 1. Set metadata on client:
+
 ```python
 # Python
 import grpc
@@ -1250,6 +1325,7 @@ response = stub.get_user(request, metadata: metadata)
 ```
 
 2. Access metadata on server:
+
 ```python
 # Python
 class UserService:
@@ -1285,6 +1361,7 @@ end
 ```
 
 **Prevention Tips:**
+
 - Document required metadata fields
 - Validate metadata early in handlers
 - Use interceptors for common metadata handling
@@ -1295,7 +1372,8 @@ end
 ### Problem 24: gRPC Streaming Deadlock
 
 **Error Message:**
-```
+
+```text
 Deadlock detected: client waiting for server response while server waiting for client message
 ```
 
@@ -1338,6 +1416,7 @@ async function* bidiStream(
 ```
 
 **Prevention Tips:**
+
 - Use unary or server/client streaming when possible
 - Implement timeouts for streaming calls
 - Test streaming with various message patterns
@@ -1348,7 +1427,8 @@ async function* bidiStream(
 ### Problem 25: gRPC Large Message Error
 
 **Error Message:**
-```
+
+```text
 grpc._channel._InactiveRpcError: <_InactiveRpcError of RPC that terminated with:
     status = StatusCode.RESOURCE_EXHAUSTED
     details = "Received message larger than max (4194304 vs. 4194304)"
@@ -1360,6 +1440,7 @@ The gRPC message exceeds the default 4MB size limit.
 **Solution:**
 
 1. Increase message size limits:
+
 ```python
 # Python - Server
 server = grpc.server(
@@ -1383,6 +1464,7 @@ channel = grpc.insecure_channel(
 ```
 
 2. Or use streaming for large data:
+
 ```protobuf
 // Instead of single large message
 service FileService {
@@ -1401,6 +1483,7 @@ message FileChunk {
 ```
 
 **Prevention Tips:**
+
 - Use streaming for large payloads
 - Implement chunking for file transfers
 - Set appropriate size limits
@@ -1495,6 +1578,7 @@ If you encounter an issue not covered in this guide:
 5. Report bugs with minimal reproduction case
 
 When reporting issues, include:
+
 - Spikard version (`spikard --version`)
 - Language and runtime version
 - Complete error message

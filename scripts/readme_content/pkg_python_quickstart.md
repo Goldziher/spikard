@@ -26,6 +26,7 @@ if __name__ == "__main__":
 ## Core Concepts
 
 **Route Decorators:**
+
 ```python
 from spikard import Spikard, get, post
 
@@ -42,6 +43,7 @@ async def create_user(user: User):
 ```
 
 **Validation with msgspec (recommended):**
+
 ```python
 from msgspec import Struct
 
@@ -55,6 +57,7 @@ async def create_user(user: User):
 ```
 
 **Dependency Injection:**
+
 ```python
 from spikard.di import Provide
 
@@ -72,6 +75,7 @@ async def get_data(pool: DatabasePool) -> dict:
 ```
 
 **WebSockets:**
+
 ```python
 from spikard import websocket
 
@@ -81,6 +85,7 @@ async def chat_endpoint(message: dict) -> dict | None:
 ```
 
 **Server-Sent Events:**
+
 ```python
 from spikard import sse
 
@@ -91,6 +96,7 @@ async def stream():
 ```
 
 **Lifecycle Hooks:**
+
 ```python
 @app.pre_validation
 async def check_auth(request):

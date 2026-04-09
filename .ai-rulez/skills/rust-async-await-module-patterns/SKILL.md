@@ -3,7 +3,6 @@ priority: medium
 description: "Rust Async/Await & Module Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: medium
@@ -285,7 +284,7 @@ impl AsyncBridge {
 
 Structure async code separately from sync:
 
-```
+```text
 src/
 ├── lib.rs              # Main API (sync)
 ├── async/              # Async implementations

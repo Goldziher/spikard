@@ -54,7 +54,7 @@ fn cli_can_generate_elixir_graphql_scaffolding() {
 
     std::fs::write(
         &schema_path,
-        r#"
+        r"
         type Query {
           user(id: ID!): User
         }
@@ -63,7 +63,7 @@ fn cli_can_generate_elixir_graphql_scaffolding() {
           id: ID!
           name: String!
         }
-        "#,
+        ",
     )
     .expect("write schema");
 

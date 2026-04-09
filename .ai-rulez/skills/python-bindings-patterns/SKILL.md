@@ -3,7 +3,6 @@ priority: critical
 description: "Python Bindings Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: critical

@@ -1222,6 +1222,13 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness run --framework phoenix --app-dir tools/benchmark-harness/apps/phoenix --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/phoenix.json
 
+  bench:run:turboapi:
+    desc: "Run benchmark against turboAPI server"
+    deps:
+      - bench:harness:build
+    cmds:
+      - ./target/release/benchmark-harness run --framework turboapi --app-dir tools/benchmark-harness/apps/turboapi --workload baseline --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/turboapi.json
+
   bench:run:all:
     desc: "Run benchmarks for all frameworks"
     cmds:
@@ -1233,6 +1240,7 @@ tasks:
       - task: bench:run:spikard-elixir
       - task: bench:run:plug-bandit
       - task: bench:run:phoenix
+      - task: bench:run:turboapi
 
   bench:run:python:json:
     desc: "Run JSON body benchmark against Spikard-Python"

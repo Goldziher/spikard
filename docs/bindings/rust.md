@@ -38,22 +38,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ```
 
 ## Validation
+
 - Derive `JsonSchema` (schemars) to register request/response schemas.
 - Accept raw JSON Schema via `request_schema_json` when needed.
 
 ## Middleware & Hooks
+
 - Add Tower layers via `.layer(...)` or use `ServerConfig` lifecycle hooks for request/response interception.
 - WebSockets: `app.websocket("/ws", handler)`; SSE via `app.sse`.
 
 ## Testing
+
 - Use `spikard::testing::TestServer` for in-memory integration tests.
 
 ## Core Types
+
 - `App` - build your router and middleware stack
 - `Context` - access path/query/header/cookie/body data
 - Response helpers such as `HandlerResponse::stream`, plus axum response types for JSON/streaming
 - Dependency injection via `ServerConfig::provide_value` / `provide_factory` and `Context::dependencies`
 
 ## Deployment
+
 - Add `spikard` to your Cargo manifest and run with `cargo run`.
 - Configure host/port/timeouts via `ServerConfig`.

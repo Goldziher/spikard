@@ -95,13 +95,19 @@ impl BenchmarkRunner {
         let root_pid = server.pid();
 
         // Determine the runtime name based on framework naming patterns
-        let runtime_name = if self.config.framework.contains("python") || self.config.framework.contains("spikard-py") {
+        let runtime_name = if self.config.framework.contains("python")
+            || self.config.framework.contains("spikard-py")
+            || matches!(
+                self.config.framework.as_str(),
+                "fastapi" | "litestar" | "robyn" | "turboapi"
+            ) {
             "python"
-        } else if self.config.framework.contains("node")
-            || self.config.framework.contains("fastify")
-            || self.config.framework.contains("hono")
+        } else if self.config.framework.contains("node") || matches!(self.config.framework.as_str(), "fastify" | "hono")
         {
             "node"
+        } else if self.config.framework.contains("bun") || self.config.framework == "elysia" {
+            // Bun frameworks - root PID is the bun process itself
+            return root_pid;
         } else if self.config.framework.contains("ruby") {
             "ruby"
         } else if self.config.framework.contains("php") {

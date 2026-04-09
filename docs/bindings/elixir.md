@@ -93,6 +93,7 @@ post "/users", &create_user/1,
 ```
 
 Supported options:
+
 - `request_schema` - Schema for request body validation
 - `response_schema` - Schema for response validation
 - `parameter_schema` - Schema for path parameters

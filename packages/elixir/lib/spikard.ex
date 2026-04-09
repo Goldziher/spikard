@@ -259,32 +259,24 @@ defmodule Spikard do
     dependencies = Keyword.get(opts, :dependencies, [])
     grpc_services = Keyword.get(opts, :grpc, Keyword.get(opts, :grpc_services, Spikard.Grpc.Service.new()))
 
-    config_map =
-      case config do
-        map when is_map(map) -> map
-        list when is_list(list) -> Enum.into(list, %{})
-        _ -> %{}
-      end
+    config_map = coerce_config_map(config)
 
-    grpc_registry =
-      case grpc_services do
-        %Spikard.Grpc.Service{} = registry -> registry
-        nil -> Spikard.Grpc.Service.new()
-        _ -> :invalid
-      end
-
-    # Validate port range
-    cond do
-      port < 1 or port > 65535 ->
-        {:error, "Port must be between 1 and 65535"}
-
-      grpc_registry == :invalid ->
-        {:error, "Option :grpc must be a Spikard.Grpc.Service registry"}
-
-      true ->
-        {:ok, port, host, routes, config_map, dependencies, grpc_registry}
+    with {:ok, grpc_registry} <- coerce_grpc_registry(grpc_services),
+         :ok <- validate_port_range(port) do
+      {:ok, port, host, routes, config_map, dependencies, grpc_registry}
     end
   end
+
+  defp coerce_config_map(map) when is_map(map), do: map
+  defp coerce_config_map(list) when is_list(list), do: Enum.into(list, %{})
+  defp coerce_config_map(_), do: %{}
+
+  defp coerce_grpc_registry(%Spikard.Grpc.Service{} = registry), do: {:ok, registry}
+  defp coerce_grpc_registry(nil), do: {:ok, Spikard.Grpc.Service.new()}
+  defp coerce_grpc_registry(_), do: {:error, "Option :grpc must be a Spikard.Grpc.Service registry"}
+
+  defp validate_port_range(port) when port >= 1 and port <= 65535, do: :ok
+  defp validate_port_range(_), do: {:error, "Port must be between 1 and 65535"}
 
   @spec serialize_routes([route() | map()]) :: {:ok, String.t()} | {:error, String.t()}
   defp serialize_routes(routes) do

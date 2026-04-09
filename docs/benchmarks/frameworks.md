@@ -96,12 +96,14 @@ Reference implementations for performance comparison.
 The most popular async Python framework. Generates OpenAPI schemas automatically. Uses Pydantic for request/response validation with runtime type checking.
 
 **Key features**:
+
 - Automatic OpenAPI documentation
 - Type hints for editor support
 - Dependency injection system
 - OAuth2 and JWT support
 
 **Performance characteristics**:
+
 - ~40% validation overhead (Pydantic)
 - Good async performance with Uvicorn
 - 15-25% improvement with Granian server
@@ -116,12 +118,14 @@ The most popular async Python framework. Generates OpenAPI schemas automatically
 FastAPI-inspired framework optimized for performance. Uses msgspec instead of Pydantic for 5x faster validation.
 
 **Key features**:
+
 - OpenAPI generation
 - Dependency injection
 - Plugin system
 - msgspec for fast serialization
 
 **Performance characteristics**:
+
 - ~15% validation overhead (msgspec)
 - Faster than FastAPI in all workloads
 - Excellent JSON performance
@@ -136,11 +140,13 @@ FastAPI-inspired framework optimized for performance. Uses msgspec instead of Py
 Experimental framework with Rust core and Python bindings. Similar architecture to Spikard but less mature.
 
 **Key features**:
+
 - Rust-based HTTP server
 - Minimal Python overhead
 - Simple decorator-based routing
 
 **Performance characteristics**:
+
 - Very high RPS (~2-3x FastAPI)
 - No built-in validation
 - Limited middleware ecosystem
@@ -157,12 +163,14 @@ Experimental framework with Rust core and Python bindings. Similar architecture 
 The most widely-used Node.js framework. Mature ecosystem with thousands of middleware packages.
 
 **Key features**:
+
 - Massive ecosystem
 - Flexible routing
 - Template engine support
 - Simple API
 
 **Performance characteristics**:
+
 - Moderate performance
 - ~25% validation overhead with Zod
 - Single-threaded (typical Node limitation)
@@ -177,12 +185,14 @@ The most widely-used Node.js framework. Mature ecosystem with thousands of middl
 Performance-focused Express alternative. Uses JSON Schema for validation with pre-compiled validators.
 
 **Key features**:
+
 - Schema-based validation (Ajv)
 - Plugin architecture
 - Request/response lifecycle hooks
 - Logging built-in (pino)
 
 **Performance characteristics**:
+
 - 2-3x faster than Express
 - ~10% validation overhead (compiled schemas)
 - Optimized JSON serialization (fast-json-stringify)
@@ -197,12 +207,14 @@ Performance-focused Express alternative. Uses JSON Schema for validation with pr
 Ultra-lightweight framework designed for edge runtimes. Runs on Node, Bun, Deno, and Cloudflare Workers.
 
 **Key features**:
+
 - Multi-runtime support
 - Tiny bundle size (<13KB)
 - Edge-optimized
 - Middleware system
 
 **Performance characteristics**:
+
 - Comparable to Fastify on Node
 - 20-30% faster on Bun runtime
 - Low memory footprint
@@ -217,12 +229,14 @@ Ultra-lightweight framework designed for edge runtimes. Runs on Node, Bun, Deno,
 Framework designed specifically for Bun. Takes advantage of Bun's JavaScriptCore engine and fast I/O.
 
 **Key features**:
+
 - Bun-optimized
 - End-to-end type safety
 - Eden Treaty (type-safe client)
 - Plugin system
 
 **Performance characteristics**:
+
 - 3-5x faster than Express
 - Fastest Node.js ecosystem framework
 - Requires Bun runtime
@@ -239,12 +253,14 @@ Framework designed specifically for Bun. Takes advantage of Bun's JavaScriptCore
 Lightweight routing tree framework. Emphasizes simplicity and plugin-based architecture.
 
 **Key features**:
+
 - Routing tree (efficient matching)
 - Plugin system
 - Minimal dependencies
 - Flexible architecture
 
 **Performance characteristics**:
+
 - Fast for Ruby ecosystem
 - ~15% validation overhead
 - Scales well with request complexity
@@ -259,12 +275,14 @@ Lightweight routing tree framework. Emphasizes simplicity and plugin-based archi
 Modern Ruby framework focused on HTTP APIs. Part of the larger Hanami ecosystem.
 
 **Key features**:
+
 - Dry-rb integration
 - Action-based architecture
 - Immutable objects
 - Clean separation of concerns
 
 **Performance characteristics**:
+
 - Similar to Roda
 - Slightly higher memory usage
 - Good JSON performance
@@ -281,12 +299,14 @@ Modern Ruby framework focused on HTTP APIs. Part of the larger Hanami ecosystem.
 High-performance PHP framework implemented as C extension. Compiled for maximum speed.
 
 **Key features**:
+
 - C extension (compiled code)
 - Full-stack framework
 - ORM built-in
 - Volt template engine
 
 **Performance characteristics**:
+
 - Fastest PHP framework
 - 5-10x faster than Laravel
 - Low memory overhead
@@ -301,12 +321,14 @@ High-performance PHP framework implemented as C extension. Compiled for maximum 
 Lightweight MVC framework with minimal dependencies.
 
 **Key features**:
+
 - No composer dependencies
 - Rapid development focus
 - Built-in code generator
 - Simple architecture
 
 **Performance characteristics**:
+
 - Moderate performance
 - Low resource usage
 - Traditional PHP architecture
@@ -322,12 +344,14 @@ Lightweight MVC framework with minimal dependencies.
 Modern Rust web framework built on Tower middleware and Hyper.
 
 **Key features**:
+
 - Type-safe extractors
 - Tower middleware ecosystem
 - Excellent compile-time guarantees
 - First-class async support
 
 **Performance characteristics**:
+
 - 100k+ RPS baseline
 - Minimal runtime overhead
 - Zero-cost abstractions
@@ -350,43 +374,50 @@ Framework pairs showing validation cost:
 
 ## Framework Selection Guide
 
-### Choose FastAPI if you need:
+### Choose FastAPI if you need
+
 - Automatic OpenAPI documentation
 - Large ecosystem and community
 - Mature production deployments
 - Type safety with Pydantic
 
-### Choose Litestar if you need:
+### Choose Litestar if you need
+
 - FastAPI-like DX with better performance
 - msgspec's speed advantage
 - Modern async patterns
 - Plugin extensibility
 
-### Choose Spikard if you need:
+### Choose Spikard if you need
+
 - Maximum Python performance
 - Rust-level safety with Python DX
 - Multi-language consistency (also using Spikard in Node/Ruby)
 - Minimal validation overhead
 
-### Choose Express if you need:
+### Choose Express if you need
+
 - Maximum compatibility and ecosystem
 - Stable, well-understood patterns
 - Extensive middleware options
 - Traditional Node.js development
 
-### Choose Fastify if you need:
+### Choose Fastify if you need
+
 - High-performance Node.js
 - Schema-based validation
 - Built-in logging and lifecycle hooks
 - Production-grade plugin system
 
-### Choose Hono if you need:
+### Choose Hono if you need
+
 - Edge deployment (Cloudflare Workers)
 - Multi-runtime support
 - Minimal bundle size
 - Modern patterns with portability
 
-### Choose Elysia if you need:
+### Choose Elysia if you need
+
 - Maximum Node.js ecosystem performance
 - Bun runtime advantages
 - End-to-end type safety

@@ -22,7 +22,7 @@ spikard init <project-name> --lang <language> [--dir <parent-directory>]
 
 - `project-name` - required positional project name
 - `--lang` / `-l` - one of `python`, `typescript`, `rust`, `ruby`, `php`, `elixir`
-- `--dir` / `-d` - parent directory to create the project inside, default `.` 
+- `--dir` / `-d` - parent directory to create the project inside, default `.`
 
 There is currently no CLI `--schema` option for `init`. If you want schema-aware
 automation, use the code generation commands after init, or the MCP `init_project`

@@ -28,7 +28,7 @@ composer require google/protobuf:^4.33
 
 The PHP gRPC binding follows Spikard's language-agnostic handler pattern:
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │  PHP gRPC Handler (implements HandlerInterface)         │
 ├─────────────────────────────────────────────────────────┤

@@ -41,6 +41,7 @@ std::thread::spawn(move || {
 ```
 
 **Thread isolation:**
+
 - Tokio runtime runs in dedicated thread
 - Does NOT block Node.js or Python event loops
 - Safe inter-thread communication via channels
@@ -66,6 +67,7 @@ process.on('SIGTERM', async () => {
 ```
 
 **Shutdown sequence:**
+
 1. Receive shutdown signal
 2. Stop accepting new connections
 3. Wait for in-flight requests (configurable timeout)
@@ -118,6 +120,7 @@ pub async fn call_python_handler(
 ```
 
 **Key requirements:**
+
 1. **GIL management:** Release GIL during async operations
 2. **Event loop coordination:** PyO3 async integrates with Python's asyncio
 3. **Await support:** Python coroutines properly awaited
@@ -139,6 +142,7 @@ async def get_user(request):
 ```
 
 **Execution flow:**
+
 1. Request arrives at Tokio runtime (Rust)
 2. Tokio calls Python handler via PyO3
 3. PyO3 adds task locals to Tokio task
@@ -179,6 +183,7 @@ pub async fn call_javascript_handler(
 ```
 
 **Key characteristics:**
+
 1. **Non-blocking to Node.js:** Uses NonBlocking mode
 2. **Promise-based:** JavaScript handler returns Promise
 3. **Event loop safe:** ThreadsafeFunction doesn't block Node's event loop
@@ -200,6 +205,7 @@ get('/users/{id}')(async (request) => {
 ```
 
 **Execution flow:**
+
 1. Request arrives at Tokio runtime (Rust thread)
 2. Tokio calls ThreadsafeFunction to Node.js
 3. Node.js event loop receives callback
@@ -260,7 +266,7 @@ let runtime = tokio::runtime::Builder::new_multi_thread()
 
 **Pattern:** Multiple requests queue for workers
 
-```
+```text
 Request 1 → Worker 1 (async handler waiting for DB)
 Request 2 → Worker 2 (async handler waiting for API)
 Request 3 → Worker 3 (sync handler, quick return)
@@ -269,6 +275,7 @@ Request 5 → Queued
 ```
 
 **Benefits:**
+
 - True parallelism (not just concurrency)
 - Efficient CPU utilization
 - Natural request batching
@@ -294,6 +301,7 @@ match result {
 ```
 
 **Behavior:**
+
 - Handler execution canceled after timeout
 - Returns 408 Request Timeout
 - In-flight async operations (database queries) cancelled
@@ -353,6 +361,7 @@ pub async fn create_user(request: RequestData) -> HandlerResult {
 ```
 
 **Benefits:**
+
 - Non-blocking background work
 - Tasks run after response sent
 - Automatic cancellation on shutdown
@@ -497,6 +506,7 @@ pub async fn good_handler(request: RequestData) -> HandlerResult {
 ### Unit Tests
 
 **Node.js:**
+
 ```typescript
 test('async handler waits for database', async () => {
   const app = new Spikard();
@@ -571,6 +581,7 @@ pub async fn handler(request: RequestData) -> HandlerResult {
 ```
 
 ## Related Skills
+
 - `handler-trait-design` - Handler trait requires Send + Sync
 - `request-response-lifecycle` - Lifecycle hooks execute async
 - `tower-middleware-patterns` - Middleware integrated with Tokio

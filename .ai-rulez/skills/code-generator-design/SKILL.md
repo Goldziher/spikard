@@ -73,12 +73,14 @@ pub struct OpenApiConfig {
 **Input:** OpenAPI/AsyncAPI YAML/JSON
 
 **Process:**
+
 1. Parse YAML/JSON to AST
 2. Resolve `$ref` references (components, external refs)
 3. Validate spec against OpenAPI/AsyncAPI schema
 4. Extract path items, schemas, security definitions
 
 **Tools:**
+
 - YAML parser: `serde_yaml`
 - JSON parser: `serde_json`
 - Schema validation: custom validator
@@ -88,6 +90,7 @@ pub struct OpenApiConfig {
 **Input:** Parsed specification
 
 **Process:**
+
 1. Walk paths and extract HTTP methods
 2. Extract parameter definitions (path, query, header)
 3. Extract request body schemas
@@ -96,7 +99,7 @@ pub struct OpenApiConfig {
 
 **Type Mapping:**
 
-```
+```text
 OpenAPI Type         Rust Type          JavaScript Type    Python Type
 string               String             string             str
 integer              i64                number             int
@@ -191,6 +194,7 @@ end
 **Output:** JSON Schema validators
 
 **Process:**
+
 1. Extract request schemas → validation rules
 2. Extract response schemas → documentation
 3. Generate parameter validators for path/query params
@@ -211,6 +215,7 @@ pub struct SchemaValidator {
 **Output:** Parametrized test cases
 
 **Process:**
+
 1. Extract examples from OpenAPI spec
 2. Generate test fixtures matching schema
 3. Create both valid and invalid test cases
@@ -218,7 +223,7 @@ pub struct SchemaValidator {
 
 **Directory Structure:**
 
-```
+```text
 testing_data/
 ├── 00-FIXTURE-SCHEMA.json         # JSON Schema for all fixtures
 ├── headers/                        # 10+ header test cases
@@ -283,6 +288,7 @@ testing_data/
    - Validation functions
    - Test fixture imports
 4. Import and extend generated handlers:
+
    ```typescript
    import { getUser as generatedGetUser } from './handlers.generated';
 
@@ -301,6 +307,7 @@ testing_data/
    - Validation decorators
    - Test parametrization data
 4. Extend with actual logic:
+
    ```python
    from handlers_generated import get_user as generated_get_user
 
@@ -440,6 +447,7 @@ paths:
 ```
 
 Codegen:
+
 1. Resolves `$ref` to `User` schema
 2. Generates validation for all User properties
 3. Generates test fixtures with valid User objects
@@ -475,6 +483,7 @@ spikard openapi:generate \
 ```
 
 ## Related Skills
+
 - `handler-trait-design` - Handlers match generated signatures
 - `fixture-schema-validation` - Fixtures follow generated schema
 - `tower-middleware-patterns` - Codegen respects middleware config

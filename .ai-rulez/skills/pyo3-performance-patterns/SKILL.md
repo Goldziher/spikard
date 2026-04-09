@@ -3,7 +3,6 @@ priority: high
 description: "PyO3 Performance Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: high

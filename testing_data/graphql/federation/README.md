@@ -5,6 +5,7 @@ Comprehensive test fixtures for Apollo Federation v2 features, including subgrap
 ## Overview
 
 This directory contains 10 fixtures that test Apollo Federation v2 core features:
+
 - **Entity Resolution** via `_entities` query
 - **Entity Keys** with `@key` directive
 - **Compound Keys** (multiple-field keys)
@@ -18,6 +19,7 @@ This directory contains 10 fixtures that test Apollo Federation v2 core features
 ## Fixtures
 
 ### 1. entity_resolution_basic.json
+
 **Tests:** Basic `_entities` query for entity resolution
 
 ```graphql
@@ -35,6 +37,7 @@ query {
 **Expected:** 200 - Resolved User entity with all requested fields
 
 **Federation Concepts:**
+
 - Basic entity representation format
 - Entity type union resolution
 - Simple key field resolution
@@ -42,6 +45,7 @@ query {
 ---
 
 ### 2. entity_with_key.json
+
 **Tests:** Entity with `@key` directive
 
 ```graphql
@@ -56,6 +60,7 @@ type User @key(fields: "id") {
 **Expected:** 200 - Resolved User entity with nested profile object
 
 **Federation Concepts:**
+
 - Single-field entity keys
 - Nested object resolution in entity context
 - Key-based entity lookup across subgraphs
@@ -63,6 +68,7 @@ type User @key(fields: "id") {
 ---
 
 ### 3. entity_with_compound_key.json
+
 **Tests:** Entity with compound `@key` spanning multiple fields
 
 ```graphql
@@ -76,6 +82,7 @@ type Product @key(fields: "sku category") {
 ```
 
 **Query:**
+
 ```graphql
 _entities(representations: [{__typename: "Product", sku: "ABC123", category: "electronics"}])
 ```
@@ -83,6 +90,7 @@ _entities(representations: [{__typename: "Product", sku: "ABC123", category: "el
 **Expected:** 200 - Product resolved using composite key (sku + category)
 
 **Federation Concepts:**
+
 - Multiple-field entity keys
 - Compound key representation in Apollo Federation
 - Field ordering in composite keys
@@ -90,6 +98,7 @@ _entities(representations: [{__typename: "Product", sku: "ABC123", category: "el
 ---
 
 ### 4. requires_directive.json
+
 **Tests:** Field with `@requires` directive for dependent field resolution
 
 ```graphql
@@ -102,6 +111,7 @@ type Shipment @key(fields: "id") {
 ```
 
 **Query:**
+
 ```graphql
 _entities(representations: [{__typename: "Shipment", id: "ship-001", weight: 5.5, destination: "NYC"}])
 ```
@@ -109,6 +119,7 @@ _entities(representations: [{__typename: "Shipment", id: "ship-001", weight: 5.5
 **Expected:** 200 - Computed `shippingEstimate` field (24.75) calculated from required fields
 
 **Federation Concepts:**
+
 - Field-level dependencies via `@requires`
 - Computed fields requiring other fields
 - Gateway-side field computation
@@ -117,6 +128,7 @@ _entities(representations: [{__typename: "Shipment", id: "ship-001", weight: 5.5
 ---
 
 ### 5. provides_directive.json
+
 **Tests:** Field with `@provides` directive for optimized nested field resolution
 
 ```graphql
@@ -129,6 +141,7 @@ type Post @key(fields: "id") {
 **Expected:** 200 - Reviews with pre-resolved author data without additional subgraph fetch
 
 **Federation Concepts:**
+
 - `@provides` directive for field optimization
 - Reducing subgraph round-trips
 - Nested field provision patterns
@@ -137,6 +150,7 @@ type Post @key(fields: "id") {
 ---
 
 ### 6. external_field.json
+
 **Tests:** Reference to `@external` field used by `@requires`
 
 ```graphql
@@ -149,6 +163,7 @@ type Parcel @key(fields: "id") {
 ```
 
 **Query:**
+
 ```graphql
 _entities(representations: [{__typename: "Parcel", id: "parcel-x1", weight: 2.5, dimensions: "10x8x6"}])
 ```
@@ -156,6 +171,7 @@ _entities(representations: [{__typename: "Parcel", id: "parcel-x1", weight: 2.5,
 **Expected:** 200 - Generated `label` field ("SMALL_PACKAGE_2.5KG") from external fields
 
 **Federation Concepts:**
+
 - `@external` directive for field references from other subgraphs
 - Cross-subgraph field dependencies
 - External field composition in computed fields
@@ -164,6 +180,7 @@ _entities(representations: [{__typename: "Parcel", id: "parcel-x1", weight: 2.5,
 ---
 
 ### 7. subgraph_introspection.json
+
 **Tests:** Federation `_service` query returning Schema Definition Language (SDL)
 
 ```graphql
@@ -177,6 +194,7 @@ query {
 **Expected:** 200 - Subgraph SDL string for gateway composition
 
 **Federation Concepts:**
+
 - Subgraph introspection mechanism
 - SDL retrieval for Apollo Gateway composition
 - Schema composition and stitching
@@ -185,9 +203,11 @@ query {
 ---
 
 ### 8. cross_subgraph_query.json
+
 **Tests:** Query spanning multiple subgraphs with federation entity references
 
 **Schema combines two entity types:**
+
 - `User @key(fields: "id")` - from users subgraph
 - `Order @key(fields: "id")` - from orders subgraph
 
@@ -211,6 +231,7 @@ query {
 **Expected:** 200 - User with associated orders from multiple subgraphs
 
 **Federation Concepts:**
+
 - Entity references across subgraphs
 - Complex multi-entity queries
 - Gateway entity resolution orchestration
@@ -219,6 +240,7 @@ query {
 ---
 
 ### 9. federation_error_missing_entity.json
+
 **Tests:** Entity not found handling (returns null per spec)
 
 ```graphql
@@ -228,6 +250,7 @@ _entities(representations: [{__typename: "Customer", id: "999999"}])
 **Expected:** 200 - Response with `null` in `_entities` array (no error thrown)
 
 **Federation Concepts:**
+
 - Federation spec compliance for missing entities
 - Null handling in entity array responses
 - Gateway-side null resolution handling
@@ -236,6 +259,7 @@ _entities(representations: [{__typename: "Customer", id: "999999"}])
 ---
 
 ### 10. federation_type_mismatch.json
+
 **Tests:** Wrong `__typename` in entity representation (returns 400 error)
 
 ```graphql
@@ -245,6 +269,7 @@ _entities(representations: [{__typename: "InvalidType", id: "1"}])
 **Expected:** 400 - GraphQL error with "Unknown type 'InvalidType'" message
 
 **Federation Concepts:**
+
 - Type validation in entity representations
 - Error handling for invalid types
 - Validation before entity resolution
@@ -255,8 +280,9 @@ _entities(representations: [{__typename: "InvalidType", id: "1"}])
 ## Federation Directives Reference
 
 ### @key
+
 - **Purpose:** Designates an object type as an entity and defines uniqueness fields
-- **Syntax:** `@key(fields: "fieldName")`  or `@key(fields: "field1 field2")`
+- **Syntax:** `@key(fields: "fieldName")` or `@key(fields: "field1 field2")`
 - **Used in:** 8 fixtures
 
 ```graphql
@@ -267,6 +293,7 @@ type User @key(fields: "id") {
 ```
 
 ### @requires
+
 - **Purpose:** Indicates that a field requires other fields to be resolved
 - **Syntax:** `@requires(fields: "fieldName")` or `@requires(fields: "field1 field2")`
 - **Used in:** 2 fixtures (requires_directive, external_field)
@@ -279,6 +306,7 @@ type Shipment {
 ```
 
 ### @provides
+
 - **Purpose:** Indicates that a field may provide data available from another subgraph
 - **Syntax:** `@provides(fields: "fieldName")`
 - **Used in:** 1 fixture (provides_directive)
@@ -290,6 +318,7 @@ type Post {
 ```
 
 ### @external
+
 - **Purpose:** Indicates that a field is defined and owned by another subgraph
 - **Syntax:** `@external` (applied directly to field)
 - **Used in:** 1 fixture (external_field)
@@ -305,9 +334,11 @@ type Parcel {
 ## Federation Queries Reference
 
 ### _entities
+
 **Purpose:** Core federation query for resolving entities by their key representations
 
 **Signature:**
+
 ```graphql
 _entities(representations: [_Any!]!): [_Entity]!
 ```
@@ -315,6 +346,7 @@ _entities(representations: [_Any!]!): [_Entity]!
 **Used in:** 9 fixtures (all except subgraph_introspection)
 
 **Example:**
+
 ```graphql
 {
   _entities(representations: [
@@ -328,9 +360,11 @@ _entities(representations: [_Any!]!): [_Entity]!
 ```
 
 ### _service
+
 **Purpose:** Subgraph introspection query for schema composition
 
 **Signature:**
+
 ```graphql
 _service: _Service { sdl: String! }
 ```
@@ -338,6 +372,7 @@ _service: _Service { sdl: String! }
 **Used in:** 10 fixtures (all fixtures include _service in schema)
 
 **Example:**
+
 ```graphql
 {
   _service {
@@ -384,7 +419,9 @@ Each fixture follows the standard Spikard GraphQL fixture schema:
 ## Resolver Types
 
 ### mock
+
 Returns a static value
+
 ```json
 {
   "type": "mock",
@@ -393,7 +430,9 @@ Returns a static value
 ```
 
 ### factory
+
 Calls a factory function for dynamic resolution
+
 ```json
 {
   "type": "factory",
@@ -402,7 +441,9 @@ Calls a factory function for dynamic resolution
 ```
 
 ### error
+
 Returns a GraphQL error
+
 ```json
 {
   "type": "error",
@@ -416,6 +457,7 @@ Returns a GraphQL error
 ## Usage in Tests
 
 ### Load fixtures via conftest.py
+
 ```python
 @pytest.fixture(params=load_federation_fixtures())
 def federation_fixture(request):
@@ -423,6 +465,7 @@ def federation_fixture(request):
 ```
 
 ### Test entity resolution
+
 ```python
 def test_entity_resolution(graphql_client, federation_fixture):
     response = graphql_client.query(
@@ -456,19 +499,25 @@ This fixture set provides comprehensive coverage of:
 ## Integration Notes
 
 ### With Spikard Test Framework
+
 All fixtures are compatible with the Spikard fixture-driven testing approach:
+
 - Auto-generate Python, Node.js, Ruby, and PHP test suites
 - Factory resolvers support async/await for language bindings
 - Complexity and depth limits enforced at handler level
 
 ### With Apollo Gateway
+
 Fixtures simulate subgraph responses that Apollo Federation Gateway expects:
+
 - Proper entity representation format
 - SDL response for gateway composition
 - Error handling matching federation spec
 
 ### With Federation-Enabled Servers
+
 Test any Federation v2-compliant server:
+
 - Apollo Server with @apollo/subgraph
 - GraphQL-core with federation plugins
 - Custom federation-enabled GraphQL servers

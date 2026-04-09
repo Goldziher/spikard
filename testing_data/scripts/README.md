@@ -9,6 +9,7 @@ Utility scripts for working with test fixtures.
 Validates all test fixtures against their JSON schemas.
 
 **Usage:**
+
 ```bash
 # Validate all fixtures in all categories
 python testing_data/scripts/validate.py
@@ -19,11 +20,13 @@ python testing_data/scripts/validate.py query_params
 ```
 
 **Requirements:**
+
 ```bash
 pip install jsonschema
 ```
 
 **Output:**
+
 - ✅ Valid fixtures
 - ❌ Invalid fixtures with detailed error messages
 - Exit code 0 if all valid, 1 if any invalid
@@ -41,6 +44,7 @@ Helper utilities for loading fixtures in test code.
 - `pytest_parametrize_fixtures(category)` - Generate pytest parametrize args
 
 **Usage in tests:**
+
 ```python
 from testing_data.scripts.loader import load_fixture, pytest_parametrize_fixtures
 

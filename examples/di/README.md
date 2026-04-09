@@ -28,6 +28,7 @@ Demonstrates TypeScript/Node.js dependency injection:
 - **Type-Safe Injection**: TypeScript types for injected dependencies
 
 **Run with**:
+
 ```bash
 # From the examples/di directory
 npx ts-node node_basic.ts
@@ -39,6 +40,7 @@ node --loader ts-node/esm node_basic.ts
 ### python_basic.py / python_database.py
 
 Demonstrates Python dependency injection with **type-based dependencies** (recommended pattern). Dependencies are keyed by type and auto-injected via type annotations. The database example shows async generator cleanup and singleton/per-request caching.
+
 ## Key Concepts
 
 ### Value Dependencies
@@ -81,5 +83,6 @@ See `crates/spikard-http/tests/server_config_builder.rs` for comprehensive unit 
 ## Documentation
 
 For full documentation on the dependency injection system, see:
+
 - `docs/adr/0008-dependency-injection.md` - Architecture decision record
 - `IMPLEMENTATION_PLAN.md` - Full implementation plan

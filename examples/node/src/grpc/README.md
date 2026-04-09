@@ -16,6 +16,7 @@ Spikard provides gRPC streaming support through Node.js async iterators and call
 **Note**: The Node.js gRPC streaming bindings currently return `UNIMPLEMENTED` for streaming methods due to napi-rs limitations with async generators. This is a known constraint of the napi-rs FFI layer.
 
 **Working Patterns**:
+
 - ✅ Unary RPC (fully implemented)
 - ⚠️ Server/Client/Bidirectional Streaming (handlers must use collection patterns)
 
@@ -146,6 +147,7 @@ return {
 #### 3. Streaming Patterns (Recommended Workarounds)
 
 **Server Streaming** - Pre-collect and return:
+
 ```typescript
 async handleServerStream(request: GrpcRequest): Promise<GrpcResponse> {
   const messages: Buffer[] = [];
@@ -167,6 +169,7 @@ async handleServerStream(request: GrpcRequest): Promise<GrpcResponse> {
 ```
 
 **Client Streaming** - Consume with async iterator:
+
 ```typescript
 async handleClientStream(
   requestStream: AsyncIterator<GrpcRequest>
@@ -189,6 +192,7 @@ async handleClientStream(
 ```
 
 **Bidirectional Streaming** - Callback pattern:
+
 ```typescript
 // Future enhancement: Callback-based streaming
 async handleBidiStream(
@@ -251,6 +255,7 @@ The current Node.js implementation uses napi-rs, which has known limitations wit
 Spikard's Node runtime now supports method-level gRPC registration on the app/server side.
 The remaining gap is transport behavior inside napi-rs for truly incremental JavaScript-driven
 stream emission. The practical options today are:
+
 - Pre-collect stream messages and return a single batched response
 - Use callback-oriented designs outside the current handler interface
 - Use WebSockets when you need fully interactive bidirectional messaging
@@ -290,6 +295,7 @@ pnpm test:grpc -- --grep "error_handling"
 | Metadata | ✅ Full support | ✅ Full support |
 
 **Why the difference?**
+
 - PyO3 provides robust async generator support
 - napi-rs has more limited async generator iteration from Rust
 - Both follow the same architectural patterns where possible

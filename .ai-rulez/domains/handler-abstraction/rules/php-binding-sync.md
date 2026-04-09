@@ -2,7 +2,9 @@
 name: php-binding-sync
 priority: high
 ---
+
 PHP binding must:
+
 - Use thread pool for concurrent PHP execution
 - Convert RequestData to PHP array
 - Support both sync and async-php patterns

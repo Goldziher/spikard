@@ -5,6 +5,7 @@
 ## Purpose
 
 This tool generates:
+
 - OpenAPI specifications from test fixtures
 - Test suites for Rust, Python, and TypeScript
 - Minimal test applications to validate scenarios

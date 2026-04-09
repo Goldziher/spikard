@@ -32,6 +32,7 @@
 Elixir bindings for Spikard: a Rust-centric web framework with type-safe code generation from OpenAPI, GraphQL, AsyncAPI, and OpenRPC specifications. Leverage Phoenix-style routing with zero-copy Rustler NIF performance.
 
 ## Key Features
+
 - **Phoenix-style routing**: Compile-time `get`, `post`, `put`, `patch`, `delete` macros with scopes
 - **Zero-copy NIFs**: Rustler bindings eliminate serialization overhead
 - **Full typespecs**: `@spec` annotations on all public functions for Dialyzer type checking
@@ -83,12 +84,14 @@ end
 ```
 
 The `Spikard.Request` struct provides access to:
+
 - `get_path_param(request, key)` - Path parameters
 - `get_query_param(request, key, default)` - Query parameters
 - `get_header(request, name)` - Request headers (case-insensitive)
 - `get_cookie(request, name)` - Request cookies
 - `get_body(request)` - Parsed request body
 - `files(request)` - Uploaded files
+
 ## Responses
 
 Return maps, or use the fluent `Response` builder:
@@ -264,6 +267,7 @@ end
 ## Examples
 
 **Examples & Code Generation:**
+
 - [Runnable Examples](../../examples/) - Elixir, Python, TypeScript, Ruby, PHP, and Rust
 - [Code Generation Guide](../../examples/README.md) - Generate from OpenAPI, GraphQL, AsyncAPI, OpenRPC, Protobuf
 

@@ -13,7 +13,7 @@ The gRPC module enables TypeScript/Node.js applications to implement gRPC servic
 
 ## Architecture
 
-```
+```text
 JavaScript Handler (TypeScript)
        ↓
 ThreadsafeFunction (napi-rs)
@@ -50,6 +50,7 @@ pub struct GrpcRequest {
 ```
 
 Exposed to JavaScript as:
+
 ```typescript
 interface GrpcRequest {
   serviceName: string;
@@ -70,6 +71,7 @@ pub struct GrpcResponse {
 ```
 
 Exposed to JavaScript as:
+
 ```typescript
 interface GrpcResponse {
   payload: Buffer;
@@ -100,6 +102,7 @@ fn metadata_to_hashmap(metadata: &MetadataMap) -> HashMap<String, String>
 ```
 
 Converts tonic's `MetadataMap` to a simple `HashMap<String, String>` for JavaScript:
+
 - Extracts ASCII metadata values
 - Skips binary metadata (logged with tracing::debug)
 - Handles invalid UTF-8 gracefully
@@ -111,6 +114,7 @@ fn hashmap_to_metadata(map: &HashMap<String, String>) -> Result<MetadataMap>
 ```
 
 Converts JavaScript object to tonic's `MetadataMap`:
+
 - Parses keys as `MetadataKey<Ascii>`
 - Parses values as `MetadataValue<Ascii>`
 - Returns `napi::Error` for invalid keys/values
@@ -130,6 +134,7 @@ throw new GrpcError(GrpcStatusCode.NOT_FOUND, 'User not found');
 ```
 
 This is converted to:
+
 ```rust
 tonic::Status::new(Code::NotFound, "User not found")
 ```
@@ -143,12 +148,14 @@ tonic::Status::new(Code::NotFound, "User not found")
 ## Testing
 
 Run tests:
+
 ```bash
 cd crates/spikard-node
 cargo test grpc --lib
 ```
 
 Test coverage:
+
 - Type conversions (metadata, payloads)
 - Round-trip serialization
 - Error cases (invalid metadata, large payloads)
@@ -160,6 +167,7 @@ Test coverage:
 See `packages/node/src/grpc.ts` for the TypeScript API.
 
 Example:
+
 ```typescript
 import { GrpcHandler, GrpcRequest, GrpcResponse } from 'spikard';
 

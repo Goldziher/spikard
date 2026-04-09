@@ -3,7 +3,6 @@ priority: medium
 description: "Universal Anti-Patterns"
 ---
 
-
 ______________________________________________________________________
 
 ## priority: medium

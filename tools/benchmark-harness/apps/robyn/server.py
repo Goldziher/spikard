@@ -429,7 +429,7 @@ async def post_json_small_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -444,7 +444,7 @@ async def post_json_medium_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -459,7 +459,7 @@ async def post_json_large_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -474,7 +474,7 @@ async def post_json_very_large_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -497,7 +497,7 @@ async def post_multipart_small_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "No files received"}),
+            description=jsonify({"detail": "No files received"}),
         )
     return jsonify({"files_received": files_received, "total_bytes": total_bytes})
 
@@ -521,7 +521,7 @@ async def post_multipart_medium_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "No files received"}),
+            description=jsonify({"detail": "No files received"}),
         )
     return jsonify({"files_received": files_received, "total_bytes": total_bytes})
 
@@ -545,7 +545,7 @@ async def post_multipart_large_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "No files received"}),
+            description=jsonify({"detail": "No files received"}),
         )
     return jsonify({"files_received": files_received, "total_bytes": total_bytes})
 
@@ -569,7 +569,7 @@ async def post_urlencoded_simple_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -592,7 +592,7 @@ async def post_urlencoded_complex_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -605,10 +605,7 @@ async def get_path_simple_validated(request: Request):
             status_code=400,
             headers={"Content-Type": "application/json"},
             description=jsonify(
-                {
-                    "error": "Validation failed",
-                    "details": "Path parameter 'id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
-                }
+                {"detail": "Path parameter 'id' must be non-empty, alphanumeric (with - or _), and max 255 characters"}
             ),
         )
     return jsonify({"id": id_value})
@@ -625,8 +622,7 @@ async def get_path_multiple_validated(request: Request):
             headers={"Content-Type": "application/json"},
             description=jsonify(
                 {
-                    "error": "Validation failed",
-                    "details": "Path parameter 'user_id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+                    "detail": "Path parameter 'user_id' must be non-empty, alphanumeric (with - or _), and max 255 characters"
                 }
             ),
         )
@@ -636,8 +632,7 @@ async def get_path_multiple_validated(request: Request):
             headers={"Content-Type": "application/json"},
             description=jsonify(
                 {
-                    "error": "Validation failed",
-                    "details": "Path parameter 'post_id' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+                    "detail": "Path parameter 'post_id' must be non-empty, alphanumeric (with - or _), and max 255 characters"
                 }
             ),
         )
@@ -671,8 +666,7 @@ async def get_path_deep_validated(request: Request):
                 headers={"Content-Type": "application/json"},
                 description=jsonify(
                     {
-                        "error": "Validation failed",
-                        "details": f"Path parameter '{param_name}' must be non-empty, alphanumeric (with - or _), and max 255 characters",
+                        "detail": f"Path parameter '{param_name}' must be non-empty, alphanumeric (with - or _), and max 255 characters"
                     }
                 ),
             )
@@ -698,7 +692,7 @@ async def get_path_int_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "Invalid integer format"}),
+            description=jsonify({"detail": "Invalid integer format"}),
         )
 
 
@@ -712,7 +706,7 @@ async def get_path_uuid_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "Invalid UUID format"}),
+            description=jsonify({"detail": "Invalid UUID format"}),
         )
 
 
@@ -726,7 +720,7 @@ async def get_path_date_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": "Invalid ISO date format"}),
+            description=jsonify({"detail": "Invalid ISO date format"}),
         )
 
 
@@ -741,7 +735,7 @@ async def get_query_few_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -756,7 +750,7 @@ async def get_query_medium_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -771,7 +765,7 @@ async def get_query_many_validated(request: Request):
         return Response(
             status_code=400,
             headers={"Content-Type": "application/json"},
-            description=jsonify({"error": "Validation failed", "details": e.errors()}),
+            description=jsonify({"detail": str(e)}),
         )
 
 
@@ -795,4 +789,4 @@ async def root():
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     print(f"[robyn] Starting server on port {port}", file=sys.stderr)
-    app.start(host="0.0.0.0", port=port)
+    app.start(host="0.0.0.0", port=port, processes=1, workers=1)

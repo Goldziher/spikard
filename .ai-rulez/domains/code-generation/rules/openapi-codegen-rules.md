@@ -2,7 +2,9 @@
 name: openapi-codegen-rules
 priority: high
 ---
+
 OpenAPI code generation must:
+
 - Convert Route definitions to OpenAPI 3.0 spec
 - Generate parameter validators from JSON schemas
 - Support Swagger UI and ReDoc UI
