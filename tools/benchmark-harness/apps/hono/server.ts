@@ -37,61 +37,6 @@ app.post("/json/very-large", async (c) => {
 	return c.json(body);
 });
 
-app.post("/multipart/small", async (c) => {
-	const formData = await c.req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	return c.json({ files_received, total_bytes });
-});
-
-app.post("/multipart/medium", async (c) => {
-	const formData = await c.req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	return c.json({ files_received, total_bytes });
-});
-
-app.post("/multipart/large", async (c) => {
-	const formData = await c.req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	return c.json({ files_received, total_bytes });
-});
-
-app.post("/urlencoded/simple", async (c) => {
-	const body = await c.req.parseBody();
-	return c.json(body || {});
-});
-
-app.post("/urlencoded/complex", async (c) => {
-	const body = await c.req.parseBody();
-	return c.json(body || {});
-});
-
 app.get("/path/simple/:id", (c) => {
 	const id = c.req.param("id");
 	return c.json({ id });
@@ -269,35 +214,6 @@ const StringParamDeepSchema = z.object({
 		.regex(/^[a-zA-Z0-9_-]+$/),
 });
 
-const UrlencodedSimpleSchema = z.object({
-	name: z.string(),
-	email: z.string(),
-	age: z.union([z.string(), z.coerce.number().int()]),
-	subscribe: z.union([z.string(), z.coerce.boolean()]),
-});
-
-const UrlencodedComplexSchema = z.object({
-	username: z.string(),
-	password: z.string(),
-	email: z.string(),
-	first_name: z.string(),
-	last_name: z.string(),
-	age: z.union([z.string(), z.coerce.number().int()]),
-	country: z.string(),
-	state: z.string(),
-	city: z.string(),
-	zip: z.string(),
-	phone: z.string(),
-	company: z.string(),
-	job_title: z.string(),
-	subscribe: z.union([z.string(), z.coerce.boolean()]),
-	newsletter: z.union([z.string(), z.coerce.boolean()]),
-	terms_accepted: z.union([z.string(), z.coerce.boolean()]),
-	privacy_accepted: z.union([z.string(), z.coerce.boolean()]),
-	marketing_consent: z.union([z.string(), z.coerce.boolean()]),
-	two_factor_enabled: z.union([z.string(), z.coerce.boolean()]),
-});
-
 const QueryFewSchema = z.object({
 	q: z.string(),
 	page: z.coerce.number().int().optional(),
@@ -350,81 +266,6 @@ app.post("/validated/json/large", zValidator("json", LargePayloadSchema), (c) =>
 
 app.post("/validated/json/very-large", zValidator("json", VeryLargePayloadSchema), (c) => {
 	const validated: VeryLargePayload = c.req.valid("json");
-	return c.json(validated);
-});
-
-interface MultipartResponse {
-	files_received: number;
-	total_bytes: number;
-}
-
-app.post("/validated/multipart/small", async (c) => {
-	const formData = await c.req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	if (files_received === 0) {
-		return c.json({ error: "No files received" }, 400);
-	}
-
-	const response: MultipartResponse = { files_received, total_bytes };
-	return c.json(response);
-});
-
-app.post("/validated/multipart/medium", async (c) => {
-	const formData = await c.req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	if (files_received === 0) {
-		return c.json({ error: "No files received" }, 400);
-	}
-
-	const response: MultipartResponse = { files_received, total_bytes };
-	return c.json(response);
-});
-
-app.post("/validated/multipart/large", async (c) => {
-	const formData = await c.req.formData();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of formData.entries()) {
-		if (key.startsWith("file") && value instanceof File) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	if (files_received === 0) {
-		return c.json({ error: "No files received" }, 400);
-	}
-
-	const response: MultipartResponse = { files_received, total_bytes };
-	return c.json(response);
-});
-
-app.post("/validated/urlencoded/simple", zValidator("form", UrlencodedSimpleSchema), (c) => {
-	const validated = c.req.valid("form");
-	return c.json(validated);
-});
-
-app.post("/validated/urlencoded/complex", zValidator("form", UrlencodedComplexSchema), (c) => {
-	const validated = c.req.valid("form");
 	return c.json(validated);
 });
 

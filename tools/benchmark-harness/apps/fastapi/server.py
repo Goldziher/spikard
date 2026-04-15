@@ -6,7 +6,6 @@ Validated endpoints use Pydantic models for type checking and validation.
 """
 
 import sys
-import urllib.parse
 from datetime import date as DateType
 from typing import Any
 from uuid import UUID
@@ -23,13 +22,6 @@ app = FastAPI(default_response_class=ORJSONResponse)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Convert FastAPI 422 validation errors to 400 for consistency."""
     return ORJSONResponse(status_code=400, content={"detail": str(exc)})
-
-
-async def _parse_urlencoded(request: Request) -> dict[str, Any]:
-    raw = await request.body()
-    text = raw.decode("utf-8", errors="replace")
-    parsed = urllib.parse.parse_qs(text, keep_blank_values=True, strict_parsing=False)
-    return {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
 
 
 # ============================================================================
@@ -83,39 +75,6 @@ class VeryLargePayload(BaseModel):
     name: str
     tags: list[str]
     images: list[Image]
-
-
-class UrlencodedSimple(BaseModel):
-    """Simple URL-encoded form validation schema."""
-
-    name: str
-    email: str
-    age: int
-    subscribe: bool
-
-
-class UrlencodedComplex(BaseModel):
-    """Complex URL-encoded form validation schema."""
-
-    username: str
-    password: str
-    email: str
-    first_name: str
-    last_name: str
-    age: int
-    country: str
-    state: str
-    city: str
-    zip: str
-    phone: str
-    company: str
-    job_title: str
-    subscribe: bool
-    newsletter: bool
-    terms_accepted: bool
-    privacy_accepted: bool
-    marketing_consent: bool
-    two_factor_enabled: bool
 
 
 class QueryFew(BaseModel):
@@ -190,60 +149,6 @@ async def post_json_very_large(request: Request) -> dict[str, Any]:
     """Very large JSON body (~100KB) - no validation."""
     body = await request.json()
     return body
-
-
-@app.post("/multipart/small")
-async def post_multipart_small(request: Request) -> dict[str, Any]:
-    """Small multipart form (~1KB)."""
-    form = await request.form()
-    files_received = 0
-    total_bytes = 0
-    for key, value in form.items():
-        if hasattr(value, "file"):
-            files_received += 1
-            content = await value.read()
-            total_bytes += len(content)
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@app.post("/multipart/medium")
-async def post_multipart_medium(request: Request) -> dict[str, Any]:
-    """Medium multipart form (~10KB)."""
-    form = await request.form()
-    files_received = 0
-    total_bytes = 0
-    for key, value in form.items():
-        if hasattr(value, "file"):
-            files_received += 1
-            content = await value.read()
-            total_bytes += len(content)
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@app.post("/multipart/large")
-async def post_multipart_large(request: Request) -> dict[str, Any]:
-    """Large multipart form (~100KB)."""
-    form = await request.form()
-    files_received = 0
-    total_bytes = 0
-    for key, value in form.items():
-        if hasattr(value, "file"):
-            files_received += 1
-            content = await value.read()
-            total_bytes += len(content)
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@app.post("/urlencoded/simple")
-async def post_urlencoded_simple(request: Request) -> dict[str, Any]:
-    """Simple URL-encoded form."""
-    return await _parse_urlencoded(request)
-
-
-@app.post("/urlencoded/complex")
-async def post_urlencoded_complex(request: Request) -> dict[str, Any]:
-    """Complex URL-encoded form."""
-    return await _parse_urlencoded(request)
 
 
 @app.get("/path/simple/{id}")
@@ -333,86 +238,6 @@ async def post_json_large_validated(body: LargePayload) -> LargePayload:
 async def post_json_very_large_validated(body: VeryLargePayload) -> VeryLargePayload:
     """Very large JSON body (~100KB) with Pydantic validation."""
     return body
-
-
-@app.post("/validated/multipart/small")
-async def post_multipart_small_validated(request: Request) -> dict[str, Any]:
-    """Small multipart form (~1KB)."""
-    form = await request.form()
-    files_received = 0
-    total_bytes = 0
-    for key, value in form.items():
-        if hasattr(value, "file"):
-            files_received += 1
-            content = await value.read()
-            total_bytes += len(content)
-    if files_received == 0:
-        from fastapi import HTTPException
-
-        raise HTTPException(status_code=400, detail="No files received")
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@app.post("/validated/multipart/medium")
-async def post_multipart_medium_validated(request: Request) -> dict[str, Any]:
-    """Medium multipart form (~10KB)."""
-    form = await request.form()
-    files_received = 0
-    total_bytes = 0
-    for key, value in form.items():
-        if hasattr(value, "file"):
-            files_received += 1
-            content = await value.read()
-            total_bytes += len(content)
-    if files_received == 0:
-        from fastapi import HTTPException
-
-        raise HTTPException(status_code=400, detail="No files received")
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@app.post("/validated/multipart/large")
-async def post_multipart_large_validated(request: Request) -> dict[str, Any]:
-    """Large multipart form (~100KB)."""
-    form = await request.form()
-    files_received = 0
-    total_bytes = 0
-    for key, value in form.items():
-        if hasattr(value, "file"):
-            files_received += 1
-            content = await value.read()
-            total_bytes += len(content)
-    if files_received == 0:
-        from fastapi import HTTPException
-
-        raise HTTPException(status_code=400, detail="No files received")
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@app.post("/validated/urlencoded/simple")
-async def post_urlencoded_simple_validated(request: Request) -> dict[str, Any]:
-    """Simple URL-encoded form with Pydantic validation."""
-    raw_data = await _parse_urlencoded(request)
-    try:
-        validated = UrlencodedSimple(**raw_data)
-        return validated.model_dump()
-    except Exception as e:
-        from fastapi import HTTPException
-
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/validated/urlencoded/complex")
-async def post_urlencoded_complex_validated(request: Request) -> dict[str, Any]:
-    """Complex URL-encoded form with Pydantic validation."""
-    raw_data = await _parse_urlencoded(request)
-    try:
-        validated = UrlencodedComplex(**raw_data)
-        return validated.model_dump()
-    except Exception as e:
-        from fastapi import HTTPException
-
-        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/validated/path/simple/{id}")

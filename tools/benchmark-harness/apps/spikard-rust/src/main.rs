@@ -10,7 +10,7 @@ use axum::body::Body;
 use axum::http::{Response, StatusCode};
 use clap::Parser;
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 use spikard::{App, RequestContext, ServerConfig, get, post};
 use std::collections::HashMap;
 use uuid::Uuid;
@@ -150,103 +150,6 @@ async fn post_json_large(ctx: RequestContext) -> Result<Response<Body>, (StatusC
 
 async fn post_json_very_large(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: VeryLargePayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
-    let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(json))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_multipart_small(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses multipart to JSON
-    let body = ctx.body_value();
-
-    let mut files_received = 0;
-    let mut total_bytes = 0;
-
-    if let Some(file_obj) = body.get("file") {
-        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
-            files_received = 1;
-            total_bytes = size;
-        }
-    }
-
-    let result = serde_json::json!({
-        "files_received": files_received,
-        "total_bytes": total_bytes
-    });
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(result.to_string()))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_multipart_medium(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses multipart to JSON
-    let body = ctx.body_value();
-
-    let mut files_received = 0;
-    let mut total_bytes = 0;
-
-    if let Some(file_obj) = body.get("file") {
-        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
-            files_received = 1;
-            total_bytes = size;
-        }
-    }
-
-    let result = serde_json::json!({
-        "files_received": files_received,
-        "total_bytes": total_bytes
-    });
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(result.to_string()))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_multipart_large(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses multipart to JSON
-    let body = ctx.body_value();
-
-    let mut files_received = 0;
-    let mut total_bytes = 0;
-
-    if let Some(file_obj) = body.get("file") {
-        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
-            files_received = 1;
-            total_bytes = size;
-        }
-    }
-
-    let result = serde_json::json!({
-        "files_received": files_received,
-        "total_bytes": total_bytes
-    });
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(result.to_string()))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_urlencoded_simple(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses urlencoded to JSON
-    let body = ctx.body_value();
-    let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(json))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_urlencoded_complex(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses urlencoded to JSON
-    let body = ctx.body_value();
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -437,67 +340,6 @@ fn validate_string_param(value: &str, param_name: &str) -> Result<(), (StatusCod
     Ok(())
 }
 
-fn coerce_bool(value: Value) -> Value {
-    match value {
-        Value::Bool(_) => value,
-        Value::String(ref s) => {
-            if s.eq_ignore_ascii_case("true") {
-                Value::Bool(true)
-            } else if s.eq_ignore_ascii_case("false") {
-                Value::Bool(false)
-            } else {
-                value
-            }
-        },
-        _ => value,
-    }
-}
-
-fn coerce_i64(value: Value) -> Value {
-    match value {
-        Value::Number(_) => value,
-        Value::String(value) => value
-            .parse::<i64>()
-            .map_or(Value::String(value), |parsed| Value::Number(parsed.into())),
-        _ => value,
-    }
-}
-
-fn coerce_field(map: &mut Map<String, Value>, key: &str, coerce: fn(Value) -> Value) {
-    if let Some(value) = map.remove(key) {
-        map.insert(key.to_string(), coerce(value));
-    }
-}
-
-fn coerce_urlencoded_simple(body: Value) -> Value {
-    let mut map = match body {
-        Value::Object(map) => map,
-        _ => return body,
-    };
-    coerce_field(&mut map, "age", coerce_i64);
-    coerce_field(&mut map, "subscribe", coerce_bool);
-    Value::Object(map)
-}
-
-fn coerce_urlencoded_complex(body: Value) -> Value {
-    let mut map = match body {
-        Value::Object(map) => map,
-        _ => return body,
-    };
-    coerce_field(&mut map, "age", coerce_i64);
-    for key in [
-        "subscribe",
-        "newsletter",
-        "terms_accepted",
-        "privacy_accepted",
-        "marketing_consent",
-        "two_factor_enabled",
-    ] {
-        coerce_field(&mut map, key, coerce_bool);
-    }
-    Value::Object(map)
-}
-
 async fn post_json_small_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: SmallPayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -530,115 +372,6 @@ async fn post_json_large_validated(ctx: RequestContext) -> Result<Response<Body>
 
 async fn post_json_very_large_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
     let body: VeryLargePayload = ctx.json().map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
-    let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(json))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_multipart_small_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses multipart to JSON
-    let body = ctx.body_value();
-
-    let mut files_received = 0;
-    let mut total_bytes = 0;
-
-    if let Some(file_obj) = body.get("file") {
-        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
-            files_received = 1;
-            total_bytes = size;
-        }
-    }
-
-    if files_received == 0 {
-        return Err((StatusCode::BAD_REQUEST, "No files received".to_string()));
-    }
-
-    let result = serde_json::json!({
-        "files_received": files_received,
-        "total_bytes": total_bytes
-    });
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(result.to_string()))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_multipart_medium_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses multipart to JSON
-    let body = ctx.body_value();
-
-    let mut files_received = 0;
-    let mut total_bytes = 0;
-
-    if let Some(file_obj) = body.get("file") {
-        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
-            files_received = 1;
-            total_bytes = size;
-        }
-    }
-
-    if files_received == 0 {
-        return Err((StatusCode::BAD_REQUEST, "No files received".to_string()));
-    }
-
-    let result = serde_json::json!({
-        "files_received": files_received,
-        "total_bytes": total_bytes
-    });
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(result.to_string()))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_multipart_large_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses multipart to JSON
-    let body = ctx.body_value();
-
-    let mut files_received = 0;
-    let mut total_bytes = 0;
-
-    if let Some(file_obj) = body.get("file") {
-        if let Some(size) = file_obj.get("size").and_then(|s| s.as_u64()) {
-            files_received = 1;
-            total_bytes = size;
-        }
-    }
-
-    if files_received == 0 {
-        return Err((StatusCode::BAD_REQUEST, "No files received".to_string()));
-    }
-
-    let result = serde_json::json!({
-        "files_received": files_received,
-        "total_bytes": total_bytes
-    });
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(result.to_string()))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_urlencoded_simple_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses urlencoded to JSON
-    let body = coerce_urlencoded_simple(ctx.body_value().clone());
-    let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "application/json")
-        .body(Body::from(json))
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
-}
-
-async fn post_urlencoded_complex_validated(ctx: RequestContext) -> Result<Response<Body>, (StatusCode, String)> {
-    // Spikard middleware already parses urlencoded to JSON
-    let body = coerce_urlencoded_complex(ctx.body_value().clone());
     let json = serde_json::to_string(&body).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     Response::builder()
         .status(StatusCode::OK)
@@ -797,7 +530,7 @@ async fn main() {
 
     let mut app = App::new().config(config);
 
-    let request_schemas = load_schema_map(REQUEST_SCHEMAS);
+    let _request_schemas = load_schema_map(REQUEST_SCHEMAS);
     let response_schemas = load_schema_map(RESPONSE_SCHEMAS);
     let parameter_schemas = load_schema_map(PARAMETER_SCHEMAS);
 
@@ -812,13 +545,6 @@ async fn main() {
     app.route(post("/json/medium"), post_json_medium).unwrap();
     app.route(post("/json/large"), post_json_large).unwrap();
     app.route(post("/json/very-large"), post_json_very_large).unwrap();
-
-    app.route(post("/multipart/small"), post_multipart_small).unwrap();
-    app.route(post("/multipart/medium"), post_multipart_medium).unwrap();
-    app.route(post("/multipart/large"), post_multipart_large).unwrap();
-
-    app.route(post("/urlencoded/simple"), post_urlencoded_simple).unwrap();
-    app.route(post("/urlencoded/complex"), post_urlencoded_complex).unwrap();
 
     app.route(get("/path/simple/{id}"), get_path_simple).unwrap();
     app.route(get("/path/multiple/{user_id}/{post_id}"), get_path_multiple)
@@ -841,74 +567,31 @@ async fn main() {
     // ============================================================================
 
     app.route(
-        get("/validated/health").response_schema_json(schema_value(&response_schemas, "health")),
-        health,
-    )
-    .unwrap();
-
-    app.route(
         post("/validated/json/small")
-            .request_schema_json(schema_value(&request_schemas, "json/small"))
+            .request_schema_json(schema_value(&response_schemas, "json/small"))
             .response_schema_json(schema_value(&response_schemas, "json/small")),
         post_json_small_validated,
     )
     .unwrap();
     app.route(
         post("/validated/json/medium")
-            .request_schema_json(schema_value(&request_schemas, "json/medium"))
+            .request_schema_json(schema_value(&response_schemas, "json/medium"))
             .response_schema_json(schema_value(&response_schemas, "json/medium")),
         post_json_medium_validated,
     )
     .unwrap();
     app.route(
         post("/validated/json/large")
-            .request_schema_json(schema_value(&request_schemas, "json/large"))
+            .request_schema_json(schema_value(&response_schemas, "json/large"))
             .response_schema_json(schema_value(&response_schemas, "json/large")),
         post_json_large_validated,
     )
     .unwrap();
     app.route(
         post("/validated/json/very-large")
-            .request_schema_json(schema_value(&request_schemas, "json/very-large"))
+            .request_schema_json(schema_value(&response_schemas, "json/very-large"))
             .response_schema_json(schema_value(&response_schemas, "json/very-large")),
         post_json_very_large_validated,
-    )
-    .unwrap();
-
-    app.route(
-        post("/validated/multipart/small")
-            .request_schema_json(schema_value(&request_schemas, "multipart/small"))
-            .response_schema_json(schema_value(&response_schemas, "multipart/small")),
-        post_multipart_small_validated,
-    )
-    .unwrap();
-    app.route(
-        post("/validated/multipart/medium")
-            .request_schema_json(schema_value(&request_schemas, "multipart/medium"))
-            .response_schema_json(schema_value(&response_schemas, "multipart/medium")),
-        post_multipart_medium_validated,
-    )
-    .unwrap();
-    app.route(
-        post("/validated/multipart/large")
-            .request_schema_json(schema_value(&request_schemas, "multipart/large"))
-            .response_schema_json(schema_value(&response_schemas, "multipart/large")),
-        post_multipart_large_validated,
-    )
-    .unwrap();
-
-    app.route(
-        post("/validated/urlencoded/simple")
-            .request_schema_json(schema_value(&request_schemas, "urlencoded/simple"))
-            .response_schema_json(schema_value(&response_schemas, "urlencoded/simple")),
-        post_urlencoded_simple_validated,
-    )
-    .unwrap();
-    app.route(
-        post("/validated/urlencoded/complex")
-            .request_schema_json(schema_value(&request_schemas, "urlencoded/complex"))
-            .response_schema_json(schema_value(&response_schemas, "urlencoded/complex")),
-        post_urlencoded_complex_validated,
     )
     .unwrap();
 

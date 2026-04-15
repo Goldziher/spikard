@@ -7,14 +7,9 @@
  * Validated endpoints: JSON Schema validation (under /validated/* prefix)
  */
 
-import formbody from "@fastify/formbody";
-import multipart from "@fastify/multipart";
 import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 
 const fastify = Fastify({ logger: false });
-
-await fastify.register(formbody);
-await fastify.register(multipart);
 
 // ============================================================================
 // RAW ENDPOINTS (No validation)
@@ -45,27 +40,6 @@ interface DateParams {
 	date: string;
 }
 
-interface FileResponse {
-	files_received: number;
-	total_bytes: number;
-}
-
-interface StatusResponse {
-	status: string;
-}
-
-interface IdResponse {
-	id: string | number;
-}
-
-interface UuidResponse {
-	uuid: string;
-}
-
-interface DateResponse {
-	date: string;
-}
-
 fastify.post("/json/small", (request: FastifyRequest, reply: FastifyReply) => {
 	reply.send(request.body);
 });
@@ -79,71 +53,6 @@ fastify.post("/json/large", (request: FastifyRequest, reply: FastifyReply) => {
 });
 
 fastify.post("/json/very-large", (request: FastifyRequest, reply: FastifyReply) => {
-	reply.send(request.body);
-});
-
-fastify.post("/multipart/small", async (request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
-	const parts = request.parts();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for await (const part of parts) {
-		if (part.type === "file" && part.fieldname.startsWith("file")) {
-			files_received++;
-			let partBytes = 0;
-			for await (const chunk of part.file) {
-				partBytes += chunk.length;
-			}
-			total_bytes += partBytes;
-		}
-	}
-
-	return { files_received, total_bytes };
-});
-
-fastify.post("/multipart/medium", async (request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
-	const parts = request.parts();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for await (const part of parts) {
-		if (part.type === "file" && part.fieldname.startsWith("file")) {
-			files_received++;
-			let partBytes = 0;
-			for await (const chunk of part.file) {
-				partBytes += chunk.length;
-			}
-			total_bytes += partBytes;
-		}
-	}
-
-	return { files_received, total_bytes };
-});
-
-fastify.post("/multipart/large", async (request: FastifyRequest, _reply: FastifyReply): Promise<FileResponse> => {
-	const parts = request.parts();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for await (const part of parts) {
-		if (part.type === "file" && part.fieldname.startsWith("file")) {
-			files_received++;
-			let partBytes = 0;
-			for await (const chunk of part.file) {
-				partBytes += chunk.length;
-			}
-			total_bytes += partBytes;
-		}
-	}
-
-	return { files_received, total_bytes };
-});
-
-fastify.post("/urlencoded/simple", (request: FastifyRequest, reply: FastifyReply) => {
-	reply.send(request.body);
-});
-
-fastify.post("/urlencoded/complex", (request: FastifyRequest, reply: FastifyReply) => {
 	reply.send(request.body);
 });
 
@@ -290,65 +199,6 @@ const veryLargePayloadSchema = {
 	},
 } as const;
 
-const urlencodedSimpleSchema = {
-	type: "object",
-	required: ["name", "email", "age", "subscribe"],
-	properties: {
-		name: { type: "string" },
-		email: { type: "string" },
-		age: { type: "string" },
-		subscribe: { type: "string" },
-	},
-	additionalProperties: false,
-} as const;
-
-const urlencodedComplexSchema = {
-	type: "object",
-	required: [
-		"username",
-		"password",
-		"email",
-		"first_name",
-		"last_name",
-		"age",
-		"country",
-		"state",
-		"city",
-		"zip",
-		"phone",
-		"company",
-		"job_title",
-		"subscribe",
-		"newsletter",
-		"terms_accepted",
-		"privacy_accepted",
-		"marketing_consent",
-		"two_factor_enabled",
-	],
-	properties: {
-		username: { type: "string" },
-		password: { type: "string" },
-		email: { type: "string" },
-		first_name: { type: "string" },
-		last_name: { type: "string" },
-		age: { type: "string" },
-		country: { type: "string" },
-		state: { type: "string" },
-		city: { type: "string" },
-		zip: { type: "string" },
-		phone: { type: "string" },
-		company: { type: "string" },
-		job_title: { type: "string" },
-		subscribe: { type: "string" },
-		newsletter: { type: "string" },
-		terms_accepted: { type: "string" },
-		privacy_accepted: { type: "string" },
-		marketing_consent: { type: "string" },
-		two_factor_enabled: { type: "string" },
-	},
-	additionalProperties: false,
-} as const;
-
 fastify.post("/validated/json/small", {
 	schema: {
 		body: smallPayloadSchema,
@@ -379,96 +229,6 @@ fastify.post("/validated/json/large", {
 fastify.post("/validated/json/very-large", {
 	schema: {
 		body: veryLargePayloadSchema,
-	},
-	handler: (request, reply) => {
-		reply.send(request.body);
-	},
-});
-
-fastify.post("/validated/multipart/small", async (request, reply) => {
-	const parts = request.parts();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for await (const part of parts) {
-		if (part.type === "file" && part.fieldname.startsWith("file")) {
-			files_received++;
-			let partBytes = 0;
-			for await (const chunk of part.file) {
-				partBytes += chunk.length;
-			}
-			total_bytes += partBytes;
-		}
-	}
-
-	if (files_received === 0) {
-		reply.code(400);
-		return { error: "No files received" };
-	}
-
-	return { files_received, total_bytes };
-});
-
-fastify.post("/validated/multipart/medium", async (request, reply) => {
-	const parts = request.parts();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for await (const part of parts) {
-		if (part.type === "file" && part.fieldname.startsWith("file")) {
-			files_received++;
-			let partBytes = 0;
-			for await (const chunk of part.file) {
-				partBytes += chunk.length;
-			}
-			total_bytes += partBytes;
-		}
-	}
-
-	if (files_received === 0) {
-		reply.code(400);
-		return { error: "No files received" };
-	}
-
-	return { files_received, total_bytes };
-});
-
-fastify.post("/validated/multipart/large", async (request, reply) => {
-	const parts = request.parts();
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for await (const part of parts) {
-		if (part.type === "file" && part.fieldname.startsWith("file")) {
-			files_received++;
-			let partBytes = 0;
-			for await (const chunk of part.file) {
-				partBytes += chunk.length;
-			}
-			total_bytes += partBytes;
-		}
-	}
-
-	if (files_received === 0) {
-		reply.code(400);
-		return { error: "No files received" };
-	}
-
-	return { files_received, total_bytes };
-});
-
-fastify.post("/validated/urlencoded/simple", {
-	schema: {
-		body: urlencodedSimpleSchema,
-	},
-	handler: (request, reply) => {
-		reply.send(request.body);
-	},
-});
-
-fastify.post("/validated/urlencoded/complex", {
-	schema: {
-		body: urlencodedComplexSchema,
 	},
 	handler: (request, reply) => {
 		reply.send(request.body);

@@ -24,19 +24,6 @@ response_schemas = JSON.parse(File.read(File.join(schema_dir, 'response_schemas.
 
 echo_body = lambda { |_params, _query, body| body || {} }
 
-multipart_handler = lambda { |_params, _query, body|
-  files = (body.is_a?(Hash) && body['files']) || {}
-  files_received = 0
-  total_bytes = 0
-  files.each do |key, file_data|
-    next unless key.start_with?('file') && file_data.is_a?(Hash)
-
-    files_received += 1
-    total_bytes += file_data['size'].to_i
-  end
-  { 'files_received' => files_received, 'total_bytes' => total_bytes }
-}
-
 # ===== RAW ENDPOINTS (no validation) =====
 
 # JSON body echo
@@ -44,15 +31,6 @@ app.post('/json/small', &echo_body)
 app.post('/json/medium', &echo_body)
 app.post('/json/large', &echo_body)
 app.post('/json/very-large', &echo_body)
-
-# Multipart
-app.post('/multipart/small', &multipart_handler)
-app.post('/multipart/medium', &multipart_handler)
-app.post('/multipart/large', &multipart_handler)
-
-# URL-encoded
-app.post('/urlencoded/simple', &echo_body)
-app.post('/urlencoded/complex', &echo_body)
 
 # Path parameters
 app.get('/path/simple/{id}') { |params, _query, _body| { 'id' => params['id'] || params[:id] } }
@@ -99,25 +77,6 @@ app.post('/validated/json/very-large',
          request_schema: request_schemas['json/very-large'],
          response_schema: response_schemas['json/very-large'], &echo_body)
 
-# Multipart - validated
-app.post('/validated/multipart/small',
-         request_schema: request_schemas['multipart/small'],
-         response_schema: response_schemas['multipart/small'], &multipart_handler)
-app.post('/validated/multipart/medium',
-         request_schema: request_schemas['multipart/medium'],
-         response_schema: response_schemas['multipart/medium'], &multipart_handler)
-app.post('/validated/multipart/large',
-         request_schema: request_schemas['multipart/large'],
-         response_schema: response_schemas['multipart/large'], &multipart_handler)
-
-# URL-encoded - validated
-app.post('/validated/urlencoded/simple',
-         request_schema: request_schemas['urlencoded/simple'],
-         response_schema: response_schemas['urlencoded/simple'], &echo_body)
-app.post('/validated/urlencoded/complex',
-         request_schema: request_schemas['urlencoded/complex'],
-         response_schema: response_schemas['urlencoded/complex'], &echo_body)
-
 # Path parameters - validated
 app.get('/validated/path/simple/{id}',
         response_schema: response_schemas['path/simple'],
@@ -159,12 +118,6 @@ app.get('/validated/query/medium',
 app.get('/validated/query/many',
         response_schema: response_schemas['query/many'],
         parameter_schema: parameter_schemas['query/many'], &query_echo)
-
-# Health / root - validated
-app.get('/validated/health',
-        response_schema: response_schemas['health']) { |_params, _query, _body| { 'status' => 'ok' } }
-app.get('/validated/',
-        response_schema: response_schemas['root']) { |_params, _query, _body| { 'status' => 'ok' } }
 
 if __FILE__ == $0
   port = (ARGV[0] || 8000).to_i

@@ -6,14 +6,12 @@ Raw endpoints use Request.json() for minimal overhead.
 Validated endpoints use Pydantic for validation.
 """
 
-import inspect
 import sys
-import urllib.parse
 from datetime import date
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ValidationError, field_validator
+from pydantic import BaseModel, ValidationError
 from robyn import Robyn, Request, Response, jsonify
 
 app = Robyn(__file__)
@@ -68,71 +66,6 @@ class VeryLargePayload(BaseModel):
     name: str
     tags: list[str]
     images: list[Image]
-
-
-class SimpleUrlencoded(BaseModel):
-    name: str
-    email: str
-    age: int
-    subscribe: bool
-
-    @field_validator("age", mode="before")
-    @classmethod
-    def validate_age(cls, v):
-        if isinstance(v, str):
-            return int(v)
-        return v
-
-    @field_validator("subscribe", mode="before")
-    @classmethod
-    def validate_subscribe(cls, v):
-        if isinstance(v, str):
-            return v.lower() in ("true", "1", "yes", "on")
-        return v
-
-
-class ComplexUrlencoded(BaseModel):
-    username: str
-    password: str
-    email: str
-    first_name: str
-    last_name: str
-    age: int
-    country: str
-    state: str
-    city: str
-    zip: str
-    phone: str
-    company: str
-    job_title: str
-    subscribe: bool
-    newsletter: bool
-    terms_accepted: bool
-    privacy_accepted: bool
-    marketing_consent: bool
-    two_factor_enabled: bool
-
-    @field_validator("age", mode="before")
-    @classmethod
-    def validate_age(cls, v):
-        if isinstance(v, str):
-            return int(v)
-        return v
-
-    @field_validator(
-        "subscribe",
-        "newsletter",
-        "terms_accepted",
-        "privacy_accepted",
-        "marketing_consent",
-        "two_factor_enabled",
-        mode="before",
-    )
-    @classmethod
-    def validate_bool_fields(cls, v):
-        if isinstance(v, str):
-            return v.lower() in ("true", "1", "yes", "on")
-        return v
 
 
 class QueryFew(BaseModel):
@@ -262,90 +195,6 @@ async def post_json_very_large(request: Request):
     return jsonify(body)
 
 
-@app.post("/multipart/small")
-async def post_multipart_small(request: Request):
-    """Small multipart form (~1KB)."""
-    files = getattr(request, "files", {})
-    files_received = len(files)
-    total_bytes = 0
-    for file_list in files.values():
-        if isinstance(file_list, list):
-            for file_obj in file_list:
-                if hasattr(file_obj, "file") and hasattr(file_obj.file, "read"):
-                    content = file_obj.file.read()
-                    total_bytes += len(content)
-        elif hasattr(file_list, "file") and hasattr(file_list.file, "read"):
-            content = file_list.file.read()
-            total_bytes += len(content)
-    return jsonify({"files_received": files_received, "total_bytes": total_bytes})
-
-
-@app.post("/multipart/medium")
-async def post_multipart_medium(request: Request):
-    """Medium multipart form (~10KB)."""
-    files = getattr(request, "files", {})
-    files_received = len(files)
-    total_bytes = 0
-    for file_list in files.values():
-        if isinstance(file_list, list):
-            for file_obj in file_list:
-                if hasattr(file_obj, "file") and hasattr(file_obj.file, "read"):
-                    content = file_obj.file.read()
-                    total_bytes += len(content)
-        elif hasattr(file_list, "file") and hasattr(file_list.file, "read"):
-            content = file_list.file.read()
-            total_bytes += len(content)
-    return jsonify({"files_received": files_received, "total_bytes": total_bytes})
-
-
-@app.post("/multipart/large")
-async def post_multipart_large(request: Request):
-    """Large multipart form (~100KB)."""
-    files = getattr(request, "files", {})
-    files_received = len(files)
-    total_bytes = 0
-    for file_list in files.values():
-        if isinstance(file_list, list):
-            for file_obj in file_list:
-                if hasattr(file_obj, "file") and hasattr(file_obj.file, "read"):
-                    content = file_obj.file.read()
-                    total_bytes += len(content)
-        elif hasattr(file_list, "file") and hasattr(file_list.file, "read"):
-            content = file_list.file.read()
-            total_bytes += len(content)
-    return jsonify({"files_received": files_received, "total_bytes": total_bytes})
-
-
-@app.post("/urlencoded/simple")
-async def post_urlencoded_simple(request: Request):
-    """Simple URL-encoded form - no validation."""
-    raw = getattr(request, "body", b"")
-    if inspect.isawaitable(raw):
-        raw = await raw
-    if isinstance(raw, (bytes, bytearray, memoryview)):
-        text = bytes(raw).decode("utf-8", errors="replace")
-    else:
-        text = str(raw or "")
-    parsed = urllib.parse.parse_qs(text, keep_blank_values=True, strict_parsing=False)
-    body = {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
-    return jsonify(body)
-
-
-@app.post("/urlencoded/complex")
-async def post_urlencoded_complex(request: Request):
-    """Complex URL-encoded form - no validation."""
-    raw = getattr(request, "body", b"")
-    if inspect.isawaitable(raw):
-        raw = await raw
-    if isinstance(raw, (bytes, bytearray, memoryview)):
-        text = bytes(raw).decode("utf-8", errors="replace")
-    else:
-        text = str(raw or "")
-    parsed = urllib.parse.parse_qs(text, keep_blank_values=True, strict_parsing=False)
-    body = {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
-    return jsonify(body)
-
-
 @app.get("/path/simple/:id")
 async def get_path_simple(request: Request):
     """Single path parameter."""
@@ -469,124 +318,6 @@ async def post_json_very_large_validated(request: Request):
     try:
         body = request.json()
         validated = VeryLargePayload(**body)
-        return jsonify(validated.model_dump())
-    except ValidationError as e:
-        return Response(
-            status_code=400,
-            headers={"Content-Type": "application/json"},
-            description=jsonify({"detail": str(e)}),
-        )
-
-
-@app.post("/validated/multipart/small")
-async def post_multipart_small_validated(request: Request):
-    """Small multipart form (~1KB)."""
-    files = getattr(request, "files", {})
-    files_received = len(files)
-    total_bytes = 0
-    for file_list in files.values():
-        if isinstance(file_list, list):
-            for file_obj in file_list:
-                if hasattr(file_obj, "file") and hasattr(file_obj.file, "read"):
-                    content = file_obj.file.read()
-                    total_bytes += len(content)
-        elif hasattr(file_list, "file") and hasattr(file_list.file, "read"):
-            content = file_list.file.read()
-            total_bytes += len(content)
-    if files_received == 0:
-        return Response(
-            status_code=400,
-            headers={"Content-Type": "application/json"},
-            description=jsonify({"detail": "No files received"}),
-        )
-    return jsonify({"files_received": files_received, "total_bytes": total_bytes})
-
-
-@app.post("/validated/multipart/medium")
-async def post_multipart_medium_validated(request: Request):
-    """Medium multipart form (~10KB)."""
-    files = getattr(request, "files", {})
-    files_received = len(files)
-    total_bytes = 0
-    for file_list in files.values():
-        if isinstance(file_list, list):
-            for file_obj in file_list:
-                if hasattr(file_obj, "file") and hasattr(file_obj.file, "read"):
-                    content = file_obj.file.read()
-                    total_bytes += len(content)
-        elif hasattr(file_list, "file") and hasattr(file_list.file, "read"):
-            content = file_list.file.read()
-            total_bytes += len(content)
-    if files_received == 0:
-        return Response(
-            status_code=400,
-            headers={"Content-Type": "application/json"},
-            description=jsonify({"detail": "No files received"}),
-        )
-    return jsonify({"files_received": files_received, "total_bytes": total_bytes})
-
-
-@app.post("/validated/multipart/large")
-async def post_multipart_large_validated(request: Request):
-    """Large multipart form (~100KB)."""
-    files = getattr(request, "files", {})
-    files_received = len(files)
-    total_bytes = 0
-    for file_list in files.values():
-        if isinstance(file_list, list):
-            for file_obj in file_list:
-                if hasattr(file_obj, "file") and hasattr(file_obj.file, "read"):
-                    content = file_obj.file.read()
-                    total_bytes += len(content)
-        elif hasattr(file_list, "file") and hasattr(file_list.file, "read"):
-            content = file_list.file.read()
-            total_bytes += len(content)
-    if files_received == 0:
-        return Response(
-            status_code=400,
-            headers={"Content-Type": "application/json"},
-            description=jsonify({"detail": "No files received"}),
-        )
-    return jsonify({"files_received": files_received, "total_bytes": total_bytes})
-
-
-@app.post("/validated/urlencoded/simple")
-async def post_urlencoded_simple_validated(request: Request):
-    """Simple URL-encoded form with validation."""
-    try:
-        raw = getattr(request, "body", b"")
-        if inspect.isawaitable(raw):
-            raw = await raw
-        if isinstance(raw, (bytes, bytearray, memoryview)):
-            text = bytes(raw).decode("utf-8", errors="replace")
-        else:
-            text = str(raw or "")
-        parsed = urllib.parse.parse_qs(text, keep_blank_values=True, strict_parsing=False)
-        body = {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
-        validated = SimpleUrlencoded(**body)
-        return jsonify(validated.model_dump())
-    except ValidationError as e:
-        return Response(
-            status_code=400,
-            headers={"Content-Type": "application/json"},
-            description=jsonify({"detail": str(e)}),
-        )
-
-
-@app.post("/validated/urlencoded/complex")
-async def post_urlencoded_complex_validated(request: Request):
-    """Complex URL-encoded form with validation."""
-    try:
-        raw = getattr(request, "body", b"")
-        if inspect.isawaitable(raw):
-            raw = await raw
-        if isinstance(raw, (bytes, bytearray, memoryview)):
-            text = bytes(raw).decode("utf-8", errors="replace")
-        else:
-            text = str(raw or "")
-        parsed = urllib.parse.parse_qs(text, keep_blank_values=True, strict_parsing=False)
-        body = {k: (v[0] if len(v) == 1 else v) for k, v in parsed.items()}
-        validated = ComplexUrlencoded(**body)
         return jsonify(validated.model_dump())
     except ValidationError as e:
         return Response(

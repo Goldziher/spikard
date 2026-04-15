@@ -14,7 +14,7 @@ from pathlib import Path as PathLib
 from typing import Any
 from uuid import UUID
 
-from spikard import Path, Query, Response, Spikard, get, post
+from spikard import Path, Query, Spikard, get, post
 from spikard.config import ServerConfig
 from spikard.routing import get_default_router
 
@@ -41,56 +41,6 @@ def parameter_schema(key: str) -> dict[str, Any]:
 
 def response_schema(key: str) -> dict[str, Any]:
     return RESPONSE_SCHEMAS[key]
-
-
-def _coerce_bool(value: Any) -> Any:
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        lowered = value.lower()
-        if lowered in ("true", "1", "yes", "on"):
-            return True
-        if lowered in ("false", "0", "no", "off"):
-            return False
-    return value
-
-
-def _coerce_int(value: Any) -> Any:
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, int):
-        return value
-    if isinstance(value, str):
-        stripped = value.strip()
-        if stripped and stripped.lstrip("-").isdigit():
-            return int(stripped)
-    return value
-
-
-def _coerce_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
-    coerced = dict(body)
-    if "age" in coerced:
-        coerced["age"] = _coerce_int(coerced["age"])
-    if "subscribe" in coerced:
-        coerced["subscribe"] = _coerce_bool(coerced["subscribe"])
-    return coerced
-
-
-def _coerce_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
-    coerced = dict(body)
-    if "age" in coerced:
-        coerced["age"] = _coerce_int(coerced["age"])
-    for key in (
-        "subscribe",
-        "newsletter",
-        "terms_accepted",
-        "privacy_accepted",
-        "marketing_consent",
-        "two_factor_enabled",
-    ):
-        if key in coerced:
-            coerced[key] = _coerce_bool(coerced[key])
-    return coerced
 
 
 @get("/health", response_schema=response_schema("health"))
@@ -122,63 +72,6 @@ def post_json_large(body: dict[str, Any]) -> dict[str, Any]:
 @post("/json/very-large")
 def post_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
     """Very large JSON payload (~100KB-1MB) - raw."""
-    return body
-
-
-@post("/multipart/small")
-def post_multipart_small(body: dict[str, Any]) -> dict[str, Any]:
-    """Small multipart form (~1KB) - raw."""
-    files = body.get("files", {})
-    files_received = 0
-    total_bytes = 0
-
-    for key, file_data in files.items():
-        if key.startswith("file") and isinstance(file_data, dict):
-            files_received += 1
-            total_bytes += file_data.get("size", 0)
-
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@post("/multipart/medium")
-def post_multipart_medium(body: dict[str, Any]) -> dict[str, Any]:
-    """Medium multipart form (~10KB) - raw."""
-    files = body.get("files", {})
-    files_received = 0
-    total_bytes = 0
-
-    for key, file_data in files.items():
-        if key.startswith("file") and isinstance(file_data, dict):
-            files_received += 1
-            total_bytes += file_data.get("size", 0)
-
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@post("/multipart/large")
-def post_multipart_large(body: dict[str, Any]) -> dict[str, Any]:
-    """Large multipart form (~100KB) - raw."""
-    files = body.get("files", {})
-    files_received = 0
-    total_bytes = 0
-
-    for key, file_data in files.items():
-        if key.startswith("file") and isinstance(file_data, dict):
-            files_received += 1
-            total_bytes += file_data.get("size", 0)
-
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@post("/urlencoded/simple")
-def post_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
-    """Simple URL-encoded form (3-5 fields) - raw."""
-    return body
-
-
-@post("/urlencoded/complex")
-def post_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
-    """Complex URL-encoded form (10-20 fields) - raw."""
     return body
 
 
@@ -363,92 +256,6 @@ def post_validated_json_large(body: dict[str, Any]) -> dict[str, Any]:
 def post_validated_json_very_large(body: dict[str, Any]) -> dict[str, Any]:
     """Very large JSON payload (arrays of values and objects) - validated."""
     return body
-
-
-@post(
-    "/validated/multipart/small",
-    body_schema=request_schema("multipart/small"),
-    response_schema=response_schema("multipart/small"),
-)
-def post_validated_multipart_small(body: dict[str, Any]) -> dict[str, int]:
-    """Small multipart form (~1KB) - validated."""
-    files = body.get("files", {})
-    files_received = 0
-    total_bytes = 0
-
-    for key, file_data in files.items():
-        if key.startswith("file") and isinstance(file_data, dict):
-            files_received += 1
-            total_bytes += file_data.get("size", 0)
-
-    if files_received == 0:
-        return Response(content={"error": "No files received"}, status_code=400)
-
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@post(
-    "/validated/multipart/medium",
-    body_schema=request_schema("multipart/medium"),
-    response_schema=response_schema("multipart/medium"),
-)
-def post_validated_multipart_medium(body: dict[str, Any]) -> dict[str, int]:
-    """Medium multipart form (~10KB) - validated."""
-    files = body.get("files", {})
-    files_received = 0
-    total_bytes = 0
-
-    for key, file_data in files.items():
-        if key.startswith("file") and isinstance(file_data, dict):
-            files_received += 1
-            total_bytes += file_data.get("size", 0)
-
-    if files_received == 0:
-        return Response(content={"error": "No files received"}, status_code=400)
-
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@post(
-    "/validated/multipart/large",
-    body_schema=request_schema("multipart/large"),
-    response_schema=response_schema("multipart/large"),
-)
-def post_validated_multipart_large(body: dict[str, Any]) -> dict[str, int]:
-    """Large multipart form (~100KB) - validated."""
-    files = body.get("files", {})
-    files_received = 0
-    total_bytes = 0
-
-    for key, file_data in files.items():
-        if key.startswith("file") and isinstance(file_data, dict):
-            files_received += 1
-            total_bytes += file_data.get("size", 0)
-
-    if files_received == 0:
-        return Response(content={"error": "No files received"}, status_code=400)
-
-    return {"files_received": files_received, "total_bytes": total_bytes}
-
-
-@post(
-    "/validated/urlencoded/simple",
-    body_schema=request_schema("urlencoded/simple"),
-    response_schema=response_schema("urlencoded/simple"),
-)
-def post_validated_urlencoded_simple(body: dict[str, Any]) -> dict[str, Any]:
-    """Simple URL-encoded form (3-5 fields) - validated."""
-    return _coerce_urlencoded_simple(body)
-
-
-@post(
-    "/validated/urlencoded/complex",
-    body_schema=request_schema("urlencoded/complex"),
-    response_schema=response_schema("urlencoded/complex"),
-)
-def post_validated_urlencoded_complex(body: dict[str, Any]) -> dict[str, Any]:
-    """Complex URL-encoded form (10-20 fields) - validated."""
-    return _coerce_urlencoded_complex(body)
 
 
 @get(

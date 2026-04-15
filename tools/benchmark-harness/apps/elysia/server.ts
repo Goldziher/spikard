@@ -58,35 +58,6 @@ const VeryLargePayloadSchema = t.Object({
 	images: t.Array(ImageSchema),
 });
 
-const UrlencodedSimpleSchema = t.Object({
-	name: t.String(),
-	email: t.String(),
-	age: t.Union([t.String(), t.Integer()]),
-	subscribe: t.Union([t.String(), t.Boolean()]),
-});
-
-const UrlencodedComplexSchema = t.Object({
-	username: t.String(),
-	password: t.String(),
-	email: t.String(),
-	first_name: t.String(),
-	last_name: t.String(),
-	age: t.Union([t.String(), t.Integer()]),
-	country: t.String(),
-	state: t.String(),
-	city: t.String(),
-	zip: t.String(),
-	phone: t.String(),
-	company: t.String(),
-	job_title: t.String(),
-	subscribe: t.Union([t.String(), t.Boolean()]),
-	newsletter: t.Union([t.String(), t.Boolean()]),
-	terms_accepted: t.Union([t.String(), t.Boolean()]),
-	privacy_accepted: t.Union([t.String(), t.Boolean()]),
-	marketing_consent: t.Union([t.String(), t.Boolean()]),
-	two_factor_enabled: t.Union([t.String(), t.Boolean()]),
-});
-
 const QueryFewSchema = t.Object({
 	q: t.String(),
 	page: t.Optional(t.Numeric()),
@@ -129,55 +100,6 @@ app.post("/json/medium", ({ body }) => body);
 app.post("/json/large", ({ body }) => body);
 
 app.post("/json/very-large", ({ body }) => body);
-
-app.post("/multipart/small", async ({ body }) => {
-	const formData = body as Record<string, unknown>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of Object.entries(formData)) {
-		if (key.startsWith("file") && value instanceof Blob) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	return { files_received, total_bytes };
-});
-
-app.post("/multipart/medium", async ({ body }) => {
-	const formData = body as Record<string, unknown>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of Object.entries(formData)) {
-		if (key.startsWith("file") && value instanceof Blob) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	return { files_received, total_bytes };
-});
-
-app.post("/multipart/large", async ({ body }) => {
-	const formData = body as Record<string, unknown>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of Object.entries(formData)) {
-		if (key.startsWith("file") && value instanceof Blob) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	return { files_received, total_bytes };
-});
-
-app.post("/urlencoded/simple", ({ body }) => body ?? {});
-
-app.post("/urlencoded/complex", ({ body }) => body ?? {});
 
 app.get("/path/simple/:id", ({ params: { id } }) => ({ id }));
 
@@ -223,74 +145,6 @@ app.post("/validated/json/large", ({ body }) => body, {
 
 app.post("/validated/json/very-large", ({ body }) => body, {
 	body: VeryLargePayloadSchema,
-});
-
-app.post("/validated/multipart/small", async ({ body, set }) => {
-	const formData = body as Record<string, unknown>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of Object.entries(formData)) {
-		if (key.startsWith("file") && value instanceof Blob) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	if (files_received === 0) {
-		set.status = 400;
-		return { error: "No files received" };
-	}
-
-	return { files_received, total_bytes };
-});
-
-app.post("/validated/multipart/medium", async ({ body, set }) => {
-	const formData = body as Record<string, unknown>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of Object.entries(formData)) {
-		if (key.startsWith("file") && value instanceof Blob) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	if (files_received === 0) {
-		set.status = 400;
-		return { error: "No files received" };
-	}
-
-	return { files_received, total_bytes };
-});
-
-app.post("/validated/multipart/large", async ({ body, set }) => {
-	const formData = body as Record<string, unknown>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const [key, value] of Object.entries(formData)) {
-		if (key.startsWith("file") && value instanceof Blob) {
-			files_received++;
-			total_bytes += value.size;
-		}
-	}
-
-	if (files_received === 0) {
-		set.status = 400;
-		return { error: "No files received" };
-	}
-
-	return { files_received, total_bytes };
-});
-
-app.post("/validated/urlencoded/simple", ({ body }) => body ?? {}, {
-	body: UrlencodedSimpleSchema,
-});
-
-app.post("/validated/urlencoded/complex", ({ body }) => body ?? {}, {
-	body: UrlencodedComplexSchema,
 });
 
 app.get("/validated/path/simple/:id", ({ params: { id } }) => ({ id }), {

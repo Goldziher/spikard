@@ -136,74 +136,6 @@ function post_json_very_large(request: HandlerInput): HandlerOutput {
 	return ok(request.body);
 }
 
-function post_multipart_small(request: HandlerInput): HandlerOutput {
-	const body = request.body;
-	if (!body || typeof body !== "object" || !("files" in body)) {
-		return ok({ files_received: 0, total_bytes: 0 });
-	}
-
-	const files = body.files as Record<string, { size: number }>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const key in files) {
-		if (key.startsWith("file")) {
-			files_received++;
-			total_bytes += files[key].size || 0;
-		}
-	}
-
-	return ok({ files_received, total_bytes });
-}
-
-function post_multipart_medium(request: HandlerInput): HandlerOutput {
-	const body = request.body;
-	if (!body || typeof body !== "object" || !("files" in body)) {
-		return ok({ files_received: 0, total_bytes: 0 });
-	}
-
-	const files = body.files as Record<string, { size: number }>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const key in files) {
-		if (key.startsWith("file")) {
-			files_received++;
-			total_bytes += files[key].size || 0;
-		}
-	}
-
-	return ok({ files_received, total_bytes });
-}
-
-function post_multipart_large(request: HandlerInput): HandlerOutput {
-	const body = request.body;
-	if (!body || typeof body !== "object" || !("files" in body)) {
-		return ok({ files_received: 0, total_bytes: 0 });
-	}
-
-	const files = body.files as Record<string, { size: number }>;
-	let files_received = 0;
-	let total_bytes = 0;
-
-	for (const key in files) {
-		if (key.startsWith("file")) {
-			files_received++;
-			total_bytes += files[key].size || 0;
-		}
-	}
-
-	return ok({ files_received, total_bytes });
-}
-
-function post_urlencoded_simple(request: HandlerInput): HandlerOutput {
-	return ok(request.body ?? {});
-}
-
-function post_urlencoded_complex(request: HandlerInput): HandlerOutput {
-	return ok(request.body ?? {});
-}
-
 function get_path_simple(request: HandlerInput): HandlerOutput {
 	return ok({ id: request.pathParams.id });
 }
@@ -263,13 +195,6 @@ post("/json/medium", post_json_medium);
 post("/json/large", post_json_large);
 post("/json/very-large", post_json_very_large);
 
-post("/multipart/small", post_multipart_small);
-post("/multipart/medium", post_multipart_medium);
-post("/multipart/large", post_multipart_large);
-
-post("/urlencoded/simple", post_urlencoded_simple);
-post("/urlencoded/complex", post_urlencoded_complex);
-
 get("/path/simple/{id}", get_path_simple);
 get("/path/multiple/{user_id}/{post_id}", get_path_multiple);
 get("/path/deep/{org}/{team}/{project}/{resource}/{id}", get_path_deep);
@@ -295,38 +220,6 @@ post(
 	responseSchema("json/very-large"),
 );
 
-post(
-	"/validated/multipart/small",
-	post_multipart_small,
-	requestSchema("multipart/small"),
-	responseSchema("multipart/small"),
-);
-post(
-	"/validated/multipart/medium",
-	post_multipart_medium,
-	requestSchema("multipart/medium"),
-	responseSchema("multipart/medium"),
-);
-post(
-	"/validated/multipart/large",
-	post_multipart_large,
-	requestSchema("multipart/large"),
-	responseSchema("multipart/large"),
-);
-
-post(
-	"/validated/urlencoded/simple",
-	post_urlencoded_simple,
-	requestSchema("urlencoded/simple"),
-	responseSchema("urlencoded/simple"),
-);
-post(
-	"/validated/urlencoded/complex",
-	post_urlencoded_complex,
-	requestSchema("urlencoded/complex"),
-	responseSchema("urlencoded/complex"),
-);
-
 get("/validated/path/simple/{id}", get_path_simple, responseSchema("path/simple"), parameterSchema("path/simple"));
 get(
 	"/validated/path/multiple/{user_id}/{post_id}",
@@ -347,9 +240,6 @@ get("/validated/path/date/{date}", get_path_date, responseSchema("path/date"), p
 get("/validated/query/few", get_query_few, responseSchema("query/few"), parameterSchema("query/few"));
 get("/validated/query/medium", get_query_medium, responseSchema("query/medium"), parameterSchema("query/medium"));
 get("/validated/query/many", get_query_many, responseSchema("query/many"), parameterSchema("query/many"));
-
-get("/validated/health", get_health, responseSchema("health"));
-get("/validated/", get_root, responseSchema("root"));
 
 function resolvePort(defaultPort = 8000): number {
 	for (const arg of process.argv.slice(2)) {

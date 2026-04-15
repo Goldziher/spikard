@@ -995,7 +995,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-python
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-python --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-python
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-python --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-python
       - task: bench:format:python
       - task: bench:lint:python
 
@@ -1005,7 +1005,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-rust-gen
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-rust --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-rust-gen
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-rust --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-rust-gen
       - task: bench:format:rust:gen
       - task: bench:lint:rust:gen
 
@@ -1015,7 +1015,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-node
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-node --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-node
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-node --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-node
       - task: bench:format:node
       - task: bench:lint:node
 
@@ -1025,7 +1025,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-ruby
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-ruby --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-ruby
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-ruby --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-ruby
       - task: bench:lint:ruby
 
   bench:generate:php:
@@ -1034,7 +1034,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-php
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-php --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-php
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-php --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-php
       - task: bench:lint:php
 
   bench:generate:elixir:
@@ -1043,7 +1043,7 @@ tasks:
       - bench:generator:build
     cmds:
       - rm -rf tools/benchmark-harness/apps/spikard-elixir
-      - ./tools/app-generator/target/release/app-generator generate --framework spikard-elixir --fixtures testing_data --categories query_params,json_bodies,path_params,multipart,url_encoded --output tools/benchmark-harness/apps/spikard-elixir
+      - ./tools/app-generator/target/release/app-generator generate --framework spikard-elixir --fixtures testing_data --categories query_params,json_bodies,path_params --output tools/benchmark-harness/apps/spikard-elixir
       - task: bench:lint:elixir
 
   bench:generate:all:
@@ -1258,37 +1258,6 @@ tasks:
     cmds:
       - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload json-bodies --category json_bodies --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-json.json
 
-  bench:run:python:multipart:
-    desc: "Run multipart form benchmark against Spikard-Python"
-    deps:
-      - bench:harness:build
-      - bench:build:python
-    cmds:
-      - ./target/release/benchmark-harness run --framework spikard-python --app-dir tools/benchmark-harness/apps/spikard-python --workload multipart --category multipart --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-python-multipart.json
-
-  bench:run:rust:multipart:
-    desc: "Run multipart form benchmark against Spikard-Rust"
-    deps:
-      - bench:harness:build
-      - bench:build:rust
-    cmds:
-      - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload multipart --category multipart --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-multipart.json
-
-  bench:run:python:urlencoded:
-    desc: "Run URL-encoded form benchmark against Spikard-Python"
-    deps:
-      - bench:harness:build
-      - bench:build:python
-    cmds:
-      - ./target/release/benchmark-harness run --framework spikard-python --app-dir tools/benchmark-harness/apps/spikard-python --workload url-encoded --category url_encoded --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-python-urlencoded.json
-
-  bench:run:rust:urlencoded:
-    desc: "Run URL-encoded form benchmark against Spikard-Rust"
-    deps:
-      - bench:harness:build
-      - bench:build:rust
-    cmds:
-      - ./target/release/benchmark-harness run --framework spikard-rust --app-dir tools/benchmark-harness/apps/spikard-rust --workload url-encoded --category url_encoded --duration 10 --concurrency 50 --warmup 3 --output tools/benchmark-harness/results/spikard-rust-urlencoded.json
 
   bench:run:python:websocket:
     desc: "Run WebSocket benchmark against Spikard-Python"
@@ -1327,8 +1296,6 @@ tasks:
     cmds:
       - task: bench:run:python
       - task: bench:run:python:json
-      - task: bench:run:python:multipart
-      - task: bench:run:python:urlencoded
       - task: bench:run:python:websocket
       - task: bench:run:python:sse
 
@@ -1337,8 +1304,6 @@ tasks:
     cmds:
       - task: bench:run:rust
       - task: bench:run:rust:json
-      - task: bench:run:rust:multipart
-      - task: bench:run:rust:urlencoded
       - task: bench:run:rust:websocket
       - task: bench:run:rust:sse
 
