@@ -138,7 +138,7 @@ importers:
         version: 4.1.3(vitest@4.1.3)
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(postcss@8.5.9)(tsx@4.21.0)(typescript@6.0.2)
+        version: 8.5.1(postcss@8.5.10)(tsx@4.21.0)(typescript@6.0.2)
       typescript:
         specifier: ^6.0.2
         version: 6.0.2
@@ -187,8 +187,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0
       fastify:
-        specifier: ^5.8.4
-        version: 5.8.4
+        specifier: ^5.8.5
+        version: 5.8.5
     devDependencies:
       '@types/node':
         specifier: ^25.5.2
@@ -214,38 +214,6 @@ importers:
       zod:
         specifier: ^4.3.6
         version: 4.3.6
-    devDependencies:
-      '@types/node':
-        specifier: ^25.5.2
-        version: 25.5.2
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^6.0.2
-        version: 6.0.2
-
-  tools/benchmark-harness/apps/kito:
-    dependencies:
-      kitojs:
-        specifier: 1.0.0-alpha.8
-        version: 1.0.0-alpha.8(typescript@6.0.2)
-    devDependencies:
-      '@types/node':
-        specifier: ^25.5.2
-        version: 25.5.2
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^6.0.2
-        version: 6.0.2
-
-  tools/benchmark-harness/apps/morojs:
-    dependencies:
-      '@morojs/moro':
-        specifier: ^1.7.22
-        version: 1.7.22(@grpc/grpc-js@1.14.3)(@grpc/proto-loader@0.8.0)(ws@8.20.0)
     devDependencies:
       '@types/node':
         specifier: ^25.5.2
@@ -718,106 +686,6 @@ packages:
 
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
-
-  '@kitojs/kito-core@1.0.0-alpha.8':
-    resolution: {integrity: sha512-OWV6DnaMd+kRikdQLZHzIiVYT1usFg/yw9Ey+qeWrll0GwkWpS6TS6mvYbNCqPzeG8Yq70ux3kP2ApiVhO7WoA==}
-    engines: {node: '>= 10'}
-
-  '@morojs/moro@1.7.22':
-    resolution: {integrity: sha512-GsX2o4MRq8gi86GUE4dDulBdOvtCmVDdBrqmSQ5AuAP4/rjaXhfOazUB0hEsK2UFtsZk/1A8qTJ9VtOSKxf+Hg==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      '@aws-sdk/client-ses': '>=3.927.0'
-      '@aws-sdk/client-sqs': '>=3.927.0'
-      '@grpc/grpc-js': '>=1.14.1'
-      '@grpc/proto-loader': '>=0.8.0'
-      '@pothos/core': '>=4.10.0'
-      '@sendgrid/mail': '>=8.1.6'
-      amqplib: '>=0.10.9'
-      better-auth: '>=1.3.34'
-      better-sqlite3: '>=12.2.0'
-      bullmq: '>=5.63.0'
-      class-validator: '>=0.14.0'
-      dataloader: '>=2.2.3'
-      drizzle-orm: '>=0.44.5'
-      ejs: '>=3.1.10'
-      graphql: '>=16.12.0'
-      graphql-jit: '>=0.8.7'
-      handlebars: '>=4.7.8'
-      ioredis: '>=5.7.0'
-      joi: '>=17.0.0'
-      kafkajs: '>=2.2.4'
-      mongodb: '>=6.19.0'
-      mysql2: '>=3.14.5'
-      nodemailer: '>=7.0.10'
-      pg: '>=8.16.3'
-      resend: '>=6.4.2'
-      socket.io: '>=4.8.1'
-      swagger-ui-dist: '>=5.28.1'
-      uWebSockets.js: github:uNetworking/uWebSockets.js#semver:^v20.52.0
-      ws: '>=8.18.0'
-      yup: '>=1.7.1'
-    peerDependenciesMeta:
-      '@aws-sdk/client-ses':
-        optional: true
-      '@aws-sdk/client-sqs':
-        optional: true
-      '@grpc/grpc-js':
-        optional: true
-      '@grpc/proto-loader':
-        optional: true
-      '@pothos/core':
-        optional: true
-      '@sendgrid/mail':
-        optional: true
-      amqplib:
-        optional: true
-      better-auth:
-        optional: true
-      better-sqlite3:
-        optional: true
-      bullmq:
-        optional: true
-      class-validator:
-        optional: true
-      dataloader:
-        optional: true
-      drizzle-orm:
-        optional: true
-      ejs:
-        optional: true
-      graphql:
-        optional: true
-      graphql-jit:
-        optional: true
-      handlebars:
-        optional: true
-      ioredis:
-        optional: true
-      joi:
-        optional: true
-      kafkajs:
-        optional: true
-      mongodb:
-        optional: true
-      mysql2:
-        optional: true
-      nodemailer:
-        optional: true
-      pg:
-        optional: true
-      resend:
-        optional: true
-      socket.io:
-        optional: true
-      swagger-ui-dist:
-        optional: true
-      uWebSockets.js:
-        optional: true
-      ws:
-        optional: true
-      yup:
-        optional: true
 
   '@napi-rs/cli@3.6.1':
     resolution: {integrity: sha512-xOrDmCdtXfJ2XzknJAyEAMUe4SHT02PHY3JG8/vXFAB+EPF7Pgv0q182Vmw2zAlhAvnfofccvJlHrZpNPDbypA==}
@@ -1625,10 +1493,6 @@ packages:
   abstract-logging@2.0.1:
     resolution: {integrity: sha512-2BjRTZxTPvheOvGbBslFSYOUkr+SjPtOnrLP33f+VIWLzezQpZcqVg7ja3L4dBXmzzgwT+a029jRx5PCi3JuiA==}
 
-  acorn-walk@8.3.5:
-    resolution: {integrity: sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw==}
-    engines: {node: '>=0.4.0'}
-
   acorn@8.16.0:
     resolution: {integrity: sha512-UVJyE9MttOsBQIDKw1skb9nAwQuR5wuGD3+82K6JgJlm/Y+KI92oNsMNGZCYdDsVtRHSak0pcV5Dno5+4jh9sw==}
     engines: {node: '>=0.4.0'}
@@ -1846,8 +1710,8 @@ packages:
   fastify-plugin@5.1.0:
     resolution: {integrity: sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==}
 
-  fastify@5.8.4:
-    resolution: {integrity: sha512-sa42J1xylbBAYUWALSBoyXKPDUvM3OoNOibIefA+Oha57FryXKKCZarA1iDntOCWp3O35voZLuDg2mdODXtPzQ==}
+  fastify@5.8.5:
+    resolution: {integrity: sha512-Yqptv59pQzPgQUSIm87hMqHJmdkb1+GPxdE6vW6FRyVE9G86mt7rOghitiU4JHRaTyDUk9pfeKmDeu70lAwM4Q==}
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
@@ -1941,11 +1805,6 @@ packages:
 
   json-with-bigint@3.5.8:
     resolution: {integrity: sha512-eq/4KP6K34kwa7TcFdtvnftvHCD9KvHOGGICWwMFc4dOOKF5t4iYqnfLK8otCRCRv06FXOzGGyqE8h8ElMvvdw==}
-
-  kitojs@1.0.0-alpha.8:
-    resolution: {integrity: sha512-ZVQPTFPh/TXpp4DY51V/skt/ZH/Ol2v/DPvWrbVJEjjvfpXDAZ20N5VZhQ1DI+krom85ALTiROQODWVPWXSkiw==}
-    peerDependencies:
-      typescript: ^5.9.2
 
   light-my-request@6.6.0:
     resolution: {integrity: sha512-CHYbu8RtboSIoVsHZ6Ye4cj4Aw/yg2oAFimlF7mNvfDV192LR7nDiKtSIfCuLT7KokPSTn/9kfVLm5OGN0A28A==}
@@ -2067,8 +1926,8 @@ packages:
       yaml:
         optional: true
 
-  postcss@8.5.9:
-    resolution: {integrity: sha512-7a70Nsot+EMX9fFU3064K/kdHWZqGVY+BADLyXc8Dfv+mTLLVl6JzJpPaCZ2kQL9gIJvKXSLMHhqdRRjwQeFtw==}
+  postcss@8.5.10:
+    resolution: {integrity: sha512-pMMHxBOZKFU6HgAZ4eyGnwXF/EvPGGqUr0MnZ5+99485wwW41kW91A4LOGxSHhgugZmSChL5AlElNdwlNgcnLQ==}
     engines: {node: ^10 || ^12 || >=14}
 
   process-warning@4.0.1:
@@ -2765,14 +2624,6 @@ snapshots:
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
-  '@kitojs/kito-core@1.0.0-alpha.8': {}
-
-  '@morojs/moro@1.7.22(@grpc/grpc-js@1.14.3)(@grpc/proto-loader@0.8.0)(ws@8.20.0)':
-    optionalDependencies:
-      '@grpc/grpc-js': 1.14.3
-      '@grpc/proto-loader': 0.8.0
-      ws: 8.20.0
-
   '@napi-rs/cli@3.6.1(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.0)(@types/node@25.5.2)':
     dependencies:
       '@inquirer/prompts': 8.4.1(@types/node@25.5.2)
@@ -3381,10 +3232,6 @@ snapshots:
 
   abstract-logging@2.0.1: {}
 
-  acorn-walk@8.3.5:
-    dependencies:
-      acorn: 8.16.0
-
   acorn@8.16.0: {}
 
   ajv-formats@3.0.1(ajv@8.18.0):
@@ -3581,7 +3428,7 @@ snapshots:
 
   fastify-plugin@5.1.0: {}
 
-  fastify@5.8.4:
+  fastify@5.8.5:
     dependencies:
       '@fastify/ajv-compiler': 4.0.5
       '@fastify/error': 4.2.0
@@ -3681,13 +3528,6 @@ snapshots:
   json-schema-traverse@1.0.0: {}
 
   json-with-bigint@3.5.8: {}
-
-  kitojs@1.0.0-alpha.8(typescript@6.0.2):
-    dependencies:
-      '@kitojs/kito-core': 1.0.0-alpha.8
-      acorn: 8.16.0
-      acorn-walk: 8.3.5
-      typescript: 6.0.2
 
   light-my-request@6.6.0:
     dependencies:
@@ -3804,14 +3644,14 @@ snapshots:
       mlly: 1.8.2
       pathe: 2.0.3
 
-  postcss-load-config@6.0.1(postcss@8.5.9)(tsx@4.21.0):
+  postcss-load-config@6.0.1(postcss@8.5.10)(tsx@4.21.0):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
-      postcss: 8.5.9
+      postcss: 8.5.10
       tsx: 4.21.0
 
-  postcss@8.5.9:
+  postcss@8.5.10:
     dependencies:
       nanoid: 3.3.11
       picocolors: 1.1.1
@@ -4004,7 +3844,7 @@ snapshots:
   tslib@2.8.1:
     optional: true
 
-  tsup@8.5.1(postcss@8.5.9)(tsx@4.21.0)(typescript@6.0.2):
+  tsup@8.5.1(postcss@8.5.10)(tsx@4.21.0)(typescript@6.0.2):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.27.7)
       cac: 6.7.14
@@ -4015,7 +3855,7 @@ snapshots:
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(postcss@8.5.9)(tsx@4.21.0)
+      postcss-load-config: 6.0.1(postcss@8.5.10)(tsx@4.21.0)
       resolve-from: 5.0.0
       rollup: 4.60.1
       source-map: 0.7.6
@@ -4024,7 +3864,7 @@ snapshots:
       tinyglobby: 0.2.16
       tree-kill: 1.2.2
     optionalDependencies:
-      postcss: 8.5.9
+      postcss: 8.5.10
       typescript: 6.0.2
     transitivePeerDependencies:
       - jiti
@@ -4056,7 +3896,7 @@ snapshots:
       esbuild: 0.27.7
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.9
+      postcss: 8.5.10
       rollup: 4.60.1
       tinyglobby: 0.2.16
     optionalDependencies:
