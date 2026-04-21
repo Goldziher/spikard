@@ -1,4 +1,0 @@
-# Cargo build configuration for Ruby extension
-
-[env]
-# Windows GNU target uses RubyInstaller DevKit headers automatically

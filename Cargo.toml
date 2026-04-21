@@ -2,22 +2,15 @@
 resolver = "2"
 members = [
     "crates/spikard",
-    "crates/spikard-bindings-shared",
     "crates/spikard-cli",
     "crates/spikard-codegen",
     "crates/spikard-core",
-    "crates/spikard-elixir",
     "crates/spikard-graphql",
     "crates/spikard-http",
-    "crates/spikard-node",
-    "crates/spikard-php",
-    "crates/spikard-py",
-    "crates/spikard-rb",
-    "crates/spikard-rb-macros",
     "tools/benchmark-harness",
     "tools/snippet-runner",
 ]
-exclude = ["e2e/*", "examples/*", "tests/test_apps/*", "tools/test-generator"]
+exclude = ["e2e/*", "examples/*", "tests/test_apps/*"]
 
 [workspace.package]
 version = "0.13.0"
@@ -45,9 +38,6 @@ jsonwebtoken = { version = "10.3", features = ["use_pem", "rust_crypto"] }
 prost = "0.14"
 prost-types = "0.14"
 
-# Python bindings
-pyo3 = { version = "0.28", features = ["abi3-py310"] }
-pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # Core library
@@ -94,7 +84,7 @@ pedantic = { level = "deny", priority = 0 }
 nursery = { level = "deny", priority = 0 }
 
 [workspace.metadata.cargo-llvm-cov]
-exclude = ["spikard-node"]
+exclude = []
 
 [profile.release]
 lto = "fat"

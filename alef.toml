@@ -1,0 +1,262 @@
+languages = ["python", "node", "ruby", "php", "elixir"]
+
+[crate]
+name = "spikard"
+sources = [
+  "crates/spikard/src/lib.rs",
+  "crates/spikard/src/upload.rs",
+  "crates/spikard/src/validation.rs",
+  "crates/spikard-core/src/lib.rs",
+  "crates/spikard-core/src/http.rs",
+  "crates/spikard-core/src/request_data.rs",
+  "crates/spikard-core/src/router.rs",
+  "crates/spikard-core/src/schema_registry.rs",
+  "crates/spikard-core/src/bindings/response.rs",
+  "crates/spikard-core/src/errors.rs",
+  "crates/spikard-core/src/lifecycle.rs",
+  "crates/spikard-core/src/parameters.rs",
+  "crates/spikard-core/src/problem.rs",
+  "crates/spikard-core/src/validation/mod.rs",
+  "crates/spikard-core/src/di/mod.rs",
+  "crates/spikard-core/src/di/container.rs",
+  "crates/spikard-core/src/di/dependency.rs",
+  "crates/spikard-core/src/di/factory.rs",
+  "crates/spikard-core/src/di/value.rs",
+  "crates/spikard-core/src/di/resolved.rs",
+  "crates/spikard-core/src/di/graph.rs",
+  "crates/spikard-http/src/lib.rs",
+  "crates/spikard-http/src/handler_trait.rs",
+  "crates/spikard-http/src/handler_response.rs",
+  "crates/spikard-http/src/response.rs",
+  "crates/spikard-http/src/auth.rs",
+  "crates/spikard-http/src/background.rs",
+  "crates/spikard-http/src/cors.rs",
+  "crates/spikard-http/src/openapi/mod.rs",
+  "crates/spikard-http/src/sse.rs",
+  "crates/spikard-http/src/websocket.rs",
+  "crates/spikard-http/src/grpc/mod.rs",
+  "crates/spikard-http/src/jsonrpc/mod.rs",
+  "crates/spikard-graphql/src/lib.rs",
+  "crates/spikard-graphql/src/error.rs",
+  "crates/spikard-graphql/src/executor.rs",
+  "crates/spikard-graphql/src/handler.rs",
+  "crates/spikard-graphql/src/routes.rs",
+  "crates/spikard-graphql/src/schema.rs",
+]
+version_from = "Cargo.toml"
+workspace_root = "."
+features = ["di"]
+path_mappings = { "spikard" = "spikard_http" }
+
+[output]
+python = "crates/spikard-py/src/"
+node = "crates/spikard-node/src/"
+ruby = "crates/spikard-rb/src/"
+php = "crates/spikard-php/src/"
+elixir = "crates/spikard-elixir/src/"
+
+[python]
+module_name = "_spikard"
+pip_name = "spikard"
+release_gil = true
+features = ["di", "graphql"]
+
+[python.stubs]
+output = "packages/python/spikard/"
+
+[node]
+package_name = "@spikard/node"
+features = ["di", "graphql", "grpc"]
+
+[ruby]
+gem_name = "spikard"
+features = ["di"]
+
+[ruby.stubs]
+output = "packages/ruby/sig/"
+
+[php]
+extension_name = "spikard_php"
+feature_gate = "extension-module"
+features = ["di"]
+
+[elixir]
+app_name = "spikard"
+features = ["di"]
+
+[dto]
+python = "dataclass"
+python_output = "typed-dict"
+node = "interface"
+ruby = "struct"
+php = "readonly-class"
+elixir = "struct"
+
+[scaffold]
+description = "Rust-centric multi-language HTTP framework with polyglot bindings"
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+homepage = "https://github.com/Goldziher/spikard"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+keywords = ["http", "web", "framework", "polyglot", "rust"]
+
+[readme]
+discord_url = ""
+banner_url = ""
+
+[sync]
+extra_paths = []
+
+[[sync.text_replacements]]
+path = "crates/spikard-http/src/lib.rs"
+search = "version = \"\\d+\\.\\d+\\.\\d+\""
+replace = "version = \"{version}\""
+
+[e2e]
+fixtures = "fixtures"
+output = "e2e"
+languages = ["python", "node", "ruby", "php", "elixir"]
+
+[e2e.call]
+function = "handle_request"
+module = "spikard"
+result_var = "response"
+async = true
+method = "POST"
+
+[e2e.packages.python]
+name = "spikard"
+path = "../../packages/python"
+
+[e2e.packages.node]
+name = "@spikard/node"
+path = "../../packages/node"
+
+[e2e.packages.ruby]
+name = "spikard"
+path = "../../packages/ruby"
+
+[e2e.packages.php]
+name = "spikard/spikard"
+path = "../../packages/php"
+
+[e2e.packages.elixir]
+name = "spikard"
+path = "../../packages/elixir"
+
+# Handler execution adapter - bridges async between Rust tokio and language runtimes
+[[adapters]]
+name = "invoke_handler"
+pattern = "async_method"
+core_path = "spikard_http::handler_trait::Handler"
+owner_type = "Handler"
+returns = "HandlerResponse"
+error_type = "HandlerError"
+detect_async = true
+
+[[adapters.params]]
+name = "request"
+type = "RequestData"
+
+# Server lifecycle adapter - manages Tokio runtime, signal handling, graceful shutdown
+[[adapters]]
+name = "start_server"
+pattern = "server_lifecycle"
+core_path = "spikard_http::Server"
+owner_type = "Server"
+
+[[adapters.params]]
+name = "config"
+type = "ServerConfig"
+
+[[adapters.params]]
+name = "routes"
+type = "Vec<Route>"
+
+# Lifecycle hook callback bridge - Rust calls into language for request/response hooks
+[[adapters]]
+name = "lifecycle_hook"
+pattern = "callback_bridge"
+core_path = "spikard_core::lifecycle::LifecycleHook"
+trait_name = "LifecycleHook"
+trait_method = "invoke"
+detect_async = true
+
+[[adapters.params]]
+name = "request"
+type = "RequestData"
+
+# SSE streaming adapter
+[[adapters]]
+name = "sse_producer"
+pattern = "streaming"
+core_path = "spikard_http::sse::SseEventProducer"
+owner_type = "SseEventProducer"
+item_type = "SseEvent"
+
+# WebSocket streaming adapter
+[[adapters]]
+name = "websocket_handler"
+pattern = "streaming"
+core_path = "spikard_http::websocket::WebSocketHandler"
+owner_type = "WebSocketHandler"
+item_type = "WebSocketMessage"
+
+# DI value dependency bridge
+[[trait_bridges]]
+trait_name = "Dependency"
+param_name = "dependency"
+
+[generate]
+bindings = true
+errors = true
+configs = true
+async_wrappers = true
+type_conversions = true
+package_metadata = true
+public_api = true
+reverse_conversions = true
+
+[test.python]
+command = "uv run pytest packages/python/tests/"
+e2e = "uv run pytest e2e/python/"
+
+[test.node]
+command = "pnpm --filter @spikard/node test"
+e2e = "pnpm --filter @spikard/e2e-node test"
+
+[test.ruby]
+command = "cd packages/ruby && bundle exec rspec"
+e2e = "cd e2e/ruby && bundle exec rspec"
+
+[test.php]
+command = "cd packages/php && vendor/bin/phpunit"
+e2e = "cd e2e/php && vendor/bin/phpunit"
+
+[test.elixir]
+command = "cd packages/elixir && mix test"
+e2e = "cd e2e/elixir && mix test"
+
+[lint.python]
+format = "ruff format packages/python/"
+check = "ruff check packages/python/"
+typecheck = "mypy packages/python/"
+
+[lint.node]
+format = "pnpm biome format --write packages/node/"
+check = "pnpm biome lint packages/node/"
+typecheck = "pnpm tsc --noEmit -p packages/node/tsconfig.json"
+
+[lint.ruby]
+format = "cd packages/ruby && bundle exec rubocop -A"
+check = "cd packages/ruby && bundle exec rubocop"
+typecheck = "cd packages/ruby && bundle exec steep check"
+
+[lint.php]
+format = "cd packages/php && vendor/bin/php-cs-fixer fix"
+check = "cd packages/php && vendor/bin/phpstan analyse"
+
+[lint.elixir]
+format = "cd packages/elixir && mix format"
+check = "cd packages/elixir && mix credo --strict"
+typecheck = "cd packages/elixir && mix dialyzer"

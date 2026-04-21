@@ -148,16 +148,6 @@ repos:
     hooks:
       - id: actionlint
 
-  # Version sync: keep vendored headers and package versions in sync
-  - repo: local
-    hooks:
-      - id: sync-versions
-        name: Sync versions and vendored C headers
-        entry: uv run --no-project python scripts/sync_versions.py
-        language: system
-        files: (Cargo\.toml|crates/kreuzberg-ffi/kreuzberg\.h)
-        pass_filenames: false
-
   # Local hooks for unsupported languages (Ruby, Java, C#, PHP, Elixir, R) and custom configurations
   - repo: local
     hooks:
