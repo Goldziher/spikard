@@ -299,13 +299,13 @@ impl SchemaValidator {
 }
 
 /// Validation error containing one or more validation failures
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ValidationError {
     pub errors: Vec<ValidationErrorDetail>,
 }
 
 /// Individual validation error detail (FastAPI-compatible format)
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ValidationErrorDetail {
     #[serde(rename = "type")]
     pub error_type: String,

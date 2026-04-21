@@ -15,6 +15,7 @@
 //!     .finish();
 //! ```
 
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use thiserror::Error;
 
@@ -55,7 +56,7 @@ pub type SchemaResult<T> = Result<T, SchemaError>;
 ///
 /// Encapsulates all schema-level configuration options including
 /// introspection control, complexity limits, and depth limits.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchemaConfig {
     /// Enable introspection queries
     pub introspection_enabled: bool,
@@ -284,7 +285,7 @@ impl<Query, Mutation, Subscription> fmt::Debug for SchemaBuilder<Query, Mutation
 }
 
 /// Configuration for schemas with only Query type
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueryOnlyConfig {
     /// Enable introspection queries
     pub introspection_enabled: bool,
@@ -317,7 +318,7 @@ pub fn schema_query_only() -> QueryOnlyConfig {
 }
 
 /// Configuration for schemas with Query and Mutation types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueryMutationConfig {
     /// Enable introspection queries
     pub introspection_enabled: bool,
@@ -350,7 +351,7 @@ pub fn schema_query_mutation() -> QueryMutationConfig {
 }
 
 /// Configuration for fully-featured schemas with Query, Mutation, and Subscription types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FullSchemaConfig {
     /// Enable introspection queries
     pub introspection_enabled: bool,

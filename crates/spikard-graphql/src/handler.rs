@@ -43,7 +43,7 @@ pub struct GraphQLRequestPayload {
 ///
 /// Represents a standard GraphQL HTTP response body containing data
 /// and optional errors.
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GraphQLResponsePayload {
     /// Execution result data
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -59,7 +59,7 @@ pub struct GraphQLResponsePayload {
 }
 
 /// GraphQL error response format
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GraphQLErrorResponse {
     /// Error message
     pub message: String,

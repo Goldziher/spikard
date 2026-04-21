@@ -65,7 +65,7 @@ impl std::str::FromStr for ParameterSource {
 }
 
 /// Route-level metadata extracted from handler signatures
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ExtractedRouteMetadata {
     /// Extracted parameters from function signature
     pub parameters: Vec<ParameterMetadata>,

@@ -2,11 +2,12 @@
 //!
 //! Response types for returning custom responses with status codes, headers, and content
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
 /// HTTP Response with custom status code, headers, and content
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Response {
     /// Response body content
     pub content: Option<Value>,

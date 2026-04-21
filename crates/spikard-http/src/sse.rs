@@ -113,7 +113,7 @@ pub trait SseEventProducer: Send + Sync {
 /// id: event-123
 /// retry: 3000
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SseEvent {
     /// Event type (optional)
     pub event_type: Option<String>,

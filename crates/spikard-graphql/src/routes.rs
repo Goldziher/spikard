@@ -128,6 +128,8 @@
 //! - [`GraphQLExecutor`](crate::executor::GraphQLExecutor) - Query execution
 //! - [spikard-http Route documentation](https://docs.rs/spikard-http)
 
+use serde::{Deserialize, Serialize};
+
 /// Configuration for GraphQL routes
 ///
 /// Provides a builder pattern for configuring GraphQL route parameters
@@ -146,7 +148,7 @@
 /// assert_eq!(config.get_path(), "/graphql");
 /// assert_eq!(config.get_method(), "POST");
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphQLRouteConfig {
     /// HTTP path for the GraphQL endpoint
     path: String,

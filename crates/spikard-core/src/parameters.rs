@@ -10,7 +10,7 @@ use std::fmt;
 use std::sync::Arc;
 
 /// Parameter source - where the parameter comes from
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum ParameterSource {
     Query,
     Path,

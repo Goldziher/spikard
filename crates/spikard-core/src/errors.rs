@@ -3,12 +3,12 @@
 //! Bindings should convert all fatal paths into this shape to keep cross-language
 //! error payloads consistent and avoid panics crossing FFI boundaries.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::panic::{UnwindSafe, catch_unwind};
 
 /// Canonical error payload: { error, code, details }.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StructuredError {
     pub error: String,
     pub code: String,

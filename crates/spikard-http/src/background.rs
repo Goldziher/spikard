@@ -10,7 +10,7 @@ use tokio::time::timeout;
 use tokio_util::sync::CancellationToken;
 
 /// Configuration for in-process background task execution.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct BackgroundTaskConfig {
     pub max_queue_size: usize,
     pub max_concurrent_tasks: usize,
@@ -27,7 +27,7 @@ impl Default for BackgroundTaskConfig {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct BackgroundJobMetadata {
     pub name: Cow<'static, str>,
     pub request_id: Option<String>,
@@ -61,7 +61,7 @@ impl BackgroundJob {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct BackgroundJobError {
     pub message: String,
 }
@@ -98,7 +98,7 @@ impl std::error::Error for BackgroundSpawnError {}
 #[derive(Debug)]
 pub struct BackgroundShutdownError;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct BackgroundMetrics {
     queued: std::sync::atomic::AtomicU64,
     running: std::sync::atomic::AtomicU64,
@@ -127,7 +127,7 @@ impl BackgroundMetrics {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BackgroundHandle {
     sender: mpsc::Sender<BackgroundJob>,
     metrics: Arc<BackgroundMetrics>,

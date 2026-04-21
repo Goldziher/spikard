@@ -5,6 +5,7 @@
 //! the optimal batched resolution order.
 
 use super::error::DependencyError;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 /// Dependency graph for managing dependency relationships
@@ -41,7 +42,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 /// // Batch 3: service (depends on database and cache)
 /// assert_eq!(batches.len(), 3);
 /// ```
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DependencyGraph {
     /// Adjacency list: key -> list of dependencies it depends on
     graph: HashMap<String, Vec<String>>,

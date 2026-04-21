@@ -113,7 +113,7 @@ pub struct StaticFilesConfig {
 }
 
 /// Server configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
     /// Host to bind to
     pub host: String,
@@ -149,13 +149,17 @@ pub struct ServerConfig {
     /// gRPC configuration
     pub grpc: Option<crate::grpc::GrpcConfig>,
     /// Lifecycle hooks for request/response processing
+    // Not serializable: contains function pointers/closures
+    #[serde(skip)]
     pub lifecycle_hooks: Option<std::sync::Arc<LifecycleHooks>>,
     /// Background task executor configuration
     pub background_tasks: BackgroundTaskConfig,
     /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
     pub enable_http_trace: bool,
     /// Dependency injection container (requires 'di' feature)
+    // Not serializable: contains runtime dependency injection state
     #[cfg(feature = "di")]
+    #[serde(skip)]
     pub di_container: Option<std::sync::Arc<spikard_core::di::DependencyContainer>>,
 }
 

@@ -9,7 +9,7 @@
 
 use crate::validation::ValidationError;
 use http::StatusCode;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -35,7 +35,7 @@ use std::collections::HashMap;
 ///   "errors": [...]
 /// }
 /// ```
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProblemDetails {
     /// A URI reference that identifies the problem type.
     /// Defaults to "about:blank" when absent.

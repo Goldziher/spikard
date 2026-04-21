@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::io::{Cursor, Read};
 
 /// Snapshot of an Axum response used by higher-level language bindings.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ResponseSnapshot {
     /// HTTP status code.
     pub status: u16,
@@ -297,7 +297,7 @@ impl WebSocketConnection {
 }
 
 /// A WebSocket message that can be text or binary.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum WebSocketMessage {
     /// A text message.
     Text(String),

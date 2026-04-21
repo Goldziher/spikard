@@ -2,11 +2,12 @@ use crate::CompressionConfig;
 use brotli::CompressorWriter;
 use flate2::Compression;
 use flate2::write::GzEncoder;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io::Write;
 
 /// Minimal response container shared by bindings.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RawResponse {
     pub status: u16,
     pub headers: HashMap<String, String>,
@@ -97,7 +98,7 @@ fn header_value<'a>(headers: &'a HashMap<String, String>, name: &str) -> Option<
 }
 
 /// Pre-rendered static asset produced by the CLI bundler.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct StaticAsset {
     pub route: String,
     pub headers: HashMap<String, String>,
