@@ -54,8 +54,11 @@ pub use response::Response;
 pub use server::Server;
 pub use spikard_core::{
     CompressionConfig, CorsConfig, Method, ParameterValidator, ProblemDetails, RateLimitConfig, Route, RouteHandler,
-    RouteMetadata, Router, SchemaRegistry, SchemaValidator,
+    RouteMetadata, Router, SchemaRegistry, SchemaValidator, ValidationError, ValidationErrorDetail,
 };
+pub use spikard_core::errors::StructuredError;
+pub use spikard_core::parameters::ParameterSource;
+pub use spikard_core::router::JsonRpcMethodInfo;
 pub use sse::{SseEvent, SseEventProducer, SseState, sse_handler};
 pub use testing::{ResponseSnapshot, SnapshotError, snapshot_response};
 pub use websocket::{WebSocketHandler, WebSocketState, websocket_handler};
