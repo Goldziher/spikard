@@ -3,11 +3,11 @@
 //! This module provides the main server builder and routing infrastructure, with
 //! focused submodules for handler validation, request extraction, and lifecycle execution.
 
-pub mod fast_router;
+pub(crate) mod fast_router;
 pub mod grpc_routing;
-pub mod handler;
-pub mod lifecycle_execution;
-pub mod request_extraction;
+pub(crate) mod handler;
+pub(crate) mod lifecycle_execution;
+pub(crate) mod request_extraction;
 
 use crate::handler_trait::{Handler, HandlerResult, RequestData};
 use crate::{CorsConfig, ServerConfig};

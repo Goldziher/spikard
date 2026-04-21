@@ -187,6 +187,6 @@ pub use container::DependencyContainer;
 pub use dependency::Dependency;
 pub use error::DependencyError;
 pub use factory::{FactoryDependency, FactoryDependencyBuilder, FactoryFn};
-pub use graph::DependencyGraph;
+pub(crate) use graph::DependencyGraph;
 pub use resolved::ResolvedDependencies;
 pub use value::ValueDependency;

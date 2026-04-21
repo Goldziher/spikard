@@ -8,9 +8,9 @@
 pub mod auth;
 pub mod background;
 pub mod bindings;
-pub mod body_metadata;
+pub(crate) mod body_metadata;
 pub mod cors;
-pub mod debug;
+pub(crate) mod debug;
 #[cfg(feature = "di")]
 pub mod di_handler;
 pub mod grpc;
@@ -18,9 +18,9 @@ pub mod handler_response;
 pub mod handler_trait;
 pub mod jsonrpc;
 pub mod lifecycle;
-pub mod middleware;
+pub(crate) mod middleware;
 pub mod openapi;
-pub mod query_parser;
+pub(crate) mod query_parser;
 pub mod response;
 pub mod server;
 pub mod sse;

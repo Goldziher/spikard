@@ -1,5 +1,5 @@
 pub mod bindings;
-pub mod debug;
+pub(crate) mod debug;
 #[cfg(feature = "di")]
 pub mod di;
 pub mod errors;
@@ -16,7 +16,7 @@ pub mod validation;
 pub use bindings::response::{RawResponse, StaticAsset};
 #[cfg(feature = "di")]
 pub use di::{
-    Dependency, DependencyContainer, DependencyError, DependencyGraph, FactoryDependency, FactoryDependencyBuilder,
+    Dependency, DependencyContainer, DependencyError, FactoryDependency, FactoryDependencyBuilder,
     ResolvedDependencies, ValueDependency,
 };
 pub use http::{CompressionConfig, CorsConfig, Method, RateLimitConfig, RouteMetadata};

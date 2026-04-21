@@ -3,11 +3,11 @@
 //! This module provides JSON-RPC 2.0 protocol support including method registration,
 //! handler lookup, and metadata management.
 
-pub mod http_handler;
-pub mod method_registry;
-pub mod openrpc;
-pub mod protocol;
-pub mod router;
+pub(crate) mod http_handler;
+pub(crate) mod method_registry;
+pub(crate) mod openrpc;
+pub(crate) mod protocol;
+pub(crate) mod router;
 
 use serde::{Deserialize, Serialize};
 

@@ -42,10 +42,10 @@
 //! let config = GrpcConfig::default();
 //! ```
 
-pub mod framing;
-pub mod handler;
-pub mod service;
-pub mod streaming;
+pub(crate) mod framing;
+pub(crate) mod handler;
+pub(crate) mod service;
+pub(crate) mod streaming;
 
 // Re-export main types
 pub use framing::parse_grpc_client_stream;
