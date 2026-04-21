@@ -33,6 +33,7 @@ schemars = { version = "1.2", features = ["derive"] }
 serde.workspace = true
 serde_json.workspace = true
 spikard-core = { workspace = true, optional = true }
+spikard-graphql = { workspace = true }
 spikard-http = { workspace = true }
 thiserror.workspace = true
 

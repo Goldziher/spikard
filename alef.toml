@@ -186,19 +186,6 @@ type = "ServerConfig"
 name = "routes"
 type = "Vec<Route>"
 
-# Lifecycle hook callback bridge - Rust calls into language for request/response hooks
-[[adapters]]
-name = "lifecycle_hook"
-pattern = "callback_bridge"
-core_path = "spikard_core::lifecycle::LifecycleHook"
-trait_name = "LifecycleHook"
-trait_method = "invoke"
-detect_async = true
-
-[[adapters.params]]
-name = "request"
-type = "RequestData"
-
 # SSE streaming adapter
 [[adapters]]
 name = "sse_producer"
