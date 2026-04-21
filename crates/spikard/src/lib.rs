@@ -38,9 +38,12 @@ pub use spikard_http::{
     sse::{SseEvent, SseEventProducer},
     websocket::WebSocketHandler,
 };
+pub use spikard_http::{
+    ParameterValidator, RequestData, Route, RouteMetadata, Router, SchemaRegistry, SchemaValidator,
+};
 use spikard_http::{
-    Route, RouteMetadata, SchemaRegistry, Server,
-    handler_trait::{Handler, RequestData},
+    Server,
+    handler_trait::Handler,
     sse::{SseState, sse_handler},
     websocket::{WebSocketState, websocket_handler},
 };

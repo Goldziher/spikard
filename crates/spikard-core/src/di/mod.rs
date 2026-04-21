@@ -177,7 +177,7 @@
 
 mod container;
 mod dependency;
-mod error;
+pub mod error;
 mod factory;
 mod graph;
 mod resolved;

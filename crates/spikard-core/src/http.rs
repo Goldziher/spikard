@@ -37,6 +37,36 @@ impl std::fmt::Display for Method {
     }
 }
 
+impl From<Method> for http::method::Method {
+    fn from(method: Method) -> Self {
+        match method {
+            Method::Get => Self::GET,
+            Method::Post => Self::POST,
+            Method::Put => Self::PUT,
+            Method::Patch => Self::PATCH,
+            Method::Delete => Self::DELETE,
+            Method::Head => Self::HEAD,
+            Method::Options => Self::OPTIONS,
+            Method::Trace => Self::TRACE,
+        }
+    }
+}
+
+impl From<&Method> for http::method::Method {
+    fn from(method: &Method) -> Self {
+        match method {
+            Method::Get => Self::GET,
+            Method::Post => Self::POST,
+            Method::Put => Self::PUT,
+            Method::Patch => Self::PATCH,
+            Method::Delete => Self::DELETE,
+            Method::Head => Self::HEAD,
+            Method::Options => Self::OPTIONS,
+            Method::Trace => Self::TRACE,
+        }
+    }
+}
+
 impl std::str::FromStr for Method {
     type Err = String;
 
@@ -166,6 +196,27 @@ pub struct RouteMetadata {
     /// middleware pipeline for maximum throughput.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub static_response: Option<Value>,
+}
+
+impl Default for RouteMetadata {
+    fn default() -> Self {
+        Self {
+            method: "GET".to_string(),
+            path: "/".to_string(),
+            handler_name: String::new(),
+            request_schema: None,
+            response_schema: None,
+            parameter_schema: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            body_param_name: None,
+            #[cfg(feature = "di")]
+            handler_dependencies: None,
+            jsonrpc_method: None,
+            static_response: None,
+        }
+    }
 }
 
 /// Compression configuration shared across runtimes

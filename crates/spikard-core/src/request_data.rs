@@ -53,6 +53,25 @@ pub struct RequestData {
     pub dependencies: Option<Arc<ResolvedDependencies>>,
 }
 
+impl Default for RequestData {
+    fn default() -> Self {
+        Self {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Value::Null,
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Value::Null,
+            raw_body: None,
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
+            method: "GET".to_string(),
+            path: "/".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        }
+    }
+}
+
 impl Serialize for RequestData {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

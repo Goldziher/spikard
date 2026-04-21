@@ -28,6 +28,18 @@ pub struct StaticResponse {
     pub content_type: HeaderValue,
 }
 
+impl Default for StaticResponse {
+    fn default() -> Self {
+        Self {
+            status: 200,
+            headers: Vec::new(),
+            body: Bytes::new(),
+            // SAFETY: "text/plain" is a valid header value.
+            content_type: HeaderValue::from_static("text/plain"),
+        }
+    }
+}
+
 impl StaticResponse {
     /// Build an `axum::response::Response` from this static response.
     ///

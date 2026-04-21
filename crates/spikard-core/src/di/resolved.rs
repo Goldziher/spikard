@@ -9,6 +9,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 
+use serde::Serialize;
+
 type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 type CleanupTask = Box<dyn FnOnce() -> BoxFuture<'static, ()> + Send>;
 
@@ -45,11 +47,16 @@ type CleanupTask = Box<dyn FnOnce() -> BoxFuture<'static, ()> + Send>;
 /// resolved.cleanup().await;
 /// # });
 /// ```
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Serialize)]
 pub struct ResolvedDependencies {
     /// Map of dependency keys to type-erased values
+    ///
+    /// Skipped during serialization because `Arc<dyn Any>` is not serializable.
+    /// Consumers needing a serialized view should extract values before serializing.
+    #[serde(skip)]
     dependencies: Arc<Mutex<HashMap<String, Arc<dyn Any + Send + Sync>>>>,
     /// Cleanup tasks to run when dependencies are dropped
+    #[serde(skip)]
     cleanup_tasks: Arc<Mutex<Vec<CleanupTask>>>,
 }
 

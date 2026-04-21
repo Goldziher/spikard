@@ -127,6 +127,15 @@ pub enum SecuritySchemeInfo {
     },
 }
 
+impl Default for SecuritySchemeInfo {
+    fn default() -> Self {
+        Self::Http {
+            scheme: "bearer".to_string(),
+            bearer_format: None,
+        }
+    }
+}
+
 /// Convert SecuritySchemeInfo to OpenAPI SecurityScheme
 pub fn security_scheme_info_to_openapi(info: &SecuritySchemeInfo) -> SecurityScheme {
     match info {

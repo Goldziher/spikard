@@ -58,6 +58,12 @@ pub struct JsonRpcRouter {
     max_batch_size: usize,
 }
 
+impl Default for JsonRpcRouter {
+    fn default() -> Self {
+        Self::new(Arc::new(JsonRpcMethodRegistry::new()), true, 100)
+    }
+}
+
 impl JsonRpcRouter {
     /// Creates a new JSON-RPC router
     ///
@@ -331,6 +337,17 @@ pub enum JsonRpcRequestOrBatch {
     Single(JsonRpcRequest),
     /// A batch (array) of JSON-RPC requests
     Batch(Vec<JsonRpcRequest>),
+}
+
+impl Default for JsonRpcRequestOrBatch {
+    fn default() -> Self {
+        Self::Single(JsonRpcRequest {
+            jsonrpc: "2.0".to_string(),
+            method: String::new(),
+            params: None,
+            id: None,
+        })
+    }
 }
 
 #[cfg(test)]

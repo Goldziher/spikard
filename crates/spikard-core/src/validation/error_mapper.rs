@@ -49,6 +49,12 @@ pub enum ErrorCondition {
     ValidationError,
 }
 
+impl Default for ErrorCondition {
+    fn default() -> Self {
+        Self::ValidationError
+    }
+}
+
 impl ErrorCondition {
     /// Determine the error condition from schema path and error message
     #[must_use]

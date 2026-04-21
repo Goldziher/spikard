@@ -429,6 +429,16 @@ pub enum JsonRpcResponseType {
     Error(JsonRpcErrorResponse),
 }
 
+impl Default for JsonRpcResponseType {
+    fn default() -> Self {
+        Self::Success(JsonRpcResponse {
+            jsonrpc: "2.0".to_string(),
+            result: Value::Null,
+            id: Value::Null,
+        })
+    }
+}
+
 /// JSON-RPC 2.0 Standard Error Codes
 ///
 /// This module contains the standard error codes defined by the JSON-RPC 2.0 specification.

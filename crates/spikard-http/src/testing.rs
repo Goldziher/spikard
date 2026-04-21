@@ -88,6 +88,12 @@ impl std::fmt::Display for SnapshotError {
 
 impl std::error::Error for SnapshotError {}
 
+impl Default for SnapshotError {
+    fn default() -> Self {
+        Self::InvalidHeader(String::new())
+    }
+}
+
 /// Execute an HTTP request against an Axum [`TestServer`] by rehydrating it
 /// into the server's own [`axum_test::TestRequest`] builder.
 pub async fn call_test_server(server: &TestServer, request: AxumRequest<Body>) -> AxumTestResponse {
@@ -309,6 +315,12 @@ pub enum WebSocketMessage {
     Ping(Vec<u8>),
     /// A pong message.
     Pong(Vec<u8>),
+}
+
+impl Default for WebSocketMessage {
+    fn default() -> Self {
+        Self::Text(String::new())
+    }
 }
 
 impl WebSocketMessage {

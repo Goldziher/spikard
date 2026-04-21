@@ -97,6 +97,26 @@ pub struct Route {
     pub jsonrpc_method: Option<JsonRpcMethodInfo>,
 }
 
+impl Default for Route {
+    fn default() -> Self {
+        Self {
+            method: Method::Get,
+            path: "/".to_string(),
+            handler_name: String::new(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: Vec::new(),
+            jsonrpc_method: None,
+        }
+    }
+}
+
 impl Route {
     /// Create a route from metadata, using schema registry for deduplication
     ///
