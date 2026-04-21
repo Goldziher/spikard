@@ -2,51 +2,144 @@ languages = ["python", "node", "ruby", "php", "elixir"]
 
 [crate]
 name = "spikard"
-sources = [
-  "crates/spikard/src/lib.rs",
-  "crates/spikard/src/upload.rs",
-  "crates/spikard/src/validation.rs",
-  "crates/spikard-core/src/lib.rs",
-  "crates/spikard-core/src/http.rs",
-  "crates/spikard-core/src/request_data.rs",
-  "crates/spikard-core/src/router.rs",
-  "crates/spikard-core/src/schema_registry.rs",
-  "crates/spikard-core/src/bindings/response.rs",
-  "crates/spikard-core/src/errors.rs",
-  "crates/spikard-core/src/lifecycle.rs",
-  "crates/spikard-core/src/parameters.rs",
-  "crates/spikard-core/src/problem.rs",
-  "crates/spikard-core/src/validation/mod.rs",
-  "crates/spikard-core/src/di/mod.rs",
-  "crates/spikard-core/src/di/container.rs",
-  "crates/spikard-core/src/di/dependency.rs",
-  "crates/spikard-core/src/di/factory.rs",
-  "crates/spikard-core/src/di/value.rs",
-  "crates/spikard-core/src/di/resolved.rs",
-  "crates/spikard-core/src/di/graph.rs",
-  "crates/spikard-http/src/lib.rs",
-  "crates/spikard-http/src/handler_trait.rs",
-  "crates/spikard-http/src/handler_response.rs",
-  "crates/spikard-http/src/response.rs",
-  "crates/spikard-http/src/auth.rs",
-  "crates/spikard-http/src/background.rs",
-  "crates/spikard-http/src/cors.rs",
-  "crates/spikard-http/src/openapi/mod.rs",
-  "crates/spikard-http/src/sse.rs",
-  "crates/spikard-http/src/websocket.rs",
-  "crates/spikard-http/src/grpc/mod.rs",
-  "crates/spikard-http/src/jsonrpc/mod.rs",
-  "crates/spikard-graphql/src/lib.rs",
-  "crates/spikard-graphql/src/error.rs",
-  "crates/spikard-graphql/src/executor.rs",
-  "crates/spikard-graphql/src/handler.rs",
-  "crates/spikard-graphql/src/routes.rs",
-  "crates/spikard-graphql/src/schema.rs",
-]
+sources = []
 version_from = "Cargo.toml"
 workspace_root = "."
 features = ["di"]
-auto_path_mappings = true
+auto_path_mappings = false
+
+[[crate.source_crates]]
+name = "spikard"
+sources = ["crates/spikard/src/upload.rs"]
+
+[[crate.source_crates]]
+name = "spikard-core"
+sources = [
+  "crates/spikard-core/src/http.rs",
+  "crates/spikard-core/src/request_data.rs",
+  "crates/spikard-core/src/router.rs",
+  "crates/spikard-core/src/lifecycle.rs",
+  "crates/spikard-core/src/parameters.rs",
+  "crates/spikard-core/src/validation/mod.rs",
+  "crates/spikard-core/src/errors.rs",
+  "crates/spikard-core/src/problem.rs",
+]
+
+[[crate.source_crates]]
+name = "spikard-http"
+sources = [
+  "crates/spikard-http/src/lib.rs",
+  "crates/spikard-http/src/handler_trait.rs",
+  "crates/spikard-http/src/response.rs",
+  "crates/spikard-http/src/auth.rs",
+  "crates/spikard-http/src/background.rs",
+  "crates/spikard-http/src/openapi/mod.rs",
+  "crates/spikard-http/src/sse.rs",
+  "crates/spikard-http/src/websocket.rs",
+]
+
+[[crate.source_crates]]
+name = "spikard-graphql"
+sources = [
+  "crates/spikard-graphql/src/error.rs",
+  "crates/spikard-graphql/src/routes.rs",
+  "crates/spikard-graphql/src/schema.rs",
+]
+
+[exclude]
+types = [
+  "BackgroundRuntime",
+  "BackgroundShutdownError",
+  "FastRouter",
+  "GenericGrpcService",
+  "HandlerResponse",
+  "LifecycleHooks",
+  "LifecycleHooksBuilder",
+  "ResponseBodySize",
+  "RouteInfo",
+  "SchemaBuilder",
+  "SseState",
+  "SseStream",
+  "ValidatingHandler",
+  "WebSocketConnection",
+  "WebSocketState",
+  "WithoutBodyExtractionOptions",
+  "PreReadBody",
+  "PreParsedJson",
+  "IntoHandler",
+  "Handler",
+  "Dependency",
+]
+functions = [
+  "api_key_auth_middleware",
+  "assemble_openapi_spec",
+  "auto_generate_parameter_schema",
+  "build_router_with_handlers",
+  "build_router_with_handlers_and_config",
+  "build_router_with_handlers_and_config_and_grpc",
+  "build_server_runtime",
+  "call_test_server",
+  "connect_websocket",
+  "convert_string_to_json_value",
+  "copy_metadata",
+  "create_request_data_with_body",
+  "create_request_data_without_body",
+  "empty_message_stream",
+  "encode_grpc_message",
+  "error_stream",
+  "execute_with_lifecycle_hooks",
+  "extract_cookies",
+  "extract_headers",
+  "extract_parameters_from_schema",
+  "extract_path_param_names",
+  "extract_query_params",
+  "extract_raw_query_params",
+  "generate_openapi_spec",
+  "generate_openrpc_spec",
+  "grpc_response_to_tonic",
+  "handle_jsonrpc",
+  "handle_preflight",
+  "init",
+  "is_enabled",
+  "is_form_urlencoded",
+  "is_grpc_request",
+  "is_json_content_type",
+  "is_json_like",
+  "is_json_like_str",
+  "is_multipart_form_data",
+  "is_server_error",
+  "json_schema_to_request_body",
+  "json_schema_to_response",
+  "json_value_to_schema",
+  "jwt_auth_middleware",
+  "merge_parameter_schemas",
+  "message_stream_from_vec",
+  "parse_grpc_client_stream",
+  "parse_grpc_path",
+  "parse_multipart_to_json",
+  "parse_query_pairs_to_json",
+  "parse_query_string",
+  "parse_query_string_to_json",
+  "parse_type_hints",
+  "parse_unary_grpc_message",
+  "parse_urlencoded_to_json",
+  "route_grpc_request",
+  "security_scheme_info_to_openapi",
+  "single_message_stream",
+  "snapshot_http_response",
+  "snapshot_http_response_allow_body_errors",
+  "snapshot_response",
+  "strip_type_hints",
+  "type_hint_to_schema",
+  "validate_content_length",
+  "validate_content_type_headers",
+  "validate_content_type_headers_and_classify",
+  "validate_content_type_middleware",
+  "validate_cors_request",
+  "validate_json_content_type",
+  "validate_jsonrpc_method_name",
+  "validate_method_name",
+]
 
 [crate.extra_dependencies]
 spikard-core = { path = "../spikard-core" }
@@ -157,55 +250,6 @@ path = "../../packages/php"
 name = "spikard"
 path = "../../packages/elixir"
 
-# Handler execution adapter - bridges async between Rust tokio and language runtimes
-[[adapters]]
-name = "invoke_handler"
-pattern = "async_method"
-core_path = "spikard_http::handler_trait::Handler"
-owner_type = "Handler"
-returns = "HandlerResponse"
-error_type = "HandlerError"
-detect_async = true
-
-[[adapters.params]]
-name = "request"
-type = "RequestData"
-
-# Server lifecycle adapter - manages Tokio runtime, signal handling, graceful shutdown
-[[adapters]]
-name = "start_server"
-pattern = "server_lifecycle"
-core_path = "spikard_http::Server"
-owner_type = "Server"
-
-[[adapters.params]]
-name = "config"
-type = "ServerConfig"
-
-[[adapters.params]]
-name = "routes"
-type = "Vec<Route>"
-
-# SSE streaming adapter
-[[adapters]]
-name = "sse_producer"
-pattern = "streaming"
-core_path = "spikard_http::sse::SseEventProducer"
-owner_type = "SseEventProducer"
-item_type = "SseEvent"
-
-# WebSocket streaming adapter
-[[adapters]]
-name = "websocket_handler"
-pattern = "streaming"
-core_path = "spikard_http::websocket::WebSocketHandler"
-owner_type = "WebSocketHandler"
-item_type = "WebSocketMessage"
-
-# DI value dependency bridge
-[[trait_bridges]]
-trait_name = "Dependency"
-param_name = "dependency"
 
 [generate]
 bindings = true
