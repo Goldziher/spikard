@@ -235,3 +235,7 @@ tools/benchmark-harness/apps/phalcon/logs/
 tools/benchmark-harness/apps/phalcon/cache/
 tools/benchmark-harness/apps/phalcon/tmp/
 .agents/
+.alef/
+*.pyd
+.gems/
+vendor/bundle/

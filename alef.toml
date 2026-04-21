@@ -47,6 +47,12 @@ sources = [
 ]
 
 [exclude]
+methods = [
+  # std::io::Read and std::io::Seek trait impls — these require the trait to be in scope
+  # and use &mut [u8] params that don't map well to binding types.
+  "UploadFile.read",
+  "UploadFile.seek",
+]
 types = [
   # Internal implementation types
   "BackgroundJobFuture",

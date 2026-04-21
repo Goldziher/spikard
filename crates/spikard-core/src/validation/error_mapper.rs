@@ -7,7 +7,7 @@
 use serde_json::Value;
 
 /// Represents the different types of validation errors that can occur
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum ErrorCondition {
     /// String length is below minimum
     StringTooShort { min_length: Option<u64> },
@@ -46,13 +46,8 @@ pub enum ErrorCondition {
     /// Array has too many items
     TooManyItems,
     /// Fallback for unmapped errors
+    #[default]
     ValidationError,
-}
-
-impl Default for ErrorCondition {
-    fn default() -> Self {
-        Self::ValidationError
-    }
 }
 
 impl ErrorCondition {

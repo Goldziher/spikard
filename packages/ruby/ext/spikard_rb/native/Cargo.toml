@@ -1,0 +1,19 @@
+[package]
+name = "spikard-rb"
+version = "0.13.0"
+edition = "2024"
+license = "MIT"
+description = "Rust-centric multi-language HTTP framework with polyglot bindings"
+readme = false
+keywords = ["http", "web", "framework", "polyglot", "rust"]
+categories = ["text-processing"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+spikard = { path = "../../../../../crates/spikard", features = ["di"] }
+magnus = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread"] }

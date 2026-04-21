@@ -16,6 +16,12 @@ pub struct SchemaValidator {
     schema: Value,
 }
 
+impl std::fmt::Debug for SchemaValidator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SchemaValidator").field("schema", &self.schema).finish()
+    }
+}
+
 impl SchemaValidator {
     /// Create a new validator from a JSON Schema
     ///

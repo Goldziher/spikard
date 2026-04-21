@@ -1,0 +1,29 @@
+[package]
+name = "spikard-py"
+version = "0.13.0"
+edition = "2024"
+license = "MIT"
+description = "Rust-centric multi-language HTTP framework with polyglot bindings"
+readme = false
+keywords = ["http", "web", "framework", "polyglot", "rust"]
+categories = ["text-processing"]
+
+[lib]
+name = "_spikard"
+crate-type = ["cdylib"]
+
+[features]
+extension-module = ["pyo3/extension-module"]
+
+[dependencies]
+anyhow = "1.0"
+futures = "0.3"
+pyo3 = { version = "0.28" }
+pyo3-async-runtimes = { version = "0.28", features = ["tokio-runtime"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+spikard = { path = "../spikard", features = ["di"] }
+spikard-core = { path = "../spikard-core" }
+spikard-graphql = { path = "../spikard-graphql" }
+spikard-http = { path = "../spikard-http" }
+tokio = { features = ["full"], version = "1" }

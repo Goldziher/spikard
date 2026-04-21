@@ -5,6 +5,7 @@
     {
       "name": "UploadFile",
       "rust_path": "spikard::UploadFile",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "filename",
@@ -45,6 +46,51 @@
           "default": null,
           "doc": "Size of the file in bytes",
           "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "content",
+          "ty": "Bytes",
+          "optional": false,
+          "default": null,
+          "doc": "File content (may be base64 encoded)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "Bytes",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "content_encoding",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "Content encoding type",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "cursor",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Internal cursor for Read/Seek operations",
+          "sanitized": true,
           "is_boxed": false,
           "type_rust_path": null,
           "cfg": null,
@@ -102,66 +148,6 @@
           "returns_cow": false,
           "return_newtype_wrapper": null,
           "has_default_impl": false
-        },
-        {
-          "name": "read",
-          "params": [
-            {
-              "name": "buf",
-              "ty": "Bytes",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": true,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Primitive": "Usize"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": "anyhow::Error",
-          "doc": "",
-          "receiver": "RefMut",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "seek",
-          "params": [
-            {
-              "name": "pos",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Primitive": "U64"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": "anyhow::Error",
-          "doc": "",
-          "receiver": "RefMut",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
         }
       ],
       "is_opaque": false,
@@ -178,7 +164,8 @@
     },
     {
       "name": "CorsConfig",
-      "rust_path": "spikard::CorsConfig",
+      "rust_path": "spikard_core::CorsConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "allowed_origins",
@@ -470,8 +457,256 @@
       "super_traits": []
     },
     {
+      "name": "RouteMetadata",
+      "rust_path": "spikard_core::RouteMetadata",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "method",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "StringLiteral": "GET"
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "path",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "StringLiteral": "/"
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "handler_name",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "StringLiteral": ""
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "request_schema",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "response_schema",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "parameter_schema",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "file_params",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "is_async",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "cors",
+          "ty": {
+            "Named": "CorsConfig"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "body_param_name",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "Name of the body parameter (defaults to \"body\" if not specified)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "handler_dependencies",
+          "ty": {
+            "Vec": "String"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "List of dependency keys this handler requires (for DI)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "jsonrpc_method",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "JSON-RPC method metadata (if this route is exposed as a JSON-RPC method)",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "static_response",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "Optional static response configuration: `{\"status\": 200, \"body\": \"OK\", \"content_type\": \"text/plain\"}`\nWhen present, the handler is replaced by a `StaticResponseHandler` that bypasses the full\nmiddleware pipeline for maximum throughput.",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "RouteMetadata"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Route metadata extracted from bindings",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": true,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
       "name": "CompressionConfig",
-      "rust_path": "spikard::CompressionConfig",
+      "rust_path": "spikard_core::CompressionConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "gzip",
@@ -580,7 +815,8 @@
     },
     {
       "name": "RateLimitConfig",
-      "rust_path": "spikard::RateLimitConfig",
+      "rust_path": "spikard_core::RateLimitConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "per_second",
@@ -673,20 +909,337 @@
       "super_traits": []
     },
     {
-      "name": "LifecycleHooks",
-      "rust_path": "spikard::LifecycleHooks",
-      "fields": [],
+      "name": "JsonRpcMethodInfo",
+      "rust_path": "spikard_core::JsonRpcMethodInfo",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "method_name",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "The JSON-RPC method name (e.g., \"user.create\")",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "description",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "Optional description of what the method does",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "params_schema",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "Optional JSON Schema for method parameters",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "result_schema",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "Optional JSON Schema for the result",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "deprecated",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Whether this method is deprecated",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "tags",
+          "ty": {
+            "Vec": "String"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Tags for categorizing and grouping methods",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "JSON-RPC method metadata for routes that support JSON-RPC\n\nThis struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,\nenabling discovery and documentation of RPC-compatible endpoints.\n\n# Examples\n\n```ignore\nuse spikard_core::router::JsonRpcMethodInfo;\nuse serde_json::json;\n\nlet rpc_info = JsonRpcMethodInfo {\n    method_name: \"user.create\".to_string(),\n    description: Some(\"Creates a new user\".to_string()),\n    params_schema: Some(json!({\n        \"type\": \"object\",\n        \"properties\": {\n            \"name\": {\"type\": \"string\"}\n        }\n    })),\n    result_schema: Some(json!({\n        \"type\": \"object\",\n        \"properties\": {\n            \"id\": {\"type\": \"integer\"}\n        }\n    })),\n    deprecated: false,\n    tags: vec![\"users\".to_string()],\n};\n```",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "Route",
+      "rust_path": "spikard_core::Route",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "method",
+          "ty": {
+            "Named": "Method"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "EnumVariant": "Get"
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "path",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "StringLiteral": "/"
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "handler_name",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "StringLiteral": ""
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "request_validator",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "Arc",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "response_validator",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "Arc",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "parameter_validator",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "file_params",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "is_async",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "cors",
+          "ty": {
+            "Named": "CorsConfig"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "expects_json_body",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Precomputed flag: true if this route expects a JSON request body\nUsed by middleware to validate Content-Type headers",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": false
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "handler_dependencies",
+          "ty": {
+            "Vec": "String"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "List of dependency keys this handler requires (for DI)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "jsonrpc_method",
+          "ty": {
+            "Named": "JsonRpcMethodInfo"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Optional JSON-RPC method information\nWhen present, this route can be exposed as a JSON-RPC method",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
       "methods": [
         {
-          "name": "builder",
+          "name": "default",
           "params": [],
           "return_type": {
-            "Named": "LifecycleHooksBuilder"
+            "Named": "Route"
           },
           "is_async": false,
           "is_static": true,
           "error_type": null,
-          "doc": "Builder constructor for ergonomic hook registration",
+          "doc": "",
           "receiver": null,
           "sanitized": false,
           "trait_source": null,
@@ -696,7 +1249,82 @@
           "has_default_impl": false
         },
         {
-          "name": "is_empty",
+          "name": "from_metadata",
+          "params": [
+            {
+              "name": "metadata",
+              "ty": {
+                "Named": "RouteMetadata"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "registry",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": true,
+              "typed_default": null,
+              "is_ref": true,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "Route"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": "String",
+          "doc": "Create a route from metadata, using schema registry for deduplication\n\nAuto-generates parameter schema from type hints in the path if no explicit schema provided.\nType hints like `/items/{id:uuid}` generate appropriate JSON Schema validation.\nExplicit `parameter_schema` overrides auto-generated schemas.\n\n# Errors\nReturns an error if the schema compilation fails or metadata is invalid.\n\nThe schema registry ensures each unique schema is compiled only once, improving\nstartup performance and memory usage for applications with many routes.",
+          "receiver": null,
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "with_jsonrpc_method",
+          "params": [
+            {
+              "name": "info",
+              "ty": {
+                "Named": "JsonRpcMethodInfo"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "Route"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Builder method to attach JSON-RPC method info to a route\n\nThis is a convenient way to add JSON-RPC metadata after route creation.\nIt consumes the route and returns a new route with the metadata attached.\n\n# Examples\n\n```ignore\nlet route = Route::from_metadata(metadata, &registry)?\n    .with_jsonrpc_method(JsonRpcMethodInfo {\n        method_name: \"user.create\".to_string(),\n        description: Some(\"Creates a new user\".to_string()),\n        params_schema: Some(request_schema),\n        result_schema: Some(response_schema),\n        deprecated: false,\n        tags: vec![\"users\".to_string()],\n    });\n```",
+          "receiver": "Owned",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "is_jsonrpc_method",
           "params": [],
           "return_type": {
             "Primitive": "Bool"
@@ -704,7 +1332,7 @@
           "is_async": false,
           "is_static": false,
           "error_type": null,
-          "doc": "Check if any hooks are registered",
+          "doc": "Check if this route has JSON-RPC metadata",
           "receiver": "Ref",
           "sanitized": false,
           "trait_source": null,
@@ -714,464 +1342,525 @@
           "has_default_impl": false
         },
         {
-          "name": "add_on_request",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "Unit",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "",
-          "receiver": "RefMut",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "add_pre_validation",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "Unit",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "",
-          "receiver": "RefMut",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "add_pre_handler",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "Unit",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "",
-          "receiver": "RefMut",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "add_on_response",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "Unit",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "",
-          "receiver": "RefMut",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "add_on_error",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "Unit",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "",
-          "receiver": "RefMut",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "execute_on_request",
-          "params": [
-            {
-              "name": "req",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "String",
-          "doc": "# Errors\nReturns an error string if a hook execution fails.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "execute_pre_validation",
-          "params": [
-            {
-              "name": "req",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "String",
-          "doc": "# Errors\nReturns an error string if a hook execution fails.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "execute_pre_handler",
-          "params": [
-            {
-              "name": "req",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "String",
-          "doc": "# Errors\nReturns an error string if a hook execution fails.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "execute_on_response",
-          "params": [
-            {
-              "name": "resp",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "String",
-          "doc": "# Errors\nReturns an error string if a hook execution fails.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "execute_on_error",
-          "params": [
-            {
-              "name": "resp",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "String",
-          "doc": "# Errors\nReturns an error string if a hook execution fails.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
-      "name": "LifecycleHooksBuilder",
-      "rust_path": "spikard::LifecycleHooksBuilder",
-      "fields": [],
-      "methods": [
-        {
-          "name": "on_request",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "LifecycleHooksBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Add an `on_request` hook",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "pre_validation",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "LifecycleHooksBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Add a `pre_validation` hook",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "pre_handler",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "LifecycleHooksBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Add a `pre_handler` hook",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "on_response",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "LifecycleHooksBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Add an `on_response` hook",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "on_error",
-          "params": [
-            {
-              "name": "hook",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "LifecycleHooksBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Add an `on_error` hook",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "build",
+          "name": "jsonrpc_method_name",
           "params": [],
           "return_type": {
-            "Named": "LifecycleHooks"
+            "Optional": "String"
           },
           "is_async": false,
           "is_static": false,
           "error_type": null,
-          "doc": "Build the `LifecycleHooks` instance",
+          "doc": "Get the JSON-RPC method name if present",
+          "receiver": "Ref",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": true,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Route definition with compiled validators\n\nValidators are `Arc`-wrapped to enable cheap cloning across route instances\nand to support schema deduplication via `SchemaRegistry`.\n\nThe `jsonrpc_method` field is optional and has zero overhead when None,\nenabling routes to optionally expose themselves as JSON-RPC methods.",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": true,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": false,
+      "super_traits": []
+    },
+    {
+      "name": "ProblemDetails",
+      "rust_path": "spikard_core::ProblemDetails",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "type_uri",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "A URI reference that identifies the problem type.\nDefaults to \"about:blank\" when absent.\nShould be a stable, human-readable identifier for the problem type.",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "title",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "A short, human-readable summary of the problem type.\nShould not change from occurrence to occurrence of the problem.",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "status",
+          "ty": {
+            "Primitive": "U16"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "The HTTP status code generated by the origin server.\nThis is advisory; the actual HTTP status code takes precedence.",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "detail",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "A human-readable explanation specific to this occurrence of the problem.",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "instance",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "A URI reference that identifies the specific occurrence of the problem.\nIt may or may not yield further information if dereferenced.",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "extensions",
+          "ty": {
+            "Map": [
+              "String",
+              "String"
+            ]
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Extension members - problem-type-specific data.\nFor validation errors, this typically contains an \"errors\" array.",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "with_detail",
+          "params": [
+            {
+              "name": "detail",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Set the detail field",
           "receiver": "Owned",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "with_instance",
+          "params": [
+            {
+              "name": "instance",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Set the instance field",
+          "receiver": "Owned",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "with_extension",
+          "params": [
+            {
+              "name": "key",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "value",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": true,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Add an extension field",
+          "receiver": "Owned",
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "with_extensions",
+          "params": [
+            {
+              "name": "extensions",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": true,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Add all extensions from a JSON object",
+          "receiver": "Owned",
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "from_validation_error",
+          "params": [
+            {
+              "name": "error",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": true,
+              "typed_default": null,
+              "is_ref": true,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "Create a validation error Problem Details from `ValidationError`\n\nThis converts the FastAPI-style validation errors to RFC 9457 format:\n- `type`: <https://spikard.dev/errors/validation-error>\n- `title`: \"Request Validation Failed\"\n- `status`: 422\n- `detail`: Summary of error count\n- `errors`: Array of validation error details (as extension field)",
+          "receiver": null,
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "not_found",
+          "params": [
+            {
+              "name": "detail",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "Create a not found error",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "method_not_allowed",
+          "params": [
+            {
+              "name": "detail",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "Create a method not allowed error",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "internal_server_error",
+          "params": [
+            {
+              "name": "detail",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "Create an internal server error",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "internal_server_error_debug",
+          "params": [
+            {
+              "name": "detail",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "exception",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "traceback",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "request_data",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": true,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "Create an internal server error with debug information\n\nIncludes exception details, traceback, and request data for debugging.\nOnly use in development/debug mode.",
+          "receiver": null,
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "bad_request",
+          "params": [
+            {
+              "name": "detail",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "ProblemDetails"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "Create a bad request error",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "status_code",
+          "params": [],
+          "return_type": "String",
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Get the HTTP status code",
+          "receiver": "Ref",
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "to_json",
+          "params": [],
+          "return_type": "String",
+          "is_async": false,
+          "is_static": false,
+          "error_type": "serde_json::Error",
+          "doc": "Serialize to JSON string\n\n# Errors\nReturns an error if the serialization fails.",
+          "receiver": "Ref",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "to_json_pretty",
+          "params": [],
+          "return_type": "String",
+          "is_async": false,
+          "is_static": false,
+          "error_type": "serde_json::Error",
+          "doc": "Serialize to pretty JSON string\n\n# Errors\nReturns an error if the serialization fails.",
+          "receiver": "Ref",
           "sanitized": false,
           "trait_source": null,
           "returns_ref": false,
@@ -1180,8 +1869,353 @@
           "has_default_impl": false
         }
       ],
-      "is_opaque": true,
-      "is_clone": false,
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "RFC 9457 Problem Details for HTTP APIs\n\nA machine-readable format for specifying errors in HTTP API responses.\nPer RFC 9457, all fields are optional. The `type` field defaults to \"about:blank\"\nif not specified.\n\n# Content-Type\nResponses using this struct should set:\n```text\nContent-Type: application/problem+json\n```\n\n# Example\n```json\n{\n  \"type\": \"https://spikard.dev/errors/validation-error\",\n  \"title\": \"Request Validation Failed\",\n  \"status\": 422,\n  \"detail\": \"2 validation errors in request body\",\n  \"errors\": [...]\n}\n```",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "Claims",
+      "rust_path": "spikard_http::Claims",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "sub",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "exp",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "iat",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "nbf",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "aud",
+          "ty": {
+            "Vec": "String"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "iss",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "JWT claims structure - can be extended based on needs",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "BackgroundTaskConfig",
+      "rust_path": "spikard_http::BackgroundTaskConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "max_queue_size",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "IntLiteral": 1024
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "max_concurrent_tasks",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "IntLiteral": 128
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "drain_timeout_secs",
+          "ty": {
+            "Primitive": "U64"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "IntLiteral": 30
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "BackgroundTaskConfig"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Configuration for in-process background task execution.",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": false,
+      "super_traits": []
+    },
+    {
+      "name": "BackgroundJobMetadata",
+      "rust_path": "spikard_http::BackgroundJobMetadata",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "name",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "Cow",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "request_id",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "BackgroundJobMetadata"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": false,
+      "super_traits": []
+    },
+    {
+      "name": "BackgroundJobError",
+      "rust_path": "spikard_http::BackgroundJobError",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "message",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "from",
+          "params": [
+            {
+              "name": "message",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "BackgroundJobError"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
       "doc": "",
       "cfg": null,
       "is_trait": false,
@@ -1193,13 +2227,14 @@
       "super_traits": []
     },
     {
-      "name": "HandlerResult",
-      "rust_path": "spikard::HandlerResult",
+      "name": "BackgroundHandle",
+      "rust_path": "spikard_http::BackgroundHandle",
+      "original_rust_path": "",
       "fields": [],
       "methods": [],
       "is_opaque": true,
-      "is_clone": false,
-      "doc": "Result type for handlers",
+      "is_clone": true,
+      "doc": "",
       "cfg": null,
       "is_trait": false,
       "has_default": false,
@@ -1210,19 +2245,941 @@
       "super_traits": []
     },
     {
-      "name": "SseEventProducer",
-      "rust_path": "spikard::SseEventProducer",
-      "fields": [],
+      "name": "GrpcRequestData",
+      "rust_path": "spikard_http::GrpcRequestData",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "service_name",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Fully qualified service name (e.g., \"mypackage.MyService\")",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "method_name",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Method name (e.g., \"GetUser\")",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "payload",
+          "ty": "Bytes",
+          "optional": false,
+          "default": null,
+          "doc": "Serialized protobuf message bytes",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "Bytes",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "metadata",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "gRPC metadata (similar to HTTP headers)",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "gRPC request data passed to handlers\n\nContains the parsed components of a gRPC request:\n- Service and method names from the request path\n- Serialized protobuf payload as bytes\n- Request metadata (headers)",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": false,
+      "super_traits": []
+    },
+    {
+      "name": "GrpcResponseData",
+      "rust_path": "spikard_http::GrpcResponseData",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "payload",
+          "ty": "Bytes",
+          "optional": false,
+          "default": null,
+          "doc": "Serialized protobuf message bytes",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "Bytes",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "metadata",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "gRPC metadata to include in response (similar to HTTP headers)",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "gRPC response data returned by handlers\n\nContains the serialized protobuf response and any metadata to include\nin the response headers.",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": false,
+      "super_traits": []
+    },
+    {
+      "name": "GrpcConfig",
+      "rust_path": "spikard_http::GrpcConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "enabled",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable gRPC support",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "max_message_size",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Maximum message size in bytes (for both sending and receiving)\n\nThis limit applies to individual messages in both unary and streaming RPCs.\nWhen a single message exceeds this size, the request is rejected with HTTP 413\n(Payload Too Large).\n\nDefault: 4MB (4194304 bytes)\n\n# Note\nThis limit does NOT apply to the total response size in streaming RPCs.\nFor multi-message streams, the total response can exceed this limit as long\nas each individual message stays within the limit.",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "enable_compression",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable gzip compression for gRPC messages",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "request_timeout",
+          "ty": {
+            "Primitive": "U64"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Timeout for gRPC requests in seconds (None = no timeout)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "max_concurrent_streams",
+          "ty": {
+            "Primitive": "U32"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Maximum number of concurrent streams per connection (HTTP/2 advisory)\n\nThis value is communicated to HTTP/2 clients as the server's flow control limit.\nThe HTTP/2 transport layer enforces this limit automatically via SETTINGS frames\nand GOAWAY responses. Applications should NOT implement custom enforcement.\n\nDefault: 100 streams per connection\n\n# Stream Limiting Strategy\n- **Per Connection**: This limit applies per HTTP/2 connection, not globally\n- **Transport Enforcement**: HTTP/2 handles all stream limiting; applications\n  need not implement custom checks\n- **Streaming Requests**: In server streaming or bidi streaming, each logical\n  RPC consumes one stream slot. Message ordering within a stream follows\n  HTTP/2 frame ordering.\n\n# Future Enhancement\nA future `max_stream_response_bytes` field may be added to limit the total\nresponse size in streaming RPCs (separate from per-message limits).",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "enable_keepalive",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable HTTP/2 keepalive",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "keepalive_interval",
+          "ty": {
+            "Primitive": "U64"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "HTTP/2 keepalive interval in seconds",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "keepalive_timeout",
+          "ty": {
+            "Primitive": "U64"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "HTTP/2 keepalive timeout in seconds",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
       "methods": [
         {
-          "name": "next_event",
+          "name": "default",
           "params": [],
-          "return_type": "String",
+          "return_type": {
+            "Named": "GrpcConfig"
+          },
           "is_async": false,
-          "is_static": false,
+          "is_static": true,
           "error_type": null,
-          "doc": "Generate the next event\n\nCalled repeatedly to produce the event stream. Should return `Some(event)` when\nan event is ready to send, or `None` when the stream should end.\n\n# Returns\n* `Some(event)` - Event to send to the client\n* `None` - Stream complete, connection will close",
-          "receiver": "Ref",
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Configuration for gRPC support\n\nControls how the server handles gRPC requests, including compression,\ntimeouts, and protocol settings.\n\n# Stream Limits\n\nThis configuration enforces message-level size limits but delegates\nconcurrent stream limiting to the HTTP/2 transport layer:\n\n- **Message Size Limits**: The `max_message_size` field is enforced per\n  individual message (request or response) in both unary and streaming RPCs.\n  When a single message exceeds this limit, the request is rejected with\n  `PAYLOAD_TOO_LARGE` (HTTP 413).\n\n- **Concurrent Stream Limits**: The `max_concurrent_streams` is an advisory\n  configuration passed to the HTTP/2 layer for connection-level stream\n  negotiation. The HTTP/2 transport automatically enforces this limit and\n  returns GOAWAY frames when exceeded. Applications should not rely on\n  custom enforcement of this limit.\n\n- **Stream Length Limits**: There is currently no built-in limit on the\n  total number of messages in a stream. Handlers should implement their own\n  message counting if needed. Future versions may add a `max_stream_response_bytes`\n  field to limit total response size per stream.\n\n# Example\n\n```ignore\nlet mut config = GrpcConfig::default();\nconfig.max_message_size = 10 * 1024 * 1024; // 10MB per message\nconfig.max_concurrent_streams = 50; // Advised to HTTP/2 layer\n```",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "ValidatedParams",
+      "rust_path": "spikard_http::ValidatedParams",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "params",
+          "ty": {
+            "Map": [
+              "String",
+              "String"
+            ]
+          },
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Validated parameters from request (path, query, headers, cookies)",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": false,
+      "super_traits": []
+    },
+    {
+      "name": "JsonRpcConfig",
+      "rust_path": "spikard_http::JsonRpcConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "enabled",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable JSON-RPC endpoint",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "endpoint_path",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "HTTP endpoint path for JSON-RPC requests (default: \"/rpc\")",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "enable_batch",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable batch request processing (default: true)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "max_batch_size",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Maximum number of requests in a batch (default: 100)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "JsonRpcConfig"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "JSON-RPC server configuration",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "OpenApiConfig",
+      "rust_path": "spikard_http::OpenApiConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "enabled",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable OpenAPI generation (default: false for zero overhead)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": false
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "title",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "API title",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "StringLiteral": "API"
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "version",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "API version",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "StringLiteral": "1.0.0"
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "description",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "API description (supports markdown)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "swagger_ui_path",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Path to serve Swagger UI (default: \"/docs\")",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "redoc_path",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Path to serve Redoc (default: \"/redoc\")",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "openapi_json_path",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Path to serve OpenAPI JSON spec (default: \"/openapi.json\")",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "contact",
+          "ty": {
+            "Named": "ContactInfo"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Contact information",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "license",
+          "ty": {
+            "Named": "LicenseInfo"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "License information",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "servers",
+          "ty": {
+            "Vec": {
+              "Named": "ServerInfo"
+            }
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Server definitions",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "security_schemes",
+          "ty": {
+            "Map": [
+              "String",
+              {
+                "Named": "SecuritySchemeInfo"
+              }
+            ]
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Security schemes (auto-detected from middleware if not provided)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "OpenApiConfig"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "OpenAPI configuration",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "ContactInfo",
+      "rust_path": "spikard_http::ContactInfo",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "name",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "email",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "url",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Contact information",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "LicenseInfo",
+      "rust_path": "spikard_http::LicenseInfo",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "name",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "url",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "License information",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "ServerInfo",
+      "rust_path": "spikard_http::ServerInfo",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "url",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "description",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Server information",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "Response",
+      "rust_path": "spikard_http::Response",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "content",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "Response body content",
+          "sanitized": true,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "status_code",
+          "ty": {
+            "Primitive": "U16"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "HTTP status code (defaults to 200)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "headers",
+          "ty": {
+            "Map": [
+              "String",
+              "String"
+            ]
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Response headers",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "Empty",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "with_status",
+          "params": [
+            {
+              "name": "content",
+              "ty": "String",
+              "optional": true,
+              "default": null,
+              "sanitized": true,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "status_code",
+              "ty": {
+                "Primitive": "U16"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "Response"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "Create a response with a specific status code",
+          "receiver": null,
           "sanitized": true,
           "trait_source": null,
           "returns_ref": false,
@@ -1231,53 +3188,190 @@
           "has_default_impl": false
         },
         {
-          "name": "on_connect",
-          "params": [],
-          "return_type": "String",
+          "name": "set_header",
+          "params": [
+            {
+              "name": "key",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "value",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": "Unit",
           "is_async": false,
           "is_static": false,
           "error_type": null,
-          "doc": "Called when a client connects to the SSE endpoint\n\nOptional lifecycle hook invoked when a new SSE connection is established.\nDefault implementation does nothing.",
-          "receiver": "Ref",
-          "sanitized": true,
+          "doc": "Set a header",
+          "receiver": "RefMut",
+          "sanitized": false,
           "trait_source": null,
           "returns_ref": false,
           "returns_cow": false,
           "return_newtype_wrapper": null,
-          "has_default_impl": true
+          "has_default_impl": false
         },
         {
-          "name": "on_disconnect",
-          "params": [],
-          "return_type": "String",
+          "name": "set_cookie",
+          "params": [
+            {
+              "name": "key",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "value",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "max_age",
+              "ty": {
+                "Primitive": "I64"
+              },
+              "optional": true,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "domain",
+              "ty": "String",
+              "optional": true,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "path",
+              "ty": "String",
+              "optional": true,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "secure",
+              "ty": {
+                "Primitive": "Bool"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "http_only",
+              "ty": {
+                "Primitive": "Bool"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            },
+            {
+              "name": "same_site",
+              "ty": "String",
+              "optional": true,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": "Unit",
           "is_async": false,
           "is_static": false,
           "error_type": null,
-          "doc": "Called when a client disconnects from the SSE endpoint\n\nOptional lifecycle hook invoked when an SSE connection is closed (either by the\nclient or the stream ending). Default implementation does nothing.",
-          "receiver": "Ref",
-          "sanitized": true,
+          "doc": "Set a cookie in the response",
+          "receiver": "RefMut",
+          "sanitized": false,
           "trait_source": null,
           "returns_ref": false,
           "returns_cow": false,
           "return_newtype_wrapper": null,
-          "has_default_impl": true
+          "has_default_impl": false
+        },
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "Response"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
         }
       ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "SSE event producer trait\n\nImplement this trait to create custom Server-Sent Event (SSE) producers for your application.\nThe producer generates events that are streamed to connected clients.\n\n# Understanding SSE\n\nServer-Sent Events (SSE) provide one-way communication from server to client over HTTP.\nUnlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.\nUse SSE when you need to push data to clients without bidirectional communication.\n\n# Implementing the Trait\n\nYou must implement the `next_event` method to generate events. The `on_connect` and\n`on_disconnect` methods are optional lifecycle hooks.\n\n# Example\n\n```ignore\nuse spikard_http::sse::{SseEventProducer, SseEvent};\nuse serde_json::json;\nuse std::time::Duration;\nuse tokio::time::sleep;\n\nstruct CounterProducer {\n    limit: usize,\n}\n\n#[async_trait]\nimpl SseEventProducer for CounterProducer {\n    async fn next_event(&self) -> Option<SseEvent> {\n        static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);\n\n        let count = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);\n        if count < self.limit {\n            Some(SseEvent::new(json!({\"count\": count})))\n        } else {\n            None\n        }\n    }\n\n    async fn on_connect(&self) {\n        println!(\"Client connected\");\n    }\n\n    async fn on_disconnect(&self) {\n        println!(\"Client disconnected\");\n    }\n}\n```",
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "HTTP Response with custom status code, headers, and content",
       "cfg": null,
-      "is_trait": true,
-      "has_default": false,
+      "is_trait": false,
+      "has_default": true,
       "has_stripped_cfg_fields": false,
-      "is_return_type": false,
+      "is_return_type": true,
       "serde_rename_all": null,
-      "has_serde": false,
+      "has_serde": true,
       "super_traits": []
     },
     {
       "name": "SseEvent",
-      "rust_path": "spikard::SseEvent",
+      "rust_path": "spikard_http::SseEvent",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "event_type",
@@ -1460,86 +3554,158 @@
       "super_traits": []
     },
     {
-      "name": "WebSocketHandler",
-      "rust_path": "spikard::WebSocketHandler",
-      "fields": [],
-      "methods": [
+      "name": "JwtConfig",
+      "rust_path": "spikard_http::JwtConfig",
+      "original_rust_path": "",
+      "fields": [
         {
-          "name": "handle_message",
-          "params": [
-            {
-              "name": "message",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Handle incoming WebSocket message\n\nCalled whenever a text message is received from a WebSocket client.\nMessages are automatically parsed as JSON.\n\n# Arguments\n* `message` - JSON value received from the client\n\n# Returns\n* `Some(value)` - JSON value to send back to the client\n* `None` - No response to send",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
+          "name": "secret",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Secret key for JWT verification",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
         },
         {
-          "name": "on_connect",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Called when a client connects to the WebSocket\n\nOptional lifecycle hook invoked when a new WebSocket connection is established.\nDefault implementation does nothing.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": true
+          "name": "algorithm",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Required algorithm (HS256, HS384, HS512, RS256, etc.)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
         },
         {
-          "name": "on_disconnect",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Called when a client disconnects from the WebSocket\n\nOptional lifecycle hook invoked when a WebSocket connection is closed\n(either by the client or due to an error). Default implementation does nothing.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": true
+          "name": "audience",
+          "ty": {
+            "Vec": "String"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Required audience claim",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "issuer",
+          "ty": "String",
+          "optional": true,
+          "default": null,
+          "doc": "Required issuer claim",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "leeway",
+          "ty": {
+            "Primitive": "U64"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Leeway for expiration checks (seconds)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
         }
       ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "WebSocket message handler trait\n\nImplement this trait to create custom WebSocket message handlers for your application.\nThe handler processes JSON messages received from WebSocket clients and can optionally\nsend responses back.\n\n# Implementing the Trait\n\nYou must implement the `handle_message` method. The `on_connect` and `on_disconnect`\nmethods are optional and provide lifecycle hooks.\n\n# Example\n\n```ignore\nuse spikard_http::websocket::WebSocketHandler;\nuse serde_json::{json, Value};\n\nstruct EchoHandler;\n\n#[async_trait]\nimpl WebSocketHandler for EchoHandler {\n    async fn handle_message(&self, message: Value) -> Option<Value> {\n        // Echo the message back to the client\n        Some(message)\n    }\n\n    async fn on_connect(&self) {\n        println!(\"Client connected\");\n    }\n\n    async fn on_disconnect(&self) {\n        println!(\"Client disconnected\");\n    }\n}\n```",
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "JWT authentication configuration",
       "cfg": null,
-      "is_trait": true,
+      "is_trait": false,
       "has_default": false,
       "has_stripped_cfg_fields": false,
       "is_return_type": false,
       "serde_rename_all": null,
-      "has_serde": false,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "ApiKeyConfig",
+      "rust_path": "spikard_http::ApiKeyConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "keys",
+          "ty": {
+            "Vec": "String"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Valid API keys",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "header_name",
+          "ty": "String",
+          "optional": false,
+          "default": null,
+          "doc": "Header name to check (e.g., \"X-API-Key\")",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": null,
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "API Key authentication configuration",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
       "super_traits": []
     },
     {
       "name": "StaticFilesConfig",
-      "rust_path": "spikard::StaticFilesConfig",
+      "rust_path": "spikard_http::StaticFilesConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "directory",
@@ -1619,7 +3785,8 @@
     },
     {
       "name": "ServerConfig",
-      "rust_path": "spikard::ServerConfig",
+      "rust_path": "spikard_http::ServerConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "host",
@@ -1765,11 +3932,13 @@
         },
         {
           "name": "jwt_auth",
-          "ty": "String",
+          "ty": {
+            "Named": "JwtConfig"
+          },
           "optional": true,
           "default": null,
           "doc": "JWT authentication configuration",
-          "sanitized": true,
+          "sanitized": false,
           "is_boxed": false,
           "type_rust_path": null,
           "cfg": null,
@@ -1780,11 +3949,13 @@
         },
         {
           "name": "api_key_auth",
-          "ty": "String",
+          "ty": {
+            "Named": "ApiKeyConfig"
+          },
           "optional": true,
           "default": null,
           "doc": "API Key authentication configuration",
-          "sanitized": true,
+          "sanitized": false,
           "is_boxed": false,
           "type_rust_path": null,
           "cfg": null,
@@ -1852,13 +4023,15 @@
         },
         {
           "name": "openapi",
-          "ty": "String",
+          "ty": {
+            "Named": "OpenApiConfig"
+          },
           "optional": true,
           "default": null,
           "doc": "OpenAPI documentation configuration",
-          "sanitized": true,
+          "sanitized": false,
           "is_boxed": false,
-          "type_rust_path": "spikard::openapi::OpenApiConfig",
+          "type_rust_path": "spikard_http::openapi::OpenApiConfig",
           "cfg": null,
           "typed_default": "None",
           "core_wrapper": "None",
@@ -1867,13 +4040,15 @@
         },
         {
           "name": "jsonrpc",
-          "ty": "String",
+          "ty": {
+            "Named": "JsonRpcConfig"
+          },
           "optional": true,
           "default": null,
           "doc": "JSON-RPC configuration",
-          "sanitized": true,
+          "sanitized": false,
           "is_boxed": false,
-          "type_rust_path": "spikard::jsonrpc::JsonRpcConfig",
+          "type_rust_path": "spikard_http::jsonrpc::JsonRpcConfig",
           "cfg": null,
           "typed_default": "None",
           "core_wrapper": "None",
@@ -1882,13 +4057,15 @@
         },
         {
           "name": "grpc",
-          "ty": "String",
+          "ty": {
+            "Named": "GrpcConfig"
+          },
           "optional": true,
           "default": null,
           "doc": "gRPC configuration",
-          "sanitized": true,
+          "sanitized": false,
           "is_boxed": false,
-          "type_rust_path": "spikard::grpc::GrpcConfig",
+          "type_rust_path": "spikard_http::grpc::GrpcConfig",
           "cfg": null,
           "typed_default": "None",
           "core_wrapper": "None",
@@ -1912,11 +4089,13 @@
         },
         {
           "name": "background_tasks",
-          "ty": "String",
+          "ty": {
+            "Named": "BackgroundTaskConfig"
+          },
           "optional": false,
           "default": null,
           "doc": "Background task executor configuration",
-          "sanitized": true,
+          "sanitized": false,
           "is_boxed": false,
           "type_rust_path": null,
           "cfg": null,
@@ -2009,880 +4188,9 @@
       "super_traits": []
     },
     {
-      "name": "TestServer",
-      "rust_path": "spikard::testing::TestServer",
-      "fields": [],
-      "methods": [
-        {
-          "name": "from_app",
-          "params": [
-            {
-              "name": "app",
-              "ty": {
-                "Named": "App"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "TestServer"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": "AppError",
-          "doc": "Build a test server from an `App`.\n\n# Errors\n\nReturns an error if the application router construction fails.",
-          "receiver": null,
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "from_router",
-          "params": [
-            {
-              "name": "router",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "TestServer"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": "AppError",
-          "doc": "Build a test server from an Axum router.\n\n# Errors\n\nReturns an error if test server construction fails.",
-          "receiver": null,
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "call",
-          "params": [
-            {
-              "name": "request",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "SnapshotError",
-          "doc": "Execute an HTTP request and return a snapshot of the response.\n\n# Errors\n\nReturns an error if the request execution or response snapshot fails.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "connect_websocket",
-          "params": [
-            {
-              "name": "path",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Open a WebSocket connection for the provided path.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "Spikard-native test server wrapper that hides the Axum test harness.\n\nTests can build an `App`, convert it into a `TestServer`, and then issue\nHTTP/SSE/WebSocket requests without touching `axum-test` directly.",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
-      "name": "App",
-      "rust_path": "spikard::App",
-      "fields": [],
-      "methods": [
-        {
-          "name": "config",
-          "params": [
-            {
-              "name": "config",
-              "ty": {
-                "Named": "ServerConfig"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "App"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the server configuration.",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "merge_axum_router",
-          "params": [
-            {
-              "name": "router",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "App"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Attach an existing Axum router to this application, returning ownership.",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "attach_axum_router",
-          "params": [
-            {
-              "name": "router",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "App"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Attach an Axum router using a mutable reference for incremental configuration.",
-          "receiver": "RefMut",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "into_router",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": "AppError",
-          "doc": "Build the underlying Axum router.\n\n# Errors\n\nReturns an error if server or router construction fails.",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "run",
-          "params": [],
-          "return_type": "Unit",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "AppError",
-          "doc": "Run the HTTP server using the configured routes.\n\n# Errors\n\nReturns an error if server construction or execution fails.",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "default",
-          "params": [],
-          "return_type": {
-            "Named": "App"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "",
-          "receiver": null,
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "Spikard application builder.",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": true,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
-      "name": "RouteBuilder",
-      "rust_path": "spikard::RouteBuilder",
-      "fields": [],
-      "methods": [
-        {
-          "name": "handler_name",
-          "params": [
-            {
-              "name": "name",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "RouteBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Assign an explicit handler name.",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "request_schema_json",
-          "params": [
-            {
-              "name": "schema",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "RouteBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Provide a raw JSON schema for the request body.",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "response_schema_json",
-          "params": [
-            {
-              "name": "schema",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "RouteBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Provide a raw JSON schema for the response body.",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "params_schema_json",
-          "params": [
-            {
-              "name": "schema",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "RouteBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Provide a raw JSON schema for request parameters.",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "file_params_json",
-          "params": [
-            {
-              "name": "schema",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "RouteBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Provide multipart file parameter configuration.",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "cors",
-          "params": [
-            {
-              "name": "cors",
-              "ty": {
-                "Named": "CorsConfig"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "RouteBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Attach a CORS configuration for this route.",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "sync",
-          "params": [],
-          "return_type": {
-            "Named": "RouteBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Mark the route as synchronous.",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "handler_dependencies",
-          "params": [
-            {
-              "name": "dependencies",
-              "ty": {
-                "Vec": "String"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "RouteBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Declare the dependency keys that must be resolved before this handler runs.",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "Builder for defining a route.",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
-      "name": "RequestContext",
-      "rust_path": "spikard::RequestContext",
-      "fields": [],
-      "methods": [
-        {
-          "name": "request",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Borrow the underlying HTTP request.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "query_value",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Borrow the parsed query parameters as JSON.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "raw_query_params",
-          "params": [],
-          "return_type": {
-            "Map": [
-              "String",
-              {
-                "Vec": "String"
-              }
-            ]
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Borrow the raw query parameter map (string inputs as received on the wire).",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "path_params",
-          "params": [],
-          "return_type": {
-            "Map": [
-              "String",
-              "String"
-            ]
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Borrow the raw path parameter map.",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "path_param",
-          "params": [
-            {
-              "name": "name",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Optional": "String"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Extract a raw path parameter by name.",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "header",
-          "params": [
-            {
-              "name": "name",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Optional": "String"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Return a header value (case-insensitive).",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "headers_map",
-          "params": [],
-          "return_type": {
-            "Map": [
-              "String",
-              "String"
-            ]
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Borrow the normalized headers map.",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "cookie",
-          "params": [
-            {
-              "name": "name",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Optional": "String"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Return a cookie value.",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "cookies_map",
-          "params": [],
-          "return_type": {
-            "Map": [
-              "String",
-              "String"
-            ]
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Borrow the cookies map.",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "body_value",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Borrow the raw JSON request body.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "dependencies",
-          "params": [],
-          "return_type": {
-            "Optional": "String"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Borrow resolved dependencies for this request (if DI is enabled).",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "method",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Return the HTTP method.",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "path_str",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Return the request path.",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "Wrapper around the raw request and validated metadata.",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
-      "name": "IntoHandler",
-      "rust_path": "spikard::IntoHandler",
-      "fields": [],
-      "methods": [
-        {
-          "name": "into_handler",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "Convert user-facing handler functions into the low-level `Handler` trait.",
-      "cfg": null,
-      "is_trait": true,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
       "name": "GraphQLError",
-      "rust_path": "spikard::GraphQLError",
+      "rust_path": "spikard_graphql::GraphQLError",
+      "original_rust_path": "",
       "fields": [],
       "methods": [
         {
@@ -2949,366 +4257,9 @@
       "super_traits": []
     },
     {
-      "name": "GraphQLExecutor",
-      "rust_path": "spikard::GraphQLExecutor",
-      "fields": [],
-      "methods": [
-        {
-          "name": "execute",
-          "params": [
-            {
-              "name": "query",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "variables",
-              "ty": "String",
-              "optional": true,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "operation_name",
-              "ty": "String",
-              "optional": true,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "GraphQLError",
-          "doc": "Execute a GraphQL query or mutation and return GraphQL-spec JSON.\n\n# Errors\n\nReturns:\n- `GraphQLError::ValidationError` for empty query strings\n- `GraphQLError::ComplexityLimitExceeded` when limits are hit\n- `GraphQLError::DepthLimitExceeded` when limits are hit\n- `GraphQLError::SerializationError` when response JSON conversion fails",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "schema_ref",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get a reference to the underlying schema.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "clone_schema",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Clone the Arc to the schema for sharing across async tasks.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
-      "name": "GraphQLRequestPayload",
-      "rust_path": "spikard::handler::GraphQLRequestPayload",
-      "fields": [
-        {
-          "name": "query",
-          "ty": "String",
-          "optional": false,
-          "default": null,
-          "doc": "The GraphQL query string",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "variables",
-          "ty": "String",
-          "optional": true,
-          "default": null,
-          "doc": "Optional query variables as a JSON object",
-          "sanitized": true,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "operation_name",
-          "ty": "String",
-          "optional": true,
-          "default": null,
-          "doc": "Optional operation name for selecting which operation to execute\nwhen the query contains multiple operations",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        }
-      ],
-      "methods": [],
-      "is_opaque": false,
-      "is_clone": true,
-      "doc": "GraphQL request payload\n\nRepresents a standard GraphQL HTTP request body as defined by the GraphQL\nspecification for application/json requests.",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": true,
-      "super_traits": []
-    },
-    {
-      "name": "GraphQLResponsePayload",
-      "rust_path": "spikard::handler::GraphQLResponsePayload",
-      "fields": [
-        {
-          "name": "data",
-          "ty": "String",
-          "optional": true,
-          "default": null,
-          "doc": "Execution result data",
-          "sanitized": true,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "errors",
-          "ty": {
-            "Vec": {
-              "Named": "GraphQLErrorResponse"
-            }
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Execution errors (null if successful)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "extensions",
-          "ty": "String",
-          "optional": true,
-          "default": null,
-          "doc": "Extensions (optional, for tracing, etc.)",
-          "sanitized": true,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        }
-      ],
-      "methods": [],
-      "is_opaque": false,
-      "is_clone": true,
-      "doc": "GraphQL response payload\n\nRepresents a standard GraphQL HTTP response body containing data\nand optional errors.",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": true,
-      "super_traits": []
-    },
-    {
-      "name": "GraphQLErrorResponse",
-      "rust_path": "spikard::handler::GraphQLErrorResponse",
-      "fields": [
-        {
-          "name": "message",
-          "ty": "String",
-          "optional": false,
-          "default": null,
-          "doc": "Error message",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "locations",
-          "ty": {
-            "Vec": "String"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Optional locations in the query where the error occurred",
-          "sanitized": true,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "path",
-          "ty": {
-            "Vec": "String"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Optional path to the field that caused the error",
-          "sanitized": true,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "extensions",
-          "ty": "String",
-          "optional": true,
-          "default": null,
-          "doc": "Optional additional error details",
-          "sanitized": true,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": null,
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        }
-      ],
-      "methods": [],
-      "is_opaque": false,
-      "is_clone": true,
-      "doc": "GraphQL error response format",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": true,
-      "super_traits": []
-    },
-    {
-      "name": "GraphQLHandler",
-      "rust_path": "spikard::GraphQLHandler",
-      "fields": [],
-      "methods": [
-        {
-          "name": "handle_graphql",
-          "params": [
-            {
-              "name": "request_data",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": "String",
-          "is_async": true,
-          "is_static": false,
-          "error_type": "GraphQLError",
-          "doc": "Handle a GraphQL request\n\n# Arguments\n\n* `request_data` - The incoming request data\n\n# Returns\n\nHandler result with GraphQL response\n\n# Errors\n\nReturns `GraphQLError` if the request body cannot be parsed or execution fails.",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
       "name": "GraphQLRouteConfig",
-      "rust_path": "spikard::GraphQLRouteConfig",
+      "rust_path": "spikard_graphql::GraphQLRouteConfig",
+      "original_rust_path": "",
       "fields": [],
       "methods": [
         {
@@ -3534,7 +4485,8 @@
     },
     {
       "name": "SchemaConfig",
-      "rust_path": "spikard::SchemaConfig",
+      "rust_path": "spikard_graphql::SchemaConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "introspection_enabled",
@@ -3736,7 +4688,8 @@
     },
     {
       "name": "QueryOnlyConfig",
-      "rust_path": "spikard::QueryOnlyConfig",
+      "rust_path": "spikard_graphql::QueryOnlyConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "introspection_enabled",
@@ -3826,7 +4779,8 @@
     },
     {
       "name": "QueryMutationConfig",
-      "rust_path": "spikard::QueryMutationConfig",
+      "rust_path": "spikard_graphql::QueryMutationConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "introspection_enabled",
@@ -3916,7 +4870,8 @@
     },
     {
       "name": "FullSchemaConfig",
-      "rust_path": "spikard::FullSchemaConfig",
+      "rust_path": "spikard_graphql::FullSchemaConfig",
+      "original_rust_path": "",
       "fields": [
         {
           "name": "introspection_enabled",
@@ -4003,292 +4958,22 @@
       "serde_rename_all": null,
       "has_serde": true,
       "super_traits": []
-    },
-    {
-      "name": "SchemaBuilder",
-      "rust_path": "spikard::SchemaBuilder",
-      "fields": [],
-      "methods": [
-        {
-          "name": "enable_introspection",
-          "params": [
-            {
-              "name": "enable",
-              "ty": {
-                "Primitive": "Bool"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Enable or disable introspection.\n\nIntrospection is enabled by default. Disabling it prevents clients from\nquerying the schema structure via introspection queries.\n\n# Arguments\n\n* `enable` - Whether to enable introspection\n\n# Returns\n\nSelf for method chaining",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "complexity_limit",
-          "params": [
-            {
-              "name": "limit",
-              "ty": {
-                "Primitive": "Usize"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the maximum complexity allowed for queries.\n\nThe complexity is calculated based on the query structure and field costs.\nQueries exceeding this limit will be rejected.\n\n# Arguments\n\n* `limit` - The maximum complexity allowed (0 means unlimited)\n\n# Returns\n\nSelf for method chaining",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "depth_limit",
-          "params": [
-            {
-              "name": "limit",
-              "ty": {
-                "Primitive": "Usize"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaBuilder"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the maximum depth allowed for queries.\n\nThe depth is the maximum nesting level of selections.\nQueries exceeding this limit will be rejected.\n\n# Arguments\n\n* `limit` - The maximum depth allowed (0 means unlimited)\n\n# Returns\n\nSelf for method chaining",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "is_introspection_enabled",
-          "params": [],
-          "return_type": {
-            "Primitive": "Bool"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get the current introspection setting.\n\n# Returns\n\nWhether introspection is enabled",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "get_complexity_limit",
-          "params": [],
-          "return_type": {
-            "Optional": {
-              "Primitive": "Usize"
-            }
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get the current complexity limit if set.\n\n# Returns\n\nThe complexity limit, or None if unlimited",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "get_depth_limit",
-          "params": [],
-          "return_type": {
-            "Optional": {
-              "Primitive": "Usize"
-            }
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get the current depth limit if set.\n\n# Returns\n\nThe depth limit, or None if unlimited",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "config",
-          "params": [],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get the underlying configuration\n\n# Returns\n\nA reference to the `SchemaConfig`",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "finish",
-          "params": [],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Build the schema configuration (does not construct async-graphql Schema directly).\n\nReturns the configuration that should be applied to an async-graphql `SchemaBuilder`.\nThe actual Schema construction must be done by the caller using the async-graphql API.\n\n# Returns\n\nThe `SchemaConfig` instance",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
     }
   ],
   "functions": [
     {
-      "name": "validate_jsonrpc_method_name",
-      "rust_path": "spikard::validation::validate_jsonrpc_method_name",
+      "name": "add_cors_headers",
+      "rust_path": "spikard_http::cors::add_cors_headers",
+      "original_rust_path": "",
       "params": [
         {
-          "name": "name",
-          "ty": "String",
-          "optional": false,
-          "default": null,
-          "sanitized": false,
-          "typed_default": null,
-          "is_ref": true,
-          "is_mut": false,
-          "newtype_wrapper": null
-        }
-      ],
-      "return_type": "Unit",
-      "is_async": false,
-      "error_type": "String",
-      "doc": "Validates a JSON-RPC method name according to the JSON-RPC 2.0 specification.\n\nMethod names must be non-empty strings containing only alphanumeric characters,\ndots (.), underscores (_), and hyphens (-). Method names starting with \"rpc.\" are reserved.\n\n# Arguments\n\n* `name` - The method name to validate\n\n# Returns\n\n* `Ok(())` if the method name is valid\n* `Err(String)` with a descriptive error message if invalid\n\n# Errors\n\nReturns an error if:\n- The method name is empty\n- The method name starts with the reserved \"rpc.\" prefix\n- The method name contains invalid characters (only alphanumeric, dots, underscores, and hyphens allowed)\n- The method name starts or ends with invalid characters\n- The method name contains consecutive dots\n\n# Examples\n\n```\nuse spikard::validation::validate_jsonrpc_method_name;\n\nassert!(validate_jsonrpc_method_name(\"user.create\").is_ok());\nassert!(validate_jsonrpc_method_name(\"math.add\").is_ok());\nassert!(validate_jsonrpc_method_name(\"get_user_by_id\").is_ok());\nassert!(validate_jsonrpc_method_name(\"myMethod\").is_ok());\n\n// Invalid cases\nassert!(validate_jsonrpc_method_name(\"\").is_err());  // empty\nassert!(validate_jsonrpc_method_name(\"user.create!\").is_err());  // invalid char\nassert!(validate_jsonrpc_method_name(\"user create\").is_err());  // space\n```",
-      "cfg": null,
-      "sanitized": false,
-      "returns_ref": false,
-      "returns_cow": false,
-      "return_newtype_wrapper": null
-    },
-    {
-      "name": "handle_preflight",
-      "rust_path": "spikard::cors::handle_preflight",
-      "params": [
-        {
-          "name": "headers",
-          "ty": "String",
-          "optional": false,
-          "default": null,
-          "sanitized": true,
-          "typed_default": null,
-          "is_ref": true,
-          "is_mut": false,
-          "newtype_wrapper": null
-        },
-        {
-          "name": "cors_config",
+          "name": "response",
           "ty": {
-            "Named": "CorsConfig"
+            "Named": "Response"
           },
           "optional": false,
           "default": null,
           "sanitized": false,
-          "typed_default": null,
-          "is_ref": true,
-          "is_mut": false,
-          "newtype_wrapper": null
-        }
-      ],
-      "return_type": "String",
-      "is_async": false,
-      "error_type": "Box<Response<Body>>",
-      "doc": "Handle CORS preflight (OPTIONS) request\n\nValidates the request against the CORS configuration and returns appropriate\nresponse or error. This function processes OPTIONS requests as defined in the\nCORS specification (RFC 7231).\n\n# Validation\n\nChecks the following conditions:\n1. **Origin Header:** Must be present and match configured allowed origins\n2. **Access-Control-Request-Method:** Must match configured allowed methods\n3. **Access-Control-Request-Headers:** All requested headers must match configured allowed headers\n\n# Success Response\n\nReturns HTTP 204 (No Content) with the following response headers:\n- `Access-Control-Allow-Origin` - The origin that is allowed\n- `Access-Control-Allow-Methods` - Comma-separated list of allowed methods\n- `Access-Control-Allow-Headers` - Comma-separated list of allowed headers\n- `Access-Control-Max-Age` - Caching duration in seconds (if configured)\n- `Access-Control-Allow-Credentials` - \"true\" if credentials are allowed\n\n# Error Response\n\nReturns HTTP 403 (Forbidden) if validation fails for:\n- Origin not in allowed list\n- Requested method not allowed\n- Requested headers not allowed\n\n# Arguments\n* `headers` - Request headers containing CORS preflight information\n* `cors_config` - CORS configuration to validate against\n\n# Returns\n* `Ok(Response)` - 204 No Content with CORS headers\n* `Err(Response)` - 403 Forbidden or 500 Internal Server Error",
-      "cfg": null,
-      "sanitized": true,
-      "returns_ref": false,
-      "returns_cow": false,
-      "return_newtype_wrapper": null
-    },
-    {
-      "name": "add_cors_headers",
-      "rust_path": "spikard::cors::add_cors_headers",
-      "params": [
-        {
-          "name": "response",
-          "ty": "String",
-          "optional": false,
-          "default": null,
-          "sanitized": true,
           "typed_default": null,
           "is_ref": true,
           "is_mut": true,
@@ -4324,53 +5009,15 @@
       "error_type": null,
       "doc": "Add CORS headers to a successful response\n\nAdds appropriate CORS headers to the response based on the configuration.\nThis function should be called for successful (non-error) responses to\ncross-origin requests.\n\n# Headers Added\n\n- `Access-Control-Allow-Origin` - The origin that is allowed (if valid)\n- `Access-Control-Expose-Headers` - Headers that are safe to expose to the client\n- `Access-Control-Allow-Credentials` - \"true\" if credentials are allowed\n\n# Arguments\n* `response` - Mutable reference to the response to modify\n* `origin` - The origin from the request (e.g., `<https://example.com>`)\n* `cors_config` - CORS configuration to apply\n\n# Example\n\n```ignore\nlet mut response = Response::new(Body::empty());\nadd_cors_headers(&mut response, \"https://example.com\", &cors_config);\n```",
       "cfg": null,
-      "sanitized": true,
-      "returns_ref": false,
-      "returns_cow": false,
-      "return_newtype_wrapper": null
-    },
-    {
-      "name": "validate_cors_request",
-      "rust_path": "spikard::cors::validate_cors_request",
-      "params": [
-        {
-          "name": "headers",
-          "ty": "String",
-          "optional": false,
-          "default": null,
-          "sanitized": true,
-          "typed_default": null,
-          "is_ref": true,
-          "is_mut": false,
-          "newtype_wrapper": null
-        },
-        {
-          "name": "cors_config",
-          "ty": {
-            "Named": "CorsConfig"
-          },
-          "optional": false,
-          "default": null,
-          "sanitized": false,
-          "typed_default": null,
-          "is_ref": true,
-          "is_mut": false,
-          "newtype_wrapper": null
-        }
-      ],
-      "return_type": "Unit",
-      "is_async": false,
-      "error_type": "Box<Response<Body>>",
-      "doc": "Validate a non-preflight CORS request\n\nChecks if the Origin header is present and allowed for non-preflight (actual) requests.\nReturns an error response if validation fails.\n\n# Validation\n\n- If no Origin header is present, the request is allowed (not a CORS request)\n- If Origin header is present, it must match the allowed origins\n\n# Arguments\n* `headers` - Request headers containing origin information\n* `cors_config` - CORS configuration to validate against\n\n# Returns\n* `Ok(())` - Request is allowed\n* `Err(Response)` - 403 Forbidden with error details\n\n# Note\n\nThis function is for actual requests, not OPTIONS preflight requests.\nUse `handle_preflight` for OPTIONS requests.",
-      "cfg": null,
-      "sanitized": true,
+      "sanitized": false,
       "returns_ref": false,
       "returns_cow": false,
       "return_newtype_wrapper": null
     },
     {
       "name": "schema_query_only",
-      "rust_path": "spikard::schema_query_only",
+      "rust_path": "spikard_graphql::schema_query_only",
+      "original_rust_path": "",
       "params": [],
       "return_type": {
         "Named": "QueryOnlyConfig"
@@ -4386,7 +5033,8 @@
     },
     {
       "name": "schema_query_mutation",
-      "rust_path": "spikard::schema_query_mutation",
+      "rust_path": "spikard_graphql::schema_query_mutation",
+      "original_rust_path": "",
       "params": [],
       "return_type": {
         "Named": "QueryMutationConfig"
@@ -4402,7 +5050,8 @@
     },
     {
       "name": "schema_full",
-      "rust_path": "spikard::schema_full",
+      "rust_path": "spikard_graphql::schema_full",
+      "original_rust_path": "",
       "params": [],
       "return_type": {
         "Named": "FullSchemaConfig"
@@ -4420,7 +5069,8 @@
   "enums": [
     {
       "name": "Method",
-      "rust_path": "spikard::Method",
+      "rust_path": "spikard_core::Method",
+      "original_rust_path": "",
       "variants": [
         {
           "name": "Get",
@@ -4475,11 +5125,12 @@
       "cfg": null
     },
     {
-      "name": "HandlerResponse",
-      "rust_path": "spikard::HandlerResponse",
+      "name": "JsonRpcResponseType",
+      "rust_path": "spikard_http::jsonrpc::JsonRpcResponseType",
+      "original_rust_path": "",
       "variants": [
         {
-          "name": "Response",
+          "name": "Success",
           "fields": [
             {
               "name": "_0",
@@ -4497,48 +5148,18 @@
               "newtype_wrapper": null
             }
           ],
-          "doc": "A complete response ready to send",
+          "doc": "Successful response containing a result",
           "is_default": false
         },
         {
-          "name": "Stream",
+          "name": "Error",
           "fields": [
             {
-              "name": "stream",
+              "name": "_0",
               "ty": "String",
               "optional": false,
               "default": null,
-              "doc": "The byte stream that will be sent to the client",
-              "sanitized": true,
-              "is_boxed": false,
-              "type_rust_path": null,
-              "cfg": null,
-              "typed_default": null,
-              "core_wrapper": "None",
-              "vec_inner_core_wrapper": "None",
-              "newtype_wrapper": null
-            },
-            {
-              "name": "status",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "doc": "HTTP status code for the response",
-              "sanitized": true,
-              "is_boxed": false,
-              "type_rust_path": null,
-              "cfg": null,
-              "typed_default": null,
-              "core_wrapper": "None",
-              "vec_inner_core_wrapper": "None",
-              "newtype_wrapper": null
-            },
-            {
-              "name": "headers",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "doc": "Response headers to send",
+              "doc": "",
               "sanitized": true,
               "is_boxed": false,
               "type_rust_path": null,
@@ -4549,100 +5170,161 @@
               "newtype_wrapper": null
             }
           ],
-          "doc": "A streaming response with custom status and headers",
+          "doc": "Error response containing error details",
           "is_default": false
         }
       ],
-      "doc": "Unified response type that can represent either a ready response or a streaming body.\n\nThis enum allows handlers to return either:\n- A complete response that's ready to send (`Response` variant)\n- A streaming response with potentially unbounded data (`Stream` variant)\n\n# Variants\n\n* `Response` - A complete Axum response ready to send to the client. Use this for\n  responses where you have all the data ready (files, JSON bodies, HTML, etc.)\n\n* `Stream` - A streaming response that produces data chunks over time. Use this for:\n  - Large files (avoid loading entire file in memory)\n  - Server-Sent Events (SSE)\n  - Long-polling responses\n  - Real-time data feeds\n  - Any unbounded or very large responses\n\n# Examples\n\n```ignore\n// Regular response\nlet response = AxumResponse::builder()\n    .status(StatusCode::OK)\n    .body(Body::from(\"Hello\"))\n    .unwrap();\nlet handler_response = HandlerResponse::from(response);\n\n// Streaming response\nlet stream = futures::stream::iter(vec![\n    Ok::<_, Box<dyn std::error::Error>>(Bytes::from(\"chunk1\")),\n    Ok(Bytes::from(\"chunk2\")),\n]);\nlet response = HandlerResponse::stream(stream)\n    .with_status(StatusCode::OK);\n```",
+      "doc": "JSON-RPC 2.0 Response Type\n\nAn enum that represents either a successful response or an error response.\nThis is useful for untagged deserialization and handling both response types uniformly.\n\n# Variants\n\n* `Success(JsonRpcResponse)` - A successful response with a result\n* `Error(JsonRpcErrorResponse)` - An error response with error details\n\n# Example\n\n```ignore\nuse serde_json::json;\nuse spikard_http::jsonrpc::{JsonRpcResponseType, JsonRpcResponse, JsonRpcErrorResponse, error_codes};\n\nlet success = JsonRpcResponseType::Success(\n    JsonRpcResponse::success(json!(42), json!(1))\n);\n\nlet error = JsonRpcResponseType::Error(\n    JsonRpcErrorResponse::error(error_codes::INVALID_PARAMS, \"Bad params\", json!(1))\n);\n```",
       "cfg": null
+    },
+    {
+      "name": "JsonRpcRequestOrBatch",
+      "rust_path": "spikard_http::jsonrpc::JsonRpcRequestOrBatch",
+      "original_rust_path": "",
+      "variants": [
+        {
+          "name": "Single",
+          "fields": [
+            {
+              "name": "_0",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "doc": "",
+              "sanitized": true,
+              "is_boxed": false,
+              "type_rust_path": null,
+              "cfg": null,
+              "typed_default": null,
+              "core_wrapper": "None",
+              "vec_inner_core_wrapper": "None",
+              "newtype_wrapper": null
+            }
+          ],
+          "doc": "A single JSON-RPC request",
+          "is_default": false
+        },
+        {
+          "name": "Batch",
+          "fields": [
+            {
+              "name": "_0",
+              "ty": {
+                "Vec": "String"
+              },
+              "optional": false,
+              "default": null,
+              "doc": "",
+              "sanitized": true,
+              "is_boxed": false,
+              "type_rust_path": null,
+              "cfg": null,
+              "typed_default": null,
+              "core_wrapper": "None",
+              "vec_inner_core_wrapper": "None",
+              "newtype_wrapper": null
+            }
+          ],
+          "doc": "A batch (array) of JSON-RPC requests",
+          "is_default": false
+        }
+      ],
+      "doc": "Represents either a single JSON-RPC request or a batch of requests\n\nUsed to distinguish between single and batch requests after parsing,\nallowing different routing logic for each case.",
+      "cfg": null
+    },
+    {
+      "name": "SecuritySchemeInfo",
+      "rust_path": "spikard_http::SecuritySchemeInfo",
+      "original_rust_path": "",
+      "variants": [
+        {
+          "name": "Http",
+          "fields": [
+            {
+              "name": "scheme",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "doc": "",
+              "sanitized": false,
+              "is_boxed": false,
+              "type_rust_path": null,
+              "cfg": null,
+              "typed_default": null,
+              "core_wrapper": "None",
+              "vec_inner_core_wrapper": "None",
+              "newtype_wrapper": null
+            },
+            {
+              "name": "bearer_format",
+              "ty": "String",
+              "optional": true,
+              "default": null,
+              "doc": "",
+              "sanitized": false,
+              "is_boxed": false,
+              "type_rust_path": null,
+              "cfg": null,
+              "typed_default": null,
+              "core_wrapper": "None",
+              "vec_inner_core_wrapper": "None",
+              "newtype_wrapper": null
+            }
+          ],
+          "doc": "",
+          "is_default": false,
+          "serde_rename": "http"
+        },
+        {
+          "name": "ApiKey",
+          "fields": [
+            {
+              "name": "location",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "doc": "",
+              "sanitized": false,
+              "is_boxed": false,
+              "type_rust_path": null,
+              "cfg": null,
+              "typed_default": null,
+              "core_wrapper": "None",
+              "vec_inner_core_wrapper": "None",
+              "newtype_wrapper": null
+            },
+            {
+              "name": "name",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "doc": "",
+              "sanitized": false,
+              "is_boxed": false,
+              "type_rust_path": null,
+              "cfg": null,
+              "typed_default": null,
+              "core_wrapper": "None",
+              "vec_inner_core_wrapper": "None",
+              "newtype_wrapper": null
+            }
+          ],
+          "doc": "",
+          "is_default": false,
+          "serde_rename": "apiKey"
+        }
+      ],
+      "doc": "Security scheme types",
+      "cfg": null,
+      "serde_tag": "type",
+      "serde_rename_all": "lowercase"
     }
   ],
   "errors": [
     {
-      "name": "AppError",
-      "rust_path": "spikard::AppError",
-      "variants": [
-        {
-          "name": "Route",
-          "message_template": "Failed to register route: {0}",
-          "fields": [
-            {
-              "name": "_0",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "doc": "",
-              "sanitized": false,
-              "is_boxed": false,
-              "type_rust_path": null,
-              "cfg": null,
-              "typed_default": null,
-              "core_wrapper": "None",
-              "vec_inner_core_wrapper": "None",
-              "newtype_wrapper": null
-            }
-          ],
-          "has_source": false,
-          "has_from": false,
-          "is_unit": false,
-          "doc": "Route registration failed."
-        },
-        {
-          "name": "Server",
-          "message_template": "Failed to build server: {0}",
-          "fields": [
-            {
-              "name": "_0",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "doc": "",
-              "sanitized": false,
-              "is_boxed": false,
-              "type_rust_path": null,
-              "cfg": null,
-              "typed_default": null,
-              "core_wrapper": "None",
-              "vec_inner_core_wrapper": "None",
-              "newtype_wrapper": null
-            }
-          ],
-          "has_source": false,
-          "has_from": false,
-          "is_unit": false,
-          "doc": "Server/router construction failed."
-        },
-        {
-          "name": "Decode",
-          "message_template": "Failed to decode payload: {0}",
-          "fields": [
-            {
-              "name": "_0",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "doc": "",
-              "sanitized": false,
-              "is_boxed": false,
-              "type_rust_path": null,
-              "cfg": null,
-              "typed_default": null,
-              "core_wrapper": "None",
-              "vec_inner_core_wrapper": "None",
-              "newtype_wrapper": null
-            }
-          ],
-          "has_source": false,
-          "has_from": false,
-          "is_unit": false,
-          "doc": "Failed to extract DTO from the request context."
-        }
-      ],
-      "doc": "Error type for application builder operations."
-    },
-    {
       "name": "GraphQLError",
-      "rust_path": "spikard::error::GraphQLError",
+      "rust_path": "spikard_graphql::error::GraphQLError",
+      "original_rust_path": "",
       "variants": [
         {
           "name": "ExecutionError",
@@ -5007,7 +5689,8 @@
     },
     {
       "name": "SchemaError",
-      "rust_path": "spikard::schema::SchemaError",
+      "rust_path": "spikard_graphql::schema::SchemaError",
+      "original_rust_path": "",
       "variants": [
         {
           "name": "BuildingFailed",

@@ -7,6 +7,9 @@ members = [
     "crates/spikard-core",
     "crates/spikard-graphql",
     "crates/spikard-http",
+    "crates/spikard-node",
+    "crates/spikard-php",
+    "crates/spikard-py",
     "tools/benchmark-harness",
     "tools/snippet-runner",
 ]
