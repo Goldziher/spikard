@@ -142,6 +142,17 @@ pub struct SchemaBuilder<Query, Mutation, Subscription> {
     _subscription: std::marker::PhantomData<Subscription>,
 }
 
+impl<Query, Mutation, Subscription> Clone for SchemaBuilder<Query, Mutation, Subscription> {
+    fn clone(&self) -> Self {
+        Self {
+            config: self.config.clone(),
+            _query: std::marker::PhantomData,
+            _mutation: std::marker::PhantomData,
+            _subscription: std::marker::PhantomData,
+        }
+    }
+}
+
 impl<Query, Mutation, Subscription> SchemaBuilder<Query, Mutation, Subscription> {
     /// Create a new schema builder with the specified root types.
     ///

@@ -44,15 +44,15 @@ pub struct UploadFile {
 
     /// File content (may be base64 encoded)
     #[serde(skip)]
-    content: Bytes,
+    pub content: Bytes,
 
     /// Content encoding type
     #[serde(rename = "content_encoding")]
-    content_encoding: Option<String>,
+    pub content_encoding: Option<String>,
 
     /// Internal cursor for Read/Seek operations
     #[serde(skip)]
-    cursor: Cursor<Bytes>,
+    pub cursor: Cursor<Bytes>,
 }
 
 impl UploadFile {

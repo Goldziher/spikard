@@ -331,6 +331,7 @@ impl Default for App {
 }
 
 /// Builder for defining a route.
+#[derive(Clone)]
 pub struct RouteBuilder {
     method: Method,
     path: String,

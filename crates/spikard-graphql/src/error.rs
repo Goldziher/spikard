@@ -4,6 +4,7 @@
 //! All errors follow the GraphQL specification error format with extensions for
 //! HTTP integration.
 
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use thiserror::Error;
 
@@ -14,7 +15,7 @@ pub type Result<T> = std::result::Result<T, GraphQLError>;
 ///
 /// These errors are compatible with async-graphql error handling and can be
 /// converted to structured HTTP responses matching the project's error fixtures.
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum GraphQLError {
     /// Error during schema execution
     ///
