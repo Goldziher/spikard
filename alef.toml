@@ -48,12 +48,17 @@ sources = [
 
 [exclude]
 types = [
+  # Internal implementation types
+  "BackgroundJobFuture",
   "BackgroundRuntime",
   "BackgroundShutdownError",
+  "ContentTypeKind",
   "Dependency",
   "DependencyContainer",
   "DependencyGraph",
+  "DependencyInjectingHandler",
   "ErrorCondition",
+  "ErrorMapper",
   "FactoryDependency",
   "FactoryDependencyBuilder",
   "FactoryFn",
@@ -61,6 +66,7 @@ types = [
   "GenericGrpcService",
   "Handler",
   "HandlerResponse",
+  "HandlerResult",
   "IntoHandler",
   "LifecycleHooks",
   "LifecycleHooksBuilder",
@@ -69,6 +75,7 @@ types = [
   "MethodMetadata",
   "PreParsedJson",
   "PreReadBody",
+  "RegistryError",
   "ResolvedDependencies",
   "ResponseBodySize",
   "ResponseSnapshot",
@@ -82,6 +89,48 @@ types = [
   "WebSocketConnection",
   "WebSocketState",
   "WithoutBodyExtractionOptions",
+  # Internal bindings types
+  "RawResponse",
+  "StaticAsset",
+  "StructuredError",
+  # Internal protocol types
+  "JsonRpcState",
+  "JsonRpcMethodRegistry",
+  "JsonRpcRequest",
+  "JsonRpcResponse",
+  "JsonRpcError",
+  "JsonRpcErrorResponse",
+  "JsonRpcRouter",
+  # Internal gRPC types
+  "GrpcHandlerResult",
+  "GrpcHandler",
+  "GrpcRegistry",
+  "StreamingRequest",
+  "StreamingResponse",
+  # Internal server types
+  "Server",
+  "ServerConfigBuilder",
+  "StaticResponseHandler",
+  "StaticResponse",
+  "RouteHandler",
+  "Router",
+  "SchemaRegistry",
+  # Opaque validators (can't cross FFI usefully)
+  "SchemaValidator",
+  "ParameterValidator",
+  "ValidationError",
+  "ValidationErrorDetail",
+  # Traits (can't be instantiated in bindings)
+  "SseEventProducer",
+  "WebSocketHandler",
+  "GrpcHandler",
+  # Internal enums with wrong module paths
+  "ParameterSource",
+  "ContentTypeKind",
+  "WebSocketMessage",
+  "BackgroundSpawnError",
+  # Types causing residual errors
+  "RequestData",
 ]
 functions = [
   "api_key_auth_middleware",
