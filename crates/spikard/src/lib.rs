@@ -22,18 +22,6 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 #[cfg(feature = "di")]
 use spikard_core::di;
-pub use spikard_core::router::JsonRpcMethodInfo;
-pub use spikard_graphql::{
-    FullSchemaConfig, GraphQLError, GraphQLExecutor, GraphQLHandler, GraphQLResult, GraphQLRouteConfig,
-    QueryMutationConfig, QueryOnlyConfig, SchemaBuilder, SchemaConfig, schema_full, schema_query_mutation,
-    schema_query_only,
-};
-pub use spikard_http::openapi::OpenApiConfig;
-pub use spikard_http::testing::WebSocketMessage;
-pub use spikard_http::{
-    ApiKeyConfig, BackgroundTaskConfig, GrpcConfig, JsonRpcConfig, JwtConfig, ParameterValidator, RequestData, Route,
-    RouteMetadata, Router, SchemaRegistry, SchemaValidator,
-};
 pub use spikard_http::{
     CompressionConfig, CorsConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, RateLimitConfig,
     ServerConfig, StaticFilesConfig,
@@ -45,30 +33,12 @@ pub use spikard_http::{
     websocket::WebSocketHandler,
 };
 use spikard_http::{
-    Server,
+    RequestData, Route, RouteMetadata, SchemaRegistry, Server,
     handler_trait::Handler,
     sse::{SseState, sse_handler},
     websocket::{WebSocketState, websocket_handler},
 };
 pub use upload::UploadFile;
-
-/// Re-export of the `anyhow` crate for use in binding code.
-pub use anyhow;
-
-/// GraphQL error types, accessible via `spikard::error::GraphQLError`.
-pub mod error {
-    pub use spikard_graphql::error::*;
-}
-
-/// GraphQL schema types, accessible via `spikard::schema::SchemaError`.
-pub mod schema {
-    pub use spikard_graphql::schema::*;
-}
-
-/// GraphQL handler types, accessible via `spikard::handler::GraphQLRequestPayload`.
-pub mod handler {
-    pub use spikard_graphql::handler::*;
-}
 
 pub mod testing {
     use super::{App, AppError};

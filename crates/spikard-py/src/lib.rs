@@ -21,6 +21,943 @@ use std::sync::Arc;
 
 #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[pyclass(frozen, from_py_object)]
+pub struct UploadFile {
+    /// Original filename from the client
+    #[pyo3(get)]
+    pub filename: String,
+    /// MIME type of the uploaded file
+    #[pyo3(get)]
+    pub content_type: Option<String>,
+    /// Size of the file in bytes
+    #[pyo3(get)]
+    pub size: Option<usize>,
+    /// File content (may be base64 encoded)
+    #[pyo3(get)]
+    pub content: Vec<u8>,
+    /// Content encoding type
+    #[pyo3(get)]
+    pub content_encoding: Option<String>,
+    /// Internal cursor for Read/Seek operations
+    #[pyo3(get)]
+    pub cursor: String,
+}
+
+#[pymethods]
+impl UploadFile {
+    #[must_use]
+    #[pyo3(signature = (filename, content, cursor, content_type=None, size=None, content_encoding=None))]
+    #[new]
+    pub fn new(
+        filename: String,
+        content: Vec<u8>,
+        cursor: String,
+        content_type: Option<String>,
+        size: Option<usize>,
+        content_encoding: Option<String>,
+    ) -> Self {
+        Self {
+            filename,
+            content_type,
+            size,
+            content,
+            content_encoding,
+            cursor,
+        }
+    }
+
+    #[pyo3(signature = ())]
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size,
+            content: self.content.clone().into(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        core_self.as_bytes().to_vec()
+    }
+
+    #[allow(clippy::missing_errors_doc)]
+    #[pyo3(signature = ())]
+    pub fn read_to_string(&self) -> PyResult<String> {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size,
+            content: self.content.clone().into(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        let result = core_self
+            .read_to_string()
+            .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+        Ok(result.into())
+    }
+
+    #[pyo3(signature = ())]
+    pub fn content_type_or_default(&self) -> String {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size,
+            content: self.content.clone().into(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        core_self.content_type_or_default().to_owned()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct CorsConfig {
+    #[pyo3(get)]
+    pub allowed_origins: Vec<String>,
+    #[pyo3(get)]
+    pub allowed_methods: Vec<String>,
+    #[pyo3(get)]
+    pub allowed_headers: Vec<String>,
+    #[pyo3(get)]
+    pub expose_headers: Option<Vec<String>>,
+    #[pyo3(get)]
+    pub max_age: Option<u32>,
+    #[pyo3(get)]
+    pub allow_credentials: Option<bool>,
+    #[pyo3(get)]
+    pub methods_joined_cache: String,
+    #[pyo3(get)]
+    pub headers_joined_cache: String,
+}
+
+#[pymethods]
+impl CorsConfig {
+    #[allow(clippy::too_many_arguments)]
+    #[must_use]
+    #[pyo3(signature = (allowed_origins=None, allowed_methods=None, allowed_headers=None, methods_joined_cache=None, headers_joined_cache=None, expose_headers=None, max_age=None, allow_credentials=None))]
+    #[new]
+    pub fn new(
+        allowed_origins: Option<Vec<String>>,
+        allowed_methods: Option<Vec<String>>,
+        allowed_headers: Option<Vec<String>>,
+        methods_joined_cache: Option<String>,
+        headers_joined_cache: Option<String>,
+        expose_headers: Option<Vec<String>>,
+        max_age: Option<u32>,
+        allow_credentials: Option<bool>,
+    ) -> Self {
+        Self {
+            allowed_origins: allowed_origins.unwrap_or_default(),
+            allowed_methods: allowed_methods.unwrap_or_default(),
+            allowed_headers: allowed_headers.unwrap_or_default(),
+            expose_headers,
+            max_age,
+            allow_credentials,
+            methods_joined_cache: methods_joined_cache.unwrap_or_default(),
+            headers_joined_cache: headers_joined_cache.unwrap_or_default(),
+        }
+    }
+
+    #[pyo3(signature = ())]
+    pub fn allowed_methods_joined(&self) -> String {
+        let core_self = spikard_core::CorsConfig {
+            allowed_origins: self.allowed_origins.clone(),
+            allowed_methods: self.allowed_methods.clone(),
+            allowed_headers: self.allowed_headers.clone(),
+            expose_headers: self.expose_headers.clone(),
+            max_age: self.max_age,
+            allow_credentials: self.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        };
+        core_self.allowed_methods_joined().to_owned()
+    }
+
+    #[pyo3(signature = ())]
+    pub fn allowed_headers_joined(&self) -> String {
+        let core_self = spikard_core::CorsConfig {
+            allowed_origins: self.allowed_origins.clone(),
+            allowed_methods: self.allowed_methods.clone(),
+            allowed_headers: self.allowed_headers.clone(),
+            expose_headers: self.expose_headers.clone(),
+            max_age: self.max_age,
+            allow_credentials: self.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        };
+        core_self.allowed_headers_joined().to_owned()
+    }
+
+    #[pyo3(signature = (origin))]
+    pub fn is_origin_allowed(&self, origin: String) -> bool {
+        let core_self = spikard_core::CorsConfig {
+            allowed_origins: self.allowed_origins.clone(),
+            allowed_methods: self.allowed_methods.clone(),
+            allowed_headers: self.allowed_headers.clone(),
+            expose_headers: self.expose_headers.clone(),
+            max_age: self.max_age,
+            allow_credentials: self.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        };
+        core_self.is_origin_allowed(&origin)
+    }
+
+    #[pyo3(signature = (method))]
+    pub fn is_method_allowed(&self, method: String) -> bool {
+        let core_self = spikard_core::CorsConfig {
+            allowed_origins: self.allowed_origins.clone(),
+            allowed_methods: self.allowed_methods.clone(),
+            allowed_headers: self.allowed_headers.clone(),
+            expose_headers: self.expose_headers.clone(),
+            max_age: self.max_age,
+            allow_credentials: self.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        };
+        core_self.is_method_allowed(&method)
+    }
+
+    #[pyo3(signature = (requested))]
+    pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
+        let requested_refs: Vec<&str> = requested.iter().map(|s| s.as_str()).collect();
+        let _ = requested;
+        false
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> CorsConfig {
+        spikard_core::CorsConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct RouteMetadata {
+    #[pyo3(get)]
+    pub method: String,
+    #[pyo3(get)]
+    pub path: String,
+    #[pyo3(get)]
+    pub handler_name: String,
+    #[pyo3(get)]
+    pub request_schema: Option<String>,
+    #[pyo3(get)]
+    pub response_schema: Option<String>,
+    #[pyo3(get)]
+    pub parameter_schema: Option<String>,
+    #[pyo3(get)]
+    pub file_params: Option<String>,
+    #[pyo3(get)]
+    pub is_async: bool,
+    #[pyo3(get)]
+    pub cors: Option<CorsConfig>,
+    /// Name of the body parameter (defaults to "body" if not specified)
+    #[pyo3(get)]
+    pub body_param_name: Option<String>,
+    /// List of dependency keys this handler requires (for DI)
+    #[pyo3(get)]
+    pub handler_dependencies: Option<Vec<String>>,
+    /// JSON-RPC method metadata (if this route is exposed as a JSON-RPC method)
+    #[pyo3(get)]
+    pub jsonrpc_method: Option<String>,
+    /// Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}`
+    /// When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full
+    /// middleware pipeline for maximum throughput.
+    #[pyo3(get)]
+    pub static_response: Option<String>,
+}
+
+#[pymethods]
+impl RouteMetadata {
+    #[allow(clippy::too_many_arguments)]
+    #[must_use]
+    #[pyo3(signature = (method=None, path=None, handler_name=None, is_async=None, request_schema=None, response_schema=None, parameter_schema=None, file_params=None, cors=None, body_param_name=None, handler_dependencies=None, jsonrpc_method=None, static_response=None))]
+    #[new]
+    pub fn new(
+        method: Option<String>,
+        path: Option<String>,
+        handler_name: Option<String>,
+        is_async: Option<bool>,
+        request_schema: Option<String>,
+        response_schema: Option<String>,
+        parameter_schema: Option<String>,
+        file_params: Option<String>,
+        cors: Option<CorsConfig>,
+        body_param_name: Option<String>,
+        handler_dependencies: Option<Vec<String>>,
+        jsonrpc_method: Option<String>,
+        static_response: Option<String>,
+    ) -> Self {
+        Self {
+            method: method.unwrap_or_else(|| "GET".to_string()),
+            path: path.unwrap_or_else(|| "/".to_string()),
+            handler_name: handler_name.unwrap_or_else(|| "".to_string()),
+            request_schema,
+            response_schema,
+            parameter_schema,
+            file_params,
+            is_async: is_async.unwrap_or(true),
+            cors,
+            body_param_name,
+            handler_dependencies,
+            jsonrpc_method,
+            static_response,
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> RouteMetadata {
+        spikard_core::RouteMetadata::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct CompressionConfig {
+    /// Enable gzip compression
+    #[pyo3(get)]
+    pub gzip: bool,
+    /// Enable brotli compression
+    #[pyo3(get)]
+    pub brotli: bool,
+    /// Minimum response size to compress (bytes)
+    #[pyo3(get)]
+    pub min_size: usize,
+    /// Compression quality (0-11 for brotli, 0-9 for gzip)
+    #[pyo3(get)]
+    pub quality: u32,
+}
+
+#[pymethods]
+impl CompressionConfig {
+    #[must_use]
+    #[pyo3(signature = (gzip=None, brotli=None, min_size=None, quality=None))]
+    #[new]
+    pub fn new(gzip: Option<bool>, brotli: Option<bool>, min_size: Option<usize>, quality: Option<u32>) -> Self {
+        Self {
+            gzip: gzip.unwrap_or(true),
+            brotli: brotli.unwrap_or(true),
+            min_size: min_size.unwrap_or_default(),
+            quality: quality.unwrap_or_default(),
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> CompressionConfig {
+        spikard_core::CompressionConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct RateLimitConfig {
+    /// Requests per second
+    #[pyo3(get)]
+    pub per_second: u64,
+    /// Burst allowance
+    #[pyo3(get)]
+    pub burst: u32,
+    /// Use IP-based rate limiting
+    #[pyo3(get)]
+    pub ip_based: bool,
+}
+
+#[pymethods]
+impl RateLimitConfig {
+    #[must_use]
+    #[pyo3(signature = (per_second=None, burst=None, ip_based=None))]
+    #[new]
+    pub fn new(per_second: Option<u64>, burst: Option<u32>, ip_based: Option<bool>) -> Self {
+        Self {
+            per_second: per_second.unwrap_or(100),
+            burst: burst.unwrap_or(200),
+            ip_based: ip_based.unwrap_or(true),
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> RateLimitConfig {
+        spikard_core::RateLimitConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct JsonRpcMethodInfo {
+    /// The JSON-RPC method name (e.g., "user.create")
+    #[pyo3(get)]
+    pub method_name: String,
+    /// Optional description of what the method does
+    #[pyo3(get)]
+    pub description: Option<String>,
+    /// Optional JSON Schema for method parameters
+    #[pyo3(get)]
+    pub params_schema: Option<String>,
+    /// Optional JSON Schema for the result
+    #[pyo3(get)]
+    pub result_schema: Option<String>,
+    /// Whether this method is deprecated
+    #[pyo3(get)]
+    pub deprecated: bool,
+    /// Tags for categorizing and grouping methods
+    #[pyo3(get)]
+    pub tags: Vec<String>,
+}
+
+#[pymethods]
+impl JsonRpcMethodInfo {
+    #[must_use]
+    #[pyo3(signature = (method_name, deprecated, tags, description=None, params_schema=None, result_schema=None))]
+    #[new]
+    pub fn new(
+        method_name: String,
+        deprecated: bool,
+        tags: Vec<String>,
+        description: Option<String>,
+        params_schema: Option<String>,
+        result_schema: Option<String>,
+    ) -> Self {
+        Self {
+            method_name,
+            description,
+            params_schema,
+            result_schema,
+            deprecated,
+            tags,
+        }
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct Route {
+    #[pyo3(get)]
+    pub method: Method,
+    #[pyo3(get)]
+    pub path: String,
+    #[pyo3(get)]
+    pub handler_name: String,
+    #[pyo3(get)]
+    pub request_validator: Option<String>,
+    #[pyo3(get)]
+    pub response_validator: Option<String>,
+    #[pyo3(get)]
+    pub parameter_validator: Option<String>,
+    #[pyo3(get)]
+    pub file_params: Option<String>,
+    #[pyo3(get)]
+    pub is_async: bool,
+    #[pyo3(get)]
+    pub cors: Option<CorsConfig>,
+    /// Precomputed flag: true if this route expects a JSON request body
+    /// Used by middleware to validate Content-Type headers
+    #[pyo3(get)]
+    pub expects_json_body: bool,
+    /// List of dependency keys this handler requires (for DI)
+    #[pyo3(get)]
+    pub handler_dependencies: Vec<String>,
+    /// Optional JSON-RPC method information
+    /// When present, this route can be exposed as a JSON-RPC method
+    #[pyo3(get)]
+    pub jsonrpc_method: Option<JsonRpcMethodInfo>,
+}
+
+#[pymethods]
+impl Route {
+    #[allow(clippy::too_many_arguments)]
+    #[must_use]
+    #[pyo3(signature = (method=None, path=None, handler_name=None, is_async=None, expects_json_body=None, handler_dependencies=None, request_validator=None, response_validator=None, parameter_validator=None, file_params=None, cors=None, jsonrpc_method=None))]
+    #[new]
+    pub fn new(
+        method: Option<Method>,
+        path: Option<String>,
+        handler_name: Option<String>,
+        is_async: Option<bool>,
+        expects_json_body: Option<bool>,
+        handler_dependencies: Option<Vec<String>>,
+        request_validator: Option<String>,
+        response_validator: Option<String>,
+        parameter_validator: Option<String>,
+        file_params: Option<String>,
+        cors: Option<CorsConfig>,
+        jsonrpc_method: Option<JsonRpcMethodInfo>,
+    ) -> Self {
+        Self {
+            method: method.unwrap_or_default(),
+            path: path.unwrap_or_else(|| "/".to_string()),
+            handler_name: handler_name.unwrap_or_else(|| "".to_string()),
+            request_validator,
+            response_validator,
+            parameter_validator,
+            file_params,
+            is_async: is_async.unwrap_or(true),
+            cors,
+            expects_json_body: expects_json_body.unwrap_or(false),
+            handler_dependencies: handler_dependencies.unwrap_or_default(),
+            jsonrpc_method,
+        }
+    }
+
+    #[pyo3(signature = (info))]
+    pub fn with_jsonrpc_method(&self, info: JsonRpcMethodInfo) -> Route {
+        let info_core: spikard_core::JsonRpcMethodInfo = info.into();
+        let _ = info;
+        Default::default()
+    }
+
+    #[pyo3(signature = ())]
+    pub fn is_jsonrpc_method(&self) -> bool {
+        #[allow(clippy::needless_update)]
+        let core_self = spikard_core::Route {
+            method: self.method.clone().into(),
+            path: self.path.clone(),
+            handler_name: self.handler_name.clone(),
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: self.is_async,
+            cors: self.cors.clone().map(Into::into),
+            expects_json_body: self.expects_json_body,
+            handler_dependencies: self.handler_dependencies.clone(),
+            jsonrpc_method: self.jsonrpc_method.clone().map(Into::into),
+            ..Default::default()
+        };
+        core_self.is_jsonrpc_method()
+    }
+
+    #[pyo3(signature = ())]
+    pub fn jsonrpc_method_name(&self) -> Option<String> {
+        #[allow(clippy::needless_update)]
+        let core_self = spikard_core::Route {
+            method: self.method.clone().into(),
+            path: self.path.clone(),
+            handler_name: self.handler_name.clone(),
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: self.is_async,
+            cors: self.cors.clone().map(Into::into),
+            expects_json_body: self.expects_json_body,
+            handler_dependencies: self.handler_dependencies.clone(),
+            jsonrpc_method: self.jsonrpc_method.clone().map(Into::into),
+            ..Default::default()
+        };
+        core_self.jsonrpc_method_name().map(|v| v.to_owned())
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> Route {
+        spikard_core::Route::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct ProblemDetails {
+    /// A URI reference that identifies the problem type.
+    /// Defaults to "about:blank" when absent.
+    /// Should be a stable, human-readable identifier for the problem type.
+    #[pyo3(get)]
+    pub type_uri: String,
+    /// A short, human-readable summary of the problem type.
+    /// Should not change from occurrence to occurrence of the problem.
+    #[pyo3(get)]
+    pub title: String,
+    /// The HTTP status code generated by the origin server.
+    /// This is advisory; the actual HTTP status code takes precedence.
+    #[pyo3(get)]
+    pub status: u16,
+    /// A human-readable explanation specific to this occurrence of the problem.
+    #[pyo3(get)]
+    pub detail: Option<String>,
+    /// A URI reference that identifies the specific occurrence of the problem.
+    /// It may or may not yield further information if dereferenced.
+    #[pyo3(get)]
+    pub instance: Option<String>,
+    /// Extension members - problem-type-specific data.
+    /// For validation errors, this typically contains an "errors" array.
+    #[pyo3(get)]
+    pub extensions: HashMap<String, String>,
+}
+
+#[pymethods]
+impl ProblemDetails {
+    #[must_use]
+    #[pyo3(signature = (type_uri, title, status, extensions, detail=None, instance=None))]
+    #[new]
+    pub fn new(
+        type_uri: String,
+        title: String,
+        status: u16,
+        extensions: HashMap<String, String>,
+        detail: Option<String>,
+        instance: Option<String>,
+    ) -> Self {
+        Self {
+            type_uri,
+            title,
+            status,
+            detail,
+            instance,
+            extensions,
+        }
+    }
+
+    #[pyo3(signature = (detail))]
+    pub fn with_detail(&self, detail: String) -> ProblemDetails {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        core_self.with_detail(detail).into()
+    }
+
+    #[pyo3(signature = (instance))]
+    pub fn with_instance(&self, instance: String) -> ProblemDetails {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        core_self.with_instance(instance).into()
+    }
+
+    #[allow(clippy::missing_errors_doc)]
+    #[pyo3(signature = ())]
+    pub fn to_json(&self) -> PyResult<String> {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        let result = core_self
+            .to_json()
+            .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+        Ok(result.into())
+    }
+
+    #[allow(clippy::missing_errors_doc)]
+    #[pyo3(signature = ())]
+    pub fn to_json_pretty(&self) -> PyResult<String> {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        let result = core_self
+            .to_json_pretty()
+            .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
+        Ok(result.into())
+    }
+
+    #[staticmethod]
+    #[pyo3(signature = (detail))]
+    pub fn not_found(detail: String) -> ProblemDetails {
+        spikard_core::ProblemDetails::not_found(detail).into()
+    }
+
+    #[staticmethod]
+    #[pyo3(signature = (detail))]
+    pub fn method_not_allowed(detail: String) -> ProblemDetails {
+        spikard_core::ProblemDetails::method_not_allowed(detail).into()
+    }
+
+    #[staticmethod]
+    #[pyo3(signature = (detail))]
+    pub fn internal_server_error(detail: String) -> ProblemDetails {
+        spikard_core::ProblemDetails::internal_server_error(detail).into()
+    }
+
+    #[staticmethod]
+    #[pyo3(signature = (detail))]
+    pub fn bad_request(detail: String) -> ProblemDetails {
+        spikard_core::ProblemDetails::bad_request(detail).into()
+    }
+}
+
+#[derive(Clone)]
+#[pyclass(frozen, from_py_object)]
+pub struct GraphQLRouteConfig {
+    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
+}
+
+#[pymethods]
+impl GraphQLRouteConfig {
+    #[pyo3(signature = (path))]
+    pub fn path(&self, path: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().path(path)),
+        }
+    }
+
+    #[pyo3(signature = (method))]
+    pub fn method(&self, method: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().method(method)),
+        }
+    }
+
+    #[pyo3(signature = (enable))]
+    pub fn enable_playground(&self, enable: bool) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().enable_playground(enable)),
+        }
+    }
+
+    #[pyo3(signature = (description))]
+    pub fn description(&self, description: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().description(description)),
+        }
+    }
+
+    #[pyo3(signature = ())]
+    pub fn get_path(&self) -> String {
+        self.inner.get_path().into()
+    }
+
+    #[pyo3(signature = ())]
+    pub fn get_method(&self) -> String {
+        self.inner.get_method().into()
+    }
+
+    #[pyo3(signature = ())]
+    pub fn is_playground_enabled(&self) -> bool {
+        self.inner.is_playground_enabled()
+    }
+
+    #[pyo3(signature = ())]
+    pub fn get_description(&self) -> Option<String> {
+        self.inner.get_description().map(Into::into)
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new(spikard_graphql::GraphQLRouteConfig::default()),
+        }
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct SchemaConfig {
+    /// Enable introspection queries
+    #[pyo3(get)]
+    pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
+    #[pyo3(get)]
+    pub complexity_limit: Option<usize>,
+    /// Maximum query depth (None = unlimited)
+    #[pyo3(get)]
+    pub depth_limit: Option<usize>,
+}
+
+#[pymethods]
+impl SchemaConfig {
+    #[must_use]
+    #[pyo3(signature = (introspection_enabled=None, complexity_limit=None, depth_limit=None))]
+    #[new]
+    pub fn new(
+        introspection_enabled: Option<bool>,
+        complexity_limit: Option<usize>,
+        depth_limit: Option<usize>,
+    ) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    #[pyo3(signature = (enabled))]
+    pub fn set_introspection_enabled(&self, enabled: bool) -> Self {
+        let mut core_self = spikard_graphql::SchemaConfig {
+            introspection_enabled: self.introspection_enabled,
+            complexity_limit: self.complexity_limit,
+            depth_limit: self.depth_limit,
+        };
+        core_self.set_introspection_enabled(enabled);
+        core_self.into()
+    }
+
+    #[pyo3(signature = (limit))]
+    pub fn set_complexity_limit(&self, limit: usize) -> Self {
+        let mut core_self = spikard_graphql::SchemaConfig {
+            introspection_enabled: self.introspection_enabled,
+            complexity_limit: self.complexity_limit,
+            depth_limit: self.depth_limit,
+        };
+        core_self.set_complexity_limit(limit);
+        core_self.into()
+    }
+
+    #[pyo3(signature = (limit))]
+    pub fn set_depth_limit(&self, limit: usize) -> Self {
+        let mut core_self = spikard_graphql::SchemaConfig {
+            introspection_enabled: self.introspection_enabled,
+            complexity_limit: self.complexity_limit,
+            depth_limit: self.depth_limit,
+        };
+        core_self.set_depth_limit(limit);
+        core_self.into()
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> SchemaConfig {
+        spikard_graphql::SchemaConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct QueryOnlyConfig {
+    /// Enable introspection queries
+    #[pyo3(get)]
+    pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
+    #[pyo3(get)]
+    pub complexity_limit: Option<usize>,
+    /// Maximum query depth (None = unlimited)
+    #[pyo3(get)]
+    pub depth_limit: Option<usize>,
+}
+
+#[pymethods]
+impl QueryOnlyConfig {
+    #[must_use]
+    #[pyo3(signature = (introspection_enabled=None, complexity_limit=None, depth_limit=None))]
+    #[new]
+    pub fn new(
+        introspection_enabled: Option<bool>,
+        complexity_limit: Option<usize>,
+        depth_limit: Option<usize>,
+    ) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> QueryOnlyConfig {
+        spikard_graphql::QueryOnlyConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct QueryMutationConfig {
+    /// Enable introspection queries
+    #[pyo3(get)]
+    pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
+    #[pyo3(get)]
+    pub complexity_limit: Option<usize>,
+    /// Maximum query depth (None = unlimited)
+    #[pyo3(get)]
+    pub depth_limit: Option<usize>,
+}
+
+#[pymethods]
+impl QueryMutationConfig {
+    #[must_use]
+    #[pyo3(signature = (introspection_enabled=None, complexity_limit=None, depth_limit=None))]
+    #[new]
+    pub fn new(
+        introspection_enabled: Option<bool>,
+        complexity_limit: Option<usize>,
+        depth_limit: Option<usize>,
+    ) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> QueryMutationConfig {
+        spikard_graphql::QueryMutationConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
+pub struct FullSchemaConfig {
+    /// Enable introspection queries
+    #[pyo3(get)]
+    pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
+    #[pyo3(get)]
+    pub complexity_limit: Option<usize>,
+    /// Maximum query depth (None = unlimited)
+    #[pyo3(get)]
+    pub depth_limit: Option<usize>,
+}
+
+#[pymethods]
+impl FullSchemaConfig {
+    #[must_use]
+    #[pyo3(signature = (introspection_enabled=None, complexity_limit=None, depth_limit=None))]
+    #[new]
+    pub fn new(
+        introspection_enabled: Option<bool>,
+        complexity_limit: Option<usize>,
+        depth_limit: Option<usize>,
+    ) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[staticmethod]
+    #[pyo3(signature = ())]
+    pub fn default() -> FullSchemaConfig {
+        spikard_graphql::FullSchemaConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[pyclass(frozen, from_py_object)]
 #[allow(clippy::similar_names)]
 pub struct Claims {
     #[pyo3(get)]
@@ -154,598 +1091,6 @@ impl BackgroundJobError {
 #[pyclass(frozen, from_py_object)]
 pub struct BackgroundHandle {
     inner: Arc<spikard_http::BackgroundHandle>,
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct CorsConfig {
-    #[pyo3(get)]
-    pub allowed_origins: Vec<String>,
-    #[pyo3(get)]
-    pub allowed_methods: Vec<String>,
-    #[pyo3(get)]
-    pub allowed_headers: Vec<String>,
-    #[pyo3(get)]
-    pub expose_headers: Option<Vec<String>>,
-    #[pyo3(get)]
-    pub max_age: Option<u32>,
-    #[pyo3(get)]
-    pub allow_credentials: Option<bool>,
-    #[pyo3(get)]
-    pub methods_joined_cache: String,
-    #[pyo3(get)]
-    pub headers_joined_cache: String,
-}
-
-#[pymethods]
-impl CorsConfig {
-    #[allow(clippy::too_many_arguments)]
-    #[must_use]
-    #[pyo3(signature = (allowed_origins=None, allowed_methods=None, allowed_headers=None, methods_joined_cache=None, headers_joined_cache=None, expose_headers=None, max_age=None, allow_credentials=None))]
-    #[new]
-    pub fn new(
-        allowed_origins: Option<Vec<String>>,
-        allowed_methods: Option<Vec<String>>,
-        allowed_headers: Option<Vec<String>>,
-        methods_joined_cache: Option<String>,
-        headers_joined_cache: Option<String>,
-        expose_headers: Option<Vec<String>>,
-        max_age: Option<u32>,
-        allow_credentials: Option<bool>,
-    ) -> Self {
-        Self {
-            allowed_origins: allowed_origins.unwrap_or_default(),
-            allowed_methods: allowed_methods.unwrap_or_default(),
-            allowed_headers: allowed_headers.unwrap_or_default(),
-            expose_headers,
-            max_age,
-            allow_credentials,
-            methods_joined_cache: methods_joined_cache.unwrap_or_default(),
-            headers_joined_cache: headers_joined_cache.unwrap_or_default(),
-        }
-    }
-
-    #[pyo3(signature = ())]
-    pub fn allowed_methods_joined(&self) -> String {
-        let core_self = spikard_http::CorsConfig {
-            allowed_origins: self.allowed_origins.clone(),
-            allowed_methods: self.allowed_methods.clone(),
-            allowed_headers: self.allowed_headers.clone(),
-            expose_headers: self.expose_headers.clone(),
-            max_age: self.max_age,
-            allow_credentials: self.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        };
-        core_self.allowed_methods_joined().to_owned()
-    }
-
-    #[pyo3(signature = ())]
-    pub fn allowed_headers_joined(&self) -> String {
-        let core_self = spikard_http::CorsConfig {
-            allowed_origins: self.allowed_origins.clone(),
-            allowed_methods: self.allowed_methods.clone(),
-            allowed_headers: self.allowed_headers.clone(),
-            expose_headers: self.expose_headers.clone(),
-            max_age: self.max_age,
-            allow_credentials: self.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        };
-        core_self.allowed_headers_joined().to_owned()
-    }
-
-    #[pyo3(signature = (origin))]
-    pub fn is_origin_allowed(&self, origin: String) -> bool {
-        let core_self = spikard_http::CorsConfig {
-            allowed_origins: self.allowed_origins.clone(),
-            allowed_methods: self.allowed_methods.clone(),
-            allowed_headers: self.allowed_headers.clone(),
-            expose_headers: self.expose_headers.clone(),
-            max_age: self.max_age,
-            allow_credentials: self.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        };
-        core_self.is_origin_allowed(&origin)
-    }
-
-    #[pyo3(signature = (method))]
-    pub fn is_method_allowed(&self, method: String) -> bool {
-        let core_self = spikard_http::CorsConfig {
-            allowed_origins: self.allowed_origins.clone(),
-            allowed_methods: self.allowed_methods.clone(),
-            allowed_headers: self.allowed_headers.clone(),
-            expose_headers: self.expose_headers.clone(),
-            max_age: self.max_age,
-            allow_credentials: self.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        };
-        core_self.is_method_allowed(&method)
-    }
-
-    #[pyo3(signature = (requested))]
-    pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
-        let requested_refs: Vec<&str> = requested.iter().map(|s| s.as_str()).collect();
-        let _ = requested;
-        false
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> CorsConfig {
-        spikard_http::CorsConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct RouteMetadata {
-    #[pyo3(get)]
-    pub method: String,
-    #[pyo3(get)]
-    pub path: String,
-    #[pyo3(get)]
-    pub handler_name: String,
-    #[pyo3(get)]
-    pub request_schema: Option<String>,
-    #[pyo3(get)]
-    pub response_schema: Option<String>,
-    #[pyo3(get)]
-    pub parameter_schema: Option<String>,
-    #[pyo3(get)]
-    pub file_params: Option<String>,
-    #[pyo3(get)]
-    pub is_async: bool,
-    #[pyo3(get)]
-    pub cors: Option<CorsConfig>,
-    /// Name of the body parameter (defaults to "body" if not specified)
-    #[pyo3(get)]
-    pub body_param_name: Option<String>,
-    /// List of dependency keys this handler requires (for DI)
-    #[pyo3(get)]
-    pub handler_dependencies: Option<Vec<String>>,
-    /// JSON-RPC method metadata (if this route is exposed as a JSON-RPC method)
-    #[pyo3(get)]
-    pub jsonrpc_method: Option<String>,
-    /// Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}`
-    /// When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full
-    /// middleware pipeline for maximum throughput.
-    #[pyo3(get)]
-    pub static_response: Option<String>,
-}
-
-#[pymethods]
-impl RouteMetadata {
-    #[allow(clippy::too_many_arguments)]
-    #[must_use]
-    #[pyo3(signature = (method=None, path=None, handler_name=None, is_async=None, request_schema=None, response_schema=None, parameter_schema=None, file_params=None, cors=None, body_param_name=None, handler_dependencies=None, jsonrpc_method=None, static_response=None))]
-    #[new]
-    pub fn new(
-        method: Option<String>,
-        path: Option<String>,
-        handler_name: Option<String>,
-        is_async: Option<bool>,
-        request_schema: Option<String>,
-        response_schema: Option<String>,
-        parameter_schema: Option<String>,
-        file_params: Option<String>,
-        cors: Option<CorsConfig>,
-        body_param_name: Option<String>,
-        handler_dependencies: Option<Vec<String>>,
-        jsonrpc_method: Option<String>,
-        static_response: Option<String>,
-    ) -> Self {
-        Self {
-            method: method.unwrap_or_else(|| "GET".to_string()),
-            path: path.unwrap_or_else(|| "/".to_string()),
-            handler_name: handler_name.unwrap_or_else(|| "".to_string()),
-            request_schema,
-            response_schema,
-            parameter_schema,
-            file_params,
-            is_async: is_async.unwrap_or(true),
-            cors,
-            body_param_name,
-            handler_dependencies,
-            jsonrpc_method,
-            static_response,
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> RouteMetadata {
-        spikard_http::RouteMetadata::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct CompressionConfig {
-    /// Enable gzip compression
-    #[pyo3(get)]
-    pub gzip: bool,
-    /// Enable brotli compression
-    #[pyo3(get)]
-    pub brotli: bool,
-    /// Minimum response size to compress (bytes)
-    #[pyo3(get)]
-    pub min_size: usize,
-    /// Compression quality (0-11 for brotli, 0-9 for gzip)
-    #[pyo3(get)]
-    pub quality: u32,
-}
-
-#[pymethods]
-impl CompressionConfig {
-    #[must_use]
-    #[pyo3(signature = (gzip=None, brotli=None, min_size=None, quality=None))]
-    #[new]
-    pub fn new(gzip: Option<bool>, brotli: Option<bool>, min_size: Option<usize>, quality: Option<u32>) -> Self {
-        Self {
-            gzip: gzip.unwrap_or(true),
-            brotli: brotli.unwrap_or(true),
-            min_size: min_size.unwrap_or_default(),
-            quality: quality.unwrap_or_default(),
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> CompressionConfig {
-        spikard_http::CompressionConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct RateLimitConfig {
-    /// Requests per second
-    #[pyo3(get)]
-    pub per_second: u64,
-    /// Burst allowance
-    #[pyo3(get)]
-    pub burst: u32,
-    /// Use IP-based rate limiting
-    #[pyo3(get)]
-    pub ip_based: bool,
-}
-
-#[pymethods]
-impl RateLimitConfig {
-    #[must_use]
-    #[pyo3(signature = (per_second=None, burst=None, ip_based=None))]
-    #[new]
-    pub fn new(per_second: Option<u64>, burst: Option<u32>, ip_based: Option<bool>) -> Self {
-        Self {
-            per_second: per_second.unwrap_or(100),
-            burst: burst.unwrap_or(200),
-            ip_based: ip_based.unwrap_or(true),
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> RateLimitConfig {
-        spikard_http::RateLimitConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct ProblemDetails {
-    /// A URI reference that identifies the problem type.
-    /// Defaults to "about:blank" when absent.
-    /// Should be a stable, human-readable identifier for the problem type.
-    #[pyo3(get)]
-    pub type_uri: String,
-    /// A short, human-readable summary of the problem type.
-    /// Should not change from occurrence to occurrence of the problem.
-    #[pyo3(get)]
-    pub title: String,
-    /// The HTTP status code generated by the origin server.
-    /// This is advisory; the actual HTTP status code takes precedence.
-    #[pyo3(get)]
-    pub status: u16,
-    /// A human-readable explanation specific to this occurrence of the problem.
-    #[pyo3(get)]
-    pub detail: Option<String>,
-    /// A URI reference that identifies the specific occurrence of the problem.
-    /// It may or may not yield further information if dereferenced.
-    #[pyo3(get)]
-    pub instance: Option<String>,
-    /// Extension members - problem-type-specific data.
-    /// For validation errors, this typically contains an "errors" array.
-    #[pyo3(get)]
-    pub extensions: HashMap<String, String>,
-}
-
-#[pymethods]
-impl ProblemDetails {
-    #[must_use]
-    #[pyo3(signature = (type_uri, title, status, extensions, detail=None, instance=None))]
-    #[new]
-    pub fn new(
-        type_uri: String,
-        title: String,
-        status: u16,
-        extensions: HashMap<String, String>,
-        detail: Option<String>,
-        instance: Option<String>,
-    ) -> Self {
-        Self {
-            type_uri,
-            title,
-            status,
-            detail,
-            instance,
-            extensions,
-        }
-    }
-
-    #[pyo3(signature = (detail))]
-    pub fn with_detail(&self, detail: String) -> ProblemDetails {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        core_self.with_detail(detail).into()
-    }
-
-    #[pyo3(signature = (instance))]
-    pub fn with_instance(&self, instance: String) -> ProblemDetails {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        core_self.with_instance(instance).into()
-    }
-
-    #[allow(clippy::missing_errors_doc)]
-    #[pyo3(signature = ())]
-    pub fn to_json(&self) -> PyResult<String> {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        let result = core_self
-            .to_json()
-            .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-        Ok(result.into())
-    }
-
-    #[allow(clippy::missing_errors_doc)]
-    #[pyo3(signature = ())]
-    pub fn to_json_pretty(&self) -> PyResult<String> {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        let result = core_self
-            .to_json_pretty()
-            .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-        Ok(result.into())
-    }
-
-    #[staticmethod]
-    #[pyo3(signature = (detail))]
-    pub fn not_found(detail: String) -> ProblemDetails {
-        spikard_http::ProblemDetails::not_found(detail).into()
-    }
-
-    #[staticmethod]
-    #[pyo3(signature = (detail))]
-    pub fn method_not_allowed(detail: String) -> ProblemDetails {
-        spikard_http::ProblemDetails::method_not_allowed(detail).into()
-    }
-
-    #[staticmethod]
-    #[pyo3(signature = (detail))]
-    pub fn internal_server_error(detail: String) -> ProblemDetails {
-        spikard_http::ProblemDetails::internal_server_error(detail).into()
-    }
-
-    #[staticmethod]
-    #[pyo3(signature = (detail))]
-    pub fn bad_request(detail: String) -> ProblemDetails {
-        spikard_http::ProblemDetails::bad_request(detail).into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct JsonRpcMethodInfo {
-    /// The JSON-RPC method name (e.g., "user.create")
-    #[pyo3(get)]
-    pub method_name: String,
-    /// Optional description of what the method does
-    #[pyo3(get)]
-    pub description: Option<String>,
-    /// Optional JSON Schema for method parameters
-    #[pyo3(get)]
-    pub params_schema: Option<String>,
-    /// Optional JSON Schema for the result
-    #[pyo3(get)]
-    pub result_schema: Option<String>,
-    /// Whether this method is deprecated
-    #[pyo3(get)]
-    pub deprecated: bool,
-    /// Tags for categorizing and grouping methods
-    #[pyo3(get)]
-    pub tags: Vec<String>,
-}
-
-#[pymethods]
-impl JsonRpcMethodInfo {
-    #[must_use]
-    #[pyo3(signature = (method_name, deprecated, tags, description=None, params_schema=None, result_schema=None))]
-    #[new]
-    pub fn new(
-        method_name: String,
-        deprecated: bool,
-        tags: Vec<String>,
-        description: Option<String>,
-        params_schema: Option<String>,
-        result_schema: Option<String>,
-    ) -> Self {
-        Self {
-            method_name,
-            description,
-            params_schema,
-            result_schema,
-            deprecated,
-            tags,
-        }
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct Route {
-    #[pyo3(get)]
-    pub method: Method,
-    #[pyo3(get)]
-    pub path: String,
-    #[pyo3(get)]
-    pub handler_name: String,
-    #[pyo3(get)]
-    pub request_validator: Option<String>,
-    #[pyo3(get)]
-    pub response_validator: Option<String>,
-    #[pyo3(get)]
-    pub parameter_validator: Option<String>,
-    #[pyo3(get)]
-    pub file_params: Option<String>,
-    #[pyo3(get)]
-    pub is_async: bool,
-    #[pyo3(get)]
-    pub cors: Option<CorsConfig>,
-    /// Precomputed flag: true if this route expects a JSON request body
-    /// Used by middleware to validate Content-Type headers
-    #[pyo3(get)]
-    pub expects_json_body: bool,
-    /// List of dependency keys this handler requires (for DI)
-    #[pyo3(get)]
-    pub handler_dependencies: Vec<String>,
-    /// Optional JSON-RPC method information
-    /// When present, this route can be exposed as a JSON-RPC method
-    #[pyo3(get)]
-    pub jsonrpc_method: Option<JsonRpcMethodInfo>,
-}
-
-#[pymethods]
-impl Route {
-    #[allow(clippy::too_many_arguments)]
-    #[must_use]
-    #[pyo3(signature = (method=None, path=None, handler_name=None, is_async=None, expects_json_body=None, handler_dependencies=None, request_validator=None, response_validator=None, parameter_validator=None, file_params=None, cors=None, jsonrpc_method=None))]
-    #[new]
-    pub fn new(
-        method: Option<Method>,
-        path: Option<String>,
-        handler_name: Option<String>,
-        is_async: Option<bool>,
-        expects_json_body: Option<bool>,
-        handler_dependencies: Option<Vec<String>>,
-        request_validator: Option<String>,
-        response_validator: Option<String>,
-        parameter_validator: Option<String>,
-        file_params: Option<String>,
-        cors: Option<CorsConfig>,
-        jsonrpc_method: Option<JsonRpcMethodInfo>,
-    ) -> Self {
-        Self {
-            method: method.unwrap_or_default(),
-            path: path.unwrap_or_else(|| "/".to_string()),
-            handler_name: handler_name.unwrap_or_else(|| "".to_string()),
-            request_validator,
-            response_validator,
-            parameter_validator,
-            file_params,
-            is_async: is_async.unwrap_or(true),
-            cors,
-            expects_json_body: expects_json_body.unwrap_or(false),
-            handler_dependencies: handler_dependencies.unwrap_or_default(),
-            jsonrpc_method,
-        }
-    }
-
-    #[pyo3(signature = (info))]
-    pub fn with_jsonrpc_method(&self, info: JsonRpcMethodInfo) -> Route {
-        let info_core: spikard::JsonRpcMethodInfo = info.into();
-        let _ = info;
-        Default::default()
-    }
-
-    #[pyo3(signature = ())]
-    pub fn is_jsonrpc_method(&self) -> bool {
-        #[allow(clippy::needless_update)]
-        let core_self = spikard_http::Route {
-            method: self.method.clone().into(),
-            path: self.path.clone(),
-            handler_name: self.handler_name.clone(),
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: self.is_async,
-            cors: self.cors.clone().map(Into::into),
-            expects_json_body: self.expects_json_body,
-            handler_dependencies: self.handler_dependencies.clone(),
-            jsonrpc_method: self.jsonrpc_method.clone().map(Into::into),
-            ..Default::default()
-        };
-        core_self.is_jsonrpc_method()
-    }
-
-    #[pyo3(signature = ())]
-    pub fn jsonrpc_method_name(&self) -> Option<String> {
-        #[allow(clippy::needless_update)]
-        let core_self = spikard_http::Route {
-            method: self.method.clone().into(),
-            path: self.path.clone(),
-            handler_name: self.handler_name.clone(),
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: self.is_async,
-            cors: self.cors.clone().map(Into::into),
-            expects_json_body: self.expects_json_body,
-            handler_dependencies: self.handler_dependencies.clone(),
-            jsonrpc_method: self.jsonrpc_method.clone().map(Into::into),
-            ..Default::default()
-        };
-        core_self.jsonrpc_method_name().map(|v| v.to_owned())
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> Route {
-        spikard_http::Route::default().into()
-    }
 }
 
 #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
@@ -1438,351 +1783,6 @@ impl ServerConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct UploadFile {
-    /// Original filename from the client
-    #[pyo3(get)]
-    pub filename: String,
-    /// MIME type of the uploaded file
-    #[pyo3(get)]
-    pub content_type: Option<String>,
-    /// Size of the file in bytes
-    #[pyo3(get)]
-    pub size: Option<usize>,
-    /// File content (may be base64 encoded)
-    #[pyo3(get)]
-    pub content: Vec<u8>,
-    /// Content encoding type
-    #[pyo3(get)]
-    pub content_encoding: Option<String>,
-    /// Internal cursor for Read/Seek operations
-    #[pyo3(get)]
-    pub cursor: String,
-}
-
-#[pymethods]
-impl UploadFile {
-    #[must_use]
-    #[pyo3(signature = (filename, content, cursor, content_type=None, size=None, content_encoding=None))]
-    #[new]
-    pub fn new(
-        filename: String,
-        content: Vec<u8>,
-        cursor: String,
-        content_type: Option<String>,
-        size: Option<usize>,
-        content_encoding: Option<String>,
-    ) -> Self {
-        Self {
-            filename,
-            content_type,
-            size,
-            content,
-            content_encoding,
-            cursor,
-        }
-    }
-
-    #[pyo3(signature = ())]
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size,
-            content: self.content.clone().into(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        core_self.as_bytes().to_vec()
-    }
-
-    #[allow(clippy::missing_errors_doc)]
-    #[pyo3(signature = ())]
-    pub fn read_to_string(&self) -> PyResult<String> {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size,
-            content: self.content.clone().into(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        let result = core_self
-            .read_to_string()
-            .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
-        Ok(result.into())
-    }
-
-    #[pyo3(signature = ())]
-    pub fn content_type_or_default(&self) -> String {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size,
-            content: self.content.clone().into(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        core_self.content_type_or_default().to_owned()
-    }
-}
-
-#[derive(Clone)]
-#[pyclass(frozen, from_py_object)]
-pub struct GraphQLRouteConfig {
-    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
-}
-
-#[pymethods]
-impl GraphQLRouteConfig {
-    #[pyo3(signature = (path))]
-    pub fn path(&self, path: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().path(path)),
-        }
-    }
-
-    #[pyo3(signature = (method))]
-    pub fn method(&self, method: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().method(method)),
-        }
-    }
-
-    #[pyo3(signature = (enable))]
-    pub fn enable_playground(&self, enable: bool) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().enable_playground(enable)),
-        }
-    }
-
-    #[pyo3(signature = (description))]
-    pub fn description(&self, description: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().description(description)),
-        }
-    }
-
-    #[pyo3(signature = ())]
-    pub fn get_path(&self) -> String {
-        self.inner.get_path().into()
-    }
-
-    #[pyo3(signature = ())]
-    pub fn get_method(&self) -> String {
-        self.inner.get_method().into()
-    }
-
-    #[pyo3(signature = ())]
-    pub fn is_playground_enabled(&self) -> bool {
-        self.inner.is_playground_enabled()
-    }
-
-    #[pyo3(signature = ())]
-    pub fn get_description(&self) -> Option<String> {
-        self.inner.get_description().map(Into::into)
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new(spikard_graphql::GraphQLRouteConfig::default()),
-        }
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct SchemaConfig {
-    /// Enable introspection queries
-    #[pyo3(get)]
-    pub introspection_enabled: bool,
-    /// Maximum query complexity (None = unlimited)
-    #[pyo3(get)]
-    pub complexity_limit: Option<usize>,
-    /// Maximum query depth (None = unlimited)
-    #[pyo3(get)]
-    pub depth_limit: Option<usize>,
-}
-
-#[pymethods]
-impl SchemaConfig {
-    #[must_use]
-    #[pyo3(signature = (introspection_enabled=None, complexity_limit=None, depth_limit=None))]
-    #[new]
-    pub fn new(
-        introspection_enabled: Option<bool>,
-        complexity_limit: Option<usize>,
-        depth_limit: Option<usize>,
-    ) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    #[pyo3(signature = (enabled))]
-    pub fn set_introspection_enabled(&self, enabled: bool) -> Self {
-        let mut core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_introspection_enabled(enabled);
-        core_self.into()
-    }
-
-    #[pyo3(signature = (limit))]
-    pub fn set_complexity_limit(&self, limit: usize) -> Self {
-        let mut core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_complexity_limit(limit);
-        core_self.into()
-    }
-
-    #[pyo3(signature = (limit))]
-    pub fn set_depth_limit(&self, limit: usize) -> Self {
-        let mut core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_depth_limit(limit);
-        core_self.into()
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> SchemaConfig {
-        spikard_graphql::SchemaConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct QueryOnlyConfig {
-    /// Enable introspection queries
-    #[pyo3(get)]
-    pub introspection_enabled: bool,
-    /// Maximum query complexity (None = unlimited)
-    #[pyo3(get)]
-    pub complexity_limit: Option<usize>,
-    /// Maximum query depth (None = unlimited)
-    #[pyo3(get)]
-    pub depth_limit: Option<usize>,
-}
-
-#[pymethods]
-impl QueryOnlyConfig {
-    #[must_use]
-    #[pyo3(signature = (introspection_enabled=None, complexity_limit=None, depth_limit=None))]
-    #[new]
-    pub fn new(
-        introspection_enabled: Option<bool>,
-        complexity_limit: Option<usize>,
-        depth_limit: Option<usize>,
-    ) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> QueryOnlyConfig {
-        spikard_graphql::QueryOnlyConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct QueryMutationConfig {
-    /// Enable introspection queries
-    #[pyo3(get)]
-    pub introspection_enabled: bool,
-    /// Maximum query complexity (None = unlimited)
-    #[pyo3(get)]
-    pub complexity_limit: Option<usize>,
-    /// Maximum query depth (None = unlimited)
-    #[pyo3(get)]
-    pub depth_limit: Option<usize>,
-}
-
-#[pymethods]
-impl QueryMutationConfig {
-    #[must_use]
-    #[pyo3(signature = (introspection_enabled=None, complexity_limit=None, depth_limit=None))]
-    #[new]
-    pub fn new(
-        introspection_enabled: Option<bool>,
-        complexity_limit: Option<usize>,
-        depth_limit: Option<usize>,
-    ) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> QueryMutationConfig {
-        spikard_graphql::QueryMutationConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[pyclass(frozen, from_py_object)]
-pub struct FullSchemaConfig {
-    /// Enable introspection queries
-    #[pyo3(get)]
-    pub introspection_enabled: bool,
-    /// Maximum query complexity (None = unlimited)
-    #[pyo3(get)]
-    pub complexity_limit: Option<usize>,
-    /// Maximum query depth (None = unlimited)
-    #[pyo3(get)]
-    pub depth_limit: Option<usize>,
-}
-
-#[pymethods]
-impl FullSchemaConfig {
-    #[must_use]
-    #[pyo3(signature = (introspection_enabled=None, complexity_limit=None, depth_limit=None))]
-    #[new]
-    pub fn new(
-        introspection_enabled: Option<bool>,
-        complexity_limit: Option<usize>,
-        depth_limit: Option<usize>,
-    ) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[staticmethod]
-    #[pyo3(signature = ())]
-    pub fn default() -> FullSchemaConfig {
-        spikard_graphql::FullSchemaConfig::default().into()
-    }
-}
-
 #[derive(Clone, PartialEq, Default, serde::Serialize, serde::Deserialize)]
 #[pyclass(eq, eq_int, from_py_object)]
 pub enum Method {
@@ -1891,13 +1891,6 @@ impl<'de> serde::Deserialize<'de> for SecuritySchemeInfo {
 }
 
 #[pyfunction]
-#[pyo3(signature = (response, origin, cors_config))]
-pub fn add_cors_headers(response: Response, origin: String, cors_config: CorsConfig) -> () {
-    let _ = (response, origin, cors_config);
-    ()
-}
-
-#[pyfunction]
 #[pyo3(signature = ())]
 pub fn schema_query_only() -> QueryOnlyConfig {
     spikard_graphql::schema_query_only().into()
@@ -1913,6 +1906,13 @@ pub fn schema_query_mutation() -> QueryMutationConfig {
 #[pyo3(signature = ())]
 pub fn schema_full() -> FullSchemaConfig {
     spikard_graphql::schema_full().into()
+}
+
+#[pyfunction]
+#[pyo3(signature = (response, origin, cors_config))]
+pub fn add_cors_headers(response: Response, origin: String, cors_config: CorsConfig) -> () {
+    let _ = (response, origin, cors_config);
+    ()
 }
 
 // Error types
@@ -1971,6 +1971,309 @@ fn schema_error_to_py_err(e: spikard_graphql::SchemaError) -> pyo3::PyErr {
         spikard_graphql::SchemaError::ComplexityLimitExceeded { .. } => ComplexityLimitExceededError::new_err(msg),
         spikard_graphql::SchemaError::DepthLimitExceeded { .. } => DepthLimitExceededError::new_err(msg),
         _ => SchemaError::new_err(msg),
+    }
+}
+
+impl From<spikard::UploadFile> for UploadFile {
+    fn from(val: spikard::UploadFile) -> Self {
+        Self {
+            filename: val.filename,
+            content_type: val.content_type,
+            size: val.size,
+            content: val.content.to_vec(),
+            content_encoding: val.content_encoding,
+            cursor: format!("{:?}", val.cursor),
+        }
+    }
+}
+
+impl From<CorsConfig> for spikard_core::CorsConfig {
+    fn from(val: CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::CorsConfig> for CorsConfig {
+    fn from(val: spikard_core::CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
+            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<RouteMetadata> for spikard_core::RouteMetadata {
+    fn from(val: RouteMetadata) -> Self {
+        Self {
+            method: val.method,
+            path: val.path,
+            handler_name: val.handler_name,
+            request_schema: Default::default(),
+            response_schema: Default::default(),
+            parameter_schema: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: Default::default(),
+            static_response: Default::default(),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::RouteMetadata> for RouteMetadata {
+    fn from(val: spikard_core::RouteMetadata) -> Self {
+        Self {
+            method: val.method,
+            path: val.path,
+            handler_name: val.handler_name,
+            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
+            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
+            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
+            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
+        }
+    }
+}
+
+impl From<CompressionConfig> for spikard_core::CompressionConfig {
+    fn from(val: CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard_core::CompressionConfig> for CompressionConfig {
+    fn from(val: spikard_core::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard_core::RateLimitConfig {
+    fn from(val: RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard_core::RateLimitConfig> for RateLimitConfig {
+    fn from(val: spikard_core::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<JsonRpcMethodInfo> for spikard_core::JsonRpcMethodInfo {
+    fn from(val: JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: Default::default(),
+            result_schema: Default::default(),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+impl From<spikard_core::JsonRpcMethodInfo> for JsonRpcMethodInfo {
+    fn from(val: spikard_core::JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
+            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<Route> for spikard_core::Route {
+    fn from(val: Route) -> Self {
+        Self {
+            method: val.method.into(),
+            path: val.path,
+            handler_name: val.handler_name,
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::Route> for Route {
+    fn from(val: spikard_core::Route) -> Self {
+        Self {
+            method: val.method.into(),
+            path: val.path,
+            handler_name: val.handler_name,
+            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
+            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
+            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+        }
+    }
+}
+
+impl From<ProblemDetails> for spikard_core::ProblemDetails {
+    fn from(val: ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::ProblemDetails> for ProblemDetails {
+    fn from(val: spikard_core::ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: val
+                .extensions
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+        }
+    }
+}
+
+impl From<SchemaConfig> for spikard_graphql::SchemaConfig {
+    fn from(val: SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
+    fn from(val: spikard_graphql::SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<QueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
+    fn from(val: QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
+    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<QueryMutationConfig> for spikard_graphql::QueryMutationConfig {
+    fn from(val: QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
+    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<FullSchemaConfig> for spikard_graphql::FullSchemaConfig {
+    fn from(val: FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
+    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
     }
 }
 
@@ -2034,216 +2337,6 @@ impl From<BackgroundJobError> for spikard_http::BackgroundJobError {
 impl From<spikard_http::BackgroundJobError> for BackgroundJobError {
     fn from(val: spikard_http::BackgroundJobError) -> Self {
         Self { message: val.message }
-    }
-}
-
-impl From<CorsConfig> for spikard_http::CorsConfig {
-    fn from(val: CorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins,
-            allowed_methods: val.allowed_methods,
-            allowed_headers: val.allowed_headers,
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::CorsConfig> for CorsConfig {
-    fn from(val: spikard_http::CorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins,
-            allowed_methods: val.allowed_methods,
-            allowed_headers: val.allowed_headers,
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
-            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<RouteMetadata> for spikard_http::RouteMetadata {
-    fn from(val: RouteMetadata) -> Self {
-        Self {
-            method: val.method,
-            path: val.path,
-            handler_name: val.handler_name,
-            request_schema: Default::default(),
-            response_schema: Default::default(),
-            parameter_schema: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: Default::default(),
-            static_response: Default::default(),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::RouteMetadata> for RouteMetadata {
-    fn from(val: spikard_http::RouteMetadata) -> Self {
-        Self {
-            method: val.method,
-            path: val.path,
-            handler_name: val.handler_name,
-            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
-            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
-            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
-            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
-        }
-    }
-}
-
-impl From<CompressionConfig> for spikard_http::CompressionConfig {
-    fn from(val: CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<spikard_http::CompressionConfig> for CompressionConfig {
-    fn from(val: spikard_http::CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<RateLimitConfig> for spikard_http::RateLimitConfig {
-    fn from(val: RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<spikard_http::RateLimitConfig> for RateLimitConfig {
-    fn from(val: spikard_http::RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<ProblemDetails> for spikard_http::ProblemDetails {
-    fn from(val: ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::ProblemDetails> for ProblemDetails {
-    fn from(val: spikard_http::ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: val
-                .extensions
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
-        }
-    }
-}
-
-impl From<JsonRpcMethodInfo> for spikard_http::JsonRpcMethodInfo {
-    fn from(val: JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: Default::default(),
-            result_schema: Default::default(),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-impl From<spikard_http::JsonRpcMethodInfo> for JsonRpcMethodInfo {
-    fn from(val: spikard_http::JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
-            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<Route> for spikard_http::Route {
-    fn from(val: Route) -> Self {
-        Self {
-            method: val.method.into(),
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::Route> for Route {
-    fn from(val: spikard_http::Route) -> Self {
-        Self {
-            method: val.method.into(),
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
-            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
-            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-        }
     }
 }
 
@@ -2585,100 +2678,7 @@ impl From<spikard_http::ServerConfig> for ServerConfig {
     }
 }
 
-impl From<spikard::UploadFile> for UploadFile {
-    fn from(val: spikard::UploadFile) -> Self {
-        Self {
-            filename: val.filename,
-            content_type: val.content_type,
-            size: val.size,
-            content: val.content.to_vec(),
-            content_encoding: val.content_encoding,
-            cursor: format!("{:?}", val.cursor),
-        }
-    }
-}
-
-impl From<SchemaConfig> for spikard_graphql::SchemaConfig {
-    fn from(val: SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
-    fn from(val: spikard_graphql::SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<QueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
-    fn from(val: QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
-    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<QueryMutationConfig> for spikard_graphql::QueryMutationConfig {
-    fn from(val: QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
-    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<FullSchemaConfig> for spikard_graphql::FullSchemaConfig {
-    fn from(val: FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
-    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<Method> for spikard_http::Method {
+impl From<Method> for spikard_core::Method {
     fn from(val: Method) -> Self {
         match val {
             Method::Get => Self::Get,
@@ -2693,35 +2693,41 @@ impl From<Method> for spikard_http::Method {
     }
 }
 
-impl From<spikard_http::Method> for Method {
-    fn from(val: spikard_http::Method) -> Self {
+impl From<spikard_core::Method> for Method {
+    fn from(val: spikard_core::Method) -> Self {
         match val {
-            spikard_http::Method::Get => Self::Get,
-            spikard_http::Method::Post => Self::Post,
-            spikard_http::Method::Put => Self::Put,
-            spikard_http::Method::Patch => Self::Patch,
-            spikard_http::Method::Delete => Self::Delete,
-            spikard_http::Method::Head => Self::Head,
-            spikard_http::Method::Options => Self::Options,
-            spikard_http::Method::Trace => Self::Trace,
+            spikard_core::Method::Get => Self::Get,
+            spikard_core::Method::Post => Self::Post,
+            spikard_core::Method::Put => Self::Put,
+            spikard_core::Method::Patch => Self::Patch,
+            spikard_core::Method::Delete => Self::Delete,
+            spikard_core::Method::Head => Self::Head,
+            spikard_core::Method::Options => Self::Options,
+            spikard_core::Method::Trace => Self::Trace,
         }
     }
 }
 
 #[pymodule]
 pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<UploadFile>()?;
+    m.add_class::<CorsConfig>()?;
+    m.add_class::<RouteMetadata>()?;
+    m.add_class::<CompressionConfig>()?;
+    m.add_class::<RateLimitConfig>()?;
+    m.add_class::<JsonRpcMethodInfo>()?;
+    m.add_class::<Route>()?;
+    m.add_class::<ProblemDetails>()?;
+    m.add_class::<GraphQLRouteConfig>()?;
+    m.add_class::<SchemaConfig>()?;
+    m.add_class::<QueryOnlyConfig>()?;
+    m.add_class::<QueryMutationConfig>()?;
+    m.add_class::<FullSchemaConfig>()?;
     m.add_class::<Claims>()?;
     m.add_class::<BackgroundTaskConfig>()?;
     m.add_class::<BackgroundJobMetadata>()?;
     m.add_class::<BackgroundJobError>()?;
     m.add_class::<BackgroundHandle>()?;
-    m.add_class::<CorsConfig>()?;
-    m.add_class::<RouteMetadata>()?;
-    m.add_class::<CompressionConfig>()?;
-    m.add_class::<RateLimitConfig>()?;
-    m.add_class::<ProblemDetails>()?;
-    m.add_class::<JsonRpcMethodInfo>()?;
-    m.add_class::<Route>()?;
     m.add_class::<GrpcRequestData>()?;
     m.add_class::<GrpcResponseData>()?;
     m.add_class::<GrpcConfig>()?;
@@ -2737,20 +2743,14 @@ pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<ApiKeyConfig>()?;
     m.add_class::<StaticFilesConfig>()?;
     m.add_class::<ServerConfig>()?;
-    m.add_class::<UploadFile>()?;
-    m.add_class::<GraphQLRouteConfig>()?;
-    m.add_class::<SchemaConfig>()?;
-    m.add_class::<QueryOnlyConfig>()?;
-    m.add_class::<QueryMutationConfig>()?;
-    m.add_class::<FullSchemaConfig>()?;
     m.add_class::<Method>()?;
     m.add_class::<JsonRpcResponseType>()?;
     m.add_class::<JsonRpcRequestOrBatch>()?;
     m.add_class::<SecuritySchemeInfo>()?;
-    m.add_function(wrap_pyfunction!(add_cors_headers, m)?)?;
     m.add_function(wrap_pyfunction!(schema_query_only, m)?)?;
     m.add_function(wrap_pyfunction!(schema_query_mutation, m)?)?;
     m.add_function(wrap_pyfunction!(schema_full, m)?)?;
+    m.add_function(wrap_pyfunction!(add_cors_headers, m)?)?;
     m.add("ExecutionError", m.py().get_type::<ExecutionError>())?;
     m.add("SchemaBuildError", m.py().get_type::<SchemaBuildError>())?;
     m.add("RequestHandlingError", m.py().get_type::<RequestHandlingError>())?;
