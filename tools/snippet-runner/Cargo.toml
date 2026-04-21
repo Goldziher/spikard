@@ -18,7 +18,7 @@ path = "src/main.rs"
 
 [dependencies]
 clap.workspace = true
-rayon = "1.11"
+rayon = "1.12"
 serde.workspace = true
 serde_json.workspace = true
 tempfile = "3.27"

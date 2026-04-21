@@ -59,12 +59,12 @@ protox = "0.9" # Protocol Buffers compilation
 
 # Optional language-specific dependencies
 pyo3 = { workspace = true, optional = true }
-rmcp = { version = "1.3.0", features = [
+rmcp = { version = "1.5.0", features = [
     "client",
     "transport-io",
 ], optional = true }
 serde.workspace = true
-serde-saphyr = "0.0.23"
+serde-saphyr = "0.0.24"
 serde_json.workspace = true
 spikard.workspace = true
 spikard-http = { workspace = true }

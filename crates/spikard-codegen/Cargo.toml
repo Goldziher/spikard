@@ -9,7 +9,7 @@ description = "Code generation utilities for Spikard"
 documentation = "https://docs.rs/spikard-codegen"
 
 [dependencies]
-indexmap = { version = "2.13", features = ["serde"] }
+indexmap = { version = "2.14", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2"

@@ -26,7 +26,7 @@ brotli = "8.0"
 bytes = { version = "1.11", optional = true }
 flate2.workspace = true
 http.workspace = true
-indexmap = "2.13"
+indexmap = "2.14"
 jiff = "0.2"
 jsonschema.workspace = true
 regex = "1"

@@ -1,6 +1,6 @@
 # /// script
 # dependencies = [
-#     "msgspec>=0.20.0",
+#     "msgspec>=0.21.1",
 # ]
 # ///
 [project]

@@ -1,7 +1,5 @@
 [files]
-extend-exclude = [
-    "docs/assets/benchmarks/*.html",
-]
+extend-exclude = ["docs/assets/benchmarks/*.html"]
 
 [default.extend-words]
 # Intentional test data: short strings for min_length validation tests

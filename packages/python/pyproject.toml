@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "maturin"
-requires = [ "maturin>=1.12.6,<2" ]
+requires = [ "maturin>=1.13.1,<2" ]
 
 [project]
 name = "spikard"
@@ -59,7 +59,7 @@ dependencies = [
   "grpcio>=1.80",
   "httpx>=0.28.1",
   "httpx-sse>=0.4.3",
-  "msgspec>=0.19",
+  "msgspec>=0.21.1",
   "typing-extensions>=4",
   "uvloop>=0.22; sys_platform!='win32'",
   "websockets>=16",

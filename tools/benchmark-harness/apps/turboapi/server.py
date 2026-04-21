@@ -356,19 +356,11 @@ def get_path_simple_validated(id: str):
 @app.get("/validated/path/multiple/{user_id}/{post_id}")
 def get_path_multiple_validated(user_id: str, post_id: str):
     """Multiple path parameters with validation."""
-    if (
-        not user_id
-        or len(user_id) > 255
-        or not user_id.replace("-", "").replace("_", "").isalnum()
-    ):
+    if not user_id or len(user_id) > 255 or not user_id.replace("-", "").replace("_", "").isalnum():
         return {
             "detail": "Path parameter 'user_id' must be non-empty, alphanumeric (with - or _), and max 255 characters"
         }, 400
-    if (
-        not post_id
-        or len(post_id) > 255
-        or not post_id.replace("-", "").replace("_", "").isalnum()
-    ):
+    if not post_id or len(post_id) > 255 or not post_id.replace("-", "").replace("_", "").isalnum():
         return {
             "detail": "Path parameter 'post_id' must be non-empty, alphanumeric (with - or _), and max 255 characters"
         }, 400
@@ -376,9 +368,7 @@ def get_path_multiple_validated(user_id: str, post_id: str):
 
 
 @app.get("/validated/path/deep/{org}/{team}/{project}/{resource}/{id}")
-def get_path_deep_validated(
-    org: str, team: str, project: str, resource: str, id: str
-):
+def get_path_deep_validated(org: str, team: str, project: str, resource: str, id: str):
     """Deep nested path parameters with validation."""
     for param_name, param_value in [
         ("org", org),
@@ -387,11 +377,7 @@ def get_path_deep_validated(
         ("resource", resource),
         ("id", id),
     ]:
-        if (
-            not param_value
-            or len(param_value) > 255
-            or not param_value.replace("-", "").replace("_", "").isalnum()
-        ):
+        if not param_value or len(param_value) > 255 or not param_value.replace("-", "").replace("_", "").isalnum():
             return {
                 "detail": f"Path parameter '{param_name}' must be non-empty, alphanumeric (with - or _), and max 255 characters"
             }, 400
@@ -430,9 +416,7 @@ def get_path_date_validated(date: str):
 
 
 @app.get("/validated/query/few")
-def get_query_few_validated(
-    q: str, page: Optional[int] = None, limit: Optional[int] = None
-):
+def get_query_few_validated(q: str, page: Optional[int] = None, limit: Optional[int] = None):
     """Few query parameters (1-2) with dhi validation."""
     validated = QueryFew(q=q, page=page, limit=limit)
     return validated.model_dump(exclude_none=True)

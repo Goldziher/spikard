@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# rubocop:disable Style/OneClassPerFile
-
 require 'grpc'
 require 'json'
 
@@ -315,5 +313,3 @@ class GrpcTestClient
     raise GRPC::BadStatus.new(GRPC::Core::StatusCodes::INTERNAL, error.message)
   end
 end
-
-# rubocop:enable Style/OneClassPerFile
