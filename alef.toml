@@ -46,7 +46,20 @@ sources = [
 version_from = "Cargo.toml"
 workspace_root = "."
 features = ["di"]
-path_mappings = { "spikard" = "spikard_http" }
+auto_path_mappings = true
+
+[crate.extra_dependencies]
+spikard-core = { path = "../spikard-core" }
+spikard-http = { path = "../spikard-http" }
+spikard-graphql = { path = "../spikard-graphql" }
+anyhow = "1.0"
+futures = "0.3"
+
+[python.extra_dependencies]
+tokio = { version = "1", features = ["full"] }
+
+[node.extra_dependencies]
+tokio = { version = "1", features = ["full"] }
 
 [output]
 python = "crates/spikard-py/src/"
@@ -59,14 +72,14 @@ elixir = "crates/spikard-elixir/src/"
 module_name = "_spikard"
 pip_name = "spikard"
 release_gil = true
-features = ["di", "graphql"]
+features = ["di"]
 
 [python.stubs]
 output = "packages/python/spikard/"
 
 [node]
 package_name = "@spikard/node"
-features = ["di", "graphql", "grpc"]
+features = ["di"]
 
 [ruby]
 gem_name = "spikard"
