@@ -36,6 +36,13 @@ on:
       - '.github/workflows/**'
       - '.github/actions/**'
       - '.github/workflows/ci-validate.yaml'
+      - 'alef.toml'
+      - 'crates/spikard*/src/**/*.rs'
+      - 'crates/spikard-py/src/**'
+      - 'crates/spikard-node/src/**'
+      - 'crates/spikard-rb/src/**'
+      - 'crates/spikard-php/src/**'
+      - 'crates/spikard-elixir/src/**'
   pull_request:
     branches: [main]
     paths:
@@ -69,8 +76,14 @@ on:
       - 'scripts/**'
       - '.github/workflows/**'
       - '.github/actions/**'
-
       - '.github/workflows/ci-validate.yaml'
+      - 'alef.toml'
+      - 'crates/spikard*/src/**/*.rs'
+      - 'crates/spikard-py/src/**'
+      - 'crates/spikard-node/src/**'
+      - 'crates/spikard-rb/src/**'
+      - 'crates/spikard-php/src/**'
+      - 'crates/spikard-elixir/src/**'
 concurrency:
   group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -294,3 +307,51 @@ jobs:
         run: |
           uv run python scripts/sync_versions.py
           git diff --exit-code
+
+  alef-verify:
+    name: Alef Verify Bindings
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          cache-key-prefix: alef-verify
+          # alef verify only needs to run the generator, not compile the workspace
+          use-sccache: 'false'
+
+      - name: Cache alef binary
+        id: cache-alef
+        uses: actions/cache@v5
+        with:
+          path: ~/.cargo/bin/alef
+          key: alef-bin-${{ runner.os }}-${{ hashFiles('alef.toml') }}
+
+      - name: Install cargo-binstall
+        if: steps.cache-alef.outputs.cache-hit != 'true'
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install alef via binstall
+        if: steps.cache-alef.outputs.cache-hit != 'true'
+        # alef-cli is published to crates.io and distributes pre-built binaries
+        # from https://github.com/kreuzberg-dev/alef/releases via cargo-binstall.
+        # If the release binary is unavailable (e.g. a new platform), binstall falls
+        # back to compiling from source automatically.
+        run: cargo binstall --no-confirm --locked alef-cli
+
+      - name: Verify alef installation
+        run: alef --version
+
+      - name: Run alef verify
+        run: alef verify
+
+      - name: Fail if bindings are stale
+        run: |
+          if ! git diff --exit-code; then
+            echo "alef verify produced uncommitted changes — run 'task alef:generate' locally and commit the result."
+            exit 1
+          fi

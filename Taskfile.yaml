@@ -759,6 +759,31 @@ tasks:
       - task: generate:tests:php
       - task: generate:tests:elixir
 
+  alef:generate:
+    desc: "Generate all language bindings with alef"
+    cmds:
+      - alef all --clean
+
+  alef:verify:
+    desc: "Verify generated bindings are up to date"
+    cmds:
+      - alef verify
+
+  alef:extract:
+    desc: "Extract API surface from Rust source"
+    cmds:
+      - alef extract
+
+  alef:scaffold:
+    desc: "Generate package scaffolding (Cargo.toml, pyproject.toml, etc.)"
+    cmds:
+      - alef scaffold
+
+  alef:sync:
+    desc: "Sync version from Cargo.toml to all package manifests"
+    cmds:
+      - alef sync-versions
+
   verify:tests:rust:
     desc: "Regenerate and run Rust e2e suite, ensuring no diff"
     cmds:

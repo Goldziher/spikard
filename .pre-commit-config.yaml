@@ -203,3 +203,11 @@ repos:
         language: system
         files: ^packages/elixir/
         pass_filenames: false
+
+      # Alef
+      - id: alef-verify
+        name: Verify alef-generated bindings are up to date
+        entry: alef verify
+        language: system
+        files: (alef\.toml|crates/spikard.*/src/.*\.rs)
+        pass_filenames: false
