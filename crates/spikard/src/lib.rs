@@ -39,8 +39,11 @@ pub use spikard_http::{
     websocket::WebSocketHandler,
 };
 pub use spikard_http::{
-    ParameterValidator, RequestData, Route, RouteMetadata, Router, SchemaRegistry, SchemaValidator,
+    ApiKeyConfig, BackgroundTaskConfig, GrpcConfig, JsonRpcConfig, JwtConfig, ParameterValidator, RequestData, Route,
+    RouteMetadata, Router, SchemaRegistry, SchemaValidator,
 };
+pub use spikard_http::openapi::OpenApiConfig;
+pub use spikard_core::router::JsonRpcMethodInfo;
 use spikard_http::{
     Server,
     handler_trait::Handler,

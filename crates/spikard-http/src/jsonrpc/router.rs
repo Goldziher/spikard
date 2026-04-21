@@ -49,6 +49,7 @@ use std::sync::Arc;
 ///
 /// Manages request routing to registered method handlers with support for
 /// batch processing, notifications, and comprehensive error handling.
+#[derive(Clone)]
 pub struct JsonRpcRouter {
     /// Registry of available methods and their handlers
     registry: Arc<JsonRpcMethodRegistry>,
@@ -331,7 +332,7 @@ impl JsonRpcRouter {
 ///
 /// Used to distinguish between single and batch requests after parsing,
 /// allowing different routing logic for each case.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum JsonRpcRequestOrBatch {
     /// A single JSON-RPC request
     Single(JsonRpcRequest),

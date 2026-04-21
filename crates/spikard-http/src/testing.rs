@@ -69,7 +69,7 @@ impl ResponseSnapshot {
 }
 
 /// Possible errors while converting an Axum response into a snapshot.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SnapshotError {
     /// Response header could not be decoded to UTF-8.
     InvalidHeader(String),
