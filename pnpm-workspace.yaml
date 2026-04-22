@@ -2,4 +2,4 @@ packages:
   - "packages/node"
   - "e2e/node"
   - "examples/*"
-  - "tests/test_apps/node"
+  - "test_apps/node"

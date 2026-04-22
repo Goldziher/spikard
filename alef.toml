@@ -318,6 +318,27 @@ path = "../../packages/php"
 name = "spikard"
 path = "../../packages/elixir"
 
+[e2e.registry]
+output = "test_apps"
+github_repo = "https://github.com/Goldziher/spikard"
+
+[e2e.registry.packages.python]
+name = "spikard"
+
+[e2e.registry.packages.node]
+name = "@spikard/node"
+
+[e2e.registry.packages.ruby]
+name = "spikard"
+
+[e2e.registry.packages.php]
+name = "spikard/spikard"
+
+[e2e.registry.packages.elixir]
+name = "spikard"
+
+[e2e.registry.packages.rust]
+name = "spikard"
 
 [generate]
 bindings = true

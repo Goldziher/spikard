@@ -145,14 +145,14 @@ keep_full_version = true
 max_supported_python = "3.14"
 
 [tool.mypy]
-mypy_path = "packages/python:tests/test_apps/python"
+mypy_path = "packages/python:test_apps/python"
 exclude = [
   "examples",
   "testing_data",
   "e2e",
   "tools/benchmark-harness",
   "tools/app-generator",
-  "tests/test_apps/php/vendor",
+  "test_apps/php/vendor",
   "scripts/ci/python/select-and-install-wheel.py",
 ]
 python_version = "3.14"

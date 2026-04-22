@@ -133,7 +133,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Update pyproject.toml version
-        working-directory: tests/test_apps/python
+        working-directory: test_apps/python
         shell: bash
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
@@ -141,11 +141,11 @@ jobs:
           rm -f pyproject.toml.bak
 
       - name: Install dependencies
-        working-directory: tests/test_apps/python
+        working-directory: test_apps/python
         run: uv sync
 
       - name: Run tests
-        working-directory: tests/test_apps/python
+        working-directory: test_apps/python
         run: uv run pytest -v
 
   test-node:
@@ -174,7 +174,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Update package.json version
-        working-directory: tests/test_apps/node
+        working-directory: test_apps/node
         shell: bash
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
@@ -182,11 +182,11 @@ jobs:
           mv package.json.tmp package.json
 
       - name: Install dependencies
-        working-directory: tests/test_apps/node
+        working-directory: test_apps/node
         run: pnpm install --no-frozen-lockfile
 
       - name: Run tests
-        working-directory: tests/test_apps/node
+        working-directory: test_apps/node
         run: pnpm test
 
   test-ruby:
@@ -210,18 +210,18 @@ jobs:
           bundler: "4.0.0"
 
       - name: Update Gemfile version
-        working-directory: tests/test_apps/ruby
+        working-directory: test_apps/ruby
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           sed -i.bak "s/gem 'spikard', '.*/gem 'spikard', '$VERSION'/" Gemfile
           rm -f Gemfile.bak
 
       - name: Install dependencies
-        working-directory: tests/test_apps/ruby
+        working-directory: test_apps/ruby
         run: bundle install
 
       - name: Run tests
-        working-directory: tests/test_apps/ruby
+        working-directory: test_apps/ruby
         run: bundle exec rspec
 
   test-php:
@@ -244,22 +244,22 @@ jobs:
           php-version: ${{ matrix.php-version }}
 
       - name: Update composer.json version
-        working-directory: tests/test_apps/php
+        working-directory: test_apps/php
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           jq ".require[\"spikard/spikard\"] = \"$VERSION\"" composer.json > composer.json.tmp
           mv composer.json.tmp composer.json
 
       - name: Update composer.lock
-        working-directory: tests/test_apps/php
+        working-directory: test_apps/php
         run: composer update spikard/spikard --no-interaction
 
       - name: Install dependencies
-        working-directory: tests/test_apps/php
+        working-directory: test_apps/php
         run: composer install --no-interaction
 
       - name: Run tests
-        working-directory: tests/test_apps/php
+        working-directory: test_apps/php
         run: composer test
 
   test-rust:
@@ -282,7 +282,7 @@ jobs:
           toolchain: ${{ matrix.rust-version }}
 
       - name: Update Cargo.toml version
-        working-directory: tests/test_apps/rust
+        working-directory: test_apps/rust
         shell: bash
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
@@ -290,11 +290,11 @@ jobs:
           rm -f Cargo.toml.bak
 
       - name: Update Cargo.lock
-        working-directory: tests/test_apps/rust
+        working-directory: test_apps/rust
         run: cargo update
 
       - name: Run tests
-        working-directory: tests/test_apps/rust
+        working-directory: test_apps/rust
         run: cargo test
 
   test-elixir:
@@ -313,23 +313,23 @@ jobs:
           otp-version: "27"
 
       - name: Update mix.exs dependency version
-        working-directory: tests/test_apps/elixir
+        working-directory: test_apps/elixir
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           sed -i "s/@version \".*\"/@version \"$VERSION\"/" mix.exs
 
       - name: Install Hex and Rebar
-        working-directory: tests/test_apps/elixir
+        working-directory: test_apps/elixir
         run: |
           mix local.hex --force
           mix local.rebar --force
 
       - name: Install dependencies
-        working-directory: tests/test_apps/elixir
+        working-directory: test_apps/elixir
         run: mix deps.get
 
       - name: Run tests
-        working-directory: tests/test_apps/elixir
+        working-directory: test_apps/elixir
         run: mix test
 
   report:

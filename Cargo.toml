@@ -12,7 +12,7 @@ members = [
     "crates/spikard-py",
     "tools/snippet-runner",
 ]
-exclude = ["e2e/*", "examples/*", "tests/test_apps/*"]
+exclude = ["e2e/*", "examples/*", "test_apps/*"]
 
 [workspace.package]
 version = "0.13.0"
