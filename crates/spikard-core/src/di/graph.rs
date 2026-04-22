@@ -117,76 +117,6 @@ impl DependencyGraph {
     ///
     /// # Returns
     ///
-    /// `true` if adding this dependency would create a cycle, `false` otherwise.
-    ///
-    /// # Examples
-    ///
-    /// ```ignore
-    /// use spikard_core::di::DependencyGraph;
-    ///
-    /// let mut graph = DependencyGraph::new();
-    /// graph.add_dependency("a", vec!["b".to_string()]).unwrap();
-    /// graph.add_dependency("b", vec!["c".to_string()]).unwrap();
-    ///
-    /// // Adding c -> a would create a cycle
-    /// assert!(graph.has_cycle_with("c", &["a".to_string()]));
-    ///
-    /// // Adding c -> [] would not
-    /// assert!(!graph.has_cycle_with("c", &[]));
-    /// ```
-    #[must_use]
-    pub(crate) fn has_cycle_with(&self, new_key: &str, new_deps: &[String]) -> bool {
-        let mut temp_graph = self.graph.clone();
-        temp_graph.insert(new_key.to_string(), new_deps.to_vec());
-
-        let mut visited = HashSet::new();
-        let mut rec_stack = HashSet::new();
-
-        for key in temp_graph.keys() {
-            if !visited.contains(key) && Self::has_cycle_dfs(key, &temp_graph, &mut visited, &mut rec_stack) {
-                return true;
-            }
-        }
-
-        false
-    }
-
-    /// Depth-first search for cycle detection
-    ///
-    /// # Arguments
-    ///
-    /// * `node` - Current node being visited
-    /// * `graph` - The graph to search
-    /// * `visited` - Set of all visited nodes
-    /// * `rec_stack` - Set of nodes in the current recursion stack
-    ///
-    /// # Returns
-    ///
-    /// `true` if a cycle is detected, `false` otherwise.
-    fn has_cycle_dfs(
-        node: &str,
-        graph: &HashMap<String, Vec<String>>,
-        visited: &mut HashSet<String>,
-        rec_stack: &mut HashSet<String>,
-    ) -> bool {
-        visited.insert(node.to_string());
-        rec_stack.insert(node.to_string());
-
-        if let Some(deps) = graph.get(node) {
-            for dep in deps {
-                if !visited.contains(dep) {
-                    if Self::has_cycle_dfs(dep, graph, visited, rec_stack) {
-                        return true;
-                    }
-                } else if rec_stack.contains(dep) {
-                    return true;
-                }
-            }
-        }
-
-        rec_stack.remove(node);
-        false
-    }
 
     /// Calculate batches of dependencies that can be resolved in parallel
     ///
@@ -374,39 +304,6 @@ mod tests {
         graph.add_dependency("a", vec![]).unwrap();
         let result = graph.add_dependency("a", vec![]);
         assert!(matches!(result, Err(DependencyError::DuplicateKey { .. })));
-    }
-
-    #[test]
-    fn test_has_cycle_simple() {
-        let mut graph = DependencyGraph::new();
-        graph.add_dependency("a", vec!["b".to_string()]).unwrap();
-
-        assert!(graph.has_cycle_with("b", &["a".to_string()]));
-    }
-
-    #[test]
-    fn test_has_cycle_complex() {
-        let mut graph = DependencyGraph::new();
-        graph.add_dependency("a", vec!["b".to_string()]).unwrap();
-        graph.add_dependency("b", vec!["c".to_string()]).unwrap();
-
-        assert!(graph.has_cycle_with("c", &["a".to_string()]));
-    }
-
-    #[test]
-    fn test_has_cycle_self_loop() {
-        let graph = DependencyGraph::new();
-
-        assert!(graph.has_cycle_with("a", &["a".to_string()]));
-    }
-
-    #[test]
-    fn test_no_cycle() {
-        let mut graph = DependencyGraph::new();
-        graph.add_dependency("a", vec![]).unwrap();
-        graph.add_dependency("b", vec!["a".to_string()]).unwrap();
-
-        assert!(!graph.has_cycle_with("c", &["a".to_string()]));
     }
 
     #[test]

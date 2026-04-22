@@ -8,24 +8,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 static DEBUG_ENABLED: AtomicBool = AtomicBool::new(false);
 
-/// Initialize debug logging based on environment and build mode
-pub(crate) fn init() {
-    let enabled = cfg!(debug_assertions) || std::env::var("SPIKARD_DEBUG").is_ok() || std::env::var("DEBUG").is_ok();
-
-    eprintln!(
-        "[spikard-http::debug] init() called, cfg!(debug_assertions)={}, DEBUG={}, enabled={}",
-        cfg!(debug_assertions),
-        std::env::var("DEBUG").is_ok(),
-        enabled
-    );
-
-    DEBUG_ENABLED.store(enabled, Ordering::Relaxed);
-
-    if enabled {
-        eprintln!("[spikard-http] Debug logging enabled");
-    }
-}
-
 /// Check if debug logging is enabled
 #[inline]
 pub fn is_enabled() -> bool {
@@ -84,22 +66,6 @@ mod tests {
                 unsafe { std::env::remove_var("SPIKARD_DEBUG") };
             }
         }
-    }
-
-    #[test]
-    fn init_sets_debug_enabled_in_tests() {
-        let _lock = FLAG_LOCK.lock().unwrap();
-        let previous = DEBUG_ENABLED.load(Ordering::Relaxed);
-        let previous_env = std::env::var("SPIKARD_DEBUG").ok();
-        let _guard = DebugFlagGuard {
-            previous_flag: previous,
-            previous_env,
-        };
-
-        unsafe { std::env::set_var("SPIKARD_DEBUG", "1") };
-
-        init();
-        assert!(is_enabled(), "init should enable debug when SPIKARD_DEBUG is set");
     }
 
     #[test]
