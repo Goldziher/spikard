@@ -27,6 +27,40 @@ defmodule E2e.JsonrpcTest do
     end
   end
 
+  describe "jsonrpc_config_batch_disabled" do
+    test "POST /rpc - Tests JSON-RPC batch requests disabled returns error" do
+      {:ok, response} = Req.post(client(), url: "/rpc", json: [%{"id" => 1, "jsonrpc" => "2.0", "method" => "add", "params" => [1, 2]}, %{"id" => 2, "jsonrpc" => "2.0", "method" => "subtract", "params" => [5, 3]}], headers: [{"Content-Type", "application/json"}])
+      assert response.status == 400
+      assert Jason.decode!(response.body) == %{"error" => %{"code" => -32600, "message" => "Batch requests not enabled"}, "jsonrpc" => "2.0"}
+    end
+  end
+
+  describe "jsonrpc_config_custom_endpoint_path" do
+    test "POST /api/rpc - Tests JSON-RPC server at custom endpoint path" do
+      {:ok, response} = Req.post(client(), url: "/api/rpc", json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "test", "params" => %{}}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"id" => 1, "jsonrpc" => "2.0", "result" => "ok"}
+    end
+  end
+
+  describe "jsonrpc_config_max_batch_size" do
+    test "POST /rpc - Tests JSON-RPC batch request respects maximum batch size" do
+      {:ok, response} = Req.post(client(), url: "/rpc", json: [%{"id" => 1, "jsonrpc" => "2.0", "method" => "method1"}, %{"id" => 2, "jsonrpc" => "2.0", "method" => "method2"}, %{"id" => 3, "jsonrpc" => "2.0", "method" => "method3"}], headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == [%{"id" => 1, "jsonrpc" => "2.0", "result" => "result1"}, %{"id" => 2, "jsonrpc" => "2.0", "result" => "result2"}, %{"id" => 3, "jsonrpc" => "2.0", "result" => "result3"}]
+    end
+  end
+
+  describe "jsonrpc_deprecated_method_flag" do
+    test "POST /rpc - Tests JSON-RPC method marked as deprecated" do
+      {:ok, response} = Req.post(client(), url: "/rpc", json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "oldMethod", "params" => %{}}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"id" => 1, "jsonrpc" => "2.0", "result" => "deprecated"}
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "deprecation", do: v end) == "true"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "sunset", do: v end) != nil
+    end
+  end
+
   describe "jsonrpc_error_response" do
     test "POST /rpc - Tests JSON-RPC error response with error object" do
       {:ok, response} = Req.post(client(), url: "/rpc", json: %{"id" => 3, "jsonrpc" => "2.0", "method" => "divide", "params" => %{"denominator" => 0, "numerator" => 10}}, headers: [{"Content-Type", "application/json"}])
@@ -59,10 +93,34 @@ defmodule E2e.JsonrpcTest do
     end
   end
 
+  describe "jsonrpc_method_with_params_schema" do
+    test "POST /rpc - Tests JSON-RPC method params validated against schema" do
+      {:ok, response} = Req.post(client(), url: "/rpc", json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "createUser", "params" => %{"age" => 30, "name" => "Alice"}}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"id" => 1, "jsonrpc" => "2.0", "result" => %{"age" => 30, "id" => 1, "name" => "Alice"}}
+    end
+  end
+
+  describe "jsonrpc_method_with_result_schema" do
+    test "POST /rpc - Tests JSON-RPC method result schema validation" do
+      {:ok, response} = Req.post(client(), url: "/rpc", json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "getUser", "params" => %{"id" => 1}}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"id" => 1, "jsonrpc" => "2.0", "result" => %{"email" => "john@example.com", "id" => 1, "name" => "John"}}
+    end
+  end
+
   describe "jsonrpc_notification_no_id" do
     test "POST /rpc - Tests JSON-RPC notification (no response expected)" do
       {:ok, response} = Req.post(client(), url: "/rpc", json: %{"jsonrpc" => "2.0", "method" => "notify_event", "params" => %{"event" => "user_login"}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 204
+    end
+  end
+
+  describe "jsonrpc_notification_no_response" do
+    test "POST /rpc - Tests JSON-RPC notification (no id) doesn't return response" do
+      {:ok, response} = Req.post(client(), url: "/rpc", json: %{"jsonrpc" => "2.0", "method" => "notify", "params" => %{"message" => "hello"}}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 204
+      assert Jason.decode!(response.body) == ""
     end
   end
 

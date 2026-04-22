@@ -29,6 +29,60 @@ def test_jsonrpc_call_with_positional_params(client) -> None:
     data = response.json()
     assert data == {"id": 2, "jsonrpc": "2.0", "result": 28}  # noqa: S101
 
+def test_jsonrpc_config_batch_disabled(client) -> None:
+    """Tests JSON-RPC batch requests disabled returns error."""
+    response = client.post(
+        "/rpc",
+        json=[{"id": 1, "jsonrpc": "2.0", "method": "add", "params": [1, 2]}, {"id": 2, "jsonrpc": "2.0", "method": "subtract", "params": [5, 3]}],
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 400  # noqa: S101
+    data = response.json()
+    assert data == {"error": {"code": -32600, "message": "Batch requests not enabled"}, "jsonrpc": "2.0"}  # noqa: S101
+
+def test_jsonrpc_config_custom_endpoint_path(client) -> None:
+    """Tests JSON-RPC server at custom endpoint path."""
+    response = client.post(
+        "/api/rpc",
+        json={"id": 1, "jsonrpc": "2.0", "method": "test", "params": {}},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"id": 1, "jsonrpc": "2.0", "result": "ok"}  # noqa: S101
+
+def test_jsonrpc_config_max_batch_size(client) -> None:
+    """Tests JSON-RPC batch request respects maximum batch size."""
+    response = client.post(
+        "/rpc",
+        json=[{"id": 1, "jsonrpc": "2.0", "method": "method1"}, {"id": 2, "jsonrpc": "2.0", "method": "method2"}, {"id": 3, "jsonrpc": "2.0", "method": "method3"}],
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == [{"id": 1, "jsonrpc": "2.0", "result": "result1"}, {"id": 2, "jsonrpc": "2.0", "result": "result2"}, {"id": 3, "jsonrpc": "2.0", "result": "result3"}]  # noqa: S101
+
+def test_jsonrpc_deprecated_method_flag(client) -> None:
+    """Tests JSON-RPC method marked as deprecated."""
+    response = client.post(
+        "/rpc",
+        json={"id": 1, "jsonrpc": "2.0", "method": "oldMethod", "params": {}},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"id": 1, "jsonrpc": "2.0", "result": "deprecated"}  # noqa: S101
+    assert response.headers["deprecation"] == "true"  # noqa: S101
+    assert "sunset" in response.headers  # noqa: S101
+
 def test_jsonrpc_error_response(client) -> None:
     """Tests JSON-RPC error response with error object."""
     response = client.post(
@@ -81,6 +135,32 @@ def test_jsonrpc_method_parameter_validation(client) -> None:
     data = response.json()
     assert data == {"id": 6, "jsonrpc": "2.0", "result": {"email": "john@example.com", "id": 123, "name": "John Doe", "updated": True}}  # noqa: S101
 
+def test_jsonrpc_method_with_params_schema(client) -> None:
+    """Tests JSON-RPC method params validated against schema."""
+    response = client.post(
+        "/rpc",
+        json={"id": 1, "jsonrpc": "2.0", "method": "createUser", "params": {"age": 30, "name": "Alice"}},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"id": 1, "jsonrpc": "2.0", "result": {"age": 30, "id": 1, "name": "Alice"}}  # noqa: S101
+
+def test_jsonrpc_method_with_result_schema(client) -> None:
+    """Tests JSON-RPC method result schema validation."""
+    response = client.post(
+        "/rpc",
+        json={"id": 1, "jsonrpc": "2.0", "method": "getUser", "params": {"id": 1}},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"id": 1, "jsonrpc": "2.0", "result": {"email": "john@example.com", "id": 1, "name": "John"}}  # noqa: S101
+
 def test_jsonrpc_notification_no_id(client) -> None:
     """Tests JSON-RPC notification (no response expected)."""
     response = client.post(
@@ -91,6 +171,19 @@ def test_jsonrpc_notification_no_id(client) -> None:
         },
     )
     assert response.status_code == 204  # noqa: S101
+
+def test_jsonrpc_notification_no_response(client) -> None:
+    """Tests JSON-RPC notification (no id) doesn't return response."""
+    response = client.post(
+        "/rpc",
+        json={"jsonrpc": "2.0", "method": "notify", "params": {"message": "hello"}},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 204  # noqa: S101
+    data = response.json()
+    assert data == ""  # noqa: S101
 
 def test_jsonrpc_single_call_success(client) -> None:
     """Tests single JSON-RPC 2.0 call with successful response."""

@@ -22,10 +22,36 @@ RSpec.describe 'rate_limit' do
     end
   end
 
+  describe 'GET /rate-limit/burst' do
+    it 'Tests burst setting allows request spike beyond per_second rate' do
+      response = client.get('/rate-limit/burst')
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'status' => 'ok' })
+    end
+  end
+
   describe 'GET /rate-limit/exceeded' do
     it 'Sends sequential requests until the configured limit is exceeded and validates the 429 response.' do
       response = client.get('/rate-limit/exceeded')
       expect(response.status).to eq(429)
+    end
+  end
+
+  describe 'GET /rate-limit/ip-based' do
+    it 'Tests rate limiting is applied per IP address' do
+      response = client.get('/rate-limit/ip-based',
+        headers: { 'X-Forwarded-For' => '192.168.1.100' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'status' => 'ok' })
+    end
+  end
+
+  describe 'GET /rate-limit/per-second' do
+    it 'Tests rate limit allows up to 10 requests per second' do
+      response = client.get('/rate-limit/per-second')
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'status' => 'ok' })
     end
   end
 end

@@ -55,5 +55,93 @@
 			}
 		},
 		"tags": ["rate_limit", "too_many_requests", "middleware"]
+	},
+	{
+		"id": "rate_limit_per_second_setting_10_requests",
+		"description": "Tests rate limit allows up to 10 requests per second",
+		"category": "rate_limit",
+		"http": {
+			"handler": {
+				"route": "/rate-limit/per-second",
+				"method": "GET",
+				"middleware": {
+					"rate_limit": {
+						"per_second": 10,
+						"burst": 10
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/rate-limit/per-second"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"status": "ok"
+				}
+			}
+		},
+		"tags": ["rate_limit", "per_second", "middleware"]
+	},
+	{
+		"id": "rate_limit_burst_setting_allows_spike",
+		"description": "Tests burst setting allows request spike beyond per_second rate",
+		"category": "rate_limit",
+		"http": {
+			"handler": {
+				"route": "/rate-limit/burst",
+				"method": "GET",
+				"middleware": {
+					"rate_limit": {
+						"per_second": 2,
+						"burst": 20
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/rate-limit/burst"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"status": "ok"
+				}
+			}
+		},
+		"tags": ["rate_limit", "burst", "spike", "middleware"]
+	},
+	{
+		"id": "rate_limit_ip_based_tracking",
+		"description": "Tests rate limiting is applied per IP address",
+		"category": "rate_limit",
+		"http": {
+			"handler": {
+				"route": "/rate-limit/ip-based",
+				"method": "GET",
+				"middleware": {
+					"rate_limit": {
+						"per_second": 5,
+						"burst": 5,
+						"ip_based": true
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/rate-limit/ip-based",
+				"headers": {
+					"X-Forwarded-For": "192.168.1.100"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"status": "ok"
+				}
+			}
+		},
+		"tags": ["rate_limit", "ip_based", "per_ip", "middleware"]
 	}
 ]

@@ -42,11 +42,31 @@ RSpec.describe 'auth' do
     end
   end
 
+  describe 'GET /api/resource' do
+    it 'Tests API key authentication with custom X-API-Token header' do
+      response = client.get('/api/resource',
+        headers: { 'X-API-Token' => 'token_xyz789' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'resource' => 'data' })
+    end
+  end
+
   describe 'GET /api/data?api_key=sk_test_123456' do
     it 'Tests API key authentication when key is provided as query parameter instead of header' do
       response = client.get('/api/data?api_key=sk_test_123456')
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'data' => 'sensitive information', 'message' => 'Access granted' })
+    end
+  end
+
+  describe 'GET /api/endpoint' do
+    it 'Tests API key authentication accepts multiple valid keys' do
+      response = client.get('/api/endpoint',
+        headers: { 'X-API-Key' => 'key_staging_001' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'message' => 'Authenticated with staging key' })
     end
   end
 
@@ -78,6 +98,16 @@ RSpec.describe 'auth' do
       )
       expect(response.status).to eq(401)
       expect(response.body).to eq({ 'detail' => 'Authorization header must use Bearer scheme: \'Bearer <token>\'', 'status' => 401, 'title' => 'Invalid Authorization header format', 'type' => 'https://spikard.dev/errors/unauthorized' })
+    end
+  end
+
+  describe 'GET /api/protected' do
+    it 'Tests JWT validation of audience (aud) claim' do
+      response = client.get('/api/protected',
+        headers: { 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdfQ.test' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'message' => 'Access granted' })
     end
   end
 
@@ -129,6 +159,36 @@ RSpec.describe 'auth' do
     end
   end
 
+  describe 'GET /api/secure' do
+    it 'Tests JWT validation with RS256 asymmetric algorithm' do
+      response = client.get('/api/secure',
+        headers: { 'Authorization' => 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test_signature' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'message' => 'Access granted' })
+    end
+  end
+
+  describe 'GET /api/protected' do
+    it 'Tests JWT validation with leeway for clock skew' do
+      response = client.get('/api/protected',
+        headers: { 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNzYyNzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDB9.test' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'message' => 'Access granted with leeway' })
+    end
+  end
+
+  describe 'GET /api/protected' do
+    it 'Tests JWT validation of expiration (exp) claim' do
+      response = client.get('/api/protected',
+        headers: { 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'message' => 'Access granted' })
+    end
+  end
+
   describe 'GET /api/protected' do
     it 'Tests JWT rejection when issuer claim doesn\'t match expected value' do
       response = client.get('/api/protected',
@@ -136,6 +196,16 @@ RSpec.describe 'auth' do
       )
       expect(response.status).to eq(401)
       expect(response.body).to eq({ 'detail' => 'Token issuer is invalid, expected \'https://auth.example.com\'', 'status' => 401, 'title' => 'JWT validation failed', 'type' => 'https://spikard.dev/errors/unauthorized' })
+    end
+  end
+
+  describe 'GET /api/protected' do
+    it 'Tests JWT validation of issuer (iss) claim' do
+      response = client.get('/api/protected',
+        headers: { 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.test' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'message' => 'Access granted' })
     end
   end
 
@@ -169,6 +239,16 @@ RSpec.describe 'auth' do
     end
   end
 
+  describe 'GET /api/user' do
+    it 'Tests JWT validation with subject (sub) claim' do
+      response = client.get('/api/user',
+        headers: { 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWFiYzEyMyIsImV4cCI6MjYyNjc4Mzk0NiwiaWF0IjoxNzYyNzgzOTQ2fQ.xYz9QaJkL5M2NpQ8RsT1UvW3XyZ4AaBbCcDdEeFfGgHhIiJ' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'user_id' => 'user-abc123' })
+    end
+  end
+
   describe 'GET /api/protected' do
     it 'Tests JWT validation when token has multiple audiences and one must match' do
       response = client.get('/api/protected',
@@ -182,7 +262,7 @@ RSpec.describe 'auth' do
   describe 'GET /api/data' do
     it 'Tests authentication when both JWT and API key are provided, JWT takes precedence' do
       response = client.get('/api/data',
-        headers: { 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg', 'X-API-Key' => 'sk_test_123456' }
+        headers: { 'X-API-Key' => 'sk_test_123456', 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'auth_method' => 'jwt', 'message' => 'Access granted', 'user_id' => 'user123' })

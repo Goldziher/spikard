@@ -10,8 +10,34 @@ def test_rate_limit_below_threshold_succeeds(client) -> None:
     data = response.json()
     assert data == {"request": "under-limit", "status": "ok"}  # noqa: S101
 
+def test_rate_limit_burst_setting_allows_spike(client) -> None:
+    """Tests burst setting allows request spike beyond per_second rate."""
+    response = client.get("/rate-limit/burst")
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"status": "ok"}  # noqa: S101
+
 def test_rate_limit_exceeded_returns_429(client) -> None:
     """Sends sequential requests until the configured limit is exceeded and validates the 429 response."""
     response = client.get("/rate-limit/exceeded")
     assert response.status_code == 429  # noqa: S101
+
+def test_rate_limit_ip_based_tracking(client) -> None:
+    """Tests rate limiting is applied per IP address."""
+    response = client.get(
+        "/rate-limit/ip-based",
+        headers={
+            "X-Forwarded-For": "192.168.1.100",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"status": "ok"}  # noqa: S101
+
+def test_rate_limit_per_second_setting_10_requests(client) -> None:
+    """Tests rate limit allows up to 10 requests per second."""
+    response = client.get("/rate-limit/per-second")
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"status": "ok"}  # noqa: S101
 

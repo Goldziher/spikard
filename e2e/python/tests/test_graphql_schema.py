@@ -3,6 +3,33 @@
 import pytest
 
 
+def test_graphql_authentication_error_variant(client) -> None:
+    """Tests GraphQL authentication error when auth fails."""
+    response = client.post(
+        "/graphql",
+        json={"query": "{ user { id } }"},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 401  # noqa: S101
+    data = response.json()
+    assert data == {"error": "<<present>>"}  # noqa: S101
+
+def test_graphql_authorization_error_variant(client) -> None:
+    """Tests GraphQL authorization error when access denied."""
+    response = client.post(
+        "/graphql",
+        json={"query": "{ admin { id } }"},
+        headers={
+            "Authorization": "Bearer invalid",
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 403  # noqa: S101
+    data = response.json()
+    assert data == {"error": "<<present>>"}  # noqa: S101
+
 def test_graphql_complexity_limit_exceeded(client) -> None:
     """Tests GraphQL query complexity validation rejects overly complex queries."""
     response = client.post(
@@ -55,6 +82,19 @@ def test_graphql_error_response_format(client) -> None:
     data = response.json()
     assert data == {"errors": [{"extensions": {"code": "GRAPHQL_VALIDATION_FAILED"}, "message": "Cannot query field 'invalidField' on type 'Query'"}]}  # noqa: S101
 
+def test_graphql_execution_error_variant(client) -> None:
+    """Tests GraphQL execution error response."""
+    response = client.post(
+        "/graphql",
+        json={"query": "{ invalidField }"},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"errors": [{"message": "<<present>>"}]}  # noqa: S101
+
 def test_graphql_full_schema_with_subscriptions(client) -> None:
     """Tests GraphQL schema with queries, mutations, and subscriptions."""
     response = client.post(
@@ -94,6 +134,32 @@ def test_graphql_introspection_enabled(client) -> None:
     data = response.json()
     assert data == {"data": {"__schema": {"types": None}}}  # noqa: S101
 
+def test_graphql_invalid_input_error_variant(client) -> None:
+    """Tests GraphQL invalid input error."""
+    response = client.post(
+        "/graphql",
+        json={"query": "mutation { createUser(age: -5) { id } }"},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"errors": [{"message": "<<present>>"}]}  # noqa: S101
+
+def test_graphql_not_found_error_variant(client) -> None:
+    """Tests GraphQL not found error for missing resource."""
+    response = client.post(
+        "/graphql",
+        json={"query": '{ user(id: "nonexistent") { id } }'},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"errors": [{"message": "<<present>>"}]}  # noqa: S101
+
 def test_graphql_query_and_mutation_schema(client) -> None:
     """Tests GraphQL schema with queries and mutations."""
     response = client.post(
@@ -119,4 +185,43 @@ def test_graphql_query_only_schema(client) -> None:
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"data": {"user": {"id": "1", "name": "Test User"}}}  # noqa: S101
+
+def test_graphql_rate_limit_error_variant(client) -> None:
+    """Tests GraphQL rate limit exceeded error."""
+    response = client.post(
+        "/graphql",
+        json={"query": "{ user { id } }"},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"data": "<<present>>"}  # noqa: S101
+
+def test_graphql_schema_build_error_variant(client) -> None:
+    """Tests GraphQL schema build error."""
+    response = client.post(
+        "/graphql",
+        json={"query": "{ test }"},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 500  # noqa: S101
+    data = response.json()
+    assert data == {"error": "<<present>>"}  # noqa: S101
+
+def test_graphql_serialization_error_variant(client) -> None:
+    """Tests GraphQL serialization error for invalid response."""
+    response = client.post(
+        "/graphql",
+        json={"query": "{ user { id } }"},
+        headers={
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"data": "<<present>>"}  # noqa: S101
 

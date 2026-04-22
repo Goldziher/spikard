@@ -19,10 +19,34 @@ defmodule E2e.RateLimitTest do
     end
   end
 
+  describe "rate_limit_burst_setting_allows_spike" do
+    test "GET /rate-limit/burst - Tests burst setting allows request spike beyond per_second rate" do
+      {:ok, response} = Req.get(client(), url: "/rate-limit/burst")
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"status" => "ok"}
+    end
+  end
+
   describe "rate_limit_exceeded_returns_429" do
     test "GET /rate-limit/exceeded - Sends sequential requests until the configured limit is exceeded and validates the 429 response." do
       {:ok, response} = Req.get(client(), url: "/rate-limit/exceeded")
       assert response.status == 429
+    end
+  end
+
+  describe "rate_limit_ip_based_tracking" do
+    test "GET /rate-limit/ip-based - Tests rate limiting is applied per IP address" do
+      {:ok, response} = Req.get(client(), url: "/rate-limit/ip-based", headers: [{"X-Forwarded-For", "192.168.1.100"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"status" => "ok"}
+    end
+  end
+
+  describe "rate_limit_per_second_setting_10_requests" do
+    test "GET /rate-limit/per-second - Tests rate limit allows up to 10 requests per second" do
+      {:ok, response} = Req.get(client(), url: "/rate-limit/per-second")
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"status" => "ok"}
     end
   end
 end

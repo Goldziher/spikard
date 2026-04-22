@@ -21,12 +21,12 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "multiple_hooks_all_phases" do
     test "POST /api/full-lifecycle - Test multiple lifecycle hooks across all five phases for a complete request lifecycle" do
-      {:ok, response} = Req.post(client(), url: "/api/full-lifecycle", json: %{"action" => "update_profile", "user_id" => "user-123"}, headers: [{"Content-Type", "application/json"}, {"Authorization", "Bearer valid-token-12345"}])
+      {:ok, response} = Req.post(client(), url: "/api/full-lifecycle", json: %{"action" => "update_profile", "user_id" => "user-123"}, headers: [{"Authorization", "Bearer valid-token-12345"}, {"Content-Type", "application/json"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"}
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-response-time", do: v end) == ".*ms"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: v end) == ".*"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-content-type-options", do: v end) == "nosniff"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-response-time", do: v end) == ".*ms"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-frame-options", do: v end) == "DENY"
     end
   end
@@ -64,9 +64,9 @@ defmodule E2e.LifecycleHooksTest do
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"message" => "Response with security headers"}
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-content-type-options", do: v end) == "nosniff"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-frame-options", do: v end) == "DENY"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-xss-protection", do: v end) == "1; mode=block"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "strict-transport-security", do: v end) == "max-age=31536000; includeSubDomains"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-xss-protection", do: v end) == "1; mode=block"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-frame-options", do: v end) == "DENY"
     end
   end
 

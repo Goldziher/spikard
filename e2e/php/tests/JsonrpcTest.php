@@ -45,6 +45,56 @@ final class JsonrpcTest extends TestCase
         $this->assertEquals(["id" => 2, "jsonrpc" => "2.0", "result" => 28], $body);
     }
 
+    /** Tests JSON-RPC batch requests disabled returns error */
+    public function test_jsonrpc_config_batch_disabled(): void
+    {
+        $response = $this->httpClient->request('POST', "/rpc", [
+            'json' => [["id" => 1, "jsonrpc" => "2.0", "method" => "add", "params" => [1, 2]], ["id" => 2, "jsonrpc" => "2.0", "method" => "subtract", "params" => [5, 3]]],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(400, $response->getStatusCode());
+        $this->assertEquals(["error" => ["code" => -32600, "message" => "Batch requests not enabled"], "jsonrpc" => "2.0"], $body);
+    }
+
+    /** Tests JSON-RPC server at custom endpoint path */
+    public function test_jsonrpc_config_custom_endpoint_path(): void
+    {
+        $response = $this->httpClient->request('POST', "/api/rpc", [
+            'json' => ["id" => 1, "jsonrpc" => "2.0", "method" => "test", "params" => []],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["id" => 1, "jsonrpc" => "2.0", "result" => "ok"], $body);
+    }
+
+    /** Tests JSON-RPC batch request respects maximum batch size */
+    public function test_jsonrpc_config_max_batch_size(): void
+    {
+        $response = $this->httpClient->request('POST', "/rpc", [
+            'json' => [["id" => 1, "jsonrpc" => "2.0", "method" => "method1"], ["id" => 2, "jsonrpc" => "2.0", "method" => "method2"], ["id" => 3, "jsonrpc" => "2.0", "method" => "method3"]],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals([["id" => 1, "jsonrpc" => "2.0", "result" => "result1"], ["id" => 2, "jsonrpc" => "2.0", "result" => "result2"], ["id" => 3, "jsonrpc" => "2.0", "result" => "result3"]], $body);
+    }
+
+    /** Tests JSON-RPC method marked as deprecated */
+    public function test_jsonrpc_deprecated_method_flag(): void
+    {
+        $response = $this->httpClient->request('POST', "/rpc", [
+            'json' => ["id" => 1, "jsonrpc" => "2.0", "method" => "oldMethod", "params" => []],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["id" => 1, "jsonrpc" => "2.0", "result" => "deprecated"], $body);
+        $this->assertEquals("true", $response->getHeaderLine("deprecation"));
+        $this->assertTrue($response->hasHeader("sunset"));
+    }
+
     /** Tests JSON-RPC error response with error object */
     public function test_jsonrpc_error_response(): void
     {
@@ -93,6 +143,30 @@ final class JsonrpcTest extends TestCase
         $this->assertEquals(["id" => 6, "jsonrpc" => "2.0", "result" => ["email" => "john@example.com", "id" => 123, "name" => "John Doe", "updated" => true]], $body);
     }
 
+    /** Tests JSON-RPC method params validated against schema */
+    public function test_jsonrpc_method_with_params_schema(): void
+    {
+        $response = $this->httpClient->request('POST', "/rpc", [
+            'json' => ["id" => 1, "jsonrpc" => "2.0", "method" => "createUser", "params" => ["age" => 30, "name" => "Alice"]],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["id" => 1, "jsonrpc" => "2.0", "result" => ["age" => 30, "id" => 1, "name" => "Alice"]], $body);
+    }
+
+    /** Tests JSON-RPC method result schema validation */
+    public function test_jsonrpc_method_with_result_schema(): void
+    {
+        $response = $this->httpClient->request('POST', "/rpc", [
+            'json' => ["id" => 1, "jsonrpc" => "2.0", "method" => "getUser", "params" => ["id" => 1]],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["id" => 1, "jsonrpc" => "2.0", "result" => ["email" => "john@example.com", "id" => 1, "name" => "John"]], $body);
+    }
+
     /** Tests JSON-RPC notification (no response expected) */
     public function test_jsonrpc_notification_no_id(): void
     {
@@ -102,6 +176,18 @@ final class JsonrpcTest extends TestCase
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(204, $response->getStatusCode());
+    }
+
+    /** Tests JSON-RPC notification (no id) doesn't return response */
+    public function test_jsonrpc_notification_no_response(): void
+    {
+        $response = $this->httpClient->request('POST', "/rpc", [
+            'json' => ["jsonrpc" => "2.0", "method" => "notify", "params" => ["message" => "hello"]],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(204, $response->getStatusCode());
+        $this->assertEquals("", $body);
     }
 
     /** Tests single JSON-RPC 2.0 call with successful response */

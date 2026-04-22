@@ -39,8 +39,8 @@ defmodule E2e.HttpMethodsTest do
     test "HEAD /items/1 - Tests HEAD method returns headers without response body" do
       {:ok, response} = Req.head(client(), url: "/items/1")
       assert response.status == 200
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/json"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-length", do: v end) == "85"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/json"
     end
   end
 

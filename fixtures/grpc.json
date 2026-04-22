@@ -270,5 +270,296 @@
 			}
 		},
 		"tags": ["grpc", "metadata", "custom_headers"]
+	},
+	{
+		"id": "grpc_config_max_message_size",
+		"description": "Tests gRPC server respects maximum message size configuration",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/SendLargeMessage",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"data": {
+							"type": "string"
+						}
+					},
+					"required": ["data"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/SendLargeMessage",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers"
+				},
+				"body": {
+					"data": "large_payload_data"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0"
+				},
+				"body": {
+					"received_size": 19
+				}
+			}
+		},
+		"tags": ["grpc", "max_message_size", "config"]
+	},
+	{
+		"id": "grpc_config_compression_enabled",
+		"description": "Tests gRPC compression is enabled for responses",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/GetCompressedData",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"request": {
+							"type": "string"
+						}
+					},
+					"required": ["request"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/GetCompressedData",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers",
+					"grpc-encoding": "gzip"
+				},
+				"body": {
+					"request": "get_data"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0",
+					"grpc-encoding": "gzip"
+				}
+			}
+		},
+		"tags": ["grpc", "compression", "config"]
+	},
+	{
+		"id": "grpc_config_request_timeout",
+		"description": "Tests gRPC request timeout configuration",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/TimedOperation",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"operation": {
+							"type": "string"
+						}
+					},
+					"required": ["operation"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/TimedOperation",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers",
+					"grpc-timeout": "5000m"
+				},
+				"body": {
+					"operation": "process"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0"
+				}
+			}
+		},
+		"tags": ["grpc", "timeout", "config"]
+	},
+	{
+		"id": "grpc_config_keepalive_settings",
+		"description": "Tests gRPC keepalive ping configuration",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/LongRunning",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"task": {
+							"type": "string"
+						}
+					},
+					"required": ["task"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/LongRunning",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers"
+				},
+				"body": {
+					"task": "background_job"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0"
+				}
+			}
+		},
+		"tags": ["grpc", "keepalive", "config"]
+	},
+	{
+		"id": "grpc_request_service_name_field",
+		"description": "Tests gRPC request includes service_name field",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/helloworld.Greeter/SayHello",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						}
+					},
+					"required": ["name"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/helloworld.Greeter/SayHello",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers"
+				},
+				"body": {
+					"name": "World"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0"
+				},
+				"body": {
+					"message": "Hello World",
+					"service": "helloworld.Greeter"
+				}
+			}
+		},
+		"tags": ["grpc", "service_name", "request"]
+	},
+	{
+		"id": "grpc_request_method_name_field",
+		"description": "Tests gRPC request includes method_name field",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/GetData",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string"
+						}
+					},
+					"required": ["id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/GetData",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers"
+				},
+				"body": {
+					"id": "resource-1"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0"
+				},
+				"body": {
+					"data": "result",
+					"method": "GetData"
+				}
+			}
+		},
+		"tags": ["grpc", "method_name", "request"]
+	},
+	{
+		"id": "grpc_response_with_metadata_trailers",
+		"description": "Tests gRPC response includes metadata in trailers",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/MetadataResponse",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"request": {
+							"type": "string"
+						}
+					},
+					"required": ["request"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/MetadataResponse",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers"
+				},
+				"body": {
+					"request": "test"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0",
+					"x-metadata-key": "metadata-value"
+				},
+				"body": {
+					"result": "success"
+				}
+			}
+		},
+		"tags": ["grpc", "metadata", "trailers", "response"]
 	}
 ]

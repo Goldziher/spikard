@@ -1,0 +1,203 @@
+[
+	{
+		"id": "sse_simple_event_stream",
+		"description": "Tests Server-Sent Events with simple text events",
+		"category": "sse",
+		"http": {
+			"handler": {
+				"route": "/events",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/events",
+				"headers": {
+					"Accept": "text/event-stream"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/event-stream",
+					"Cache-Control": "no-cache"
+				}
+			}
+		},
+		"tags": ["sse", "server_sent_events", "streaming"]
+	},
+	{
+		"id": "sse_event_with_type_field",
+		"description": "Tests SSE event includes event type field",
+		"category": "sse",
+		"http": {
+			"handler": {
+				"route": "/events/typed",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/events/typed",
+				"headers": {
+					"Accept": "text/event-stream"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/event-stream"
+				}
+			}
+		},
+		"tags": ["sse", "event_type", "streaming"]
+	},
+	{
+		"id": "sse_event_with_id_field",
+		"description": "Tests SSE event includes unique ID field",
+		"category": "sse",
+		"http": {
+			"handler": {
+				"route": "/events/with-id",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/events/with-id",
+				"headers": {
+					"Accept": "text/event-stream"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/event-stream"
+				}
+			}
+		},
+		"tags": ["sse", "event_id", "streaming"]
+	},
+	{
+		"id": "sse_event_with_retry_field",
+		"description": "Tests SSE event includes retry interval field",
+		"category": "sse",
+		"http": {
+			"handler": {
+				"route": "/events/with-retry",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/events/with-retry",
+				"headers": {
+					"Accept": "text/event-stream"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/event-stream"
+				}
+			}
+		},
+		"tags": ["sse", "retry", "streaming"]
+	},
+	{
+		"id": "sse_event_with_data_and_metadata",
+		"description": "Tests SSE event with JSON data and metadata fields",
+		"category": "sse",
+		"http": {
+			"handler": {
+				"route": "/events/data",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/events/data",
+				"headers": {
+					"Accept": "text/event-stream"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/event-stream"
+				}
+			}
+		},
+		"tags": ["sse", "data", "json", "streaming"]
+	},
+	{
+		"id": "sse_event_with_all_fields",
+		"description": "Tests SSE event with all optional fields (id, type, retry)",
+		"category": "sse",
+		"http": {
+			"handler": {
+				"route": "/events/complete",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/events/complete",
+				"headers": {
+					"Accept": "text/event-stream"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/event-stream"
+				}
+			}
+		},
+		"tags": ["sse", "complete", "all_fields", "streaming"]
+	},
+	{
+		"id": "sse_multiple_events_stream",
+		"description": "Tests SSE stream with multiple consecutive events",
+		"category": "sse",
+		"http": {
+			"handler": {
+				"route": "/events/multi",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/events/multi",
+				"headers": {
+					"Accept": "text/event-stream"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/event-stream"
+				}
+			}
+		},
+		"tags": ["sse", "multiple_events", "streaming"]
+	},
+	{
+		"id": "sse_event_retry_5000_milliseconds",
+		"description": "Tests SSE event with 5000ms retry interval",
+		"category": "sse",
+		"http": {
+			"handler": {
+				"route": "/events/retry-5s",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/events/retry-5s",
+				"headers": {
+					"Accept": "text/event-stream"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/event-stream"
+				}
+			}
+		},
+		"tags": ["sse", "retry", "interval", "streaming"]
+	}
+]

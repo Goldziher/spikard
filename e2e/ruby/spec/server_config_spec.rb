@@ -14,6 +14,14 @@ RSpec.describe 'server_config' do
     end
   end
 
+  describe 'GET /task' do
+    it 'Tests server with background tasks configured' do
+      response = client.get('/task')
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'background_tasks_enabled' => true })
+    end
+  end
+
   describe 'GET /data' do
     it 'Tests server compresses responses when enabled' do
       response = client.get('/data',
@@ -41,6 +49,34 @@ RSpec.describe 'server_config' do
     end
   end
 
+  describe 'GET /trace' do
+    it 'Tests server with HTTP trace logging enabled' do
+      response = client.get('/trace')
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'trace_enabled' => true })
+    end
+  end
+
+  describe 'GET /shutdown' do
+    it 'Tests server graceful shutdown waits for in-flight requests' do
+      response = client.get('/shutdown')
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'graceful_shutdown' => true })
+    end
+  end
+
+  describe 'POST /api.Service/Method' do
+    it 'Tests server with gRPC protocol integration' do
+      response = client.post('/api.Service/Method',
+        json: { 'data' => 'test' },
+        headers: { 'Content-Type' => 'application/grpc', 'te' => 'trailers' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.headers['content-type']).to eq('application/grpc')
+      expect(response.headers['grpc-status']).to eq('0')
+    end
+  end
+
   describe 'GET /secure' do
     it 'Tests server with both JWT and API key authentication configured' do
       response = client.get('/secure',
@@ -62,6 +98,15 @@ RSpec.describe 'server_config' do
     end
   end
 
+  describe 'GET /openapi.json' do
+    it 'Tests server with OpenAPI documentation integration' do
+      response = client.get('/openapi.json')
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'openapi' => '3.0.0' })
+      expect(response.headers['content-type']).to eq('application/json')
+    end
+  end
+
   describe 'GET /limited' do
     it 'Tests server enforces rate limiting configuration' do
       response = client.get('/limited')
@@ -76,6 +121,22 @@ RSpec.describe 'server_config' do
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'has_request_id' => true })
       expect(response.headers['x-request-id']).not_to be_nil
+    end
+  end
+
+  describe 'GET /timeout' do
+    it 'Tests server respects request timeout configuration' do
+      response = client.get('/timeout')
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'timeout_ms' => 30000 })
+    end
+  end
+
+  describe 'GET /shutdown-timeout' do
+    it 'Tests server shutdown timeout configuration' do
+      response = client.get('/shutdown-timeout')
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'shutdown_timeout_secs' => 30 })
     end
   end
 

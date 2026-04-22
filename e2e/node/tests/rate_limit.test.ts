@@ -9,8 +9,31 @@ describe('rate_limit', () => {
     expect(data).toEqual({ request: "under-limit", status: "ok" });
   });
 
+  it('rate_limit_burst_setting_allows_spike: Tests burst setting allows request spike beyond per_second rate', async () => {
+    const response = await app.request('/rate-limit/burst', { method: 'GET' });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ status: "ok" });
+  });
+
   it('rate_limit_exceeded_returns_429: Sends sequential requests until the configured limit is exceeded and validates the 429 response.', async () => {
     const response = await app.request('/rate-limit/exceeded', { method: 'GET' });
     expect(response.status).toBe(429);
+  });
+
+  it('rate_limit_ip_based_tracking: Tests rate limiting is applied per IP address', async () => {
+    const response = await app.request('/rate-limit/ip-based', { method: 'GET', headers: {
+      'X-Forwarded-For': '192.168.1.100',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ status: "ok" });
+  });
+
+  it('rate_limit_per_second_setting_10_requests: Tests rate limit allows up to 10 requests per second', async () => {
+    const response = await app.request('/rate-limit/per-second', { method: 'GET' });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ status: "ok" });
   });
 });

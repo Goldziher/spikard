@@ -418,5 +418,387 @@
 			}
 		},
 		"tags": ["graphql_schema", "custom_endpoint"]
+	},
+	{
+		"id": "graphql_execution_error_variant",
+		"description": "Tests GraphQL execution error response",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_only"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ invalidField }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "<<present>>"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_schema", "error", "execution"]
+	},
+	{
+		"id": "graphql_schema_build_error_variant",
+		"description": "Tests GraphQL schema build error",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "invalid"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ test }"
+				}
+			},
+			"expected_response": {
+				"status_code": 500,
+				"body": {
+					"error": "<<present>>"
+				}
+			}
+		},
+		"tags": ["graphql_schema", "error", "schema_build"]
+	},
+	{
+		"id": "graphql_serialization_error_variant",
+		"description": "Tests GraphQL serialization error for invalid response",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_only"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ user { id } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": "<<present>>"
+				}
+			}
+		},
+		"tags": ["graphql_schema", "error", "serialization"]
+	},
+	{
+		"id": "graphql_authentication_error_variant",
+		"description": "Tests GraphQL authentication error when auth fails",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"parameters": {
+					"headers": {
+						"Authorization": {
+							"type": "string",
+							"required": true
+						}
+					}
+				},
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_only"
+					},
+					"jwt_auth": {
+						"enabled": true,
+						"algorithm": "HS256",
+						"secret": "test-secret"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ user { id } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 401,
+				"body": {
+					"error": "<<present>>"
+				}
+			}
+		},
+		"tags": ["graphql_schema", "error", "authentication"]
+	},
+	{
+		"id": "graphql_authorization_error_variant",
+		"description": "Tests GraphQL authorization error when access denied",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"parameters": {
+					"headers": {
+						"Authorization": {
+							"type": "string",
+							"required": true
+						}
+					}
+				},
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_only"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json",
+					"Authorization": "Bearer invalid"
+				},
+				"body": {
+					"query": "{ admin { id } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 403,
+				"body": {
+					"error": "<<present>>"
+				}
+			}
+		},
+		"tags": ["graphql_schema", "error", "authorization"]
+	},
+	{
+		"id": "graphql_not_found_error_variant",
+		"description": "Tests GraphQL not found error for missing resource",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_only"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ user(id: \"nonexistent\") { id } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "<<present>>"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_schema", "error", "not_found"]
+	},
+	{
+		"id": "graphql_rate_limit_error_variant",
+		"description": "Tests GraphQL rate limit exceeded error",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_only"
+					},
+					"rate_limit": {
+						"per_second": 1,
+						"burst": 1
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ user { id } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": "<<present>>"
+				}
+			}
+		},
+		"tags": ["graphql_schema", "error", "rate_limit"]
+	},
+	{
+		"id": "graphql_invalid_input_error_variant",
+		"description": "Tests GraphQL invalid input error",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_mutation"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "mutation { createUser(age: -5) { id } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "<<present>>"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_schema", "error", "invalid_input"]
 	}
 ]

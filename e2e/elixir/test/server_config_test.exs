@@ -11,6 +11,14 @@ defmodule E2e.ServerConfigTest do
     Req.new(base_url: base_url())
   end
 
+  describe "server_background_tasks_configuration" do
+    test "GET /task - Tests server with background tasks configured" do
+      {:ok, response} = Req.get(client(), url: "/task")
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"background_tasks_enabled" => true}
+    end
+  end
+
   describe "server_compression_enabled" do
     test "GET /data - Tests server compresses responses when enabled" do
       {:ok, response} = Req.get(client(), url: "/data", headers: [{"Accept-Encoding", "gzip"}])
@@ -36,6 +44,31 @@ defmodule E2e.ServerConfigTest do
     end
   end
 
+  describe "server_enable_http_trace_logging" do
+    test "GET /trace - Tests server with HTTP trace logging enabled" do
+      {:ok, response} = Req.get(client(), url: "/trace")
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"trace_enabled" => true}
+    end
+  end
+
+  describe "server_graceful_shutdown_enabled" do
+    test "GET /shutdown - Tests server graceful shutdown waits for in-flight requests" do
+      {:ok, response} = Req.get(client(), url: "/shutdown")
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"graceful_shutdown" => true}
+    end
+  end
+
+  describe "server_grpc_integration" do
+    test "POST /api.Service/Method - Tests server with gRPC protocol integration" do
+      {:ok, response} = Req.post(client(), url: "/api.Service/Method", json: %{"data" => "test"}, headers: [{"Content-Type", "application/grpc"}, {"te", "trailers"}])
+      assert response.status == 200
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
+    end
+  end
+
   describe "server_jwt_and_api_key_auth_combined" do
     test "GET /secure - Tests server with both JWT and API key authentication configured" do
       {:ok, response} = Req.get(client(), url: "/secure", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwiZXhwIjoyNjI2NzgzOTQ2fQ.test"}])
@@ -49,6 +82,15 @@ defmodule E2e.ServerConfigTest do
       {:ok, response} = Req.post(client(), url: "/upload", json: %{"data" => "x"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"received" => 1}
+    end
+  end
+
+  describe "server_openapi_integration" do
+    test "GET /openapi.json - Tests server with OpenAPI documentation integration" do
+      {:ok, response} = Req.get(client(), url: "/openapi.json")
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"openapi" => "3.0.0"}
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/json"
     end
   end
 
@@ -66,6 +108,22 @@ defmodule E2e.ServerConfigTest do
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"has_request_id" => true}
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: v end) != nil
+    end
+  end
+
+  describe "server_request_timeout_setting" do
+    test "GET /timeout - Tests server respects request timeout configuration" do
+      {:ok, response} = Req.get(client(), url: "/timeout")
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"timeout_ms" => 30000}
+    end
+  end
+
+  describe "server_shutdown_timeout_setting" do
+    test "GET /shutdown-timeout - Tests server shutdown timeout configuration" do
+      {:ok, response} = Req.get(client(), url: "/shutdown-timeout")
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"shutdown_timeout_secs" => 30}
     end
   end
 

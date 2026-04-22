@@ -52,6 +52,17 @@ final class AuthTest extends TestCase
         $this->assertEquals(["data" => "sensitive information", "message" => "Access granted"], $body);
     }
 
+    /** Tests API key authentication with custom X-API-Token header */
+    public function test_api_key_custom_header_x_api_token(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/resource", [
+            'headers' => ["X-API-Token" => "token_xyz789"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["resource" => "data"], $body);
+    }
+
     /** Tests API key authentication when key is provided as query parameter instead of header */
     public function test_api_key_in_query_parameter(): void
     {
@@ -59,6 +70,17 @@ final class AuthTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["data" => "sensitive information", "message" => "Access granted"], $body);
+    }
+
+    /** Tests API key authentication accepts multiple valid keys */
+    public function test_api_key_multiple_valid_keys(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/endpoint", [
+            'headers' => ["X-API-Key" => "key_staging_001"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Authenticated with staging key"], $body);
     }
 
     /** Tests API key authentication during rotation period when old key remains valid alongside new key */
@@ -93,6 +115,17 @@ final class AuthTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals(["detail" => "Authorization header must use Bearer scheme: 'Bearer <token>'", "status" => 401, "title" => "Invalid Authorization header format", "type" => "https://spikard.dev/errors/unauthorized"], $body);
+    }
+
+    /** Tests JWT validation of audience (aud) claim */
+    public function test_jwt_audience_claim_aud_field(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/protected", [
+            'headers' => ["Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdfQ.test"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Access granted"], $body);
     }
 
     /** Tests JWT authentication failure when token has expired (exp claim in the past) */
@@ -148,6 +181,39 @@ final class AuthTest extends TestCase
         $this->assertEquals(["message" => "Access granted", "user_id" => "user123"], $body);
     }
 
+    /** Tests JWT validation with RS256 asymmetric algorithm */
+    public function test_jwt_config_algorithm_rs256(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/secure", [
+            'headers' => ["Authorization" => "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test_signature"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Access granted"], $body);
+    }
+
+    /** Tests JWT validation with leeway for clock skew */
+    public function test_jwt_config_leeway_seconds(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/protected", [
+            'headers' => ["Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNzYyNzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDB9.test"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Access granted with leeway"], $body);
+    }
+
+    /** Tests JWT validation of expiration (exp) claim */
+    public function test_jwt_expiration_claim_exp_field(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/protected", [
+            'headers' => ["Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Access granted"], $body);
+    }
+
     /** Tests JWT rejection when issuer claim doesn't match expected value */
     public function test_jwt_invalid_issuer(): void
     {
@@ -157,6 +223,17 @@ final class AuthTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(401, $response->getStatusCode());
         $this->assertEquals(["detail" => "Token issuer is invalid, expected 'https://auth.example.com'", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"], $body);
+    }
+
+    /** Tests JWT validation of issuer (iss) claim */
+    public function test_jwt_issuer_claim_iss_field(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/protected", [
+            'headers' => ["Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.test"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Access granted"], $body);
     }
 
     /** Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature) */
@@ -192,6 +269,17 @@ final class AuthTest extends TestCase
         $this->assertEquals(["detail" => "JWT not valid yet, not before claim is in the future", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"], $body);
     }
 
+    /** Tests JWT validation with subject (sub) claim */
+    public function test_jwt_subject_claim_sub_field(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/user", [
+            'headers' => ["Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWFiYzEyMyIsImV4cCI6MjYyNjc4Mzk0NiwiaWF0IjoxNzYyNzgzOTQ2fQ.xYz9QaJkL5M2NpQ8RsT1UvW3XyZ4AaBbCcDdEeFfGgHhIiJ"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["user_id" => "user-abc123"], $body);
+    }
+
     /** Tests JWT validation when token has multiple audiences and one must match */
     public function test_jwt_with_multiple_audiences(): void
     {
@@ -207,7 +295,7 @@ final class AuthTest extends TestCase
     public function test_multiple_authentication_schemes_jwt_precedence(): void
     {
         $response = $this->httpClient->request('GET', "/api/data", [
-            'headers' => ["Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg", "X-API-Key" => "sk_test_123456"],
+            'headers' => ["X-API-Key" => "sk_test_123456", "Authorization" => "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());

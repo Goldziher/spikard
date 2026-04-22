@@ -34,12 +34,36 @@ def test_api_key_authentication_valid_key(client) -> None:
     data = response.json()
     assert data == {"data": "sensitive information", "message": "Access granted"}  # noqa: S101
 
+def test_api_key_custom_header_x_api_token(client) -> None:
+    """Tests API key authentication with custom X-API-Token header."""
+    response = client.get(
+        "/api/resource",
+        headers={
+            "X-API-Token": "token_xyz789",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"resource": "data"}  # noqa: S101
+
 def test_api_key_in_query_parameter(client) -> None:
     """Tests API key authentication when key is provided as query parameter instead of header."""
     response = client.get("/api/data?api_key=sk_test_123456")
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"data": "sensitive information", "message": "Access granted"}  # noqa: S101
+
+def test_api_key_multiple_valid_keys(client) -> None:
+    """Tests API key authentication accepts multiple valid keys."""
+    response = client.get(
+        "/api/endpoint",
+        headers={
+            "X-API-Key": "key_staging_001",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "Authenticated with staging key"}  # noqa: S101
 
 def test_api_key_rotation_old_key_still_valid(client) -> None:
     """Tests API key authentication during rotation period when old key remains valid alongside new key."""
@@ -77,6 +101,18 @@ def test_bearer_token_without_prefix(client) -> None:
     assert response.status_code == 401  # noqa: S101
     data = response.json()
     assert data == {"detail": "Authorization header must use Bearer scheme: 'Bearer <token>'", "status": 401, "title": "Invalid Authorization header format", "type": "https://spikard.dev/errors/unauthorized"}  # noqa: S101
+
+def test_jwt_audience_claim_aud_field(client) -> None:
+    """Tests JWT validation of audience (aud) claim."""
+    response = client.get(
+        "/api/protected",
+        headers={
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdfQ.test",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "Access granted"}  # noqa: S101
 
 def test_jwt_authentication_expired_token(client) -> None:
     """Tests JWT authentication failure when token has expired (exp claim in the past)."""
@@ -133,6 +169,42 @@ def test_jwt_authentication_valid_token(client) -> None:
     data = response.json()
     assert data == {"message": "Access granted", "user_id": "user123"}  # noqa: S101
 
+def test_jwt_config_algorithm_rs256(client) -> None:
+    """Tests JWT validation with RS256 asymmetric algorithm."""
+    response = client.get(
+        "/api/secure",
+        headers={
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test_signature",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "Access granted"}  # noqa: S101
+
+def test_jwt_config_leeway_seconds(client) -> None:
+    """Tests JWT validation with leeway for clock skew."""
+    response = client.get(
+        "/api/protected",
+        headers={
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNzYyNzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDB9.test",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "Access granted with leeway"}  # noqa: S101
+
+def test_jwt_expiration_claim_exp_field(client) -> None:
+    """Tests JWT validation of expiration (exp) claim."""
+    response = client.get(
+        "/api/protected",
+        headers={
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "Access granted"}  # noqa: S101
+
 def test_jwt_invalid_issuer(client) -> None:
     """Tests JWT rejection when issuer claim doesn't match expected value."""
     response = client.get(
@@ -144,6 +216,18 @@ def test_jwt_invalid_issuer(client) -> None:
     assert response.status_code == 401  # noqa: S101
     data = response.json()
     assert data == {"detail": "Token issuer is invalid, expected 'https://auth.example.com'", "status": 401, "title": "JWT validation failed", "type": "https://spikard.dev/errors/unauthorized"}  # noqa: S101
+
+def test_jwt_issuer_claim_iss_field(client) -> None:
+    """Tests JWT validation of issuer (iss) claim."""
+    response = client.get(
+        "/api/protected",
+        headers={
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.test",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "Access granted"}  # noqa: S101
 
 def test_jwt_malformed_token_format(client) -> None:
     """Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature)."""
@@ -181,6 +265,18 @@ def test_jwt_not_before_claim_in_future(client) -> None:
     data = response.json()
     assert data == {"detail": "JWT not valid yet, not before claim is in the future", "status": 401, "title": "JWT validation failed", "type": "https://spikard.dev/errors/unauthorized"}  # noqa: S101
 
+def test_jwt_subject_claim_sub_field(client) -> None:
+    """Tests JWT validation with subject (sub) claim."""
+    response = client.get(
+        "/api/user",
+        headers={
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWFiYzEyMyIsImV4cCI6MjYyNjc4Mzk0NiwiaWF0IjoxNzYyNzgzOTQ2fQ.xYz9QaJkL5M2NpQ8RsT1UvW3XyZ4AaBbCcDdEeFfGgHhIiJ",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"user_id": "user-abc123"}  # noqa: S101
+
 def test_jwt_with_multiple_audiences(client) -> None:
     """Tests JWT validation when token has multiple audiences and one must match."""
     response = client.get(
@@ -198,8 +294,8 @@ def test_multiple_authentication_schemes_jwt_precedence(client) -> None:
     response = client.get(
         "/api/data",
         headers={
-            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
             "X-API-Key": "sk_test_123456",
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
         },
     )
     assert response.status_code == 200  # noqa: S101

@@ -7,8 +7,8 @@ describe('static_files', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual("Hello from static storage");
-    expect(response.headers.get('cache-control')).toBe('public, max-age=60');
     expect(response.headers.get('content-type')).toBe('text/plain');
+    expect(response.headers.get('cache-control')).toBe('public, max-age=60');
   });
 
   it('static_server_returns_index_html_for_directory: When index files are enabled the server should serve index.html when the directory root is requested.', async () => {

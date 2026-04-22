@@ -3,6 +3,13 @@
 import pytest
 
 
+def test_server_background_tasks_configuration(client) -> None:
+    """Tests server with background tasks configured."""
+    response = client.get("/task")
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"background_tasks_enabled": True}  # noqa: S101
+
 def test_server_compression_enabled(client) -> None:
     """Tests server compresses responses when enabled."""
     response = client.get(
@@ -30,6 +37,34 @@ def test_server_default_configuration(client) -> None:
     data = response.json()
     assert data == {"message": "Server is running with default config", "status": "ok"}  # noqa: S101
 
+def test_server_enable_http_trace_logging(client) -> None:
+    """Tests server with HTTP trace logging enabled."""
+    response = client.get("/trace")
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"trace_enabled": True}  # noqa: S101
+
+def test_server_graceful_shutdown_enabled(client) -> None:
+    """Tests server graceful shutdown waits for in-flight requests."""
+    response = client.get("/shutdown")
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"graceful_shutdown": True}  # noqa: S101
+
+def test_server_grpc_integration(client) -> None:
+    """Tests server with gRPC protocol integration."""
+    response = client.post(
+        "/api.Service/Method",
+        json={"data": "test"},
+        headers={
+            "Content-Type": "application/grpc",
+            "te": "trailers",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
+
 def test_server_jwt_and_api_key_auth_combined(client) -> None:
     """Tests server with both JWT and API key authentication configured."""
     response = client.get(
@@ -55,6 +90,14 @@ def test_server_max_body_size_configuration(client) -> None:
     data = response.json()
     assert data == {"received": 1}  # noqa: S101
 
+def test_server_openapi_integration(client) -> None:
+    """Tests server with OpenAPI documentation integration."""
+    response = client.get("/openapi.json")
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"openapi": "3.0.0"}  # noqa: S101
+    assert response.headers["content-type"] == "application/json"  # noqa: S101
+
 def test_server_rate_limit_configuration(client) -> None:
     """Tests server enforces rate limiting configuration."""
     response = client.get("/limited")
@@ -69,6 +112,20 @@ def test_server_request_id_enabled(client) -> None:
     data = response.json()
     assert data == {"has_request_id": True}  # noqa: S101
     assert "x-request-id" in response.headers  # noqa: S101
+
+def test_server_request_timeout_setting(client) -> None:
+    """Tests server respects request timeout configuration."""
+    response = client.get("/timeout")
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"timeout_ms": 30000}  # noqa: S101
+
+def test_server_shutdown_timeout_setting(client) -> None:
+    """Tests server shutdown timeout configuration."""
+    response = client.get("/shutdown-timeout")
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"shutdown_timeout_secs": 30}  # noqa: S101
 
 def test_server_static_files_configuration(client) -> None:
     """Tests server serves static files from configured directory."""

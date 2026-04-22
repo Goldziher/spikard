@@ -4,42 +4,87 @@ import { describe, it, expect } from 'vitest';
 describe('grpc', () => {
   it('grpc_call_with_metadata: Tests gRPC call with request metadata headers', async () => {
     const response = await app.request('/api.Service/GetData', { method: 'POST', headers: {
-      'Content-Type': 'application/grpc',
-      'x-custom-metadata': 'value123',
       'te': 'trailers',
+      'x-custom-metadata': 'value123',
+      'Content-Type': 'application/grpc',
       'authorization': 'Bearer token123',
     }, body: JSON.stringify({ id: "resource-1" }) });
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ data: "result", id: "resource-1" });
-    expect(response.headers.get('grpc-status')).toBe('0');
     expect(response.headers.get('x-response-metadata')).toBe('processed');
     expect(response.headers.get('content-type')).toBe('application/grpc');
+    expect(response.headers.get('grpc-status')).toBe('0');
+  });
+
+  it('grpc_config_compression_enabled: Tests gRPC compression is enabled for responses', async () => {
+    const response = await app.request('/api.Service/GetCompressedData', { method: 'POST', headers: {
+      'grpc-encoding': 'gzip',
+      'Content-Type': 'application/grpc',
+      'te': 'trailers',
+    }, body: JSON.stringify({ request: "get_data" }) });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('grpc-encoding')).toBe('gzip');
+    expect(response.headers.get('grpc-status')).toBe('0');
+    expect(response.headers.get('content-type')).toBe('application/grpc');
+  });
+
+  it('grpc_config_keepalive_settings: Tests gRPC keepalive ping configuration', async () => {
+    const response = await app.request('/api.Service/LongRunning', { method: 'POST', headers: {
+      'Content-Type': 'application/grpc',
+      'te': 'trailers',
+    }, body: JSON.stringify({ task: "background_job" }) });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('grpc-status')).toBe('0');
+    expect(response.headers.get('content-type')).toBe('application/grpc');
+  });
+
+  it('grpc_config_max_message_size: Tests gRPC server respects maximum message size configuration', async () => {
+    const response = await app.request('/api.Service/SendLargeMessage', { method: 'POST', headers: {
+      'te': 'trailers',
+      'Content-Type': 'application/grpc',
+    }, body: JSON.stringify({ data: "large_payload_data" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ received_size: 19 });
+    expect(response.headers.get('grpc-status')).toBe('0');
+    expect(response.headers.get('content-type')).toBe('application/grpc');
+  });
+
+  it('grpc_config_request_timeout: Tests gRPC request timeout configuration', async () => {
+    const response = await app.request('/api.Service/TimedOperation', { method: 'POST', headers: {
+      'Content-Type': 'application/grpc',
+      'grpc-timeout': '5000m',
+      'te': 'trailers',
+    }, body: JSON.stringify({ operation: "process" }) });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('application/grpc');
+    expect(response.headers.get('grpc-status')).toBe('0');
   });
 
   it('grpc_deadline_exceeded: Tests gRPC DEADLINE_EXCEEDED error when timeout occurs', async () => {
     const response = await app.request('/api.Service/SlowOperation', { method: 'POST', headers: {
-      'Content-Type': 'application/grpc',
       'grpc-timeout': '100m',
+      'Content-Type': 'application/grpc',
       'te': 'trailers',
     }, body: JSON.stringify({ duration_ms: 60000 }) });
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ code: "DEADLINE_EXCEEDED", message: "Operation exceeded deadline" });
-    expect(response.headers.get('content-type')).toBe('application/grpc');
     expect(response.headers.get('grpc-status')).toBe('4');
+    expect(response.headers.get('content-type')).toBe('application/grpc');
   });
 
   it('grpc_error_invalid_argument: Tests gRPC INVALID_ARGUMENT error status response', async () => {
     const response = await app.request('/api.Service/ValidateInput', { method: 'POST', headers: {
-      'Content-Type': 'application/grpc',
       'te': 'trailers',
+      'Content-Type': 'application/grpc',
     }, body: JSON.stringify({ value: -100 }) });
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ code: "INVALID_ARGUMENT", message: "Value must be non-negative" });
-    expect(response.headers.get('content-type')).toBe('application/grpc');
     expect(response.headers.get('grpc-status')).toBe('3');
+    expect(response.headers.get('content-type')).toBe('application/grpc');
   });
 
   it('grpc_error_not_found: Tests gRPC NOT_FOUND error status response', async () => {
@@ -50,22 +95,59 @@ describe('grpc', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ code: "NOT_FOUND", message: "Item not found" });
-    expect(response.headers.get('content-type')).toBe('application/grpc');
     expect(response.headers.get('grpc-status')).toBe('5');
+    expect(response.headers.get('content-type')).toBe('application/grpc');
+  });
+
+  it('grpc_request_method_name_field: Tests gRPC request includes method_name field', async () => {
+    const response = await app.request('/api.Service/GetData', { method: 'POST', headers: {
+      'te': 'trailers',
+      'Content-Type': 'application/grpc',
+    }, body: JSON.stringify({ id: "resource-1" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ data: "result", method: "GetData" });
+    expect(response.headers.get('grpc-status')).toBe('0');
+    expect(response.headers.get('content-type')).toBe('application/grpc');
+  });
+
+  it('grpc_request_service_name_field: Tests gRPC request includes service_name field', async () => {
+    const response = await app.request('/helloworld.Greeter/SayHello', { method: 'POST', headers: {
+      'Content-Type': 'application/grpc',
+      'te': 'trailers',
+    }, body: JSON.stringify({ name: "World" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ message: "Hello World", service: "helloworld.Greeter" });
+    expect(response.headers.get('grpc-status')).toBe('0');
+    expect(response.headers.get('content-type')).toBe('application/grpc');
   });
 
   it('grpc_request_with_custom_metadata: Tests gRPC request includes custom metadata in trailers', async () => {
     const response = await app.request('/api.Service/ProcessWithMetadata', { method: 'POST', headers: {
-      'x-trace-id': 'trace-abc123',
       'te': 'trailers',
-      'Content-Type': 'application/grpc',
-      'x-request-id': 'req-12345',
       'x-user-id': 'user-42',
+      'x-request-id': 'req-12345',
+      'x-trace-id': 'trace-abc123',
+      'Content-Type': 'application/grpc',
     }, body: JSON.stringify({ data: { key: "value" }, request_id: "req-12345" }) });
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ processed: true, request_id: "req-12345" });
+    expect(response.headers.get('content-type')).toBe('application/grpc');
+    expect(response.headers.get('grpc-status')).toBe('0');
     expect(response.headers.get('x-response-trace-id')).toBe('trace-abc123');
+  });
+
+  it('grpc_response_with_metadata_trailers: Tests gRPC response includes metadata in trailers', async () => {
+    const response = await app.request('/api.Service/MetadataResponse', { method: 'POST', headers: {
+      'Content-Type': 'application/grpc',
+      'te': 'trailers',
+    }, body: JSON.stringify({ request: "test" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ result: "success" });
+    expect(response.headers.get('x-metadata-key')).toBe('metadata-value');
     expect(response.headers.get('grpc-status')).toBe('0');
     expect(response.headers.get('content-type')).toBe('application/grpc');
   });

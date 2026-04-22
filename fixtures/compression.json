@@ -73,5 +73,116 @@
 			}
 		},
 		"tags": ["compression", "gzip", "min_size"]
+	},
+	{
+		"id": "compression_brotli_only",
+		"description": "Tests Brotli compression when enabled and client supports it",
+		"category": "compression",
+		"http": {
+			"handler": {
+				"route": "/compression/brotli",
+				"method": "GET",
+				"middleware": {
+					"compression": {
+						"gzip": false,
+						"brotli": true,
+						"min_size": 0,
+						"quality": 5
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/compression/brotli",
+				"headers": {
+					"Accept-Encoding": "br"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"message": "Brotli compressed payload",
+					"data": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+				},
+				"headers": {
+					"content-encoding": "br",
+					"vary": "Accept-Encoding"
+				}
+			}
+		},
+		"tags": ["compression", "brotli", "middleware"]
+	},
+	{
+		"id": "compression_quality_level_9",
+		"description": "Tests compression with high quality level setting",
+		"category": "compression",
+		"http": {
+			"handler": {
+				"route": "/compression/high_quality",
+				"method": "GET",
+				"middleware": {
+					"compression": {
+						"gzip": true,
+						"brotli": false,
+						"min_size": 0,
+						"quality": 9
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/compression/high_quality",
+				"headers": {
+					"Accept-Encoding": "gzip"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"message": "High quality compression",
+					"payload": "x"
+				},
+				"headers": {
+					"content-encoding": "gzip"
+				}
+			}
+		},
+		"tags": ["compression", "gzip", "quality"]
+	},
+	{
+		"id": "compression_min_size_threshold_exact_boundary",
+		"description": "Tests compression respects exact minimum size boundary",
+		"category": "compression",
+		"http": {
+			"handler": {
+				"route": "/compression/boundary",
+				"method": "GET",
+				"middleware": {
+					"compression": {
+						"gzip": true,
+						"brotli": false,
+						"min_size": 100,
+						"quality": 4
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/compression/boundary",
+				"headers": {
+					"Accept-Encoding": "gzip"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"message": "Exact size payload that is exactly 100 bytes or more to test boundary"
+				},
+				"headers": {
+					"content-encoding": "gzip"
+				}
+			}
+		},
+		"tags": ["compression", "gzip", "min_size", "boundary"]
 	}
 ]

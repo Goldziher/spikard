@@ -9,18 +9,79 @@ def test_grpc_call_with_metadata(client) -> None:
         "/api.Service/GetData",
         json={"id": "resource-1"},
         headers={
-            "Content-Type": "application/grpc",
-            "x-custom-metadata": "value123",
             "te": "trailers",
+            "x-custom-metadata": "value123",
+            "Content-Type": "application/grpc",
             "authorization": "Bearer token123",
         },
     )
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"data": "result", "id": "resource-1"}  # noqa: S101
-    assert response.headers["grpc-status"] == "0"  # noqa: S101
     assert response.headers["x-response-metadata"] == "processed"  # noqa: S101
     assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
+
+def test_grpc_config_compression_enabled(client) -> None:
+    """Tests gRPC compression is enabled for responses."""
+    response = client.post(
+        "/api.Service/GetCompressedData",
+        json={"request": "get_data"},
+        headers={
+            "grpc-encoding": "gzip",
+            "Content-Type": "application/grpc",
+            "te": "trailers",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    assert response.headers["grpc-encoding"] == "gzip"  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+
+def test_grpc_config_keepalive_settings(client) -> None:
+    """Tests gRPC keepalive ping configuration."""
+    response = client.post(
+        "/api.Service/LongRunning",
+        json={"task": "background_job"},
+        headers={
+            "Content-Type": "application/grpc",
+            "te": "trailers",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+
+def test_grpc_config_max_message_size(client) -> None:
+    """Tests gRPC server respects maximum message size configuration."""
+    response = client.post(
+        "/api.Service/SendLargeMessage",
+        json={"data": "large_payload_data"},
+        headers={
+            "te": "trailers",
+            "Content-Type": "application/grpc",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"received_size": 19}  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+
+def test_grpc_config_request_timeout(client) -> None:
+    """Tests gRPC request timeout configuration."""
+    response = client.post(
+        "/api.Service/TimedOperation",
+        json={"operation": "process"},
+        headers={
+            "Content-Type": "application/grpc",
+            "grpc-timeout": "5000m",
+            "te": "trailers",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
 
 def test_grpc_deadline_exceeded(client) -> None:
     """Tests gRPC DEADLINE_EXCEEDED error when timeout occurs."""
@@ -28,16 +89,16 @@ def test_grpc_deadline_exceeded(client) -> None:
         "/api.Service/SlowOperation",
         json={"duration_ms": 60000},
         headers={
-            "Content-Type": "application/grpc",
             "grpc-timeout": "100m",
+            "Content-Type": "application/grpc",
             "te": "trailers",
         },
     )
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"code": "DEADLINE_EXCEEDED", "message": "Operation exceeded deadline"}  # noqa: S101
-    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
     assert response.headers["grpc-status"] == "4"  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
 
 def test_grpc_error_invalid_argument(client) -> None:
     """Tests gRPC INVALID_ARGUMENT error status response."""
@@ -45,15 +106,15 @@ def test_grpc_error_invalid_argument(client) -> None:
         "/api.Service/ValidateInput",
         json={"value": -100},
         headers={
-            "Content-Type": "application/grpc",
             "te": "trailers",
+            "Content-Type": "application/grpc",
         },
     )
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"code": "INVALID_ARGUMENT", "message": "Value must be non-negative"}  # noqa: S101
-    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
     assert response.headers["grpc-status"] == "3"  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
 
 def test_grpc_error_not_found(client) -> None:
     """Tests gRPC NOT_FOUND error status response."""
@@ -68,8 +129,40 @@ def test_grpc_error_not_found(client) -> None:
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"code": "NOT_FOUND", "message": "Item not found"}  # noqa: S101
-    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
     assert response.headers["grpc-status"] == "5"  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+
+def test_grpc_request_method_name_field(client) -> None:
+    """Tests gRPC request includes method_name field."""
+    response = client.post(
+        "/api.Service/GetData",
+        json={"id": "resource-1"},
+        headers={
+            "te": "trailers",
+            "Content-Type": "application/grpc",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"data": "result", "method": "GetData"}  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+
+def test_grpc_request_service_name_field(client) -> None:
+    """Tests gRPC request includes service_name field."""
+    response = client.post(
+        "/helloworld.Greeter/SayHello",
+        json={"name": "World"},
+        headers={
+            "Content-Type": "application/grpc",
+            "te": "trailers",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "Hello World", "service": "helloworld.Greeter"}  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
 
 def test_grpc_request_with_custom_metadata(client) -> None:
     """Tests gRPC request includes custom metadata in trailers."""
@@ -77,17 +170,34 @@ def test_grpc_request_with_custom_metadata(client) -> None:
         "/api.Service/ProcessWithMetadata",
         json={"data": {"key": "value"}, "request_id": "req-12345"},
         headers={
-            "x-trace-id": "trace-abc123",
             "te": "trailers",
-            "Content-Type": "application/grpc",
-            "x-request-id": "req-12345",
             "x-user-id": "user-42",
+            "x-request-id": "req-12345",
+            "x-trace-id": "trace-abc123",
+            "Content-Type": "application/grpc",
         },
     )
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"processed": True, "request_id": "req-12345"}  # noqa: S101
+    assert response.headers["content-type"] == "application/grpc"  # noqa: S101
+    assert response.headers["grpc-status"] == "0"  # noqa: S101
     assert response.headers["x-response-trace-id"] == "trace-abc123"  # noqa: S101
+
+def test_grpc_response_with_metadata_trailers(client) -> None:
+    """Tests gRPC response includes metadata in trailers."""
+    response = client.post(
+        "/api.Service/MetadataResponse",
+        json={"request": "test"},
+        headers={
+            "Content-Type": "application/grpc",
+            "te": "trailers",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"result": "success"}  # noqa: S101
+    assert response.headers["x-metadata-key"] == "metadata-value"  # noqa: S101
     assert response.headers["grpc-status"] == "0"  # noqa: S101
     assert response.headers["content-type"] == "application/grpc"  # noqa: S101
 

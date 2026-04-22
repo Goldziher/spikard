@@ -291,5 +291,191 @@
       "server_config",
       "rate_limit"
     ]
+  },
+  {
+    "id": "server_request_timeout_setting",
+    "description": "Tests server respects request timeout configuration",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/timeout",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/timeout"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "timeout_ms": 30000
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "timeout"
+    ]
+  },
+  {
+    "id": "server_graceful_shutdown_enabled",
+    "description": "Tests server graceful shutdown waits for in-flight requests",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/shutdown",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/shutdown"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "graceful_shutdown": true
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "graceful_shutdown"
+    ]
+  },
+  {
+    "id": "server_shutdown_timeout_setting",
+    "description": "Tests server shutdown timeout configuration",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/shutdown-timeout",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/shutdown-timeout"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "shutdown_timeout_secs": 30
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "shutdown_timeout"
+    ]
+  },
+  {
+    "id": "server_enable_http_trace_logging",
+    "description": "Tests server with HTTP trace logging enabled",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/trace",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/trace"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "trace_enabled": true
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "trace_logging"
+    ]
+  },
+  {
+    "id": "server_openapi_integration",
+    "description": "Tests server with OpenAPI documentation integration",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/openapi.json",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/openapi.json"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "openapi": "3.0.0"
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "openapi"
+    ]
+  },
+  {
+    "id": "server_grpc_integration",
+    "description": "Tests server with gRPC protocol integration",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/api.Service/Method",
+        "method": "POST"
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api.Service/Method",
+        "headers": {
+          "Content-Type": "application/grpc",
+          "te": "trailers"
+        },
+        "body": {
+          "data": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "headers": {
+          "content-type": "application/grpc",
+          "grpc-status": "0"
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "grpc"
+    ]
+  },
+  {
+    "id": "server_background_tasks_configuration",
+    "description": "Tests server with background tasks configured",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/task",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/task"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "background_tasks_enabled": true
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "background_tasks"
+    ]
   }
 ]

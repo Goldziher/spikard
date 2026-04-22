@@ -1,0 +1,358 @@
+[
+	{
+		"id": "upload_file_basic_success",
+		"description": "Tests basic file upload with single file",
+		"category": "upload",
+		"http": {
+			"handler": {
+				"route": "/upload",
+				"method": "POST",
+				"parameters": {
+					"body": {
+						"type": "multipart/form-data",
+						"properties": {
+							"file": {
+								"type": "file"
+							}
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload",
+				"headers": {
+					"Content-Type": "multipart/form-data"
+				},
+				"body": {
+					"file": {
+						"filename": "test.txt",
+						"content": "Hello, World!"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"filename": "test.txt",
+					"size": 13
+				}
+			}
+		},
+		"tags": ["upload", "file", "multipart"]
+	},
+	{
+		"id": "upload_file_with_custom_content_type",
+		"description": "Tests file upload preserves custom Content-Type",
+		"category": "upload",
+		"http": {
+			"handler": {
+				"route": "/upload/typed",
+				"method": "POST",
+				"parameters": {
+					"body": {
+						"type": "multipart/form-data",
+						"properties": {
+							"file": {
+								"type": "file"
+							}
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload/typed",
+				"headers": {
+					"Content-Type": "multipart/form-data"
+				},
+				"body": {
+					"file": {
+						"filename": "data.json",
+						"content_type": "application/json",
+						"content": "{\"key\": \"value\"}"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"filename": "data.json",
+					"content_type": "application/json",
+					"size": 16
+				}
+			}
+		},
+		"tags": ["upload", "content_type", "multipart"]
+	},
+	{
+		"id": "upload_file_with_gzip_content_encoding",
+		"description": "Tests file upload with gzip content encoding",
+		"category": "upload",
+		"http": {
+			"handler": {
+				"route": "/upload/compressed",
+				"method": "POST",
+				"parameters": {
+					"body": {
+						"type": "multipart/form-data",
+						"properties": {
+							"file": {
+								"type": "file"
+							}
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload/compressed",
+				"headers": {
+					"Content-Type": "multipart/form-data"
+				},
+				"body": {
+					"file": {
+						"filename": "data.gz",
+						"content_encoding": "gzip",
+						"content": "compressed data"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"filename": "data.gz",
+					"content_encoding": "gzip"
+				}
+			}
+		},
+		"tags": ["upload", "content_encoding", "gzip"]
+	},
+	{
+		"id": "upload_multiple_files",
+		"description": "Tests uploading multiple files at once",
+		"category": "upload",
+		"http": {
+			"handler": {
+				"route": "/upload/multiple",
+				"method": "POST",
+				"parameters": {
+					"body": {
+						"type": "multipart/form-data",
+						"properties": {
+							"files": {
+								"type": "file[]"
+							}
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload/multiple",
+				"headers": {
+					"Content-Type": "multipart/form-data"
+				},
+				"body": {
+					"files": [
+						{
+							"filename": "file1.txt",
+							"content": "Content 1"
+						},
+						{
+							"filename": "file2.txt",
+							"content": "Content 2"
+						}
+					]
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"uploaded_files": 2,
+					"total_size": 18
+				}
+			}
+		},
+		"tags": ["upload", "multiple_files", "multipart"]
+	},
+	{
+		"id": "upload_file_as_bytes",
+		"description": "Tests file upload read as byte array",
+		"category": "upload",
+		"http": {
+			"handler": {
+				"route": "/upload/bytes",
+				"method": "POST",
+				"parameters": {
+					"body": {
+						"type": "multipart/form-data",
+						"properties": {
+							"file": {
+								"type": "file"
+							}
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload/bytes",
+				"headers": {
+					"Content-Type": "multipart/form-data"
+				},
+				"body": {
+					"file": {
+						"filename": "binary.bin",
+						"content": "binary data"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"filename": "binary.bin",
+					"size": 11,
+					"as_bytes": true
+				}
+			}
+		},
+		"tags": ["upload", "bytes", "binary"]
+	},
+	{
+		"id": "upload_file_read_to_string",
+		"description": "Tests file upload read as string",
+		"category": "upload",
+		"http": {
+			"handler": {
+				"route": "/upload/string",
+				"method": "POST",
+				"parameters": {
+					"body": {
+						"type": "multipart/form-data",
+						"properties": {
+							"file": {
+								"type": "file"
+							}
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload/string",
+				"headers": {
+					"Content-Type": "multipart/form-data"
+				},
+				"body": {
+					"file": {
+						"filename": "text.txt",
+						"content": "Hello, World!"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"filename": "text.txt",
+					"content": "Hello, World!",
+					"as_string": true
+				}
+			}
+		},
+		"tags": ["upload", "string", "text"]
+	},
+	{
+		"id": "upload_file_with_form_fields",
+		"description": "Tests file upload with additional form fields",
+		"category": "upload",
+		"http": {
+			"handler": {
+				"route": "/upload/with-fields",
+				"method": "POST",
+				"parameters": {
+					"body": {
+						"type": "multipart/form-data",
+						"properties": {
+							"file": {
+								"type": "file"
+							},
+							"description": {
+								"type": "string"
+							},
+							"tags": {
+								"type": "array"
+							}
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload/with-fields",
+				"headers": {
+					"Content-Type": "multipart/form-data"
+				},
+				"body": {
+					"file": {
+						"filename": "document.pdf",
+						"content": "PDF content"
+					},
+					"description": "Important document",
+					"tags": ["important", "archive"]
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"filename": "document.pdf",
+					"description": "Important document",
+					"tags_count": 2
+				}
+			}
+		},
+		"tags": ["upload", "form_fields", "multipart"]
+	},
+	{
+		"id": "upload_file_content_type_or_default",
+		"description": "Tests file upload uses provided content_type or defaults",
+		"category": "upload",
+		"http": {
+			"handler": {
+				"route": "/upload/auto-type",
+				"method": "POST",
+				"parameters": {
+					"body": {
+						"type": "multipart/form-data",
+						"properties": {
+							"file": {
+								"type": "file"
+							}
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload/auto-type",
+				"headers": {
+					"Content-Type": "multipart/form-data"
+				},
+				"body": {
+					"file": {
+						"filename": "unknown.xyz",
+						"content": "Some content"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"filename": "unknown.xyz",
+					"content_type": "application/octet-stream"
+				}
+			}
+		},
+		"tags": ["upload", "content_type", "default"]
+	}
+]

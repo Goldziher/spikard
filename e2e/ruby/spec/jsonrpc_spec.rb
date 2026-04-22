@@ -37,6 +37,52 @@ RSpec.describe 'jsonrpc' do
   end
 
   describe 'POST /rpc' do
+    it 'Tests JSON-RPC batch requests disabled returns error' do
+      response = client.post('/rpc',
+        json: [{ 'id' => 1, 'jsonrpc' => '2.0', 'method' => 'add', 'params' => [1, 2] }, { 'id' => 2, 'jsonrpc' => '2.0', 'method' => 'subtract', 'params' => [5, 3] }],
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(400)
+      expect(response.body).to eq({ 'error' => { 'code' => -32600, 'message' => 'Batch requests not enabled' }, 'jsonrpc' => '2.0' })
+    end
+  end
+
+  describe 'POST /api/rpc' do
+    it 'Tests JSON-RPC server at custom endpoint path' do
+      response = client.post('/api/rpc',
+        json: { 'id' => 1, 'jsonrpc' => '2.0', 'method' => 'test', 'params' => {  } },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'id' => 1, 'jsonrpc' => '2.0', 'result' => 'ok' })
+    end
+  end
+
+  describe 'POST /rpc' do
+    it 'Tests JSON-RPC batch request respects maximum batch size' do
+      response = client.post('/rpc',
+        json: [{ 'id' => 1, 'jsonrpc' => '2.0', 'method' => 'method1' }, { 'id' => 2, 'jsonrpc' => '2.0', 'method' => 'method2' }, { 'id' => 3, 'jsonrpc' => '2.0', 'method' => 'method3' }],
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq([{ 'id' => 1, 'jsonrpc' => '2.0', 'result' => 'result1' }, { 'id' => 2, 'jsonrpc' => '2.0', 'result' => 'result2' }, { 'id' => 3, 'jsonrpc' => '2.0', 'result' => 'result3' }])
+    end
+  end
+
+  describe 'POST /rpc' do
+    it 'Tests JSON-RPC method marked as deprecated' do
+      response = client.post('/rpc',
+        json: { 'id' => 1, 'jsonrpc' => '2.0', 'method' => 'oldMethod', 'params' => {  } },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'id' => 1, 'jsonrpc' => '2.0', 'result' => 'deprecated' })
+      expect(response.headers['deprecation']).to eq('true')
+      expect(response.headers['sunset']).not_to be_nil
+    end
+  end
+
+  describe 'POST /rpc' do
     it 'Tests JSON-RPC error response with error object' do
       response = client.post('/rpc',
         json: { 'id' => 3, 'jsonrpc' => '2.0', 'method' => 'divide', 'params' => { 'denominator' => 0, 'numerator' => 10 } },
@@ -81,12 +127,45 @@ RSpec.describe 'jsonrpc' do
   end
 
   describe 'POST /rpc' do
+    it 'Tests JSON-RPC method params validated against schema' do
+      response = client.post('/rpc',
+        json: { 'id' => 1, 'jsonrpc' => '2.0', 'method' => 'createUser', 'params' => { 'age' => 30, 'name' => 'Alice' } },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'id' => 1, 'jsonrpc' => '2.0', 'result' => { 'age' => 30, 'id' => 1, 'name' => 'Alice' } })
+    end
+  end
+
+  describe 'POST /rpc' do
+    it 'Tests JSON-RPC method result schema validation' do
+      response = client.post('/rpc',
+        json: { 'id' => 1, 'jsonrpc' => '2.0', 'method' => 'getUser', 'params' => { 'id' => 1 } },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'id' => 1, 'jsonrpc' => '2.0', 'result' => { 'email' => 'john@example.com', 'id' => 1, 'name' => 'John' } })
+    end
+  end
+
+  describe 'POST /rpc' do
     it 'Tests JSON-RPC notification (no response expected)' do
       response = client.post('/rpc',
         json: { 'jsonrpc' => '2.0', 'method' => 'notify_event', 'params' => { 'event' => 'user_login' } },
         headers: { 'Content-Type' => 'application/json' }
       )
       expect(response.status).to eq(204)
+    end
+  end
+
+  describe 'POST /rpc' do
+    it 'Tests JSON-RPC notification (no id) doesn\'t return response' do
+      response = client.post('/rpc',
+        json: { 'jsonrpc' => '2.0', 'method' => 'notify', 'params' => { 'message' => 'hello' } },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(204)
+      expect(response.body).to eq('')
     end
   end
 

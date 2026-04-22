@@ -35,11 +35,27 @@ defmodule E2e.AuthTest do
     end
   end
 
+  describe "api_key_custom_header_x_api_token" do
+    test "GET /api/resource - Tests API key authentication with custom X-API-Token header" do
+      {:ok, response} = Req.get(client(), url: "/api/resource", headers: [{"X-API-Token", "token_xyz789"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"resource" => "data"}
+    end
+  end
+
   describe "api_key_in_query_parameter" do
     test "GET /api/data?api_key=sk_test_123456 - Tests API key authentication when key is provided as query parameter instead of header" do
       {:ok, response} = Req.get(client(), url: "/api/data?api_key=sk_test_123456")
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"data" => "sensitive information", "message" => "Access granted"}
+    end
+  end
+
+  describe "api_key_multiple_valid_keys" do
+    test "GET /api/endpoint - Tests API key authentication accepts multiple valid keys" do
+      {:ok, response} = Req.get(client(), url: "/api/endpoint", headers: [{"X-API-Key", "key_staging_001"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"message" => "Authenticated with staging key"}
     end
   end
 
@@ -65,6 +81,14 @@ defmodule E2e.AuthTest do
       {:ok, response} = Req.get(client(), url: "/api/protected", headers: [{"Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA"}])
       assert response.status == 401
       assert Jason.decode!(response.body) == %{"detail" => "Authorization header must use Bearer scheme: 'Bearer <token>'", "status" => 401, "title" => "Invalid Authorization header format", "type" => "https://spikard.dev/errors/unauthorized"}
+    end
+  end
+
+  describe "jwt_audience_claim_aud_field" do
+    test "GET /api/protected - Tests JWT validation of audience (aud) claim" do
+      {:ok, response} = Req.get(client(), url: "/api/protected", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdfQ.test"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"message" => "Access granted"}
     end
   end
 
@@ -108,11 +132,43 @@ defmodule E2e.AuthTest do
     end
   end
 
+  describe "jwt_config_algorithm_rs256" do
+    test "GET /api/secure - Tests JWT validation with RS256 asymmetric algorithm" do
+      {:ok, response} = Req.get(client(), url: "/api/secure", headers: [{"Authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test_signature"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"message" => "Access granted"}
+    end
+  end
+
+  describe "jwt_config_leeway_seconds" do
+    test "GET /api/protected - Tests JWT validation with leeway for clock skew" do
+      {:ok, response} = Req.get(client(), url: "/api/protected", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNzYyNzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDB9.test"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"message" => "Access granted with leeway"}
+    end
+  end
+
+  describe "jwt_expiration_claim_exp_field" do
+    test "GET /api/protected - Tests JWT validation of expiration (exp) claim" do
+      {:ok, response} = Req.get(client(), url: "/api/protected", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"message" => "Access granted"}
+    end
+  end
+
   describe "jwt_invalid_issuer" do
     test "GET /api/protected - Tests JWT rejection when issuer claim doesn't match expected value" do
       {:ok, response} = Req.get(client(), url: "/api/protected", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2V2aWwuY29tIn0.mbL5L04_hpaaiz0SPABap6ZWfBLu18aiexBjzwQ1nnA"}])
       assert response.status == 401
       assert Jason.decode!(response.body) == %{"detail" => "Token issuer is invalid, expected 'https://auth.example.com'", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}
+    end
+  end
+
+  describe "jwt_issuer_claim_iss_field" do
+    test "GET /api/protected - Tests JWT validation of issuer (iss) claim" do
+      {:ok, response} = Req.get(client(), url: "/api/protected", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.test"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"message" => "Access granted"}
     end
   end
 
@@ -140,6 +196,14 @@ defmodule E2e.AuthTest do
     end
   end
 
+  describe "jwt_subject_claim_sub_field" do
+    test "GET /api/user - Tests JWT validation with subject (sub) claim" do
+      {:ok, response} = Req.get(client(), url: "/api/user", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWFiYzEyMyIsImV4cCI6MjYyNjc4Mzk0NiwiaWF0IjoxNzYyNzgzOTQ2fQ.xYz9QaJkL5M2NpQ8RsT1UvW3XyZ4AaBbCcDdEeFfGgHhIiJ"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"user_id" => "user-abc123"}
+    end
+  end
+
   describe "jwt_with_multiple_audiences" do
     test "GET /api/protected - Tests JWT validation when token has multiple audiences and one must match" do
       {:ok, response} = Req.get(client(), url: "/api/protected", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.9MBL_XccGXfu9cDUnCpQruDMOl2hHYydzeGn-20dQOs"}])
@@ -150,7 +214,7 @@ defmodule E2e.AuthTest do
 
   describe "multiple_authentication_schemes_jwt_precedence" do
     test "GET /api/data - Tests authentication when both JWT and API key are provided, JWT takes precedence" do
-      {:ok, response} = Req.get(client(), url: "/api/data", headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"}, {"X-API-Key", "sk_test_123456"}])
+      {:ok, response} = Req.get(client(), url: "/api/data", headers: [{"X-API-Key", "sk_test_123456"}, {"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"auth_method" => "jwt", "message" => "Access granted", "user_id" => "user123"}
     end

@@ -21,6 +21,19 @@ final class CompressionTest extends TestCase
         $this->httpClient = new Client(['base_uri' => $baseUrl, 'http_errors' => false]);
     }
 
+    /** Tests Brotli compression when enabled and client supports it */
+    public function test_compression_brotli_only(): void
+    {
+        $response = $this->httpClient->request('GET', "/compression/brotli", [
+            'headers' => ["Accept-Encoding" => "br"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["data" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "message" => "Brotli compressed payload"], $body);
+        $this->assertEquals("Accept-Encoding", $response->getHeaderLine("vary"));
+        $this->assertEquals("br", $response->getHeaderLine("content-encoding"));
+    }
+
     /** Serves a JSON payload compressed with gzip when the client advertises support. */
     public function test_compression_gzip_applied(): void
     {
@@ -34,6 +47,18 @@ final class CompressionTest extends TestCase
         $this->assertEquals("gzip", $response->getHeaderLine("content-encoding"));
     }
 
+    /** Tests compression respects exact minimum size boundary */
+    public function test_compression_min_size_threshold_exact_boundary(): void
+    {
+        $response = $this->httpClient->request('GET', "/compression/boundary", [
+            'headers' => ["Accept-Encoding" => "gzip"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Exact size payload that is exactly 100 bytes or more to test boundary"], $body);
+        $this->assertEquals("gzip", $response->getHeaderLine("content-encoding"));
+    }
+
     /** Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding. */
     public function test_compression_payload_below_min_size_is_not_compressed(): void
     {
@@ -44,5 +69,17 @@ final class CompressionTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["message" => "Small payload", "payload" => "tiny"], $body);
         $this->assertFalse($response->hasHeader("content-encoding"));
+    }
+
+    /** Tests compression with high quality level setting */
+    public function test_compression_quality_level_9(): void
+    {
+        $response = $this->httpClient->request('GET', "/compression/high_quality", [
+            'headers' => ["Accept-Encoding" => "gzip"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "High quality compression", "payload" => "x"], $body);
+        $this->assertEquals("gzip", $response->getHeaderLine("content-encoding"));
     }
 }

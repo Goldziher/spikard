@@ -256,5 +256,119 @@
 				}
 			}
 		}
+	},
+	{
+		"id": "cors_allow_credentials_flag",
+		"description": "Tests CORS response with credentials flag when allowed",
+		"category": "cors",
+		"http": {
+			"handler": {
+				"route": "/api/secure",
+				"method": "GET",
+				"parameters": {
+					"headers": {
+						"Origin": {
+							"type": "string",
+							"optional": true
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/secure",
+				"headers": {
+					"Origin": "https://example.com"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Access-Control-Allow-Origin": "https://example.com",
+					"Access-Control-Allow-Credentials": "true"
+				},
+				"body": {
+					"message": "Success"
+				}
+			}
+		},
+		"tags": ["cors", "credentials", "success"]
+	},
+	{
+		"id": "cors_restricted_methods_post_get_only",
+		"description": "Tests CORS allows only specific HTTP methods (POST, GET)",
+		"category": "cors",
+		"http": {
+			"handler": {
+				"route": "/api/data",
+				"method": "GET",
+				"parameters": {
+					"headers": {
+						"Origin": {
+							"type": "string",
+							"optional": true
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/data",
+				"headers": {
+					"Origin": "https://example.com"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Access-Control-Allow-Methods": "GET,POST"
+				},
+				"body": {
+					"message": "Success"
+				}
+			}
+		},
+		"tags": ["cors", "methods", "success"]
+	},
+	{
+		"id": "cors_custom_allowed_headers_x_custom",
+		"description": "Tests CORS allows custom X-Custom-Header in requests",
+		"category": "cors",
+		"http": {
+			"handler": {
+				"route": "/api/data",
+				"method": "POST",
+				"parameters": {
+					"headers": {
+						"Origin": {
+							"type": "string",
+							"optional": true
+						},
+						"Access-Control-Request-Headers": {
+							"type": "string",
+							"optional": true
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "OPTIONS",
+				"path": "/api/data",
+				"headers": {
+					"Origin": "https://example.com",
+					"Access-Control-Request-Method": "POST",
+					"Access-Control-Request-Headers": "X-Custom-Header"
+				}
+			},
+			"expected_response": {
+				"status_code": 204,
+				"headers": {
+					"Access-Control-Allow-Origin": "https://example.com",
+					"Access-Control-Allow-Methods": "POST",
+					"Access-Control-Allow-Headers": "X-Custom-Header"
+				}
+			}
+		},
+		"tags": ["cors", "custom_headers", "preflight", "success"]
 	}
 ]

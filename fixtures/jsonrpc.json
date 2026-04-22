@@ -423,5 +423,380 @@
 			}
 		},
 		"tags": ["jsonrpc", "validation", "params"]
+	},
+	{
+		"id": "jsonrpc_config_custom_endpoint_path",
+		"description": "Tests JSON-RPC server at custom endpoint path",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/api/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"params": {
+							"type": "object"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "test",
+					"params": {},
+					"id": 1
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"result": "ok",
+					"id": 1
+				}
+			}
+		},
+		"tags": ["jsonrpc", "endpoint", "config"]
+	},
+	{
+		"id": "jsonrpc_config_batch_disabled",
+		"description": "Tests JSON-RPC batch requests disabled returns error",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "array"
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": [
+					{
+						"jsonrpc": "2.0",
+						"method": "add",
+						"params": [1, 2],
+						"id": 1
+					},
+					{
+						"jsonrpc": "2.0",
+						"method": "subtract",
+						"params": [5, 3],
+						"id": 2
+					}
+				]
+			},
+			"expected_response": {
+				"status_code": 400,
+				"body": {
+					"jsonrpc": "2.0",
+					"error": {
+						"code": -32600,
+						"message": "Batch requests not enabled"
+					}
+				}
+			}
+		},
+		"tags": ["jsonrpc", "batch", "disabled", "config"]
+	},
+	{
+		"id": "jsonrpc_config_max_batch_size",
+		"description": "Tests JSON-RPC batch request respects maximum batch size",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "array"
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": [
+					{
+						"jsonrpc": "2.0",
+						"method": "method1",
+						"id": 1
+					},
+					{
+						"jsonrpc": "2.0",
+						"method": "method2",
+						"id": 2
+					},
+					{
+						"jsonrpc": "2.0",
+						"method": "method3",
+						"id": 3
+					}
+				]
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": [
+					{
+						"jsonrpc": "2.0",
+						"result": "result1",
+						"id": 1
+					},
+					{
+						"jsonrpc": "2.0",
+						"result": "result2",
+						"id": 2
+					},
+					{
+						"jsonrpc": "2.0",
+						"result": "result3",
+						"id": 3
+					}
+				]
+			}
+		},
+		"tags": ["jsonrpc", "batch", "max_size", "config"]
+	},
+	{
+		"id": "jsonrpc_method_with_params_schema",
+		"description": "Tests JSON-RPC method params validated against schema",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"params": {
+							"type": "object",
+							"properties": {
+								"name": {
+									"type": "string"
+								},
+								"age": {
+									"type": "integer",
+									"minimum": 0
+								}
+							},
+							"required": ["name", "age"]
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "params", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "createUser",
+					"params": {
+						"name": "Alice",
+						"age": 30
+					},
+					"id": 1
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"result": {
+						"id": 1,
+						"name": "Alice",
+						"age": 30
+					},
+					"id": 1
+				}
+			}
+		},
+		"tags": ["jsonrpc", "params_schema", "validation"]
+	},
+	{
+		"id": "jsonrpc_method_with_result_schema",
+		"description": "Tests JSON-RPC method result schema validation",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "getUser",
+					"params": {
+						"id": 1
+					},
+					"id": 1
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"result": {
+						"id": 1,
+						"name": "John",
+						"email": "john@example.com"
+					},
+					"id": 1
+				}
+			}
+		},
+		"tags": ["jsonrpc", "result_schema", "validation"]
+	},
+	{
+		"id": "jsonrpc_deprecated_method_flag",
+		"description": "Tests JSON-RPC method marked as deprecated",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "oldMethod",
+					"params": {},
+					"id": 1
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Deprecation": "true",
+					"Sunset": "<<present>>"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"result": "deprecated",
+					"id": 1
+				}
+			}
+		},
+		"tags": ["jsonrpc", "deprecated", "method"]
+	},
+	{
+		"id": "jsonrpc_notification_no_response",
+		"description": "Tests JSON-RPC notification (no id) doesn't return response",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"params": {
+							"type": "object"
+						}
+					},
+					"required": ["jsonrpc", "method"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "notify",
+					"params": {
+						"message": "hello"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 204,
+				"body": ""
+			}
+		},
+		"tags": ["jsonrpc", "notification"]
 	}
 ]

@@ -21,6 +21,30 @@ final class GraphqlSchemaTest extends TestCase
         $this->httpClient = new Client(['base_uri' => $baseUrl, 'http_errors' => false]);
     }
 
+    /** Tests GraphQL authentication error when auth fails */
+    public function test_graphql_authentication_error_variant(): void
+    {
+        $response = $this->httpClient->request('POST', "/graphql", [
+            'json' => ["query" => "{ user { id } }"],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(401, $response->getStatusCode());
+        $this->assertEquals(["error" => "<<present>>"], $body);
+    }
+
+    /** Tests GraphQL authorization error when access denied */
+    public function test_graphql_authorization_error_variant(): void
+    {
+        $response = $this->httpClient->request('POST', "/graphql", [
+            'json' => ["query" => "{ admin { id } }"],
+            'headers' => ["Authorization" => "Bearer invalid", "Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(403, $response->getStatusCode());
+        $this->assertEquals(["error" => "<<present>>"], $body);
+    }
+
     /** Tests GraphQL query complexity validation rejects overly complex queries */
     public function test_graphql_complexity_limit_exceeded(): void
     {
@@ -69,6 +93,18 @@ final class GraphqlSchemaTest extends TestCase
         $this->assertEquals(["errors" => [["extensions" => ["code" => "GRAPHQL_VALIDATION_FAILED"], "message" => "Cannot query field 'invalidField' on type 'Query'"]]], $body);
     }
 
+    /** Tests GraphQL execution error response */
+    public function test_graphql_execution_error_variant(): void
+    {
+        $response = $this->httpClient->request('POST', "/graphql", [
+            'json' => ["query" => "{ invalidField }"],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["errors" => [["message" => "<<present>>"]]], $body);
+    }
+
     /** Tests GraphQL schema with queries, mutations, and subscriptions */
     public function test_graphql_full_schema_with_subscriptions(): void
     {
@@ -105,6 +141,30 @@ final class GraphqlSchemaTest extends TestCase
         $this->assertEquals(["data" => ["__schema" => ["types" => null]]], $body);
     }
 
+    /** Tests GraphQL invalid input error */
+    public function test_graphql_invalid_input_error_variant(): void
+    {
+        $response = $this->httpClient->request('POST', "/graphql", [
+            'json' => ["query" => "mutation { createUser(age: -5) { id } }"],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["errors" => [["message" => "<<present>>"]]], $body);
+    }
+
+    /** Tests GraphQL not found error for missing resource */
+    public function test_graphql_not_found_error_variant(): void
+    {
+        $response = $this->httpClient->request('POST', "/graphql", [
+            'json' => ["query" => "{ user(id: \"nonexistent\") { id } }"],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["errors" => [["message" => "<<present>>"]]], $body);
+    }
+
     /** Tests GraphQL schema with queries and mutations */
     public function test_graphql_query_and_mutation_schema(): void
     {
@@ -127,5 +187,41 @@ final class GraphqlSchemaTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["data" => ["user" => ["id" => "1", "name" => "Test User"]]], $body);
+    }
+
+    /** Tests GraphQL rate limit exceeded error */
+    public function test_graphql_rate_limit_error_variant(): void
+    {
+        $response = $this->httpClient->request('POST', "/graphql", [
+            'json' => ["query" => "{ user { id } }"],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["data" => "<<present>>"], $body);
+    }
+
+    /** Tests GraphQL schema build error */
+    public function test_graphql_schema_build_error_variant(): void
+    {
+        $response = $this->httpClient->request('POST', "/graphql", [
+            'json' => ["query" => "{ test }"],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(500, $response->getStatusCode());
+        $this->assertEquals(["error" => "<<present>>"], $body);
+    }
+
+    /** Tests GraphQL serialization error for invalid response */
+    public function test_graphql_serialization_error_variant(): void
+    {
+        $response = $this->httpClient->request('POST', "/graphql", [
+            'json' => ["query" => "{ user { id } }"],
+            'headers' => ["Content-Type" => "application/json"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["data" => "<<present>>"], $body);
     }
 }

@@ -11,6 +11,16 @@ defmodule E2e.CompressionTest do
     Req.new(base_url: base_url())
   end
 
+  describe "compression_brotli_only" do
+    test "GET /compression/brotli - Tests Brotli compression when enabled and client supports it" do
+      {:ok, response} = Req.get(client(), url: "/compression/brotli", headers: [{"Accept-Encoding", "br"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"data" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "message" => "Brotli compressed payload"}
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "vary", do: v end) == "Accept-Encoding"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-encoding", do: v end) == "br"
+    end
+  end
+
   describe "compression_gzip_applied" do
     test "GET /compression/gzip - Serves a JSON payload compressed with gzip when the client advertises support." do
       {:ok, response} = Req.get(client(), url: "/compression/gzip", headers: [{"Accept-Encoding", "gzip"}])
@@ -21,12 +31,30 @@ defmodule E2e.CompressionTest do
     end
   end
 
+  describe "compression_min_size_threshold_exact_boundary" do
+    test "GET /compression/boundary - Tests compression respects exact minimum size boundary" do
+      {:ok, response} = Req.get(client(), url: "/compression/boundary", headers: [{"Accept-Encoding", "gzip"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"message" => "Exact size payload that is exactly 100 bytes or more to test boundary"}
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-encoding", do: v end) == "gzip"
+    end
+  end
+
   describe "compression_payload_below_min_size_is_not_compressed" do
     test "GET /compression/skip - Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding." do
       {:ok, response} = Req.get(client(), url: "/compression/skip", headers: [{"Accept-Encoding", "gzip"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"message" => "Small payload", "payload" => "tiny"}
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-encoding", do: v end) == nil
+    end
+  end
+
+  describe "compression_quality_level_9" do
+    test "GET /compression/high_quality - Tests compression with high quality level setting" do
+      {:ok, response} = Req.get(client(), url: "/compression/high_quality", headers: [{"Accept-Encoding", "gzip"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"message" => "High quality compression", "payload" => "x"}
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-encoding", do: v end) == "gzip"
     end
   end
 end

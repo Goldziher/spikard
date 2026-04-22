@@ -1,0 +1,275 @@
+[
+	{
+		"id": "response_status_code_200_success",
+		"description": "Tests response with explicit 200 status code",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/success",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/success"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"status": "ok"
+				}
+			}
+		},
+		"tags": ["response", "status_code", "success"]
+	},
+	{
+		"id": "response_status_code_201_created",
+		"description": "Tests response with 201 Created status code",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/items",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						}
+					},
+					"required": ["name"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/items",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"name": "New Item"
+				}
+			},
+			"expected_response": {
+				"status_code": 201,
+				"body": {
+					"id": "1",
+					"name": "New Item"
+				}
+			}
+		},
+		"tags": ["response", "status_code", "created"]
+	},
+	{
+		"id": "response_status_code_204_no_content",
+		"description": "Tests response with 204 No Content status code",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/items/1",
+				"method": "DELETE"
+			},
+			"request": {
+				"method": "DELETE",
+				"path": "/items/1"
+			},
+			"expected_response": {
+				"status_code": 204,
+				"body": ""
+			}
+		},
+		"tags": ["response", "status_code", "no_content"]
+	},
+	{
+		"id": "response_with_custom_headers",
+		"description": "Tests response includes custom headers",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/data",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/data"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"X-Custom-Header": "custom-value",
+					"X-Total-Count": "42",
+					"X-Request-Id": "<<present>>"
+				},
+				"body": {
+					"data": "value"
+				}
+			}
+		},
+		"tags": ["response", "headers", "custom"]
+	},
+	{
+		"id": "response_set_cookie_in_response",
+		"description": "Tests response sets cookie with Set-Cookie header",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/login",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"username": {
+							"type": "string"
+						},
+						"password": {
+							"type": "string"
+						}
+					},
+					"required": ["username", "password"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/login",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"username": "user",
+					"password": "pass"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Set-Cookie": "<<present>>"
+				},
+				"body": {
+					"message": "Login successful"
+				}
+			}
+		},
+		"tags": ["response", "cookie", "set_cookie"]
+	},
+	{
+		"id": "response_content_type_application_json",
+		"description": "Tests response with Content-Type: application/json",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/api/data",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/data"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"key": "value"
+				}
+			}
+		},
+		"tags": ["response", "content_type", "json"]
+	},
+	{
+		"id": "response_content_type_text_html",
+		"description": "Tests response with Content-Type: text/html",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/html",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/html"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "text/html"
+				}
+			}
+		},
+		"tags": ["response", "content_type", "html"]
+	},
+	{
+		"id": "response_location_header_redirect",
+		"description": "Tests response includes Location header for redirects",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/old-path",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/old-path"
+			},
+			"expected_response": {
+				"status_code": 301,
+				"headers": {
+					"Location": "https://example.com/new-path"
+				}
+			}
+		},
+		"tags": ["response", "redirect", "location"]
+	},
+	{
+		"id": "response_cache_control_header",
+		"description": "Tests response includes Cache-Control header",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/static-resource",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/static-resource"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Cache-Control": "public, max-age=3600"
+				},
+				"body": {
+					"resource": "data"
+				}
+			}
+		},
+		"tags": ["response", "cache_control"]
+	},
+	{
+		"id": "response_multiple_headers_combined",
+		"description": "Tests response with multiple custom headers combined",
+		"category": "response",
+		"http": {
+			"handler": {
+				"route": "/complex",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/complex"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"X-Custom-Header": "value1",
+					"X-Another-Header": "value2",
+					"X-Third-Header": "value3",
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"message": "Complex response"
+				}
+			}
+		},
+		"tags": ["response", "headers", "multiple"]
+	}
+]

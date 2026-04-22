@@ -262,7 +262,7 @@ final class HeadersTest extends TestCase
     public function test_multiple_custom_headers(): void
     {
         $response = $this->httpClient->request('GET', "/headers/multiple", [
-            'headers' => ["X-Trace-Id" => "trace-abc", "X-Request-Id" => "req-12345", "X-Client-Version" => "1.2.3"],
+            'headers' => ["X-Client-Version" => "1.2.3", "X-Request-Id" => "req-12345", "X-Trace-Id" => "trace-abc"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());

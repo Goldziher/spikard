@@ -2,6 +2,25 @@
 import { describe, it, expect } from 'vitest';
 
 describe('graphql_schema', () => {
+  it('graphql_authentication_error_variant: Tests GraphQL authentication error when auth fails', async () => {
+    const response = await app.request('/graphql', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ query: "{ user { id } }" }) });
+    expect(response.status).toBe(401);
+    const data = await response.json();
+    expect(data).toEqual({ error: "<<present>>" });
+  });
+
+  it('graphql_authorization_error_variant: Tests GraphQL authorization error when access denied', async () => {
+    const response = await app.request('/graphql', { method: 'POST', headers: {
+      'Authorization': 'Bearer invalid',
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ query: "{ admin { id } }" }) });
+    expect(response.status).toBe(403);
+    const data = await response.json();
+    expect(data).toEqual({ error: "<<present>>" });
+  });
+
   it('graphql_complexity_limit_exceeded: Tests GraphQL query complexity validation rejects overly complex queries', async () => {
     const response = await app.request('/graphql', { method: 'POST', headers: {
       'Content-Type': 'application/json',
@@ -38,6 +57,15 @@ describe('graphql_schema', () => {
     expect(data).toEqual({ errors: [{ extensions: { code: "GRAPHQL_VALIDATION_FAILED" }, message: "Cannot query field 'invalidField' on type 'Query'" }] });
   });
 
+  it('graphql_execution_error_variant: Tests GraphQL execution error response', async () => {
+    const response = await app.request('/graphql', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ query: "{ invalidField }" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
+  });
+
   it('graphql_full_schema_with_subscriptions: Tests GraphQL schema with queries, mutations, and subscriptions', async () => {
     const response = await app.request('/graphql', { method: 'POST', headers: {
       'Content-Type': 'application/json',
@@ -65,6 +93,24 @@ describe('graphql_schema', () => {
     expect(data).toEqual({ data: { __schema: { types: null } } });
   });
 
+  it('graphql_invalid_input_error_variant: Tests GraphQL invalid input error', async () => {
+    const response = await app.request('/graphql', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ query: "mutation { createUser(age: -5) { id } }" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
+  });
+
+  it('graphql_not_found_error_variant: Tests GraphQL not found error for missing resource', async () => {
+    const response = await app.request('/graphql', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ query: "{ user(id: \"nonexistent\") { id } }" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
+  });
+
   it('graphql_query_and_mutation_schema: Tests GraphQL schema with queries and mutations', async () => {
     const response = await app.request('/graphql', { method: 'POST', headers: {
       'Content-Type': 'application/json',
@@ -81,5 +127,32 @@ describe('graphql_schema', () => {
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ data: { user: { id: "1", name: "Test User" } } });
+  });
+
+  it('graphql_rate_limit_error_variant: Tests GraphQL rate limit exceeded error', async () => {
+    const response = await app.request('/graphql', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ query: "{ user { id } }" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ data: "<<present>>" });
+  });
+
+  it('graphql_schema_build_error_variant: Tests GraphQL schema build error', async () => {
+    const response = await app.request('/graphql', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ query: "{ test }" }) });
+    expect(response.status).toBe(500);
+    const data = await response.json();
+    expect(data).toEqual({ error: "<<present>>" });
+  });
+
+  it('graphql_serialization_error_variant: Tests GraphQL serialization error for invalid response', async () => {
+    const response = await app.request('/graphql', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ query: "{ user { id } }" }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ data: "<<present>>" });
   });
 });

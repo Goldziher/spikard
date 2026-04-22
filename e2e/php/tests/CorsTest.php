@@ -25,7 +25,7 @@ final class CorsTest extends TestCase
     public function test_06_cors_preflight_method_not_allowed(): void
     {
         $response = $this->httpClient->request('OPTIONS', "/api/data", [
-            'headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "DELETE", "Access-Control-Request-Headers" => "Content-Type"],
+            'headers' => ["Access-Control-Request-Headers" => "Content-Type", "Origin" => "https://example.com", "Access-Control-Request-Method" => "DELETE"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(403, $response->getStatusCode());
@@ -35,7 +35,7 @@ final class CorsTest extends TestCase
     public function test_07_cors_preflight_header_not_allowed(): void
     {
         $response = $this->httpClient->request('OPTIONS', "/api/data", [
-            'headers' => ["Access-Control-Request-Headers" => "X-Custom-Header", "Origin" => "https://example.com", "Access-Control-Request-Method" => "POST"],
+            'headers' => ["Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "X-Custom-Header", "Origin" => "https://example.com"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(403, $response->getStatusCode());
@@ -45,14 +45,14 @@ final class CorsTest extends TestCase
     public function test_08_cors_max_age(): void
     {
         $response = $this->httpClient->request('OPTIONS', "/api/data", [
-            'headers' => ["Access-Control-Request-Headers" => "Content-Type", "Access-Control-Request-Method" => "POST", "Origin" => "https://example.com"],
+            'headers' => ["Origin" => "https://example.com", "Access-Control-Request-Method" => "POST", "Access-Control-Request-Headers" => "Content-Type"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(204, $response->getStatusCode());
-        $this->assertEquals("POST", $response->getHeaderLine("access-control-allow-methods"));
         $this->assertEquals("Content-Type", $response->getHeaderLine("access-control-allow-headers"));
         $this->assertEquals("https://example.com", $response->getHeaderLine("access-control-allow-origin"));
         $this->assertEquals("3600", $response->getHeaderLine("access-control-max-age"));
+        $this->assertEquals("POST", $response->getHeaderLine("access-control-allow-methods"));
     }
 
     /** CORS response should include Access-Control-Expose-Headers for custom headers */
@@ -63,10 +63,10 @@ final class CorsTest extends TestCase
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("https://example.com", $response->getHeaderLine("access-control-allow-origin"));
+        $this->assertEquals("42", $response->getHeaderLine("x-total-count"));
         $this->assertEquals("X-Total-Count, X-Request-Id", $response->getHeaderLine("access-control-expose-headers"));
         $this->assertEquals("abc123", $response->getHeaderLine("x-request-id"));
-        $this->assertEquals("42", $response->getHeaderLine("x-total-count"));
+        $this->assertEquals("https://example.com", $response->getHeaderLine("access-control-allow-origin"));
     }
 
     /** CORS request with 'null' origin should be handled according to policy */
@@ -80,6 +80,32 @@ final class CorsTest extends TestCase
         $this->assertEquals(["error" => "Origin 'null' is not allowed"], $body);
     }
 
+    /** Tests CORS response with credentials flag when allowed */
+    public function test_cors_allow_credentials_flag(): void
+    {
+        $response = $this->httpClient->request('GET', "/api/secure", [
+            'headers' => ["Origin" => "https://example.com"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Success"], $body);
+        $this->assertEquals("true", $response->getHeaderLine("access-control-allow-credentials"));
+        $this->assertEquals("https://example.com", $response->getHeaderLine("access-control-allow-origin"));
+    }
+
+    /** Tests CORS allows custom X-Custom-Header in requests */
+    public function test_cors_custom_allowed_headers_x_custom(): void
+    {
+        $response = $this->httpClient->request('OPTIONS', "/api/data", [
+            'headers' => ["Access-Control-Request-Method" => "POST", "Origin" => "https://example.com", "Access-Control-Request-Headers" => "X-Custom-Header"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(204, $response->getStatusCode());
+        $this->assertEquals("https://example.com", $response->getHeaderLine("access-control-allow-origin"));
+        $this->assertEquals("POST", $response->getHeaderLine("access-control-allow-methods"));
+        $this->assertEquals("X-Custom-Header", $response->getHeaderLine("access-control-allow-headers"));
+    }
+
     /** Tests CORS request from disallowed origin */
     public function test_cors_request_blocked(): void
     {
@@ -91,16 +117,28 @@ final class CorsTest extends TestCase
         $this->assertEquals(["detail" => "CORS request from origin 'https://malicious-site.com' not allowed"], $body);
     }
 
-    /** Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight */
-    public function test_cors_safelisted_headers_without_preflight(): void
+    /** Tests CORS allows only specific HTTP methods (POST, GET) */
+    public function test_cors_restricted_methods_post_get_only(): void
     {
-        $response = $this->httpClient->request('POST', "/api/form", [
-            'headers' => ["Origin" => "https://app.example.com", "Accept" => "application/json", "Accept-Language" => "en-US", "Content-Type" => "text/plain"],
+        $response = $this->httpClient->request('GET', "/api/data", [
+            'headers' => ["Origin" => "https://example.com"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["message" => "Success"], $body);
-        $this->assertEquals("Origin", $response->getHeaderLine("vary"));
+        $this->assertEquals("GET,POST", $response->getHeaderLine("access-control-allow-methods"));
+    }
+
+    /** Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight */
+    public function test_cors_safelisted_headers_without_preflight(): void
+    {
+        $response = $this->httpClient->request('POST', "/api/form", [
+            'headers' => ["Content-Type" => "text/plain", "Accept" => "application/json", "Accept-Language" => "en-US", "Origin" => "https://app.example.com"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["message" => "Success"], $body);
         $this->assertEquals("https://app.example.com", $response->getHeaderLine("access-control-allow-origin"));
+        $this->assertEquals("Origin", $response->getHeaderLine("vary"));
     }
 }

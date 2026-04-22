@@ -127,9 +127,9 @@ def test_multiple_cookies_success(client) -> None:
     response = client.get(
         "/items/",
         cookies={
-            "session_id": "session123",
-            "googall_tracker": "ga789",
             "fatebook_tracker": "tracker456",
+            "googall_tracker": "ga789",
+            "session_id": "session123",
         },
     )
     assert response.status_code == 200  # noqa: S101

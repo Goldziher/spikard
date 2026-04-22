@@ -194,9 +194,9 @@ describe('headers', () => {
 
   it('multiple_custom_headers: Tests multiple custom headers in single request', async () => {
     const response = await app.request('/headers/multiple', { method: 'GET', headers: {
-      'X-Trace-Id': 'trace-abc',
-      'X-Request-Id': 'req-12345',
       'X-Client-Version': '1.2.3',
+      'X-Request-Id': 'req-12345',
+      'X-Trace-Id': 'trace-abc',
     } });
     expect(response.status).toBe(200);
     const data = await response.json();

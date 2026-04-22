@@ -42,8 +42,8 @@ RSpec.describe 'http_methods' do
     it 'Tests HEAD method returns headers without response body' do
       response = client.head('/items/1')
       expect(response.status).to eq(200)
-      expect(response.headers['content-type']).to eq('application/json')
       expect(response.headers['content-length']).to eq('85')
+      expect(response.headers['content-type']).to eq('application/json')
     end
   end
 

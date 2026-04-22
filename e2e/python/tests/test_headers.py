@@ -259,9 +259,9 @@ def test_multiple_custom_headers(client) -> None:
     response = client.get(
         "/headers/multiple",
         headers={
-            "X-Trace-Id": "trace-abc",
-            "X-Request-Id": "req-12345",
             "X-Client-Version": "1.2.3",
+            "X-Request-Id": "req-12345",
+            "X-Trace-Id": "trace-abc",
         },
     )
     assert response.status_code == 200  # noqa: S101

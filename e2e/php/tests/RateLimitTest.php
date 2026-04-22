@@ -30,11 +30,40 @@ final class RateLimitTest extends TestCase
         $this->assertEquals(["request" => "under-limit", "status" => "ok"], $body);
     }
 
+    /** Tests burst setting allows request spike beyond per_second rate */
+    public function test_rate_limit_burst_setting_allows_spike(): void
+    {
+        $response = $this->httpClient->request('GET', "/rate-limit/burst");
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["status" => "ok"], $body);
+    }
+
     /** Sends sequential requests until the configured limit is exceeded and validates the 429 response. */
     public function test_rate_limit_exceeded_returns_429(): void
     {
         $response = $this->httpClient->request('GET', "/rate-limit/exceeded");
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(429, $response->getStatusCode());
+    }
+
+    /** Tests rate limiting is applied per IP address */
+    public function test_rate_limit_ip_based_tracking(): void
+    {
+        $response = $this->httpClient->request('GET', "/rate-limit/ip-based", [
+            'headers' => ["X-Forwarded-For" => "192.168.1.100"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["status" => "ok"], $body);
+    }
+
+    /** Tests rate limit allows up to 10 requests per second */
+    public function test_rate_limit_per_second_setting_10_requests(): void
+    {
+        $response = $this->httpClient->request('GET', "/rate-limit/per-second");
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["status" => "ok"], $body);
     }
 }

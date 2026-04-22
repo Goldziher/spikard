@@ -21,6 +21,15 @@ final class ServerConfigTest extends TestCase
         $this->httpClient = new Client(['base_uri' => $baseUrl, 'http_errors' => false]);
     }
 
+    /** Tests server with background tasks configured */
+    public function test_server_background_tasks_configuration(): void
+    {
+        $response = $this->httpClient->request('GET', "/task");
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["background_tasks_enabled" => true], $body);
+    }
+
     /** Tests server compresses responses when enabled */
     public function test_server_compression_enabled(): void
     {
@@ -51,6 +60,37 @@ final class ServerConfigTest extends TestCase
         $this->assertEquals(["message" => "Server is running with default config", "status" => "ok"], $body);
     }
 
+    /** Tests server with HTTP trace logging enabled */
+    public function test_server_enable_http_trace_logging(): void
+    {
+        $response = $this->httpClient->request('GET', "/trace");
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["trace_enabled" => true], $body);
+    }
+
+    /** Tests server graceful shutdown waits for in-flight requests */
+    public function test_server_graceful_shutdown_enabled(): void
+    {
+        $response = $this->httpClient->request('GET', "/shutdown");
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["graceful_shutdown" => true], $body);
+    }
+
+    /** Tests server with gRPC protocol integration */
+    public function test_server_grpc_integration(): void
+    {
+        $response = $this->httpClient->request('POST', "/api.Service/Method", [
+            'json' => ["data" => "test"],
+            'headers' => ["Content-Type" => "application/grpc", "te" => "trailers"],
+        ]);
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
+        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
+    }
+
     /** Tests server with both JWT and API key authentication configured */
     public function test_server_jwt_and_api_key_auth_combined(): void
     {
@@ -74,6 +114,16 @@ final class ServerConfigTest extends TestCase
         $this->assertEquals(["received" => 1], $body);
     }
 
+    /** Tests server with OpenAPI documentation integration */
+    public function test_server_openapi_integration(): void
+    {
+        $response = $this->httpClient->request('GET', "/openapi.json");
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["openapi" => "3.0.0"], $body);
+        $this->assertEquals("application/json", $response->getHeaderLine("content-type"));
+    }
+
     /** Tests server enforces rate limiting configuration */
     public function test_server_rate_limit_configuration(): void
     {
@@ -91,6 +141,24 @@ final class ServerConfigTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["has_request_id" => true], $body);
         $this->assertTrue($response->hasHeader("x-request-id"));
+    }
+
+    /** Tests server respects request timeout configuration */
+    public function test_server_request_timeout_setting(): void
+    {
+        $response = $this->httpClient->request('GET', "/timeout");
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["timeout_ms" => 30000], $body);
+    }
+
+    /** Tests server shutdown timeout configuration */
+    public function test_server_shutdown_timeout_setting(): void
+    {
+        $response = $this->httpClient->request('GET', "/shutdown-timeout");
+        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(["shutdown_timeout_secs" => 30], $body);
     }
 
     /** Tests server serves static files from configured directory */

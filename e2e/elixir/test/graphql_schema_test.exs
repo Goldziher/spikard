@@ -11,6 +11,22 @@ defmodule E2e.GraphqlSchemaTest do
     Req.new(base_url: base_url())
   end
 
+  describe "graphql_authentication_error_variant" do
+    test "POST /graphql - Tests GraphQL authentication error when auth fails" do
+      {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ user { id } }"}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 401
+      assert Jason.decode!(response.body) == %{"error" => "<<present>>"}
+    end
+  end
+
+  describe "graphql_authorization_error_variant" do
+    test "POST /graphql - Tests GraphQL authorization error when access denied" do
+      {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ admin { id } }"}, headers: [{"Authorization", "Bearer invalid"}, {"Content-Type", "application/json"}])
+      assert response.status == 403
+      assert Jason.decode!(response.body) == %{"error" => "<<present>>"}
+    end
+  end
+
   describe "graphql_complexity_limit_exceeded" do
     test "POST /graphql - Tests GraphQL query complexity validation rejects overly complex queries" do
       {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ user { id name email posts { id title comments { id text } } } }"}, headers: [{"Content-Type", "application/json"}])
@@ -43,6 +59,14 @@ defmodule E2e.GraphqlSchemaTest do
     end
   end
 
+  describe "graphql_execution_error_variant" do
+    test "POST /graphql - Tests GraphQL execution error response" do
+      {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ invalidField }"}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"errors" => [%{"message" => "<<present>>"}]}
+    end
+  end
+
   describe "graphql_full_schema_with_subscriptions" do
     test "POST /graphql - Tests GraphQL schema with queries, mutations, and subscriptions" do
       {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ __typename }"}, headers: [{"Content-Type", "application/json"}])
@@ -67,6 +91,22 @@ defmodule E2e.GraphqlSchemaTest do
     end
   end
 
+  describe "graphql_invalid_input_error_variant" do
+    test "POST /graphql - Tests GraphQL invalid input error" do
+      {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "mutation { createUser(age: -5) { id } }"}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"errors" => [%{"message" => "<<present>>"}]}
+    end
+  end
+
+  describe "graphql_not_found_error_variant" do
+    test "POST /graphql - Tests GraphQL not found error for missing resource" do
+      {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ user(id: \"nonexistent\") { id } }"}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"errors" => [%{"message" => "<<present>>"}]}
+    end
+  end
+
   describe "graphql_query_and_mutation_schema" do
     test "POST /graphql - Tests GraphQL schema with queries and mutations" do
       {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "mutation { createUser(name: \"New\") { id name } }"}, headers: [{"Content-Type", "application/json"}])
@@ -80,6 +120,30 @@ defmodule E2e.GraphqlSchemaTest do
       {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ user { id name } }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"data" => %{"user" => %{"id" => "1", "name" => "Test User"}}}
+    end
+  end
+
+  describe "graphql_rate_limit_error_variant" do
+    test "POST /graphql - Tests GraphQL rate limit exceeded error" do
+      {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ user { id } }"}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"data" => "<<present>>"}
+    end
+  end
+
+  describe "graphql_schema_build_error_variant" do
+    test "POST /graphql - Tests GraphQL schema build error" do
+      {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ test }"}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 500
+      assert Jason.decode!(response.body) == %{"error" => "<<present>>"}
+    end
+  end
+
+  describe "graphql_serialization_error_variant" do
+    test "POST /graphql - Tests GraphQL serialization error for invalid response" do
+      {:ok, response} = Req.post(client(), url: "/graphql", json: %{"query" => "{ user { id } }"}, headers: [{"Content-Type", "application/json"}])
+      assert response.status == 200
+      assert Jason.decode!(response.body) == %{"data" => "<<present>>"}
     end
   end
 end

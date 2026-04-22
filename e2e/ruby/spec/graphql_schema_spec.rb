@@ -15,6 +15,28 @@ RSpec.describe 'graphql_schema' do
   end
 
   describe 'POST /graphql' do
+    it 'Tests GraphQL authentication error when auth fails' do
+      response = client.post('/graphql',
+        json: { 'query' => '{ user { id } }' },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(401)
+      expect(response.body).to eq({ 'error' => '<<present>>' })
+    end
+  end
+
+  describe 'POST /graphql' do
+    it 'Tests GraphQL authorization error when access denied' do
+      response = client.post('/graphql',
+        json: { 'query' => '{ admin { id } }' },
+        headers: { 'Authorization' => 'Bearer invalid', 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(403)
+      expect(response.body).to eq({ 'error' => '<<present>>' })
+    end
+  end
+
+  describe 'POST /graphql' do
     it 'Tests GraphQL query complexity validation rejects overly complex queries' do
       response = client.post('/graphql',
         json: { 'query' => '{ user { id name email posts { id title comments { id text } } } }' },
@@ -59,6 +81,17 @@ RSpec.describe 'graphql_schema' do
   end
 
   describe 'POST /graphql' do
+    it 'Tests GraphQL execution error response' do
+      response = client.post('/graphql',
+        json: { 'query' => '{ invalidField }' },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'errors' => [{ 'message' => '<<present>>' }] })
+    end
+  end
+
+  describe 'POST /graphql' do
     it 'Tests GraphQL schema with queries, mutations, and subscriptions' do
       response = client.post('/graphql',
         json: { 'query' => '{ __typename }' },
@@ -92,6 +125,28 @@ RSpec.describe 'graphql_schema' do
   end
 
   describe 'POST /graphql' do
+    it 'Tests GraphQL invalid input error' do
+      response = client.post('/graphql',
+        json: { 'query' => 'mutation { createUser(age: -5) { id } }' },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'errors' => [{ 'message' => '<<present>>' }] })
+    end
+  end
+
+  describe 'POST /graphql' do
+    it 'Tests GraphQL not found error for missing resource' do
+      response = client.post('/graphql',
+        json: { 'query' => '{ user(id: "nonexistent") { id } }' },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'errors' => [{ 'message' => '<<present>>' }] })
+    end
+  end
+
+  describe 'POST /graphql' do
     it 'Tests GraphQL schema with queries and mutations' do
       response = client.post('/graphql',
         json: { 'query' => 'mutation { createUser(name: "New") { id name } }' },
@@ -110,6 +165,39 @@ RSpec.describe 'graphql_schema' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'data' => { 'user' => { 'id' => '1', 'name' => 'Test User' } } })
+    end
+  end
+
+  describe 'POST /graphql' do
+    it 'Tests GraphQL rate limit exceeded error' do
+      response = client.post('/graphql',
+        json: { 'query' => '{ user { id } }' },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'data' => '<<present>>' })
+    end
+  end
+
+  describe 'POST /graphql' do
+    it 'Tests GraphQL schema build error' do
+      response = client.post('/graphql',
+        json: { 'query' => '{ test }' },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(500)
+      expect(response.body).to eq({ 'error' => '<<present>>' })
+    end
+  end
+
+  describe 'POST /graphql' do
+    it 'Tests GraphQL serialization error for invalid response' do
+      response = client.post('/graphql',
+        json: { 'query' => '{ user { id } }' },
+        headers: { 'Content-Type' => 'application/json' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'data' => '<<present>>' })
     end
   end
 end

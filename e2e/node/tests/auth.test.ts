@@ -27,11 +27,29 @@ describe('auth', () => {
     expect(data).toEqual({ data: "sensitive information", message: "Access granted" });
   });
 
+  it('api_key_custom_header_x_api_token: Tests API key authentication with custom X-API-Token header', async () => {
+    const response = await app.request('/api/resource', { method: 'GET', headers: {
+      'X-API-Token': 'token_xyz789',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ resource: "data" });
+  });
+
   it('api_key_in_query_parameter: Tests API key authentication when key is provided as query parameter instead of header', async () => {
     const response = await app.request('/api/data?api_key=sk_test_123456', { method: 'GET' });
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ data: "sensitive information", message: "Access granted" });
+  });
+
+  it('api_key_multiple_valid_keys: Tests API key authentication accepts multiple valid keys', async () => {
+    const response = await app.request('/api/endpoint', { method: 'GET', headers: {
+      'X-API-Key': 'key_staging_001',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ message: "Authenticated with staging key" });
   });
 
   it('api_key_rotation_old_key_still_valid: Tests API key authentication during rotation period when old key remains valid alongside new key', async () => {
@@ -60,6 +78,15 @@ describe('auth', () => {
     expect(response.status).toBe(401);
     const data = await response.json();
     expect(data).toEqual({ detail: "Authorization header must use Bearer scheme: 'Bearer <token>'", status: 401, title: "Invalid Authorization header format", type: "https://spikard.dev/errors/unauthorized" });
+  });
+
+  it('jwt_audience_claim_aud_field: Tests JWT validation of audience (aud) claim', async () => {
+    const response = await app.request('/api/protected', { method: 'GET', headers: {
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdfQ.test',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ message: "Access granted" });
   });
 
   it('jwt_authentication_expired_token: Tests JWT authentication failure when token has expired (exp claim in the past)', async () => {
@@ -105,6 +132,33 @@ describe('auth', () => {
     expect(data).toEqual({ message: "Access granted", user_id: "user123" });
   });
 
+  it('jwt_config_algorithm_rs256: Tests JWT validation with RS256 asymmetric algorithm', async () => {
+    const response = await app.request('/api/secure', { method: 'GET', headers: {
+      'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test_signature',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ message: "Access granted" });
+  });
+
+  it('jwt_config_leeway_seconds: Tests JWT validation with leeway for clock skew', async () => {
+    const response = await app.request('/api/protected', { method: 'GET', headers: {
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNzYyNzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDB9.test',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ message: "Access granted with leeway" });
+  });
+
+  it('jwt_expiration_claim_exp_field: Tests JWT validation of expiration (exp) claim', async () => {
+    const response = await app.request('/api/protected', { method: 'GET', headers: {
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ message: "Access granted" });
+  });
+
   it('jwt_invalid_issuer: Tests JWT rejection when issuer claim doesn\'t match expected value', async () => {
     const response = await app.request('/api/protected', { method: 'GET', headers: {
       'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2V2aWwuY29tIn0.mbL5L04_hpaaiz0SPABap6ZWfBLu18aiexBjzwQ1nnA',
@@ -112,6 +166,15 @@ describe('auth', () => {
     expect(response.status).toBe(401);
     const data = await response.json();
     expect(data).toEqual({ detail: "Token issuer is invalid, expected 'https://auth.example.com'", status: 401, title: "JWT validation failed", type: "https://spikard.dev/errors/unauthorized" });
+  });
+
+  it('jwt_issuer_claim_iss_field: Tests JWT validation of issuer (iss) claim', async () => {
+    const response = await app.request('/api/protected', { method: 'GET', headers: {
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.test',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ message: "Access granted" });
   });
 
   it('jwt_malformed_token_format: Tests JWT rejection when token doesn\'t have the required 3-part structure (header.payload.signature)', async () => {
@@ -141,6 +204,15 @@ describe('auth', () => {
     expect(data).toEqual({ detail: "JWT not valid yet, not before claim is in the future", status: 401, title: "JWT validation failed", type: "https://spikard.dev/errors/unauthorized" });
   });
 
+  it('jwt_subject_claim_sub_field: Tests JWT validation with subject (sub) claim', async () => {
+    const response = await app.request('/api/user', { method: 'GET', headers: {
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWFiYzEyMyIsImV4cCI6MjYyNjc4Mzk0NiwiaWF0IjoxNzYyNzgzOTQ2fQ.xYz9QaJkL5M2NpQ8RsT1UvW3XyZ4AaBbCcDdEeFfGgHhIiJ',
+    } });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ user_id: "user-abc123" });
+  });
+
   it('jwt_with_multiple_audiences: Tests JWT validation when token has multiple audiences and one must match', async () => {
     const response = await app.request('/api/protected', { method: 'GET', headers: {
       'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.9MBL_XccGXfu9cDUnCpQruDMOl2hHYydzeGn-20dQOs',
@@ -152,8 +224,8 @@ describe('auth', () => {
 
   it('multiple_authentication_schemes_jwt_precedence: Tests authentication when both JWT and API key are provided, JWT takes precedence', async () => {
     const response = await app.request('/api/data', { method: 'GET', headers: {
-      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg',
       'X-API-Key': 'sk_test_123456',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg',
     } });
     expect(response.status).toBe(200);
     const data = await response.json();

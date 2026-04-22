@@ -353,7 +353,7 @@ describe('query_params', () => {
   });
 
   it('multiple_query_parameters_with_different_types: Tests multiple query parameters of different types in single request', async () => {
-    const response = await app.request('/query/multi-type?name=john&age=30&score=95.5&active=true', { method: 'GET' });
+    const response = await app.request('/query/multi-type?age=30&score=95.5&active=true&name=john', { method: 'GET' });
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ active: true, age: 30, name: "john", score: 95.5 });

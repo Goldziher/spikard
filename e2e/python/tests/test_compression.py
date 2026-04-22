@@ -3,6 +3,20 @@
 import pytest
 
 
+def test_compression_brotli_only(client) -> None:
+    """Tests Brotli compression when enabled and client supports it."""
+    response = client.get(
+        "/compression/brotli",
+        headers={
+            "Accept-Encoding": "br",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"data": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "message": "Brotli compressed payload"}  # noqa: S101
+    assert response.headers["vary"] == "Accept-Encoding"  # noqa: S101
+    assert response.headers["content-encoding"] == "br"  # noqa: S101
+
 def test_compression_gzip_applied(client) -> None:
     """Serves a JSON payload compressed with gzip when the client advertises support."""
     response = client.get(
@@ -17,6 +31,19 @@ def test_compression_gzip_applied(client) -> None:
     assert response.headers["vary"] == "Accept-Encoding"  # noqa: S101
     assert response.headers["content-encoding"] == "gzip"  # noqa: S101
 
+def test_compression_min_size_threshold_exact_boundary(client) -> None:
+    """Tests compression respects exact minimum size boundary."""
+    response = client.get(
+        "/compression/boundary",
+        headers={
+            "Accept-Encoding": "gzip",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "Exact size payload that is exactly 100 bytes or more to test boundary"}  # noqa: S101
+    assert response.headers["content-encoding"] == "gzip"  # noqa: S101
+
 def test_compression_payload_below_min_size_is_not_compressed(client) -> None:
     """Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding."""
     response = client.get(
@@ -29,4 +56,17 @@ def test_compression_payload_below_min_size_is_not_compressed(client) -> None:
     data = response.json()
     assert data == {"message": "Small payload", "payload": "tiny"}  # noqa: S101
     assert response.headers.get("content-encoding") is None  # noqa: S101
+
+def test_compression_quality_level_9(client) -> None:
+    """Tests compression with high quality level setting."""
+    response = client.get(
+        "/compression/high_quality",
+        headers={
+            "Accept-Encoding": "gzip",
+        },
+    )
+    assert response.status_code == 200  # noqa: S101
+    data = response.json()
+    assert data == {"message": "High quality compression", "payload": "x"}  # noqa: S101
+    assert response.headers["content-encoding"] == "gzip"  # noqa: S101
 

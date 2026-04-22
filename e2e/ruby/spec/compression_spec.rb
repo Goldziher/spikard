@@ -14,6 +14,18 @@ RSpec.describe 'compression' do
     end
   end
 
+  describe 'GET /compression/brotli' do
+    it 'Tests Brotli compression when enabled and client supports it' do
+      response = client.get('/compression/brotli',
+        headers: { 'Accept-Encoding' => 'br' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'data' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'message' => 'Brotli compressed payload' })
+      expect(response.headers['vary']).to eq('Accept-Encoding')
+      expect(response.headers['content-encoding']).to eq('br')
+    end
+  end
+
   describe 'GET /compression/gzip' do
     it 'Serves a JSON payload compressed with gzip when the client advertises support.' do
       response = client.get('/compression/gzip',
@@ -26,6 +38,17 @@ RSpec.describe 'compression' do
     end
   end
 
+  describe 'GET /compression/boundary' do
+    it 'Tests compression respects exact minimum size boundary' do
+      response = client.get('/compression/boundary',
+        headers: { 'Accept-Encoding' => 'gzip' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'message' => 'Exact size payload that is exactly 100 bytes or more to test boundary' })
+      expect(response.headers['content-encoding']).to eq('gzip')
+    end
+  end
+
   describe 'GET /compression/skip' do
     it 'Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding.' do
       response = client.get('/compression/skip',
@@ -34,6 +57,17 @@ RSpec.describe 'compression' do
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'message' => 'Small payload', 'payload' => 'tiny' })
       expect(response.headers['content-encoding']).to be_nil
+    end
+  end
+
+  describe 'GET /compression/high_quality' do
+    it 'Tests compression with high quality level setting' do
+      response = client.get('/compression/high_quality',
+        headers: { 'Accept-Encoding' => 'gzip' }
+      )
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({ 'message' => 'High quality compression', 'payload' => 'x' })
+      expect(response.headers['content-encoding']).to eq('gzip')
     end
   end
 end

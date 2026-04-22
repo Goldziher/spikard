@@ -20,6 +20,44 @@ describe('jsonrpc', () => {
     expect(data).toEqual({ id: 2, jsonrpc: "2.0", result: 28 });
   });
 
+  it('jsonrpc_config_batch_disabled: Tests JSON-RPC batch requests disabled returns error', async () => {
+    const response = await app.request('/rpc', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify([{ id: 1, jsonrpc: "2.0", method: "add", params: [1, 2] }, { id: 2, jsonrpc: "2.0", method: "subtract", params: [5, 3] }]) });
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data).toEqual({ error: { code: -32600, message: "Batch requests not enabled" }, jsonrpc: "2.0" });
+  });
+
+  it('jsonrpc_config_custom_endpoint_path: Tests JSON-RPC server at custom endpoint path', async () => {
+    const response = await app.request('/api/rpc', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "test", params: {  } }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ id: 1, jsonrpc: "2.0", result: "ok" });
+  });
+
+  it('jsonrpc_config_max_batch_size: Tests JSON-RPC batch request respects maximum batch size', async () => {
+    const response = await app.request('/rpc', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify([{ id: 1, jsonrpc: "2.0", method: "method1" }, { id: 2, jsonrpc: "2.0", method: "method2" }, { id: 3, jsonrpc: "2.0", method: "method3" }]) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual([{ id: 1, jsonrpc: "2.0", result: "result1" }, { id: 2, jsonrpc: "2.0", result: "result2" }, { id: 3, jsonrpc: "2.0", result: "result3" }]);
+  });
+
+  it('jsonrpc_deprecated_method_flag: Tests JSON-RPC method marked as deprecated', async () => {
+    const response = await app.request('/rpc', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "oldMethod", params: {  } }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ id: 1, jsonrpc: "2.0", result: "deprecated" });
+    expect(response.headers.get('deprecation')).toBe('true');
+    expect(response.headers.get('sunset')).not.toBeNull();
+  });
+
   it('jsonrpc_error_response: Tests JSON-RPC error response with error object', async () => {
     const response = await app.request('/rpc', { method: 'POST', headers: {
       'Content-Type': 'application/json',
@@ -56,11 +94,38 @@ describe('jsonrpc', () => {
     expect(data).toEqual({ id: 6, jsonrpc: "2.0", result: { email: "john@example.com", id: 123, name: "John Doe", updated: true } });
   });
 
+  it('jsonrpc_method_with_params_schema: Tests JSON-RPC method params validated against schema', async () => {
+    const response = await app.request('/rpc', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "createUser", params: { age: 30, name: "Alice" } }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ id: 1, jsonrpc: "2.0", result: { age: 30, id: 1, name: "Alice" } });
+  });
+
+  it('jsonrpc_method_with_result_schema: Tests JSON-RPC method result schema validation', async () => {
+    const response = await app.request('/rpc', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "getUser", params: { id: 1 } }) });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ id: 1, jsonrpc: "2.0", result: { email: "john@example.com", id: 1, name: "John" } });
+  });
+
   it('jsonrpc_notification_no_id: Tests JSON-RPC notification (no response expected)', async () => {
     const response = await app.request('/rpc', { method: 'POST', headers: {
       'Content-Type': 'application/json',
     }, body: JSON.stringify({ jsonrpc: "2.0", method: "notify_event", params: { event: "user_login" } }) });
     expect(response.status).toBe(204);
+  });
+
+  it('jsonrpc_notification_no_response: Tests JSON-RPC notification (no id) doesn\'t return response', async () => {
+    const response = await app.request('/rpc', { method: 'POST', headers: {
+      'Content-Type': 'application/json',
+    }, body: JSON.stringify({ jsonrpc: "2.0", method: "notify", params: { message: "hello" } }) });
+    expect(response.status).toBe(204);
+    const data = await response.json();
+    expect(data).toEqual("");
   });
 
   it('jsonrpc_single_call_success: Tests single JSON-RPC 2.0 call with successful response', async () => {

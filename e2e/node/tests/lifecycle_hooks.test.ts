@@ -11,15 +11,15 @@ describe('lifecycle_hooks', () => {
 
   it('multiple_hooks_all_phases: Test multiple lifecycle hooks across all five phases for a complete request lifecycle', async () => {
     const response = await app.request('/api/full-lifecycle', { method: 'POST', headers: {
-      'Content-Type': 'application/json',
       'Authorization': 'Bearer valid-token-12345',
+      'Content-Type': 'application/json',
     }, body: JSON.stringify({ action: "update_profile", user_id: "user-123" }) });
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data).toEqual({ action: "update_profile", message: "Action completed successfully", request_id: ".*", user_id: "user-123" });
+    expect(response.headers.get('x-response-time')).toBe('.*ms');
     expect(response.headers.get('x-request-id')).toBe('.*');
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
-    expect(response.headers.get('x-response-time')).toBe('.*ms');
     expect(response.headers.get('x-frame-options')).toBe('DENY');
   });
 
@@ -53,9 +53,9 @@ describe('lifecycle_hooks', () => {
     const data = await response.json();
     expect(data).toEqual({ message: "Response with security headers" });
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');
-    expect(response.headers.get('x-frame-options')).toBe('DENY');
-    expect(response.headers.get('x-xss-protection')).toBe('1; mode=block');
     expect(response.headers.get('strict-transport-security')).toBe('max-age=31536000; includeSubDomains');
+    expect(response.headers.get('x-xss-protection')).toBe('1; mode=block');
+    expect(response.headers.get('x-frame-options')).toBe('DENY');
   });
 
   it('prehandler_authentication_failed_short_circuit: Test preHandler hook that short-circuits on invalid authentication', async () => {

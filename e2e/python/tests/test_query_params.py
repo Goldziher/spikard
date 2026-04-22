@@ -588,10 +588,10 @@ def test_multiple_query_parameters_with_different_types(client) -> None:
     response = client.get(
         "/query/multi-type",
         params={
-            "name": "john",
             "age": "30",
             "score": "95.5",
             "active": "true",
+            "name": "john",
         },
     )
     assert response.status_code == 200  # noqa: S101
