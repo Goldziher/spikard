@@ -26,7 +26,7 @@ RSpec.describe 'cors' do
   describe 'OPTIONS /api/data' do
     it 'CORS preflight request with non-allowed header should be rejected' do
       response = client.options('/api/data',
-        headers: { 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'X-Custom-Header' }
+        headers: { 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'X-Custom-Header', 'Origin' => 'https://example.com' }
       )
       expect(response.status).to eq(403)
     end
@@ -35,13 +35,13 @@ RSpec.describe 'cors' do
   describe 'OPTIONS /api/data' do
     it 'CORS preflight response should include Access-Control-Max-Age' do
       response = client.options('/api/data',
-        headers: { 'Origin' => 'https://example.com', 'Access-Control-Request-Method' => 'POST', 'Access-Control-Request-Headers' => 'Content-Type' }
+        headers: { 'Access-Control-Request-Headers' => 'Content-Type', 'Access-Control-Request-Method' => 'POST', 'Origin' => 'https://example.com' }
       )
       expect(response.status).to eq(204)
       expect(response.headers['access-control-allow-methods']).to eq('POST')
+      expect(response.headers['access-control-allow-headers']).to eq('Content-Type')
       expect(response.headers['access-control-max-age']).to eq('3600')
       expect(response.headers['access-control-allow-origin']).to eq('https://example.com')
-      expect(response.headers['access-control-allow-headers']).to eq('Content-Type')
     end
   end
 
@@ -51,10 +51,10 @@ RSpec.describe 'cors' do
         headers: { 'Origin' => 'https://example.com' }
       )
       expect(response.status).to eq(200)
-      expect(response.headers['access-control-expose-headers']).to eq('X-Total-Count, X-Request-Id')
       expect(response.headers['access-control-allow-origin']).to eq('https://example.com')
       expect(response.headers['x-total-count']).to eq('42')
       expect(response.headers['x-request-id']).to eq('abc123')
+      expect(response.headers['access-control-expose-headers']).to eq('X-Total-Count, X-Request-Id')
     end
   end
 
@@ -81,12 +81,12 @@ RSpec.describe 'cors' do
   describe 'POST /api/form' do
     it 'Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don\'t require preflight' do
       response = client.post('/api/form',
-        headers: { 'Origin' => 'https://app.example.com', 'Content-Type' => 'text/plain', 'Accept' => 'application/json', 'Accept-Language' => 'en-US' }
+        headers: { 'Accept-Language' => 'en-US', 'Accept' => 'application/json', 'Origin' => 'https://app.example.com', 'Content-Type' => 'text/plain' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'message' => 'Success' })
-      expect(response.headers['access-control-allow-origin']).to eq('https://app.example.com')
       expect(response.headers['vary']).to eq('Origin')
+      expect(response.headers['access-control-allow-origin']).to eq('https://app.example.com')
     end
   end
 end

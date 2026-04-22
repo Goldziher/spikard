@@ -32,8 +32,8 @@ def test_head_get_metadata_without_body(client) -> None:
     """Tests HEAD method returns headers without response body."""
     response = client.head("/items/1")
     assert response.status_code == 200  # noqa: S101
-    assert response.headers["content-length"] == "85"  # noqa: S101
     assert response.headers["content-type"] == "application/json"  # noqa: S101
+    assert response.headers["content-length"] == "85"  # noqa: S101
 
 
 def test_patch_partial_update(client) -> None:

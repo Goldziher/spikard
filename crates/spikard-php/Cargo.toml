@@ -11,6 +11,9 @@ categories = ["text-processing"]
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+extension-module = []
+
 [dependencies]
 anyhow = "1.0"
 ext-php-rs = "0.15"
@@ -22,9 +25,6 @@ spikard-core = { path = "../spikard-core" }
 spikard-graphql = { path = "../spikard-graphql" }
 spikard-http = { path = "../spikard-http" }
 tokio = { version = "1", features = ["full"] }
-
-[features]
-extension-module = []
 
 [lints]
 workspace = true

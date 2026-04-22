@@ -108,7 +108,7 @@ final class ContentTypesTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/data", [
             'json' => ["value" => "short"],
-            'headers' => ["Content-Type" => "application/json", "Content-Length" => "100"],
+            'headers' => ["Content-Length" => "100", "Content-Type" => "application/json"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(400, $response->getStatusCode());

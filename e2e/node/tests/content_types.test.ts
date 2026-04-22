@@ -100,8 +100,8 @@ describe("content_types", () => {
 		const response = await app.request("/data", {
 			method: "POST",
 			headers: {
-				"Content-Type": "application/json",
 				"Content-Length": "100",
+				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ value: "short" }),
 		});

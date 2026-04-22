@@ -97,7 +97,7 @@ defmodule E2e.CookiesTest do
 
   describe "multiple_cookies_success" do
     test "GET /items/ - Tests multiple cookie parameters in a single request" do
-      {:ok, response} = Req.get(client(), url: "/items/", headers: [{"cookie", "googall_tracker=ga789; session_id=session123; fatebook_tracker=tracker456"}])
+      {:ok, response} = Req.get(client(), url: "/items/", headers: [{"cookie", "fatebook_tracker=tracker456; session_id=session123; googall_tracker=ga789"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"fatebook_tracker" => "tracker456", "googall_tracker" => "ga789", "session_id" => "session123"}
     end

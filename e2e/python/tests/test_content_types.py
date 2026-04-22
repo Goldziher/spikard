@@ -114,8 +114,8 @@ def test__content_length_mismatch(client) -> None:
         "/data",
         json={"value": "short"},
         headers={
-            "Content-Type": "application/json",
             "Content-Length": "100",
+            "Content-Type": "application/json",
         },
     )
     assert response.status_code == 400  # noqa: S101
