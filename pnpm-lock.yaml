@@ -31,7 +31,7 @@ importers:
     devDependencies:
       '@spikard/node':
         specifier: workspace:*
-        version: link:../../packages/typescript
+        version: link:../../packages/node
       vitest:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@25.6.0)(terser@5.46.0)(tsx@4.21.0)
@@ -40,7 +40,7 @@ importers:
     dependencies:
       '@spikard/node':
         specifier: workspace:*
-        version: link:../../packages/typescript
+        version: link:../../packages/node
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -53,7 +53,7 @@ importers:
     dependencies:
       '@spikard/node':
         specifier: workspace:*
-        version: link:../../packages/typescript
+        version: link:../../packages/node
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -69,7 +69,7 @@ importers:
     dependencies:
       '@spikard/node':
         specifier: workspace:*
-        version: link:../../packages/typescript
+        version: link:../../packages/node
     devDependencies:
       '@types/node':
         specifier: ^25.6.0
@@ -81,7 +81,7 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  packages/typescript:
+  packages/node:
     devDependencies:
       '@napi-rs/cli':
         specifier: ^3.6.2
@@ -91,7 +91,7 @@ importers:
     devDependencies:
       '@spikard/node':
         specifier: workspace:*
-        version: link:../../packages/typescript
+        version: link:../../packages/node
       vitest:
         specifier: ^4.1.5
         version: 4.1.5(@types/node@25.6.0)(vite@7.3.1(@types/node@25.6.0)(terser@5.46.0)(tsx@4.21.0))
