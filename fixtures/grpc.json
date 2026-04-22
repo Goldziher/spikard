@@ -1,0 +1,274 @@
+[
+	{
+		"id": "grpc_unary_call_success",
+		"description": "Tests unary gRPC call with successful response",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/helloworld.Greeter/SayHello",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						}
+					},
+					"required": ["name"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/helloworld.Greeter/SayHello",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers"
+				},
+				"body": {
+					"name": "World"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0"
+				},
+				"body": {
+					"message": "Hello World"
+				}
+			}
+		},
+		"tags": ["grpc", "unary", "success"]
+	},
+	{
+		"id": "grpc_call_with_metadata",
+		"description": "Tests gRPC call with request metadata headers",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/GetData",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string"
+						}
+					},
+					"required": ["id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/GetData",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers",
+					"x-custom-metadata": "value123",
+					"authorization": "Bearer token123"
+				},
+				"body": {
+					"id": "resource-1"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0",
+					"x-response-metadata": "processed"
+				},
+				"body": {
+					"id": "resource-1",
+					"data": "result"
+				}
+			}
+		},
+		"tags": ["grpc", "metadata", "headers"]
+	},
+	{
+		"id": "grpc_error_not_found",
+		"description": "Tests gRPC NOT_FOUND error status response",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/GetItem",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"item_id": {
+							"type": "string"
+						}
+					},
+					"required": ["item_id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/GetItem",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers"
+				},
+				"body": {
+					"item_id": "nonexistent"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "5"
+				},
+				"body": {
+					"code": "NOT_FOUND",
+					"message": "Item not found"
+				}
+			}
+		},
+		"tags": ["grpc", "error", "not_found"]
+	},
+	{
+		"id": "grpc_error_invalid_argument",
+		"description": "Tests gRPC INVALID_ARGUMENT error status response",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/ValidateInput",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"value": {
+							"type": "integer",
+							"minimum": 0
+						}
+					},
+					"required": ["value"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/ValidateInput",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers"
+				},
+				"body": {
+					"value": -100
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "3"
+				},
+				"body": {
+					"code": "INVALID_ARGUMENT",
+					"message": "Value must be non-negative"
+				}
+			}
+		},
+		"tags": ["grpc", "error", "invalid_argument"]
+	},
+	{
+		"id": "grpc_deadline_exceeded",
+		"description": "Tests gRPC DEADLINE_EXCEEDED error when timeout occurs",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/SlowOperation",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"duration_ms": {
+							"type": "integer"
+						}
+					},
+					"required": ["duration_ms"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/SlowOperation",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers",
+					"grpc-timeout": "100m"
+				},
+				"body": {
+					"duration_ms": 60000
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "4"
+				},
+				"body": {
+					"code": "DEADLINE_EXCEEDED",
+					"message": "Operation exceeded deadline"
+				}
+			}
+		},
+		"tags": ["grpc", "error", "deadline_exceeded", "timeout"]
+	},
+	{
+		"id": "grpc_request_with_custom_metadata",
+		"description": "Tests gRPC request includes custom metadata in trailers",
+		"category": "grpc",
+		"http": {
+			"handler": {
+				"route": "/api.Service/ProcessWithMetadata",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"request_id": {
+							"type": "string"
+						},
+						"data": {
+							"type": "object"
+						}
+					},
+					"required": ["request_id", "data"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api.Service/ProcessWithMetadata",
+				"headers": {
+					"Content-Type": "application/grpc",
+					"te": "trailers",
+					"x-request-id": "req-12345",
+					"x-trace-id": "trace-abc123",
+					"x-user-id": "user-42"
+				},
+				"body": {
+					"request_id": "req-12345",
+					"data": {
+						"key": "value"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"content-type": "application/grpc",
+					"grpc-status": "0",
+					"x-response-trace-id": "trace-abc123"
+				},
+				"body": {
+					"request_id": "req-12345",
+					"processed": true
+				}
+			}
+		},
+		"tags": ["grpc", "metadata", "custom_headers"]
+	}
+]

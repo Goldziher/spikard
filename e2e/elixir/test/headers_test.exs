@@ -187,7 +187,7 @@ defmodule E2e.HeadersTest do
 
   describe "multiple_custom_headers" do
     test "GET /headers/multiple - Tests multiple custom headers in single request" do
-      {:ok, response} = Req.get(client(), url: "/headers/multiple", headers: [{"X-Request-Id", "req-12345"}, {"X-Trace-Id", "trace-abc"}, {"X-Client-Version", "1.2.3"}])
+      {:ok, response} = Req.get(client(), url: "/headers/multiple", headers: [{"X-Trace-Id", "trace-abc"}, {"X-Request-Id", "req-12345"}, {"X-Client-Version", "1.2.3"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"x_client_version" => "1.2.3", "x_request_id" => "req-12345", "x_trace_id" => "trace-abc"}
     end

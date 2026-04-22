@@ -70,7 +70,7 @@ describe('status_codes', () => {
 
   it('_not_modified_cached_content_valid: Tests 304 Not Modified for cached resources', async () => {
     const response = await app.request('/status-test/304', { method: 'GET', headers: {
-      'If-None-Match': '"abc123"',
+      'If-None-Match': '\"abc123\"',
     } });
     expect(response.status).toBe(304);
   });

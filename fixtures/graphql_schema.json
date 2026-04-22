@@ -1,0 +1,422 @@
+[
+	{
+		"id": "graphql_query_only_schema",
+		"description": "Tests GraphQL schema configured with queries only",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_only"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ user { id name } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"user": {
+							"id": "1",
+							"name": "Test User"
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_schema", "query"]
+	},
+	{
+		"id": "graphql_query_and_mutation_schema",
+		"description": "Tests GraphQL schema with queries and mutations",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "query_mutation"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "mutation { createUser(name: \"New\") { id name } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"createUser": {
+							"id": "2",
+							"name": "New"
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_schema", "mutation"]
+	},
+	{
+		"id": "graphql_full_schema_with_subscriptions",
+		"description": "Tests GraphQL schema with queries, mutations, and subscriptions",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema_type": "full"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ __typename }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"__typename": "Query"
+					}
+				}
+			}
+		},
+		"tags": ["graphql_schema", "full", "subscriptions"]
+	},
+	{
+		"id": "graphql_introspection_enabled",
+		"description": "Tests GraphQL introspection is available",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"introspection": true
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ __schema { types { name } } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"__schema": {
+							"types": null
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_schema", "introspection"]
+	},
+	{
+		"id": "graphql_introspection_disabled",
+		"description": "Tests GraphQL introspection returns error when disabled",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"introspection": false
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ __schema { types { name } } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "GraphQL introspection is disabled"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_schema", "introspection", "security"]
+	},
+	{
+		"id": "graphql_complexity_limit_exceeded",
+		"description": "Tests GraphQL query complexity validation rejects overly complex queries",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"complexity_limit": 100
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ user { id name email posts { id title comments { id text } } } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "Query complexity limit exceeded"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_schema", "complexity", "validation"]
+	},
+	{
+		"id": "graphql_depth_limit_exceeded",
+		"description": "Tests GraphQL query depth validation rejects deeply nested queries",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"depth_limit": 3
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ user { posts { comments { author { posts { title } } } } } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "Query depth limit exceeded"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_schema", "depth", "validation"]
+	},
+	{
+		"id": "graphql_error_response_format",
+		"description": "Tests GraphQL error response format with correct structure",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ invalidField }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "Cannot query field 'invalidField' on type 'Query'",
+							"extensions": {
+								"code": "GRAPHQL_VALIDATION_FAILED"
+							}
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_schema", "errors"]
+	},
+	{
+		"id": "graphql_custom_endpoint_configuration",
+		"description": "Tests GraphQL route configured at custom endpoint",
+		"category": "graphql_schema",
+		"http": {
+			"handler": {
+				"route": "/api/v2/query",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": {
+							"type": "string"
+						}
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"endpoint": "/api/v2/query"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/api/v2/query",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"query": "{ user { id } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"user": {
+							"id": "1"
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_schema", "custom_endpoint"]
+	}
+]

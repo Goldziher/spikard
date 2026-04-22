@@ -26,14 +26,14 @@ RSpec.describe 'lifecycle_hooks' do
     it 'Test multiple lifecycle hooks across all five phases for a complete request lifecycle' do
       response = client.post('/api/full-lifecycle',
         json: { 'action' => 'update_profile', 'user_id' => 'user-123' },
-        headers: { 'Authorization' => 'Bearer valid-token-12345', 'Content-Type' => 'application/json' }
+        headers: { 'Content-Type' => 'application/json', 'Authorization' => 'Bearer valid-token-12345' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123' })
-      expect(response.headers['x-frame-options']).to eq('DENY')
-      expect(response.headers['x-response-time']).to eq('.*ms')
       expect(response.headers['x-request-id']).to eq('.*')
       expect(response.headers['x-content-type-options']).to eq('nosniff')
+      expect(response.headers['x-response-time']).to eq('.*ms')
+      expect(response.headers['x-frame-options']).to eq('DENY')
     end
   end
 
@@ -69,10 +69,10 @@ RSpec.describe 'lifecycle_hooks' do
       response = client.get('/api/test-security-headers')
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'message' => 'Response with security headers' })
+      expect(response.headers['x-content-type-options']).to eq('nosniff')
       expect(response.headers['x-frame-options']).to eq('DENY')
       expect(response.headers['x-xss-protection']).to eq('1; mode=block')
       expect(response.headers['strict-transport-security']).to eq('max-age=31536000; includeSubDomains')
-      expect(response.headers['x-content-type-options']).to eq('nosniff')
     end
   end
 

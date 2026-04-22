@@ -37,8 +37,8 @@ RSpec.describe 'di' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'authenticated' => true, 'logged' => true })
-      expect(response.headers['x-log-level']).to eq('debug')
       expect(response.headers['x-auth-mode']).to eq('strict')
+      expect(response.headers['x-log-level']).to eq('debug')
     end
   end
 

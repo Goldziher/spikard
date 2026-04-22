@@ -1,0 +1,295 @@
+[
+  {
+    "id": "server_default_configuration",
+    "description": "Tests server with default configuration (0.0.0.0:8080)",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/status",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/status"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "status": "ok",
+          "message": "Server is running with default config"
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "defaults"
+    ]
+  },
+  {
+    "id": "server_custom_host_port",
+    "description": "Tests server configured with custom host and port",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/config",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/config"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "host": "127.0.0.1",
+          "port": 9000
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "host",
+      "port"
+    ]
+  },
+  {
+    "id": "server_worker_count_configuration",
+    "description": "Tests server with custom worker thread count",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/workers",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/workers"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "workers": 4
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "workers"
+    ]
+  },
+  {
+    "id": "server_max_body_size_configuration",
+    "description": "Tests server respects max body size limit",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/upload",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/upload",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": "x"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "received": 1
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "max_body_size"
+    ]
+  },
+  {
+    "id": "server_request_id_enabled",
+    "description": "Tests server generates request IDs when enabled",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/request",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/request"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "headers": {
+          "x-request-id": "<<present>>"
+        },
+        "body": {
+          "has_request_id": true
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "request_id"
+    ]
+  },
+  {
+    "id": "server_compression_enabled",
+    "description": "Tests server compresses responses when enabled",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/data",
+        "headers": {
+          "Accept-Encoding": "gzip"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "headers": {
+          "content-encoding": "gzip"
+        },
+        "body": {
+          "compressed": true
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "compression"
+    ]
+  },
+  {
+    "id": "server_static_files_configuration",
+    "description": "Tests server serves static files from configured directory",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/static/{file}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "file": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/static/index.html"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "headers": {
+          "Content-Type": "text/html"
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "static_files"
+    ]
+  },
+  {
+    "id": "server_jwt_and_api_key_auth_combined",
+    "description": "Tests server with both JWT and API key authentication configured",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/secure",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string"
+            },
+            "X-API-Key": {
+              "type": "string"
+            }
+          }
+        },
+        "middleware": {
+          "jwt_auth": {
+            "enabled": true,
+            "algorithm": "HS256",
+            "secret": "test-secret"
+          },
+          "api_key_auth": {
+            "enabled": true,
+            "header": "X-API-Key"
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/secure",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwiZXhwIjoyNjI2NzgzOTQ2fQ.test"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "authenticated": true
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "auth",
+      "jwt",
+      "api_key"
+    ]
+  },
+  {
+    "id": "server_rate_limit_configuration",
+    "description": "Tests server enforces rate limiting configuration",
+    "category": "server_config",
+    "http": {
+      "handler": {
+        "route": "/limited",
+        "method": "GET",
+        "middleware": {
+          "rate_limit": {
+            "enabled": true,
+            "requests_per_second": 10
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/limited"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "limited": false
+        }
+      }
+    },
+    "tags": [
+      "server_config",
+      "rate_limit"
+    ]
+  }
+]

@@ -1,0 +1,427 @@
+[
+	{
+		"id": "jsonrpc_single_call_success",
+		"description": "Tests single JSON-RPC 2.0 call with successful response",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"params": {
+							"type": "object"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "add",
+					"params": {
+						"a": 5,
+						"b": 3
+					},
+					"id": 1
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"result": 8,
+					"id": 1
+				}
+			}
+		},
+		"tags": ["jsonrpc", "success"]
+	},
+	{
+		"id": "jsonrpc_call_with_positional_params",
+		"description": "Tests JSON-RPC call with positional array parameters",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"params": {
+							"type": "array"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "multiply",
+					"params": [4, 7],
+					"id": 2
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"result": 28,
+					"id": 2
+				}
+			}
+		},
+		"tags": ["jsonrpc", "params", "positional"]
+	},
+	{
+		"id": "jsonrpc_error_response",
+		"description": "Tests JSON-RPC error response with error object",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"params": {
+							"type": "object"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "divide",
+					"params": {
+						"numerator": 10,
+						"denominator": 0
+					},
+					"id": 3
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"error": {
+						"code": -32600,
+						"message": "Invalid Request",
+						"data": "Division by zero"
+					},
+					"id": 3
+				}
+			}
+		},
+		"tags": ["jsonrpc", "error"]
+	},
+	{
+		"id": "jsonrpc_batch_request",
+		"description": "Tests JSON-RPC batch request with multiple calls",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "array"
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": [
+					{
+						"jsonrpc": "2.0",
+						"method": "add",
+						"params": [1, 2],
+						"id": 1
+					},
+					{
+						"jsonrpc": "2.0",
+						"method": "subtract",
+						"params": [5, 3],
+						"id": 2
+					}
+				]
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": [
+					{
+						"jsonrpc": "2.0",
+						"result": 3,
+						"id": 1
+					},
+					{
+						"jsonrpc": "2.0",
+						"result": 2,
+						"id": 2
+					}
+				]
+			}
+		},
+		"tags": ["jsonrpc", "batch"]
+	},
+	{
+		"id": "jsonrpc_method_not_found",
+		"description": "Tests JSON-RPC error when method does not exist",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "nonexistent_method",
+					"id": 4
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"error": {
+						"code": -32601,
+						"message": "Method not found"
+					},
+					"id": 4
+				}
+			}
+		},
+		"tags": ["jsonrpc", "error", "method_not_found"]
+	},
+	{
+		"id": "jsonrpc_invalid_params",
+		"description": "Tests JSON-RPC error for invalid parameters",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"params": {
+							"type": "object"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "params", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "subtract",
+					"params": {
+						"wrong_field": 42
+					},
+					"id": 5
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"error": {
+						"code": -32602,
+						"message": "Invalid params"
+					},
+					"id": 5
+				}
+			}
+		},
+		"tags": ["jsonrpc", "error", "invalid_params"]
+	},
+	{
+		"id": "jsonrpc_notification_no_id",
+		"description": "Tests JSON-RPC notification (no response expected)",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string"
+						},
+						"params": {
+							"type": "object"
+						}
+					},
+					"required": ["jsonrpc", "method"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "notify_event",
+					"params": {
+						"event": "user_login"
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 204
+			}
+		},
+		"tags": ["jsonrpc", "notification"]
+	},
+	{
+		"id": "jsonrpc_method_parameter_validation",
+		"description": "Tests JSON-RPC validates parameter types and values",
+		"category": "jsonrpc",
+		"http": {
+			"handler": {
+				"route": "/rpc",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"jsonrpc": {
+							"type": "string"
+						},
+						"method": {
+							"type": "string",
+							"minLength": 1
+						},
+						"params": {
+							"type": "object"
+						},
+						"id": {
+							"type": ["integer", "string"]
+						}
+					},
+					"required": ["jsonrpc", "method", "params", "id"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/rpc",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"jsonrpc": "2.0",
+					"method": "update_user",
+					"params": {
+						"id": 123,
+						"name": "John Doe",
+						"email": "john@example.com"
+					},
+					"id": 6
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"jsonrpc": "2.0",
+					"result": {
+						"id": 123,
+						"name": "John Doe",
+						"email": "john@example.com",
+						"updated": true
+					},
+					"id": 6
+				}
+			}
+		},
+		"tags": ["jsonrpc", "validation", "params"]
+	}
+]

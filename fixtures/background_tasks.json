@@ -1,0 +1,231 @@
+[
+	{
+		"id": "background_task_custom_max_concurrent",
+		"description": "Tests background task with custom max_concurrent setting",
+		"category": "background_tasks",
+		"http": {
+			"handler": {
+				"route": "/background/process",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"task_id": {
+							"type": "string"
+						},
+						"data": {
+							"type": "string"
+						}
+					},
+					"required": ["task_id", "data"],
+					"additionalProperties": false
+				},
+				"middleware": {
+					"background_tasks": {
+						"enabled": true,
+						"max_concurrent": 5
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/background/process",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"task_id": "task-001",
+					"data": "process this"
+				}
+			},
+			"expected_response": {
+				"status_code": 202,
+				"body": {
+					"task_id": "task-001",
+					"status": "queued"
+				}
+			}
+		},
+		"tags": ["background_tasks", "async", "concurrency"]
+	},
+	{
+		"id": "background_task_custom_timeout",
+		"description": "Tests background task with custom timeout configuration",
+		"category": "background_tasks",
+		"http": {
+			"handler": {
+				"route": "/background/slow-task",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"duration_ms": {
+							"type": "integer"
+						}
+					},
+					"required": ["duration_ms"]
+				},
+				"middleware": {
+					"background_tasks": {
+						"enabled": true,
+						"timeout_seconds": 30
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/background/slow-task",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"duration_ms": 5000
+				}
+			},
+			"expected_response": {
+				"status_code": 202,
+				"headers": {
+					"content-type": "application/json"
+				}
+			}
+		},
+		"tags": ["background_tasks", "async", "timeout"]
+	},
+	{
+		"id": "background_task_error_handling",
+		"description": "Tests background task error handling and retry behavior",
+		"category": "background_tasks",
+		"http": {
+			"handler": {
+				"route": "/background/may-fail",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"should_fail": {
+							"type": "boolean"
+						}
+					},
+					"required": ["should_fail"]
+				},
+				"middleware": {
+					"background_tasks": {
+						"enabled": true,
+						"retry_policy": "exponential_backoff"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/background/may-fail",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"should_fail": true
+				}
+			},
+			"expected_response": {
+				"status_code": 202,
+				"body": {
+					"status": "queued",
+					"will_retry": true
+				}
+			}
+		},
+		"tags": ["background_tasks", "async", "error_handling"]
+	},
+	{
+		"id": "background_task_cancellation",
+		"description": "Tests background task cancellation via request",
+		"category": "background_tasks",
+		"http": {
+			"handler": {
+				"route": "/background/cancel/{task_id}",
+				"method": "DELETE",
+				"parameters": {
+					"path": {
+						"task_id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "DELETE",
+				"path": "/background/cancel/task-001"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"task_id": "task-001",
+					"cancelled": true
+				}
+			}
+		},
+		"tags": ["background_tasks", "async", "cancellation"]
+	},
+	{
+		"id": "background_task_multiple_concurrent",
+		"description": "Tests multiple concurrent background tasks are queued",
+		"category": "background_tasks",
+		"http": {
+			"handler": {
+				"route": "/background/batch",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"tasks": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"id": {
+										"type": "string"
+									},
+									"payload": {
+										"type": "string"
+									}
+								},
+								"required": ["id", "payload"]
+							}
+						}
+					},
+					"required": ["tasks"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/background/batch",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"tasks": [
+						{
+							"id": "task-1",
+							"payload": "data1"
+						},
+						{
+							"id": "task-2",
+							"payload": "data2"
+						},
+						{
+							"id": "task-3",
+							"payload": "data3"
+						}
+					]
+				}
+			},
+			"expected_response": {
+				"status_code": 202,
+				"body": {
+					"queued": 3,
+					"status": "all_queued"
+				}
+			}
+		},
+		"tags": ["background_tasks", "async", "batch"]
+	}
+]

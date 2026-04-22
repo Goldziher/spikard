@@ -413,7 +413,7 @@ defmodule E2e.QueryParamsTest do
 
   describe "multiple_query_parameters_with_different_types" do
     test "GET /query/multi-type - Tests multiple query parameters of different types in single request" do
-      {:ok, response} = Req.get(client(), url: "/query/multi-type", params: [{"name", "john"}, {"active", "true"}, {"age", "30"}, {"score", "95.5"}])
+      {:ok, response} = Req.get(client(), url: "/query/multi-type", params: [{"name", "john"}, {"age", "30"}, {"score", "95.5"}, {"active", "true"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"active" => true, "age" => 30, "name" => "john", "score" => 95.5}
     end
@@ -453,7 +453,7 @@ defmodule E2e.QueryParamsTest do
 
   describe "query_parameter_with_special_characters_url_encoding" do
     test "GET /test - Tests query parameters with special characters that need URL encoding" do
-      {:ok, response} = Req.get(client(), url: "/test", params: [{"special", "&@A.ac"}, {"email", "x@test.com"}])
+      {:ok, response} = Req.get(client(), url: "/test", params: [{"email", "x@test.com"}, {"special", "&@A.ac"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"email" => "x@test.com", "special" => "&@A.ac"}
     end
