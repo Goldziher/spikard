@@ -55,15 +55,16 @@ tasks:
   version:sync:
     desc: "Sync all package versions to the workspace version"
     cmds:
-      - uv run python scripts/sync_versions.py{{if .VERSION}} {{.VERSION}}{{end}}
+      - alef sync-versions
   readme:generate:
-    desc: "Generate all README files from Jinja2 templates"
+    desc: "Generate all README files from templates"
     cmds:
-      - uv run python scripts/generate_readme.py
+      - alef readme
   readme:validate:
-    desc: "Validate that generated READMEs match templates"
+    desc: "Validate that generated READMEs are up to date"
     cmds:
-      - uv run python scripts/generate_readme.py --validate
+      - alef readme
+      - git diff --exit-code
   docs:snippets:list:
     desc: "List all discovered documentation snippets"
     cmds:
@@ -646,7 +647,7 @@ tasks:
   version:sync:php:
     desc: "Sync PHP package version to workspace version"
     cmds:
-      - uv run python scripts/sync_versions.py
+      - alef sync-versions
 
   build:rust:
     desc: "Build Rust workspace in release mode"
@@ -708,56 +709,10 @@ tasks:
     cmds:
       - task: build:node
 
-  generate:openapi:
-    desc: "Generate OpenAPI spec from test fixtures"
-    cmds:
-      - mkdir -p openapi-specs
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- openapi --fixtures testing_data --output openapi-specs/full.yaml --title "Spikard Test API" --version "1.0.0"
-
-  generate:tests:rust:
-    desc: "Generate Rust e2e test suite from fixtures"
-    cmds:
-      - rm -rf e2e/rust
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang rust --output e2e/rust
-      - cargo fmt --manifest-path e2e/rust/Cargo.toml
-
-  generate:tests:python:
-    desc: "Generate Python e2e test suite from fixtures"
-    cmds:
-      - rm -rf e2e/python
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang python --output e2e/python
-
-  generate:tests:node:
-    desc: "Generate Node.js e2e test suite from fixtures (vitest)"
-    cmds:
-      - rm -rf e2e/node
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang node --output e2e/node
-
-  generate:tests:ruby:
-    desc: "Generate Ruby e2e test suite from fixtures"
-    cmds:
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang ruby --output e2e/ruby
-
-  generate:tests:php:
-    desc: "Generate PHP e2e test suite from fixtures"
-    cmds:
-      - rm -rf e2e/php
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang php --output e2e/php
-
-  generate:tests:elixir:
-    desc: "Generate Elixir e2e test suite from fixtures"
-    cmds:
-      - cargo run --manifest-path tools/test-generator/Cargo.toml -- tests --lang elixir --output e2e/elixir
-
   generate:tests:
-    desc: "Generate all e2e test suites from fixtures"
+    desc: "Generate e2e test suites from fixtures"
     cmds:
-      - task: generate:tests:rust
-      - task: generate:tests:python
-      - task: generate:tests:node
-      - task: generate:tests:ruby
-      - task: generate:tests:php
-      - task: generate:tests:elixir
+      - alef e2e generate
 
   alef:generate:
     desc: "Generate all language bindings with alef"
@@ -784,63 +739,16 @@ tasks:
     cmds:
       - alef sync-versions
 
-  verify:tests:rust:
-    desc: "Regenerate and run Rust e2e suite, ensuring no diff"
-    cmds:
-      - task: generate:tests:rust
-      - task: test:e2e:rust
-      - git diff --exit-code
-
-  verify:tests:python:
-    desc: "Regenerate and run Python e2e suite, ensuring no diff"
-    cmds:
-      - task: generate:tests:python
-      - task: test:e2e:python
-      - git diff --exit-code
-
-  verify:tests:node:
-    desc: "Regenerate and run Node e2e suite, ensuring no diff"
-    cmds:
-      - task: generate:tests:node
-      - task: test:e2e:node
-      - git diff --exit-code
-
-  verify:tests:ruby:
-    desc: "Regenerate and run Ruby e2e suite, ensuring no diff"
-    cmds:
-      - task: generate:tests:ruby
-      - task: test:e2e:ruby
-      - git diff --exit-code
-
-  verify:tests:php:
-    desc: "Regenerate and run PHP e2e suite, ensuring no diff"
-    cmds:
-      - task: generate:tests:php
-      - task: test:e2e:php
-      - git diff --exit-code
-
-  verify:tests:elixir:
-    desc: "Regenerate and run Elixir e2e suite, ensuring no diff"
-    cmds:
-      - task: generate:tests:elixir
-      - task: test:e2e:elixir
-      - git diff --exit-code
-
   verify:tests:
-    desc: "Verify all e2e suites are up to date and pass"
+    desc: "Verify generated e2e tests are up to date"
     cmds:
-      - task: verify:tests:rust
-      - task: verify:tests:python
-      - task: verify:tests:node
-      - task: verify:tests:ruby
-      - task: verify:tests:php
-      - task: verify:tests:elixir
+      - alef e2e generate
+      - git diff --exit-code e2e/
 
   clean:generated:
     desc: "Remove all generated e2e test infrastructure"
     cmds:
       - rm -rf e2e/
-      - rm -rf openapi-specs/
 
   test:e2e:rust:
     desc: "Run Rust e2e tests (fixture-driven integration tests)"

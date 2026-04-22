@@ -235,11 +235,12 @@ nav:
 
   # Language Bindings
   - Bindings:
-      - Python: bindings/python.md
-      - TypeScript & Node: bindings/typescript.md
-      - Ruby: bindings/ruby.md
-      - PHP: bindings/php.md
-      - Rust: bindings/rust.md
+      - Python: reference/api-python.md
+      - TypeScript & Node: reference/api-typescript.md
+      - Ruby: reference/api-ruby.md
+      - PHP: reference/api-php.md
+      - Rust: reference/api-rust.md
+      - Elixir: reference/api-elixir.md
 
   # Practical Patterns
   - Playbooks:
@@ -253,9 +254,8 @@ nav:
   # API Documentation
   - API Reference:
       - Types: reference/types.md
+      - Configuration: reference/configuration.md
       - Errors: reference/errors.md
-      - Init Command Reference: reference/init-advanced.md
-      - gRPC Status Codes: reference/grpc-status-codes.md
 
   # Testing
   - Testing:

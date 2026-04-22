@@ -1,4 +1,4 @@
-<!-- GENERATED FILE — DO NOT EDIT DIRECTLY. Run: task readme:generate -->
+<!-- GENERATED FILE — DO NOT EDIT DIRECTLY. Run: alef readme -->
 
 # Spikard
 
