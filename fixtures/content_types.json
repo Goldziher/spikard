@@ -1,0 +1,415 @@
+[
+  {
+    "id": "content_negotiation_accept_header",
+    "description": "Tests content negotiation based on Accept header",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/accept-test/{id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/accept-test/1",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "id": 1,
+          "name": "Item"
+        },
+        "headers": {
+          "content-type": "application/json"
+        }
+      }
+    }
+  },
+  {
+    "id": "415_unsupported_media_type",
+    "description": "Tests rejection of unsupported content type",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "string"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/xml"
+        },
+        "body": "<?xml version=\"1.0\"?><item><name>Item</name></item>"
+      },
+      "expected_response": {
+        "status_code": 415,
+        "body": {
+          "type": "https://spikard.dev/errors/unsupported-media-type",
+          "title": "Unsupported Media Type",
+          "status": 415,
+          "detail": "Unsupported media type"
+        }
+      }
+    }
+  },
+  {
+    "id": "13_json_with_charset_utf16",
+    "description": "JSON with UTF-16 charset should be rejected (UTF-8 only)",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/data",
+        "headers": {
+          "Content-Type": "application/json; charset=utf-16"
+        },
+        "body": {
+          "value": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 415,
+        "body": {
+          "type": "https://spikard.dev/errors/unsupported-charset",
+          "title": "Unsupported Charset",
+          "status": 415,
+          "detail": "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported."
+        }
+      }
+    },
+    "tags": [
+      "content_types",
+      "charset",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "14_content_type_case_insensitive",
+    "description": "Content-Type header should be case-insensitive",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/data",
+        "headers": {
+          "Content-Type": "APPLICATION/JSON"
+        },
+        "body": {
+          "name": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 201,
+        "body": {
+          "name": "test"
+        }
+      }
+    },
+    "tags": [
+      "content_types",
+      "case_insensitive",
+      "success"
+    ]
+  },
+  {
+    "id": "15_multipart_boundary_required",
+    "description": "Multipart content-type without boundary parameter should fail",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/upload",
+        "method": "POST",
+        "parameters": {
+          "files": {
+            "document": {
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/upload",
+        "headers": {
+          "Content-Type": "multipart/form-data"
+        }
+      },
+      "expected_response": {
+        "status_code": 400,
+        "body": {
+          "error": "multipart/form-data requires 'boundary' parameter"
+        }
+      }
+    },
+    "tags": [
+      "content_types",
+      "multipart",
+      "boundary",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "16_text_plain_not_accepted",
+    "description": "text/plain content-type should be rejected when JSON is expected",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "data"
+          ],
+          "properties": {
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/data",
+        "headers": {
+          "Content-Type": "text/plain"
+        },
+        "body": "{\"data\": \"value\"}"
+      },
+      "expected_response": {
+        "status_code": 415,
+        "body": {
+          "type": "https://spikard.dev/errors/unsupported-media-type",
+          "title": "Unsupported Media Type",
+          "status": 415,
+          "detail": "Unsupported media type"
+        }
+      }
+    },
+    "tags": [
+      "content_types",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "17_vendor_json_accepted",
+    "description": "Vendor-specific JSON content-type should be accepted",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/api/v1/resource",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "data"
+          ],
+          "properties": {
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/resource",
+        "headers": {
+          "Content-Type": "application/vnd.api+json"
+        },
+        "body": {
+          "data": "value"
+        }
+      },
+      "expected_response": {
+        "status_code": 201,
+        "body": {
+          "data": "value"
+        }
+      }
+    },
+    "tags": [
+      "content_types",
+      "vendor",
+      "json",
+      "success"
+    ]
+  },
+  {
+    "id": "18_content_type_with_multiple_params",
+    "description": "Content-Type with multiple parameters should be parsed correctly",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/data",
+        "headers": {
+          "Content-Type": "application/json; charset=utf-8; boundary=something"
+        },
+        "body": {
+          "value": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 201,
+        "body": {
+          "value": "test"
+        }
+      }
+    },
+    "tags": [
+      "content_types",
+      "parameters",
+      "parsing",
+      "success"
+    ]
+  },
+  {
+    "id": "19_missing_content_type_default_json",
+    "description": "Missing Content-Type header should default to JSON when body is present",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/data",
+        "body": {
+          "name": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 201,
+        "body": {
+          "name": "test"
+        }
+      }
+    },
+    "tags": [
+      "content_types",
+      "default",
+      "success"
+    ]
+  },
+  {
+    "id": "20_content_length_mismatch",
+    "description": "Content-Length header mismatch with actual body size should fail",
+    "category": "content_types",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        "parameters": {
+          "headers": {
+            "Content-Length": {
+              "type": "string",
+              "optional": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/data",
+        "headers": {
+          "Content-Type": "application/json",
+          "Content-Length": "100"
+        },
+        "body": {
+          "value": "short"
+        }
+      },
+      "expected_response": {
+        "status_code": 400,
+        "body": {
+          "type": "https://spikard.dev/errors/content-length-mismatch",
+          "title": "Content-Length header mismatch",
+          "status": 400,
+          "detail": "Content-Length header does not match actual body size"
+        }
+      }
+    },
+    "tags": [
+      "content_types",
+      "content_length",
+      "validation",
+      "error"
+    ]
+  }
+]

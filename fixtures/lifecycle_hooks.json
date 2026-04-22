@@ -1,0 +1,572 @@
+[
+  {
+    "id": "onrequest_request_logging",
+    "description": "Test onRequest hook that logs incoming requests and adds a request ID",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/test-on-request",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "on_request": [
+              {
+                "name": "request_logger",
+                "handler": "log_request"
+              },
+              {
+                "name": "request_id_generator",
+                "handler": "add_request_id"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/test-on-request"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "message": "onRequest hooks executed",
+          "request_logged": true,
+          "has_request_id": true
+        },
+        "headers": {
+          "X-Request-ID": ".*"
+        }
+      }
+    }
+  },
+  {
+    "id": "prevalidation_rate_limiting",
+    "description": "Test preValidation hook that implements rate limiting before validation",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/test-rate-limit",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data"
+          ]
+        },
+        "middleware": {
+          "lifecycle_hooks": {
+            "pre_validation": [
+              {
+                "name": "rate_limiter",
+                "handler": "check_rate_limit",
+                "config": {
+                  "max_requests": 10,
+                  "window_seconds": 60
+                }
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/test-rate-limit",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "message": "Request accepted",
+          "rate_limit_checked": true
+        }
+      }
+    }
+  },
+  {
+    "id": "prevalidation_rate_limit_exceeded_short_circuit",
+    "description": "Test preValidation hook that short-circuits when rate limit is exceeded",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/test-rate-limit-exceeded",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "data"
+          ]
+        },
+        "middleware": {
+          "lifecycle_hooks": {
+            "pre_validation": [
+              {
+                "name": "rate_limiter",
+                "handler": "check_rate_limit",
+                "config": {
+                  "max_requests": 0,
+                  "window_seconds": 60
+                }
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/test-rate-limit-exceeded",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 429,
+        "body": {
+          "error": "Rate limit exceeded",
+          "message": "Too many requests, please try again later"
+        },
+        "headers": {
+          "Retry-After": "60"
+        }
+      }
+    }
+  },
+  {
+    "id": "prehandler_authentication_success",
+    "description": "Test preHandler hook that validates authentication tokens",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/protected-resource",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "pre_handler": [
+              {
+                "name": "authenticator",
+                "handler": "validate_auth_token"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/protected-resource",
+        "headers": {
+          "Authorization": "Bearer valid-token-12345"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "message": "Access granted",
+          "user_id": "user-123",
+          "authenticated": true
+        }
+      }
+    }
+  },
+  {
+    "id": "prehandler_authentication_failed_short_circuit",
+    "description": "Test preHandler hook that short-circuits on invalid authentication",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/protected-resource-fail",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "pre_handler": [
+              {
+                "name": "authenticator",
+                "handler": "validate_auth_token"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/protected-resource-fail",
+        "headers": {
+          "Authorization": "Bearer invalid-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 401,
+        "body": {
+          "error": "Unauthorized",
+          "message": "Invalid or expired authentication token"
+        }
+      }
+    }
+  },
+  {
+    "id": "prehandler_authorization_check",
+    "description": "Test preHandler hook for role-based authorization after authentication",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/admin-only",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "pre_handler": [
+              {
+                "name": "authenticator",
+                "handler": "validate_auth_token"
+              },
+              {
+                "name": "authorizer",
+                "handler": "check_admin_role"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/admin-only",
+        "headers": {
+          "Authorization": "Bearer admin-token-67890"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "message": "Admin access granted",
+          "user_id": "admin-456",
+          "role": "admin"
+        }
+      }
+    }
+  },
+  {
+    "id": "prehandler_authorization_forbidden_short_circuit",
+    "description": "Test preHandler hook that denies access for insufficient permissions",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/admin-only-forbidden",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "pre_handler": [
+              {
+                "name": "authenticator",
+                "handler": "validate_auth_token"
+              },
+              {
+                "name": "authorizer",
+                "handler": "check_admin_role"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/admin-only-forbidden",
+        "headers": {
+          "Authorization": "Bearer user-token-11111"
+        }
+      },
+      "expected_response": {
+        "status_code": 403,
+        "body": {
+          "error": "Forbidden",
+          "message": "Admin role required for this endpoint"
+        }
+      }
+    }
+  },
+  {
+    "id": "onresponse_security_headers",
+    "description": "Test onResponse hook that adds security headers to all responses",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/test-security-headers",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "on_response": [
+              {
+                "name": "security_headers",
+                "handler": "add_security_headers"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/test-security-headers"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "message": "Response with security headers"
+        },
+        "headers": {
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY",
+          "X-XSS-Protection": "1; mode=block",
+          "Strict-Transport-Security": "max-age=31536000; includeSubDomains"
+        }
+      }
+    }
+  },
+  {
+    "id": "onresponse_response_timing",
+    "description": "Test onResponse hook that adds timing information to response headers",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/test-timing",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "on_request": [
+              {
+                "name": "start_timer",
+                "handler": "record_start_time"
+              }
+            ],
+            "on_response": [
+              {
+                "name": "response_timer",
+                "handler": "add_response_time"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/test-timing"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "message": "Response with timing info"
+        },
+        "headers": {
+          "X-Response-Time": ".*ms"
+        }
+      }
+    }
+  },
+  {
+    "id": "onerror_error_logging",
+    "description": "Test onError hook that logs server errors and formats error responses",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/test-error",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "on_error": [
+              {
+                "name": "error_logger",
+                "handler": "log_error"
+              },
+              {
+                "name": "error_formatter",
+                "handler": "format_error_response"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/test-error"
+      },
+      "expected_response": {
+        "status_code": 500,
+        "body": {
+          "error": "Internal Server Error",
+          "message": "An unexpected error occurred",
+          "error_id": ".*"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_hooks_all_phases",
+    "description": "Test multiple lifecycle hooks across all five phases for a complete request lifecycle",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/full-lifecycle",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "user_id": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "user_id",
+            "action"
+          ]
+        },
+        "middleware": {
+          "lifecycle_hooks": {
+            "on_request": [
+              {
+                "name": "request_logger",
+                "handler": "log_request"
+              },
+              {
+                "name": "request_id_generator",
+                "handler": "add_request_id"
+              }
+            ],
+            "pre_validation": [
+              {
+                "name": "rate_limiter",
+                "handler": "check_rate_limit",
+                "config": {
+                  "max_requests": 100,
+                  "window_seconds": 60
+                }
+              }
+            ],
+            "pre_handler": [
+              {
+                "name": "authenticator",
+                "handler": "validate_auth_token"
+              },
+              {
+                "name": "authorizer",
+                "handler": "check_user_permissions"
+              }
+            ],
+            "on_response": [
+              {
+                "name": "security_headers",
+                "handler": "add_security_headers"
+              },
+              {
+                "name": "response_timer",
+                "handler": "add_response_time"
+              },
+              {
+                "name": "audit_logger",
+                "handler": "log_successful_action"
+              }
+            ],
+            "on_error": [
+              {
+                "name": "error_logger",
+                "handler": "log_error"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/full-lifecycle",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer valid-token-12345"
+        },
+        "body": {
+          "user_id": "user-123",
+          "action": "update_profile"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "message": "Action completed successfully",
+          "user_id": "user-123",
+          "action": "update_profile",
+          "request_id": ".*"
+        },
+        "headers": {
+          "X-Request-ID": ".*",
+          "X-Response-Time": ".*ms",
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY"
+        }
+      }
+    }
+  },
+  {
+    "id": "hook_execution_order",
+    "description": "Test that multiple hooks of the same type execute in registration order",
+    "category": "lifecycle_hooks",
+    "http": {
+      "handler": {
+        "route": "/api/test-hook-order",
+        "method": "GET",
+        "middleware": {
+          "lifecycle_hooks": {
+            "on_request": [
+              {
+                "name": "first_hook",
+                "handler": "append_first",
+                "order": 1
+              },
+              {
+                "name": "second_hook",
+                "handler": "append_second",
+                "order": 2
+              },
+              {
+                "name": "third_hook",
+                "handler": "append_third",
+                "order": 3
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/test-hook-order"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "message": "Hooks executed in order",
+          "execution_order": [
+            "first_hook",
+            "second_hook",
+            "third_hook"
+          ]
+        }
+      }
+    }
+  }
+]

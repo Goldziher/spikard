@@ -1,0 +1,1337 @@
+[
+  {
+    "id": "string_path_parameter_success",
+    "description": "Tests string path parameter with valid value",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/str/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/str/foobar"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": "foobar"
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_path_parameter_success",
+    "description": "Tests integer path parameter with valid value",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/int/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/int/42"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": 42
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_path_parameter_invalid_string",
+    "description": "Tests integer path parameter with non-numeric string returns 422",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/int/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/int/foobar"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "int_parsing",
+              "loc": [
+                "path",
+                "item_id"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": "foobar"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "float_path_parameter_success",
+    "description": "Tests float path parameter with valid value",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/float/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/float/42.5"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": 42.5
+        }
+      }
+    }
+  },
+  {
+    "id": "uuid_path_parameter_success",
+    "description": "Tests UUID path parameter with valid UUID format",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/items/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": "ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_path_parameter_with_gt_constraint_success",
+    "description": "Tests integer path parameter with gt (greater than) validation succeeds",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/param-gt/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "integer",
+              "exclusiveMinimum": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/param-gt/42"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": 42
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_path_parameter_with_gt_constraint_failure",
+    "description": "Tests integer path parameter with gt validation fails when value too small",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/param-gt/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "integer",
+              "exclusiveMinimum": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/param-gt/2"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "greater_than",
+              "loc": [
+                "path",
+                "item_id"
+              ],
+              "msg": "Input should be greater than 3",
+              "input": 2,
+              "ctx": {
+                "gt": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "string_path_parameter_with_min_length_failure",
+    "description": "Tests string path parameter with min_length validation fails",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/param-minlength/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "string",
+              "minLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/param-minlength/fo"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "path",
+                "item_id"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "fo",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "enum_path_parameter_success",
+    "description": "Tests enum path parameter with valid enum value",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/models/{model_name}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "model_name": {
+              "type": "string",
+              "enum": [
+                "alexnet",
+                "lenet",
+                "resnet"
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/models/alexnet"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "model_name": "alexnet"
+        }
+      }
+    }
+  },
+  {
+    "id": "enum_path_parameter_invalid_value",
+    "description": "Tests enum path parameter with invalid enum value returns 422",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/models/{model_name}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "model_name": {
+              "type": "string",
+              "enum": [
+                "alexnet",
+                "resnet",
+                "lenet"
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/models/foo"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "enum",
+              "loc": [
+                "path",
+                "model_name"
+              ],
+              "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
+              "input": "foo",
+              "ctx": {
+                "expected": "'alexnet', 'resnet' or 'lenet'"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "path_type_parameter_file_path",
+    "description": "Tests path type parameter that captures remaining path segments",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/files/{file_path:path}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "file_path": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/files/home/johndoe/myfile.txt"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "file_path": "home/johndoe/myfile.txt"
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_path_parameters_success",
+    "description": "Tests multiple path parameters in single route",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/{version}/{service_id}/{user_id}/{order_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "version": {
+              "type": "number"
+            },
+            "service_id": {
+              "type": "integer"
+            },
+            "user_id": {
+              "type": "string"
+            },
+            "order_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "version": 1.0,
+          "service_id": 1,
+          "user_id": "abc",
+          "order_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+        }
+      }
+    }
+  },
+  {
+    "id": "boolean_path_parameter_true",
+    "description": "Tests boolean path parameter with 'True' string value",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/bool/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/bool/True"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": true
+        }
+      }
+    }
+  },
+  {
+    "id": "boolean_path_parameter_numeric_1",
+    "description": "Tests boolean path parameter with '1' converts to true",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/bool/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/bool/1"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": true
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_path_parameter_with_ge_constraint_success",
+    "description": "Tests integer path parameter with ge (greater than or equal) validation at boundary",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/param-ge/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "integer",
+              "minimum": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/param-ge/3"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": 3
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_path_parameter_with_le_constraint_success",
+    "description": "Tests integer path parameter with le (less than or equal) validation at boundary",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/param-le/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "integer",
+              "maximum": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/param-le/3"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": 3
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_path_parameter_with_lt_constraint_success",
+    "description": "Tests integer path parameter with lt (less than) validation",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/param-lt/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "integer",
+              "exclusiveMaximum": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/param-lt/2"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": 2
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_path_parameter_with_combined_lt_and_gt_constraints_success",
+    "description": "Tests integer path parameter with both lt and gt validation (range check)",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/param-lt-gt/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "integer",
+              "exclusiveMinimum": 1,
+              "exclusiveMaximum": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/param-lt-gt/2"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": 2
+        }
+      }
+    }
+  },
+  {
+    "id": "string_path_parameter_with_max_length_failure",
+    "description": "Tests string path parameter with max_length validation fails when too long",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/path/param-maxlength/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "string",
+              "maxLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/path/param-maxlength/foobar"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_long",
+              "loc": [
+                "path",
+                "item_id"
+              ],
+              "msg": "String should have at most 3 characters",
+              "input": "foobar",
+              "ctx": {
+                "max_length": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "date_path_parameter_success",
+    "description": "Tests date path parameter with ISO format date",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/date/{date_param}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "date_param": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/date/2023-07-15"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "date_param": "2023-07-15"
+        }
+      }
+    }
+  },
+  {
+    "id": "20_uuid_v3_path_param_success",
+    "description": "Path parameter with valid UUID v3 should be accepted",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/items/{id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "uuidVersion": "3"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/e8b5a51d-11c8-3310-a6ab-367563f20686"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "id": "e8b5a51d-11c8-3310-a6ab-367563f20686"
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "uuid",
+      "v3",
+      "format",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "21_uuid_v5_path_param_success",
+    "description": "Path parameter with valid UUID v5 should be accepted",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/items/{id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "uuidVersion": "5"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/630eb68f-e0fa-5ecc-887a-7c7a62614681"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "id": "630eb68f-e0fa-5ecc-887a-7c7a62614681"
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "uuid",
+      "v5",
+      "format",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "24_date_format_path_param_success",
+    "description": "Path parameter with valid ISO date format should be accepted",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/events/{date}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/events/2025-10-30"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "date": "2025-10-30"
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "date",
+      "format",
+      "iso8601",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "25_date_format_invalid_failure",
+    "description": "Path parameter with invalid date format should fail validation",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/events/{date}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "date": {
+              "type": "string",
+              "format": "date",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/events/2025-13-45"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "path",
+                "date"
+              ],
+              "msg": "Invalid date format",
+              "ctx": {
+                "format": "date",
+                "value": "2025-13-45"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "date",
+      "format",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "27_datetime_format_path_param_success",
+    "description": "Path parameter with valid ISO 8601 datetime should be accepted",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/bookings/{timestamp}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/bookings/2025-10-30T14:30:00Z"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "timestamp": "2025-10-30T14:30:00Z"
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "datetime",
+      "format",
+      "iso8601",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "28_duration_format_path_param_success",
+    "description": "Path parameter with valid ISO 8601 duration should be accepted",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/delays/{duration}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "duration": {
+              "type": "string",
+              "format": "duration"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/delays/P1DT2H30M"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "duration": "P1DT2H30M"
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "duration",
+      "format",
+      "iso8601",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "29_decimal_path_param_success",
+    "description": "Path parameter with decimal/money value should be accepted",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/prices/{amount}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "amount": {
+              "type": "string",
+              "format": "decimal"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/prices/19.99"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "amount": "19.99"
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "decimal",
+      "format",
+      "money",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "30_string_minlength_path_success",
+    "description": "Path parameter with string meeting minLength constraint should succeed",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/users/{username}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "username": {
+              "type": "string",
+              "minLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/alice"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "username": "alice"
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "string",
+      "minLength",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "31_string_minlength_path_failure",
+    "description": "Path parameter with string below minLength constraint should fail",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/users/{username}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "username": {
+              "type": "string",
+              "minLength": 3,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/ab"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "path",
+                "username"
+              ],
+              "msg": "String length must be at least 3",
+              "ctx": {
+                "min_length": 3,
+                "actual_length": 2
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "string",
+      "minLength",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "32_string_maxlength_path_failure",
+    "description": "Path parameter with string exceeding maxLength constraint should fail",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/users/{username}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "username": {
+              "type": "string",
+              "maxLength": 20,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/this_username_is_way_too_long_to_be_valid"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "path",
+                "username"
+              ],
+              "msg": "String length must not exceed 20",
+              "ctx": {
+                "max_length": 20,
+                "actual_length": 42
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "string",
+      "maxLength",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "33_string_pattern_path_success",
+    "description": "Path parameter matching regex pattern should succeed",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/repos/{owner}/{repo}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "owner": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]+$"
+            },
+            "repo": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-_]+$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/repos/spikard-labs/spikard-http"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "owner": "spikard-labs",
+          "repo": "spikard-http"
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "string",
+      "pattern",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "34_string_pattern_path_failure",
+    "description": "Path parameter not matching regex pattern should fail",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/repos/{owner}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "owner": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9-]+$",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/repos/invalid@owner"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "path",
+                "owner"
+              ],
+              "msg": "String does not match pattern",
+              "ctx": {
+                "pattern": "^[a-zA-Z0-9-]+$",
+                "value": "invalid@owner"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "string",
+      "pattern",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "35_negative_integer_path_param",
+    "description": "Path parameter with negative integer should be parsed correctly",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/offset/{value}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "value": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/offset/-100"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "value": -100
+        }
+      }
+    },
+    "tags": [
+      "path_params",
+      "integer",
+      "negative",
+      "type_coercion",
+      "success"
+    ]
+  },
+  {
+    "id": "path_parameter_with_type_syntax_uuid",
+    "description": "Tests path parameter with :uuid type syntax auto-generates UUID validation",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/type-syntax/items/{id:uuid}",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/type-syntax/items/550e8400-e29b-41d4-a716-446655440000"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "id": "550e8400-e29b-41d4-a716-446655440000"
+        }
+      }
+    }
+  },
+  {
+    "id": "path_parameter_with_type_syntax_integer",
+    "description": "Tests path parameter with :int type syntax auto-generates integer type",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/type-syntax/users/{user_id:int}",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/type-syntax/users/42"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "user_id": "42"
+        }
+      }
+    }
+  },
+  {
+    "id": "path_parameter_type_syntax_with_override",
+    "description": "Tests that explicit parameter schema merges with auto-generated type syntax schema",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/type-syntax/items-count/{count:int}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "count": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/type-syntax/items-count/50"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "count": "50"
+        }
+      }
+    }
+  },
+  {
+    "id": "path_parameter_type_syntax_invalid_uuid",
+    "description": "Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs",
+    "category": "path_params",
+    "http": {
+      "handler": {
+        "route": "/type-syntax/items/{id:uuid}",
+        "method": "GET"
+      },
+      "request": {
+        "method": "GET",
+        "path": "/type-syntax/items/not-a-uuid"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "uuid_parsing",
+              "loc": [
+                "path",
+                "id"
+              ],
+              "msg": "Input should be a valid UUID",
+              "input": "not-a-uuid"
+            }
+          ]
+        }
+      }
+    }
+  }
+]

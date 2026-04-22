@@ -1,0 +1,1138 @@
+[
+  {
+    "id": "simple_form_submission_success",
+    "description": "Tests basic URL-encoded form with username and password",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/login/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username",
+            "password"
+          ],
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/login/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "username": "johndoe"
+        }
+      }
+    }
+  },
+  {
+    "id": "required_field_missing_validation_error_2",
+    "description": "Tests validation error when required form field is missing",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/login/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username",
+            "password"
+          ],
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/login/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "username"
+              ],
+              "msg": "Field required",
+              "input": {
+                "password": "secret"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "optional_field_missing_success",
+    "description": "Tests form with optional field omitted",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/register/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username",
+            "password"
+          ],
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "email": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "email"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/register/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "username": "johndoe",
+          "email": null
+        }
+      }
+    }
+  },
+  {
+    "id": "special_characters_encoding",
+    "description": "Tests URL encoding of special characters in form data",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/form/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/form/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "John Doe",
+          "description": "Test & Development"
+        }
+      }
+    }
+  },
+  {
+    "id": "string_min_length_validation_fail_2",
+    "description": "Tests form field with min_length constraint failure",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/form/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string",
+              "minLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/form/validated",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "username"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "ab",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "string_max_length_validation_fail_2",
+    "description": "Tests form field with max_length constraint failure",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/form/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string",
+              "maxLength": 20
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/form/validated",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_long",
+              "loc": [
+                "body",
+                "username"
+              ],
+              "msg": "String should have at most 20 characters",
+              "input": "this_is_a_very_long_username_that_exceeds_limit",
+              "ctx": {
+                "max_length": 20
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "pattern_validation_fail",
+    "description": "Tests form field with regex pattern constraint failure",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/form/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/form/validated",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "body",
+                "username"
+              ],
+              "msg": "String should match pattern '^[a-z0-9_]+$'",
+              "input": "john doe",
+              "ctx": {
+                "pattern": "^[a-z0-9_]+$"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_values_for_same_field",
+    "description": "Tests form field with multiple values (array)",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/form/tags",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "tags"
+          ],
+          "properties": {
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/form/tags",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "tags": [
+            "python",
+            "fastapi",
+            "web"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "empty_string_value",
+    "description": "Tests form field with empty string value",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/form/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/form/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "username": "johndoe",
+          "description": ""
+        }
+      }
+    }
+  },
+  {
+    "id": "oauth2_password_grant_flow",
+    "description": "Tests OAuth2 password grant with form data",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/token",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username",
+            "password",
+            "grant_type"
+          ],
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "grant_type": {
+              "type": "string"
+            },
+            "scope": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/token",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "access_token": "johndoe",
+          "token_type": "bearer"
+        }
+      }
+    }
+  },
+  {
+    "id": "numeric_field_type_conversion",
+    "description": "Tests conversion of form string value to numeric type",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/form/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "age": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/form/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "username": "johndoe",
+          "age": 30
+        }
+      }
+    }
+  },
+  {
+    "id": "boolean_field_conversion",
+    "description": "Tests conversion of form string value to boolean",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/form/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "subscribe": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/form/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "username": "johndoe",
+          "subscribe": true
+        }
+      }
+    }
+  },
+  {
+    "id": "13_array_field_success",
+    "description": "URL-encoded form with array field using bracket notation should parse correctly",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/register",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "tags"
+          ],
+          "properties": {
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/register",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "tags[]=python&tags[]=rust&tags[]=typescript"
+      },
+      "expected_response": {
+        "status_code": 201,
+        "body": {
+          "tags": [
+            "python",
+            "rust",
+            "typescript"
+          ]
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "arrays",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "14_nested_object_bracket_notation",
+    "description": "URL-encoded form with nested object using bracket notation should parse correctly",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/profile",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "user"
+          ],
+          "properties": {
+            "user": {
+              "type": "object",
+              "required": [
+                "name",
+                "email"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "age": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/profile",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30"
+      },
+      "expected_response": {
+        "status_code": 201,
+        "body": {
+          "user": {
+            "name": "John Doe",
+            "email": "john@example.com",
+            "age": 30
+          }
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "nested",
+      "objects",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "15_special_characters_field_names",
+    "description": "URL-encoded form with special characters in field names should be handled correctly",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "user-name": {
+              "type": "string"
+            },
+            "contact.email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/data",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "user-name=JohnDoe&contact.email=john%40example.com"
+      },
+      "expected_response": {
+        "status_code": 201,
+        "body": {
+          "user-name": "JohnDoe",
+          "contact.email": "john@example.com"
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "special_characters",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "16_minlength_validation_failure",
+    "description": "URL-encoded form field violating minLength constraint should fail",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/users",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string",
+              "minLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/users",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "username=ab"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "username"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "ab",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "minLength",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "17_pattern_validation_failure",
+    "description": "URL-encoded form field violating regex pattern should fail",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/accounts",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "account_id"
+          ],
+          "properties": {
+            "account_id": {
+              "type": "string",
+              "pattern": "^ACC-[0-9]{6}$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/accounts",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "account_id=INVALID123"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "body",
+                "account_id"
+              ],
+              "msg": "String should match pattern '^ACC-[0-9]{6}$'",
+              "input": "INVALID123",
+              "ctx": {
+                "pattern": "^ACC-[0-9]{6}$"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "pattern",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "18_integer_minimum_validation_failure",
+    "description": "URL-encoded integer field below minimum should fail",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/products",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "quantity"
+          ],
+          "properties": {
+            "quantity": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/products",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "quantity=0"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "greater_than_equal",
+              "loc": [
+                "body",
+                "quantity"
+              ],
+              "msg": "Input should be greater than or equal to 1",
+              "input": 0,
+              "ctx": {
+                "ge": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "minimum",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "19_array_minitems_validation_failure",
+    "description": "URL-encoded array with fewer items than minItems should fail",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/tags",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "tags"
+          ],
+          "properties": {
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/tags",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "tags[]=single"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "too_short",
+              "loc": [
+                "body",
+                "tags"
+              ],
+              "msg": "List should have at least 2 item after validation",
+              "input": [
+                "single"
+              ],
+              "ctx": {
+                "min_length": 2
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "arrays",
+      "minItems",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "20_format_email_validation_failure",
+    "description": "URL-encoded form with invalid email format should fail",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/subscribe",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "email"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/subscribe",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "email=not-an-email"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "body",
+                "email"
+              ],
+              "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
+              "input": "not-an-email",
+              "ctx": {
+                "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "format",
+      "email",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "21_integer_type_coercion_failure",
+    "description": "URL-encoded form with non-numeric value for integer field should fail",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/products",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "price"
+          ],
+          "properties": {
+            "price": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/products",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "price=not-a-number"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "int_parsing",
+              "loc": [
+                "body",
+                "price"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": "not-a-number"
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "type",
+      "integer",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "22_additional_properties_strict_failure",
+    "description": "URL-encoded form with extra fields when additionalProperties is false should fail",
+    "category": "url_encoded",
+    "http": {
+      "handler": {
+        "route": "/settings",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "theme"
+          ],
+          "properties": {
+            "theme": {
+              "type": "string",
+              "enum": [
+                "light",
+                "dark"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/settings",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "theme=dark&unknown_field=value"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body",
+                "unknown_field"
+              ],
+              "msg": "Additional properties are not allowed",
+              "input": {
+                "theme": "dark",
+                "unknown_field": "value"
+              },
+              "ctx": {
+                "additional_properties": false,
+                "unexpected_field": "unknown_field"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "url_encoded",
+      "additionalProperties",
+      "validation",
+      "error"
+    ]
+  }
+]

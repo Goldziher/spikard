@@ -1,0 +1,82 @@
+[
+  {
+    "id": "background_event_logging",
+    "description": "Enqueues a background job that appends the posted event to shared state",
+    "category": "background",
+    "http": {
+      "handler": {
+        "route": "/background/events",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "event": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "event"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/background/events",
+        "body": {
+          "event": "alpha"
+        }
+      },
+      "expected_response": {
+        "status_code": 202,
+        "headers": {
+          "content-type": "application/json"
+        }
+      }
+    },
+    "tags": [
+      "background",
+      "async"
+    ]
+  },
+  {
+    "id": "background_event_logging_second_payload",
+    "description": "Ensures background jobs handle different payloads",
+    "category": "background",
+    "http": {
+      "handler": {
+        "route": "/background/events",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "event": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "event"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/background/events",
+        "body": {
+          "event": "beta"
+        }
+      },
+      "expected_response": {
+        "status_code": 202,
+        "headers": {
+          "content-type": "application/json"
+        }
+      }
+    },
+    "tags": [
+      "background",
+      "async"
+    ]
+  }
+]

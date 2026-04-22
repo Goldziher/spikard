@@ -1,0 +1,89 @@
+[
+  {
+    "id": "static_file_server_returns_text_file",
+    "description": "Tests serving a plain text file with Cache-Control headers.",
+    "category": "static_files",
+    "http": {
+      "handler": {
+        "route": "/public/hello.txt",
+        "method": "GET",
+        "middleware": {
+          "static_files": [
+            {
+              "route_prefix": "/public",
+              "cache_control": "public, max-age=60",
+              "files": [
+                {
+                  "path": "hello.txt",
+                  "content": "Hello from static storage"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/public/hello.txt"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "Hello from static storage",
+        "headers": {
+          "content-type": "text/plain",
+          "cache-control": "public, max-age=60"
+        }
+      }
+    },
+    "tags": [
+      "static_files",
+      "serve_dir",
+      "middleware"
+    ]
+  },
+  {
+    "id": "static_server_returns_index_html_for_directory",
+    "description": "When index files are enabled the server should serve index.html when the directory root is requested.",
+    "category": "static_files",
+    "http": {
+      "handler": {
+        "route": "/app",
+        "method": "GET",
+        "middleware": {
+          "static_files": [
+            {
+              "route_prefix": "/app",
+              "index_file": true,
+              "files": [
+                {
+                  "path": "index.html",
+                  "content": "<!doctype html><h1>Welcome</h1>"
+                },
+                {
+                  "path": "styles/main.css",
+                  "content": "h1 { color: #336699; }"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/app/"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "<!doctype html><h1>Welcome</h1>",
+        "headers": {
+          "content-type": "text/html"
+        }
+      }
+    },
+    "tags": [
+      "static_files",
+      "index",
+      "middleware"
+    ]
+  }
+]

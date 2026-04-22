@@ -1,0 +1,951 @@
+[
+  {
+    "id": "simple_file_upload",
+    "description": "Single file upload with text/plain content type",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "test": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "test"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/",
+        "content_type": "multipart/form-data"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "test": {
+            "filename": "test.txt",
+            "size": 14,
+            "content": "<file content>",
+            "content_type": "text/plain"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "form_data_without_files",
+    "description": "Multipart form with only text fields, no file uploads",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "some": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/",
+        "content_type": "multipart/form-data"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "some": "data"
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_file_uploads",
+    "description": "Upload multiple files in a single multipart request",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "test1": {
+              "type": "string",
+              "format": "binary"
+            },
+            "test2": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "test1",
+            "test2"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/",
+        "content_type": "multipart/form-data"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "test1": {
+            "filename": "test1.txt",
+            "size": 15,
+            "content": "<file1 content>",
+            "content_type": "text/plain"
+          },
+          "test2": {
+            "filename": "test2.txt",
+            "size": 15,
+            "content": "<file2 content>",
+            "content_type": "text/plain"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "mixed_files_and_form_data",
+    "description": "Multipart request with both file uploads and regular form fields",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string",
+              "format": "binary"
+            },
+            "username": {
+              "type": "string"
+            },
+            "age": {
+              "type": "string"
+            },
+            "active": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "file"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/",
+        "content_type": "multipart/form-data"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "file": {
+            "filename": "upload.txt",
+            "size": 14,
+            "content": "file data here",
+            "content_type": "text/plain"
+          },
+          "username": "testuser",
+          "age": "25",
+          "active": "true"
+        }
+      }
+    }
+  },
+  {
+    "id": "file_upload_with_custom_headers",
+    "description": "File upload with additional custom headers in the multipart section",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "test2": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "test2"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/",
+        "content_type": "multipart/form-data"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "test2": {
+            "filename": "test2.txt",
+            "size": 15,
+            "content": "<file2 content>",
+            "content_type": "text/plain",
+            "headers": [
+              [
+                "content-disposition",
+                "form-data; name=\"test2\"; filename=\"test2.txt\""
+              ],
+              [
+                "content-type",
+                "text/plain"
+              ],
+              [
+                "x-custom",
+                "f2"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "file_upload_without_filename",
+    "description": "Upload file content without providing a filename",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "test1": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "test1"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/",
+        "content_type": "multipart/form-data"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "test1": "<file1 content>"
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_values_for_same_field_name",
+    "description": "Multiple files uploaded with the same field name (array-like behavior)",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "files"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/",
+        "content_type": "multipart/form-data"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "files": [
+            {
+              "filename": "file1.txt",
+              "size": 10,
+              "content": "first file",
+              "content_type": "text/plain"
+            },
+            {
+              "filename": "file2.txt",
+              "size": 11,
+              "content": "second file",
+              "content_type": "text/plain"
+            }
+          ],
+          "tags": [
+            "python",
+            "rust",
+            "web"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "optional_file_upload_missing",
+    "description": "Tests optional file parameter when no file is provided",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/optional",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/optional"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "file": null
+        }
+      }
+    }
+  },
+  {
+    "id": "optional_file_upload_provided",
+    "description": "Tests optional file parameter when file is provided",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/optional",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "file"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/optional"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "filename": "optional.txt",
+          "content_type": "text/plain",
+          "size": 21
+        }
+      }
+    }
+  },
+  {
+    "id": "file_list_upload_array_of_files",
+    "description": "Tests uploading multiple files as a list parameter",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/list",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "files"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/list"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "filenames": [
+            "file1.txt",
+            "file2.txt"
+          ],
+          "total_size": 35
+        }
+      }
+    }
+  },
+  {
+    "id": "empty_file_upload",
+    "description": "Tests uploading a file with zero bytes",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/upload",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "file"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/upload"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "filename": "empty.txt",
+          "size": 0
+        }
+      }
+    }
+  },
+  {
+    "id": "image_file_upload",
+    "description": "Tests uploading an image file (JPEG)",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/image",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "image": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "image"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/image"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "filename": "photo.jpg",
+          "content_type": "image/jpeg",
+          "size": 22
+        }
+      }
+    }
+  },
+  {
+    "id": "pdf_file_upload",
+    "description": "Tests uploading a PDF document",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/document",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "document": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "document"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/document"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "filename": "report.pdf",
+          "content_type": "application/pdf",
+          "size": 16
+        }
+      }
+    }
+  },
+  {
+    "id": "file_size_validation_too_large",
+    "description": "Tests file upload exceeding max size limit",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/validated"
+      },
+      "expected_response": {
+        "status_code": 413,
+        "body": {
+          "detail": "File too large. Maximum size is 1MB"
+        }
+      }
+    }
+  },
+  {
+    "id": "content_type_validation_invalid_type",
+    "description": "Tests file upload with disallowed content type",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/images-only",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "additionalProperties": false
+        },
+        "parameters": {
+          "files": {
+            "file": {
+              "required": true,
+              "content_type": [
+                "image/jpeg",
+                "image/png",
+                "image/gif"
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/images-only"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "validation_errors": [
+          {
+            "type": "validation_error",
+            "loc": [
+              "files",
+              "file"
+            ],
+            "msg": "Invalid content type 'application/x-sh'. Allowed types: image/jpeg, image/png, image/gif"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "required_file_upload_missing",
+    "description": "Tests required file parameter when no file is provided",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/files/required",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "file": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "required": [
+            "file"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/files/required"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "file"
+              ],
+              "msg": "Field required",
+              "input": []
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "17_file_magic_number_png_success",
+    "description": "File with correct PNG magic number and matching MIME type should be accepted",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/upload",
+        "method": "POST",
+        "parameters": {
+          "files": {
+            "image": {
+              "required": true,
+              "content_type": [
+                "image/png"
+              ],
+              "validate_magic_numbers": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/upload"
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "multipart",
+      "file",
+      "magic_number",
+      "png",
+      "security",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "18_file_magic_number_jpeg_success",
+    "description": "File with correct JPEG magic number and matching MIME type should be accepted",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/upload",
+        "method": "POST",
+        "parameters": {
+          "files": {
+            "image": {
+              "required": true,
+              "content_type": [
+                "image/jpeg"
+              ],
+              "validate_magic_numbers": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/upload"
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "multipart",
+      "file",
+      "magic_number",
+      "jpeg",
+      "security",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "19_file_mime_spoofing_png_as_jpeg",
+    "description": "File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/upload",
+        "method": "POST",
+        "parameters": {
+          "files": {
+            "image": {
+              "required": true,
+              "content_type": [
+                "image/jpeg"
+              ],
+              "validate_magic_numbers": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/upload"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "files",
+                "image"
+              ],
+              "msg": "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png",
+              "ctx": {
+                "declared_mime": "image/jpeg",
+                "detected_type": "image/png",
+                "magic_bytes": "89504e470d0a1a0a"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "multipart",
+      "file",
+      "magic_number",
+      "spoofing",
+      "security",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "20_file_mime_spoofing_jpeg_as_png",
+    "description": "File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/upload",
+        "method": "POST",
+        "parameters": {
+          "files": {
+            "image": {
+              "required": true,
+              "content_type": [
+                "image/png"
+              ],
+              "validate_magic_numbers": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/upload"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "files",
+                "image"
+              ],
+              "msg": "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg",
+              "ctx": {
+                "declared_mime": "image/png",
+                "detected_type": "image/jpeg",
+                "magic_bytes": "ffd8ffe0"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "multipart",
+      "file",
+      "magic_number",
+      "spoofing",
+      "security",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "21_file_pdf_magic_number_success",
+    "description": "File with correct PDF magic number should be accepted",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/upload",
+        "method": "POST",
+        "parameters": {
+          "files": {
+            "document": {
+              "required": true,
+              "content_type": [
+                "application/pdf"
+              ],
+              "validate_magic_numbers": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/upload"
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "multipart",
+      "file",
+      "magic_number",
+      "pdf",
+      "security",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "22_file_empty_buffer",
+    "description": "File with empty buffer should fail validation",
+    "category": "multipart",
+    "http": {
+      "handler": {
+        "route": "/upload",
+        "method": "POST",
+        "parameters": {
+          "files": {
+            "file": {
+              "required": true,
+              "validate_magic_numbers": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/upload"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "files",
+                "file"
+              ],
+              "msg": "File buffer is empty",
+              "ctx": {
+                "buffer_size": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "multipart",
+      "file",
+      "empty",
+      "edge_case",
+      "validation",
+      "error"
+    ]
+  }
+]

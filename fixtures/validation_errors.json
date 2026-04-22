@@ -1,0 +1,1373 @@
+[
+  {
+    "id": "query_param_type_error_string_provided_for_int",
+    "description": "Tests validation error when string is provided for integer query param",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string"
+            },
+            "skip": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/?q=test&skip=not_a_number",
+        "headers": {
+          "x-token": "test-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "int_parsing",
+              "loc": [
+                "query",
+                "skip"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": "not_a_number"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "missing_required_query_parameter",
+    "description": "Tests validation error when required query param is missing",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/",
+        "headers": {
+          "x-token": "test-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "query",
+                "q"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "body_field_type_error_string_for_float",
+    "description": "Tests validation error when body field has wrong type",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": "not_a_float"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "float_parsing",
+              "loc": [
+                "body",
+                "price"
+              ],
+              "msg": "Input should be a valid number, unable to parse string as a number",
+              "input": "not_a_float"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "missing_required_body_field",
+    "description": "Tests validation error when required body field is missing",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "price"
+              ],
+              "msg": "Field required",
+              "input": {
+                "name": "Item"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "numeric_constraint_violation_gt_greater_than",
+    "description": "Tests validation error when value violates gt constraint",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/?q=test&price=0",
+        "headers": {
+          "x-token": "test-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "greater_than",
+              "loc": [
+                "query",
+                "price"
+              ],
+              "msg": "Input should be greater than 0",
+              "input": "0",
+              "ctx": {
+                "gt": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "numeric_constraint_violation_le_less_than_or_equal",
+    "description": "Tests validation error when value violates le constraint",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "maximum": 100
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/?q=test&limit=101",
+        "headers": {
+          "x-token": "test-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "less_than_equal",
+              "loc": [
+                "query",
+                "limit"
+              ],
+              "msg": "Input should be less than or equal to 100",
+              "input": "101",
+              "ctx": {
+                "le": 100
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "string_min_length_constraint_violation",
+    "description": "Tests validation error when string is shorter than min_length",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string",
+              "minLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/?q=ab",
+        "headers": {
+          "x-token": "test-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "query",
+                "q"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "ab",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "string_max_length_constraint_violation",
+    "description": "Tests validation error when string exceeds max_length",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string",
+              "maxLength": 50
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",
+        "headers": {
+          "x-token": "test-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_long",
+              "loc": [
+                "query",
+                "q"
+              ],
+              "msg": "String should have at most 50 characters",
+              "input": "this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter",
+              "ctx": {
+                "max_length": 50
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "09_multiple_validation_errors",
+    "description": "Multiple validation errors should be returned together in batch",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/users",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name",
+            "email",
+            "age"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 3
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "age": {
+              "type": "integer",
+              "minimum": 18
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/users",
+        "body": {
+          "name": "ab",
+          "email": "invalid-email",
+          "age": 15
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "3 validation errors in request",
+          "errors": [
+            {
+              "type": "greater_than_equal",
+              "loc": [
+                "body",
+                "age"
+              ],
+              "msg": "Input should be greater than or equal to 18",
+              "input": 15,
+              "ctx": {
+                "ge": 18
+              }
+            },
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "body",
+                "email"
+              ],
+              "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
+              "input": "invalid-email",
+              "ctx": {
+                "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+              }
+            },
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "name"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "ab",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "validation_errors",
+      "multiple",
+      "batch",
+      "error_reporting"
+    ]
+  },
+  {
+    "id": "string_regex_pattern_mismatch",
+    "description": "Tests validation error when string doesn't match regex pattern",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/?q=invalid!",
+        "headers": {
+          "x-token": "test-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "query",
+                "q"
+              ],
+              "msg": "String should match pattern '^[a-zA-Z0-9_-]+$'",
+              "input": "invalid!",
+              "ctx": {
+                "pattern": "^[a-zA-Z0-9_-]+$"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "invalid_enum_value",
+    "description": "Tests validation error when value is not in allowed enum values",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/models/{model_name}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "model_name": {
+              "type": "string",
+              "enum": [
+                "alexnet",
+                "resnet",
+                "lenet"
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/models/invalid_model"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "enum",
+              "loc": [
+                "path",
+                "model_name"
+              ],
+              "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
+              "input": "invalid_model",
+              "ctx": {
+                "expected": "'alexnet', 'resnet' or 'lenet'"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "10_nested_error_path",
+    "description": "Validation error in nested object should have correct path in loc",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/profiles",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "profile"
+          ],
+          "properties": {
+            "profile": {
+              "type": "object",
+              "required": [
+                "contact"
+              ],
+              "properties": {
+                "contact": {
+                  "type": "object",
+                  "required": [
+                    "email"
+                  ],
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/profiles",
+        "body": {
+          "profile": {
+            "contact": {
+              "email": "invalid"
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "body",
+                "profile",
+                "contact",
+                "email"
+              ],
+              "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
+              "input": "invalid",
+              "ctx": {
+                "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "validation_errors",
+      "nested",
+      "path",
+      "error_reporting"
+    ]
+  },
+  {
+    "id": "invalid_uuid_format",
+    "description": "Tests validation error when UUID format is invalid",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/{item_id}",
+        "method": "GET",
+        "parameters": {
+          "path": {
+            "item_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/not-a-uuid"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "uuid_parsing",
+              "loc": [
+                "path",
+                "item_id"
+              ],
+              "msg": "Input should be a valid UUID, invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `n` at 0",
+              "input": "not-a-uuid"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "invalid_datetime_format",
+    "description": "Tests validation error when datetime format is invalid",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "created_at"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 10.0,
+          "created_at": "not-a-datetime"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "datetime_parsing",
+              "loc": [
+                "body",
+                "created_at"
+              ],
+              "msg": "Input should be a valid datetime",
+              "input": "not-a-datetime"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "invalid_boolean_value",
+    "description": "Tests validation error when boolean value is invalid",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string"
+            },
+            "is_active": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/?q=test&is_active=maybe",
+        "headers": {
+          "x-token": "test-token"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "bool_parsing",
+              "loc": [
+                "query",
+                "is_active"
+              ],
+              "msg": "Input should be a valid boolean, unable to interpret input",
+              "input": "maybe"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_validation_errors_2",
+    "description": "Tests multiple validation errors returned in single response",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 3
+            },
+            "price": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "quantity": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "quantity"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "X",
+          "price": -10,
+          "quantity": "not_a_number"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "3 validation errors in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "name"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "X",
+              "ctx": {
+                "min_length": 3
+              }
+            },
+            {
+              "type": "greater_than",
+              "loc": [
+                "body",
+                "price"
+              ],
+              "msg": "Input should be greater than 0",
+              "input": -10,
+              "ctx": {
+                "gt": 0
+              }
+            },
+            {
+              "type": "int_parsing",
+              "loc": [
+                "body",
+                "quantity"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": "not_a_number"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "nested_object_validation_error",
+    "description": "Tests validation error in nested object field",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "seller": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 3
+                },
+                "address": {
+                  "type": "object",
+                  "properties": {
+                    "city": {
+                      "type": "string",
+                      "minLength": 3
+                    },
+                    "zip_code": {
+                      "type": "string",
+                      "minLength": 5
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "city",
+                    "zip_code"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "address"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "seller"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Product",
+          "price": 10.0,
+          "seller": {
+            "name": "Jo",
+            "address": {
+              "city": "SF",
+              "zip_code": "123"
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "3 validation errors in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "seller",
+                "address",
+                "city"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "SF",
+              "ctx": {
+                "min_length": 3
+              }
+            },
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "seller",
+                "address",
+                "zip_code"
+              ],
+              "msg": "String should have at least 5 characters",
+              "input": "123",
+              "ctx": {
+                "min_length": 5
+              }
+            },
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "seller",
+                "name"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "Jo",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "array_min_items_constraint_violation",
+    "description": "Tests validation error when array has fewer items than min_items",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "tags": {
+              "type": "array",
+              "items": {},
+              "minItems": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "tags"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 10.0,
+          "tags": []
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "too_short",
+              "loc": [
+                "body",
+                "tags"
+              ],
+              "msg": "List should have at least 1 item after validation",
+              "input": [],
+              "ctx": {
+                "min_length": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "array_max_items_constraint_violation",
+    "description": "Tests validation error when array has more items than max_items",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 10
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "tags"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 10.0,
+          "tags": [
+            "tag1",
+            "tag2",
+            "tag3",
+            "tag4",
+            "tag5",
+            "tag6",
+            "tag7",
+            "tag8",
+            "tag9",
+            "tag10",
+            "tag11"
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "too_long",
+              "loc": [
+                "body",
+                "tags"
+              ],
+              "msg": "List should have at most 10 items after validation",
+              "input": [
+                "tag1",
+                "tag2",
+                "tag3",
+                "tag4",
+                "tag5",
+                "tag6",
+                "tag7",
+                "tag8",
+                "tag9",
+                "tag10",
+                "tag11"
+              ],
+              "ctx": {
+                "max_length": 10
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "array_item_validation_error",
+    "description": "Tests validation error for invalid item within array",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "tags"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 10.0,
+          "tags": [
+            "tag1",
+            "tag2",
+            123
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "type_error",
+              "loc": [
+                "body",
+                "tags",
+                "2"
+              ],
+              "msg": "Input should be a valid unknown",
+              "input": 123
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "header_validation_error",
+    "description": "Tests validation error when required header is missing",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string"
+            }
+          },
+          "headers": {
+            "x-token": {
+              "type": "string",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/?q=test"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "headers",
+                "x-token"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "malformed_json_body",
+    "description": "Tests validation error when request body contains malformed JSON",
+    "category": "validation_errors",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "string"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "{\"name\": \"Item\", \"price\": }"
+      },
+      "expected_response": {
+        "status_code": 400,
+        "body": {
+          "detail": "Invalid request format"
+        }
+      }
+    }
+  }
+]

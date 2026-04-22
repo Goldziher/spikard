@@ -1,0 +1,3006 @@
+[
+  {
+    "id": "required_string_query_parameter_success",
+    "description": "Tests a required string query parameter with valid value",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query",
+        "query_params": {
+          "query": "baz"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "foo bar baz"
+      }
+    }
+  },
+  {
+    "id": "required_string_query_parameter_missing",
+    "description": "Tests a required string query parameter without providing value, should return 422",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "query",
+                "query"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "required_integer_query_parameter_success",
+    "description": "Tests a required integer query parameter with valid value",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "integer",
+              "annotation": "int"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int",
+        "query_params": {
+          "query": 42
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "foo bar 42"
+      }
+    }
+  },
+  {
+    "id": "required_integer_query_parameter_missing",
+    "description": "Tests a required integer query parameter without providing value, should return 422",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "integer",
+              "annotation": "int"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "query",
+                "query"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "required_integer_query_parameter_invalid_type",
+    "description": "Tests integer query parameter with non-numeric string, should return 422",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "integer",
+              "annotation": "int"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int",
+        "query_params": {
+          "query": "baz"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "int_parsing",
+              "loc": [
+                "query",
+                "query"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": "baz"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "required_integer_query_parameter_float_value",
+    "description": "Tests integer query parameter with float string value, should return 422",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "integer",
+              "annotation": "int"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int",
+        "query_params": {
+          "query": "42.5"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "int_parsing",
+              "loc": [
+                "query",
+                "query"
+              ],
+              "msg": "Input should be a valid integer, unable to parse string as an integer",
+              "input": 42.5
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "optional_string_query_parameter_missing",
+    "description": "Tests optional string parameter without value, should return None/null",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/optional",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "string",
+              "annotation": "str",
+              "optional": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/optional"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "foo bar None"
+      }
+    }
+  },
+  {
+    "id": "optional_string_query_parameter_provided",
+    "description": "Tests optional string parameter with value provided",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/optional",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "string",
+              "annotation": "str",
+              "optional": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/optional",
+        "query_params": {
+          "query": "baz"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "foo bar baz"
+      }
+    }
+  },
+  {
+    "id": "optional_integer_query_parameter_missing",
+    "description": "Tests optional integer parameter without value, should not error",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int/optional",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "integer",
+              "annotation": "int",
+              "optional": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int/optional"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "foo bar None"
+      }
+    }
+  },
+  {
+    "id": "integer_with_default_value_not_provided",
+    "description": "Tests integer parameter with default value when not provided",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int/default",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "integer",
+              "annotation": "int",
+              "optional": true,
+              "default": 10
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int/default"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "foo bar 10"
+      }
+    }
+  },
+  {
+    "id": "integer_with_default_value_override",
+    "description": "Tests integer parameter with default value when overridden with custom value",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int/default",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "query": {
+              "type": "integer",
+              "annotation": "int",
+              "optional": true,
+              "default": 10
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int/default",
+        "query_params": {
+          "query": 50
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": "foo bar 50"
+      }
+    }
+  },
+  {
+    "id": "list_of_integers_multiple_values",
+    "description": "Tests list query parameter with multiple integer values using same key",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/list",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "device_ids": {
+              "type": "array",
+              "annotation": "list[int]",
+              "items": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/list",
+        "query_params": {
+          "device_ids": [
+            1,
+            2
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": [
+          1,
+          2
+        ]
+      }
+    }
+  },
+  {
+    "id": "list_query_parameter_required_but_missing",
+    "description": "Tests required list parameter without any values, should return 422",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/list",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "device_ids": {
+              "type": "array",
+              "annotation": "list[int]",
+              "items": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/list"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "query",
+                "device_ids"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "list_with_default_empty_array_no_values_provided",
+    "description": "Tests list parameter with default=[] when no values provided, should return empty list",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/list-default",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "tags": {
+              "type": "array",
+              "annotation": "list[str]",
+              "items": {
+                "type": "string"
+              },
+              "optional": true,
+              "default": []
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/list-default"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": []
+      }
+    }
+  },
+  {
+    "id": "list_of_strings_multiple_values",
+    "description": "Tests list of string query parameters with multiple values",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "array",
+              "annotation": "list[str]",
+              "items": {
+                "type": "string"
+              },
+              "optional": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/",
+        "query_params": {
+          "q": [
+            "foo",
+            "bar"
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "q": [
+            "foo",
+            "bar"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "string_validation_with_regex_success",
+    "description": "Tests string parameter with regex pattern validation - matching pattern",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "item_query": {
+              "type": "string",
+              "annotation": "str",
+              "pattern": "^fixedquery$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/",
+        "query_params": {
+          "item_query": "fixedquery"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_query": "fixedquery"
+        }
+      }
+    }
+  },
+  {
+    "id": "string_validation_with_regex_failure",
+    "description": "Tests string parameter with regex pattern validation - non-matching pattern returns 422",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "item_query": {
+              "type": "string",
+              "annotation": "str",
+              "pattern": "^fixedquery$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/",
+        "query_params": {
+          "item_query": "nonregexquery"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "query",
+                "item_query"
+              ],
+              "msg": "String should match pattern '^fixedquery$'",
+              "input": "nonregexquery",
+              "ctx": {
+                "pattern": "^fixedquery$"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "query_parameter_with_special_characters_url_encoding",
+    "description": "Tests query parameters with special characters that need URL encoding",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/test",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "email": {
+              "type": "string",
+              "annotation": "str"
+            },
+            "special": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/test",
+        "query_params": {
+          "email": "x@test.com",
+          "special": "&@A.ac"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "email": "x@test.com",
+          "special": "&@A.ac"
+        }
+      }
+    }
+  },
+  {
+    "id": "boolean_query_parameter_true",
+    "description": "Tests boolean query parameter with 'true' string value",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/bool",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "flag": {
+              "type": "boolean",
+              "annotation": "bool"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/bool",
+        "query_params": {
+          "flag": "true"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "flag": true
+        }
+      }
+    }
+  },
+  {
+    "id": "boolean_query_parameter_numeric_1",
+    "description": "Tests boolean query parameter with '1' converts to true",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/bool",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "flag": {
+              "type": "boolean",
+              "annotation": "bool"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/bool",
+        "query_params": {
+          "flag": "1"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "flag": true
+        }
+      }
+    }
+  },
+  {
+    "id": "uuid_query_parameter_success",
+    "description": "Tests UUID query parameter with valid UUID format",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/uuid",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "item_id": {
+              "type": "string",
+              "annotation": "str",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/uuid",
+        "query_params": {
+          "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+        }
+      }
+    }
+  },
+  {
+    "id": "enum_query_parameter_success",
+    "description": "Tests enum query parameter with valid enum value",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/enum",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "model": {
+              "type": "string",
+              "annotation": "str",
+              "enum": [
+                "alexnet",
+                "resnet",
+                "lenet"
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/enum",
+        "query_params": {
+          "model": "alexnet"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "model": "alexnet"
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_query_param_with_ge_constraint_boundary",
+    "description": "Tests integer query parameter with ge validation at boundary value",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int-ge",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "value": {
+              "type": "integer",
+              "annotation": "int",
+              "minimum": 10
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int-ge",
+        "query_params": {
+          "value": "10"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "value": 10
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_query_param_with_le_constraint_boundary",
+    "description": "Tests integer query parameter with le validation at boundary value",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int-le",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "value": {
+              "type": "integer",
+              "annotation": "int",
+              "maximum": 100
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int-le",
+        "query_params": {
+          "value": "100"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "value": 100
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_query_param_with_lt_constraint_valid",
+    "description": "Tests integer query parameter with lt validation, value below limit",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int-lt",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "value": {
+              "type": "integer",
+              "annotation": "int",
+              "exclusiveMaximum": 50
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int-lt",
+        "query_params": {
+          "value": "49"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "value": 49
+        }
+      }
+    }
+  },
+  {
+    "id": "integer_query_param_with_gt_constraint_valid",
+    "description": "Tests integer query parameter with gt validation, value above limit",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/int-gt",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "value": {
+              "type": "integer",
+              "annotation": "int",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/int-gt",
+        "query_params": {
+          "value": "1"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "value": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "string_query_param_with_max_length_constraint_fail",
+    "description": "Tests string query parameter with max_length validation failure",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/str-max-length",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "name": {
+              "type": "string",
+              "annotation": "str",
+              "maxLength": 10
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/str-max-length",
+        "query_params": {
+          "name": "this_is_way_too_long"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_long",
+              "loc": [
+                "query",
+                "name"
+              ],
+              "msg": "String should have at most 10 characters",
+              "input": "this_is_way_too_long",
+              "ctx": {
+                "max_length": 10
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "string_query_param_with_min_length_constraint_fail",
+    "description": "Tests string query parameter with min_length validation failure",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/str-min-length",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "name": {
+              "type": "string",
+              "annotation": "str",
+              "minLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/str-min-length",
+        "query_params": {
+          "name": "ab"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "query",
+                "name"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "ab",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "date_query_parameter_success",
+    "description": "Tests date query parameter with valid ISO date format",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/date",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "event_date": {
+              "type": "string",
+              "annotation": "str",
+              "format": "date"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/date",
+        "query_params": {
+          "event_date": "2024-01-15"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "event_date": "2024-01-15"
+        }
+      }
+    }
+  },
+  {
+    "id": "datetime_query_parameter_success",
+    "description": "Tests datetime query parameter with valid ISO datetime format",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/datetime",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "timestamp": {
+              "type": "string",
+              "annotation": "str",
+              "format": "date-time"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/datetime",
+        "query_params": {
+          "timestamp": "2024-01-15T10:30:00Z"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "timestamp": "2024-01-15T10:30:00Z"
+        }
+      }
+    }
+  },
+  {
+    "id": "string_query_param_with_regex_pattern_fail",
+    "description": "Tests string query parameter with regex pattern validation failure",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/pattern",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "code": {
+              "type": "string",
+              "annotation": "str",
+              "pattern": "^[0-9]{3,}$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/pattern",
+        "query_params": {
+          "code": "abc123"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "query",
+                "code"
+              ],
+              "msg": "String should match pattern '^[0-9]{3,}$'",
+              "input": "abc123",
+              "ctx": {
+                "pattern": "^[0-9]{3,}$"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "array_query_parameter_empty_array",
+    "description": "Tests array query parameter when no values are provided",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/list-default",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "tags": {
+              "type": "array",
+              "annotation": "list[str]",
+              "items": {
+                "type": "string"
+              },
+              "optional": true,
+              "default": []
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/list-default"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": []
+      }
+    }
+  },
+  {
+    "id": "array_query_parameter_single_value",
+    "description": "Tests array query parameter with single value",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/list-default",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "tags": {
+              "type": "array",
+              "annotation": "list[str]",
+              "items": {
+                "type": "string"
+              },
+              "optional": true,
+              "default": []
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/list-default",
+        "query_params": {
+          "tags": "apple"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": [
+          "apple"
+        ]
+      }
+    }
+  },
+  {
+    "id": "query_parameter_with_url_encoded_space",
+    "description": "Tests query parameter with URL encoded space character",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/basic",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "name": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/basic",
+        "query_params": {
+          "name": "hello world"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "hello world"
+        }
+      }
+    }
+  },
+  {
+    "id": "query_parameter_with_url_encoded_special_characters",
+    "description": "Tests query parameter with URL encoded special characters",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/basic",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "name": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/basic",
+        "query_params": {
+          "name": "test&value=123"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "test&value=123"
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_query_parameters_with_different_types",
+    "description": "Tests multiple query parameters of different types in single request",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/multi-type",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "name": {
+              "type": "string",
+              "annotation": "str"
+            },
+            "age": {
+              "type": "integer",
+              "annotation": "int"
+            },
+            "active": {
+              "type": "boolean",
+              "annotation": "bool"
+            },
+            "score": {
+              "type": "number",
+              "annotation": "float"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/multi-type",
+        "query_params": {
+          "name": "john",
+          "age": "30",
+          "active": "true",
+          "score": "95.5"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "john",
+          "age": 30,
+          "active": true,
+          "score": 95.5
+        }
+      }
+    }
+  },
+  {
+    "id": "optional_query_parameter_with_default_value",
+    "description": "Tests optional query parameter that uses default when not provided",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/optional-default",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "limit": {
+              "type": "integer",
+              "annotation": "int",
+              "optional": true,
+              "default": 10
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/optional-default"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "limit": 10
+        }
+      }
+    }
+  },
+  {
+    "id": "float_query_param_with_ge_constraint_success",
+    "description": "Tests float query parameter with ge validation at boundary",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/float-ge",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "price": {
+              "type": "number",
+              "annotation": "float",
+              "minimum": 0.01
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/float-ge",
+        "query_params": {
+          "price": "0.01"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "price": 0.01
+        }
+      }
+    }
+  },
+  {
+    "id": "enum_query_parameter_invalid_value",
+    "description": "Tests enum query parameter with value not in enum",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/enum",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "model": {
+              "type": "string",
+              "annotation": "str",
+              "enum": [
+                "alexnet",
+                "resnet",
+                "lenet"
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/enum",
+        "query_params": {
+          "model": "vgg16"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "enum",
+              "loc": [
+                "query",
+                "model"
+              ],
+              "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
+              "input": "vgg16",
+              "ctx": {
+                "expected": "'alexnet', 'resnet' or 'lenet'"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "uuid_query_parameter_invalid_format",
+    "description": "Tests UUID query parameter with invalid UUID format",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/query/uuid",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "item_id": {
+              "type": "string",
+              "annotation": "str",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/query/uuid",
+        "query_params": {
+          "item_id": "not-a-uuid"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "uuid_parsing",
+              "loc": [
+                "query",
+                "item_id"
+              ],
+              "msg": "Input should be a valid UUID",
+              "input": "not-a-uuid"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "42_negative_integer_query_param",
+    "description": "Query parameter with negative integer value should be parsed correctly",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items/negative",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "offset": {
+              "type": "integer",
+              "annotation": "int"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/negative",
+        "query_params": {
+          "offset": "-10"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "offset": -10
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "integer",
+      "negative",
+      "type_coercion",
+      "success"
+    ]
+  },
+  {
+    "id": "43_scientific_notation_float",
+    "description": "Query parameter with scientific notation float should parse correctly",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/stats",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "threshold": {
+              "type": "number",
+              "annotation": "float"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/stats",
+        "query_params": {
+          "threshold": "1.5e-3"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "threshold": 0.0015
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "float",
+      "scientific_notation",
+      "type_coercion",
+      "edge_case",
+      "success"
+    ]
+  },
+  {
+    "id": "44_string_minlength_validation_success",
+    "description": "String query parameter meeting minLength constraint should succeed",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/search",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "term": {
+              "type": "string",
+              "minLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/search",
+        "query_params": {
+          "term": "foo"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "term": "foo"
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "string",
+      "minLength",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "45_string_minlength_validation_failure",
+    "description": "String query parameter below minLength constraint should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/search",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "term": {
+              "type": "string",
+              "minLength": 3,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/search",
+        "query_params": {
+          "term": "ab"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "term"
+              ],
+              "msg": "String length must be at least 3",
+              "ctx": {
+                "min_length": 3,
+                "actual_length": 2
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "string",
+      "minLength",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "46_string_maxlength_validation_failure",
+    "description": "String query parameter exceeding maxLength constraint should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/search",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "term": {
+              "type": "string",
+              "maxLength": 10,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/search",
+        "query_params": {
+          "term": "this_is_way_too_long"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "term"
+              ],
+              "msg": "String length must not exceed 10",
+              "ctx": {
+                "max_length": 10,
+                "actual_length": 21
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "string",
+      "maxLength",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "47_pattern_validation_email_success",
+    "description": "String query parameter matching regex pattern should succeed",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/subscribe",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "email": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/subscribe",
+        "query_params": {
+          "email": "user@example.com"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "email": "user@example.com"
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "string",
+      "pattern",
+      "email",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "48_pattern_validation_email_failure",
+    "description": "String query parameter not matching regex pattern should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/subscribe",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "email": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/subscribe",
+        "query_params": {
+          "email": "invalid-email"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "email"
+              ],
+              "msg": "String does not match pattern",
+              "ctx": {
+                "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+                "value": "invalid-email"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "string",
+      "pattern",
+      "email",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "49_integer_gt_constraint_success",
+    "description": "Integer query parameter greater than exclusive minimum should succeed",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "limit": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "limit": "5"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "limit": 5
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "integer",
+      "gt",
+      "exclusiveMinimum",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "50_integer_gt_constraint_failure",
+    "description": "Integer query parameter equal to exclusive minimum should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "limit": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "limit": "0"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "limit"
+              ],
+              "msg": "Value must be greater than 0",
+              "ctx": {
+                "exclusive_minimum": 0,
+                "value": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "integer",
+      "gt",
+      "exclusiveMinimum",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "51_integer_ge_constraint_boundary",
+    "description": "Integer query parameter equal to minimum should succeed with ge constraint",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "offset": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "offset": "0"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "offset": 0
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "integer",
+      "ge",
+      "minimum",
+      "boundary",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "52_integer_le_constraint_boundary",
+    "description": "Integer query parameter equal to maximum should succeed with le constraint",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "limit": {
+              "type": "integer",
+              "maximum": 100
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "limit": "100"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "limit": 100
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "integer",
+      "le",
+      "maximum",
+      "boundary",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "53_integer_le_constraint_failure",
+    "description": "Integer query parameter exceeding maximum should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "limit": {
+              "type": "integer",
+              "maximum": 100,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "limit": "101"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "limit"
+              ],
+              "msg": "Value must not exceed 100",
+              "ctx": {
+                "maximum": 100,
+                "value": 101
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "integer",
+      "le",
+      "maximum",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "54_array_minitems_constraint_success",
+    "description": "Array query parameter meeting minItems constraint should succeed",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 2
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "ids": [
+            "1",
+            "2",
+            "3"
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "ids": [
+            1,
+            2,
+            3
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "array",
+      "minItems",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "55_array_minitems_constraint_failure",
+    "description": "Array query parameter below minItems constraint should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 2,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "ids": [
+            "1"
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "ids"
+              ],
+              "msg": "Array must contain at least 2 items",
+              "ctx": {
+                "min_items": 2,
+                "actual_items": 1
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "array",
+      "minItems",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "56_array_maxitems_constraint_failure",
+    "description": "Array query parameter exceeding maxItems constraint should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 5,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "tags": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f"
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "tags"
+              ],
+              "msg": "Array must not contain more than 5 items",
+              "ctx": {
+                "max_items": 5,
+                "actual_items": 6
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "array",
+      "maxItems",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "57_boolean_empty_string_coercion",
+    "description": "Boolean query parameter with empty string should coerce to false",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "active": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "active": ""
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "active": false
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "boolean",
+      "empty_string",
+      "type_coercion",
+      "edge_case",
+      "success"
+    ]
+  },
+  {
+    "id": "58_format_email_success",
+    "description": "Query parameter with valid email format should be accepted",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/subscribe",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/subscribe",
+        "query_params": {
+          "email": "user@example.com"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "email": "user@example.com"
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "format",
+      "email",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "59_format_email_failure",
+    "description": "Query parameter with invalid email format should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/subscribe",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "email": {
+              "type": "string",
+              "format": "email",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/subscribe",
+        "query_params": {
+          "email": "not-an-email"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "email"
+              ],
+              "msg": "Invalid email format",
+              "ctx": {
+                "format": "email",
+                "value": "not-an-email"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "format",
+      "email",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "60_format_ipv4_success",
+    "description": "Query parameter with valid IPv4 address should be accepted",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/network",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "ip": {
+              "type": "string",
+              "format": "ipv4"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/network",
+        "query_params": {
+          "ip": "192.168.1.1"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "ip": "192.168.1.1"
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "format",
+      "ipv4",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "61_format_ipv4_failure",
+    "description": "Query parameter with invalid IPv4 address should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/network",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "ip": {
+              "type": "string",
+              "format": "ipv4",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/network",
+        "query_params": {
+          "ip": "999.999.999.999"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "ip"
+              ],
+              "msg": "Invalid IPv4 address format",
+              "ctx": {
+                "format": "ipv4",
+                "value": "999.999.999.999"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "format",
+      "ipv4",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "62_format_ipv6_success",
+    "description": "Query parameter with valid IPv6 address should be accepted",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/network/ipv6",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "ip": {
+              "type": "string",
+              "format": "ipv6"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/network/ipv6",
+        "query_params": {
+          "ip": "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "ip": "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "format",
+      "ipv6",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "63_format_uri_success",
+    "description": "Query parameter with valid URI should be accepted",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/redirect",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "url": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/redirect",
+        "query_params": {
+          "url": "https://example.com/path?query=value"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "url": "https://example.com/path?query=value"
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "format",
+      "uri",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "64_format_uri_failure",
+    "description": "Query parameter with invalid URI should fail validation",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/redirect",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/redirect",
+        "query_params": {
+          "url": "not a uri"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "url"
+              ],
+              "msg": "Invalid URI format",
+              "ctx": {
+                "format": "uri",
+                "value": "not a uri"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "format",
+      "uri",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "65_format_hostname_success",
+    "description": "Query parameter with valid hostname should be accepted",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/dns",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "host": {
+              "type": "string",
+              "format": "hostname"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/dns",
+        "query_params": {
+          "host": "api.example.com"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "host": "api.example.com"
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "format",
+      "hostname",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "66_multipleof_constraint_success",
+    "description": "Integer query parameter that is multiple of constraint should succeed",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "quantity": {
+              "type": "integer",
+              "multipleOf": 5
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "quantity": "15"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "quantity": 15
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "integer",
+      "multipleOf",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "67_multipleof_constraint_failure",
+    "description": "Integer query parameter that is not multiple of constraint should fail",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "quantity": {
+              "type": "integer",
+              "multipleOf": 5,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "quantity": "17"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "quantity"
+              ],
+              "msg": "Value must be a multiple of 5",
+              "ctx": {
+                "multiple_of": 5,
+                "value": 17
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "integer",
+      "multipleOf",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "68_array_uniqueitems_success",
+    "description": "Array query parameter with unique items should succeed",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "uniqueItems": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "ids": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "ids": [
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "array",
+      "uniqueItems",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "69_array_uniqueitems_failure",
+    "description": "Array query parameter with duplicate items should fail when uniqueItems is true",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "ids": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "uniqueItems": true,
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items",
+        "query_params": {
+          "ids": [
+            "1",
+            "2",
+            "2",
+            "3"
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "query",
+                "ids"
+              ],
+              "msg": "Array items must be unique",
+              "ctx": {
+                "unique_items": true,
+                "duplicate_value": 2,
+                "duplicate_index": 2
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "array",
+      "uniqueItems",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "70_array_separator_pipe",
+    "description": "Array query parameter with pipe separator should parse correctly",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "separator": "|"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items?tags=python|rust|typescript",
+        "query_params": {
+          "tags": "python|rust|typescript"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "tags": [
+            "python",
+            "rust",
+            "typescript"
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "array",
+      "separator",
+      "pipe",
+      "parsing",
+      "success"
+    ]
+  },
+  {
+    "id": "71_array_separator_semicolon",
+    "description": "Array query parameter with semicolon separator should parse correctly",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "colors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "separator": ";"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items?colors=red;green;blue",
+        "query_params": {
+          "colors": "red;green;blue"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "colors": [
+            "red",
+            "green",
+            "blue"
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "array",
+      "separator",
+      "semicolon",
+      "parsing",
+      "success"
+    ]
+  },
+  {
+    "id": "72_array_separator_space",
+    "description": "Array query parameter with space separator should parse correctly",
+    "category": "query_params",
+    "http": {
+      "handler": {
+        "route": "/search",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "keywords": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "separator": " "
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/search?keywords=rust%20web%20framework",
+        "query_params": {
+          "keywords": "rust web framework"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "keywords": [
+            "rust",
+            "web",
+            "framework"
+          ]
+        }
+      }
+    },
+    "tags": [
+      "query_params",
+      "array",
+      "separator",
+      "space",
+      "percent_encoding",
+      "parsing",
+      "success"
+    ]
+  }
+]

@@ -1,0 +1,1278 @@
+[
+  {
+    "id": "user_agent_header_default_value",
+    "description": "Tests optional User-Agent header when not provided, uses testclient default",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "User-Agent": {
+              "type": "string",
+              "annotation": "str",
+              "optional": true,
+              "default": "testclient"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "User-Agent": "testclient"
+        }
+      }
+    }
+  },
+  {
+    "id": "user_agent_header_custom_value",
+    "description": "Tests User-Agent header with custom value",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "User-Agent": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 Custom Browser"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "User-Agent": "Mozilla/5.0 Custom Browser"
+        }
+      }
+    }
+  },
+  {
+    "id": "x_api_key_required_header_success",
+    "description": "Tests required X-API-Key header with valid value",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/users/me",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "key": {
+              "type": "string",
+              "annotation": "str",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/me",
+        "headers": {
+          "key": "secret"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "username": "secret"
+        }
+      }
+    }
+  },
+  {
+    "id": "x_api_key_required_header_missing",
+    "description": "Tests required X-API-Key header when not provided, returns 403",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/users/me",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-API-Key": {
+              "type": "string",
+              "annotation": "str",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/me"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "headers",
+                "x-api-key"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "x_api_key_optional_header_success",
+    "description": "Tests optional X-API-Key header with valid value",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/users/me",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "key": {
+              "type": "string",
+              "annotation": "str",
+              "optional": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/me",
+        "headers": {
+          "key": "secret"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "msg": "Hello secret"
+        }
+      }
+    }
+  },
+  {
+    "id": "x_api_key_optional_header_missing",
+    "description": "Tests optional X-API-Key header when not provided, returns fallback message",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/users/me",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "key": {
+              "type": "string",
+              "annotation": "str",
+              "optional": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/me"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "msg": "Hello World"
+        }
+      }
+    }
+  },
+  {
+    "id": "authorization_header_success",
+    "description": "Tests Authorization header with valid Digest scheme",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/users/me",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/me",
+        "headers": {
+          "Authorization": "Digest foobar"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "scheme": "Digest",
+          "credentials": "foobar"
+        }
+      }
+    }
+  },
+  {
+    "id": "authorization_header_missing",
+    "description": "Tests missing Authorization header returns 403",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/users/me",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "annotation": "str",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/me"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "headers",
+                "authorization"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "authorization_header_wrong_scheme",
+    "description": "Tests Authorization header with incorrect scheme returns 403",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/users/me",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "annotation": "str",
+              "required": true,
+              "pattern": "^Digest .+"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/users/me",
+        "headers": {
+          "Authorization": "Other invalidauthorization"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "headers",
+                "authorization"
+              ],
+              "msg": "String should match pattern '^Digest .+'",
+              "input": "Other invalidauthorization"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_header_values_x_token",
+    "description": "Tests multiple values for same header name (X-Token)",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "x-token": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/",
+        "headers": {
+          "x-token": "foo, bar"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "X-Token values": [
+            "foo",
+            "bar"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "header_case_insensitivity_access",
+    "description": "Tests case-insensitive header access (Content-Type vs content-type)",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/echo",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "test": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "test"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/echo",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": {
+          "test": "data"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "content_type_lower": "application/json",
+          "content_type_upper": "application/json",
+          "content_type_mixed": "application/json"
+        }
+      }
+    }
+  },
+  {
+    "id": "optional_header_with_none_default_missing",
+    "description": "Tests optional header parameter with None default when not provided",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "strange-header": {
+              "type": "string",
+              "annotation": "str",
+              "optional": true,
+              "default": null
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/items/"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "strange_header": null
+        }
+      }
+    }
+  },
+  {
+    "id": "content_type_header_application_json",
+    "description": "Tests Content-Type header with JSON media type",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/content-type",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Content-Type": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/content-type",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "content_type": "application/json"
+        }
+      }
+    }
+  },
+  {
+    "id": "accept_header_json",
+    "description": "Tests Accept header for content negotiation",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/accept",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Accept": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/accept",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "accept": "application/json"
+        }
+      }
+    }
+  },
+  {
+    "id": "bearer_token_authentication_success",
+    "description": "Tests Authorization header with Bearer token scheme",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/bearer-auth",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/bearer-auth",
+        "headers": {
+          "Authorization": "Bearer valid_token_123"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "token": "valid_token_123"
+        }
+      }
+    }
+  },
+  {
+    "id": "bearer_token_authentication_missing",
+    "description": "Tests missing Bearer token returns 401 Unauthorized",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/bearer-auth",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "annotation": "str",
+              "required": true,
+              "pattern": "^Bearer .+"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/bearer-auth"
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "headers",
+                "authorization"
+              ],
+              "msg": "Field required",
+              "input": null
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "multiple_custom_headers",
+    "description": "Tests multiple custom headers in single request",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/multiple",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-Request-Id": {
+              "type": "string",
+              "annotation": "str"
+            },
+            "X-Client-Version": {
+              "type": "string",
+              "annotation": "str"
+            },
+            "X-Trace-Id": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/multiple",
+        "headers": {
+          "X-Request-Id": "req-12345",
+          "X-Client-Version": "1.2.3",
+          "X-Trace-Id": "trace-abc"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "x_request_id": "req-12345",
+          "x_client_version": "1.2.3",
+          "x_trace_id": "trace-abc"
+        }
+      }
+    }
+  },
+  {
+    "id": "header_validation_min_length_constraint",
+    "description": "Tests header validation with min_length constraint",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/validated",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-Token": {
+              "type": "string",
+              "annotation": "str",
+              "minLength": 3
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/validated",
+        "headers": {
+          "X-Token": "ab"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "headers",
+                "x-token"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "ab",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "accept_language_header",
+    "description": "Tests Accept-Language header for locale/i18n",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/accept-language",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Accept-Language": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/accept-language",
+        "headers": {
+          "Accept-Language": "en-US,en;q=0.9"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "accept_language": "en-US,en;q=0.9"
+        }
+      }
+    }
+  },
+  {
+    "id": "referer_header",
+    "description": "Tests Referer header (standard misspelling)",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/referer",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Referer": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/referer",
+        "headers": {
+          "Referer": "https://example.com/page"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "referer": "https://example.com/page"
+        }
+      }
+    }
+  },
+  {
+    "id": "header_regex_validation_fail",
+    "description": "Tests header with regex pattern validation failure",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/pattern",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-Request-Id": {
+              "type": "string",
+              "annotation": "str",
+              "pattern": "^[0-9]{3,}$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/pattern",
+        "headers": {
+          "X-Request-Id": "invalid-format"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "headers",
+                "x-request-id"
+              ],
+              "msg": "String should match pattern '^[0-9]{3,}$'",
+              "input": "invalid-format",
+              "ctx": {
+                "pattern": "^[0-9]{3,}$"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "header_regex_validation_success",
+    "description": "Tests header with regex pattern validation success",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/pattern",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-Request-Id": {
+              "type": "string",
+              "annotation": "str",
+              "pattern": "^[0-9]{3,}$"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/pattern",
+        "headers": {
+          "X-Request-Id": "12345"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "x_request_id": "12345"
+        }
+      }
+    }
+  },
+  {
+    "id": "host_header",
+    "description": "Tests Host header (standard HTTP header)",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/host",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Host": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/host",
+        "headers": {
+          "Host": "example.com:8080"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "host": "example.com:8080"
+        }
+      }
+    }
+  },
+  {
+    "id": "header_validation_max_length_constraint_fail",
+    "description": "Tests header validation with max_length constraint failure",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/max-length",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-Session-Id": {
+              "type": "string",
+              "annotation": "str",
+              "maxLength": 20
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/max-length",
+        "headers": {
+          "X-Session-Id": "this_is_way_too_long_for_validation"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_long",
+              "loc": [
+                "headers",
+                "x-session-id"
+              ],
+              "msg": "String should have at most 20 characters",
+              "input": "this_is_way_too_long_for_validation",
+              "ctx": {
+                "max_length": 20
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "basic_authentication_success",
+    "description": "Tests Authorization header with Basic auth scheme",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/basic-auth",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/basic-auth",
+        "headers": {
+          "Authorization": "Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "username": "username",
+          "password": "password"
+        }
+      }
+    }
+  },
+  {
+    "id": "origin_header",
+    "description": "Tests Origin header for CORS",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/origin",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Origin": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/origin",
+        "headers": {
+          "Origin": "https://example.com"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "origin": "https://example.com"
+        }
+      }
+    }
+  },
+  {
+    "id": "accept_encoding_header",
+    "description": "Tests Accept-Encoding header for compression negotiation",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/accept-encoding",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Accept-Encoding": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/accept-encoding",
+        "headers": {
+          "Accept-Encoding": "gzip, deflate, br"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "accept_encoding": "gzip, deflate, br"
+        }
+      }
+    }
+  },
+  {
+    "id": "header_with_underscore_conversion_explicit",
+    "description": "Tests X-Token header converted to x_token parameter",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/headers/underscore",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-Token": {
+              "type": "string",
+              "annotation": "str"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/headers/underscore",
+        "headers": {
+          "X-Token": "secret123"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "x_token": "secret123"
+        }
+      }
+    }
+  },
+  {
+    "id": "30_bearer_token_format_valid",
+    "description": "Authorization header with valid Bearer token format should be accepted",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/protected",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/protected",
+        "headers": {
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U"
+        }
+      },
+      "expected_response": {
+        "status_code": 200
+      }
+    },
+    "tags": [
+      "headers",
+      "authorization",
+      "bearer_token",
+      "security",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "31_bearer_token_format_invalid",
+    "description": "Authorization header with invalid Bearer token format should fail validation",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/protected",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/protected",
+        "headers": {
+          "Authorization": "Bearer invalid token with spaces"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "headers",
+                "authorization"
+              ],
+              "msg": "Invalid Bearer token format",
+              "ctx": {
+                "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+                "value": "Bearer invalid token with spaces"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "headers",
+      "authorization",
+      "bearer_token",
+      "security",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "32_bearer_token_missing_prefix",
+    "description": "Authorization header without Bearer prefix should fail validation",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/protected",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "Authorization": {
+              "type": "string",
+              "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/protected",
+        "headers": {
+          "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "headers",
+                "authorization"
+              ],
+              "msg": "Invalid Bearer token format",
+              "ctx": {
+                "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "headers",
+      "authorization",
+      "bearer_token",
+      "security",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "33_api_key_header_valid",
+    "description": "X-API-Key header with valid format should be accepted",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/api/data",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-API-Key": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/data",
+        "headers": {
+          "X-API-Key": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
+        }
+      },
+      "expected_response": {
+        "status_code": 200
+      }
+    },
+    "tags": [
+      "headers",
+      "api_key",
+      "security",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "34_api_key_header_invalid",
+    "description": "X-API-Key header with invalid format should fail validation",
+    "category": "headers",
+    "http": {
+      "handler": {
+        "route": "/api/data",
+        "method": "GET",
+        "parameters": {
+          "headers": {
+            "X-API-Key": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{32}$",
+              "required": true
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/api/data",
+        "headers": {
+          "X-API-Key": "invalid-key"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "headers",
+                "x-api-key"
+              ],
+              "msg": "Invalid API key format",
+              "ctx": {
+                "pattern": "^[a-f0-9]{32}$",
+                "value": "invalid-key"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "headers",
+      "api_key",
+      "security",
+      "validation",
+      "error"
+    ]
+  }
+]

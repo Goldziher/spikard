@@ -1,0 +1,66 @@
+[
+  {
+    "id": "rate_limit_below_threshold_succeeds",
+    "description": "Verifies that requests below the configured rate limit are served normally.",
+    "category": "rate_limit",
+    "http": {
+      "handler": {
+        "route": "/rate-limit/basic",
+        "method": "GET",
+        "middleware": {
+          "rate_limit": {
+            "per_second": 5,
+            "burst": 5
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/rate-limit/basic"
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "status": "ok",
+          "request": "under-limit"
+        }
+      }
+    },
+    "tags": [
+      "rate_limit",
+      "middleware"
+    ]
+  },
+  {
+    "id": "rate_limit_exceeded_returns_429",
+    "description": "Sends sequential requests until the configured limit is exceeded and validates the 429 response.",
+    "category": "rate_limit",
+    "http": {
+      "handler": {
+        "route": "/rate-limit/exceeded",
+        "method": "GET",
+        "middleware": {
+          "rate_limit": {
+            "per_second": 1,
+            "burst": 1,
+            "warmup_requests": 1,
+            "warmup_expect_status": 200,
+            "sleep_ms_between": 0
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/rate-limit/exceeded"
+      },
+      "expected_response": {
+        "status_code": 429
+      }
+    },
+    "tags": [
+      "rate_limit",
+      "too_many_requests",
+      "middleware"
+    ]
+  }
+]

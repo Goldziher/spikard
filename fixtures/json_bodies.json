@@ -1,0 +1,2902 @@
+[
+  {
+    "id": "simple_json_object_success",
+    "description": "Tests simple JSON object with all required fields",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "tax": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "description",
+            "price",
+            "tax"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Foo",
+          "description": "A very nice Item",
+          "price": 35.4,
+          "tax": 3.2
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Foo",
+          "description": "A very nice Item",
+          "price": 35.4,
+          "tax": 3.2
+        }
+      }
+    }
+  },
+  {
+    "id": "required_field_missing_validation_error",
+    "description": "Tests validation error when required field is missing",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "price",
+            "name"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "description": "A very nice Item",
+          "price": 35.4
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "name"
+              ],
+              "msg": "Field required",
+              "input": {
+                "description": "A very nice Item",
+                "price": 35.4
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "field_type_validation_invalid_type",
+    "description": "Tests type validation error when field has wrong type",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "tax": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "description",
+            "price",
+            "tax"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Foo",
+          "description": "A very nice Item",
+          "price": "not a number",
+          "tax": 3.2
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "float_parsing",
+              "loc": [
+                "body",
+                "price"
+              ],
+              "msg": "Input should be a valid number, unable to parse string as a number",
+              "input": "not a number"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "nested_object_success",
+    "description": "Tests nested JSON objects",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/nested",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "image": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "url",
+                "name"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "image"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/nested",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Foo",
+          "price": 42.0,
+          "image": {
+            "url": "https://example.com/image.jpg",
+            "name": "Product Image"
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Foo",
+          "price": 42.0,
+          "image": {
+            "url": "https://example.com/image.jpg",
+            "name": "Product Image"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "array_of_objects_success",
+    "description": "Tests array field containing objects",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/list",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "images": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "url",
+                  "name"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "tags",
+            "images"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/list",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Product Bundle",
+          "tags": [
+            "electronics",
+            "gadget"
+          ],
+          "images": [
+            {
+              "url": "https://example.com/img1.jpg",
+              "name": "Front"
+            },
+            {
+              "url": "https://example.com/img2.jpg",
+              "name": "Back"
+            }
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Product Bundle",
+          "tags": [
+            "electronics",
+            "gadget"
+          ],
+          "images": [
+            {
+              "url": "https://example.com/img1.jpg",
+              "name": "Front"
+            },
+            {
+              "url": "https://example.com/img2.jpg",
+              "name": "Back"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "optional_fields_omitted",
+    "description": "Tests object with optional fields omitted",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Foo",
+          "price": 35.4
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Foo",
+          "price": 35.4,
+          "description": null,
+          "tax": null
+        }
+      }
+    }
+  },
+  {
+    "id": "string_min_length_validation_fail",
+    "description": "Tests string field with min_length constraint failure",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 3
+            },
+            "price": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/validated",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "ab",
+          "price": 35.4
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_short",
+              "loc": [
+                "body",
+                "name"
+              ],
+              "msg": "String should have at least 3 characters",
+              "input": "ab",
+              "ctx": {
+                "min_length": 3
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "string_max_length_validation_fail",
+    "description": "Tests string field with max_length constraint failure",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "price": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/validated",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "This is a very long name that exceeds the maximum length",
+          "price": 35.4
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_too_long",
+              "loc": [
+                "body",
+                "name"
+              ],
+              "msg": "String should have at most 50 characters",
+              "input": "This is a very long name that exceeds the maximum length",
+              "ctx": {
+                "max_length": 50
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "empty_json_object",
+    "description": "Tests empty JSON object when all fields are optional",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/optional-all",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/optional-all",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {}
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": null,
+          "description": null,
+          "price": null,
+          "tax": null
+        }
+      }
+    }
+  },
+  {
+    "id": "empty_array_validation_fail",
+    "description": "Tests array field with min_items constraint failure",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/list-validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {},
+              "minItems": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "tags"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/list-validated",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Product",
+          "tags": []
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "too_short",
+              "loc": [
+                "body",
+                "tags"
+              ],
+              "msg": "List should have at least 1 item after validation",
+              "input": [],
+              "ctx": {
+                "min_length": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "numeric_ge_validation_fail",
+    "description": "Tests numeric field with ge (greater than or equal) constraint failure",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/validated",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 0.5
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "greater_than_equal",
+              "loc": [
+                "body",
+                "price"
+              ],
+              "msg": "Input should be greater than or equal to 1",
+              "input": 0.5,
+              "ctx": {
+                "ge": 1
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "numeric_le_validation_success",
+    "description": "Tests numeric field with le (less than or equal) constraint at boundary",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/validated",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 100.0
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Item",
+          "price": 100.0
+        }
+      }
+    }
+  },
+  {
+    "id": "boolean_field_success",
+    "description": "Tests JSON object with boolean field",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "in_stock": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "in_stock"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 42.0,
+          "in_stock": true
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Item",
+          "price": 42.0,
+          "in_stock": true
+        }
+      }
+    }
+  },
+  {
+    "id": "null_value_for_optional_field",
+    "description": "Tests explicitly setting optional field to null",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "description": {
+              "type": "null"
+            },
+            "tax": {
+              "type": "null"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "description",
+            "tax"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 42.0,
+          "description": null,
+          "tax": null
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Item",
+          "price": 42.0,
+          "description": null,
+          "tax": null
+        }
+      }
+    }
+  },
+  {
+    "id": "string_pattern_validation_fail",
+    "description": "Tests string field with regex pattern constraint failure",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "sku": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}[0-9]{4}$"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "sku"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/validated",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "sku": "ABC-123"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "string_pattern_mismatch",
+              "loc": [
+                "body",
+                "sku"
+              ],
+              "msg": "String should match pattern '^[A-Z]{3}[0-9]{4}$'",
+              "input": "ABC-123",
+              "ctx": {
+                "pattern": "^[A-Z]{3}[0-9]{4}$"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "string_pattern_validation_success",
+    "description": "Tests string field with regex pattern constraint success",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/validated",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "sku": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "sku"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/validated",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "sku": "ABC1234"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Item",
+          "sku": "ABC1234"
+        }
+      }
+    }
+  },
+  {
+    "id": "date_field_success",
+    "description": "Tests date field with ISO date format",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/events/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "event_date": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "event_date"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/events/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Conference",
+          "event_date": "2024-03-15"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Conference",
+          "event_date": "2024-03-15"
+        }
+      }
+    }
+  },
+  {
+    "id": "datetime_field_success",
+    "description": "Tests datetime field with ISO datetime format",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/events/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "created_at"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/events/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Meeting",
+          "created_at": "2024-03-15T10:30:00Z"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Meeting",
+          "created_at": "2024-03-15T10:30:00Z"
+        }
+      }
+    }
+  },
+  {
+    "id": "uuid_field_success",
+    "description": "Tests UUID field with valid UUID format",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "item_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "item_id"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Item",
+          "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716"
+        }
+      }
+    }
+  },
+  {
+    "id": "uuid_field_invalid_format",
+    "description": "Tests UUID field with invalid UUID format",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "item_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "item_id"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "item_id": "not-a-valid-uuid"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "uuid_parsing",
+              "loc": [
+                "body",
+                "item_id"
+              ],
+              "msg": "Input should be a valid UUID",
+              "input": "not-a-valid-uuid"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "enum_field_success",
+    "description": "Tests enum field with valid enum value",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "category"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "category": "electronics"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Item",
+          "category": "electronics"
+        }
+      }
+    }
+  },
+  {
+    "id": "enum_field_invalid_value",
+    "description": "Tests enum field with value not in enum",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "electronics",
+                "clothing",
+                "books"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "category"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "category": "furniture"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "enum",
+              "loc": [
+                "body",
+                "category"
+              ],
+              "msg": "Input should be 'electronics', 'clothing' or 'books'",
+              "input": "furniture",
+              "ctx": {
+                "expected": "'electronics', 'clothing' or 'books'"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "body_with_query_parameters",
+    "description": "Tests JSON body combined with query parameters",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price"
+          ]
+        },
+        "parameters": {
+          "query": {
+            "limit": {
+              "type": "integer"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/?limit=10",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "query_params": {
+          "limit": 10
+        },
+        "body": {
+          "name": "Item",
+          "price": 42.0
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "item": {
+            "name": "Item",
+            "price": 42.0
+          },
+          "limit": 10
+        }
+      }
+    }
+  },
+  {
+    "id": "patch_partial_update_2",
+    "description": "Tests PATCH request with partial object update",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/{id}",
+        "method": "PATCH",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "price": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "price"
+          ]
+        },
+        "parameters": {
+          "path": {
+            "id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "PATCH",
+        "path": "/items/1",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "price": 45.0
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Original Item",
+          "price": 45.0,
+          "description": "Original description"
+        }
+      }
+    }
+  },
+  {
+    "id": "deeply_nested_objects",
+    "description": "Tests deeply nested JSON structure (3+ levels)",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/nested",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "seller": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": "object",
+                  "properties": {
+                    "street": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "country": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false,
+                      "required": [
+                        "name",
+                        "code"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false,
+                  "required": [
+                    "street",
+                    "city",
+                    "country"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "address"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "seller"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/nested",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Product",
+          "price": 100.0,
+          "seller": {
+            "name": "John Doe",
+            "address": {
+              "street": "123 Main St",
+              "city": "Springfield",
+              "country": {
+                "name": "USA",
+                "code": "US"
+              }
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Product",
+          "price": 100.0,
+          "seller": {
+            "name": "John Doe",
+            "address": {
+              "street": "123 Main St",
+              "city": "Springfield",
+              "country": {
+                "name": "USA",
+                "code": "US"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "extra_fields_ignored_no_additionalproperties",
+    "description": "Tests that extra fields not in model are ignored",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number"
+            },
+            "extra_field": {
+              "type": "string"
+            },
+            "another_extra": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "price",
+            "extra_field",
+            "another_extra"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Item",
+          "price": 42.0,
+          "extra_field": "this should be ignored",
+          "another_extra": 123
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Item",
+          "price": 42.0
+        }
+      }
+    }
+  },
+  {
+    "id": "array_of_primitive_values",
+    "description": "Tests array field containing primitive values (strings, numbers)",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items/",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "ratings": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "tags",
+            "ratings"
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items/",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "name": "Product",
+          "tags": [
+            "electronics",
+            "gadget",
+            "new"
+          ],
+          "ratings": [
+            4.5,
+            4.8,
+            5.0,
+            4.2
+          ]
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "name": "Product",
+          "tags": [
+            "electronics",
+            "gadget",
+            "new"
+          ],
+          "ratings": [
+            4.5,
+            4.8,
+            5.0,
+            4.2
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "29_nested_object_validation_success",
+    "description": "Nested object in JSON body should validate correctly",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/users",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "profile"
+          ],
+          "properties": {
+            "profile": {
+              "type": "object",
+              "required": [
+                "name",
+                "email"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                }
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/users",
+        "body": {
+          "profile": {
+            "name": "John Doe",
+            "email": "john@example.com"
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "nested",
+      "object",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "30_nested_object_missing_field",
+    "description": "Nested object missing required field should fail validation",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/users",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "profile"
+          ],
+          "properties": {
+            "profile": {
+              "type": "object",
+              "required": [
+                "name",
+                "email"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                }
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/users",
+        "body": {
+          "profile": {
+            "name": "John Doe"
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "missing",
+              "loc": [
+                "body",
+                "profile",
+                "email"
+              ],
+              "msg": "Field required",
+              "input": {
+                "name": "John Doe"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "nested",
+      "object",
+      "validation",
+      "error",
+      "required"
+    ]
+  },
+  {
+    "id": "31_nullable_property_null_value",
+    "description": "Nullable property with null value should be accepted",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/users",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/users",
+        "body": {
+          "name": "Test User",
+          "description": null
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "nullable",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "32_schema_ref_definitions",
+    "description": "JSON Schema $ref with definitions should validate correctly",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/products",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "product"
+          ],
+          "properties": {
+            "product": {
+              "$ref": "#/definitions/Product"
+            }
+          },
+          "definitions": {
+            "Product": {
+              "type": "object",
+              "required": [
+                "name",
+                "price"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/products",
+        "body": {
+          "product": {
+            "name": "Widget",
+            "price": 9.99
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "schema_ref",
+      "definitions",
+      "composition",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "33_allof_schema_composition",
+    "description": "JSON Schema allOf composition should validate all schemas",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/items",
+        "method": "POST",
+        "body_schema": {
+          "allOf": [
+            {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "price"
+              ],
+              "properties": {
+                "price": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/items",
+        "body": {
+          "name": "Product",
+          "price": 29.99
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "allOf",
+      "composition",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "34_additional_properties_false",
+    "description": "Schema with additionalProperties false should reject extra fields",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/users",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/users",
+        "body": {
+          "name": "John",
+          "email": "john@example.com",
+          "extra_field": "should fail"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body",
+                "extra_field"
+              ],
+              "msg": "Additional properties are not allowed",
+              "ctx": {
+                "additional_properties": false,
+                "unexpected_field": "extra_field"
+              },
+              "input": {
+                "name": "John",
+                "email": "john@example.com",
+                "extra_field": "should fail"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "additionalProperties",
+      "strict",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "35_oneof_schema_success",
+    "description": "oneOf schema composition - exactly one schema must match",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/payment",
+        "method": "POST",
+        "body_schema": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "credit_card"
+              ],
+              "properties": {
+                "credit_card": {
+                  "type": "string",
+                  "pattern": "^[0-9]{16}$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "paypal_email"
+              ],
+              "properties": {
+                "paypal_email": {
+                  "type": "string",
+                  "format": "email"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/payment",
+        "body": {
+          "credit_card": "1234567812345678"
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "oneOf",
+      "composition",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "36_oneof_schema_multiple_match_failure",
+    "description": "oneOf schema composition - fails when multiple schemas match",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/payment",
+        "method": "POST",
+        "body_schema": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "credit_card"
+              ],
+              "properties": {
+                "credit_card": {
+                  "type": "string",
+                  "pattern": "^[0-9]{16}$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "paypal_email"
+              ],
+              "properties": {
+                "paypal_email": {
+                  "type": "string",
+                  "format": "email"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/payment",
+        "body": {
+          "credit_card": "1234567812345678",
+          "paypal_email": "user@example.com"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the 'oneOf' keyword",
+              "input": {
+                "credit_card": "1234567812345678",
+                "paypal_email": "user@example.com"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "oneOf",
+      "composition",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "37_oneof_schema_no_match_failure",
+    "description": "oneOf schema composition - fails when no schemas match",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/payment",
+        "method": "POST",
+        "body_schema": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "credit_card"
+              ],
+              "properties": {
+                "credit_card": {
+                  "type": "string",
+                  "pattern": "^[0-9]{16}$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "paypal_email"
+              ],
+              "properties": {
+                "paypal_email": {
+                  "type": "string",
+                  "format": "email"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/payment",
+        "body": {
+          "bitcoin_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "{\"bitcoin_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa\"} is not valid under any of the schemas listed in the 'oneOf' keyword",
+              "input": {
+                "bitcoin_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "oneOf",
+      "composition",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "38_anyof_schema_success",
+    "description": "anyOf schema composition - at least one schema must match",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/contact",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "email"
+              ]
+            },
+            {
+              "required": [
+                "phone"
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/contact",
+        "body": {
+          "name": "John Doe",
+          "email": "john@example.com"
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "anyOf",
+      "composition",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "39_anyof_schema_multiple_match_success",
+    "description": "anyOf schema composition - succeeds when multiple schemas match",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/contact",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "phone": {
+              "type": "string"
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "email"
+              ]
+            },
+            {
+              "required": [
+                "phone"
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/contact",
+        "body": {
+          "name": "John Doe",
+          "email": "john@example.com",
+          "phone": "+1-555-0100"
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "anyOf",
+      "composition",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "40_anyof_schema_failure",
+    "description": "anyOf schema composition - fails when no schemas match",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/contact",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "phone": {
+              "type": "string"
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "email"
+              ]
+            },
+            {
+              "required": [
+                "phone"
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/contact",
+        "body": {
+          "name": "John Doe"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "{\"name\":\"John Doe\"} is not valid under any of the schemas listed in the 'anyOf' keyword",
+              "input": {
+                "name": "John Doe"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "anyOf",
+      "composition",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "41_not_schema_success",
+    "description": "not schema - value must not match the schema",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/users",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string",
+              "not": {
+                "enum": [
+                  "admin",
+                  "root",
+                  "system"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/users",
+        "body": {
+          "username": "john_doe"
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "not",
+      "composition",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "42_not_schema_failure",
+    "description": "not schema - fails when value matches the prohibited schema",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/users",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "username"
+          ],
+          "properties": {
+            "username": {
+              "type": "string",
+              "not": {
+                "enum": [
+                  "admin",
+                  "root",
+                  "system"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/users",
+        "body": {
+          "username": "admin"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body",
+                "username"
+              ],
+              "msg": "{\"enum\":[\"admin\",\"root\",\"system\"]} is not allowed for \"admin\"",
+              "input": "admin"
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "not",
+      "composition",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "43_const_validation_success",
+    "description": "Field with const constraint matching exact value should succeed",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/api/v1/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "version",
+            "data"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/data",
+        "body": {
+          "version": "1.0",
+          "data": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "const",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "44_const_validation_failure",
+    "description": "Field with const constraint not matching exact value should fail",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/api/v1/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "version",
+            "data"
+          ],
+          "properties": {
+            "version": {
+              "type": "string",
+              "const": "1.0"
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/data",
+        "body": {
+          "version": "2.0",
+          "data": "test"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body",
+                "version"
+              ],
+              "msg": "\"1.0\" was expected",
+              "input": "2.0"
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "const",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "45_minproperties_validation_success",
+    "description": "Object with properties meeting minProperties constraint should succeed",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/config",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "minProperties": 2
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/config",
+        "body": {
+          "host": "localhost",
+          "port": 8080
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "minProperties",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "46_minproperties_validation_failure",
+    "description": "Object with fewer properties than minProperties should fail",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/config",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "minProperties": 2
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/config",
+        "body": {
+          "host": "localhost"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "{\"host\":\"localhost\"} has less than 2 properties",
+              "input": {
+                "host": "localhost"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "minProperties",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "47_maxproperties_validation_failure",
+    "description": "Object with more properties than maxProperties should fail",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/config",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "maxProperties": 3
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/config",
+        "body": {
+          "host": "localhost",
+          "port": 8080,
+          "ssl": true,
+          "debug": false
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "{\"host\":\"localhost\",\"port\":8080,\"ssl\":true,\"debug\":false} has more than 3 properties",
+              "input": {
+                "host": "localhost",
+                "port": 8080,
+                "ssl": true,
+                "debug": false
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "maxProperties",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "48_dependencies_validation_success",
+    "description": "Dependencies constraint - when A present, B is required and provided",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/billing",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "credit_card": {
+              "type": "string"
+            },
+            "billing_address": {
+              "type": "string"
+            }
+          },
+          "dependencies": {
+            "credit_card": [
+              "billing_address"
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/billing",
+        "body": {
+          "name": "John Doe",
+          "credit_card": "1234567812345678",
+          "billing_address": "123 Main St"
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "dependencies",
+      "validation",
+      "success"
+    ]
+  },
+  {
+    "id": "49_dependencies_validation_failure",
+    "description": "Dependencies constraint - when A present, B is required but missing",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/billing",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "credit_card": {
+              "type": "string"
+            },
+            "billing_address": {
+              "type": "string"
+            }
+          },
+          "dependencies": {
+            "credit_card": [
+              "billing_address"
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/billing",
+        "body": {
+          "name": "John Doe",
+          "credit_card": "1234567812345678"
+        }
+      },
+      "expected_response": {
+        "status_code": 422,
+        "body": {
+          "type": "https://spikard.dev/errors/validation-error",
+          "title": "Request Validation Failed",
+          "status": 422,
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "type": "validation_error",
+              "loc": [
+                "body"
+              ],
+              "msg": "\"billing_address\" is a required property",
+              "input": {
+                "name": "John Doe",
+                "credit_card": "1234567812345678"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "dependencies",
+      "validation",
+      "error"
+    ]
+  },
+  {
+    "id": "50_deep_nesting_4_levels",
+    "description": "Deeply nested object with 4+ levels should validate correctly",
+    "category": "json_bodies",
+    "http": {
+      "handler": {
+        "route": "/data",
+        "method": "POST",
+        "body_schema": {
+          "type": "object",
+          "required": [
+            "user"
+          ],
+          "properties": {
+            "user": {
+              "type": "object",
+              "required": [
+                "profile"
+              ],
+              "properties": {
+                "profile": {
+                  "type": "object",
+                  "required": [
+                    "contact"
+                  ],
+                  "properties": {
+                    "contact": {
+                      "type": "object",
+                      "required": [
+                        "address"
+                      ],
+                      "properties": {
+                        "address": {
+                          "type": "object",
+                          "required": [
+                            "street"
+                          ],
+                          "properties": {
+                            "street": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "path": "/data",
+        "body": {
+          "user": {
+            "profile": {
+              "contact": {
+                "address": {
+                  "street": "123 Main St"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected_response": {
+        "status_code": 201
+      }
+    },
+    "tags": [
+      "json_bodies",
+      "nested",
+      "deep_nesting",
+      "validation",
+      "success"
+    ]
+  }
+]

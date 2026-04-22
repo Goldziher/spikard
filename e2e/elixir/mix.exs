@@ -13,6 +13,8 @@ defmodule E2eElixir.MixProject do
   defp deps do
     [
       {:spikard, path: "../../packages/elixir"}
+      {:req, "~> 0.5"}
+      {:jason, "~> 1.4"}
     ]
   end
 end
