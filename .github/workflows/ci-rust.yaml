@@ -216,7 +216,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.13/site-packages
         run: >
           cargo tarpaulin
-          -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared
+          -p spikard -p spikard-core -p spikard-http
           --out Lcov
           --output-dir target/tarpaulin
           --timeout 300
@@ -291,7 +291,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.13/site-packages
         run: |
           cargo tarpaulin \
-            -p spikard -p spikard-core -p spikard-http -p spikard-bindings-shared \
+            -p spikard -p spikard-core -p spikard-http \
             --out Lcov \
             --output-dir target/tarpaulin-php \
             --timeout 300 \

@@ -293,19 +293,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
         with:
-          enable-cache: true
+          use-sccache: 'false'
 
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
+      - name: Install alef
+        uses: cargo-bins/cargo-binstall@main
+      - run: cargo binstall --no-confirm --locked alef-cli
 
       - name: Verify synchronized package versions
         run: |
-          uv run python scripts/sync_versions.py
+          alef sync-versions
           git diff --exit-code
 
   alef-verify:
