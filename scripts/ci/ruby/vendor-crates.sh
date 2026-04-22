@@ -25,11 +25,18 @@ if [ -z "${WORKSPACE_VERSION:-}" ]; then
 fi
 
 # Copy internal crates
-for crate in spikard-core spikard-http spikard-graphql spikard-rb; do
+for crate in spikard-core spikard-http spikard-graphql; do
   echo "  Copying $crate..."
   rm -rf "${VENDOR_DIR:?}/$crate"
   cp -r "crates/$crate" "$VENDOR_DIR/"
 done
+
+# spikard-rb is split: source in crates/, Cargo.toml in packages/ruby/ext/
+echo "  Copying spikard-rb..."
+rm -rf "${VENDOR_DIR:?}/spikard-rb"
+mkdir -p "$VENDOR_DIR/spikard-rb"
+cp -r "crates/spikard-rb/src" "$VENDOR_DIR/spikard-rb/"
+cp "packages/ruby/ext/spikard_rb/native/Cargo.toml" "$VENDOR_DIR/spikard-rb/"
 
 for crate in spikard-core spikard-http spikard-graphql spikard-rb; do
   if [ ! -f "${VENDOR_DIR}/${crate}/Cargo.toml" ]; then
