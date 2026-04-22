@@ -299,7 +299,6 @@ impl GenericGrpcService {
 
         Ok(response)
     }
-
 }
 
 fn grpc_stream_body(message_stream: MessageStream) -> axum::body::Body {

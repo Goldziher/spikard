@@ -580,7 +580,9 @@ mod tests {
             ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
                 Box::pin(async {
                     Ok(Box::pin(futures_util::stream::iter(
-                        vec![Bytes::from_static(b"streamed")].into_iter().map(Ok::<Bytes, tonic::Status>),
+                        vec![Bytes::from_static(b"streamed")]
+                            .into_iter()
+                            .map(Ok::<Bytes, tonic::Status>),
                     )) as MessageStream)
                 })
             }
@@ -847,8 +849,9 @@ mod tests {
             ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
                 Box::pin(async {
                     let messages = vec![Bytes::from("m1"), Bytes::from("m2")];
-                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok::<Bytes, tonic::Status>)))
-                        as MessageStream)
+                    Ok(Box::pin(futures_util::stream::iter(
+                        messages.into_iter().map(Ok::<Bytes, tonic::Status>),
+                    )) as MessageStream)
                 })
             }
         }
@@ -973,8 +976,9 @@ mod tests {
             ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
                 Box::pin(async {
                     let messages = vec![Bytes::from("r1")];
-                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok::<Bytes, tonic::Status>)))
-                        as MessageStream)
+                    Ok(Box::pin(futures_util::stream::iter(
+                        messages.into_iter().map(Ok::<Bytes, tonic::Status>),
+                    )) as MessageStream)
                 })
             }
         }
