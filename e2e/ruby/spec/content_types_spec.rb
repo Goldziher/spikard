@@ -93,7 +93,7 @@ RSpec.describe 'content_types' do
     it 'Content-Length header mismatch with actual body size should fail' do
       response = client.post('/data',
         json: { 'value' => 'short' },
-        headers: { 'Content-Length' => '100', 'Content-Type' => 'application/json' }
+        headers: { 'Content-Type' => 'application/json', 'Content-Length' => '100' }
       )
       expect(response.status).to eq(400)
       expect(response.body).to eq({ 'detail' => 'Content-Length header does not match actual body size', 'status' => 400, 'title' => 'Content-Length header mismatch', 'type' => 'https://spikard.dev/errors/content-length-mismatch' })

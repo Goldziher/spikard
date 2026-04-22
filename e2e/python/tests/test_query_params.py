@@ -817,8 +817,8 @@ def test_multiple_query_parameters_with_different_types(client) -> None:
         params={
             "name": "john",
             "active": "true",
-            "score": "95.5",
             "age": "30",
+            "score": "95.5",
         },
     )
     assert response.status_code == 200  # noqa: S101

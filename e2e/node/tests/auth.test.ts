@@ -260,9 +260,9 @@ describe("auth", () => {
 		const response = await app.request("/api/data", {
 			method: "GET",
 			headers: {
+				"X-API-Key": "sk_test_123456",
 				Authorization:
 					"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg",
-				"X-API-Key": "sk_test_123456",
 			},
 		});
 		expect(response.status).toBe(200);

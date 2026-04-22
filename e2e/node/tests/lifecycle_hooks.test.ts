@@ -29,10 +29,10 @@ describe("lifecycle_hooks", () => {
 			request_id: ".*",
 			user_id: "user-123",
 		});
-		expect(response.headers.get("x-response-time")).toBe(".*ms");
-		expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 		expect(response.headers.get("x-frame-options")).toBe("DENY");
+		expect(response.headers.get("x-response-time")).toBe(".*ms");
 		expect(response.headers.get("x-request-id")).toBe(".*");
+		expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 	});
 
 	it("onerror_error_logging: Test onError hook that logs server errors and formats error responses", async () => {
@@ -64,10 +64,10 @@ describe("lifecycle_hooks", () => {
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data).toEqual({ message: "Response with security headers" });
-		expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 		expect(response.headers.get("x-frame-options")).toBe("DENY");
 		expect(response.headers.get("x-xss-protection")).toBe("1; mode=block");
 		expect(response.headers.get("strict-transport-security")).toBe("max-age=31536000; includeSubDomains");
+		expect(response.headers.get("x-content-type-options")).toBe("nosniff");
 	});
 
 	it("prehandler_authentication_failed_short_circuit: Test preHandler hook that short-circuits on invalid authentication", async () => {

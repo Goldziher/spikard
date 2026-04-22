@@ -567,7 +567,7 @@ final class QueryParamsTest extends TestCase
     public function test_multiple_query_parameters_with_different_types(): void
     {
         $response = $this->httpClient->request('GET', "/query/multi-type", [
-            'query' => ["name" => "john", "active" => "true", "score" => "95.5", "age" => "30"],
+            'query' => ["name" => "john", "active" => "true", "age" => "30", "score" => "95.5"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());

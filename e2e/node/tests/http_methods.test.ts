@@ -26,8 +26,8 @@ describe("http_methods", () => {
 	it("head_get_metadata_without_body: Tests HEAD method returns headers without response body", async () => {
 		const response = await app.request("/items/1", { method: "HEAD" });
 		expect(response.status).toBe(200);
-		expect(response.headers.get("content-type")).toBe("application/json");
 		expect(response.headers.get("content-length")).toBe("85");
+		expect(response.headers.get("content-type")).toBe("application/json");
 	});
 
 	it("patch_partial_update: Tests PATCH method for partial resource updates", async () => {

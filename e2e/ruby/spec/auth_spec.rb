@@ -182,7 +182,7 @@ RSpec.describe 'auth' do
   describe 'GET /api/data' do
     it 'Tests authentication when both JWT and API key are provided, JWT takes precedence' do
       response = client.get('/api/data',
-        headers: { 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg', 'X-API-Key' => 'sk_test_123456' }
+        headers: { 'X-API-Key' => 'sk_test_123456', 'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'auth_method' => 'jwt', 'message' => 'Access granted', 'user_id' => 'user123' })

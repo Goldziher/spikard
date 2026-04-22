@@ -1301,7 +1301,6 @@ pub struct OpenApiConfig {
     pub servers: Vec<ServerInfo>,
     /// Security schemes (auto-detected from middleware if not provided)
     #[pyo3(get)]
-    #[serde(default)]
     pub security_schemes: HashMap<String, SecuritySchemeInfo>,
 }
 
@@ -1668,7 +1667,6 @@ pub struct ServerConfig {
     pub shutdown_timeout: u64,
     /// OpenAPI documentation configuration
     #[pyo3(get)]
-    #[serde(default)]
     pub openapi: Option<OpenApiConfig>,
     /// JSON-RPC configuration
     #[pyo3(get)]
