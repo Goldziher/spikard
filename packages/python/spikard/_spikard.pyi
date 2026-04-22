@@ -34,14 +34,14 @@ class CorsConfig:
     headers_joined_cache: str
     def __init__(
         self,
-        allowed_origins: list[str],
-        allowed_methods: list[str],
-        allowed_headers: list[str],
-        methods_joined_cache: str,
-        headers_joined_cache: str,
+        allowed_origins: list[str] | None = None,
+        allowed_methods: list[str] | None = None,
+        allowed_headers: list[str] | None = None,
         expose_headers: list[str] | None = None,
         max_age: int | None = None,
         allow_credentials: bool | None = None,
+        methods_joined_cache: str | None = None,
+        headers_joined_cache: str | None = None,
     ) -> None: ...
     def allowed_methods_joined(self) -> str: ...
     def allowed_headers_joined(self) -> str: ...
@@ -67,14 +67,14 @@ class RouteMetadata:
     static_response: str | None
     def __init__(
         self,
-        method: str,
-        path: str,
-        handler_name: str,
-        is_async: bool,
+        method: str | None = None,
+        path: str | None = None,
+        handler_name: str | None = None,
         request_schema: str | None = None,
         response_schema: str | None = None,
         parameter_schema: str | None = None,
         file_params: str | None = None,
+        is_async: bool | None = None,
         cors: CorsConfig | None = None,
         body_param_name: str | None = None,
         handler_dependencies: list[str] | None = None,
@@ -89,7 +89,13 @@ class CompressionConfig:
     brotli: bool
     min_size: int
     quality: int
-    def __init__(self, gzip: bool, brotli: bool, min_size: int, quality: int) -> None: ...
+    def __init__(
+        self,
+        gzip: bool | None = None,
+        brotli: bool | None = None,
+        min_size: int | None = None,
+        quality: int | None = None,
+    ) -> None: ...
     @staticmethod
     def default() -> CompressionConfig: ...
 
@@ -97,7 +103,12 @@ class RateLimitConfig:
     per_second: int
     burst: int
     ip_based: bool
-    def __init__(self, per_second: int, burst: int, ip_based: bool) -> None: ...
+    def __init__(
+        self,
+        per_second: int | None = None,
+        burst: int | None = None,
+        ip_based: bool | None = None,
+    ) -> None: ...
     @staticmethod
     def default() -> RateLimitConfig: ...
 
@@ -133,17 +144,17 @@ class Route:
     jsonrpc_method: JsonRpcMethodInfo | None
     def __init__(
         self,
-        method: Method | str,
-        path: str,
-        handler_name: str,
-        is_async: bool,
-        expects_json_body: bool,
-        handler_dependencies: list[str],
+        method: Method | str | None = None,
+        path: str | None = None,
+        handler_name: str | None = None,
         request_validator: str | None = None,
         response_validator: str | None = None,
         parameter_validator: str | None = None,
         file_params: str | None = None,
+        is_async: bool | None = None,
         cors: CorsConfig | None = None,
+        expects_json_body: bool | None = None,
+        handler_dependencies: list[str] | None = None,
         jsonrpc_method: JsonRpcMethodInfo | None = None,
     ) -> None: ...
     def is_jsonrpc_method(self) -> bool: ...
@@ -186,7 +197,7 @@ class SchemaConfig:
     depth_limit: int | None
     def __init__(
         self,
-        introspection_enabled: bool,
+        introspection_enabled: bool | None = None,
         complexity_limit: int | None = None,
         depth_limit: int | None = None,
     ) -> None: ...
@@ -199,7 +210,7 @@ class QueryOnlyConfig:
     depth_limit: int | None
     def __init__(
         self,
-        introspection_enabled: bool,
+        introspection_enabled: bool | None = None,
         complexity_limit: int | None = None,
         depth_limit: int | None = None,
     ) -> None: ...
@@ -212,7 +223,7 @@ class QueryMutationConfig:
     depth_limit: int | None
     def __init__(
         self,
-        introspection_enabled: bool,
+        introspection_enabled: bool | None = None,
         complexity_limit: int | None = None,
         depth_limit: int | None = None,
     ) -> None: ...
@@ -225,7 +236,7 @@ class FullSchemaConfig:
     depth_limit: int | None
     def __init__(
         self,
-        introspection_enabled: bool,
+        introspection_enabled: bool | None = None,
         complexity_limit: int | None = None,
         depth_limit: int | None = None,
     ) -> None: ...
@@ -255,9 +266,9 @@ class BackgroundTaskConfig:
     drain_timeout_secs: int
     def __init__(
         self,
-        max_queue_size: int,
-        max_concurrent_tasks: int,
-        drain_timeout_secs: int,
+        max_queue_size: int | None = None,
+        max_concurrent_tasks: int | None = None,
+        drain_timeout_secs: int | None = None,
     ) -> None: ...
     @staticmethod
     def default() -> BackgroundTaskConfig: ...
@@ -265,7 +276,7 @@ class BackgroundTaskConfig:
 class BackgroundJobMetadata:
     name: str
     request_id: str | None
-    def __init__(self, name: str, request_id: str | None = None) -> None: ...
+    def __init__(self, name: str | None = None, request_id: str | None = None) -> None: ...
     @staticmethod
     def default() -> BackgroundJobMetadata: ...
 
@@ -304,14 +315,14 @@ class GrpcConfig:
     keepalive_timeout: int
     def __init__(
         self,
-        enabled: bool,
-        max_message_size: int,
-        enable_compression: bool,
-        max_concurrent_streams: int,
-        enable_keepalive: bool,
-        keepalive_interval: int,
-        keepalive_timeout: int,
+        enabled: bool | None = None,
+        max_message_size: int | None = None,
+        enable_compression: bool | None = None,
         request_timeout: int | None = None,
+        max_concurrent_streams: int | None = None,
+        enable_keepalive: bool | None = None,
+        keepalive_interval: int | None = None,
+        keepalive_timeout: int | None = None,
     ) -> None: ...
     @staticmethod
     def default() -> GrpcConfig: ...
@@ -327,10 +338,10 @@ class JsonRpcConfig:
     max_batch_size: int
     def __init__(
         self,
-        enabled: bool,
-        endpoint_path: str,
-        enable_batch: bool,
-        max_batch_size: int,
+        enabled: bool | None = None,
+        endpoint_path: str | None = None,
+        enable_batch: bool | None = None,
+        max_batch_size: int | None = None,
     ) -> None: ...
     @staticmethod
     def default() -> JsonRpcConfig: ...
@@ -349,17 +360,17 @@ class OpenApiConfig:
     security_schemes: dict[str, SecuritySchemeInfo]
     def __init__(
         self,
-        enabled: bool,
-        title: str,
-        version: str,
-        swagger_ui_path: str,
-        redoc_path: str,
-        openapi_json_path: str,
-        servers: list[ServerInfo],
-        security_schemes: dict[str, SecuritySchemeInfo],
+        enabled: bool | None = None,
+        title: str | None = None,
+        version: str | None = None,
         description: str | None = None,
+        swagger_ui_path: str | None = None,
+        redoc_path: str | None = None,
+        openapi_json_path: str | None = None,
         contact: ContactInfo | None = None,
         license: LicenseInfo | None = None,
+        servers: list[ServerInfo] | None = None,
+        security_schemes: dict[str, SecuritySchemeInfo] | None = None,
     ) -> None: ...
     @staticmethod
     def default() -> OpenApiConfig: ...
@@ -391,9 +402,9 @@ class Response:
     headers: dict[str, str]
     def __init__(
         self,
-        status_code: int,
-        headers: dict[str, str],
         content: str | None = None,
+        status_code: int | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None: ...
     def set_header(self, key: str, value: str) -> None: ...
     def set_cookie(
@@ -484,25 +495,25 @@ class ServerConfig:
     di_container: str | None
     def __init__(
         self,
-        host: str,
-        port: int,
-        workers: int,
-        enable_request_id: bool,
-        static_files: list[StaticFilesConfig],
-        graceful_shutdown: bool,
-        shutdown_timeout: int,
-        background_tasks: BackgroundTaskConfig,
-        enable_http_trace: bool,
+        host: str | None = None,
+        port: int | None = None,
+        workers: int | None = None,
+        enable_request_id: bool | None = None,
         max_body_size: int | None = None,
         request_timeout: int | None = None,
         compression: CompressionConfig | None = None,
         rate_limit: RateLimitConfig | None = None,
         jwt_auth: JwtConfig | None = None,
         api_key_auth: ApiKeyConfig | None = None,
+        static_files: list[StaticFilesConfig] | None = None,
+        graceful_shutdown: bool | None = None,
+        shutdown_timeout: int | None = None,
         openapi: OpenApiConfig | None = None,
         jsonrpc: JsonRpcConfig | None = None,
         grpc: GrpcConfig | None = None,
         lifecycle_hooks: str | None = None,
+        background_tasks: BackgroundTaskConfig | None = None,
+        enable_http_trace: bool | None = None,
         di_container: str | None = None,
     ) -> None: ...
     @staticmethod
@@ -536,37 +547,37 @@ class Method:
     Trace: Method = ...
     def __init__(self, value: int | str) -> None: ...
 
-class JsonRpcResponseTypeSuccess(TypedDict):
+class JsonRpcResponseTypeSuccessVariant(TypedDict):
     type: Literal["Success"]
     _0: str
 
-class JsonRpcResponseTypeError(TypedDict):
+class JsonRpcResponseTypeErrorVariant(TypedDict):
     type: Literal["Error"]
     _0: str
 
-JsonRpcResponseType: TypeAlias = JsonRpcResponseTypeSuccess | JsonRpcResponseTypeError
+JsonRpcResponseType: TypeAlias = JsonRpcResponseTypeSuccessVariant | JsonRpcResponseTypeErrorVariant
 
-class JsonRpcRequestOrBatchSingle(TypedDict):
+class JsonRpcRequestOrBatchSingleVariant(TypedDict):
     type: Literal["Single"]
     _0: str
 
-class JsonRpcRequestOrBatchBatch(TypedDict):
+class JsonRpcRequestOrBatchBatchVariant(TypedDict):
     type: Literal["Batch"]
     _0: list[str]
 
-JsonRpcRequestOrBatch: TypeAlias = JsonRpcRequestOrBatchSingle | JsonRpcRequestOrBatchBatch
+JsonRpcRequestOrBatch: TypeAlias = JsonRpcRequestOrBatchSingleVariant | JsonRpcRequestOrBatchBatchVariant
 
-class SecuritySchemeInfoHttp(TypedDict):
+class SecuritySchemeInfoHttpVariant(TypedDict):
     type: Literal["http"]
     scheme: str
     bearer_format: str | None
 
-class SecuritySchemeInfoApiKey(TypedDict):
+class SecuritySchemeInfoApiKeyVariant(TypedDict):
     type: Literal["apiKey"]
     location: str
     name: str
 
-SecuritySchemeInfo: TypeAlias = SecuritySchemeInfoHttp | SecuritySchemeInfoApiKey
+SecuritySchemeInfo: TypeAlias = SecuritySchemeInfoHttpVariant | SecuritySchemeInfoApiKeyVariant
 
 def schema_query_only() -> QueryOnlyConfig: ...
 def schema_query_mutation() -> QueryMutationConfig: ...

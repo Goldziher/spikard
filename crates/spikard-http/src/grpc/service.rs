@@ -443,4 +443,3 @@ pub(crate) fn copy_metadata(source: &tonic::metadata::MetadataMap, dest: &mut to
         }
     }
 }
-

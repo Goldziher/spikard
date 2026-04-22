@@ -121,7 +121,7 @@ RSpec.describe 'cookies' do
   describe 'GET /items/' do
     it 'Tests multiple cookie parameters in a single request' do
       response = client.get('/items/',
-        headers: { 'Cookie' => 'googall_tracker=ga789; fatebook_tracker=tracker456; session_id=session123' }
+        headers: { 'Cookie' => 'fatebook_tracker=tracker456; googall_tracker=ga789; session_id=session123' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'fatebook_tracker' => 'tracker456', 'googall_tracker' => 'ga789', 'session_id' => 'session123' })

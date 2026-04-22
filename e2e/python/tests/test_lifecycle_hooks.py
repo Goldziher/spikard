@@ -21,8 +21,8 @@ def test_multiple_hooks_all_phases(client) -> None:
         "/api/full-lifecycle",
         json={"action": "update_profile", "user_id": "user-123"},
         headers={
-            "Content-Type": "application/json",
             "Authorization": "Bearer valid-token-12345",
+            "Content-Type": "application/json",
         },
     )
     assert response.status_code == 200  # noqa: S101
@@ -35,8 +35,8 @@ def test_multiple_hooks_all_phases(client) -> None:
     }  # noqa: S101
     assert response.headers["x-response-time"] == ".*ms"  # noqa: S101
     assert response.headers["x-content-type-options"] == "nosniff"  # noqa: S101
-    assert response.headers["x-request-id"] == ".*"  # noqa: S101
     assert response.headers["x-frame-options"] == "DENY"  # noqa: S101
+    assert response.headers["x-request-id"] == ".*"  # noqa: S101
 
 
 def test_onerror_error_logging(client) -> None:
@@ -72,9 +72,9 @@ def test_onresponse_security_headers(client) -> None:
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"message": "Response with security headers"}  # noqa: S101
+    assert response.headers["x-content-type-options"] == "nosniff"  # noqa: S101
     assert response.headers["x-frame-options"] == "DENY"  # noqa: S101
     assert response.headers["x-xss-protection"] == "1; mode=block"  # noqa: S101
-    assert response.headers["x-content-type-options"] == "nosniff"  # noqa: S101
     assert response.headers["strict-transport-security"] == "max-age=31536000; includeSubDomains"  # noqa: S101
 
 

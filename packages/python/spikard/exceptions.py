@@ -72,15 +72,3 @@ class SchemaError(Exception):
 
 class BuildingFailedError(SchemaError):
     """Generic schema building error."""
-
-
-class ValidationError(SchemaError):
-    """Configuration validation error."""
-
-
-class ComplexityLimitExceededError(SchemaError):
-    """Complexity limit exceeded."""
-
-
-class DepthLimitExceededError(SchemaError):
-    """Depth limit exceeded."""

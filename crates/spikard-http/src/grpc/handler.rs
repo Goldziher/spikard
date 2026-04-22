@@ -318,4 +318,3 @@ pub trait GrpcHandler: Send + Sync {
         })
     }
 }
-

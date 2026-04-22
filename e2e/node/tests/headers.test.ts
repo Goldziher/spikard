@@ -368,9 +368,9 @@ describe("headers", () => {
 		const response = await app.request("/headers/multiple", {
 			method: "GET",
 			headers: {
-				"X-Client-Version": "1.2.3",
-				"X-Trace-Id": "trace-abc",
 				"X-Request-Id": "req-12345",
+				"X-Trace-Id": "trace-abc",
+				"X-Client-Version": "1.2.3",
 			},
 		});
 		expect(response.status).toBe(200);

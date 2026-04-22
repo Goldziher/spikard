@@ -815,10 +815,10 @@ def test_multiple_query_parameters_with_different_types(client) -> None:
     response = client.get(
         "/query/multi-type",
         params={
-            "active": "true",
-            "age": "30",
-            "score": "95.5",
             "name": "john",
+            "active": "true",
+            "score": "95.5",
+            "age": "30",
         },
     )
     assert response.status_code == 200  # noqa: S101
@@ -868,8 +868,8 @@ def test_query_parameter_with_special_characters_url_encoding(client) -> None:
     response = client.get(
         "/test",
         params={
-            "email": "x@test.com",
             "special": "&@A.ac",
+            "email": "x@test.com",
         },
     )
     assert response.status_code == 200  # noqa: S101

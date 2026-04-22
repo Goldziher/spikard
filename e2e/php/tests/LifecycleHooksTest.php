@@ -35,15 +35,15 @@ final class LifecycleHooksTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/api/full-lifecycle", [
             'json' => ["action" => "update_profile", "user_id" => "user-123"],
-            'headers' => ["Content-Type" => "application/json", "Authorization" => "Bearer valid-token-12345"],
+            'headers' => ["Authorization" => "Bearer valid-token-12345", "Content-Type" => "application/json"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"], $body);
         $this->assertEquals(".*ms", $response->getHeaderLine("x-response-time"));
         $this->assertEquals("nosniff", $response->getHeaderLine("x-content-type-options"));
-        $this->assertEquals(".*", $response->getHeaderLine("x-request-id"));
         $this->assertEquals("DENY", $response->getHeaderLine("x-frame-options"));
+        $this->assertEquals(".*", $response->getHeaderLine("x-request-id"));
     }
 
     /** Test onError hook that logs server errors and formats error responses */
@@ -83,9 +83,9 @@ final class LifecycleHooksTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["message" => "Response with security headers"], $body);
+        $this->assertEquals("nosniff", $response->getHeaderLine("x-content-type-options"));
         $this->assertEquals("DENY", $response->getHeaderLine("x-frame-options"));
         $this->assertEquals("1; mode=block", $response->getHeaderLine("x-xss-protection"));
-        $this->assertEquals("nosniff", $response->getHeaderLine("x-content-type-options"));
         $this->assertEquals("max-age=31536000; includeSubDomains", $response->getHeaderLine("strict-transport-security"));
     }
 

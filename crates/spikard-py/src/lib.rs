@@ -1266,7 +1266,7 @@ impl JsonRpcConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone)]
 #[pyclass(frozen, from_py_object)]
 pub struct OpenApiConfig {
     /// Enable OpenAPI generation (default: false for zero overhead)
@@ -1301,7 +1301,7 @@ pub struct OpenApiConfig {
     pub servers: Vec<ServerInfo>,
     /// Security schemes (auto-detected from middleware if not provided)
     #[pyo3(get)]
-    #[serde(skip)]
+    #[serde(default)]
     pub security_schemes: HashMap<String, SecuritySchemeInfo>,
 }
 
@@ -1623,7 +1623,7 @@ impl StaticFilesConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone)]
 #[pyclass(frozen, from_py_object)]
 #[allow(clippy::similar_names)]
 pub struct ServerConfig {
@@ -1668,7 +1668,7 @@ pub struct ServerConfig {
     pub shutdown_timeout: u64,
     /// OpenAPI documentation configuration
     #[pyo3(get)]
-    #[serde(skip)]
+    #[serde(default)]
     pub openapi: Option<OpenApiConfig>,
     /// JSON-RPC configuration
     #[pyo3(get)]
