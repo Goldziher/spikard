@@ -18,9 +18,9 @@ describe("cors", () => {
 		const response = await app.request("/api/data", {
 			method: "OPTIONS",
 			headers: {
-				Origin: "https://example.com",
 				"Access-Control-Request-Method": "POST",
 				"Access-Control-Request-Headers": "X-Custom-Header",
+				Origin: "https://example.com",
 			},
 		});
 		expect(response.status).toBe(403);
@@ -31,15 +31,15 @@ describe("cors", () => {
 			method: "OPTIONS",
 			headers: {
 				"Access-Control-Request-Method": "POST",
-				Origin: "https://example.com",
 				"Access-Control-Request-Headers": "Content-Type",
+				Origin: "https://example.com",
 			},
 		});
 		expect(response.status).toBe(204);
 		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
 		expect(response.headers.get("access-control-max-age")).toBe("3600");
-		expect(response.headers.get("access-control-allow-methods")).toBe("POST");
 		expect(response.headers.get("access-control-allow-headers")).toBe("Content-Type");
+		expect(response.headers.get("access-control-allow-methods")).toBe("POST");
 	});
 
 	it("_cors_expose_headers: CORS response should include Access-Control-Expose-Headers for custom headers", async () => {
@@ -51,9 +51,9 @@ describe("cors", () => {
 		});
 		expect(response.status).toBe(200);
 		expect(response.headers.get("x-total-count")).toBe("42");
-		expect(response.headers.get("access-control-expose-headers")).toBe("X-Total-Count, X-Request-Id");
 		expect(response.headers.get("x-request-id")).toBe("abc123");
 		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
+		expect(response.headers.get("access-control-expose-headers")).toBe("X-Total-Count, X-Request-Id");
 	});
 
 	it("_cors_origin_null: CORS request with 'null' origin should be handled according to policy", async () => {
@@ -84,16 +84,16 @@ describe("cors", () => {
 		const response = await app.request("/api/form", {
 			method: "POST",
 			headers: {
-				"Content-Type": "text/plain",
 				Accept: "application/json",
-				"Accept-Language": "en-US",
+				"Content-Type": "text/plain",
 				Origin: "https://app.example.com",
+				"Accept-Language": "en-US",
 			},
 		});
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data).toEqual({ message: "Success" });
-		expect(response.headers.get("vary")).toBe("Origin");
 		expect(response.headers.get("access-control-allow-origin")).toBe("https://app.example.com");
+		expect(response.headers.get("vary")).toBe("Origin");
 	});
 });

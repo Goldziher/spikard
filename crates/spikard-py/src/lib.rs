@@ -512,13 +512,6 @@ impl Route {
         }
     }
 
-    #[pyo3(signature = (info))]
-    pub fn with_jsonrpc_method(&self, info: JsonRpcMethodInfo) -> Route {
-        let info_core: spikard::JsonRpcMethodInfo = info.into();
-        let _ = info;
-        Default::default()
-    }
-
     #[pyo3(signature = ())]
     pub fn is_jsonrpc_method(&self) -> bool {
         #[allow(clippy::needless_update)]
@@ -801,39 +794,6 @@ impl SchemaConfig {
             complexity_limit,
             depth_limit,
         }
-    }
-
-    #[pyo3(signature = (enabled))]
-    pub fn set_introspection_enabled(&self, enabled: bool) -> Self {
-        let mut core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_introspection_enabled(enabled);
-        core_self.into()
-    }
-
-    #[pyo3(signature = (limit))]
-    pub fn set_complexity_limit(&self, limit: usize) -> Self {
-        let mut core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_complexity_limit(limit);
-        core_self.into()
-    }
-
-    #[pyo3(signature = (limit))]
-    pub fn set_depth_limit(&self, limit: usize) -> Self {
-        let mut core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_depth_limit(limit);
-        core_self.into()
     }
 
     #[allow(clippy::should_implement_trait)]

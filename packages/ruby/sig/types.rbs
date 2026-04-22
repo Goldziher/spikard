@@ -170,11 +170,9 @@ module Spikard
     attr_accessor jsonrpc_method: JsonRpcMethodInfo
 
     def initialize: (method: Method, path: String, handler_name: String, ?request_validator: String, ?response_validator: String, ?parameter_validator: String, ?file_params: String, is_async: bool, ?cors: CorsConfig, expects_json_body: bool, handler_dependencies: Array[String], ?jsonrpc_method: JsonRpcMethodInfo) -> void
-    def with_jsonrpc_method: (JsonRpcMethodInfo info) -> Route
     def is_jsonrpc_method: () -> bool
     def jsonrpc_method_name: () -> String?
     def self.default: () -> Route
-    def self.from_metadata: (RouteMetadata metadata, String registry) -> Route
   end
 
   class ProblemDetails
@@ -211,23 +209,16 @@ module Spikard
     def initialize: (type_uri: String, title: String, status: Integer, ?detail: String, ?instance: String, extensions: Hash[String, String]) -> void
     def with_detail: (String detail) -> ProblemDetails
     def with_instance: (String instance) -> ProblemDetails
-    def with_extension: (String key, String value) -> ProblemDetails
-    def with_extensions: (String extensions) -> ProblemDetails
-    def status_code: () -> String
     def to_json: () -> String
     def to_json_pretty: () -> String
-    def self.from_validation_error: (String error) -> ProblemDetails
     def self.not_found: (String detail) -> ProblemDetails
     def self.method_not_allowed: (String detail) -> ProblemDetails
     def self.internal_server_error: (String detail) -> ProblemDetails
-    def self.internal_server_error_debug: (String detail, String exception, String traceback, String request_data) -> ProblemDetails
     def self.bad_request: (String detail) -> ProblemDetails
   end
 
   class GraphQLError
     def status_code: () -> Integer
-    def to_graphql_response: () -> String
-    def to_http_response: () -> String
   end
 
   class GraphQLRouteConfig
@@ -272,10 +263,6 @@ module Spikard
     attr_accessor depth_limit: Integer
 
     def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
-    def set_introspection_enabled: (bool enabled) -> SchemaConfig
-    def set_complexity_limit: (Integer limit) -> SchemaConfig
-    def set_depth_limit: (Integer limit) -> SchemaConfig
-    def validate: () -> String
     def self.default: () -> SchemaConfig
   end
 
@@ -507,7 +494,6 @@ module Spikard
     def initialize: (?content: String, status_code: Integer, headers: Hash[String, String]) -> void
     def set_header: (String key, String value) -> void
     def set_cookie: (String key, String value, ?Integer max_age, ?String domain, ?String path, bool secure, bool http_only, ?String same_site) -> void
-    def self.with_status: (?String content, Integer status_code) -> Response
     def self.default: () -> Response
   end
 
@@ -542,7 +528,6 @@ module Spikard
     def initialize: (?event_type: String, data: String, ?id: String, ?retry: Integer) -> void
     def with_id: (String id) -> SseEvent
     def with_retry: (Integer retry_ms) -> SseEvent
-    def self.with_type: (String event_type, String data) -> SseEvent
   end
 
   class JwtConfig
@@ -603,7 +588,6 @@ module Spikard
 
     def initialize: (host: String, port: Integer, workers: Integer, enable_request_id: bool, ?max_body_size: Integer, ?request_timeout: Integer, ?compression: CompressionConfig, ?rate_limit: RateLimitConfig, ?jwt_auth: JwtConfig, ?api_key_auth: ApiKeyConfig, static_files: Array[StaticFilesConfig], graceful_shutdown: bool, shutdown_timeout: Integer, ?openapi: OpenApiConfig, ?jsonrpc: JsonRpcConfig, ?grpc: GrpcConfig, ?lifecycle_hooks: String, background_tasks: BackgroundTaskConfig, enable_http_trace: bool, ?di_container: String) -> void
     def self.default: () -> ServerConfig
-    def self.builder: () -> String
   end
 
   class Method

@@ -20,19 +20,19 @@ defmodule E2e.CorsTest do
 
   describe "_cors_preflight_header_not_allowed" do
     test "OPTIONS /api/data - CORS preflight request with non-allowed header should be rejected" do
-      {:ok, response} = Req.options(client(), url: "/api/data", headers: [{"Origin", "https://example.com"}, {"Access-Control-Request-Method", "POST"}, {"Access-Control-Request-Headers", "X-Custom-Header"}])
+      {:ok, response} = Req.options(client(), url: "/api/data", headers: [{"Access-Control-Request-Method", "POST"}, {"Access-Control-Request-Headers", "X-Custom-Header"}, {"Origin", "https://example.com"}])
       assert response.status == 403
     end
   end
 
   describe "_cors_max_age" do
     test "OPTIONS /api/data - CORS preflight response should include Access-Control-Max-Age" do
-      {:ok, response} = Req.options(client(), url: "/api/data", headers: [{"Access-Control-Request-Method", "POST"}, {"Origin", "https://example.com"}, {"Access-Control-Request-Headers", "Content-Type"}])
+      {:ok, response} = Req.options(client(), url: "/api/data", headers: [{"Access-Control-Request-Method", "POST"}, {"Access-Control-Request-Headers", "Content-Type"}, {"Origin", "https://example.com"}])
       assert response.status == 204
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-allow-origin", do: v end) == "https://example.com"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-max-age", do: v end) == "3600"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-allow-methods", do: v end) == "POST"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-allow-headers", do: v end) == "Content-Type"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-allow-methods", do: v end) == "POST"
     end
   end
 
@@ -41,9 +41,9 @@ defmodule E2e.CorsTest do
       {:ok, response} = Req.get(client(), url: "/api/data", headers: [{"Origin", "https://example.com"}])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-total-count", do: v end) == "42"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-expose-headers", do: v end) == "X-Total-Count, X-Request-Id"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: v end) == "abc123"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-allow-origin", do: v end) == "https://example.com"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-expose-headers", do: v end) == "X-Total-Count, X-Request-Id"
     end
   end
 
@@ -65,11 +65,11 @@ defmodule E2e.CorsTest do
 
   describe "cors_safelisted_headers_without_preflight" do
     test "POST /api/form - Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight" do
-      {:ok, response} = Req.post(client(), url: "/api/form", headers: [{"Content-Type", "text/plain"}, {"Accept", "application/json"}, {"Accept-Language", "en-US"}, {"Origin", "https://app.example.com"}])
+      {:ok, response} = Req.post(client(), url: "/api/form", headers: [{"Accept", "application/json"}, {"Content-Type", "text/plain"}, {"Origin", "https://app.example.com"}, {"Accept-Language", "en-US"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"message" => "Success"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "vary", do: v end) == "Origin"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "access-control-allow-origin", do: v end) == "https://app.example.com"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "vary", do: v end) == "Origin"
     end
   end
 end

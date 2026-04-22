@@ -348,78 +348,18 @@ Maps GraphQL error types to appropriate HTTP status codes:
 def status_code()
 ```
 
-###### to_graphql_response()
-
-Convert error to GraphQL error response JSON
-
-Returns a JSON object matching the GraphQL spec error format with
-structured extensions for HTTP integration.
-
-## Format
-
-```json
-{
-  "errors": [
-    {
-      "message": "error message",
-      "extensions": {
-        "code": "ERROR_CODE",
-        "status": 400,
-        "type": "<https://spikard.dev/errors/...">
-      }
-    }
-  ]
-}
-```
-
-**Signature:**
-
-```ruby
-def to_graphql_response()
-```
-
-### to_http_response()
-
-Convert error to structured HTTP error response
-
-Returns a JSON object matching the project's error fixture format,
-suitable for direct HTTP response conversion.
-
-## Format
-
-```json
-{
-  "type": "<https://spikard.dev/errors/...",>
-  "title": "Error Title",
-  "status": 422,
-  "detail": "error message",
-  "errors": [
-    {
-      "type": "error_code",
-      "message": "error message"
-    }
-  ]
-}
-```
-
-**Signature:**
-
-```ruby
-def to_http_response()
-```
-
 ---
 
-### GraphQlRouteConfig
+##### GraphQlRouteConfig
 
 Configuration for GraphQL routes
 
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-#### Methods
+###### Methods
 
-##### path()
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -736,44 +676,6 @@ Set the instance field
 def with_instance(instance)
 ```
 
-###### with_extension()
-
-Add an extension field
-
-**Signature:**
-
-```ruby
-def with_extension(key, value)
-```
-
-###### with_extensions()
-
-Add all extensions from a JSON object
-
-**Signature:**
-
-```ruby
-def with_extensions(extensions)
-```
-
-###### from_validation_error()
-
-Create a validation error Problem Details from `ValidationError`
-
-This converts the FastAPI-style validation errors to RFC 9457 format:
-
-- `type`: <https://spikard.dev/errors/validation-error>
-- `title`: "Request Validation Failed"
-- `status`: 422
-- `detail`: Summary of error count
-- `errors`: Array of validation error details (as extension field)
-
-**Signature:**
-
-```ruby
-def self.from_validation_error(error)
-```
-
 ###### not_found()
 
 Create a not found error
@@ -804,19 +706,6 @@ Create an internal server error
 def self.internal_server_error(detail)
 ```
 
-###### internal_server_error_debug()
-
-Create an internal server error with debug information
-
-Includes exception details, traceback, and request data for debugging.
-Only use in development/debug mode.
-
-**Signature:**
-
-```ruby
-def self.internal_server_error_debug(detail, exception, traceback, request_data)
-```
-
 ###### bad_request()
 
 Create a bad request error
@@ -825,16 +714,6 @@ Create a bad request error
 
 ```ruby
 def self.bad_request(detail)
-```
-
-###### status_code()
-
-Get the HTTP status code
-
-**Signature:**
-
-```ruby
-def status_code()
 ```
 
 ###### to_json()
@@ -943,16 +822,6 @@ HTTP Response with custom status code, headers, and content
 
 ###### Methods
 
-###### with_status()
-
-Create a response with a specific status code
-
-**Signature:**
-
-```ruby
-def self.with_status(content, status_code)
-```
-
 ###### set_header()
 
 Set a header
@@ -1016,39 +885,6 @@ enabling routes to optionally expose themselves as JSON-RPC methods.
 
 ```ruby
 def self.default()
-```
-
-###### from_metadata()
-
-Create a route from metadata, using schema registry for deduplication
-
-Auto-generates parameter schema from type hints in the path if no explicit schema provided.
-Type hints like `/items/{id:uuid}` generate appropriate JSON Schema validation.
-Explicit `parameter_schema` overrides auto-generated schemas.
-
-**Errors:**
-Returns an error if the schema compilation fails or metadata is invalid.
-
-The schema registry ensures each unique schema is compiled only once, improving
-startup performance and memory usage for applications with many routes.
-
-**Signature:**
-
-```ruby
-def self.from_metadata(metadata, registry)
-```
-
-###### with_jsonrpc_method()
-
-Builder method to attach JSON-RPC method info to a route
-
-This is a convenient way to add JSON-RPC metadata after route creation.
-It consumes the route and returns a new route with the metadata attached.
-
-**Signature:**
-
-```ruby
-def with_jsonrpc_method(info)
 ```
 
 ###### is_jsonrpc_method()
@@ -1128,50 +964,6 @@ introspection control, complexity limits, and depth limits.
 def self.default()
 ```
 
-###### set_introspection_enabled()
-
-Enable or disable introspection
-
-**Signature:**
-
-```ruby
-def set_introspection_enabled(enabled)
-```
-
-###### set_complexity_limit()
-
-Set the complexity limit (0 means unlimited)
-
-**Signature:**
-
-```ruby
-def set_complexity_limit(limit)
-```
-
-###### set_depth_limit()
-
-Set the depth limit (0 means unlimited)
-
-**Signature:**
-
-```ruby
-def set_depth_limit(limit)
-```
-
-###### validate()
-
-Validate the configuration
-
-**Errors:**
-
-Returns an error if the configuration is invalid (currently all configurations are valid)
-
-**Signature:**
-
-```ruby
-def validate()
-```
-
 ---
 
 ##### ServerConfig
@@ -1209,16 +1001,6 @@ Server configuration
 
 ```ruby
 def self.default()
-```
-
-###### builder()
-
-Create a new builder for ServerConfig
-
-**Signature:**
-
-```ruby
-def self.builder()
 ```
 
 ---
@@ -1261,20 +1043,7 @@ retry: 3000
 
 ### Methods
 
-#### with_type()
-
-Create a new SSE event with an event type and data
-
-Creates an event with a type field. Clients can filter events by type
-in their event listener.
-
-**Signature:**
-
-```ruby
-def self.with_type(event_type, data)
-```
-
-##### with_id()
+#### with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -1287,7 +1056,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 def with_id(id)
 ```
 
-###### with_retry()
+##### with_retry()
 
 Set the retry timeout for client reconnection
 

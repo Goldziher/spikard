@@ -818,16 +818,6 @@ pub fn route_default() -> Route {
 }
 
 #[rustler::nif]
-pub fn route_from_metadata(metadata: RouteMetadata, registry: String) -> Result<Route, String> {
-    Err(String::from("Not implemented: route_from_metadata"))
-}
-
-#[rustler::nif]
-pub fn route_with_jsonrpc_method(obj: Route, info: JsonRpcMethodInfo) -> Route {
-    spikard::Route::from(obj).with_jsonrpc_method(info.into()).into()
-}
-
-#[rustler::nif]
 pub fn route_is_jsonrpc_method(obj: Route) -> bool {
     spikard::Route::from(obj).is_jsonrpc_method()
 }
@@ -848,21 +838,6 @@ pub fn problemdetails_with_instance(obj: ProblemDetails, instance: String) -> Pr
 }
 
 #[rustler::nif]
-pub fn problemdetails_with_extension(obj: ProblemDetails, key: String, value: String) -> ProblemDetails {
-    panic!("alef: problemdetails_with_extension not auto-delegatable")
-}
-
-#[rustler::nif]
-pub fn problemdetails_with_extensions(obj: ProblemDetails, extensions: String) -> ProblemDetails {
-    panic!("alef: problemdetails_with_extensions not auto-delegatable")
-}
-
-#[rustler::nif]
-pub fn problemdetails_from_validation_error(error: String) -> ProblemDetails {
-    panic!("alef: problemdetails_from_validation_error not auto-delegatable")
-}
-
-#[rustler::nif]
 pub fn problemdetails_not_found(detail: String) -> ProblemDetails {
     spikard::ProblemDetails::not_found(detail).into()
 }
@@ -878,23 +853,8 @@ pub fn problemdetails_internal_server_error(detail: String) -> ProblemDetails {
 }
 
 #[rustler::nif]
-pub fn problemdetails_internal_server_error_debug(
-    detail: String,
-    exception: String,
-    traceback: String,
-    request_data: String,
-) -> ProblemDetails {
-    panic!("alef: problemdetails_internal_server_error_debug not auto-delegatable")
-}
-
-#[rustler::nif]
 pub fn problemdetails_bad_request(detail: String) -> ProblemDetails {
     spikard::ProblemDetails::bad_request(detail).into()
-}
-
-#[rustler::nif]
-pub fn problemdetails_status_code(obj: ProblemDetails) -> String {
-    String::from("[unimplemented: problemdetails_status_code]")
 }
 
 #[rustler::nif]
@@ -916,16 +876,6 @@ pub fn problemdetails_to_json_pretty(obj: ProblemDetails) -> Result<String, Stri
 #[rustler::nif]
 pub fn graphqlerror_status_code(resource: ResourceArc<GraphQLError>) -> u16 {
     resource.inner.as_ref().clone().status_code()
-}
-
-#[rustler::nif]
-pub fn graphqlerror_to_graphql_response(resource: ResourceArc<GraphQLError>) -> String {
-    String::from("[unimplemented: graphqlerror_to_graphql_response]")
-}
-
-#[rustler::nif]
-pub fn graphqlerror_to_http_response(resource: ResourceArc<GraphQLError>) -> String {
-    String::from("[unimplemented: graphqlerror_to_http_response]")
 }
 
 #[rustler::nif]
@@ -1001,26 +951,6 @@ pub fn schemaconfig_default() -> SchemaConfig {
 }
 
 #[rustler::nif]
-pub fn schemaconfig_set_introspection_enabled(obj: SchemaConfig, enabled: bool) -> SchemaConfig {
-    panic!("alef: schemaconfig_set_introspection_enabled not auto-delegatable")
-}
-
-#[rustler::nif]
-pub fn schemaconfig_set_complexity_limit(obj: SchemaConfig, limit: usize) -> SchemaConfig {
-    panic!("alef: schemaconfig_set_complexity_limit not auto-delegatable")
-}
-
-#[rustler::nif]
-pub fn schemaconfig_set_depth_limit(obj: SchemaConfig, limit: usize) -> SchemaConfig {
-    panic!("alef: schemaconfig_set_depth_limit not auto-delegatable")
-}
-
-#[rustler::nif]
-pub fn schemaconfig_validate(obj: SchemaConfig) -> String {
-    String::from("[unimplemented: schemaconfig_validate]")
-}
-
-#[rustler::nif]
 pub fn queryonlyconfig_default() -> QueryOnlyConfig {
     spikard::QueryOnlyConfig::default().into()
 }
@@ -1066,11 +996,6 @@ pub fn openapiconfig_default() -> OpenApiConfig {
 }
 
 #[rustler::nif]
-pub fn response_with_status(content: String, status_code: u16) -> Response {
-    panic!("alef: response_with_status not auto-delegatable")
-}
-
-#[rustler::nif]
 pub fn response_set_header(obj: Response, key: String, value: String) -> () {
     ()
 }
@@ -1096,11 +1021,6 @@ pub fn response_default() -> Response {
 }
 
 #[rustler::nif]
-pub fn sseevent_with_type(event_type: String, data: String) -> SseEvent {
-    panic!("alef: sseevent_with_type not auto-delegatable")
-}
-
-#[rustler::nif]
 pub fn sseevent_with_id(obj: SseEvent, id: String) -> SseEvent {
     spikard::SseEvent::from(obj).with_id(id).into()
 }
@@ -1113,11 +1033,6 @@ pub fn sseevent_with_retry(obj: SseEvent, retry_ms: u64) -> SseEvent {
 #[rustler::nif]
 pub fn serverconfig_default() -> ServerConfig {
     spikard::ServerConfig::default().into()
-}
-
-#[rustler::nif]
-pub fn serverconfig_builder() -> String {
-    String::from("[unimplemented: serverconfig_builder]")
 }
 
 impl From<spikard::UploadFile> for UploadFile {

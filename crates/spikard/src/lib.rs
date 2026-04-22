@@ -20,17 +20,15 @@ use axum::{Router as AxumRouter, body::Body};
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
+pub use spikard_core::ProblemDetails;
 #[cfg(feature = "di")]
 use spikard_core::di;
 pub use spikard_core::router::JsonRpcMethodInfo;
-pub use spikard_core::ProblemDetails;
-pub use spikard_graphql::{
-    FullSchemaConfig, GraphQLRouteConfig, QueryMutationConfig, QueryOnlyConfig, SchemaConfig,
-};
+pub use spikard_graphql::{FullSchemaConfig, GraphQLRouteConfig, QueryMutationConfig, QueryOnlyConfig, SchemaConfig};
 pub use spikard_http::{
     ApiKeyConfig, BackgroundJobError, BackgroundJobMetadata, BackgroundTaskConfig, CompressionConfig, CorsConfig,
-    GrpcConfig, JsonRpcConfig, JwtConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method,
-    OpenApiConfig, RateLimitConfig, Response, Route, RouteMetadata, ServerConfig, SseEvent, StaticFilesConfig,
+    GrpcConfig, JsonRpcConfig, JwtConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, OpenApiConfig,
+    RateLimitConfig, Response, Route, RouteMetadata, ServerConfig, SseEvent, StaticFilesConfig,
     cors::{add_cors_headers, handle_preflight, validate_cors_request},
     handler_response::HandlerResponse,
     handler_trait::HandlerResult,

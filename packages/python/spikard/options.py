@@ -29,12 +29,12 @@ class LicenseInfo:
     """Placeholder for LicenseInfo type."""
 
 
-class ContactInfo:
-    """Placeholder for ContactInfo type."""
-
-
 class JsonRpcMethodInfo:
     """Placeholder for JsonRpcMethodInfo type."""
+
+
+class ContactInfo:
+    """Placeholder for ContactInfo type."""
 
 
 class ApiKeyConfig:

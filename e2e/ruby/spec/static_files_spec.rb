@@ -19,8 +19,8 @@ RSpec.describe 'static_files' do
       response = client.get('/public/hello.txt')
       expect(response.status).to eq(200)
       expect(response.body).to eq('Hello from static storage')
-      expect(response.headers['cache-control']).to eq('public, max-age=60')
       expect(response.headers['content-type']).to eq('text/plain')
+      expect(response.headers['cache-control']).to eq('public, max-age=60')
     end
   end
 

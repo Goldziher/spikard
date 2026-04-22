@@ -348,78 +348,18 @@ Maps GraphQL error types to appropriate HTTP status codes:
 statusCode(): number
 ```
 
-###### toGraphqlResponse()
-
-Convert error to GraphQL error response JSON
-
-Returns a JSON object matching the GraphQL spec error format with
-structured extensions for HTTP integration.
-
-## Format
-
-```json
-{
-  "errors": [
-    {
-      "message": "error message",
-      "extensions": {
-        "code": "ERROR_CODE",
-        "status": 400,
-        "type": "<https://spikard.dev/errors/...">
-      }
-    }
-  ]
-}
-```
-
-**Signature:**
-
-```typescript
-toGraphqlResponse(): string
-```
-
-### toHttpResponse()
-
-Convert error to structured HTTP error response
-
-Returns a JSON object matching the project's error fixture format,
-suitable for direct HTTP response conversion.
-
-## Format
-
-```json
-{
-  "type": "<https://spikard.dev/errors/...",>
-  "title": "Error Title",
-  "status": 422,
-  "detail": "error message",
-  "errors": [
-    {
-      "type": "error_code",
-      "message": "error message"
-    }
-  ]
-}
-```
-
-**Signature:**
-
-```typescript
-toHttpResponse(): string
-```
-
 ---
 
-### GraphQlRouteConfig
+##### GraphQlRouteConfig
 
 Configuration for GraphQL routes
 
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-#### Methods
+###### Methods
 
-##### path()
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -736,44 +676,6 @@ Set the instance field
 withInstance(instance: string): ProblemDetails
 ```
 
-###### withExtension()
-
-Add an extension field
-
-**Signature:**
-
-```typescript
-withExtension(key: string, value: string): ProblemDetails
-```
-
-###### withExtensions()
-
-Add all extensions from a JSON object
-
-**Signature:**
-
-```typescript
-withExtensions(extensions: string): ProblemDetails
-```
-
-###### fromValidationError()
-
-Create a validation error Problem Details from `ValidationError`
-
-This converts the FastAPI-style validation errors to RFC 9457 format:
-
-- `type`: <https://spikard.dev/errors/validation-error>
-- `title`: "Request Validation Failed"
-- `status`: 422
-- `detail`: Summary of error count
-- `errors`: Array of validation error details (as extension field)
-
-**Signature:**
-
-```typescript
-static fromValidationError(error: string): ProblemDetails
-```
-
 ###### notFound()
 
 Create a not found error
@@ -804,19 +706,6 @@ Create an internal server error
 static internalServerError(detail: string): ProblemDetails
 ```
 
-###### internalServerErrorDebug()
-
-Create an internal server error with debug information
-
-Includes exception details, traceback, and request data for debugging.
-Only use in development/debug mode.
-
-**Signature:**
-
-```typescript
-static internalServerErrorDebug(detail: string, exception: string, traceback: string, requestData: string): ProblemDetails
-```
-
 ###### badRequest()
 
 Create a bad request error
@@ -825,16 +714,6 @@ Create a bad request error
 
 ```typescript
 static badRequest(detail: string): ProblemDetails
-```
-
-###### statusCode()
-
-Get the HTTP status code
-
-**Signature:**
-
-```typescript
-statusCode(): string
 ```
 
 ###### toJson()
@@ -943,16 +822,6 @@ HTTP Response with custom status code, headers, and content
 
 ###### Methods
 
-###### withStatus()
-
-Create a response with a specific status code
-
-**Signature:**
-
-```typescript
-static withStatus(content: string, statusCode: number): Response
-```
-
 ###### setHeader()
 
 Set a header
@@ -1016,39 +885,6 @@ enabling routes to optionally expose themselves as JSON-RPC methods.
 
 ```typescript
 static default(): Route
-```
-
-###### fromMetadata()
-
-Create a route from metadata, using schema registry for deduplication
-
-Auto-generates parameter schema from type hints in the path if no explicit schema provided.
-Type hints like `/items/{id:uuid}` generate appropriate JSON Schema validation.
-Explicit `parameter_schema` overrides auto-generated schemas.
-
-**Errors:**
-Returns an error if the schema compilation fails or metadata is invalid.
-
-The schema registry ensures each unique schema is compiled only once, improving
-startup performance and memory usage for applications with many routes.
-
-**Signature:**
-
-```typescript
-static fromMetadata(metadata: RouteMetadata, registry: string): Route
-```
-
-###### withJsonrpcMethod()
-
-Builder method to attach JSON-RPC method info to a route
-
-This is a convenient way to add JSON-RPC metadata after route creation.
-It consumes the route and returns a new route with the metadata attached.
-
-**Signature:**
-
-```typescript
-withJsonrpcMethod(info: JsonRpcMethodInfo): Route
 ```
 
 ###### isJsonrpcMethod()
@@ -1128,50 +964,6 @@ introspection control, complexity limits, and depth limits.
 static default(): SchemaConfig
 ```
 
-###### setIntrospectionEnabled()
-
-Enable or disable introspection
-
-**Signature:**
-
-```typescript
-setIntrospectionEnabled(enabled: boolean): SchemaConfig
-```
-
-###### setComplexityLimit()
-
-Set the complexity limit (0 means unlimited)
-
-**Signature:**
-
-```typescript
-setComplexityLimit(limit: number): SchemaConfig
-```
-
-###### setDepthLimit()
-
-Set the depth limit (0 means unlimited)
-
-**Signature:**
-
-```typescript
-setDepthLimit(limit: number): SchemaConfig
-```
-
-###### validate()
-
-Validate the configuration
-
-**Errors:**
-
-Returns an error if the configuration is invalid (currently all configurations are valid)
-
-**Signature:**
-
-```typescript
-validate(): string
-```
-
 ---
 
 ##### ServerConfig
@@ -1209,16 +1001,6 @@ Server configuration
 
 ```typescript
 static default(): ServerConfig
-```
-
-###### builder()
-
-Create a new builder for ServerConfig
-
-**Signature:**
-
-```typescript
-static builder(): string
 ```
 
 ---
@@ -1261,20 +1043,7 @@ retry: 3000
 
 ### Methods
 
-#### withType()
-
-Create a new SSE event with an event type and data
-
-Creates an event with a type field. Clients can filter events by type
-in their event listener.
-
-**Signature:**
-
-```typescript
-static withType(eventType: string, data: string): SseEvent
-```
-
-##### withId()
+#### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1287,7 +1056,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 withId(id: string): SseEvent
 ```
 
-###### withRetry()
+##### withRetry()
 
 Set the retry timeout for client reconnection
 

@@ -436,10 +436,6 @@ impl Route {
         self.jsonrpc_method.clone()
     }
 
-    pub fn with_jsonrpc_method(&self, info: &JsonRpcMethodInfo) -> Route {
-        panic!("alef: with_jsonrpc_method not auto-delegatable")
-    }
-
     pub fn is_jsonrpc_method(&self) -> bool {
         #[allow(clippy::needless_update)]
         let core_self = spikard_core::Route {
@@ -503,12 +499,6 @@ impl Route {
     #[allow(clippy::should_implement_trait)]
     pub fn default() -> Route {
         spikard_core::Route::default().into()
-    }
-
-    pub fn from_metadata(metadata: &RouteMetadata, registry: String) -> PhpResult<Route> {
-        Err(ext_php_rs::exception::PhpException::default(
-            "Not implemented: from_metadata".to_string(),
-        ))
     }
 }
 
@@ -590,18 +580,6 @@ impl ProblemDetails {
         core_self.with_instance(instance).into()
     }
 
-    pub fn with_extension(&self, key: String, value: String) -> ProblemDetails {
-        panic!("alef: with_extension not auto-delegatable")
-    }
-
-    pub fn with_extensions(&self, extensions: String) -> ProblemDetails {
-        panic!("alef: with_extensions not auto-delegatable")
-    }
-
-    pub fn status_code(&self) -> String {
-        String::from("[unimplemented: status_code]")
-    }
-
     pub fn to_json(&self) -> PhpResult<String> {
         let core_self = spikard_core::ProblemDetails {
             type_uri: self.type_uri.clone(),
@@ -632,10 +610,6 @@ impl ProblemDetails {
         Ok(result)
     }
 
-    pub fn from_validation_error(error: String) -> ProblemDetails {
-        panic!("alef: from_validation_error not auto-delegatable")
-    }
-
     pub fn not_found(detail: String) -> ProblemDetails {
         spikard_core::ProblemDetails::not_found(detail).into()
     }
@@ -646,15 +620,6 @@ impl ProblemDetails {
 
     pub fn internal_server_error(detail: String) -> ProblemDetails {
         spikard_core::ProblemDetails::internal_server_error(detail).into()
-    }
-
-    pub fn internal_server_error_debug(
-        detail: String,
-        exception: String,
-        traceback: String,
-        request_data: String,
-    ) -> ProblemDetails {
-        panic!("alef: internal_server_error_debug not auto-delegatable")
     }
 
     pub fn bad_request(detail: String) -> ProblemDetails {
@@ -673,14 +638,6 @@ pub struct GraphQLError {
 impl GraphQLError {
     pub fn status_code(&self) -> u16 {
         self.inner.status_code()
-    }
-
-    pub fn to_graphql_response(&self) -> String {
-        self.inner.to_graphql_response()
-    }
-
-    pub fn to_http_response(&self) -> String {
-        self.inner.to_http_response()
     }
 }
 
@@ -768,22 +725,6 @@ impl SchemaConfig {
             complexity_limit,
             depth_limit,
         }
-    }
-
-    pub fn set_introspection_enabled(&self, enabled: bool) -> SchemaConfig {
-        panic!("alef: set_introspection_enabled not auto-delegatable")
-    }
-
-    pub fn set_complexity_limit(&self, limit: i64) -> SchemaConfig {
-        panic!("alef: set_complexity_limit not auto-delegatable")
-    }
-
-    pub fn set_depth_limit(&self, limit: i64) -> SchemaConfig {
-        panic!("alef: set_depth_limit not auto-delegatable")
-    }
-
-    pub fn validate(&self) -> String {
-        String::from("[unimplemented: validate]")
     }
 
     #[allow(clippy::should_implement_trait)]
@@ -1400,10 +1341,6 @@ impl Response {
         ()
     }
 
-    pub fn with_status(content: Option<String>, status_code: u16) -> Response {
-        panic!("alef: with_status not auto-delegatable")
-    }
-
     #[allow(clippy::should_implement_trait)]
     pub fn default() -> Response {
         spikard_http::Response::default().into()
@@ -1457,10 +1394,6 @@ impl SseEvent {
             retry: self.retry.map(|v| v as u64),
         };
         core_self.with_retry(retry_ms as u64).into()
-    }
-
-    pub fn with_type(event_type: String, data: String) -> SseEvent {
-        panic!("alef: with_type not auto-delegatable")
     }
 }
 
@@ -1670,10 +1603,6 @@ impl ServerConfig {
     #[allow(clippy::should_implement_trait)]
     pub fn default() -> ServerConfig {
         spikard_http::ServerConfig::default().into()
-    }
-
-    pub fn builder() -> String {
-        String::from("[unimplemented: builder]")
     }
 }
 

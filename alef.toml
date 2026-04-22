@@ -48,10 +48,28 @@ sources = [
 
 [exclude]
 methods = [
-  # std::io::Read and std::io::Seek trait impls — these require the trait to be in scope
-  # and use &mut [u8] params that don't map well to binding types.
+  # std::io trait impls — require trait in scope, &mut [u8] params
   "UploadFile.read",
   "UploadFile.seek",
+  # Methods with unknown external types (StatusCode, axum::Response, etc.)
+  "ProblemDetails.status_code",
+  "ProblemDetails.with_extension",
+  "ProblemDetails.with_extensions",
+  "ProblemDetails.from_validation_error",
+  "ProblemDetails.internal_server_error_debug",
+  "GraphQLError.to_graphql_response",
+  "GraphQLError.to_http_response",
+  # Methods returning type aliases or excluded types
+  "SchemaConfig.validate",
+  "SchemaConfig.set_introspection_enabled",
+  "SchemaConfig.set_complexity_limit",
+  "SchemaConfig.set_depth_limit",
+  "ServerConfig.builder",
+  # Methods with complex params not auto-delegatable
+  "Route.from_metadata",
+  "Route.with_jsonrpc_method",
+  "Response.with_status",
+  "SseEvent.with_type",
 ]
 types = [
   # Internal implementation types

@@ -166,16 +166,6 @@ impl JsGraphQLError {
     pub fn status_code(&self) -> u16 {
         self.inner.status_code()
     }
-
-    #[napi(js_name = "toGraphqlResponse")]
-    pub fn to_graphql_response(&self) -> String {
-        String::from("[unimplemented: GraphQLError.to_graphql_response]")
-    }
-
-    #[napi(js_name = "toHttpResponse")]
-    pub fn to_http_response(&self) -> String {
-        String::from("[unimplemented: GraphQLError.to_http_response]")
-    }
 }
 
 #[derive(Clone)]

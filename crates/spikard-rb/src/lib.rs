@@ -731,10 +731,6 @@ impl Route {
         self.jsonrpc_method.clone()
     }
 
-    fn with_jsonrpc_method(&self, info: JsonRpcMethodInfo) -> Route {
-        panic!("alef: with_jsonrpc_method not auto-delegatable")
-    }
-
     fn is_jsonrpc_method(&self) -> bool {
         #[allow(clippy::needless_update)]
         let core_self = spikard_core::Route {
@@ -864,18 +860,6 @@ impl ProblemDetails {
         core_self.with_instance(instance).into()
     }
 
-    fn with_extension(&self, key: String, value: String) -> ProblemDetails {
-        panic!("alef: with_extension not auto-delegatable")
-    }
-
-    fn with_extensions(&self, extensions: String) -> ProblemDetails {
-        panic!("alef: with_extensions not auto-delegatable")
-    }
-
-    fn status_code(&self) -> String {
-        String::from("[unimplemented: status_code]")
-    }
-
     fn to_json(&self) -> Result<String, Error> {
         let core_self = spikard_core::ProblemDetails {
             type_uri: self.type_uri.clone(),
@@ -932,14 +916,6 @@ unsafe impl TryConvertOwned for GraphQLError {}
 impl GraphQLError {
     fn status_code(&self) -> u16 {
         self.inner.status_code()
-    }
-
-    fn to_graphql_response(&self) -> String {
-        String::from("[unimplemented: to_graphql_response]")
-    }
-
-    fn to_http_response(&self) -> String {
-        String::from("[unimplemented: to_http_response]")
     }
 }
 
@@ -1049,37 +1025,6 @@ impl SchemaConfig {
 
     fn depth_limit(&self) -> Option<usize> {
         self.depth_limit
-    }
-
-    fn set_introspection_enabled(&self, enabled: bool) -> SchemaConfig {
-        let core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_introspection_enabled(enabled).into()
-    }
-
-    fn set_complexity_limit(&self, limit: usize) -> SchemaConfig {
-        let core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_complexity_limit(limit).into()
-    }
-
-    fn set_depth_limit(&self, limit: usize) -> SchemaConfig {
-        let core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_depth_limit(limit).into()
-    }
-
-    fn validate(&self) -> String {
-        String::from("[unimplemented: validate]")
     }
 }
 
@@ -3444,7 +3389,6 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("expects_json_body", method!(Route::expects_json_body, 0))?;
     class.define_method("handler_dependencies", method!(Route::handler_dependencies, 0))?;
     class.define_method("jsonrpc_method", method!(Route::jsonrpc_method, 0))?;
-    class.define_method("with_jsonrpc_method", method!(Route::with_jsonrpc_method, 1))?;
     class.define_method("is_jsonrpc_method", method!(Route::is_jsonrpc_method, 0))?;
     class.define_method("jsonrpc_method_name", method!(Route::jsonrpc_method_name, 0))?;
 
@@ -3458,16 +3402,11 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("extensions", method!(ProblemDetails::extensions, 0))?;
     class.define_method("with_detail", method!(ProblemDetails::with_detail, 1))?;
     class.define_method("with_instance", method!(ProblemDetails::with_instance, 1))?;
-    class.define_method("with_extension", method!(ProblemDetails::with_extension, 2))?;
-    class.define_method("with_extensions", method!(ProblemDetails::with_extensions, 1))?;
-    class.define_method("status_code", method!(ProblemDetails::status_code, 0))?;
     class.define_method("to_json", method!(ProblemDetails::to_json, 0))?;
     class.define_method("to_json_pretty", method!(ProblemDetails::to_json_pretty, 0))?;
 
     let class = module.define_class("GraphQLError", ruby.class_object())?;
     class.define_method("status_code", method!(GraphQLError::status_code, 0))?;
-    class.define_method("to_graphql_response", method!(GraphQLError::to_graphql_response, 0))?;
-    class.define_method("to_http_response", method!(GraphQLError::to_http_response, 0))?;
 
     let class = module.define_class("GraphQLRouteConfig", ruby.class_object())?;
     class.define_method("path", method!(GraphQLRouteConfig::path, 1))?;
@@ -3487,13 +3426,6 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("introspection_enabled", method!(SchemaConfig::introspection_enabled, 0))?;
     class.define_method("complexity_limit", method!(SchemaConfig::complexity_limit, 0))?;
     class.define_method("depth_limit", method!(SchemaConfig::depth_limit, 0))?;
-    class.define_method(
-        "set_introspection_enabled",
-        method!(SchemaConfig::set_introspection_enabled, 1),
-    )?;
-    class.define_method("set_complexity_limit", method!(SchemaConfig::set_complexity_limit, 1))?;
-    class.define_method("set_depth_limit", method!(SchemaConfig::set_depth_limit, 1))?;
-    class.define_method("validate", method!(SchemaConfig::validate, 0))?;
 
     let class = module.define_class("QueryOnlyConfig", ruby.class_object())?;
     class.define_singleton_method("new", function!(QueryOnlyConfig::new, 3))?;

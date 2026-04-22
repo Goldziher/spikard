@@ -8,8 +8,7 @@ defmodule Spikard.Native do
     base_url:
       "https://github.com/Goldziher/spikard/releases/download/v#{Mix.Project.config()[:version]}",
     version: Mix.Project.config()[:version],
-    force_build:
-      System.get_env("SPIKARD_BUILD") in ["1", "true"] or Mix.env() in [:test, :dev],
+    force_build: System.get_env("SPIKARD_BUILD") in ["1", "true"] or Mix.env() in [:test, :dev],
     targets:
       ~w(aarch64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu x86_64-pc-windows-gnu),
     nif_versions: ["2.16", "2.17"]
@@ -31,29 +30,17 @@ defmodule Spikard.Native do
   def compressionconfig_default, do: :erlang.nif_error(:nif_not_loaded)
   def ratelimitconfig_default, do: :erlang.nif_error(:nif_not_loaded)
   def route_default, do: :erlang.nif_error(:nif_not_loaded)
-  def route_from_metadata(_metadata, _registry), do: :erlang.nif_error(:nif_not_loaded)
-  def route_with_jsonrpc_method(_obj, _info), do: :erlang.nif_error(:nif_not_loaded)
   def route_is_jsonrpc_method(_obj), do: :erlang.nif_error(:nif_not_loaded)
   def route_jsonrpc_method_name(_obj), do: :erlang.nif_error(:nif_not_loaded)
   def problemdetails_with_detail(_obj, _detail), do: :erlang.nif_error(:nif_not_loaded)
   def problemdetails_with_instance(_obj, _instance), do: :erlang.nif_error(:nif_not_loaded)
-  def problemdetails_with_extension(_obj, _key, _value), do: :erlang.nif_error(:nif_not_loaded)
-  def problemdetails_with_extensions(_obj, _extensions), do: :erlang.nif_error(:nif_not_loaded)
-  def problemdetails_from_validation_error(_error), do: :erlang.nif_error(:nif_not_loaded)
   def problemdetails_not_found(_detail), do: :erlang.nif_error(:nif_not_loaded)
   def problemdetails_method_not_allowed(_detail), do: :erlang.nif_error(:nif_not_loaded)
   def problemdetails_internal_server_error(_detail), do: :erlang.nif_error(:nif_not_loaded)
-
-  def problemdetails_internal_server_error_debug(_detail, _exception, _traceback, _request_data),
-    do: :erlang.nif_error(:nif_not_loaded)
-
   def problemdetails_bad_request(_detail), do: :erlang.nif_error(:nif_not_loaded)
-  def problemdetails_status_code(_obj), do: :erlang.nif_error(:nif_not_loaded)
   def problemdetails_to_json(_obj), do: :erlang.nif_error(:nif_not_loaded)
   def problemdetails_to_json_pretty(_obj), do: :erlang.nif_error(:nif_not_loaded)
   def graphqlerror_status_code(_obj), do: :erlang.nif_error(:nif_not_loaded)
-  def graphqlerror_to_graphql_response(_obj), do: :erlang.nif_error(:nif_not_loaded)
-  def graphqlerror_to_http_response(_obj), do: :erlang.nif_error(:nif_not_loaded)
   def graphqlrouteconfig_path(_obj, _path), do: :erlang.nif_error(:nif_not_loaded)
   def graphqlrouteconfig_method(_obj, _method), do: :erlang.nif_error(:nif_not_loaded)
   def graphqlrouteconfig_enable_playground(_obj, _enable), do: :erlang.nif_error(:nif_not_loaded)
@@ -64,13 +51,6 @@ defmodule Spikard.Native do
   def graphqlrouteconfig_get_description(_obj), do: :erlang.nif_error(:nif_not_loaded)
   def graphqlrouteconfig_default, do: :erlang.nif_error(:nif_not_loaded)
   def schemaconfig_default, do: :erlang.nif_error(:nif_not_loaded)
-
-  def schemaconfig_set_introspection_enabled(_obj, _enabled),
-    do: :erlang.nif_error(:nif_not_loaded)
-
-  def schemaconfig_set_complexity_limit(_obj, _limit), do: :erlang.nif_error(:nif_not_loaded)
-  def schemaconfig_set_depth_limit(_obj, _limit), do: :erlang.nif_error(:nif_not_loaded)
-  def schemaconfig_validate(_obj), do: :erlang.nif_error(:nif_not_loaded)
   def queryonlyconfig_default, do: :erlang.nif_error(:nif_not_loaded)
   def querymutationconfig_default, do: :erlang.nif_error(:nif_not_loaded)
   def fullschemaconfig_default, do: :erlang.nif_error(:nif_not_loaded)
@@ -80,16 +60,13 @@ defmodule Spikard.Native do
   def grpcconfig_default, do: :erlang.nif_error(:nif_not_loaded)
   def jsonrpcconfig_default, do: :erlang.nif_error(:nif_not_loaded)
   def openapiconfig_default, do: :erlang.nif_error(:nif_not_loaded)
-  def response_with_status(_content, _status_code), do: :erlang.nif_error(:nif_not_loaded)
   def response_set_header(_obj, _key, _value), do: :erlang.nif_error(:nif_not_loaded)
 
   def response_set_cookie(_obj, _key, _value, _max_age, _domain, _path, _secure, _http_only, _same_site),
     do: :erlang.nif_error(:nif_not_loaded)
 
   def response_default, do: :erlang.nif_error(:nif_not_loaded)
-  def sseevent_with_type(_event_type, _data), do: :erlang.nif_error(:nif_not_loaded)
   def sseevent_with_id(_obj, _id), do: :erlang.nif_error(:nif_not_loaded)
   def sseevent_with_retry(_obj, _retry_ms), do: :erlang.nif_error(:nif_not_loaded)
   def serverconfig_default, do: :erlang.nif_error(:nif_not_loaded)
-  def serverconfig_builder, do: :erlang.nif_error(:nif_not_loaded)
 end

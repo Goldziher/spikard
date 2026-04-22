@@ -104,21 +104,6 @@ defmodule Spikard do
     Spikard.Native.route_default()
   end
 
-  @doc "Create a route from metadata, using schema registry for deduplication"
-  @spec route_from_metadata(
-          String.t() | nil,
-          String.t()
-        ) :: {:ok, String.t() | nil} | {:error, String.t()}
-  def route_from_metadata(metadata, registry) do
-    Spikard.Native.route_from_metadata(metadata, registry)
-  end
-
-  @doc "Builder method to attach JSON-RPC method info to a route"
-  @spec route_with_jsonrpc_method(map(), map()) :: String.t() | nil
-  def route_with_jsonrpc_method(obj, info) do
-    Spikard.Native.route_with_jsonrpc_method(obj, info)
-  end
-
   @doc "Check if this route has JSON-RPC metadata"
   @spec route_is_jsonrpc_method(map()) :: boolean()
   def route_is_jsonrpc_method(obj) do
@@ -143,24 +128,6 @@ defmodule Spikard do
     Spikard.Native.problemdetails_with_instance(obj, instance)
   end
 
-  @doc "Add an extension field"
-  @spec problemdetails_with_extension(map(), String.t(), String.t()) :: map()
-  def problemdetails_with_extension(obj, key, value) do
-    Spikard.Native.problemdetails_with_extension(obj, key, value)
-  end
-
-  @doc "Add all extensions from a JSON object"
-  @spec problemdetails_with_extensions(map(), String.t()) :: map()
-  def problemdetails_with_extensions(obj, extensions) do
-    Spikard.Native.problemdetails_with_extensions(obj, extensions)
-  end
-
-  @doc "Create a validation error Problem Details from `ValidationError`"
-  @spec problemdetails_from_validation_error(String.t()) :: map()
-  def problemdetails_from_validation_error(error) do
-    Spikard.Native.problemdetails_from_validation_error(error)
-  end
-
   @doc "Create a not found error"
   @spec problemdetails_not_found(String.t()) :: map()
   def problemdetails_not_found(detail) do
@@ -179,27 +146,10 @@ defmodule Spikard do
     Spikard.Native.problemdetails_internal_server_error(detail)
   end
 
-  @doc "Create an internal server error with debug information"
-  @spec problemdetails_internal_server_error_debug(
-          String.t(),
-          String.t(),
-          String.t(),
-          String.t()
-        ) :: map()
-  def problemdetails_internal_server_error_debug(detail, exception, traceback, request_data) do
-    Spikard.Native.problemdetails_internal_server_error_debug(detail, exception, traceback, request_data)
-  end
-
   @doc "Create a bad request error"
   @spec problemdetails_bad_request(String.t()) :: map()
   def problemdetails_bad_request(detail) do
     Spikard.Native.problemdetails_bad_request(detail)
-  end
-
-  @doc "Get the HTTP status code"
-  @spec problemdetails_status_code(map()) :: String.t()
-  def problemdetails_status_code(obj) do
-    Spikard.Native.problemdetails_status_code(obj)
   end
 
   @doc "Serialize to JSON string"
@@ -218,18 +168,6 @@ defmodule Spikard do
   @spec graphqlerror_status_code(map()) :: non_neg_integer()
   def graphqlerror_status_code(obj) do
     Spikard.Native.graphqlerror_status_code(obj)
-  end
-
-  @doc "Convert error to GraphQL error response JSON"
-  @spec graphqlerror_to_graphql_response(map()) :: String.t()
-  def graphqlerror_to_graphql_response(obj) do
-    Spikard.Native.graphqlerror_to_graphql_response(obj)
-  end
-
-  @doc "Convert error to structured HTTP error response"
-  @spec graphqlerror_to_http_response(map()) :: String.t()
-  def graphqlerror_to_http_response(obj) do
-    Spikard.Native.graphqlerror_to_http_response(obj)
   end
 
   @doc "Set the HTTP path for the GraphQL endpoint"
@@ -292,30 +230,6 @@ defmodule Spikard do
     Spikard.Native.schemaconfig_default()
   end
 
-  @doc "Enable or disable introspection"
-  @spec schemaconfig_set_introspection_enabled(map(), boolean()) :: String.t() | nil
-  def schemaconfig_set_introspection_enabled(obj, enabled) do
-    Spikard.Native.schemaconfig_set_introspection_enabled(obj, enabled)
-  end
-
-  @doc "Set the complexity limit (0 means unlimited)"
-  @spec schemaconfig_set_complexity_limit(map(), non_neg_integer()) :: String.t() | nil
-  def schemaconfig_set_complexity_limit(obj, limit) do
-    Spikard.Native.schemaconfig_set_complexity_limit(obj, limit)
-  end
-
-  @doc "Set the depth limit (0 means unlimited)"
-  @spec schemaconfig_set_depth_limit(map(), non_neg_integer()) :: String.t() | nil
-  def schemaconfig_set_depth_limit(obj, limit) do
-    Spikard.Native.schemaconfig_set_depth_limit(obj, limit)
-  end
-
-  @doc "Validate the configuration"
-  @spec schemaconfig_validate(map()) :: String.t()
-  def schemaconfig_validate(obj) do
-    Spikard.Native.schemaconfig_validate(obj)
-  end
-
   @doc "Method"
   @spec queryonlyconfig_default() :: String.t() | nil
   def queryonlyconfig_default do
@@ -370,12 +284,6 @@ defmodule Spikard do
     Spikard.Native.openapiconfig_default()
   end
 
-  @doc "Create a response with a specific status code"
-  @spec response_with_status(String.t() | nil, non_neg_integer()) :: String.t() | nil
-  def response_with_status(content, status_code) do
-    Spikard.Native.response_with_status(content, status_code)
-  end
-
   @doc "Set a header"
   @spec response_set_header(map(), String.t(), String.t()) :: nil
   def response_set_header(obj, key, value) do
@@ -404,12 +312,6 @@ defmodule Spikard do
     Spikard.Native.response_default()
   end
 
-  @doc "Create a new SSE event with an event type and data"
-  @spec sseevent_with_type(String.t(), String.t()) :: map()
-  def sseevent_with_type(event_type, data) do
-    Spikard.Native.sseevent_with_type(event_type, data)
-  end
-
   @doc "Set the event ID for client-side reconnection support"
   @spec sseevent_with_id(map(), String.t()) :: map()
   def sseevent_with_id(obj, id) do
@@ -426,11 +328,5 @@ defmodule Spikard do
   @spec serverconfig_default() :: String.t() | nil
   def serverconfig_default do
     Spikard.Native.serverconfig_default()
-  end
-
-  @doc "Create a new builder for ServerConfig"
-  @spec serverconfig_builder() :: String.t()
-  def serverconfig_builder do
-    Spikard.Native.serverconfig_builder()
   end
 end

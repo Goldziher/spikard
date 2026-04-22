@@ -1249,81 +1249,6 @@
           "has_default_impl": false
         },
         {
-          "name": "from_metadata",
-          "params": [
-            {
-              "name": "metadata",
-              "ty": {
-                "Named": "RouteMetadata"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "registry",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "Route"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": "String",
-          "doc": "Create a route from metadata, using schema registry for deduplication\n\nAuto-generates parameter schema from type hints in the path if no explicit schema provided.\nType hints like `/items/{id:uuid}` generate appropriate JSON Schema validation.\nExplicit `parameter_schema` overrides auto-generated schemas.\n\n# Errors\nReturns an error if the schema compilation fails or metadata is invalid.\n\nThe schema registry ensures each unique schema is compiled only once, improving\nstartup performance and memory usage for applications with many routes.",
-          "receiver": null,
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "with_jsonrpc_method",
-          "params": [
-            {
-              "name": "info",
-              "ty": {
-                "Named": "JsonRpcMethodInfo"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "Route"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Builder method to attach JSON-RPC method info to a route\n\nThis is a convenient way to add JSON-RPC metadata after route creation.\nIt consumes the route and returns a new route with the metadata attached.\n\n# Examples\n\n```ignore\nlet route = Route::from_metadata(metadata, &registry)?\n    .with_jsonrpc_method(JsonRpcMethodInfo {\n        method_name: \"user.create\".to_string(),\n        description: Some(\"Creates a new user\".to_string()),\n        params_schema: Some(request_schema),\n        result_schema: Some(response_schema),\n        deprecated: false,\n        tags: vec![\"users\".to_string()],\n    });\n```",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
           "name": "is_jsonrpc_method",
           "params": [],
           "return_type": {
@@ -1537,107 +1462,6 @@
           "has_default_impl": false
         },
         {
-          "name": "with_extension",
-          "params": [
-            {
-              "name": "key",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "value",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "ProblemDetails"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Add an extension field",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "with_extensions",
-          "params": [
-            {
-              "name": "extensions",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "ProblemDetails"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Add all extensions from a JSON object",
-          "receiver": "Owned",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "from_validation_error",
-          "params": [
-            {
-              "name": "error",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": true,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "ProblemDetails"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "Create a validation error Problem Details from `ValidationError`\n\nThis converts the FastAPI-style validation errors to RFC 9457 format:\n- `type`: <https://spikard.dev/errors/validation-error>\n- `title`: \"Request Validation Failed\"\n- `status`: 422\n- `detail`: Summary of error count\n- `errors`: Array of validation error details (as extension field)",
-          "receiver": null,
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
           "name": "not_found",
           "params": [
             {
@@ -1728,69 +1552,6 @@
           "has_default_impl": false
         },
         {
-          "name": "internal_server_error_debug",
-          "params": [
-            {
-              "name": "detail",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "exception",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "traceback",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "request_data",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "ProblemDetails"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "Create an internal server error with debug information\n\nIncludes exception details, traceback, and request data for debugging.\nOnly use in development/debug mode.",
-          "receiver": null,
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
           "name": "bad_request",
           "params": [
             {
@@ -1814,22 +1575,6 @@
           "doc": "Create a bad request error",
           "receiver": null,
           "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "status_code",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get the HTTP status code",
-          "receiver": "Ref",
-          "sanitized": true,
           "trait_source": null,
           "returns_ref": false,
           "returns_cow": false,
@@ -1899,38 +1644,6 @@
           "doc": "Convert error to HTTP status code\n\nMaps GraphQL error types to appropriate HTTP status codes:\n- 400: Bad Request for parse/request-handling errors\n- 401: Unauthorized for authentication errors\n- 403: Forbidden for authorization errors\n- 404: Not Found for resource not found\n- 422: Unprocessable Entity for validation failures\n- 429: Too Many Requests for rate limit errors\n- 500: Internal Server Error for schema/serialization/internal errors\n- 200: OK for GraphQL execution errors returned in GraphQL response body\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::AuthenticationError(\"Invalid token\".to_string());\nassert_eq!(error.status_code(), 401);\n\nlet error = GraphQLError::ExecutionError(\"Query failed\".to_string());\nassert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body\n```",
           "receiver": "Ref",
           "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "to_graphql_response",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Convert error to GraphQL error response JSON\n\nReturns a JSON object matching the GraphQL spec error format with\nstructured extensions for HTTP integration.\n\n# Format\n\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"error message\",\n      \"extensions\": {\n        \"code\": \"ERROR_CODE\",\n        \"status\": 400,\n        \"type\": \"https://spikard.dev/errors/...\"\n      }\n    }\n  ]\n}\n```\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::ValidationError(\"Invalid query\".to_string());\nlet json = error.to_graphql_response();\nassert!(json[\"errors\"].is_array());\n```",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "to_http_response",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Convert error to structured HTTP error response\n\nReturns a JSON object matching the project's error fixture format,\nsuitable for direct HTTP response conversion.\n\n# Format\n\n```json\n{\n  \"type\": \"https://spikard.dev/errors/...\",\n  \"title\": \"Error Title\",\n  \"status\": 422,\n  \"detail\": \"error message\",\n  \"errors\": [\n    {\n      \"type\": \"error_code\",\n      \"message\": \"error message\"\n    }\n  ]\n}\n```\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::ValidationError(\"Invalid query\".to_string());\nlet json = error.to_http_response();\nassert_eq!(json[\"status\"], 422);\n```",
-          "receiver": "Ref",
-          "sanitized": true,
           "trait_source": null,
           "returns_ref": false,
           "returns_cow": false,
@@ -2249,118 +1962,6 @@
           "doc": "",
           "receiver": null,
           "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "set_introspection_enabled",
-          "params": [
-            {
-              "name": "enabled",
-              "ty": {
-                "Primitive": "Bool"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Enable or disable introspection",
-          "receiver": "RefMut",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "set_complexity_limit",
-          "params": [
-            {
-              "name": "limit",
-              "ty": {
-                "Primitive": "Usize"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the complexity limit (0 means unlimited)",
-          "receiver": "RefMut",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "set_depth_limit",
-          "params": [
-            {
-              "name": "limit",
-              "ty": {
-                "Primitive": "Usize"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the depth limit (0 means unlimited)",
-          "receiver": "RefMut",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "validate",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Validate the configuration\n\n# Errors\n\nReturns an error if the configuration is invalid (currently all configurations are valid)",
-          "receiver": "Ref",
-          "sanitized": true,
           "trait_source": null,
           "returns_ref": false,
           "returns_cow": false,
@@ -3917,49 +3518,6 @@
       ],
       "methods": [
         {
-          "name": "with_status",
-          "params": [
-            {
-              "name": "content",
-              "ty": "String",
-              "optional": true,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "status_code",
-              "ty": {
-                "Primitive": "U16"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "Response"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "Create a response with a specific status code",
-          "receiver": null,
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
           "name": "set_header",
           "params": [
             {
@@ -4209,47 +3767,6 @@
         }
       ],
       "methods": [
-        {
-          "name": "with_type",
-          "params": [
-            {
-              "name": "event_type",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            },
-            {
-              "name": "data",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": true,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SseEvent"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "Create a new SSE event with an event type and data\n\nCreates an event with a type field. Clients can filter events by type\nin their event listener.\n\n# Arguments\n* `event_type` - String identifying the event type (e.g., \"update\", \"error\")\n* `data` - JSON value to send to the client\n\n# Example\n\n```ignore\nuse serde_json::json;\nuse spikard_http::sse::SseEvent;\n\nlet event = SseEvent::with_type(\"update\", json!({\"count\": 42}));\n// Client can listen with: eventSource.addEventListener(\"update\", ...)\n```",
-          "receiver": null,
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
         {
           "name": "with_id",
           "params": [
@@ -4924,22 +4441,6 @@
           "doc": "",
           "receiver": null,
           "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "builder",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "Create a new builder for ServerConfig\n\n# Example\n\n```ignorerust\nuse spikard_http::ServerConfig;\n\nlet config = ServerConfig::builder()\n    .port(3000)\n    .host(\"0.0.0.0\")\n    .build();\n```",
-          "receiver": null,
-          "sanitized": true,
           "trait_source": null,
           "returns_ref": false,
           "returns_cow": false,

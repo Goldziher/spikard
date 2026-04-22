@@ -10,8 +10,8 @@ def test_static_file_server_returns_text_file(client) -> None:
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == "Hello from static storage"  # noqa: S101
-    assert response.headers["cache-control"] == "public, max-age=60"  # noqa: S101
     assert response.headers["content-type"] == "text/plain"  # noqa: S101
+    assert response.headers["cache-control"] == "public, max-age=60"  # noqa: S101
 
 
 def test_static_server_returns_index_html_for_directory(client) -> None:
