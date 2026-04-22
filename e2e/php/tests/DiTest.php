@@ -48,8 +48,8 @@ final class DiTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["authenticated" => true, "logged" => true], $body);
-        $this->assertEquals("strict", $response->getHeaderLine("x-auth-mode"));
         $this->assertEquals("debug", $response->getHeaderLine("x-log-level"));
+        $this->assertEquals("strict", $response->getHeaderLine("x-auth-mode"));
     }
 
     /** Tests factory dependency that creates instances on-demand */

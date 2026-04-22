@@ -16,8 +16,8 @@ defmodule E2e.CompressionTest do
       {:ok, response} = Req.get(client(), url: "/compression/gzip", headers: [{"Accept-Encoding", "gzip"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"message" => "Compressed payload", "payload" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-encoding", do: v end) == "gzip"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "vary", do: v end) == "Accept-Encoding"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-encoding", do: v end) == "gzip"
     end
   end
 

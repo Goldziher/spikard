@@ -38,8 +38,8 @@ describe("di", () => {
 		expect(response.status).toBe(200);
 		const data = await response.json();
 		expect(data).toEqual({ authenticated: true, logged: true });
-		expect(response.headers.get("x-auth-mode")).toBe("strict");
 		expect(response.headers.get("x-log-level")).toBe("debug");
+		expect(response.headers.get("x-auth-mode")).toBe("strict");
 	});
 
 	it("factory_dependency_success: Tests factory dependency that creates instances on-demand", async () => {

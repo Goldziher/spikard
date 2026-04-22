@@ -75,7 +75,7 @@ impl UploadFile {
             filename: self.filename.clone(),
             content_type: self.content_type.clone(),
             size: self.size.map(|v| v as usize),
-            content: self.content.clone(),
+            content: self.content.clone().into(),
             content_encoding: self.content_encoding.clone(),
             cursor: Default::default(),
         };
@@ -87,7 +87,7 @@ impl UploadFile {
             filename: self.filename.clone(),
             content_type: self.content_type.clone(),
             size: self.size.map(|v| v as usize),
-            content: self.content.clone(),
+            content: self.content.clone().into(),
             content_encoding: self.content_encoding.clone(),
             cursor: Default::default(),
         };
@@ -102,7 +102,7 @@ impl UploadFile {
             filename: self.filename.clone(),
             content_type: self.content_type.clone(),
             size: self.size.map(|v| v as usize),
-            content: self.content.clone(),
+            content: self.content.clone().into(),
             content_encoding: self.content_encoding.clone(),
             cursor: Default::default(),
         };

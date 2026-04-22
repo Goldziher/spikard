@@ -18,8 +18,8 @@ def test_compression_gzip_applied(client) -> None:
         "message": "Compressed payload",
         "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     }  # noqa: S101
-    assert response.headers["content-encoding"] == "gzip"  # noqa: S101
     assert response.headers["vary"] == "Accept-Encoding"  # noqa: S101
+    assert response.headers["content-encoding"] == "gzip"  # noqa: S101
 
 
 def test_compression_payload_below_min_size_is_not_compressed(client) -> None:

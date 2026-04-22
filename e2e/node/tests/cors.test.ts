@@ -6,8 +6,8 @@ describe("cors", () => {
 		const response = await app.request("/api/data", {
 			method: "OPTIONS",
 			headers: {
-				Origin: "https://example.com",
 				"Access-Control-Request-Method": "DELETE",
+				Origin: "https://example.com",
 				"Access-Control-Request-Headers": "Content-Type",
 			},
 		});
@@ -31,14 +31,14 @@ describe("cors", () => {
 			method: "OPTIONS",
 			headers: {
 				"Access-Control-Request-Headers": "Content-Type",
-				"Access-Control-Request-Method": "POST",
 				Origin: "https://example.com",
+				"Access-Control-Request-Method": "POST",
 			},
 		});
 		expect(response.status).toBe(204);
-		expect(response.headers.get("access-control-allow-methods")).toBe("POST");
 		expect(response.headers.get("access-control-allow-headers")).toBe("Content-Type");
 		expect(response.headers.get("access-control-max-age")).toBe("3600");
+		expect(response.headers.get("access-control-allow-methods")).toBe("POST");
 		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
 	});
 
@@ -50,10 +50,10 @@ describe("cors", () => {
 			},
 		});
 		expect(response.status).toBe(200);
-		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
-		expect(response.headers.get("x-total-count")).toBe("42");
-		expect(response.headers.get("x-request-id")).toBe("abc123");
 		expect(response.headers.get("access-control-expose-headers")).toBe("X-Total-Count, X-Request-Id");
+		expect(response.headers.get("x-total-count")).toBe("42");
+		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
+		expect(response.headers.get("x-request-id")).toBe("abc123");
 	});
 
 	it("_cors_origin_null: CORS request with 'null' origin should be handled according to policy", async () => {
@@ -84,10 +84,10 @@ describe("cors", () => {
 		const response = await app.request("/api/form", {
 			method: "POST",
 			headers: {
-				"Accept-Language": "en-US",
-				Accept: "application/json",
 				Origin: "https://app.example.com",
 				"Content-Type": "text/plain",
+				"Accept-Language": "en-US",
+				Accept: "application/json",
 			},
 		});
 		expect(response.status).toBe(200);

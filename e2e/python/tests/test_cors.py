@@ -9,8 +9,8 @@ def test__cors_preflight_method_not_allowed(client) -> None:
     response = client.options(
         "/api/data",
         headers={
-            "Origin": "https://example.com",
             "Access-Control-Request-Method": "DELETE",
+            "Origin": "https://example.com",
             "Access-Control-Request-Headers": "Content-Type",
         },
     )
@@ -36,14 +36,14 @@ def test__cors_max_age(client) -> None:
         "/api/data",
         headers={
             "Access-Control-Request-Headers": "Content-Type",
-            "Access-Control-Request-Method": "POST",
             "Origin": "https://example.com",
+            "Access-Control-Request-Method": "POST",
         },
     )
     assert response.status_code == 204  # noqa: S101
-    assert response.headers["access-control-allow-methods"] == "POST"  # noqa: S101
     assert response.headers["access-control-allow-headers"] == "Content-Type"  # noqa: S101
     assert response.headers["access-control-max-age"] == "3600"  # noqa: S101
+    assert response.headers["access-control-allow-methods"] == "POST"  # noqa: S101
     assert response.headers["access-control-allow-origin"] == "https://example.com"  # noqa: S101
 
 
@@ -56,10 +56,10 @@ def test__cors_expose_headers(client) -> None:
         },
     )
     assert response.status_code == 200  # noqa: S101
-    assert response.headers["access-control-allow-origin"] == "https://example.com"  # noqa: S101
-    assert response.headers["x-total-count"] == "42"  # noqa: S101
-    assert response.headers["x-request-id"] == "abc123"  # noqa: S101
     assert response.headers["access-control-expose-headers"] == "X-Total-Count, X-Request-Id"  # noqa: S101
+    assert response.headers["x-total-count"] == "42"  # noqa: S101
+    assert response.headers["access-control-allow-origin"] == "https://example.com"  # noqa: S101
+    assert response.headers["x-request-id"] == "abc123"  # noqa: S101
 
 
 def test__cors_origin_null(client) -> None:
@@ -93,10 +93,10 @@ def test_cors_safelisted_headers_without_preflight(client) -> None:
     response = client.post(
         "/api/form",
         headers={
-            "Accept-Language": "en-US",
-            "Accept": "application/json",
             "Origin": "https://app.example.com",
             "Content-Type": "text/plain",
+            "Accept-Language": "en-US",
+            "Accept": "application/json",
         },
     )
     assert response.status_code == 200  # noqa: S101

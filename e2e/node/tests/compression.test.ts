@@ -15,8 +15,8 @@ describe("compression", () => {
 			message: "Compressed payload",
 			payload: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		});
-		expect(response.headers.get("content-encoding")).toBe("gzip");
 		expect(response.headers.get("vary")).toBe("Accept-Encoding");
+		expect(response.headers.get("content-encoding")).toBe("gzip");
 	});
 
 	it("compression_payload_below_min_size_is_not_compressed: Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding.", async () => {

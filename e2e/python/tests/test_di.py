@@ -43,8 +43,8 @@ def test_dependency_injection_in_lifecycle_hooks_success(client) -> None:
     assert response.status_code == 200  # noqa: S101
     data = response.json()
     assert data == {"authenticated": True, "logged": True}  # noqa: S101
-    assert response.headers["x-auth-mode"] == "strict"  # noqa: S101
     assert response.headers["x-log-level"] == "debug"  # noqa: S101
+    assert response.headers["x-auth-mode"] == "strict"  # noqa: S101
 
 
 def test_factory_dependency_success(client) -> None:

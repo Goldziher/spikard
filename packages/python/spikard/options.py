@@ -19,8 +19,16 @@ class Method(str, Enum):
     TRACE = "trace"
 
 
+class LicenseInfo:
+    """Placeholder for LicenseInfo type."""
+
+
 class ApiKeyConfig:
     """Placeholder for ApiKeyConfig type."""
+
+
+class JwtConfig:
+    """Placeholder for JwtConfig type."""
 
 
 class JsonRpcMethodInfo:
@@ -29,14 +37,6 @@ class JsonRpcMethodInfo:
 
 class ContactInfo:
     """Placeholder for ContactInfo type."""
-
-
-class JwtConfig:
-    """Placeholder for JwtConfig type."""
-
-
-class LicenseInfo:
-    """Placeholder for LicenseInfo type."""
 
 
 @dataclass

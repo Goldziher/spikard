@@ -32,8 +32,8 @@ defmodule E2e.DiTest do
       {:ok, response} = Req.get(client(), url: "/api/hook-di-test", headers: [{"authorization", "Bearer valid_token"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"authenticated" => true, "logged" => true}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-auth-mode", do: v end) == "strict"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-log-level", do: v end) == "debug"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-auth-mode", do: v end) == "strict"
     end
   end
 

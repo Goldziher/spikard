@@ -413,7 +413,7 @@ defmodule E2e.QueryParamsTest do
 
   describe "multiple_query_parameters_with_different_types" do
     test "GET /query/multi-type - Tests multiple query parameters of different types in single request" do
-      {:ok, response} = Req.get(client(), url: "/query/multi-type", params: [{"active", "true"}, {"name", "john"}, {"score", "95.5"}, {"age", "30"}])
+      {:ok, response} = Req.get(client(), url: "/query/multi-type", params: [{"active", "true"}, {"age", "30"}, {"score", "95.5"}, {"name", "john"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"active" => true, "age" => 30, "name" => "john", "score" => 95.5}
     end
