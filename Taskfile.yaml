@@ -260,23 +260,16 @@ tasks:
     desc: "Build documentation"
     cmds:
       - task: docs:snippets:validate
-      - uv run mkdocs build --clean --strict
+      - uv run zensical build --clean --strict
   docs:serve:
     desc: "Serve documentation locally"
     cmds:
-      - uv run mkdocs serve
-  docs:serve:versioned:
-    desc: "Serve versioned documentation with mike"
-    cmds:
-      - uv run mike serve
+      - uv run zensical serve
   docs:deploy:
-    desc: "Build and stage versioned documentation with mike"
+    desc: "Build and deploy documentation"
     cmds:
-      - uv run mike deploy --update-aliases latest
-  docs:publish:
-    desc: "Publish documentation with mike (push latest alias)"
-    cmds:
-      - uv run mike deploy --push latest
+      - alef docs
+      - uv run zensical build --clean --strict
 
   python:test:
     desc: "Run Python integration tests"

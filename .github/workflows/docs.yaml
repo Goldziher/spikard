@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'docs/**'
-      - 'mkdocs.yml'
+      - 'zensical.toml'
       - 'README.md'
       - 'CHANGELOG.md'
       - '.github/workflows/docs.yaml'
