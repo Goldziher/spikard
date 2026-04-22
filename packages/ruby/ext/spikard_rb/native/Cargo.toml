@@ -9,6 +9,8 @@ keywords = ["http", "web", "framework", "polyglot", "rust"]
 categories = ["text-processing"]
 
 [lib]
+name = "spikard_rb"
+path = "../../../../../crates/spikard-rb/src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]

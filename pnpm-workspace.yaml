@@ -1,5 +1,6 @@
 packages:
   - "packages/typescript"
+  - "crates/spikard-node"
   - "e2e/node"
   - "examples/*"
   - "test_apps/node"
