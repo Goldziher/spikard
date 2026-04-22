@@ -1,5 +1,4 @@
 pub mod bindings;
-pub(crate) mod debug;
 #[cfg(feature = "di")]
 pub mod di;
 pub mod errors;

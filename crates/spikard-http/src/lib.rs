@@ -10,7 +10,6 @@ pub mod background;
 pub mod bindings;
 pub(crate) mod body_metadata;
 pub mod cors;
-pub(crate) mod debug;
 #[cfg(feature = "di")]
 pub mod di_handler;
 pub mod grpc;

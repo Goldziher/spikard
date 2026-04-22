@@ -496,7 +496,7 @@ mod tests {
     use super::*;
     use crate::grpc::framing::{encode_grpc_message, parse_unary_grpc_message};
     use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
-    use crate::grpc::streaming::{MessageStream, StreamingRequest, message_stream_from_vec};
+    use crate::grpc::streaming::{MessageStream, StreamingRequest};
     use bytes::Bytes;
     use flate2::{Compression, write::GzEncoder};
     use futures_util::StreamExt;
@@ -578,7 +578,11 @@ mod tests {
                 &self,
                 _request: GrpcRequestData,
             ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
-                Box::pin(async { Ok(message_stream_from_vec(vec![Bytes::from_static(b"streamed")])) })
+                Box::pin(async {
+                    Ok(Box::pin(futures_util::stream::iter(
+                        vec![Bytes::from_static(b"streamed")].into_iter().map(Ok::<Bytes, tonic::Status>),
+                    )) as MessageStream)
+                })
             }
         }
 
@@ -843,7 +847,8 @@ mod tests {
             ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
                 Box::pin(async {
                     let messages = vec![Bytes::from("m1"), Bytes::from("m2")];
-                    Ok(message_stream_from_vec(messages))
+                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok::<Bytes, tonic::Status>)))
+                        as MessageStream)
                 })
             }
         }
@@ -968,7 +973,8 @@ mod tests {
             ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
                 Box::pin(async {
                     let messages = vec![Bytes::from("r1")];
-                    Ok(message_stream_from_vec(messages))
+                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok::<Bytes, tonic::Status>)))
+                        as MessageStream)
                 })
             }
         }

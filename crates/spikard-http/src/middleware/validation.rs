@@ -6,11 +6,6 @@ use axum::response::{IntoResponse, Response};
 use serde_json::json;
 use spikard_core::problem::{CONTENT_TYPE_PROBLEM_JSON, ProblemDetails};
 
-/// Check if a media type is JSON or has a +json suffix
-pub fn is_json_content_type(mime: &mime::Mime) -> bool {
-    (mime.type_() == mime::APPLICATION && mime.subtype() == mime::JSON) || mime.suffix() == Some(mime::JSON)
-}
-
 fn trim_ascii_whitespace(bytes: &[u8]) -> &[u8] {
     let mut start = 0usize;
     let mut end = bytes.len();
@@ -92,30 +87,12 @@ fn ascii_contains_ignore_case(haystack: &[u8], needle: &[u8]) -> bool {
     haystack.windows(needle.len()).any(|w| w.eq_ignore_ascii_case(needle))
 }
 
-/// Fast classification: does this Content-Type represent JSON (application/json or +json)?
-pub fn is_json_like(content_type: &HeaderValue) -> bool {
-    let token = token_before_semicolon(content_type.as_bytes());
-    is_json_like_token(token)
-}
-
 /// Fast classification for already-extracted header strings.
 ///
 /// This is used in hot paths where headers are stored as `String` values in `RequestData`.
 pub fn is_json_like_str(content_type: &str) -> bool {
     let token = token_before_semicolon(content_type.as_bytes());
     is_json_like_token(token)
-}
-
-/// Fast classification: is this Content-Type multipart/form-data?
-pub fn is_multipart_form_data(content_type: &HeaderValue) -> bool {
-    let token = token_before_semicolon(content_type.as_bytes());
-    is_multipart_form_data_token(token)
-}
-
-/// Fast classification: is this Content-Type application/x-www-form-urlencoded?
-pub fn is_form_urlencoded(content_type: &HeaderValue) -> bool {
-    let token = token_before_semicolon(content_type.as_bytes());
-    is_form_urlencoded_token(token)
 }
 
 /// Classify Content-Type header values after validation.
@@ -451,30 +428,6 @@ mod tests {
     }
 
     #[test]
-    fn test_is_json_content_type() {
-        let mime = "application/json".parse::<mime::Mime>().unwrap();
-        assert!(is_json_content_type(&mime));
-
-        let mime = "application/vnd.api+json".parse::<mime::Mime>().unwrap();
-        assert!(is_json_content_type(&mime));
-
-        let mime = "application/problem+json".parse::<mime::Mime>().unwrap();
-        assert!(is_json_content_type(&mime));
-
-        let mime = "application/hal+json".parse::<mime::Mime>().unwrap();
-        assert!(is_json_content_type(&mime));
-
-        let mime = "text/plain".parse::<mime::Mime>().unwrap();
-        assert!(!is_json_content_type(&mime));
-
-        let mime = "application/xml".parse::<mime::Mime>().unwrap();
-        assert!(!is_json_content_type(&mime));
-
-        let mime = "application/x-www-form-urlencoded".parse::<mime::Mime>().unwrap();
-        assert!(!is_json_content_type(&mime));
-    }
-
-    #[test]
     fn test_json_with_utf8_uppercase_charset() {
         let mut headers = HeaderMap::new();
         headers.insert(
@@ -641,42 +594,6 @@ mod tests {
 
         let result = validate_content_type_headers(&headers, 0);
         assert!(result.is_ok(), "form-urlencoded should be accepted");
-    }
-
-    #[test]
-    fn test_is_json_content_type_with_hal_json() {
-        let mime = "application/hal+json".parse::<mime::Mime>().unwrap();
-        assert!(is_json_content_type(&mime), "HAL+JSON should be recognized as JSON");
-    }
-
-    #[test]
-    fn test_is_json_content_type_with_ld_json() {
-        let mime = "application/ld+json".parse::<mime::Mime>().unwrap();
-        assert!(is_json_content_type(&mime), "LD+JSON should be recognized as JSON");
-    }
-
-    #[test]
-    fn test_is_json_content_type_rejects_json_patch() {
-        let mime = "application/json-patch+json".parse::<mime::Mime>().unwrap();
-        assert!(is_json_content_type(&mime), "JSON-Patch should be recognized as JSON");
-    }
-
-    #[test]
-    fn test_is_json_content_type_rejects_html() {
-        let mime = "text/html".parse::<mime::Mime>().unwrap();
-        assert!(!is_json_content_type(&mime), "HTML should not be JSON");
-    }
-
-    #[test]
-    fn test_is_json_content_type_rejects_csv() {
-        let mime = "text/csv".parse::<mime::Mime>().unwrap();
-        assert!(!is_json_content_type(&mime), "CSV should not be JSON");
-    }
-
-    #[test]
-    fn test_is_json_content_type_rejects_image_png() {
-        let mime = "image/png".parse::<mime::Mime>().unwrap();
-        assert!(!is_json_content_type(&mime), "PNG should not be JSON");
     }
 
     #[test]

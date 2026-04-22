@@ -23,5 +23,8 @@ spikard-graphql = { path = "../spikard-graphql" }
 spikard-http = { path = "../spikard-http" }
 tokio = { version = "1", features = ["full"] }
 
+[features]
+extension-module = []
+
 [lints]
 workspace = true

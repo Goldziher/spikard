@@ -5,7 +5,7 @@
 //! enabling language-agnostic gRPC handling.
 
 use crate::grpc::framing::encode_grpc_message;
-use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
+use crate::grpc::handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData};
 use crate::grpc::streaming::MessageStream;
 use axum::http::{HeaderMap, HeaderValue};
 use bytes::Bytes;
@@ -300,10 +300,6 @@ impl GenericGrpcService {
         Ok(response)
     }
 
-    /// Get the service name from the handler
-    pub fn service_name(&self) -> &str {
-        self.handler.service_name()
-    }
 }
 
 fn grpc_stream_body(message_stream: MessageStream) -> axum::body::Body {
@@ -408,7 +404,7 @@ fn grpc_code_number(code: tonic::Code) -> &'static str {
 /// assert_eq!(service, "mypackage.UserService");
 /// assert_eq!(method, "GetUser");
 /// ```
-pub fn parse_grpc_path(path: &str) -> Result<(String, String), Status> {
+pub(crate) fn parse_grpc_path(path: &str) -> Result<(String, String), Status> {
     // gRPC paths are in the format: /<package>.<service>/<method>
     let path = path.trim_start_matches('/');
     let parts: Vec<&str> = path.split('/').collect();
@@ -427,29 +423,6 @@ pub fn parse_grpc_path(path: &str) -> Result<(String, String), Status> {
     Ok((service_name, method_name))
 }
 
-/// Check if a request is a gRPC request
-///
-/// Checks the content-type header for "application/grpc" prefix.
-///
-/// # Example
-///
-/// ```ignore
-/// use spikard_http::grpc::service::is_grpc_request;
-/// use axum::http::HeaderMap;
-///
-/// let mut headers = HeaderMap::new();
-/// headers.insert("content-type", "application/grpc".parse().unwrap());
-///
-/// assert!(is_grpc_request(&headers));
-/// ```
-pub fn is_grpc_request(headers: &axum::http::HeaderMap) -> bool {
-    headers
-        .get(axum::http::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
-        .map(|v| v.starts_with("application/grpc"))
-        .unwrap_or(false)
-}
-
 /// Copy metadata from source to destination MetadataMap
 ///
 /// Efficiently copies all metadata entries (both ASCII and binary)
@@ -459,7 +432,7 @@ pub fn is_grpc_request(headers: &axum::http::HeaderMap) -> bool {
 ///
 /// * `source` - Source metadata to copy from
 /// * `dest` - Destination metadata to copy into
-pub fn copy_metadata(source: &tonic::metadata::MetadataMap, dest: &mut tonic::metadata::MetadataMap) {
+pub(crate) fn copy_metadata(source: &tonic::metadata::MetadataMap, dest: &mut tonic::metadata::MetadataMap) {
     for key_value in source.iter() {
         match key_value {
             tonic::metadata::KeyAndValueRef::Ascii(key, value) => {
@@ -470,16 +443,6 @@ pub fn copy_metadata(source: &tonic::metadata::MetadataMap, dest: &mut tonic::me
             }
         }
     }
-}
-
-/// Convert GrpcResponseData to Tonic Response
-///
-/// Helper function to convert our internal response representation
-/// to a Tonic Response.
-pub fn grpc_response_to_tonic(response: GrpcResponseData) -> Response<Bytes> {
-    let mut tonic_response = Response::new(response.payload);
-    copy_metadata(&response.metadata, tonic_response.metadata_mut());
-    tonic_response
 }
 
 #[cfg(test)]
@@ -579,69 +542,6 @@ mod tests {
         let (service, method) = parse_grpc_path("package.Service/Method").unwrap();
         assert_eq!(service, "package.Service");
         assert_eq!(method, "Method");
-    }
-
-    #[test]
-    fn test_is_grpc_request_valid() {
-        let mut headers = axum::http::HeaderMap::new();
-        headers.insert(axum::http::header::CONTENT_TYPE, "application/grpc".parse().unwrap());
-        assert!(is_grpc_request(&headers));
-    }
-
-    #[test]
-    fn test_is_grpc_request_with_subtype() {
-        let mut headers = axum::http::HeaderMap::new();
-        headers.insert(
-            axum::http::header::CONTENT_TYPE,
-            "application/grpc+proto".parse().unwrap(),
-        );
-        assert!(is_grpc_request(&headers));
-    }
-
-    #[test]
-    fn test_is_grpc_request_not_grpc() {
-        let mut headers = axum::http::HeaderMap::new();
-        headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().unwrap());
-        assert!(!is_grpc_request(&headers));
-    }
-
-    #[test]
-    fn test_is_grpc_request_no_content_type() {
-        let headers = axum::http::HeaderMap::new();
-        assert!(!is_grpc_request(&headers));
-    }
-
-    #[test]
-    fn test_grpc_response_to_tonic_basic() {
-        let response = GrpcResponseData {
-            payload: Bytes::from("response"),
-            metadata: MetadataMap::new(),
-        };
-
-        let tonic_response = grpc_response_to_tonic(response);
-        assert_eq!(tonic_response.into_inner(), Bytes::from("response"));
-    }
-
-    #[test]
-    fn test_grpc_response_to_tonic_with_metadata() {
-        let mut metadata = MetadataMap::new();
-        metadata.insert("custom-header", "value".parse().unwrap());
-
-        let response = GrpcResponseData {
-            payload: Bytes::from("data"),
-            metadata,
-        };
-
-        let tonic_response = grpc_response_to_tonic(response);
-        assert_eq!(tonic_response.get_ref(), &Bytes::from("data"));
-        assert!(tonic_response.metadata().get("custom-header").is_some());
-    }
-
-    #[test]
-    fn test_generic_grpc_service_service_name() {
-        let handler = Arc::new(TestHandler);
-        let service = GenericGrpcService::new(handler);
-        assert_eq!(service.service_name(), "test.TestService");
     }
 
     #[test]

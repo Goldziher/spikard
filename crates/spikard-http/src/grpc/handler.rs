@@ -115,7 +115,6 @@ pub type GrpcHandlerResult = Result<GrpcResponseData, tonic::Status>;
 ///
 /// ```ignore
 /// use spikard_http::grpc::{GrpcHandler, RpcMode, GrpcRequestData, MessageStream};
-/// use crate::grpc::streaming::message_stream_from_vec;
 /// use bytes::Bytes;
 /// use std::pin::Pin;
 /// use std::future::Future;
@@ -156,7 +155,7 @@ pub type GrpcHandlerResult = Result<GrpcResponseData, tonic::Status>;
 ///             }
 ///
 ///             // Convert to stream and return
-///             Ok(message_stream_from_vec(messages))
+///             Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok))))
 ///         })
 ///     }
 /// }
@@ -392,7 +391,9 @@ mod tests {
         let request = crate::grpc::streaming::StreamingRequest {
             service_name: "test.TestService".to_string(),
             method_name: "ClientStreamMethod".to_string(),
-            message_stream: crate::grpc::streaming::message_stream_from_vec(vec![Bytes::from("one")]),
+            message_stream: Box::pin(futures_util::stream::iter(
+                vec![Bytes::from("one")].into_iter().map(Ok::<Bytes, tonic::Status>),
+            )),
             metadata: MetadataMap::new(),
         };
 
@@ -406,10 +407,11 @@ mod tests {
         let request = crate::grpc::streaming::StreamingRequest {
             service_name: "test.TestService".to_string(),
             method_name: "ClientStreamMethod".to_string(),
-            message_stream: crate::grpc::streaming::message_stream_from_vec(vec![
-                Bytes::from("one"),
-                Bytes::from("two"),
-            ]),
+            message_stream: Box::pin(futures_util::stream::iter(
+                vec![Bytes::from("one"), Bytes::from("two")]
+                    .into_iter()
+                    .map(Ok::<Bytes, tonic::Status>),
+            )),
             metadata: MetadataMap::new(),
         };
 
@@ -424,7 +426,9 @@ mod tests {
         let request = crate::grpc::streaming::StreamingRequest {
             service_name: "test.TestService".to_string(),
             method_name: "BidiMethod".to_string(),
-            message_stream: crate::grpc::streaming::message_stream_from_vec(vec![Bytes::from("ping")]),
+            message_stream: Box::pin(futures_util::stream::iter(
+                vec![Bytes::from("ping")].into_iter().map(Ok::<Bytes, tonic::Status>),
+            )),
             metadata: MetadataMap::new(),
         };
 
@@ -551,7 +555,7 @@ mod tests {
                         Bytes::from("message2"),
                         Bytes::from("message3"),
                     ];
-                    Ok(super::super::streaming::message_stream_from_vec(messages))
+                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok))))
                 })
             }
         }
@@ -608,7 +612,7 @@ mod tests {
                 &self,
                 _request: GrpcRequestData,
             ) -> Pin<Box<dyn Future<Output = Result<MessageStream, tonic::Status>> + Send>> {
-                Box::pin(async { Ok(super::super::streaming::empty_message_stream()) })
+                Box::pin(async { Ok(Box::pin(futures_util::stream::empty()) as MessageStream) })
             }
         }
 
@@ -776,7 +780,7 @@ mod tests {
                     // Verify metadata is received
                     assert!(!request.metadata.is_empty());
                     let messages = vec![Bytes::from("metadata_message")];
-                    Ok(super::super::streaming::message_stream_from_vec(messages))
+                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok))))
                 })
             }
         }
@@ -838,7 +842,7 @@ mod tests {
                     for i in 0..100 {
                         messages.push(Bytes::from(format!("message_{}", i)));
                     }
-                    Ok(super::super::streaming::message_stream_from_vec(messages))
+                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok))))
                 })
             }
         }
@@ -896,7 +900,7 @@ mod tests {
                     for i in 0..500 {
                         messages.push(Bytes::from(format!("msg_{}", i)));
                     }
-                    Ok(super::super::streaming::message_stream_from_vec(messages))
+                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok))))
                 })
             }
         }
@@ -1097,7 +1101,7 @@ mod tests {
                     assert_eq!(request.payload, Bytes::from("test_payload"));
 
                     let messages = vec![Bytes::from("response")];
-                    Ok(super::super::streaming::message_stream_from_vec(messages))
+                    Ok(Box::pin(futures_util::stream::iter(messages.into_iter().map(Ok))))
                 })
             }
         }

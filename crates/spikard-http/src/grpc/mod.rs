@@ -48,9 +48,8 @@ pub(crate) mod service;
 pub(crate) mod streaming;
 
 // Re-export main types
-pub use framing::parse_grpc_client_stream;
 pub use handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
-pub use service::{GenericGrpcService, copy_metadata, is_grpc_request, parse_grpc_path};
+pub(crate) use service::{GenericGrpcService, parse_grpc_path};
 pub use streaming::{MessageStream, StreamingRequest, StreamingResponse};
 
 use serde::{Deserialize, Serialize};

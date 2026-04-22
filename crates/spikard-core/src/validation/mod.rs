@@ -2,7 +2,6 @@
 
 pub mod error_mapper;
 
-use crate::debug_log_module;
 use jsonschema::Validator;
 use serde_json::Value;
 use std::sync::Arc;
@@ -257,28 +256,6 @@ impl SchemaValidator {
                 }
             })
             .collect();
-
-        debug_log_module!("validation", "Returning {} validation errors", errors.len());
-        for (i, error) in errors.iter().enumerate() {
-            debug_log_module!(
-                "validation",
-                "  Error {}: type={}, loc={:?}, msg={}, input={}, ctx={:?}",
-                i,
-                error.error_type,
-                error.loc,
-                error.msg,
-                error.input,
-                error.ctx
-            );
-        }
-        #[allow(clippy::collapsible_if)]
-        if crate::debug::is_enabled() {
-            if let Ok(json_errors) = serde_json::to_value(&errors) {
-                if let Ok(json_str) = serde_json::to_string_pretty(&json_errors) {
-                    debug_log_module!("validation", "Serialized errors:\n{}", json_str);
-                }
-            }
-        }
 
         Err(ValidationError { errors })
     }

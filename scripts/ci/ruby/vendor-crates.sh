@@ -25,13 +25,13 @@ if [ -z "${WORKSPACE_VERSION:-}" ]; then
 fi
 
 # Copy internal crates
-for crate in spikard-core spikard-http spikard-bindings-shared spikard-rb spikard-rb-macros; do
+for crate in spikard-core spikard-http spikard-graphql spikard-rb; do
   echo "  Copying $crate..."
   rm -rf "${VENDOR_DIR:?}/$crate"
   cp -r "crates/$crate" "$VENDOR_DIR/"
 done
 
-for crate in spikard-core spikard-http spikard-bindings-shared spikard-rb spikard-rb-macros; do
+for crate in spikard-core spikard-http spikard-graphql spikard-rb; do
   if [ ! -f "${VENDOR_DIR}/${crate}/Cargo.toml" ]; then
     echo "Missing vendored crate ${crate} in ${VENDOR_DIR}" >&2
     exit 1
