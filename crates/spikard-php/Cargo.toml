@@ -11,9 +11,6 @@ categories = ["text-processing"]
 [lib]
 crate-type = ["cdylib"]
 
-[features]
-extension-module = []
-
 [dependencies]
 anyhow = "1.0"
 ext-php-rs = "0.15"

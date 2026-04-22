@@ -30,8 +30,8 @@ final class CompressionTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["message" => "Compressed payload", "payload" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"], $body);
-        $this->assertEquals("Accept-Encoding", $response->getHeaderLine("vary"));
         $this->assertEquals("gzip", $response->getHeaderLine("content-encoding"));
+        $this->assertEquals("Accept-Encoding", $response->getHeaderLine("vary"));
     }
 
     /** Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding. */

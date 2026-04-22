@@ -140,7 +140,7 @@ final class CookiesTest extends TestCase
     public function test_multiple_cookies_success(): void
     {
         $response = $this->httpClient->request('GET', "/items/", [
-            'headers' => ['Cookie' => "session_id=session123; fatebook_tracker=tracker456; googall_tracker=ga789"],
+            'headers' => ['Cookie' => "googall_tracker=ga789; session_id=session123; fatebook_tracker=tracker456"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());

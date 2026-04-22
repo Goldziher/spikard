@@ -3,8 +3,9 @@ use serde_json::Value;
 use std::sync::OnceLock;
 
 /// HTTP method
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum Method {
+    #[default]
     Get,
     Post,
     Put,

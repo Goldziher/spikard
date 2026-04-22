@@ -212,10 +212,6 @@ impl CorsConfig {
         core_self.is_method_allowed(&method)
     }
 
-    pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
-        false
-    }
-
     #[allow(clippy::should_implement_trait)]
     pub fn default() -> CorsConfig {
         spikard_core::CorsConfig::default().into()
@@ -1321,24 +1317,6 @@ impl Response {
     #[php(getter)]
     pub fn get_headers(&self) -> HashMap<String, String> {
         self.headers.clone()
-    }
-
-    pub fn set_header(&self, key: String, value: String) {
-        ()
-    }
-
-    pub fn set_cookie(
-        &self,
-        key: String,
-        value: String,
-        max_age: Option<i64>,
-        domain: Option<String>,
-        path: Option<String>,
-        secure: bool,
-        http_only: bool,
-        same_site: Option<String>,
-    ) {
-        ()
     }
 
     #[allow(clippy::should_implement_trait)]

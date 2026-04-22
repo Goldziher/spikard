@@ -1067,7 +1067,12 @@ impl From<JsOpenApiConfig> for spikard_http::OpenApiConfig {
                 .servers
                 .map(|v| v.into_iter().map(Into::into).collect())
                 .unwrap_or_default(),
-            security_schemes: val.security_schemes.unwrap_or_default().into_iter().collect(),
+            security_schemes: val
+                .security_schemes
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(k, v)| (k, v.into()))
+                .collect(),
         }
     }
 }

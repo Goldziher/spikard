@@ -21,8 +21,8 @@ RSpec.describe 'compression' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'message' => 'Compressed payload', 'payload' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' })
-      expect(response.headers['vary']).to eq('Accept-Encoding')
       expect(response.headers['content-encoding']).to eq('gzip')
+      expect(response.headers['vary']).to eq('Accept-Encoding')
     end
   end
 
