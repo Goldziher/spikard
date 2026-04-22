@@ -112,12 +112,6 @@ impl DependencyGraph {
     ///
     /// # Arguments
     ///
-    /// * `new_key` - The key of the dependency to potentially add
-    /// * `new_deps` - The dependencies that the new dependency would depend on
-    ///
-    /// # Returns
-    ///
-
     /// Calculate batches of dependencies that can be resolved in parallel
     ///
     /// Uses topological sorting with Kahn's algorithm to determine the order
