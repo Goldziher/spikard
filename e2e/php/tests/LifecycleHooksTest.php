@@ -40,10 +40,10 @@ final class LifecycleHooksTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"], $body);
-        $this->assertEquals(".*ms", $response->getHeaderLine("x-response-time"));
-        $this->assertEquals(".*", $response->getHeaderLine("x-request-id"));
         $this->assertEquals("nosniff", $response->getHeaderLine("x-content-type-options"));
+        $this->assertEquals(".*", $response->getHeaderLine("x-request-id"));
         $this->assertEquals("DENY", $response->getHeaderLine("x-frame-options"));
+        $this->assertEquals(".*ms", $response->getHeaderLine("x-response-time"));
     }
 
     /** Test onError hook that logs server errors and formats error responses */

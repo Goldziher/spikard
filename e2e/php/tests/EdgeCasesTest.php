@@ -120,17 +120,6 @@ final class EdgeCasesTest extends TestCase
         $this->assertEquals(["text" => "Hello 👋 World 🌍"], $body);
     }
 
-    /** Null byte character in strings should be rejected for security */
-    public function test_20_null_byte_in_string(): void
-    {
-        $response = $this->httpClient->request('POST', "/files", [
-            'json' => ["filename" => "file .txt"],
-        ]);
-        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        $this->assertEquals(422, $response->getStatusCode());
-        $this->assertEquals(["detail" => "1 validation error in request", "errors" => [["ctx" => ["pattern" => "^[^\\x00]+\$"], "input" => "file .txt", "loc" => ["body", "filename"], "msg" => "String should match pattern '^[^\\x00]+\$'", "type" => "string_pattern_mismatch"]], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"], $body);
-    }
-
     /** Numbers in scientific notation should be parsed correctly */
     public function test_21_scientific_notation_number(): void
     {

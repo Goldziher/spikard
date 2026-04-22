@@ -343,7 +343,7 @@ jobs:
         run: cargo binstall --no-confirm --locked alef-cli@0.5.4
 
       - name: Verify alef installation
-        run: alef --version
+        run: alef --help | head -1
 
       - name: Run alef verify
         run: alef verify

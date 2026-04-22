@@ -24,10 +24,10 @@ defmodule E2e.LifecycleHooksTest do
       {:ok, response} = Req.post(client(), url: "/api/full-lifecycle", json: %{"action" => "update_profile", "user_id" => "user-123"}, headers: [{"Content-Type", "application/json"}, {"Authorization", "Bearer valid-token-12345"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"action" => "update_profile", "message" => "Action completed successfully", "request_id" => ".*", "user_id" => "user-123"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-response-time", do: v end) == ".*ms"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: v end) == ".*"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-content-type-options", do: v end) == "nosniff"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: v end) == ".*"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-frame-options", do: v end) == "DENY"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-response-time", do: v end) == ".*ms"
     end
   end
 

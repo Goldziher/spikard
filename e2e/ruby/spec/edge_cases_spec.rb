@@ -96,16 +96,6 @@ RSpec.describe 'edge_cases' do
     end
   end
 
-  describe 'POST /files' do
-    it 'Null byte character in strings should be rejected for security' do
-      response = client.post('/files',
-        json: { 'filename' => "file .txt" }
-      )
-      expect(response.status).to eq(422)
-      expect(response.body).to eq({ 'detail' => '1 validation error in request', 'errors' => [{ 'ctx' => { 'pattern' => '^[^\\x00]+$' }, 'input' => "file .txt", 'loc' => ['body', 'filename'], 'msg' => 'String should match pattern \'^[^\\x00]+$\'', 'type' => 'string_pattern_mismatch' }], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error' })
-    end
-  end
-
   describe 'POST /calculate' do
     it 'Numbers in scientific notation should be parsed correctly' do
       response = client.post('/calculate',

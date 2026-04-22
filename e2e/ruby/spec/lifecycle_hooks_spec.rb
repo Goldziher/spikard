@@ -30,10 +30,10 @@ RSpec.describe 'lifecycle_hooks' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'action' => 'update_profile', 'message' => 'Action completed successfully', 'request_id' => '.*', 'user_id' => 'user-123' })
-      expect(response.headers['x-response-time']).to eq('.*ms')
-      expect(response.headers['x-request-id']).to eq('.*')
       expect(response.headers['x-content-type-options']).to eq('nosniff')
+      expect(response.headers['x-request-id']).to eq('.*')
       expect(response.headers['x-frame-options']).to eq('DENY')
+      expect(response.headers['x-response-time']).to eq('.*ms')
     end
   end
 

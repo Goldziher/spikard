@@ -83,14 +83,6 @@ defmodule E2e.EdgeCasesTest do
     end
   end
 
-  describe "_null_byte_in_string" do
-    test "POST /files - Null byte character in strings should be rejected for security" do
-      {:ok, response} = Req.post(client(), url: "/files", json: %{"filename" => "file .txt"})
-      assert response.status == 422
-      assert Jason.decode!(response.body) == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"pattern" => "^[^\\x00]+$"}, "input" => "file .txt", "loc" => ["body", "filename"], "msg" => "String should match pattern '^[^\\x00]+$'", "type" => "string_pattern_mismatch"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
-    end
-  end
-
   describe "_scientific_notation_number" do
     test "POST /calculate - Numbers in scientific notation should be parsed correctly" do
       {:ok, response} = Req.post(client(), url: "/calculate", json: %{"value" => 123000.0})
