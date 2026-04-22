@@ -16,8 +16,8 @@ defmodule E2e.StaticFilesTest do
       {:ok, response} = Req.get(client(), url: "/public/hello.txt")
       assert response.status == 200
       assert Jason.decode!(response.body) == "Hello from static storage"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "text/plain"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "cache-control", do: v end) == "public, max-age=60"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "text/plain"
     end
   end
 

@@ -4,7 +4,13 @@
     clippy::let_unit_value,
     clippy::needless_borrow,
     clippy::map_identity,
-    clippy::just_underscores_and_digits
+    clippy::just_underscores_and_digits,
+    clippy::unnecessary_cast,
+    clippy::unused_unit,
+    clippy::unwrap_or_default,
+    clippy::derivable_impls,
+    clippy::needless_borrows_for_generic_args,
+    clippy::unnecessary_fallible_conversions
 )]
 #![cfg(feature = "extension-module")]
 #![cfg_attr(
@@ -16,7 +22,7 @@ use ext_php_rs::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\UploadFile")]
 pub struct UploadFile {
@@ -104,7 +110,7 @@ impl UploadFile {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\CorsConfig")]
 pub struct CorsConfig {
@@ -216,7 +222,7 @@ impl CorsConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\RouteMetadata")]
 pub struct RouteMetadata {
@@ -255,10 +261,8 @@ pub struct RouteMetadata {
 
 #[php_impl]
 impl RouteMetadata {
-    pub fn __construct() -> PhpResult<Self> {
-        Err(PhpException::default(
-            "Not implemented: constructor for RouteMetadata requires complex params".to_string(),
-        ))
+    pub fn from_json(json: String) -> PhpResult<Self> {
+        serde_json::from_str(&json).map_err(|e| PhpException::default(e.to_string()))
     }
 
     #[php(getter)]
@@ -272,7 +276,7 @@ impl RouteMetadata {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\CompressionConfig")]
 pub struct CompressionConfig {
@@ -307,7 +311,7 @@ impl CompressionConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\RateLimitConfig")]
 pub struct RateLimitConfig {
@@ -338,7 +342,7 @@ impl RateLimitConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\JsonRpcMethodInfo")]
 pub struct JsonRpcMethodInfo {
@@ -383,7 +387,7 @@ impl JsonRpcMethodInfo {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\Route")]
 pub struct Route {
@@ -418,10 +422,8 @@ pub struct Route {
 
 #[php_impl]
 impl Route {
-    pub fn __construct() -> PhpResult<Self> {
-        Err(PhpException::default(
-            "Not implemented: constructor for Route requires complex params".to_string(),
-        ))
+    pub fn from_json(json: String) -> PhpResult<Self> {
+        serde_json::from_str(&json).map_err(|e| PhpException::default(e.to_string()))
     }
 
     #[php(getter)]
@@ -510,7 +512,7 @@ impl Route {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\ProblemDetails")]
 pub struct ProblemDetails {
@@ -739,7 +741,7 @@ impl GraphQLRouteConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\SchemaConfig")]
 pub struct SchemaConfig {
@@ -790,7 +792,7 @@ impl SchemaConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\QueryOnlyConfig")]
 pub struct QueryOnlyConfig {
@@ -825,7 +827,7 @@ impl QueryOnlyConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\QueryMutationConfig")]
 pub struct QueryMutationConfig {
@@ -860,7 +862,7 @@ impl QueryMutationConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\FullSchemaConfig")]
 pub struct FullSchemaConfig {
@@ -895,7 +897,7 @@ impl FullSchemaConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\Claims")]
 #[allow(clippy::similar_names)]
@@ -935,7 +937,7 @@ impl Claims {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\BackgroundTaskConfig")]
 pub struct BackgroundTaskConfig {
@@ -967,7 +969,7 @@ impl BackgroundTaskConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\BackgroundJobMetadata")]
 pub struct BackgroundJobMetadata {
@@ -992,7 +994,7 @@ impl BackgroundJobMetadata {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\BackgroundJobError")]
 pub struct BackgroundJobError {
@@ -1022,7 +1024,7 @@ pub struct BackgroundHandle {
 #[php_impl]
 impl BackgroundHandle {}
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\GrpcRequestData")]
 pub struct GrpcRequestData {
@@ -1056,7 +1058,7 @@ impl GrpcRequestData {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\GrpcResponseData")]
 pub struct GrpcResponseData {
@@ -1079,7 +1081,7 @@ impl GrpcResponseData {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\GrpcConfig")]
 pub struct GrpcConfig {
@@ -1168,7 +1170,7 @@ impl GrpcConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\ValidatedParams")]
 pub struct ValidatedParams {
@@ -1187,7 +1189,7 @@ impl ValidatedParams {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\JsonRpcConfig")]
 pub struct JsonRpcConfig {
@@ -1227,7 +1229,7 @@ impl JsonRpcConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\OpenApiConfig")]
 pub struct OpenApiConfig {
@@ -1264,10 +1266,8 @@ pub struct OpenApiConfig {
 
 #[php_impl]
 impl OpenApiConfig {
-    pub fn __construct() -> PhpResult<Self> {
-        Err(PhpException::default(
-            "Not implemented: constructor for OpenApiConfig requires complex params".to_string(),
-        ))
+    pub fn from_json(json: String) -> PhpResult<Self> {
+        serde_json::from_str(&json).map_err(|e| PhpException::default(e.to_string()))
     }
 
     #[php(getter)]
@@ -1296,7 +1296,7 @@ impl OpenApiConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\ContactInfo")]
 pub struct ContactInfo {
@@ -1315,7 +1315,7 @@ impl ContactInfo {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\LicenseInfo")]
 pub struct LicenseInfo {
@@ -1332,7 +1332,7 @@ impl LicenseInfo {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\ServerInfo")]
 pub struct ServerInfo {
@@ -1349,7 +1349,7 @@ impl ServerInfo {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\Response")]
 pub struct Response {
@@ -1382,7 +1382,7 @@ impl Response {
         self.headers.clone()
     }
 
-    pub fn set_header(&self, key: String, value: String) -> () {
+    pub fn set_header(&self, key: String, value: String) {
         ()
     }
 
@@ -1396,7 +1396,7 @@ impl Response {
         secure: bool,
         http_only: bool,
         same_site: Option<String>,
-    ) -> () {
+    ) {
         ()
     }
 
@@ -1410,7 +1410,7 @@ impl Response {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\SseEvent")]
 pub struct SseEvent {
@@ -1464,7 +1464,7 @@ impl SseEvent {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\JwtConfig")]
 pub struct JwtConfig {
@@ -1504,7 +1504,7 @@ impl JwtConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\ApiKeyConfig")]
 pub struct ApiKeyConfig {
@@ -1523,7 +1523,7 @@ impl ApiKeyConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\StaticFilesConfig")]
 pub struct StaticFilesConfig {
@@ -1558,7 +1558,7 @@ impl StaticFilesConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, serde::Serialize, serde::Deserialize, Default)]
 #[php_class]
 #[php(name = "Spikard\\Php\\ServerConfig")]
 #[allow(clippy::similar_names)]
@@ -1618,10 +1618,8 @@ pub struct ServerConfig {
 
 #[php_impl]
 impl ServerConfig {
-    pub fn __construct() -> PhpResult<Self> {
-        Err(PhpException::default(
-            "Not implemented: constructor for ServerConfig requires complex params".to_string(),
-        ))
+    pub fn from_json(json: String) -> PhpResult<Self> {
+        serde_json::from_str(&json).map_err(|e| PhpException::default(e.to_string()))
     }
 
     #[php(getter)]
@@ -1719,9 +1717,12 @@ impl SpikardPhpApi {
         spikard_graphql::schema_full().into()
     }
 
-    pub fn add_cors_headers(response: &Response, origin: String, cors_config: &CorsConfig) -> () {
-        let response_core: spikard::Response = response.clone().into();
-        let cors_config_core: spikard::CorsConfig = cors_config.clone().into();
+    pub fn add_cors_headers(response: &Response, origin: String, cors_config: &CorsConfig) {
+        let response_json = serde_json::to_string(&response).map_err(|e| format!("{e}"))?;
+        let response_core: spikard::Response = serde_json::from_str(&response_json).map_err(|e| format!("{e}"))?;
+        let cors_config_json = serde_json::to_string(&cors_config).map_err(|e| format!("{e}"))?;
+        let cors_config_core: spikard::CorsConfig =
+            serde_json::from_str(&cors_config_json).map_err(|e| format!("{e}"))?;
         spikard_http::cors::add_cors_headers(&response_core, &origin, &cors_config_core)
     }
 }
@@ -1881,30 +1882,8 @@ impl From<spikard_core::JsonRpcMethodInfo> for JsonRpcMethodInfo {
 
 impl From<Route> for spikard_core::Route {
     fn from(val: Route) -> Self {
-        Self {
-            method: match val.method.as_str() {
-                "Get" => spikard_core::Method::Get,
-                "Post" => spikard_core::Method::Post,
-                "Put" => spikard_core::Method::Put,
-                "Patch" => spikard_core::Method::Patch,
-                "Delete" => spikard_core::Method::Delete,
-                "Head" => spikard_core::Method::Head,
-                "Options" => spikard_core::Method::Options,
-                "Trace" => spikard_core::Method::Trace,
-                _ => spikard_core::Method::Get,
-            },
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-        }
+        let json = serde_json::to_string(&val).expect("alef: serialize binding type");
+        serde_json::from_str(&json).expect("alef: deserialize to core type")
     }
 }
 
@@ -2189,19 +2168,8 @@ impl From<spikard_http::JsonRpcConfig> for JsonRpcConfig {
 
 impl From<OpenApiConfig> for spikard_http::OpenApiConfig {
     fn from(val: OpenApiConfig) -> Self {
-        Self {
-            enabled: val.enabled,
-            title: val.title,
-            version: val.version,
-            description: val.description,
-            swagger_ui_path: val.swagger_ui_path,
-            redoc_path: val.redoc_path,
-            openapi_json_path: val.openapi_json_path,
-            contact: val.contact.map(Into::into),
-            license: val.license.map(Into::into),
-            servers: val.servers.into_iter().map(Into::into).collect(),
-            security_schemes: val.security_schemes.into_iter().map(|(k, v)| (k, v.into())).collect(),
-        }
+        let json = serde_json::to_string(&val).expect("alef: serialize binding type");
+        serde_json::from_str(&json).expect("alef: deserialize to core type")
     }
 }
 
@@ -2387,28 +2355,8 @@ impl From<spikard_http::StaticFilesConfig> for StaticFilesConfig {
 
 impl From<ServerConfig> for spikard_http::ServerConfig {
     fn from(val: ServerConfig) -> Self {
-        Self {
-            host: val.host,
-            port: val.port,
-            workers: val.workers as usize,
-            enable_request_id: val.enable_request_id,
-            max_body_size: val.max_body_size.map(|v| v as usize),
-            request_timeout: val.request_timeout.map(|v| v as u64),
-            compression: val.compression.map(Into::into),
-            rate_limit: val.rate_limit.map(Into::into),
-            jwt_auth: val.jwt_auth.map(Into::into),
-            api_key_auth: val.api_key_auth.map(Into::into),
-            static_files: val.static_files.into_iter().map(Into::into).collect(),
-            graceful_shutdown: val.graceful_shutdown,
-            shutdown_timeout: val.shutdown_timeout as u64,
-            openapi: val.openapi.map(Into::into),
-            jsonrpc: val.jsonrpc.map(Into::into),
-            grpc: val.grpc.map(Into::into),
-            lifecycle_hooks: Default::default(),
-            background_tasks: val.background_tasks.into(),
-            enable_http_trace: val.enable_http_trace,
-            di_container: Default::default(),
-        }
+        let json = serde_json::to_string(&val).expect("alef: serialize binding type");
+        serde_json::from_str(&json).expect("alef: deserialize to core type")
     }
 }
 

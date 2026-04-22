@@ -22,6 +22,7 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 #[cfg(feature = "di")]
 use spikard_core::di;
+pub use spikard_core::router::JsonRpcMethodInfo;
 pub use spikard_http::{
     CompressionConfig, CorsConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, RateLimitConfig,
     ServerConfig, StaticFilesConfig,

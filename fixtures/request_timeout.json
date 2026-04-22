@@ -1,63 +1,56 @@
 [
-  {
-    "id": "request_completes_before_timeout",
-    "description": "Simulated handler sleeps briefly and should complete before the timeout middleware fires.",
-    "category": "request_timeout",
-    "http": {
-      "handler": {
-        "route": "/timeouts/fast",
-        "method": "GET",
-        "middleware": {
-          "request_timeout": {
-            "seconds": 2,
-            "sleep_ms": 100
-          }
-        }
-      },
-      "request": {
-        "method": "GET",
-        "path": "/timeouts/fast"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "status": "ok",
-          "duration": "fast"
-        }
-      }
-    },
-    "tags": [
-      "timeouts",
-      "middleware"
-    ]
-  },
-  {
-    "id": "request_exceeds_timeout",
-    "description": "Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.",
-    "category": "request_timeout",
-    "http": {
-      "handler": {
-        "route": "/timeouts/slow",
-        "method": "GET",
-        "middleware": {
-          "request_timeout": {
-            "seconds": 1,
-            "sleep_ms": 1500
-          }
-        }
-      },
-      "request": {
-        "method": "GET",
-        "path": "/timeouts/slow"
-      },
-      "expected_response": {
-        "status_code": 408
-      }
-    },
-    "tags": [
-      "timeouts",
-      "middleware",
-      "slow"
-    ]
-  }
+	{
+		"id": "request_completes_before_timeout",
+		"description": "Simulated handler sleeps briefly and should complete before the timeout middleware fires.",
+		"category": "request_timeout",
+		"http": {
+			"handler": {
+				"route": "/timeouts/fast",
+				"method": "GET",
+				"middleware": {
+					"request_timeout": {
+						"seconds": 2,
+						"sleep_ms": 100
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/timeouts/fast"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"status": "ok",
+					"duration": "fast"
+				}
+			}
+		},
+		"tags": ["timeouts", "middleware"]
+	},
+	{
+		"id": "request_exceeds_timeout",
+		"description": "Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.",
+		"category": "request_timeout",
+		"http": {
+			"handler": {
+				"route": "/timeouts/slow",
+				"method": "GET",
+				"middleware": {
+					"request_timeout": {
+						"seconds": 1,
+						"sleep_ms": 1500
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/timeouts/slow"
+			},
+			"expected_response": {
+				"status_code": 408
+			}
+		},
+		"tags": ["timeouts", "middleware", "slow"]
+	}
 ]

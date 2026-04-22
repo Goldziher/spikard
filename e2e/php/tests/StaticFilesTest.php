@@ -28,8 +28,8 @@ final class StaticFilesTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals("Hello from static storage", $body);
-        $this->assertEquals("text/plain", $response->getHeaderLine("content-type"));
         $this->assertEquals("public, max-age=60", $response->getHeaderLine("cache-control"));
+        $this->assertEquals("text/plain", $response->getHeaderLine("content-type"));
     }
 
     /** When index files are enabled the server should serve index.html when the directory root is requested. */

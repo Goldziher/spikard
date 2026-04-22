@@ -1,516 +1,479 @@
 [
-  {
-    "id": "200_ok_success",
-    "description": "Tests standard 200 OK response for successful GET request",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/status-test/{code}",
-        "method": "GET",
-        "parameters": {
-          "path": {
-            "code": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "GET",
-        "path": "/status-test/200"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "id": 1,
-          "name": "Item 1"
-        }
-      }
-    }
-  },
-  {
-    "id": "201_created_resource_created",
-    "description": "Tests 201 Created response for successful POST request",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/items/",
-        "method": "POST",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "name"
-          ]
-        }
-      },
-      "request": {
-        "method": "POST",
-        "path": "/items/",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "name": "New Item"
-        }
-      },
-      "expected_response": {
-        "status_code": 201,
-        "body": {
-          "id": 1,
-          "name": "New Item"
-        }
-      }
-    }
-  },
-  {
-    "id": "202_accepted_request_accepted_for_processing",
-    "description": "Tests 202 Accepted for async processing",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/tasks/",
-        "method": "POST",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "task": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "task"
-          ]
-        }
-      },
-      "request": {
-        "method": "POST",
-        "path": "/tasks/",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "task": "process_data"
-        }
-      },
-      "expected_response": {
-        "status_code": 202,
-        "body": {
-          "message": "Task accepted for processing",
-          "task_id": "abc123"
-        }
-      }
-    }
-  },
-  {
-    "id": "204_no_content_success_with_no_body",
-    "description": "Tests 204 No Content response for successful DELETE",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/status-test/{code}",
-        "method": "DELETE",
-        "parameters": {
-          "path": {
-            "code": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "DELETE",
-        "path": "/status-test/204"
-      },
-      "expected_response": {
-        "status_code": 204
-      }
-    }
-  },
-  {
-    "id": "304_not_modified_cached_content_valid",
-    "description": "Tests 304 Not Modified for cached resources",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/status-test/{code}",
-        "method": "GET",
-        "parameters": {
-          "path": {
-            "code": {
-              "type": "string"
-            }
-          },
-          "headers": {
-            "If-None-Match": {
-              "type": "string",
-              "optional": true
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "GET",
-        "path": "/status-test/304",
-        "headers": {
-          "If-None-Match": "\"abc123\""
-        }
-      },
-      "expected_response": {
-        "status_code": 304
-      }
-    }
-  },
-  {
-    "id": "307_temporary_redirect_method_preserved",
-    "description": "Tests 307 temporary redirect with method preservation",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/redirect-post",
-        "method": "POST",
-        "body_schema": {
-          "type": "object",
-          "properties": {},
-          "additionalProperties": false
-        }
-      },
-      "request": {
-        "method": "POST",
-        "path": "/redirect-post",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {}
-      },
-      "expected_response": {
-        "status_code": 307,
-        "body": {},
-        "headers": {
-          "location": "/target-post"
-        }
-      }
-    }
-  },
-  {
-    "id": "400_bad_request_invalid_request",
-    "description": "Tests 400 Bad Request for malformed request",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/items/",
-        "method": "POST",
-        "body_schema": {
-          "type": "string"
-        }
-      },
-      "request": {
-        "method": "POST",
-        "path": "/items/",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": "not valid json"
-      },
-      "expected_response": {
-        "status_code": 400,
-        "body": {
-          "detail": "Invalid request format"
-        }
-      }
-    }
-  },
-  {
-    "id": "404_not_found_resource_not_found",
-    "description": "Tests 404 Not Found for non-existent resource",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/status-test/{code}",
-        "method": "GET",
-        "parameters": {
-          "path": {
-            "code": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "GET",
-        "path": "/status-test/404"
-      },
-      "expected_response": {
-        "status_code": 404,
-        "body": {
-          "detail": "Item not found"
-        }
-      }
-    }
-  },
-  {
-    "id": "422_unprocessable_entity_validation_error",
-    "description": "Tests 422 for validation errors (Pydantic)",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/items/",
-        "method": "POST",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "price": {
-              "type": "string"
-            },
-            "name": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "price",
-            "name"
-          ]
-        }
-      },
-      "request": {
-        "method": "POST",
-        "path": "/items/",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "price": "not a number"
-        }
-      },
-      "expected_response": {
-        "status_code": 422,
-        "body": {
-          "type": "https://spikard.dev/errors/validation-error",
-          "title": "Request Validation Failed",
-          "status": 422,
-          "detail": "1 validation error in request",
-          "errors": [
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "name"
-              ],
-              "msg": "Field required",
-              "input": {
-                "price": "not a number"
-              }
-            }
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "408_request_timeout",
-    "description": "Tests 408 status code when request takes too long",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/slow-endpoint",
-        "method": "POST",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "data": {
-              "type": "string"
-            }
-          },
-          "additionalProperties": false,
-          "required": [
-            "data"
-          ]
-        }
-      },
-      "request": {
-        "method": "POST",
-        "path": "/slow-endpoint",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "data": "large_data"
-        }
-      },
-      "expected_response": {
-        "status_code": 408,
-        "body": {
-          "detail": "Request timeout"
-        },
-        "headers": {
-          "Connection": "close"
-        }
-      }
-    }
-  },
-  {
-    "id": "19_413_payload_too_large",
-    "description": "Request with body exceeding max size should return 413",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/upload",
-        "method": "POST",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "data": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "POST",
-        "path": "/upload",
-        "body": {
-          "data": "{{ repeat 'x' 2000 times }}"
-        }
-      },
-      "expected_response": {
-        "status_code": 413,
-        "body": {
-          "error": "Payload Too Large",
-          "message": "Request body size exceeds maximum allowed size of 1024 bytes"
-        }
-      }
-    },
-    "tags": [
-      "status_codes",
-      "413",
-      "payload_size",
-      "error"
-    ]
-  },
-  {
-    "id": "20_414_uri_too_long",
-    "description": "Request with excessively long URI should return 414",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/data",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/data?skip_template_expansion=true"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {}
-      }
-    },
-    "tags": [
-      "status_codes",
-      "414",
-      "uri_length",
-      "error"
-    ]
-  },
-  {
-    "id": "21_431_request_header_fields_too_large",
-    "description": "Request with excessively large headers should return 431",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/data",
-        "method": "GET",
-        "parameters": {
-          "headers": {
-            "X-Large-Header": {
-              "type": "string",
-              "optional": true
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "GET",
-        "path": "/data",
-        "headers": {
-          "X-Large-Header": "{{ repeat 'x' 10000 times }}"
-        }
-      },
-      "expected_response": {
-        "status_code": 431,
-        "body": {
-          "error": "Request Header Fields Too Large",
-          "message": "Request headers exceed maximum allowed size of 8192 bytes"
-        }
-      }
-    },
-    "tags": [
-      "status_codes",
-      "431",
-      "header_size",
-      "error"
-    ]
-  },
-  {
-    "id": "22_501_not_implemented",
-    "description": "Unsupported HTTP method should return 501",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/data",
-        "method": "GET"
-      },
-      "request": {
-        "method": "TRACE",
-        "path": "/data"
-      },
-      "expected_response": {
-        "status_code": 405
-      }
-    },
-    "tags": [
-      "status_codes",
-      "501",
-      "unsupported_method",
-      "error"
-    ]
-  },
-  {
-    "id": "23_503_service_unavailable",
-    "description": "Service temporarily unavailable should return 503 with Retry-After",
-    "category": "status_codes",
-    "http": {
-      "handler": {
-        "route": "/data",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/data"
-      },
-      "expected_response": {
-        "status_code": 503,
-        "body": {
-          "error": "Service Unavailable",
-          "message": "The service is temporarily unavailable. Please try again later."
-        },
-        "headers": {
-          "Retry-After": "0"
-        }
-      }
-    },
-    "tags": [
-      "status_codes",
-      "503",
-      "service_unavailable",
-      "error"
-    ]
-  }
+	{
+		"id": "200_ok_success",
+		"description": "Tests standard 200 OK response for successful GET request",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/status-test/{code}",
+				"method": "GET",
+				"parameters": {
+					"path": {
+						"code": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/status-test/200"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"id": 1,
+					"name": "Item 1"
+				}
+			}
+		}
+	},
+	{
+		"id": "201_created_resource_created",
+		"description": "Tests 201 Created response for successful POST request",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/items/",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": ["name"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/items/",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"name": "New Item"
+				}
+			},
+			"expected_response": {
+				"status_code": 201,
+				"body": {
+					"id": 1,
+					"name": "New Item"
+				}
+			}
+		}
+	},
+	{
+		"id": "202_accepted_request_accepted_for_processing",
+		"description": "Tests 202 Accepted for async processing",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/tasks/",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"task": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": ["task"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/tasks/",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"task": "process_data"
+				}
+			},
+			"expected_response": {
+				"status_code": 202,
+				"body": {
+					"message": "Task accepted for processing",
+					"task_id": "abc123"
+				}
+			}
+		}
+	},
+	{
+		"id": "204_no_content_success_with_no_body",
+		"description": "Tests 204 No Content response for successful DELETE",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/status-test/{code}",
+				"method": "DELETE",
+				"parameters": {
+					"path": {
+						"code": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "DELETE",
+				"path": "/status-test/204"
+			},
+			"expected_response": {
+				"status_code": 204
+			}
+		}
+	},
+	{
+		"id": "304_not_modified_cached_content_valid",
+		"description": "Tests 304 Not Modified for cached resources",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/status-test/{code}",
+				"method": "GET",
+				"parameters": {
+					"path": {
+						"code": {
+							"type": "string"
+						}
+					},
+					"headers": {
+						"If-None-Match": {
+							"type": "string",
+							"optional": true
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/status-test/304",
+				"headers": {
+					"If-None-Match": "\"abc123\""
+				}
+			},
+			"expected_response": {
+				"status_code": 304
+			}
+		}
+	},
+	{
+		"id": "307_temporary_redirect_method_preserved",
+		"description": "Tests 307 temporary redirect with method preservation",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/redirect-post",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {},
+					"additionalProperties": false
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/redirect-post",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {}
+			},
+			"expected_response": {
+				"status_code": 307,
+				"body": {},
+				"headers": {
+					"location": "/target-post"
+				}
+			}
+		}
+	},
+	{
+		"id": "400_bad_request_invalid_request",
+		"description": "Tests 400 Bad Request for malformed request",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/items/",
+				"method": "POST",
+				"body_schema": {
+					"type": "string"
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/items/",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": "not valid json"
+			},
+			"expected_response": {
+				"status_code": 400,
+				"body": {
+					"detail": "Invalid request format"
+				}
+			}
+		}
+	},
+	{
+		"id": "404_not_found_resource_not_found",
+		"description": "Tests 404 Not Found for non-existent resource",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/status-test/{code}",
+				"method": "GET",
+				"parameters": {
+					"path": {
+						"code": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/status-test/404"
+			},
+			"expected_response": {
+				"status_code": 404,
+				"body": {
+					"detail": "Item not found"
+				}
+			}
+		}
+	},
+	{
+		"id": "422_unprocessable_entity_validation_error",
+		"description": "Tests 422 for validation errors (Pydantic)",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/items/",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"price": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": ["price", "name"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/items/",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"price": "not a number"
+				}
+			},
+			"expected_response": {
+				"status_code": 422,
+				"body": {
+					"type": "https://spikard.dev/errors/validation-error",
+					"title": "Request Validation Failed",
+					"status": 422,
+					"detail": "1 validation error in request",
+					"errors": [
+						{
+							"type": "missing",
+							"loc": ["body", "name"],
+							"msg": "Field required",
+							"input": {
+								"price": "not a number"
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	{
+		"id": "408_request_timeout",
+		"description": "Tests 408 status code when request takes too long",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/slow-endpoint",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"data": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false,
+					"required": ["data"]
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/slow-endpoint",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"data": "large_data"
+				}
+			},
+			"expected_response": {
+				"status_code": 408,
+				"body": {
+					"detail": "Request timeout"
+				},
+				"headers": {
+					"Connection": "close"
+				}
+			}
+		}
+	},
+	{
+		"id": "19_413_payload_too_large",
+		"description": "Request with body exceeding max size should return 413",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/upload",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"data": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/upload",
+				"body": {
+					"data": "{{ repeat 'x' 2000 times }}"
+				}
+			},
+			"expected_response": {
+				"status_code": 413,
+				"body": {
+					"error": "Payload Too Large",
+					"message": "Request body size exceeds maximum allowed size of 1024 bytes"
+				}
+			}
+		},
+		"tags": ["status_codes", "413", "payload_size", "error"]
+	},
+	{
+		"id": "20_414_uri_too_long",
+		"description": "Request with excessively long URI should return 414",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/data",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/data?skip_template_expansion=true"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {}
+			}
+		},
+		"tags": ["status_codes", "414", "uri_length", "error"]
+	},
+	{
+		"id": "21_431_request_header_fields_too_large",
+		"description": "Request with excessively large headers should return 431",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/data",
+				"method": "GET",
+				"parameters": {
+					"headers": {
+						"X-Large-Header": {
+							"type": "string",
+							"optional": true
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/data",
+				"headers": {
+					"X-Large-Header": "{{ repeat 'x' 10000 times }}"
+				}
+			},
+			"expected_response": {
+				"status_code": 431,
+				"body": {
+					"error": "Request Header Fields Too Large",
+					"message": "Request headers exceed maximum allowed size of 8192 bytes"
+				}
+			}
+		},
+		"tags": ["status_codes", "431", "header_size", "error"]
+	},
+	{
+		"id": "22_501_not_implemented",
+		"description": "Unsupported HTTP method should return 501",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/data",
+				"method": "GET"
+			},
+			"request": {
+				"method": "TRACE",
+				"path": "/data"
+			},
+			"expected_response": {
+				"status_code": 405
+			}
+		},
+		"tags": ["status_codes", "501", "unsupported_method", "error"]
+	},
+	{
+		"id": "23_503_service_unavailable",
+		"description": "Service temporarily unavailable should return 503 with Retry-After",
+		"category": "status_codes",
+		"http": {
+			"handler": {
+				"route": "/data",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/data"
+			},
+			"expected_response": {
+				"status_code": 503,
+				"body": {
+					"error": "Service Unavailable",
+					"message": "The service is temporarily unavailable. Please try again later."
+				},
+				"headers": {
+					"Retry-After": "0"
+				}
+			}
+		},
+		"tags": ["status_codes", "503", "service_unavailable", "error"]
+	}
 ]

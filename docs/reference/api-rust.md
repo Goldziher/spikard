@@ -2,7 +2,7 @@
 title: "Rust API Reference"
 ---
 
-## Rust API Reference <span class="version-badge">v0.13.0</span>
+## Rust API Reference <span class="version-badge">v0.14.0</span>
 
 ### Functions
 

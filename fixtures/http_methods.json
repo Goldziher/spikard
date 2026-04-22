@@ -1,558 +1,523 @@
 [
-  {
-    "id": "put_complete_resource_replacement",
-    "description": "Tests PUT method for complete resource replacement",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "PUT",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "integer"
-            },
-            "name": {
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "price": {
-              "type": "number"
-            },
-            "in_stock": {
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "description",
-            "id",
-            "in_stock",
-            "name",
-            "price"
-          ]
-        },
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "PUT",
-        "path": "/items/1",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "id": 1,
-          "name": "Updated Item",
-          "description": "Completely replaced",
-          "price": 99.99,
-          "in_stock": true
-        }
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "id": 1,
-          "name": "Updated Item",
-          "description": "Completely replaced",
-          "price": 99.99,
-          "in_stock": true
-        }
-      }
-    }
-  },
-  {
-    "id": "put_create_resource_if_doesn_t_exist",
-    "description": "Tests PUT creating new resource at specific URI",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "PUT",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "integer"
-            },
-            "name": {
-              "type": "string"
-            },
-            "price": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "id",
-            "name",
-            "price"
-          ]
-        },
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "PUT",
-        "path": "/items/999",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "id": 999,
-          "name": "New Item",
-          "price": 49.99
-        }
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "id": 999,
-          "name": "New Item",
-          "price": 49.99
-        }
-      }
-    }
-  },
-  {
-    "id": "put_idempotent_operation",
-    "description": "Tests PUT idempotency - repeated calls produce same result",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "PUT",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "integer"
-            },
-            "name": {
-              "type": "string"
-            },
-            "price": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "id",
-            "name",
-            "price"
-          ]
-        },
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "PUT",
-        "path": "/items/1",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "id": 1,
-          "name": "Fixed Name",
-          "price": 50.0
-        }
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "id": 1,
-          "name": "Fixed Name",
-          "price": 50.0
-        }
-      }
-    }
-  },
-  {
-    "id": "put_validation_error",
-    "description": "Tests PUT with invalid data returns 422",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "PUT",
-        "body_schema": {
-          "$schema": "https://json-schema.org/draft/2020-12/schema",
-          "type": "object",
-          "required": [
-            "id",
-            "name",
-            "price"
-          ],
-          "properties": {
-            "id": {
-              "type": "integer"
-            },
-            "name": {
-              "type": "string",
-              "minLength": 3
-            },
-            "price": {
-              "type": "number",
-              "exclusiveMinimum": 0
-            }
-          }
-        },
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "PUT",
-        "path": "/items/1",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "id": 1,
-          "name": "X",
-          "price": -10
-        }
-      },
-      "expected_response": {
-        "status_code": 422,
-        "body": {
-          "type": "https://spikard.dev/errors/validation-error",
-          "title": "Request Validation Failed",
-          "status": 422,
-          "detail": "2 validation errors in request",
-          "errors": [
-            {
-              "type": "string_too_short",
-              "loc": [
-                "body",
-                "name"
-              ],
-              "msg": "String should have at least 3 characters",
-              "input": "X",
-              "ctx": {
-                "min_length": 3
-              }
-            },
-            {
-              "type": "greater_than",
-              "loc": [
-                "body",
-                "price"
-              ],
-              "msg": "Input should be greater than 0",
-              "input": -10,
-              "ctx": {
-                "gt": 0
-              }
-            }
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "put_missing_required_field",
-    "description": "Tests PUT with missing required fields returns 422",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "PUT",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "integer"
-            },
-            "name": {
-              "type": "string"
-            },
-            "price": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "price"
-          ]
-        },
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "PUT",
-        "path": "/items/1",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "id": 1,
-          "name": "Item Name"
-        }
-      },
-      "expected_response": {
-        "status_code": 422,
-        "body": {
-          "type": "https://spikard.dev/errors/validation-error",
-          "title": "Request Validation Failed",
-          "status": 422,
-          "detail": "1 validation error in request",
-          "errors": [
-            {
-              "type": "missing",
-              "loc": [
-                "body",
-                "price"
-              ],
-              "msg": "Field required",
-              "input": {
-                "id": 1,
-                "name": "Item Name"
-              }
-            }
-          ]
-        }
-      }
-    }
-  },
-  {
-    "id": "patch_partial_update",
-    "description": "Tests PATCH method for partial resource updates",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "PATCH",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "price": {
-              "type": "number"
-            }
-          },
-          "required": [
-            "price"
-          ]
-        },
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "PATCH",
-        "path": "/items/1",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "price": 79.99
-        }
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "id": 1,
-          "name": "Existing Item",
-          "price": 79.99,
-          "in_stock": true
-        }
-      }
-    }
-  },
-  {
-    "id": "patch_update_multiple_fields",
-    "description": "Tests PATCH updating multiple fields at once",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "PATCH",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "price": {
-              "type": "number"
-            },
-            "in_stock": {
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "in_stock",
-            "name",
-            "price"
-          ]
-        },
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "PATCH",
-        "path": "/items/1",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": {
-          "name": "Updated Name",
-          "price": 89.99,
-          "in_stock": false
-        }
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "id": 1,
-          "name": "Updated Name",
-          "price": 89.99,
-          "in_stock": false
-        }
-      }
-    }
-  },
-  {
-    "id": "delete_remove_resource",
-    "description": "Tests DELETE method to remove a resource",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "DELETE",
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "DELETE",
-        "path": "/items/1"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {}
-      }
-    }
-  },
-  {
-    "id": "delete_with_response_body",
-    "description": "Tests DELETE returning deleted resource data",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "DELETE",
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "DELETE",
-        "path": "/items/1"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "id": 1,
-          "name": "Deleted Item",
-          "message": "Item deleted successfully"
-        }
-      }
-    }
-  },
-  {
-    "id": "delete_resource_not_found",
-    "description": "Tests DELETE on non-existent resource returns 404",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "DELETE",
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "DELETE",
-        "path": "/items/999"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {}
-      }
-    }
-  },
-  {
-    "id": "head_get_metadata_without_body",
-    "description": "Tests HEAD method returns headers without response body",
-    "category": "http_methods",
-    "http": {
-      "handler": {
-        "route": "/items/{id}",
-        "method": "HEAD",
-        "parameters": {
-          "path": {
-            "id": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "request": {
-        "method": "HEAD",
-        "path": "/items/1"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "headers": {
-          "Content-Type": "application/json",
-          "Content-Length": "85"
-        }
-      }
-    }
-  }
+	{
+		"id": "put_complete_resource_replacement",
+		"description": "Tests PUT method for complete resource replacement",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "PUT",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "integer"
+						},
+						"name": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"price": {
+							"type": "number"
+						},
+						"in_stock": {
+							"type": "boolean"
+						}
+					},
+					"required": ["description", "id", "in_stock", "name", "price"]
+				},
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "PUT",
+				"path": "/items/1",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"id": 1,
+					"name": "Updated Item",
+					"description": "Completely replaced",
+					"price": 99.99,
+					"in_stock": true
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"id": 1,
+					"name": "Updated Item",
+					"description": "Completely replaced",
+					"price": 99.99,
+					"in_stock": true
+				}
+			}
+		}
+	},
+	{
+		"id": "put_create_resource_if_doesn_t_exist",
+		"description": "Tests PUT creating new resource at specific URI",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "PUT",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "integer"
+						},
+						"name": {
+							"type": "string"
+						},
+						"price": {
+							"type": "number"
+						}
+					},
+					"required": ["id", "name", "price"]
+				},
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "PUT",
+				"path": "/items/999",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"id": 999,
+					"name": "New Item",
+					"price": 49.99
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"id": 999,
+					"name": "New Item",
+					"price": 49.99
+				}
+			}
+		}
+	},
+	{
+		"id": "put_idempotent_operation",
+		"description": "Tests PUT idempotency - repeated calls produce same result",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "PUT",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "integer"
+						},
+						"name": {
+							"type": "string"
+						},
+						"price": {
+							"type": "number"
+						}
+					},
+					"required": ["id", "name", "price"]
+				},
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "PUT",
+				"path": "/items/1",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"id": 1,
+					"name": "Fixed Name",
+					"price": 50.0
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"id": 1,
+					"name": "Fixed Name",
+					"price": 50.0
+				}
+			}
+		}
+	},
+	{
+		"id": "put_validation_error",
+		"description": "Tests PUT with invalid data returns 422",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "PUT",
+				"body_schema": {
+					"$schema": "https://json-schema.org/draft/2020-12/schema",
+					"type": "object",
+					"required": ["id", "name", "price"],
+					"properties": {
+						"id": {
+							"type": "integer"
+						},
+						"name": {
+							"type": "string",
+							"minLength": 3
+						},
+						"price": {
+							"type": "number",
+							"exclusiveMinimum": 0
+						}
+					}
+				},
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "PUT",
+				"path": "/items/1",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"id": 1,
+					"name": "X",
+					"price": -10
+				}
+			},
+			"expected_response": {
+				"status_code": 422,
+				"body": {
+					"type": "https://spikard.dev/errors/validation-error",
+					"title": "Request Validation Failed",
+					"status": 422,
+					"detail": "2 validation errors in request",
+					"errors": [
+						{
+							"type": "string_too_short",
+							"loc": ["body", "name"],
+							"msg": "String should have at least 3 characters",
+							"input": "X",
+							"ctx": {
+								"min_length": 3
+							}
+						},
+						{
+							"type": "greater_than",
+							"loc": ["body", "price"],
+							"msg": "Input should be greater than 0",
+							"input": -10,
+							"ctx": {
+								"gt": 0
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	{
+		"id": "put_missing_required_field",
+		"description": "Tests PUT with missing required fields returns 422",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "PUT",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "integer"
+						},
+						"name": {
+							"type": "string"
+						},
+						"price": {
+							"type": "string"
+						}
+					},
+					"required": ["price"]
+				},
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "PUT",
+				"path": "/items/1",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"id": 1,
+					"name": "Item Name"
+				}
+			},
+			"expected_response": {
+				"status_code": 422,
+				"body": {
+					"type": "https://spikard.dev/errors/validation-error",
+					"title": "Request Validation Failed",
+					"status": 422,
+					"detail": "1 validation error in request",
+					"errors": [
+						{
+							"type": "missing",
+							"loc": ["body", "price"],
+							"msg": "Field required",
+							"input": {
+								"id": 1,
+								"name": "Item Name"
+							}
+						}
+					]
+				}
+			}
+		}
+	},
+	{
+		"id": "patch_partial_update",
+		"description": "Tests PATCH method for partial resource updates",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "PATCH",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"price": {
+							"type": "number"
+						}
+					},
+					"required": ["price"]
+				},
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "PATCH",
+				"path": "/items/1",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"price": 79.99
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"id": 1,
+					"name": "Existing Item",
+					"price": 79.99,
+					"in_stock": true
+				}
+			}
+		}
+	},
+	{
+		"id": "patch_update_multiple_fields",
+		"description": "Tests PATCH updating multiple fields at once",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "PATCH",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"price": {
+							"type": "number"
+						},
+						"in_stock": {
+							"type": "boolean"
+						}
+					},
+					"required": ["in_stock", "name", "price"]
+				},
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "PATCH",
+				"path": "/items/1",
+				"headers": {
+					"Content-Type": "application/json"
+				},
+				"body": {
+					"name": "Updated Name",
+					"price": 89.99,
+					"in_stock": false
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"id": 1,
+					"name": "Updated Name",
+					"price": 89.99,
+					"in_stock": false
+				}
+			}
+		}
+	},
+	{
+		"id": "delete_remove_resource",
+		"description": "Tests DELETE method to remove a resource",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "DELETE",
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "DELETE",
+				"path": "/items/1"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {}
+			}
+		}
+	},
+	{
+		"id": "delete_with_response_body",
+		"description": "Tests DELETE returning deleted resource data",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "DELETE",
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "DELETE",
+				"path": "/items/1"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"id": 1,
+					"name": "Deleted Item",
+					"message": "Item deleted successfully"
+				}
+			}
+		}
+	},
+	{
+		"id": "delete_resource_not_found",
+		"description": "Tests DELETE on non-existent resource returns 404",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "DELETE",
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "DELETE",
+				"path": "/items/999"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {}
+			}
+		}
+	},
+	{
+		"id": "head_get_metadata_without_body",
+		"description": "Tests HEAD method returns headers without response body",
+		"category": "http_methods",
+		"http": {
+			"handler": {
+				"route": "/items/{id}",
+				"method": "HEAD",
+				"parameters": {
+					"path": {
+						"id": {
+							"type": "string"
+						}
+					}
+				}
+			},
+			"request": {
+				"method": "HEAD",
+				"path": "/items/1"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"headers": {
+					"Content-Type": "application/json",
+					"Content-Length": "85"
+				}
+			}
+		}
+	}
 ]

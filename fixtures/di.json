@@ -1,565 +1,471 @@
 [
-  {
-    "id": "value_dependency_injection_success",
-    "description": "Tests simple value injection (config, constants) into a handler",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/config",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/config"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "app_name": "SpikardApp",
-          "version": "1.0.0",
-          "max_connections": 100
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "value",
-      "simple"
-    ]
-  },
-  {
-    "id": "factory_dependency_success",
-    "description": "Tests factory dependency that creates instances on-demand",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/timestamp",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/timestamp"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "timestamp": "<<present>>"
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "factory",
-      "sync"
-    ]
-  },
-  {
-    "id": "async_factory_dependency_success",
-    "description": "Tests async factory that creates database pool asynchronously",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/db-status",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/db-status"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "pool_status": "connected",
-          "max_size": 10
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "factory",
-      "async",
-      "cacheable"
-    ]
-  },
-  {
-    "id": "nested_dependencies_3_levels_success",
-    "description": "Tests dependency resolution where auth depends on cache and db, which both depend on config",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/auth-status",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/auth-status"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "auth_enabled": true,
-          "has_db": true,
-          "has_cache": true
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "nested",
-      "batching",
-      "complex"
-    ]
-  },
-  {
-    "id": "singleton_dependency_caching_success",
-    "description": "Tests singleton dependency that is created once and shared across all requests",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/app-counter",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/app-counter"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "counter_id": "<<uuid>>",
-          "count": 1
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "singleton",
-      "caching"
-    ]
-  },
-  {
-    "id": "per_request_dependency_caching_success",
-    "description": "Tests per-request caching where dependency is created once per request but shared by multiple usages within that request",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/request-id",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/request-id"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "first_id": "<<uuid>>",
-          "second_id": "<<same_as:first_id>>"
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "per-request",
-      "caching"
-    ]
-  },
-  {
-    "id": "circular_dependency_detection_error",
-    "description": "Tests that circular dependencies (A depends on B, B depends on A) are detected and rejected at registration time",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/circular",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/circular"
-      },
-      "expected_response": {
-        "status_code": 500,
-        "body": {
-          "type": "https://spikard.dev/errors/dependency-error",
-          "title": "Dependency Resolution Failed",
-          "status": 500,
-          "detail": "Circular dependency detected",
-          "errors": [
-            {
-              "type": "circular_dependency",
-              "msg": "Circular dependency detected in dependency graph",
-              "cycle": [
-                "service_a",
-                "service_b",
-                "service_a"
-              ]
-            }
-          ]
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "error",
-      "circular",
-      "validation"
-    ]
-  },
-  {
-    "id": "missing_dependency_error",
-    "description": "Tests error when handler requires a dependency that was never registered",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/missing-dep",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/missing-dep"
-      },
-      "expected_response": {
-        "status_code": 500,
-        "body": {
-          "type": "https://spikard.dev/errors/dependency-error",
-          "title": "Dependency Resolution Failed",
-          "status": 500,
-          "detail": "Required dependency not found",
-          "errors": [
-            {
-              "type": "missing_dependency",
-              "msg": "Dependency 'non_existent_service' is not registered",
-              "dependency_key": "non_existent_service"
-            }
-          ]
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "error",
-      "missing"
-    ]
-  },
-  {
-    "id": "type_mismatch_in_dependency_resolution_error",
-    "description": "Tests error when handler expects a different type than what the dependency provides",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/type-mismatch",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/type-mismatch"
-      },
-      "expected_response": {
-        "status_code": 500,
-        "body": {
-          "type": "https://spikard.dev/errors/dependency-error",
-          "title": "Dependency Resolution Failed",
-          "status": 500,
-          "detail": "Dependency type mismatch",
-          "errors": [
-            {
-              "type": "type_mismatch",
-              "msg": "Dependency 'config' type mismatch: expected object, got string",
-              "dependency_key": "config",
-              "expected_type": "object",
-              "actual_type": "string"
-            }
-          ]
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "error",
-      "type_mismatch"
-    ]
-  },
-  {
-    "id": "resource_cleanup_after_request_success",
-    "description": "Tests generator pattern cleanup where dependency resources are cleaned up after handler completes",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/cleanup-test",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/cleanup-test"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "session_id": "<<uuid>>",
-          "status": "completed"
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "cleanup",
-      "generator",
-      "async"
-    ]
-  },
-  {
-    "id": "multiple_dependencies_with_cleanup_success",
-    "description": "Tests cleanup for multiple dependencies with generator pattern, ensuring all are cleaned up in reverse resolution order",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/multi-cleanup-test",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/multi-cleanup-test"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "session_active": true
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "cleanup",
-      "multiple",
-      "ordering"
-    ]
-  },
-  {
-    "id": "python_type_annotation_based_injection_success",
-    "description": "Tests Python-specific type annotation-based dependency injection where dependencies are matched by type hints",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/python-type-inject",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/python-type-inject"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "pool_type": "PostgreSQL",
-          "cache_type": "Redis"
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "python",
-      "type_hints",
-      "language_specific"
-    ]
-  },
-  {
-    "id": "python_parameter_name_based_injection_success",
-    "description": "Tests Python-specific parameter name-based dependency injection where dependencies are matched by parameter names",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/python-name-inject",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/python-name-inject"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "db_status": "connected",
-          "cache_status": "ready"
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "python",
-      "name_based",
-      "language_specific"
-    ]
-  },
-  {
-    "id": "node_js_object_destructuring_injection_success",
-    "description": "Tests Node.js/TypeScript-specific object destructuring pattern for dependency injection",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/node-destructure",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/node-destructure"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "db_name": "PostgreSQL",
-          "log_level": "info"
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "node",
-      "typescript",
-      "destructuring",
-      "language_specific"
-    ]
-  },
-  {
-    "id": "ruby_keyword_argument_injection_success",
-    "description": "Tests Ruby-specific keyword argument pattern for dependency injection",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/ruby-kwargs",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/ruby-kwargs"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "adapter": "postgresql",
-          "user_id": 42
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "ruby",
-      "keyword_args",
-      "language_specific"
-    ]
-  },
-  {
-    "id": "route_level_dependency_override_success",
-    "description": "Tests route-level dependency override of app-level dependency for testing or special cases",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/override-test",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/override-test"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "mode": "test",
-          "strict": false
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "override",
-      "testing",
-      "advanced"
-    ]
-  },
-  {
-    "id": "mixed_singleton_and_per_request_caching_success",
-    "description": "Tests mixing singleton dependencies (shared across requests) with per-request dependencies (cached within request)",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/mixed-caching",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/mixed-caching"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "app_name": "MyApp",
-          "pool_id": "<<uuid>>",
-          "context_id": "<<uuid>>"
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "singleton",
-      "per-request",
-      "mixed",
-      "advanced"
-    ]
-  },
-  {
-    "id": "dependency_injection_in_lifecycle_hooks_success",
-    "description": "Tests accessing dependencies in lifecycle hooks (onRequest, preHandler) for auth, logging, etc.",
-    "category": "di",
-    "http": {
-      "handler": {
-        "route": "/api/hook-di-test",
-        "method": "GET",
-        "middleware": {
-          "lifecycle_hooks": {
-            "on_request": [
-              {
-                "name": "log_request",
-                "handler": "log_incoming_request",
-                "dependencies": [
-                  "logger"
-                ]
-              }
-            ],
-            "pre_handler": [
-              {
-                "name": "auth_check",
-                "handler": "check_authentication",
-                "dependencies": [
-                  "auth_service"
-                ]
-              }
-            ]
-          }
-        }
-      },
-      "request": {
-        "method": "GET",
-        "path": "/api/hook-di-test",
-        "headers": {
-          "authorization": "Bearer valid_token"
-        }
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": {
-          "authenticated": true,
-          "logged": true
-        },
-        "headers": {
-          "X-Log-Level": "debug",
-          "X-Auth-Mode": "strict"
-        }
-      }
-    },
-    "tags": [
-      "dependency_injection",
-      "lifecycle_hooks",
-      "integration",
-      "advanced"
-    ]
-  }
+	{
+		"id": "value_dependency_injection_success",
+		"description": "Tests simple value injection (config, constants) into a handler",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/config",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/config"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"app_name": "SpikardApp",
+					"version": "1.0.0",
+					"max_connections": 100
+				}
+			}
+		},
+		"tags": ["dependency_injection", "value", "simple"]
+	},
+	{
+		"id": "factory_dependency_success",
+		"description": "Tests factory dependency that creates instances on-demand",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/timestamp",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/timestamp"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"timestamp": "<<present>>"
+				}
+			}
+		},
+		"tags": ["dependency_injection", "factory", "sync"]
+	},
+	{
+		"id": "async_factory_dependency_success",
+		"description": "Tests async factory that creates database pool asynchronously",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/db-status",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/db-status"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"pool_status": "connected",
+					"max_size": 10
+				}
+			}
+		},
+		"tags": ["dependency_injection", "factory", "async", "cacheable"]
+	},
+	{
+		"id": "nested_dependencies_3_levels_success",
+		"description": "Tests dependency resolution where auth depends on cache and db, which both depend on config",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/auth-status",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/auth-status"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"auth_enabled": true,
+					"has_db": true,
+					"has_cache": true
+				}
+			}
+		},
+		"tags": ["dependency_injection", "nested", "batching", "complex"]
+	},
+	{
+		"id": "singleton_dependency_caching_success",
+		"description": "Tests singleton dependency that is created once and shared across all requests",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/app-counter",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/app-counter"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"counter_id": "<<uuid>>",
+					"count": 1
+				}
+			}
+		},
+		"tags": ["dependency_injection", "singleton", "caching"]
+	},
+	{
+		"id": "per_request_dependency_caching_success",
+		"description": "Tests per-request caching where dependency is created once per request but shared by multiple usages within that request",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/request-id",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/request-id"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"first_id": "<<uuid>>",
+					"second_id": "<<same_as:first_id>>"
+				}
+			}
+		},
+		"tags": ["dependency_injection", "per-request", "caching"]
+	},
+	{
+		"id": "circular_dependency_detection_error",
+		"description": "Tests that circular dependencies (A depends on B, B depends on A) are detected and rejected at registration time",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/circular",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/circular"
+			},
+			"expected_response": {
+				"status_code": 500,
+				"body": {
+					"type": "https://spikard.dev/errors/dependency-error",
+					"title": "Dependency Resolution Failed",
+					"status": 500,
+					"detail": "Circular dependency detected",
+					"errors": [
+						{
+							"type": "circular_dependency",
+							"msg": "Circular dependency detected in dependency graph",
+							"cycle": ["service_a", "service_b", "service_a"]
+						}
+					]
+				}
+			}
+		},
+		"tags": ["dependency_injection", "error", "circular", "validation"]
+	},
+	{
+		"id": "missing_dependency_error",
+		"description": "Tests error when handler requires a dependency that was never registered",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/missing-dep",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/missing-dep"
+			},
+			"expected_response": {
+				"status_code": 500,
+				"body": {
+					"type": "https://spikard.dev/errors/dependency-error",
+					"title": "Dependency Resolution Failed",
+					"status": 500,
+					"detail": "Required dependency not found",
+					"errors": [
+						{
+							"type": "missing_dependency",
+							"msg": "Dependency 'non_existent_service' is not registered",
+							"dependency_key": "non_existent_service"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["dependency_injection", "error", "missing"]
+	},
+	{
+		"id": "type_mismatch_in_dependency_resolution_error",
+		"description": "Tests error when handler expects a different type than what the dependency provides",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/type-mismatch",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/type-mismatch"
+			},
+			"expected_response": {
+				"status_code": 500,
+				"body": {
+					"type": "https://spikard.dev/errors/dependency-error",
+					"title": "Dependency Resolution Failed",
+					"status": 500,
+					"detail": "Dependency type mismatch",
+					"errors": [
+						{
+							"type": "type_mismatch",
+							"msg": "Dependency 'config' type mismatch: expected object, got string",
+							"dependency_key": "config",
+							"expected_type": "object",
+							"actual_type": "string"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["dependency_injection", "error", "type_mismatch"]
+	},
+	{
+		"id": "resource_cleanup_after_request_success",
+		"description": "Tests generator pattern cleanup where dependency resources are cleaned up after handler completes",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/cleanup-test",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/cleanup-test"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"session_id": "<<uuid>>",
+					"status": "completed"
+				}
+			}
+		},
+		"tags": ["dependency_injection", "cleanup", "generator", "async"]
+	},
+	{
+		"id": "multiple_dependencies_with_cleanup_success",
+		"description": "Tests cleanup for multiple dependencies with generator pattern, ensuring all are cleaned up in reverse resolution order",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/multi-cleanup-test",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/multi-cleanup-test"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"session_active": true
+				}
+			}
+		},
+		"tags": ["dependency_injection", "cleanup", "multiple", "ordering"]
+	},
+	{
+		"id": "python_type_annotation_based_injection_success",
+		"description": "Tests Python-specific type annotation-based dependency injection where dependencies are matched by type hints",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/python-type-inject",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/python-type-inject"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"pool_type": "PostgreSQL",
+					"cache_type": "Redis"
+				}
+			}
+		},
+		"tags": ["dependency_injection", "python", "type_hints", "language_specific"]
+	},
+	{
+		"id": "python_parameter_name_based_injection_success",
+		"description": "Tests Python-specific parameter name-based dependency injection where dependencies are matched by parameter names",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/python-name-inject",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/python-name-inject"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"db_status": "connected",
+					"cache_status": "ready"
+				}
+			}
+		},
+		"tags": ["dependency_injection", "python", "name_based", "language_specific"]
+	},
+	{
+		"id": "node_js_object_destructuring_injection_success",
+		"description": "Tests Node.js/TypeScript-specific object destructuring pattern for dependency injection",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/node-destructure",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/node-destructure"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"db_name": "PostgreSQL",
+					"log_level": "info"
+				}
+			}
+		},
+		"tags": ["dependency_injection", "node", "typescript", "destructuring", "language_specific"]
+	},
+	{
+		"id": "ruby_keyword_argument_injection_success",
+		"description": "Tests Ruby-specific keyword argument pattern for dependency injection",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/ruby-kwargs",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/ruby-kwargs"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"adapter": "postgresql",
+					"user_id": 42
+				}
+			}
+		},
+		"tags": ["dependency_injection", "ruby", "keyword_args", "language_specific"]
+	},
+	{
+		"id": "route_level_dependency_override_success",
+		"description": "Tests route-level dependency override of app-level dependency for testing or special cases",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/override-test",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/override-test"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"mode": "test",
+					"strict": false
+				}
+			}
+		},
+		"tags": ["dependency_injection", "override", "testing", "advanced"]
+	},
+	{
+		"id": "mixed_singleton_and_per_request_caching_success",
+		"description": "Tests mixing singleton dependencies (shared across requests) with per-request dependencies (cached within request)",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/mixed-caching",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/mixed-caching"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"app_name": "MyApp",
+					"pool_id": "<<uuid>>",
+					"context_id": "<<uuid>>"
+				}
+			}
+		},
+		"tags": ["dependency_injection", "singleton", "per-request", "mixed", "advanced"]
+	},
+	{
+		"id": "dependency_injection_in_lifecycle_hooks_success",
+		"description": "Tests accessing dependencies in lifecycle hooks (onRequest, preHandler) for auth, logging, etc.",
+		"category": "di",
+		"http": {
+			"handler": {
+				"route": "/api/hook-di-test",
+				"method": "GET",
+				"middleware": {
+					"lifecycle_hooks": {
+						"on_request": [
+							{
+								"name": "log_request",
+								"handler": "log_incoming_request",
+								"dependencies": ["logger"]
+							}
+						],
+						"pre_handler": [
+							{
+								"name": "auth_check",
+								"handler": "check_authentication",
+								"dependencies": ["auth_service"]
+							}
+						]
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/api/hook-di-test",
+				"headers": {
+					"authorization": "Bearer valid_token"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"authenticated": true,
+					"logged": true
+				},
+				"headers": {
+					"X-Log-Level": "debug",
+					"X-Auth-Mode": "strict"
+				}
+			}
+		},
+		"tags": ["dependency_injection", "lifecycle_hooks", "integration", "advanced"]
+	}
 ]

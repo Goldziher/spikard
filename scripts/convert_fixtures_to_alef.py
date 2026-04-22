@@ -130,9 +130,7 @@ def convert_fixture(fixture: dict, category: str, seen_ids: set[str]) -> dict | 
     return result
 
 
-def process_category(
-    category_dir: Path, category: str, seen_ids: set[str]
-) -> list[dict]:
+def process_category(category_dir: Path, category: str, seen_ids: set[str]) -> list[dict]:
     """Process all fixtures in a category directory."""
     fixtures = []
     for json_file in sorted(category_dir.glob("**/*.json")):
@@ -209,12 +207,12 @@ def main() -> None:
             pass
     total_skipped = total_input - total_converted
 
-    print(f"\nConversion summary:")
+    print("\nConversion summary:")
     print(f"  Input:     {total_input} fixtures from {input_dir}/")
     print(f"  Converted: {total_converted} HTTP fixtures")
     print(f"  Skipped:   {total_skipped} (gRPC/protobuf/streaming/incomplete)")
     print(f"  Output:    {output_dir}/")
-    print(f"\nCategories:")
+    print("\nCategories:")
     for cat, count in sorted(category_stats.items()):
         if count > 0:
             print(f"  {cat}: {count}")
@@ -228,7 +226,7 @@ def main() -> None:
                     print(f"  ERROR: {json_file}: missing 'id'", file=sys.stderr)
                     errors += 1
                 if "http" not in f:
-                    print(f"  ERROR: {json_file}/{f.get('id','?')}: missing 'http'", file=sys.stderr)
+                    print(f"  ERROR: {json_file}/{f.get('id', '?')}: missing 'http'", file=sys.stderr)
                     errors += 1
                 http = f.get("http", {})
                 if "handler" not in http:

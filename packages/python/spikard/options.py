@@ -25,20 +25,20 @@ class JwtConfig:
     """Placeholder for JwtConfig type."""
 
 
-class ApiKeyConfig:
-    """Placeholder for ApiKeyConfig type."""
-
-
-class JsonRpcMethodInfo:
-    """Placeholder for JsonRpcMethodInfo type."""
+class LicenseInfo:
+    """Placeholder for LicenseInfo type."""
 
 
 class ContactInfo:
     """Placeholder for ContactInfo type."""
 
 
-class LicenseInfo:
-    """Placeholder for LicenseInfo type."""
+class JsonRpcMethodInfo:
+    """Placeholder for JsonRpcMethodInfo type."""
+
+
+class ApiKeyConfig:
+    """Placeholder for ApiKeyConfig type."""
 
 
 @dataclass

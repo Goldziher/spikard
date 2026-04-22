@@ -416,7 +416,7 @@ RSpec.describe 'query_params' do
 
   describe 'GET /query/multi-type' do
     it 'Tests multiple query parameters of different types in single request' do
-      response = client.get('/query/multi-type?active=true&name=john&score=95.5&age=30')
+      response = client.get('/query/multi-type?name=john&age=30&score=95.5&active=true')
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'active' => true, 'age' => 30, 'name' => 'john', 'score' => 95.5 })
     end
@@ -456,7 +456,7 @@ RSpec.describe 'query_params' do
 
   describe 'GET /test' do
     it 'Tests query parameters with special characters that need URL encoding' do
-      response = client.get('/test?special=&@A.ac&email=x@test.com')
+      response = client.get('/test?email=x@test.com&special=&@A.ac')
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'email' => 'x@test.com', 'special' => '&@A.ac' })
     end

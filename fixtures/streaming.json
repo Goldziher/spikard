@@ -1,82 +1,71 @@
 [
-  {
-    "id": "stream_json_lines",
-    "description": "Streams newline-delimited JSON payload in small chunks",
-    "category": "streaming",
-    "http": {
-      "handler": {
-        "route": "/stream/json-lines",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/stream/json-lines"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": "{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n",
-        "headers": {
-          "content-type": "application/x-ndjson"
-        }
-      }
-    },
-    "tags": [
-      "streaming",
-      "ndjson",
-      "chunked"
-    ]
-  },
-  {
-    "id": "chunked_csv_export",
-    "description": "Streams CSV header and rows as discrete chunks",
-    "category": "streaming",
-    "http": {
-      "handler": {
-        "route": "/stream/csv-report",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/stream/csv-report"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": "id,name,value\\n1,Alice,42\\n2,Bob,7\\n",
-        "headers": {
-          "content-type": "text/csv"
-        }
-      }
-    },
-    "tags": [
-      "streaming",
-      "csv"
-    ]
-  },
-  {
-    "id": "binary_log_download",
-    "description": "Streams binary log segments with control bytes",
-    "category": "streaming",
-    "http": {
-      "handler": {
-        "route": "/stream/logfile",
-        "method": "GET"
-      },
-      "request": {
-        "method": "GET",
-        "path": "/stream/logfile"
-      },
-      "expected_response": {
-        "status_code": 200,
-        "body": "LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n",
-        "headers": {
-          "content-type": "application/octet-stream"
-        }
-      }
-    },
-    "tags": [
-      "streaming",
-      "binary",
-      "chunked"
-    ]
-  }
+	{
+		"id": "stream_json_lines",
+		"description": "Streams newline-delimited JSON payload in small chunks",
+		"category": "streaming",
+		"http": {
+			"handler": {
+				"route": "/stream/json-lines",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/stream/json-lines"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": "{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n",
+				"headers": {
+					"content-type": "application/x-ndjson"
+				}
+			}
+		},
+		"tags": ["streaming", "ndjson", "chunked"]
+	},
+	{
+		"id": "chunked_csv_export",
+		"description": "Streams CSV header and rows as discrete chunks",
+		"category": "streaming",
+		"http": {
+			"handler": {
+				"route": "/stream/csv-report",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/stream/csv-report"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": "id,name,value\\n1,Alice,42\\n2,Bob,7\\n",
+				"headers": {
+					"content-type": "text/csv"
+				}
+			}
+		},
+		"tags": ["streaming", "csv"]
+	},
+	{
+		"id": "binary_log_download",
+		"description": "Streams binary log segments with control bytes",
+		"category": "streaming",
+		"http": {
+			"handler": {
+				"route": "/stream/logfile",
+				"method": "GET"
+			},
+			"request": {
+				"method": "GET",
+				"path": "/stream/logfile"
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": "LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n",
+				"headers": {
+					"content-type": "application/octet-stream"
+				}
+			}
+		},
+		"tags": ["streaming", "binary", "chunked"]
+	}
 ]

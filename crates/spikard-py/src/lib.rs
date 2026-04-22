@@ -12,7 +12,12 @@
     clippy::let_unit_value,
     clippy::needless_borrow,
     clippy::too_many_arguments,
-    clippy::map_identity
+    clippy::map_identity,
+    clippy::unnecessary_cast,
+    clippy::unwrap_or_default,
+    clippy::derivable_impls,
+    clippy::needless_borrows_for_generic_args,
+    clippy::unnecessary_fallible_conversions
 )]
 
 use pyo3::prelude::*;
@@ -509,7 +514,7 @@ impl Route {
 
     #[pyo3(signature = (info))]
     pub fn with_jsonrpc_method(&self, info: JsonRpcMethodInfo) -> Route {
-        let info_core: spikard_core::JsonRpcMethodInfo = info.into();
+        let info_core: spikard::JsonRpcMethodInfo = info.into();
         let _ = info;
         Default::default()
     }
@@ -1301,7 +1306,7 @@ impl JsonRpcConfig {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 #[pyclass(frozen, from_py_object)]
 pub struct OpenApiConfig {
     /// Enable OpenAPI generation (default: false for zero overhead)
@@ -1657,7 +1662,7 @@ impl StaticFilesConfig {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 #[pyclass(frozen, from_py_object)]
 #[allow(clippy::similar_names)]
 pub struct ServerConfig {

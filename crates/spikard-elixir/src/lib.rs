@@ -7,7 +7,12 @@
     clippy::needless_borrow,
     clippy::map_identity,
     clippy::just_underscores_and_digits,
-    clippy::unused_unit
+    clippy::unused_unit,
+    clippy::unnecessary_cast,
+    clippy::unwrap_or_default,
+    clippy::derivable_impls,
+    clippy::needless_borrows_for_generic_args,
+    clippy::unnecessary_fallible_conversions
 )]
 
 use rustler::ResourceArc;

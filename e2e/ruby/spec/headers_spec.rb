@@ -232,7 +232,7 @@ RSpec.describe 'headers' do
   describe 'GET /headers/multiple' do
     it 'Tests multiple custom headers in single request' do
       response = client.get('/headers/multiple',
-        headers: { 'X-Client-Version' => '1.2.3', 'X-Trace-Id' => 'trace-abc', 'X-Request-Id' => 'req-12345' }
+        headers: { 'X-Trace-Id' => 'trace-abc', 'X-Request-Id' => 'req-12345', 'X-Client-Version' => '1.2.3' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'x_client_version' => '1.2.3', 'x_request_id' => 'req-12345', 'x_trace_id' => 'trace-abc' })

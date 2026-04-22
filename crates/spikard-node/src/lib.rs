@@ -6,7 +6,13 @@
     clippy::let_unit_value,
     clippy::needless_borrow,
     clippy::map_identity,
-    clippy::just_underscores_and_digits
+    clippy::just_underscores_and_digits,
+    clippy::unnecessary_cast,
+    clippy::unused_unit,
+    clippy::unwrap_or_default,
+    clippy::derivable_impls,
+    clippy::needless_borrows_for_generic_args,
+    clippy::unnecessary_fallible_conversions
 )]
 
 use napi::*;
@@ -14,7 +20,7 @@ use napi_derive::napi;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsUploadFile {
     pub filename: String,
@@ -27,7 +33,7 @@ pub struct JsUploadFile {
     pub cursor: String,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsCorsConfig {
     #[napi(js_name = "allowedOrigins")]
@@ -48,7 +54,7 @@ pub struct JsCorsConfig {
     pub headers_joined_cache: Option<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsRouteMetadata {
     pub method: Option<String>,
@@ -76,7 +82,7 @@ pub struct JsRouteMetadata {
     pub static_response: Option<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsCompressionConfig {
     pub gzip: Option<bool>,
@@ -86,7 +92,7 @@ pub struct JsCompressionConfig {
     pub quality: Option<u32>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsRateLimitConfig {
     #[napi(js_name = "perSecond")]
@@ -96,7 +102,7 @@ pub struct JsRateLimitConfig {
     pub ip_based: Option<bool>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsJsonRpcMethodInfo {
     #[napi(js_name = "methodName")]
@@ -110,7 +116,7 @@ pub struct JsJsonRpcMethodInfo {
     pub tags: Vec<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsRoute {
     pub method: Option<JsMethod>,
@@ -136,7 +142,7 @@ pub struct JsRoute {
     pub jsonrpc_method: Option<JsJsonRpcMethodInfo>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsProblemDetails {
     #[napi(js_name = "typeUri")]
@@ -237,7 +243,7 @@ impl JsGraphQLRouteConfig {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsSchemaConfig {
     #[napi(js_name = "introspectionEnabled")]
@@ -248,7 +254,7 @@ pub struct JsSchemaConfig {
     pub depth_limit: Option<i64>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsQueryOnlyConfig {
     #[napi(js_name = "introspectionEnabled")]
@@ -259,7 +265,7 @@ pub struct JsQueryOnlyConfig {
     pub depth_limit: Option<i64>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsQueryMutationConfig {
     #[napi(js_name = "introspectionEnabled")]
@@ -270,7 +276,7 @@ pub struct JsQueryMutationConfig {
     pub depth_limit: Option<i64>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsFullSchemaConfig {
     #[napi(js_name = "introspectionEnabled")]
@@ -281,7 +287,7 @@ pub struct JsFullSchemaConfig {
     pub depth_limit: Option<i64>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsClaims {
     pub sub: String,
@@ -292,7 +298,7 @@ pub struct JsClaims {
     pub iss: Option<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsBackgroundTaskConfig {
     #[napi(js_name = "maxQueueSize")]
@@ -303,7 +309,7 @@ pub struct JsBackgroundTaskConfig {
     pub drain_timeout_secs: Option<i64>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsBackgroundJobMetadata {
     pub name: Option<String>,
@@ -311,7 +317,7 @@ pub struct JsBackgroundJobMetadata {
     pub request_id: Option<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsBackgroundJobError {
     pub message: String,
@@ -326,7 +332,7 @@ pub struct JsBackgroundHandle {
 #[napi]
 impl JsBackgroundHandle {}
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsGrpcRequestData {
     #[napi(js_name = "serviceName")]
@@ -337,14 +343,14 @@ pub struct JsGrpcRequestData {
     pub metadata: String,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsGrpcResponseData {
     pub payload: Vec<u8>,
     pub metadata: String,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsGrpcConfig {
     pub enabled: Option<bool>,
@@ -364,13 +370,13 @@ pub struct JsGrpcConfig {
     pub keepalive_timeout: Option<i64>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsValidatedParams {
     pub params: HashMap<String, String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsJsonRpcConfig {
     pub enabled: Option<bool>,
@@ -382,7 +388,7 @@ pub struct JsJsonRpcConfig {
     pub max_batch_size: Option<i64>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsOpenApiConfig {
     pub enabled: Option<bool>,
@@ -402,7 +408,7 @@ pub struct JsOpenApiConfig {
     pub security_schemes: Option<HashMap<String, JsSecuritySchemeInfo>>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsContactInfo {
     pub name: Option<String>,
@@ -410,21 +416,21 @@ pub struct JsContactInfo {
     pub url: Option<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsLicenseInfo {
     pub name: String,
     pub url: Option<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsServerInfo {
     pub url: String,
     pub description: Option<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsResponse {
     pub content: Option<String>,
@@ -433,7 +439,7 @@ pub struct JsResponse {
     pub headers: Option<HashMap<String, String>>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsSseEvent {
     #[napi(js_name = "eventType")]
@@ -443,7 +449,7 @@ pub struct JsSseEvent {
     pub retry: Option<i64>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsJwtConfig {
     pub secret: String,
@@ -453,7 +459,7 @@ pub struct JsJwtConfig {
     pub leeway: i64,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsApiKeyConfig {
     pub keys: Vec<String>,
@@ -461,7 +467,7 @@ pub struct JsApiKeyConfig {
     pub header_name: String,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsStaticFilesConfig {
     pub directory: String,
@@ -473,7 +479,7 @@ pub struct JsStaticFilesConfig {
     pub cache_control: Option<String>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsServerConfig {
     pub host: Option<String>,
@@ -512,7 +518,7 @@ pub struct JsServerConfig {
 }
 
 #[napi(string_enum)]
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum JsMethod {
     Get,
     Post,
@@ -532,7 +538,7 @@ impl Default for JsMethod {
 }
 
 #[napi(string_enum)]
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum JsJsonRpcResponseType {
     Success,
     Error,
@@ -546,7 +552,7 @@ impl Default for JsJsonRpcResponseType {
 }
 
 #[napi(string_enum)]
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub enum JsJsonRpcRequestOrBatch {
     Single,
     Batch,
@@ -559,7 +565,7 @@ impl Default for JsJsonRpcRequestOrBatch {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 #[napi(object)]
 pub struct JsSecuritySchemeInfo {
     #[napi(js_name = "type")]
