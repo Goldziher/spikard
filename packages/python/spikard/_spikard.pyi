@@ -3,48 +3,25 @@
 
 from typing import Any
 
-class Claims:
-    sub: str
-    exp: int
-    iat: int | None
-    nbf: int | None
-    aud: list[str] | None
-    iss: str | None
+class UploadFile:
+    filename: str
+    content_type: str | None
+    size: int | None
+    content: bytes
+    content_encoding: str | None
+    cursor: str
     def __init__(
         self,
-        sub: str,
-        exp: int,
-        iat: int | None = None,
-        nbf: int | None = None,
-        aud: list[str] | None = None,
-        iss: str | None = None,
+        filename: str,
+        content: bytes,
+        cursor: str,
+        content_type: str | None = None,
+        size: int | None = None,
+        content_encoding: str | None = None,
     ) -> None: ...
-
-class BackgroundTaskConfig:
-    max_queue_size: int
-    max_concurrent_tasks: int
-    drain_timeout_secs: int
-    def __init__(
-        self,
-        max_queue_size: int,
-        max_concurrent_tasks: int,
-        drain_timeout_secs: int,
-    ) -> None: ...
-    @staticmethod
-    def default() -> BackgroundTaskConfig: ...
-
-class BackgroundJobMetadata:
-    name: str
-    request_id: str | None
-    def __init__(self, name: str, request_id: str | None = None) -> None: ...
-    @staticmethod
-    def default() -> BackgroundJobMetadata: ...
-
-class BackgroundJobError:
-    message: str
-    def __init__(self, message: str) -> None: ...
-    @staticmethod
-    def from_(message: str) -> BackgroundJobError: ...
+    def as_bytes(self) -> bytes: ...
+    def read_to_string(self) -> str: ...
+    def content_type_or_default(self) -> str: ...
 
 class CorsConfig:
     allowed_origins: list[str]
@@ -124,47 +101,6 @@ class RateLimitConfig:
     @staticmethod
     def default() -> RateLimitConfig: ...
 
-class ProblemDetails:
-    type_uri: str
-    title: str
-    status: int
-    detail: str | None
-    instance: str | None
-    extensions: dict[str, str]
-    def __init__(
-        self,
-        type_uri: str,
-        title: str,
-        status: int,
-        extensions: dict[str, str],
-        detail: str | None = None,
-        instance: str | None = None,
-    ) -> None: ...
-    def with_detail(self, detail: str) -> ProblemDetails: ...
-    def with_instance(self, instance: str) -> ProblemDetails: ...
-    def with_extension(self, key: str, value: str) -> ProblemDetails: ...
-    def with_extensions(self, extensions: str) -> ProblemDetails: ...
-    def status_code(self) -> str: ...
-    def to_json(self) -> str: ...
-    def to_json_pretty(self) -> str: ...
-    @staticmethod
-    def from_validation_error(error: str) -> ProblemDetails: ...
-    @staticmethod
-    def not_found(detail: str) -> ProblemDetails: ...
-    @staticmethod
-    def method_not_allowed(detail: str) -> ProblemDetails: ...
-    @staticmethod
-    def internal_server_error(detail: str) -> ProblemDetails: ...
-    @staticmethod
-    def internal_server_error_debug(
-        detail: str,
-        exception: str,
-        traceback: str,
-        request_data: str,
-    ) -> ProblemDetails: ...
-    @staticmethod
-    def bad_request(detail: str) -> ProblemDetails: ...
-
 class JsonRpcMethodInfo:
     method_name: str
     description: str | None
@@ -217,6 +153,146 @@ class Route:
     def default() -> Route: ...
     @staticmethod
     def from_metadata(metadata: RouteMetadata, registry: str) -> Route: ...
+
+class ProblemDetails:
+    type_uri: str
+    title: str
+    status: int
+    detail: str | None
+    instance: str | None
+    extensions: dict[str, str]
+    def __init__(
+        self,
+        type_uri: str,
+        title: str,
+        status: int,
+        extensions: dict[str, str],
+        detail: str | None = None,
+        instance: str | None = None,
+    ) -> None: ...
+    def with_detail(self, detail: str) -> ProblemDetails: ...
+    def with_instance(self, instance: str) -> ProblemDetails: ...
+    def with_extension(self, key: str, value: str) -> ProblemDetails: ...
+    def with_extensions(self, extensions: str) -> ProblemDetails: ...
+    def status_code(self) -> str: ...
+    def to_json(self) -> str: ...
+    def to_json_pretty(self) -> str: ...
+    @staticmethod
+    def from_validation_error(error: str) -> ProblemDetails: ...
+    @staticmethod
+    def not_found(detail: str) -> ProblemDetails: ...
+    @staticmethod
+    def method_not_allowed(detail: str) -> ProblemDetails: ...
+    @staticmethod
+    def internal_server_error(detail: str) -> ProblemDetails: ...
+    @staticmethod
+    def internal_server_error_debug(
+        detail: str,
+        exception: str,
+        traceback: str,
+        request_data: str,
+    ) -> ProblemDetails: ...
+    @staticmethod
+    def bad_request(detail: str) -> ProblemDetails: ...
+
+class SchemaConfig:
+    introspection_enabled: bool
+    complexity_limit: int | None
+    depth_limit: int | None
+    def __init__(
+        self,
+        introspection_enabled: bool,
+        complexity_limit: int | None = None,
+        depth_limit: int | None = None,
+    ) -> None: ...
+    def set_introspection_enabled(self, enabled: bool) -> SchemaConfig: ...
+    def set_complexity_limit(self, limit: int) -> SchemaConfig: ...
+    def set_depth_limit(self, limit: int) -> SchemaConfig: ...
+    def validate(self) -> str: ...
+    @staticmethod
+    def default() -> SchemaConfig: ...
+
+class QueryOnlyConfig:
+    introspection_enabled: bool
+    complexity_limit: int | None
+    depth_limit: int | None
+    def __init__(
+        self,
+        introspection_enabled: bool,
+        complexity_limit: int | None = None,
+        depth_limit: int | None = None,
+    ) -> None: ...
+    @staticmethod
+    def default() -> QueryOnlyConfig: ...
+
+class QueryMutationConfig:
+    introspection_enabled: bool
+    complexity_limit: int | None
+    depth_limit: int | None
+    def __init__(
+        self,
+        introspection_enabled: bool,
+        complexity_limit: int | None = None,
+        depth_limit: int | None = None,
+    ) -> None: ...
+    @staticmethod
+    def default() -> QueryMutationConfig: ...
+
+class FullSchemaConfig:
+    introspection_enabled: bool
+    complexity_limit: int | None
+    depth_limit: int | None
+    def __init__(
+        self,
+        introspection_enabled: bool,
+        complexity_limit: int | None = None,
+        depth_limit: int | None = None,
+    ) -> None: ...
+    @staticmethod
+    def default() -> FullSchemaConfig: ...
+
+class Claims:
+    sub: str
+    exp: int
+    iat: int | None
+    nbf: int | None
+    aud: list[str] | None
+    iss: str | None
+    def __init__(
+        self,
+        sub: str,
+        exp: int,
+        iat: int | None = None,
+        nbf: int | None = None,
+        aud: list[str] | None = None,
+        iss: str | None = None,
+    ) -> None: ...
+
+class BackgroundTaskConfig:
+    max_queue_size: int
+    max_concurrent_tasks: int
+    drain_timeout_secs: int
+    def __init__(
+        self,
+        max_queue_size: int,
+        max_concurrent_tasks: int,
+        drain_timeout_secs: int,
+    ) -> None: ...
+    @staticmethod
+    def default() -> BackgroundTaskConfig: ...
+
+class BackgroundJobMetadata:
+    name: str
+    request_id: str | None
+    def __init__(self, name: str, request_id: str | None = None) -> None: ...
+    @staticmethod
+    def default() -> BackgroundJobMetadata: ...
+
+class BackgroundJobError:
+    message: str
+    def __init__(self, message: str) -> None: ...
+    @staticmethod
+    def from_(message: str) -> BackgroundJobError: ...
 
 class GrpcRequestData:
     service_name: str
@@ -457,87 +533,11 @@ class ServerConfig:
     @staticmethod
     def builder() -> str: ...
 
-class UploadFile:
-    filename: str
-    content_type: str | None
-    size: int | None
-    content: bytes
-    content_encoding: str | None
-    cursor: str
-    def __init__(
-        self,
-        filename: str,
-        content: bytes,
-        cursor: str,
-        content_type: str | None = None,
-        size: int | None = None,
-        content_encoding: str | None = None,
-    ) -> None: ...
-    def as_bytes(self) -> bytes: ...
-    def read_to_string(self) -> str: ...
-    def content_type_or_default(self) -> str: ...
-
-class SchemaConfig:
-    introspection_enabled: bool
-    complexity_limit: int | None
-    depth_limit: int | None
-    def __init__(
-        self,
-        introspection_enabled: bool,
-        complexity_limit: int | None = None,
-        depth_limit: int | None = None,
-    ) -> None: ...
-    def set_introspection_enabled(self, enabled: bool) -> SchemaConfig: ...
-    def set_complexity_limit(self, limit: int) -> SchemaConfig: ...
-    def set_depth_limit(self, limit: int) -> SchemaConfig: ...
-    def validate(self) -> str: ...
-    @staticmethod
-    def default() -> SchemaConfig: ...
-
-class QueryOnlyConfig:
-    introspection_enabled: bool
-    complexity_limit: int | None
-    depth_limit: int | None
-    def __init__(
-        self,
-        introspection_enabled: bool,
-        complexity_limit: int | None = None,
-        depth_limit: int | None = None,
-    ) -> None: ...
-    @staticmethod
-    def default() -> QueryOnlyConfig: ...
-
-class QueryMutationConfig:
-    introspection_enabled: bool
-    complexity_limit: int | None
-    depth_limit: int | None
-    def __init__(
-        self,
-        introspection_enabled: bool,
-        complexity_limit: int | None = None,
-        depth_limit: int | None = None,
-    ) -> None: ...
-    @staticmethod
-    def default() -> QueryMutationConfig: ...
-
-class FullSchemaConfig:
-    introspection_enabled: bool
-    complexity_limit: int | None
-    depth_limit: int | None
-    def __init__(
-        self,
-        introspection_enabled: bool,
-        complexity_limit: int | None = None,
-        depth_limit: int | None = None,
-    ) -> None: ...
-    @staticmethod
-    def default() -> FullSchemaConfig: ...
-
-class BackgroundHandle: ...
 class GraphQLError:
     def status_code(self) -> int: ...
     def to_graphql_response(self) -> str: ...
     def to_http_response(self) -> str: ...
+
 class GraphQLRouteConfig:
     def path(self, path: str) -> GraphQLRouteConfig: ...
     def method(self, method: str) -> GraphQLRouteConfig: ...
@@ -549,6 +549,8 @@ class GraphQLRouteConfig:
     def get_description(self) -> str | None: ...
     @staticmethod
     def default() -> GraphQLRouteConfig: ...
+
+class BackgroundHandle: ...
 
 class Method:
     Get: Method = ...
@@ -570,7 +572,7 @@ class JsonRpcRequestOrBatch:
 class SecuritySchemeInfo:
     def __init__(self, value: dict[str, Any]) -> None: ...
 
-def add_cors_headers(response: Response, origin: str, cors_config: CorsConfig) -> None: ...
 def schema_query_only() -> QueryOnlyConfig: ...
 def schema_query_mutation() -> QueryMutationConfig: ...
 def schema_full() -> FullSchemaConfig: ...
+def add_cors_headers(response: Response, origin: str, cors_config: CorsConfig) -> None: ...

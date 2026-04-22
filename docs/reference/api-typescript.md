@@ -6,39 +6,6 @@ title: "TypeScript API Reference"
 
 ### Functions
 
-#### addCorsHeaders()
-
-Add CORS headers to a successful response
-
-Adds appropriate CORS headers to the response based on the configuration.
-This function should be called for successful (non-error) responses to
-cross-origin requests.
-
-# Headers Added
-
-- `Access-Control-Allow-Origin` - The origin that is allowed (if valid)
-- `Access-Control-Expose-Headers` - Headers that are safe to expose to the client
-- `Access-Control-Allow-Credentials` - "true" if credentials are allowed
-
-**Signature:**
-
-```typescript
-function addCorsHeaders(response: Response, origin: string, corsConfig: CorsConfig): void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response` | `Response` | Yes | Mutable reference to the response to modify |
-| `origin` | `string` | Yes | The origin from the request (e.g., `<https://example.com>`) |
-| `corsConfig` | `CorsConfig` | Yes | CORS configuration to apply |
-
-**Returns:** `void`
-
-
----
-
 #### schemaQueryOnly()
 
 Create a simple schema configuration with only Query type.
@@ -56,7 +23,6 @@ function schemaQueryOnly(): QueryOnlyConfig
 ```
 
 **Returns:** `QueryOnlyConfig`
-
 
 ---
 
@@ -78,7 +44,6 @@ function schemaQueryMutation(): QueryMutationConfig
 
 **Returns:** `QueryMutationConfig`
 
-
 ---
 
 #### schemaFull()
@@ -99,6 +64,37 @@ function schemaFull(): FullSchemaConfig
 
 **Returns:** `FullSchemaConfig`
 
+---
+
+#### addCorsHeaders()
+
+Add CORS headers to a successful response
+
+Adds appropriate CORS headers to the response based on the configuration.
+This function should be called for successful (non-error) responses to
+cross-origin requests.
+
+## Headers Added
+
+- `Access-Control-Allow-Origin` - The origin that is allowed (if valid)
+- `Access-Control-Expose-Headers` - Headers that are safe to expose to the client
+- `Access-Control-Allow-Credentials` - "true" if credentials are allowed
+
+**Signature:**
+
+```typescript
+function addCorsHeaders(response: Response, origin: string, corsConfig: CorsConfig): void
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response` | `Response` | Yes | Mutable reference to the response to modify |
+| `origin` | `string` | Yes | The origin from the request (e.g., `<https://example.com>`) |
+| `corsConfig` | `CorsConfig` | Yes | CORS configuration to apply |
+
+**Returns:** `void`
 
 ---
 
@@ -113,21 +109,19 @@ API Key authentication configuration
 | `keys` | `Array<string>` | — | Valid API keys |
 | `headerName` | `string` | — | Header name to check (e.g., "X-API-Key") |
 
+---
+
+##### BackgroundHandle
 
 ---
 
-#### BackgroundHandle
-
-
----
-
-#### BackgroundJobError
+##### BackgroundJobError
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `message` | `string` | — | Message |
 
-##### Methods
+###### Methods
 
 ###### from()
 
@@ -137,17 +131,16 @@ API Key authentication configuration
 static from(message: string): BackgroundJobError
 ```
 
-
 ---
 
-#### BackgroundJobMetadata
+##### BackgroundJobMetadata
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `string` | — | The name |
 | `requestId` | `string | null` | `null` | Request id |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -157,10 +150,9 @@ static from(message: string): BackgroundJobError
 static default(): BackgroundJobMetadata
 ```
 
-
 ---
 
-#### BackgroundTaskConfig
+##### BackgroundTaskConfig
 
 Configuration for in-process background task execution.
 
@@ -170,7 +162,7 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `number` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `number` | `30` | Drain timeout secs |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -180,10 +172,9 @@ Configuration for in-process background task execution.
 static default(): BackgroundTaskConfig
 ```
 
-
 ---
 
-#### Claims
+##### Claims
 
 JWT claims structure - can be extended based on needs
 
@@ -196,10 +187,9 @@ JWT claims structure - can be extended based on needs
 | `aud` | `Array<string> | null` | `null` | Aud |
 | `iss` | `string | null` | `null` | Iss |
 
-
 ---
 
-#### CompressionConfig
+##### CompressionConfig
 
 Compression configuration shared across runtimes
 
@@ -210,7 +200,7 @@ Compression configuration shared across runtimes
 | `minSize` | `number` | — | Minimum response size to compress (bytes) |
 | `quality` | `number` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -220,10 +210,9 @@ Compression configuration shared across runtimes
 static default(): CompressionConfig
 ```
 
-
 ---
 
-#### ContactInfo
+##### ContactInfo
 
 Contact information
 
@@ -233,10 +222,9 @@ Contact information
 | `email` | `string | null` | `null` | Email |
 | `url` | `string | null` | `null` | Url |
 
-
 ---
 
-#### CorsConfig
+##### CorsConfig
 
 CORS configuration for a route
 
@@ -251,7 +239,7 @@ CORS configuration for a route
 | `methodsJoinedCache` | `string` | — | Methods joined cache |
 | `headersJoinedCache` | `string` | — | Headers joined cache |
 
-##### Methods
+###### Methods
 
 ###### allowedMethodsJoined()
 
@@ -311,10 +299,9 @@ areHeadersAllowed(requested: Array<string>): boolean
 static default(): CorsConfig
 ```
 
-
 ---
 
-#### FullSchemaConfig
+##### FullSchemaConfig
 
 Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 
@@ -324,7 +311,7 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `number | null` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `number | null` | `null` | Maximum query depth (None = unlimited) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -334,18 +321,18 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 static default(): FullSchemaConfig
 ```
 
-
 ---
 
-#### GraphQlError
+##### GraphQlError
 
-##### Methods
+###### Methods
 
 ###### statusCode()
 
 Convert error to HTTP status code
 
 Maps GraphQL error types to appropriate HTTP status codes:
+
 - 400: Bad Request for parse/request-handling errors
 - 401: Unauthorized for authentication errors
 - 403: Forbidden for authorization errors
@@ -368,7 +355,7 @@ Convert error to GraphQL error response JSON
 Returns a JSON object matching the GraphQL spec error format with
 structured extensions for HTTP integration.
 
-# Format
+## Format
 
 ```json
 {
@@ -391,14 +378,14 @@ structured extensions for HTTP integration.
 toGraphqlResponse(): string
 ```
 
-###### toHttpResponse()
+### toHttpResponse()
 
 Convert error to structured HTTP error response
 
 Returns a JSON object matching the project's error fixture format,
 suitable for direct HTTP response conversion.
 
-# Format
+## Format
 
 ```json
 {
@@ -421,19 +408,18 @@ suitable for direct HTTP response conversion.
 toHttpResponse(): string
 ```
 
-
 ---
 
-#### GraphQlRouteConfig
+### GraphQlRouteConfig
 
 Configuration for GraphQL routes
 
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Methods
+#### Methods
 
-###### path()
+##### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -521,17 +507,16 @@ getDescription(): string | null
 static default(): GraphQlRouteConfig
 ```
 
-
 ---
 
-#### GrpcConfig
+##### GrpcConfig
 
 Configuration for gRPC support
 
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -563,9 +548,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveInterval` | `number` | — | HTTP/2 keepalive interval in seconds |
 | `keepaliveTimeout` | `number` | — | HTTP/2 keepalive timeout in seconds |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -573,14 +558,14 @@ concurrent stream limiting to the HTTP/2 transport layer:
 static default(): GrpcConfig
 ```
 
-
 ---
 
-#### GrpcRequestData
+##### GrpcRequestData
 
 gRPC request data passed to handlers
 
 Contains the parsed components of a gRPC request:
+
 - Service and method names from the request path
 - Serialized protobuf payload as bytes
 - Request metadata (headers)
@@ -592,10 +577,9 @@ Contains the parsed components of a gRPC request:
 | `payload` | `Buffer` | — | Serialized protobuf message bytes |
 | `metadata` | `string` | — | gRPC metadata (similar to HTTP headers) |
 
-
 ---
 
-#### GrpcResponseData
+##### GrpcResponseData
 
 gRPC response data returned by handlers
 
@@ -607,10 +591,9 @@ in the response headers.
 | `payload` | `Buffer` | — | Serialized protobuf message bytes |
 | `metadata` | `string` | — | gRPC metadata to include in response (similar to HTTP headers) |
 
-
 ---
 
-#### JsonRpcConfig
+##### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -621,7 +604,7 @@ JSON-RPC server configuration
 | `enableBatch` | `boolean` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `number` | — | Maximum number of requests in a batch (default: 100) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -631,10 +614,9 @@ JSON-RPC server configuration
 static default(): JsonRpcConfig
 ```
 
-
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -650,10 +632,9 @@ enabling discovery and documentation of RPC-compatible endpoints.
 | `deprecated` | `boolean` | — | Whether this method is deprecated |
 | `tags` | `Array<string>` | — | Tags for categorizing and grouping methods |
 
-
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
@@ -665,10 +646,9 @@ JWT authentication configuration
 | `issuer` | `string | null` | `null` | Required issuer claim |
 | `leeway` | `number` | — | Leeway for expiration checks (seconds) |
 
-
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
@@ -677,10 +657,9 @@ License information
 | `name` | `string` | — | The name |
 | `url` | `string | null` | `null` | Url |
 
-
 ---
 
-#### OpenApiConfig
+##### OpenApiConfig
 
 OpenAPI configuration
 
@@ -698,7 +677,7 @@ OpenAPI configuration
 | `servers` | `Array<ServerInfo>` | `[]` | Server definitions |
 | `securitySchemes` | `Record<string, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -708,10 +687,9 @@ OpenAPI configuration
 static default(): OpenApiConfig
 ```
 
-
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -719,8 +697,10 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -734,9 +714,9 @@ Content-Type: application/problem+json
 | `instance` | `string | null` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Record<string, string>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-##### Methods
+### Methods
 
-###### withDetail()
+#### withDetail()
 
 Set the detail field
 
@@ -746,7 +726,7 @@ Set the detail field
 withDetail(detail: string): ProblemDetails
 ```
 
-###### withInstance()
+##### withInstance()
 
 Set the instance field
 
@@ -781,6 +761,7 @@ withExtensions(extensions: string): ProblemDetails
 Create a validation error Problem Details from `ValidationError`
 
 This converts the FastAPI-style validation errors to RFC 9457 format:
+
 - `type`: <https://spikard.dev/errors/validation-error>
 - `title`: "Request Validation Failed"
 - `status`: 422
@@ -882,10 +863,9 @@ Returns an error if the serialization fails.
 toJsonPretty(): string
 ```
 
-
 ---
 
-#### QueryMutationConfig
+##### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -895,7 +875,7 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit` | `number | null` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `number | null` | `null` | Maximum query depth (None = unlimited) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -905,10 +885,9 @@ Configuration for schemas with Query and Mutation types
 static default(): QueryMutationConfig
 ```
 
-
 ---
 
-#### QueryOnlyConfig
+##### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -918,7 +897,7 @@ Configuration for schemas with only Query type
 | `complexityLimit` | `number | null` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `number | null` | `null` | Maximum query depth (None = unlimited) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -928,10 +907,9 @@ Configuration for schemas with only Query type
 static default(): QueryOnlyConfig
 ```
 
-
 ---
 
-#### RateLimitConfig
+##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -941,7 +919,7 @@ Rate limiting configuration shared across runtimes
 | `burst` | `number` | `200` | Burst allowance |
 | `ipBased` | `boolean` | `true` | Use IP-based rate limiting |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -951,10 +929,9 @@ Rate limiting configuration shared across runtimes
 static default(): RateLimitConfig
 ```
 
-
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -964,7 +941,7 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `number` | — | HTTP status code (defaults to 200) |
 | `headers` | `Record<string, string>` | `{}` | Response headers |
 
-##### Methods
+###### Methods
 
 ###### withStatus()
 
@@ -1004,10 +981,9 @@ setCookie(key: string, value: string, maxAge: number, domain: string, path: stri
 static default(): Response
 ```
 
-
 ---
 
-#### Route
+##### Route
 
 Route definition with compiled validators
 
@@ -1032,7 +1008,7 @@ enabling routes to optionally expose themselves as JSON-RPC methods.
 | `handlerDependencies` | `Array<string>` | `[]` | List of dependency keys this handler requires (for DI) |
 | `jsonrpcMethod` | `JsonRpcMethodInfo | null` | `null` | Optional JSON-RPC method information When present, this route can be exposed as a JSON-RPC method |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -1095,10 +1071,9 @@ Get the JSON-RPC method name if present
 jsonrpcMethodName(): string | null
 ```
 
-
 ---
 
-#### RouteMetadata
+##### RouteMetadata
 
 Route metadata extracted from bindings
 
@@ -1118,7 +1093,7 @@ Route metadata extracted from bindings
 | `jsonrpcMethod` | `string | null` | `null` | JSON-RPC method metadata (if this route is exposed as a JSON-RPC method) |
 | `staticResponse` | `string | null` | `null` | Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}` When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full middleware pipeline for maximum throughput. |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -1128,10 +1103,9 @@ Route metadata extracted from bindings
 static default(): RouteMetadata
 ```
 
-
 ---
 
-#### SchemaConfig
+##### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -1144,7 +1118,7 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit` | `number | null` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `number | null` | `null` | Maximum query depth (None = unlimited) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -1198,10 +1172,9 @@ Returns an error if the configuration is invalid (currently all configurations a
 validate(): string
 ```
 
-
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
@@ -1228,7 +1201,7 @@ Server configuration
 | `enableHttpTrace` | `boolean` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
 | `diContainer` | `string | null` | `null` | Dependency injection container (requires 'di' feature) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -1248,10 +1221,9 @@ Create a new builder for ServerConfig
 static builder(): string
 ```
 
-
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
@@ -1260,19 +1232,19 @@ Server information
 | `url` | `string` | — | Url |
 | `description` | `string | null` | `null` | Human-readable description |
 
-
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1287,9 +1259,9 @@ retry: 3000
 | `id` | `string | null` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `number | null` | `null` | Retry timeout in milliseconds (optional) |
 
-##### Methods
+### Methods
 
-###### withType()
+#### withType()
 
 Create a new SSE event with an event type and data
 
@@ -1302,7 +1274,7 @@ in their event listener.
 static withType(eventType: string, data: string): SseEvent
 ```
 
-###### withId()
+##### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1328,10 +1300,9 @@ if the connection is lost. The client browser will automatically handle reconnec
 withRetry(retryMs: number): SseEvent
 ```
 
-
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
@@ -1342,10 +1313,9 @@ Static file serving configuration
 | `indexFile` | `boolean` | — | Fallback to index.html for directories |
 | `cacheControl` | `string | null` | `null` | Cache-Control header value |
 
-
 ---
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1361,7 +1331,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `contentEncoding` | `string | null` | `null` | Content encoding type |
 | `cursor` | `string` | — | Internal cursor for Read/Seek operations |
 
-##### Methods
+###### Methods
 
 ###### asBytes()
 
@@ -1399,10 +1369,9 @@ Get the content type, defaulting to "application/octet-stream".
 contentTypeOrDefault(): string
 ```
 
-
 ---
 
-#### ValidatedParams
+##### ValidatedParams
 
 Validated parameters from request (path, query, headers, cookies)
 
@@ -1410,12 +1379,11 @@ Validated parameters from request (path, query, headers, cookies)
 |-------|------|---------|-------------|
 | `params` | `Record<string, string>` | — | Params |
 
-
 ---
 
-### Enums
+#### Enums
 
-#### Method
+##### Method
 
 HTTP method
 
@@ -1430,30 +1398,28 @@ HTTP method
 | `Options` | Options |
 | `Trace` | Trace |
 
-
 ---
 
-#### JsonRpcResponseType
+##### JsonRpcResponseType
 
 JSON-RPC 2.0 Response Type
 
 An enum that represents either a successful response or an error response.
 This is useful for untagged deserialization and handling both response types uniformly.
 
-# Variants
+## Variants
 
-* `Success(JsonRpcResponse)` - A successful response with a result
-* `Error(JsonRpcErrorResponse)` - An error response with error details
+- `Success(JsonRpcResponse)` - A successful response with a result
+- `Error(JsonRpcErrorResponse)` - An error response with error details
 
 | Value | Description |
 |-------|-------------|
 | `Success` | Successful response containing a result — Fields: `0`: `string` |
 | `Error` | Error response containing error details — Fields: `0`: `string` |
 
-
 ---
 
-#### JsonRpcRequestOrBatch
+### JsonRpcRequestOrBatch
 
 Represents either a single JSON-RPC request or a batch of requests
 
@@ -1464,7 +1430,6 @@ allowing different routing logic for each case.
 |-------|-------------|
 | `Single` | A single JSON-RPC request — Fields: `0`: `string` |
 | `Batch` | A batch (array) of JSON-RPC requests — Fields: `0`: `Array<string>` |
-
 
 ---
 
@@ -1477,12 +1442,11 @@ Security scheme types
 | `Http` | Http — Fields: `scheme`: `string`, `bearerFormat`: `string` |
 | `ApiKey` | Api key — Fields: `location`: `string`, `name`: `string` |
 
-
 ---
 
-### Errors
+#### Errors
 
-#### GraphQlError
+##### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1509,10 +1473,9 @@ Errors are thrown as plain `Error` objects with descriptive messages.
 | `DepthLimitExceeded` | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit. |
 | `InternalError` | Internal server error Occurs when an unexpected internal error happens. |
 
-
 ---
 
-#### SchemaError
+##### SchemaError
 
 Error type for schema building operations
 
@@ -1525,6 +1488,4 @@ Errors are thrown as plain `Error` objects with descriptive messages.
 | `ComplexityLimitExceeded` | Complexity limit exceeded |
 | `DepthLimitExceeded` | Depth limit exceeded |
 
-
 ---
-

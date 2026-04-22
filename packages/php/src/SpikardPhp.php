@@ -7,41 +7,6 @@ namespace Spikard\Php;
 final class SpikardPhp
 {
     /**
-     * Add CORS headers to a successful response
-     *
-     * Adds appropriate CORS headers to the response based on the configuration.
-     * This function should be called for successful (non-error) responses to
-     * cross-origin requests.
-     *
-     * # Headers Added
-     *
-     * - `Access-Control-Allow-Origin` - The origin that is allowed (if valid)
-     * - `Access-Control-Expose-Headers` - Headers that are safe to expose to the client
-     * - `Access-Control-Allow-Credentials` - "true" if credentials are allowed
-     *
-     * # Arguments
-     * * `response` - Mutable reference to the response to modify
-     * * `origin` - The origin from the request (e.g., `<https://example.com>`)
-     * * `cors_config` - CORS configuration to apply
-     *
-     * # Example
-     *
-     * ```ignore
-     * let mut response = Response::new(Body::empty());
-     * add_cors_headers(&mut response, "https://example.com", &cors_config);
-     * ```
-     *
-     * @param Response $response
-     * @param string $origin
-     * @param CorsConfig $cors_config
-     * @return void
-     */
-    public static function addCorsHeaders(Response $response, string $origin, CorsConfig $cors_config): void
-    {
-        \Spikard\Php\SpikardPhpApi::addCorsHeaders($response, $origin, $cors_config); // delegate to native extension class
-    }
-
-    /**
      * Create a simple schema configuration with only Query type.
      *
      * This is a convenience function for schemas that only have queries.
@@ -87,6 +52,41 @@ final class SpikardPhp
     public static function schemaFull(): FullSchemaConfig
     {
         return \Spikard\Php\SpikardPhpApi::schemaFull(); // delegate to native extension class
+    }
+
+    /**
+     * Add CORS headers to a successful response
+     *
+     * Adds appropriate CORS headers to the response based on the configuration.
+     * This function should be called for successful (non-error) responses to
+     * cross-origin requests.
+     *
+     * # Headers Added
+     *
+     * - `Access-Control-Allow-Origin` - The origin that is allowed (if valid)
+     * - `Access-Control-Expose-Headers` - Headers that are safe to expose to the client
+     * - `Access-Control-Allow-Credentials` - "true" if credentials are allowed
+     *
+     * # Arguments
+     * * `response` - Mutable reference to the response to modify
+     * * `origin` - The origin from the request (e.g., `<https://example.com>`)
+     * * `cors_config` - CORS configuration to apply
+     *
+     * # Example
+     *
+     * ```ignore
+     * let mut response = Response::new(Body::empty());
+     * add_cors_headers(&mut response, "https://example.com", &cors_config);
+     * ```
+     *
+     * @param Response $response
+     * @param string $origin
+     * @param CorsConfig $cors_config
+     * @return void
+     */
+    public static function addCorsHeaders(Response $response, string $origin, CorsConfig $cors_config): void
+    {
+        \Spikard\Php\SpikardPhpApi::addCorsHeaders($response, $origin, $cors_config); // delegate to native extension class
     }
 
 }

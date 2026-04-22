@@ -3,46 +3,41 @@
 
 module Spikard
 
-  class Claims
-    # JWT claims structure - can be extended based on needs
+  class UploadFile
+    # Represents an uploaded file from multipart/form-data requests.
+    #
+    # This struct provides efficient access to file content with automatic
+    # base64 decoding and implements standard I/O traits for compatibility.
+    #
+    # # Example
+    #
+    # ```rust
+    # use spikard::UploadFile;
+    # use serde::Deserialize;
+    #
+    # #[derive(Deserialize)]
+    # struct UploadRequest {
+    #     file: UploadFile,
+    #     description: String,
+    # }
+    #
+    # // In a handler:
+    # // let body: UploadRequest = ctx.json()?;
+    # // let content = body.file.as_bytes();
+    # // let filename = &body.file.filename;
+    # ```
 
-    attr_reader sub: String
-    attr_reader exp: Integer
-    attr_reader iat: Integer
-    attr_reader nbf: Integer
-    attr_reader aud: Array[String]
-    attr_reader iss: String
+    attr_reader filename: String
+    attr_reader content_type: String
+    attr_reader size: Integer
+    attr_reader content: String
+    attr_reader content_encoding: String
+    attr_reader cursor: String
 
-    def initialize: (sub: String, exp: Integer, ?iat: Integer, ?nbf: Integer, ?aud: Array[String], ?iss: String) -> void
-  end
-
-  class BackgroundTaskConfig
-    # Configuration for in-process background task execution.
-
-    attr_accessor max_queue_size: Integer
-    attr_accessor max_concurrent_tasks: Integer
-    attr_accessor drain_timeout_secs: Integer
-
-    def initialize: (max_queue_size: Integer, max_concurrent_tasks: Integer, drain_timeout_secs: Integer) -> void
-    def self.default: () -> BackgroundTaskConfig
-  end
-
-  class BackgroundJobMetadata
-    attr_accessor name: String
-    attr_accessor request_id: String
-
-    def initialize: (name: String, ?request_id: String) -> void
-    def self.default: () -> BackgroundJobMetadata
-  end
-
-  class BackgroundJobError
-    attr_reader message: String
-
-    def initialize: (message: String) -> void
-    def self.from: (String message) -> BackgroundJobError
-  end
-
-  class BackgroundHandle
+    def initialize: (filename: String, ?content_type: String, ?size: Integer, content: String, ?content_encoding: String, cursor: String) -> void
+    def as_bytes: () -> String
+    def read_to_string: () -> String
+    def content_type_or_default: () -> String
   end
 
   class CorsConfig
@@ -108,53 +103,6 @@ module Spikard
 
     def initialize: (per_second: Integer, burst: Integer, ip_based: bool) -> void
     def self.default: () -> RateLimitConfig
-  end
-
-  class ProblemDetails
-    # RFC 9457 Problem Details for HTTP APIs
-    #
-    # A machine-readable format for specifying errors in HTTP API responses.
-    # Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
-    # if not specified.
-    #
-    # # Content-Type
-    # Responses using this struct should set:
-    # ```text
-    # Content-Type: application/problem+json
-    # ```
-    #
-    # # Example
-    # ```json
-    # {
-    #   "type": "https://spikard.dev/errors/validation-error",
-    #   "title": "Request Validation Failed",
-    #   "status": 422,
-    #   "detail": "2 validation errors in request body",
-    #   "errors": [...]
-    # }
-    # ```
-
-    attr_reader type_uri: String
-    attr_reader title: String
-    attr_reader status: Integer
-    attr_reader detail: String
-    attr_reader instance: String
-    attr_reader extensions: Hash[String, String]
-
-    def initialize: (type_uri: String, title: String, status: Integer, ?detail: String, ?instance: String, extensions: Hash[String, String]) -> void
-    def with_detail: (String detail) -> ProblemDetails
-    def with_instance: (String instance) -> ProblemDetails
-    def with_extension: (String key, String value) -> ProblemDetails
-    def with_extensions: (String extensions) -> ProblemDetails
-    def status_code: () -> String
-    def to_json: () -> String
-    def to_json_pretty: () -> String
-    def self.from_validation_error: (String error) -> ProblemDetails
-    def self.not_found: (String detail) -> ProblemDetails
-    def self.method_not_allowed: (String detail) -> ProblemDetails
-    def self.internal_server_error: (String detail) -> ProblemDetails
-    def self.internal_server_error_debug: (String detail, String exception, String traceback, String request_data) -> ProblemDetails
-    def self.bad_request: (String detail) -> ProblemDetails
   end
 
   class JsonRpcMethodInfo
@@ -227,6 +175,183 @@ module Spikard
     def jsonrpc_method_name: () -> String?
     def self.default: () -> Route
     def self.from_metadata: (RouteMetadata metadata, String registry) -> Route
+  end
+
+  class ProblemDetails
+    # RFC 9457 Problem Details for HTTP APIs
+    #
+    # A machine-readable format for specifying errors in HTTP API responses.
+    # Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
+    # if not specified.
+    #
+    # # Content-Type
+    # Responses using this struct should set:
+    # ```text
+    # Content-Type: application/problem+json
+    # ```
+    #
+    # # Example
+    # ```json
+    # {
+    #   "type": "https://spikard.dev/errors/validation-error",
+    #   "title": "Request Validation Failed",
+    #   "status": 422,
+    #   "detail": "2 validation errors in request body",
+    #   "errors": [...]
+    # }
+    # ```
+
+    attr_reader type_uri: String
+    attr_reader title: String
+    attr_reader status: Integer
+    attr_reader detail: String
+    attr_reader instance: String
+    attr_reader extensions: Hash[String, String]
+
+    def initialize: (type_uri: String, title: String, status: Integer, ?detail: String, ?instance: String, extensions: Hash[String, String]) -> void
+    def with_detail: (String detail) -> ProblemDetails
+    def with_instance: (String instance) -> ProblemDetails
+    def with_extension: (String key, String value) -> ProblemDetails
+    def with_extensions: (String extensions) -> ProblemDetails
+    def status_code: () -> String
+    def to_json: () -> String
+    def to_json_pretty: () -> String
+    def self.from_validation_error: (String error) -> ProblemDetails
+    def self.not_found: (String detail) -> ProblemDetails
+    def self.method_not_allowed: (String detail) -> ProblemDetails
+    def self.internal_server_error: (String detail) -> ProblemDetails
+    def self.internal_server_error_debug: (String detail, String exception, String traceback, String request_data) -> ProblemDetails
+    def self.bad_request: (String detail) -> ProblemDetails
+  end
+
+  class GraphQLError
+    def status_code: () -> Integer
+    def to_graphql_response: () -> String
+    def to_http_response: () -> String
+  end
+
+  class GraphQLRouteConfig
+    # Configuration for GraphQL routes
+    #
+    # Provides a builder pattern for configuring GraphQL route parameters
+    # for the Spikard HTTP server's routing system.
+    #
+    # # Example
+    #
+    # ```
+    # use spikard_graphql::routes::GraphQLRouteConfig;
+    #
+    # let config = GraphQLRouteConfig::new()
+    #     .path("/graphql")
+    #     .method("POST")
+    #     .enable_playground(true);
+    #
+    # assert_eq!(config.get_path(), "/graphql");
+    # assert_eq!(config.get_method(), "POST");
+    # ```
+
+    def path: (String path) -> GraphQLRouteConfig
+    def method: (String method) -> GraphQLRouteConfig
+    def enable_playground: (bool enable) -> GraphQLRouteConfig
+    def description: (String description) -> GraphQLRouteConfig
+    def get_path: () -> String
+    def get_method: () -> String
+    def is_playground_enabled: () -> bool
+    def get_description: () -> String?
+    def self.default: () -> GraphQLRouteConfig
+  end
+
+  class SchemaConfig
+    # Configuration for GraphQL schema building.
+    #
+    # Encapsulates all schema-level configuration options including
+    # introspection control, complexity limits, and depth limits.
+
+    attr_accessor introspection_enabled: bool
+    attr_accessor complexity_limit: Integer
+    attr_accessor depth_limit: Integer
+
+    def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
+    def set_introspection_enabled: (bool enabled) -> SchemaConfig
+    def set_complexity_limit: (Integer limit) -> SchemaConfig
+    def set_depth_limit: (Integer limit) -> SchemaConfig
+    def validate: () -> String
+    def self.default: () -> SchemaConfig
+  end
+
+  class QueryOnlyConfig
+    # Configuration for schemas with only Query type
+
+    attr_accessor introspection_enabled: bool
+    attr_accessor complexity_limit: Integer
+    attr_accessor depth_limit: Integer
+
+    def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
+    def self.default: () -> QueryOnlyConfig
+  end
+
+  class QueryMutationConfig
+    # Configuration for schemas with Query and Mutation types
+
+    attr_accessor introspection_enabled: bool
+    attr_accessor complexity_limit: Integer
+    attr_accessor depth_limit: Integer
+
+    def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
+    def self.default: () -> QueryMutationConfig
+  end
+
+  class FullSchemaConfig
+    # Configuration for fully-featured schemas with Query, Mutation, and Subscription types
+
+    attr_accessor introspection_enabled: bool
+    attr_accessor complexity_limit: Integer
+    attr_accessor depth_limit: Integer
+
+    def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
+    def self.default: () -> FullSchemaConfig
+  end
+
+  class Claims
+    # JWT claims structure - can be extended based on needs
+
+    attr_reader sub: String
+    attr_reader exp: Integer
+    attr_reader iat: Integer
+    attr_reader nbf: Integer
+    attr_reader aud: Array[String]
+    attr_reader iss: String
+
+    def initialize: (sub: String, exp: Integer, ?iat: Integer, ?nbf: Integer, ?aud: Array[String], ?iss: String) -> void
+  end
+
+  class BackgroundTaskConfig
+    # Configuration for in-process background task execution.
+
+    attr_accessor max_queue_size: Integer
+    attr_accessor max_concurrent_tasks: Integer
+    attr_accessor drain_timeout_secs: Integer
+
+    def initialize: (max_queue_size: Integer, max_concurrent_tasks: Integer, drain_timeout_secs: Integer) -> void
+    def self.default: () -> BackgroundTaskConfig
+  end
+
+  class BackgroundJobMetadata
+    attr_accessor name: String
+    attr_accessor request_id: String
+
+    def initialize: (name: String, ?request_id: String) -> void
+    def self.default: () -> BackgroundJobMetadata
+  end
+
+  class BackgroundJobError
+    attr_reader message: String
+
+    def initialize: (message: String) -> void
+    def self.from: (String message) -> BackgroundJobError
+  end
+
+  class BackgroundHandle
   end
 
   class GrpcRequestData
@@ -481,131 +606,6 @@ module Spikard
     def self.builder: () -> String
   end
 
-  class UploadFile
-    # Represents an uploaded file from multipart/form-data requests.
-    #
-    # This struct provides efficient access to file content with automatic
-    # base64 decoding and implements standard I/O traits for compatibility.
-    #
-    # # Example
-    #
-    # ```rust
-    # use spikard::UploadFile;
-    # use serde::Deserialize;
-    #
-    # #[derive(Deserialize)]
-    # struct UploadRequest {
-    #     file: UploadFile,
-    #     description: String,
-    # }
-    #
-    # // In a handler:
-    # // let body: UploadRequest = ctx.json()?;
-    # // let content = body.file.as_bytes();
-    # // let filename = &body.file.filename;
-    # ```
-
-    attr_reader filename: String
-    attr_reader content_type: String
-    attr_reader size: Integer
-    attr_reader content: String
-    attr_reader content_encoding: String
-    attr_reader cursor: String
-
-    def initialize: (filename: String, ?content_type: String, ?size: Integer, content: String, ?content_encoding: String, cursor: String) -> void
-    def as_bytes: () -> String
-    def read_to_string: () -> String
-    def content_type_or_default: () -> String
-  end
-
-  class GraphQLError
-    def status_code: () -> Integer
-    def to_graphql_response: () -> String
-    def to_http_response: () -> String
-  end
-
-  class GraphQLRouteConfig
-    # Configuration for GraphQL routes
-    #
-    # Provides a builder pattern for configuring GraphQL route parameters
-    # for the Spikard HTTP server's routing system.
-    #
-    # # Example
-    #
-    # ```
-    # use spikard_graphql::routes::GraphQLRouteConfig;
-    #
-    # let config = GraphQLRouteConfig::new()
-    #     .path("/graphql")
-    #     .method("POST")
-    #     .enable_playground(true);
-    #
-    # assert_eq!(config.get_path(), "/graphql");
-    # assert_eq!(config.get_method(), "POST");
-    # ```
-
-    def path: (String path) -> GraphQLRouteConfig
-    def method: (String method) -> GraphQLRouteConfig
-    def enable_playground: (bool enable) -> GraphQLRouteConfig
-    def description: (String description) -> GraphQLRouteConfig
-    def get_path: () -> String
-    def get_method: () -> String
-    def is_playground_enabled: () -> bool
-    def get_description: () -> String?
-    def self.default: () -> GraphQLRouteConfig
-  end
-
-  class SchemaConfig
-    # Configuration for GraphQL schema building.
-    #
-    # Encapsulates all schema-level configuration options including
-    # introspection control, complexity limits, and depth limits.
-
-    attr_accessor introspection_enabled: bool
-    attr_accessor complexity_limit: Integer
-    attr_accessor depth_limit: Integer
-
-    def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
-    def set_introspection_enabled: (bool enabled) -> SchemaConfig
-    def set_complexity_limit: (Integer limit) -> SchemaConfig
-    def set_depth_limit: (Integer limit) -> SchemaConfig
-    def validate: () -> String
-    def self.default: () -> SchemaConfig
-  end
-
-  class QueryOnlyConfig
-    # Configuration for schemas with only Query type
-
-    attr_accessor introspection_enabled: bool
-    attr_accessor complexity_limit: Integer
-    attr_accessor depth_limit: Integer
-
-    def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
-    def self.default: () -> QueryOnlyConfig
-  end
-
-  class QueryMutationConfig
-    # Configuration for schemas with Query and Mutation types
-
-    attr_accessor introspection_enabled: bool
-    attr_accessor complexity_limit: Integer
-    attr_accessor depth_limit: Integer
-
-    def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
-    def self.default: () -> QueryMutationConfig
-  end
-
-  class FullSchemaConfig
-    # Configuration for fully-featured schemas with Query, Mutation, and Subscription types
-
-    attr_accessor introspection_enabled: bool
-    attr_accessor complexity_limit: Integer
-    attr_accessor depth_limit: Integer
-
-    def initialize: (introspection_enabled: bool, ?complexity_limit: Integer, ?depth_limit: Integer) -> void
-    def self.default: () -> FullSchemaConfig
-  end
-
   class Method
     # HTTP method
 
@@ -666,12 +666,12 @@ module Spikard
     ApiKey: Integer
   end
 
-  def self.add_cors_headers: (Response response, String origin, CorsConfig cors_config) -> void
-
   def self.schema_query_only: () -> QueryOnlyConfig
 
   def self.schema_query_mutation: () -> QueryMutationConfig
 
   def self.schema_full: () -> FullSchemaConfig
+
+  def self.add_cors_headers: (Response response, String origin, CorsConfig cors_config) -> void
 
 end

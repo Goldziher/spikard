@@ -3,4 +3,3 @@ packages:
   - "e2e/node"
   - "examples/*"
   - "tests/test_apps/node"
-  - "tools/benchmark-harness/apps/*"

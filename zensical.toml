@@ -102,16 +102,6 @@ nav = [
         { "ADR 0013 - GraphQL HTTP Integration" = "adr/0013-graphql-http-integration.md" },
     ] },
 
-    # Performance Analysis
-    { "Benchmarks" = [
-        { "Overview" = "benchmarks/index.md" },
-        { "Results Dashboard" = "benchmarks/results.md" },
-        { "Methodology" = "benchmarks/methodology.md" },
-        { "Frameworks" = "benchmarks/frameworks.md" },
-        { "Running Benchmarks" = "benchmarks/running.md" },
-        { "Harness Design" = "benchmarks/harness-design.md" },
-    ] },
-
     # Support
     { "Troubleshooting" = "troubleshooting.md" },
 

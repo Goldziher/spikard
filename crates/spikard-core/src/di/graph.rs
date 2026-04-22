@@ -43,7 +43,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 /// assert_eq!(batches.len(), 3);
 /// ```
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub(crate) struct DependencyGraph {
+pub struct DependencyGraph {
     /// Adjacency list: key -> list of dependencies it depends on
     graph: HashMap<String, Vec<String>>,
 }

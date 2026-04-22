@@ -1882,6 +1882,778 @@
       "super_traits": []
     },
     {
+      "name": "GraphQLError",
+      "rust_path": "spikard_graphql::GraphQLError",
+      "original_rust_path": "",
+      "fields": [],
+      "methods": [
+        {
+          "name": "status_code",
+          "params": [],
+          "return_type": {
+            "Primitive": "U16"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Convert error to HTTP status code\n\nMaps GraphQL error types to appropriate HTTP status codes:\n- 400: Bad Request for parse/request-handling errors\n- 401: Unauthorized for authentication errors\n- 403: Forbidden for authorization errors\n- 404: Not Found for resource not found\n- 422: Unprocessable Entity for validation failures\n- 429: Too Many Requests for rate limit errors\n- 500: Internal Server Error for schema/serialization/internal errors\n- 200: OK for GraphQL execution errors returned in GraphQL response body\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::AuthenticationError(\"Invalid token\".to_string());\nassert_eq!(error.status_code(), 401);\n\nlet error = GraphQLError::ExecutionError(\"Query failed\".to_string());\nassert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body\n```",
+          "receiver": "Ref",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "to_graphql_response",
+          "params": [],
+          "return_type": "String",
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Convert error to GraphQL error response JSON\n\nReturns a JSON object matching the GraphQL spec error format with\nstructured extensions for HTTP integration.\n\n# Format\n\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"error message\",\n      \"extensions\": {\n        \"code\": \"ERROR_CODE\",\n        \"status\": 400,\n        \"type\": \"https://spikard.dev/errors/...\"\n      }\n    }\n  ]\n}\n```\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::ValidationError(\"Invalid query\".to_string());\nlet json = error.to_graphql_response();\nassert!(json[\"errors\"].is_array());\n```",
+          "receiver": "Ref",
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "to_http_response",
+          "params": [],
+          "return_type": "String",
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Convert error to structured HTTP error response\n\nReturns a JSON object matching the project's error fixture format,\nsuitable for direct HTTP response conversion.\n\n# Format\n\n```json\n{\n  \"type\": \"https://spikard.dev/errors/...\",\n  \"title\": \"Error Title\",\n  \"status\": 422,\n  \"detail\": \"error message\",\n  \"errors\": [\n    {\n      \"type\": \"error_code\",\n      \"message\": \"error message\"\n    }\n  ]\n}\n```\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::ValidationError(\"Invalid query\".to_string());\nlet json = error.to_http_response();\nassert_eq!(json[\"status\"], 422);\n```",
+          "receiver": "Ref",
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": true,
+      "is_clone": false,
+      "doc": "",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": false,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": false,
+      "super_traits": []
+    },
+    {
+      "name": "GraphQLRouteConfig",
+      "rust_path": "spikard_graphql::GraphQLRouteConfig",
+      "original_rust_path": "",
+      "fields": [],
+      "methods": [
+        {
+          "name": "path",
+          "params": [
+            {
+              "name": "path",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "GraphQLRouteConfig"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Set the HTTP path for the GraphQL endpoint\n\n# Arguments\n\n* `path` - The URL path (e.g., \"/graphql\", \"/api/graphql\")",
+          "receiver": "Owned",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "method",
+          "params": [
+            {
+              "name": "method",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "GraphQLRouteConfig"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Set the HTTP method for the GraphQL endpoint\n\n# Arguments\n\n* `method` - The HTTP method (typically \"POST\")",
+          "receiver": "Owned",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "enable_playground",
+          "params": [
+            {
+              "name": "enable",
+              "ty": {
+                "Primitive": "Bool"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "GraphQLRouteConfig"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Enable or disable the GraphQL Playground UI\n\n# Arguments\n\n* `enable` - Whether to enable playground",
+          "receiver": "Owned",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "description",
+          "params": [
+            {
+              "name": "description",
+              "ty": "String",
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "GraphQLRouteConfig"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Set a custom description for documentation\n\n# Arguments\n\n* `description` - Documentation string",
+          "receiver": "Owned",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "get_path",
+          "params": [],
+          "return_type": "String",
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Get the configured path",
+          "receiver": "Ref",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": true,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "get_method",
+          "params": [],
+          "return_type": "String",
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Get the configured method",
+          "receiver": "Ref",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": true,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "is_playground_enabled",
+          "params": [],
+          "return_type": {
+            "Primitive": "Bool"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Check if playground is enabled",
+          "receiver": "Ref",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "get_description",
+          "params": [],
+          "return_type": {
+            "Optional": "String"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Get the description if set",
+          "receiver": "Ref",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": true,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "GraphQLRouteConfig"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": true,
+      "is_clone": true,
+      "doc": "Configuration for GraphQL routes\n\nProvides a builder pattern for configuring GraphQL route parameters\nfor the Spikard HTTP server's routing system.\n\n# Example\n\n```\nuse spikard_graphql::routes::GraphQLRouteConfig;\n\nlet config = GraphQLRouteConfig::new()\n    .path(\"/graphql\")\n    .method(\"POST\")\n    .enable_playground(true);\n\nassert_eq!(config.get_path(), \"/graphql\");\nassert_eq!(config.get_method(), \"POST\");\n```",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "SchemaConfig",
+      "rust_path": "spikard_graphql::SchemaConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "introspection_enabled",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable introspection queries",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "complexity_limit",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Maximum query complexity (None = unlimited)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "depth_limit",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Maximum query depth (None = unlimited)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "SchemaConfig"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "set_introspection_enabled",
+          "params": [
+            {
+              "name": "enabled",
+              "ty": {
+                "Primitive": "Bool"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "SchemaConfig"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Enable or disable introspection",
+          "receiver": "RefMut",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": true,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "set_complexity_limit",
+          "params": [
+            {
+              "name": "limit",
+              "ty": {
+                "Primitive": "Usize"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "SchemaConfig"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Set the complexity limit (0 means unlimited)",
+          "receiver": "RefMut",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": true,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "set_depth_limit",
+          "params": [
+            {
+              "name": "limit",
+              "ty": {
+                "Primitive": "Usize"
+              },
+              "optional": false,
+              "default": null,
+              "sanitized": false,
+              "typed_default": null,
+              "is_ref": false,
+              "is_mut": false,
+              "newtype_wrapper": null
+            }
+          ],
+          "return_type": {
+            "Named": "SchemaConfig"
+          },
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Set the depth limit (0 means unlimited)",
+          "receiver": "RefMut",
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": true,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        },
+        {
+          "name": "validate",
+          "params": [],
+          "return_type": "String",
+          "is_async": false,
+          "is_static": false,
+          "error_type": null,
+          "doc": "Validate the configuration\n\n# Errors\n\nReturns an error if the configuration is invalid (currently all configurations are valid)",
+          "receiver": "Ref",
+          "sanitized": true,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Configuration for GraphQL schema building.\n\nEncapsulates all schema-level configuration options including\nintrospection control, complexity limits, and depth limits.",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": false,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "QueryOnlyConfig",
+      "rust_path": "spikard_graphql::QueryOnlyConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "introspection_enabled",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable introspection queries",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "complexity_limit",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Maximum query complexity (None = unlimited)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "depth_limit",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Maximum query depth (None = unlimited)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "QueryOnlyConfig"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Configuration for schemas with only Query type",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": true,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "QueryMutationConfig",
+      "rust_path": "spikard_graphql::QueryMutationConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "introspection_enabled",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable introspection queries",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "complexity_limit",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Maximum query complexity (None = unlimited)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "depth_limit",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Maximum query depth (None = unlimited)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "QueryMutationConfig"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Configuration for schemas with Query and Mutation types",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": true,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
+      "name": "FullSchemaConfig",
+      "rust_path": "spikard_graphql::FullSchemaConfig",
+      "original_rust_path": "",
+      "fields": [
+        {
+          "name": "introspection_enabled",
+          "ty": {
+            "Primitive": "Bool"
+          },
+          "optional": false,
+          "default": null,
+          "doc": "Enable introspection queries",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": {
+            "BoolLiteral": true
+          },
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "complexity_limit",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Maximum query complexity (None = unlimited)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        },
+        {
+          "name": "depth_limit",
+          "ty": {
+            "Primitive": "Usize"
+          },
+          "optional": true,
+          "default": null,
+          "doc": "Maximum query depth (None = unlimited)",
+          "sanitized": false,
+          "is_boxed": false,
+          "type_rust_path": null,
+          "cfg": null,
+          "typed_default": "None",
+          "core_wrapper": "None",
+          "vec_inner_core_wrapper": "None",
+          "newtype_wrapper": null
+        }
+      ],
+      "methods": [
+        {
+          "name": "default",
+          "params": [],
+          "return_type": {
+            "Named": "FullSchemaConfig"
+          },
+          "is_async": false,
+          "is_static": true,
+          "error_type": null,
+          "doc": "",
+          "receiver": null,
+          "sanitized": false,
+          "trait_source": null,
+          "returns_ref": false,
+          "returns_cow": false,
+          "return_newtype_wrapper": null,
+          "has_default_impl": false
+        }
+      ],
+      "is_opaque": false,
+      "is_clone": true,
+      "doc": "Configuration for fully-featured schemas with Query, Mutation, and Subscription types",
+      "cfg": null,
+      "is_trait": false,
+      "has_default": true,
+      "has_stripped_cfg_fields": false,
+      "is_return_type": true,
+      "serde_rename_all": null,
+      "has_serde": true,
+      "super_traits": []
+    },
+    {
       "name": "Claims",
       "rust_path": "spikard_http::Claims",
       "original_rust_path": "",
@@ -4186,781 +4958,60 @@
       "serde_rename_all": null,
       "has_serde": true,
       "super_traits": []
-    },
-    {
-      "name": "GraphQLError",
-      "rust_path": "spikard_graphql::GraphQLError",
-      "original_rust_path": "",
-      "fields": [],
-      "methods": [
-        {
-          "name": "status_code",
-          "params": [],
-          "return_type": {
-            "Primitive": "U16"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Convert error to HTTP status code\n\nMaps GraphQL error types to appropriate HTTP status codes:\n- 400: Bad Request for parse/request-handling errors\n- 401: Unauthorized for authentication errors\n- 403: Forbidden for authorization errors\n- 404: Not Found for resource not found\n- 422: Unprocessable Entity for validation failures\n- 429: Too Many Requests for rate limit errors\n- 500: Internal Server Error for schema/serialization/internal errors\n- 200: OK for GraphQL execution errors returned in GraphQL response body\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::AuthenticationError(\"Invalid token\".to_string());\nassert_eq!(error.status_code(), 401);\n\nlet error = GraphQLError::ExecutionError(\"Query failed\".to_string());\nassert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body\n```",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "to_graphql_response",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Convert error to GraphQL error response JSON\n\nReturns a JSON object matching the GraphQL spec error format with\nstructured extensions for HTTP integration.\n\n# Format\n\n```json\n{\n  \"errors\": [\n    {\n      \"message\": \"error message\",\n      \"extensions\": {\n        \"code\": \"ERROR_CODE\",\n        \"status\": 400,\n        \"type\": \"https://spikard.dev/errors/...\"\n      }\n    }\n  ]\n}\n```\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::ValidationError(\"Invalid query\".to_string());\nlet json = error.to_graphql_response();\nassert!(json[\"errors\"].is_array());\n```",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "to_http_response",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Convert error to structured HTTP error response\n\nReturns a JSON object matching the project's error fixture format,\nsuitable for direct HTTP response conversion.\n\n# Format\n\n```json\n{\n  \"type\": \"https://spikard.dev/errors/...\",\n  \"title\": \"Error Title\",\n  \"status\": 422,\n  \"detail\": \"error message\",\n  \"errors\": [\n    {\n      \"type\": \"error_code\",\n      \"message\": \"error message\"\n    }\n  ]\n}\n```\n\n# Examples\n\n```ignore\nuse spikard_graphql::error::GraphQLError;\n\nlet error = GraphQLError::ValidationError(\"Invalid query\".to_string());\nlet json = error.to_http_response();\nassert_eq!(json[\"status\"], 422);\n```",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": false,
-      "doc": "",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": false,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": false,
-      "super_traits": []
-    },
-    {
-      "name": "GraphQLRouteConfig",
-      "rust_path": "spikard_graphql::GraphQLRouteConfig",
-      "original_rust_path": "",
-      "fields": [],
-      "methods": [
-        {
-          "name": "path",
-          "params": [
-            {
-              "name": "path",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "GraphQLRouteConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the HTTP path for the GraphQL endpoint\n\n# Arguments\n\n* `path` - The URL path (e.g., \"/graphql\", \"/api/graphql\")",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "method",
-          "params": [
-            {
-              "name": "method",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "GraphQLRouteConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the HTTP method for the GraphQL endpoint\n\n# Arguments\n\n* `method` - The HTTP method (typically \"POST\")",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "enable_playground",
-          "params": [
-            {
-              "name": "enable",
-              "ty": {
-                "Primitive": "Bool"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "GraphQLRouteConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Enable or disable the GraphQL Playground UI\n\n# Arguments\n\n* `enable` - Whether to enable playground",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "description",
-          "params": [
-            {
-              "name": "description",
-              "ty": "String",
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "GraphQLRouteConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set a custom description for documentation\n\n# Arguments\n\n* `description` - Documentation string",
-          "receiver": "Owned",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "get_path",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get the configured path",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "get_method",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get the configured method",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "is_playground_enabled",
-          "params": [],
-          "return_type": {
-            "Primitive": "Bool"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Check if playground is enabled",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "get_description",
-          "params": [],
-          "return_type": {
-            "Optional": "String"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Get the description if set",
-          "receiver": "Ref",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "default",
-          "params": [],
-          "return_type": {
-            "Named": "GraphQLRouteConfig"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "",
-          "receiver": null,
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": true,
-      "is_clone": true,
-      "doc": "Configuration for GraphQL routes\n\nProvides a builder pattern for configuring GraphQL route parameters\nfor the Spikard HTTP server's routing system.\n\n# Example\n\n```\nuse spikard_graphql::routes::GraphQLRouteConfig;\n\nlet config = GraphQLRouteConfig::new()\n    .path(\"/graphql\")\n    .method(\"POST\")\n    .enable_playground(true);\n\nassert_eq!(config.get_path(), \"/graphql\");\nassert_eq!(config.get_method(), \"POST\");\n```",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": true,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": true,
-      "super_traits": []
-    },
-    {
-      "name": "SchemaConfig",
-      "rust_path": "spikard_graphql::SchemaConfig",
-      "original_rust_path": "",
-      "fields": [
-        {
-          "name": "introspection_enabled",
-          "ty": {
-            "Primitive": "Bool"
-          },
-          "optional": false,
-          "default": null,
-          "doc": "Enable introspection queries",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": {
-            "BoolLiteral": true
-          },
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "complexity_limit",
-          "ty": {
-            "Primitive": "Usize"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Maximum query complexity (None = unlimited)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": "None",
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "depth_limit",
-          "ty": {
-            "Primitive": "Usize"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Maximum query depth (None = unlimited)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": "None",
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        }
-      ],
-      "methods": [
-        {
-          "name": "default",
-          "params": [],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "",
-          "receiver": null,
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "set_introspection_enabled",
-          "params": [
-            {
-              "name": "enabled",
-              "ty": {
-                "Primitive": "Bool"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Enable or disable introspection",
-          "receiver": "RefMut",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "set_complexity_limit",
-          "params": [
-            {
-              "name": "limit",
-              "ty": {
-                "Primitive": "Usize"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the complexity limit (0 means unlimited)",
-          "receiver": "RefMut",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "set_depth_limit",
-          "params": [
-            {
-              "name": "limit",
-              "ty": {
-                "Primitive": "Usize"
-              },
-              "optional": false,
-              "default": null,
-              "sanitized": false,
-              "typed_default": null,
-              "is_ref": false,
-              "is_mut": false,
-              "newtype_wrapper": null
-            }
-          ],
-          "return_type": {
-            "Named": "SchemaConfig"
-          },
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Set the depth limit (0 means unlimited)",
-          "receiver": "RefMut",
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": true,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        },
-        {
-          "name": "validate",
-          "params": [],
-          "return_type": "String",
-          "is_async": false,
-          "is_static": false,
-          "error_type": null,
-          "doc": "Validate the configuration\n\n# Errors\n\nReturns an error if the configuration is invalid (currently all configurations are valid)",
-          "receiver": "Ref",
-          "sanitized": true,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": false,
-      "is_clone": true,
-      "doc": "Configuration for GraphQL schema building.\n\nEncapsulates all schema-level configuration options including\nintrospection control, complexity limits, and depth limits.",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": true,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": false,
-      "serde_rename_all": null,
-      "has_serde": true,
-      "super_traits": []
-    },
-    {
-      "name": "QueryOnlyConfig",
-      "rust_path": "spikard_graphql::QueryOnlyConfig",
-      "original_rust_path": "",
-      "fields": [
-        {
-          "name": "introspection_enabled",
-          "ty": {
-            "Primitive": "Bool"
-          },
-          "optional": false,
-          "default": null,
-          "doc": "Enable introspection queries",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": {
-            "BoolLiteral": true
-          },
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "complexity_limit",
-          "ty": {
-            "Primitive": "Usize"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Maximum query complexity (None = unlimited)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": "None",
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "depth_limit",
-          "ty": {
-            "Primitive": "Usize"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Maximum query depth (None = unlimited)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": "None",
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        }
-      ],
-      "methods": [
-        {
-          "name": "default",
-          "params": [],
-          "return_type": {
-            "Named": "QueryOnlyConfig"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "",
-          "receiver": null,
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": false,
-      "is_clone": true,
-      "doc": "Configuration for schemas with only Query type",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": true,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": true,
-      "serde_rename_all": null,
-      "has_serde": true,
-      "super_traits": []
-    },
-    {
-      "name": "QueryMutationConfig",
-      "rust_path": "spikard_graphql::QueryMutationConfig",
-      "original_rust_path": "",
-      "fields": [
-        {
-          "name": "introspection_enabled",
-          "ty": {
-            "Primitive": "Bool"
-          },
-          "optional": false,
-          "default": null,
-          "doc": "Enable introspection queries",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": {
-            "BoolLiteral": true
-          },
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "complexity_limit",
-          "ty": {
-            "Primitive": "Usize"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Maximum query complexity (None = unlimited)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": "None",
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "depth_limit",
-          "ty": {
-            "Primitive": "Usize"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Maximum query depth (None = unlimited)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": "None",
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        }
-      ],
-      "methods": [
-        {
-          "name": "default",
-          "params": [],
-          "return_type": {
-            "Named": "QueryMutationConfig"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "",
-          "receiver": null,
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": false,
-      "is_clone": true,
-      "doc": "Configuration for schemas with Query and Mutation types",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": true,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": true,
-      "serde_rename_all": null,
-      "has_serde": true,
-      "super_traits": []
-    },
-    {
-      "name": "FullSchemaConfig",
-      "rust_path": "spikard_graphql::FullSchemaConfig",
-      "original_rust_path": "",
-      "fields": [
-        {
-          "name": "introspection_enabled",
-          "ty": {
-            "Primitive": "Bool"
-          },
-          "optional": false,
-          "default": null,
-          "doc": "Enable introspection queries",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": {
-            "BoolLiteral": true
-          },
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "complexity_limit",
-          "ty": {
-            "Primitive": "Usize"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Maximum query complexity (None = unlimited)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": "None",
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        },
-        {
-          "name": "depth_limit",
-          "ty": {
-            "Primitive": "Usize"
-          },
-          "optional": true,
-          "default": null,
-          "doc": "Maximum query depth (None = unlimited)",
-          "sanitized": false,
-          "is_boxed": false,
-          "type_rust_path": null,
-          "cfg": null,
-          "typed_default": "None",
-          "core_wrapper": "None",
-          "vec_inner_core_wrapper": "None",
-          "newtype_wrapper": null
-        }
-      ],
-      "methods": [
-        {
-          "name": "default",
-          "params": [],
-          "return_type": {
-            "Named": "FullSchemaConfig"
-          },
-          "is_async": false,
-          "is_static": true,
-          "error_type": null,
-          "doc": "",
-          "receiver": null,
-          "sanitized": false,
-          "trait_source": null,
-          "returns_ref": false,
-          "returns_cow": false,
-          "return_newtype_wrapper": null,
-          "has_default_impl": false
-        }
-      ],
-      "is_opaque": false,
-      "is_clone": true,
-      "doc": "Configuration for fully-featured schemas with Query, Mutation, and Subscription types",
-      "cfg": null,
-      "is_trait": false,
-      "has_default": true,
-      "has_stripped_cfg_fields": false,
-      "is_return_type": true,
-      "serde_rename_all": null,
-      "has_serde": true,
-      "super_traits": []
     }
   ],
   "functions": [
+    {
+      "name": "schema_query_only",
+      "rust_path": "spikard_graphql::schema_query_only",
+      "original_rust_path": "",
+      "params": [],
+      "return_type": {
+        "Named": "QueryOnlyConfig"
+      },
+      "is_async": false,
+      "error_type": null,
+      "doc": "Create a simple schema configuration with only Query type.\n\nThis is a convenience function for schemas that only have queries.\n\n# Returns\n\nA `QueryOnlyConfig` with default settings",
+      "cfg": null,
+      "sanitized": false,
+      "returns_ref": false,
+      "returns_cow": false,
+      "return_newtype_wrapper": null
+    },
+    {
+      "name": "schema_query_mutation",
+      "rust_path": "spikard_graphql::schema_query_mutation",
+      "original_rust_path": "",
+      "params": [],
+      "return_type": {
+        "Named": "QueryMutationConfig"
+      },
+      "is_async": false,
+      "error_type": null,
+      "doc": "Create a schema configuration with Query and Mutation types.\n\nThis is a convenience function for schemas with queries and mutations but no subscriptions.\n\n# Returns\n\nA `QueryMutationConfig` with default settings",
+      "cfg": null,
+      "sanitized": false,
+      "returns_ref": false,
+      "returns_cow": false,
+      "return_newtype_wrapper": null
+    },
+    {
+      "name": "schema_full",
+      "rust_path": "spikard_graphql::schema_full",
+      "original_rust_path": "",
+      "params": [],
+      "return_type": {
+        "Named": "FullSchemaConfig"
+      },
+      "is_async": false,
+      "error_type": null,
+      "doc": "Create a schema configuration with all three root types.\n\nThis is a convenience function for fully-featured schemas.\n\n# Returns\n\nA `FullSchemaConfig` with default settings",
+      "cfg": null,
+      "sanitized": false,
+      "returns_ref": false,
+      "returns_cow": false,
+      "return_newtype_wrapper": null
+    },
     {
       "name": "add_cors_headers",
       "rust_path": "spikard_http::cors::add_cors_headers",
@@ -5008,57 +5059,6 @@
       "is_async": false,
       "error_type": null,
       "doc": "Add CORS headers to a successful response\n\nAdds appropriate CORS headers to the response based on the configuration.\nThis function should be called for successful (non-error) responses to\ncross-origin requests.\n\n# Headers Added\n\n- `Access-Control-Allow-Origin` - The origin that is allowed (if valid)\n- `Access-Control-Expose-Headers` - Headers that are safe to expose to the client\n- `Access-Control-Allow-Credentials` - \"true\" if credentials are allowed\n\n# Arguments\n* `response` - Mutable reference to the response to modify\n* `origin` - The origin from the request (e.g., `<https://example.com>`)\n* `cors_config` - CORS configuration to apply\n\n# Example\n\n```ignore\nlet mut response = Response::new(Body::empty());\nadd_cors_headers(&mut response, \"https://example.com\", &cors_config);\n```",
-      "cfg": null,
-      "sanitized": false,
-      "returns_ref": false,
-      "returns_cow": false,
-      "return_newtype_wrapper": null
-    },
-    {
-      "name": "schema_query_only",
-      "rust_path": "spikard_graphql::schema_query_only",
-      "original_rust_path": "",
-      "params": [],
-      "return_type": {
-        "Named": "QueryOnlyConfig"
-      },
-      "is_async": false,
-      "error_type": null,
-      "doc": "Create a simple schema configuration with only Query type.\n\nThis is a convenience function for schemas that only have queries.\n\n# Returns\n\nA `QueryOnlyConfig` with default settings",
-      "cfg": null,
-      "sanitized": false,
-      "returns_ref": false,
-      "returns_cow": false,
-      "return_newtype_wrapper": null
-    },
-    {
-      "name": "schema_query_mutation",
-      "rust_path": "spikard_graphql::schema_query_mutation",
-      "original_rust_path": "",
-      "params": [],
-      "return_type": {
-        "Named": "QueryMutationConfig"
-      },
-      "is_async": false,
-      "error_type": null,
-      "doc": "Create a schema configuration with Query and Mutation types.\n\nThis is a convenience function for schemas with queries and mutations but no subscriptions.\n\n# Returns\n\nA `QueryMutationConfig` with default settings",
-      "cfg": null,
-      "sanitized": false,
-      "returns_ref": false,
-      "returns_cow": false,
-      "return_newtype_wrapper": null
-    },
-    {
-      "name": "schema_full",
-      "rust_path": "spikard_graphql::schema_full",
-      "original_rust_path": "",
-      "params": [],
-      "return_type": {
-        "Named": "FullSchemaConfig"
-      },
-      "is_async": false,
-      "error_type": null,
-      "doc": "Create a schema configuration with all three root types.\n\nThis is a convenience function for fully-featured schemas.\n\n# Returns\n\nA `FullSchemaConfig` with default settings",
       "cfg": null,
       "sanitized": false,
       "returns_ref": false,

@@ -24,25 +24,9 @@ dev = [
 docs = [
   "zensical",
 ]
-benchmarks = [
-  # FastAPI + servers
-  "fastapi>=0.136.0",
-  "granian",
-  # Litestar + dependencies
-  "litestar[standard]",
-  "msgspec>=0.21.1",
-  "orjson>=3.11.8",
-  # Shared dependencies
-  "pydantic>=2.13.3",
-  # Robyn
-  "robyn",
-  "sniffio>=1.3.1",
-  "uvicorn[standard]>=0.44.0",
-]
 doc = [
   "zensical",
 ]
-visualize = [ "kaleido>=1.2.0", "pandas>=3.0.2", "plotly>=6.7.0" ]
 
 [tool.setuptools]
 packages = []
@@ -51,11 +35,6 @@ packages = []
 sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
 workspace.members = [
   "packages/python",
-  # Python benchmark apps (workspace-managed)
-  "tools/benchmark-harness/apps/fastapi",
-  "tools/benchmark-harness/apps/litestar",
-  "tools/benchmark-harness/apps/robyn",
-  "tools/benchmark-harness/apps/spikard-python",
 ]
 cache-keys = [
   { file = "pyproject.toml" },

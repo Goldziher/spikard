@@ -13,10 +13,6 @@ class SpikardPhpException extends \RuntimeException
     public function getErrorCode(): int { }
 }
 
-class BackgroundHandle
-{
-}
-
 class GraphQLError
 {
 }
@@ -45,83 +41,58 @@ class GraphQLRouteConfig
 {
 }
 
-/**
- * JWT claims structure - can be extended based on needs
- */
-class Claims
+class BackgroundHandle
 {
-    public string $sub;
-    public int $exp;
-    public ?int $iat;
-    public ?int $nbf;
-    /** @var ?array<string> */
-    public ?array $aud;
-    public ?string $iss;
-
-    /**
-     * @param ?array<string> $aud
-     */
-    public function __construct(
-        string $sub,
-        int $exp,
-        ?int $iat = null,
-        ?int $nbf = null,
-        ?array $aud = null,
-        ?string $iss = null
-    ) { }
-
-    public function getSub(): string { }
-    public function getExp(): int { }
-    public function getIat(): ?int { }
-    public function getNbf(): ?int { }
-    /** @return ?array<string> */
-    public function getAud(): ?array { }
-    public function getIss(): ?string { }
 }
 
 /**
- * Configuration for in-process background task execution.
+ * Represents an uploaded file from multipart/form-data requests.
+ *
+ * This struct provides efficient access to file content with automatic
+ * base64 decoding and implements standard I/O traits for compatibility.
+ *
+ * # Example
+ *
+ * ```rust
+ * use spikard::UploadFile;
+ * use serde::Deserialize;
+ *
+ * #[derive(Deserialize)]
+ * struct UploadRequest {
+ *     file: UploadFile,
+ *     description: String,
+ * }
+ *
+ * // In a handler:
+ * // let body: UploadRequest = ctx.json()?;
+ * // let content = body.file.as_bytes();
+ * // let filename = &body.file.filename;
+ * ```
  */
-class BackgroundTaskConfig
+class UploadFile
 {
-    public int $max_queue_size;
-    public int $max_concurrent_tasks;
-    public int $drain_timeout_secs;
+    public string $filename;
+    public ?string $content_type;
+    public ?int $size;
+    public string $content;
+    public ?string $content_encoding;
+    public string $cursor;
 
     public function __construct(
-        int $max_queue_size,
-        int $max_concurrent_tasks,
-        int $drain_timeout_secs
+        string $filename,
+        string $content,
+        string $cursor,
+        ?string $content_type = null,
+        ?int $size = null,
+        ?string $content_encoding = null
     ) { }
 
-    public function getMaxQueueSize(): int { }
-    public function getMaxConcurrentTasks(): int { }
-    public function getDrainTimeoutSecs(): int { }
-}
-
-class BackgroundJobMetadata
-{
-    public string $name;
-    public ?string $request_id;
-
-    public function __construct(
-        string $name,
-        ?string $request_id = null
-    ) { }
-
-    public function getName(): string { }
-    public function getRequestId(): ?string { }
-}
-
-class BackgroundJobError
-{
-    public string $message;
-
-    public function __construct(
-        string $message
-    ) { }
-
-    public function getMessage(): string { }
+    public function getFilename(): string { }
+    public function getContentType(): ?string { }
+    public function getSize(): ?int { }
+    public function getContent(): string { }
+    public function getContentEncoding(): ?string { }
+    public function getCursor(): string { }
 }
 
 /**
@@ -272,61 +243,6 @@ class RateLimitConfig
 }
 
 /**
- * RFC 9457 Problem Details for HTTP APIs
- *
- * A machine-readable format for specifying errors in HTTP API responses.
- * Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
- * if not specified.
- *
- * # Content-Type
- * Responses using this struct should set:
- * ```text
- * Content-Type: application/problem+json
- * ```
- *
- * # Example
- * ```json
- * {
- *   "type": "https://spikard.dev/errors/validation-error",
- *   "title": "Request Validation Failed",
- *   "status": 422,
- *   "detail": "2 validation errors in request body",
- *   "errors": [...]
- * }
- * ```
- */
-class ProblemDetails
-{
-    public string $type_uri;
-    public string $title;
-    public int $status;
-    public ?string $detail;
-    public ?string $instance;
-    /** @var array<string, string> */
-    public array $extensions;
-
-    /**
-     * @param array<string, string> $extensions
-     */
-    public function __construct(
-        string $type_uri,
-        string $title,
-        int $status,
-        array $extensions,
-        ?string $detail = null,
-        ?string $instance = null
-    ) { }
-
-    public function getTypeUri(): string { }
-    public function getTitle(): string { }
-    public function getStatus(): int { }
-    public function getDetail(): ?string { }
-    public function getInstance(): ?string { }
-    /** @return array<string, string> */
-    public function getExtensions(): array { }
-}
-
-/**
  * JSON-RPC method metadata for routes that support JSON-RPC
  *
  * This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
@@ -445,6 +361,223 @@ class Route
     /** @return array<string> */
     public function getHandlerDependencies(): array { }
     public function getJsonrpcMethod(): ?JsonRpcMethodInfo { }
+}
+
+/**
+ * RFC 9457 Problem Details for HTTP APIs
+ *
+ * A machine-readable format for specifying errors in HTTP API responses.
+ * Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
+ * if not specified.
+ *
+ * # Content-Type
+ * Responses using this struct should set:
+ * ```text
+ * Content-Type: application/problem+json
+ * ```
+ *
+ * # Example
+ * ```json
+ * {
+ *   "type": "https://spikard.dev/errors/validation-error",
+ *   "title": "Request Validation Failed",
+ *   "status": 422,
+ *   "detail": "2 validation errors in request body",
+ *   "errors": [...]
+ * }
+ * ```
+ */
+class ProblemDetails
+{
+    public string $type_uri;
+    public string $title;
+    public int $status;
+    public ?string $detail;
+    public ?string $instance;
+    /** @var array<string, string> */
+    public array $extensions;
+
+    /**
+     * @param array<string, string> $extensions
+     */
+    public function __construct(
+        string $type_uri,
+        string $title,
+        int $status,
+        array $extensions,
+        ?string $detail = null,
+        ?string $instance = null
+    ) { }
+
+    public function getTypeUri(): string { }
+    public function getTitle(): string { }
+    public function getStatus(): int { }
+    public function getDetail(): ?string { }
+    public function getInstance(): ?string { }
+    /** @return array<string, string> */
+    public function getExtensions(): array { }
+}
+
+/**
+ * Configuration for GraphQL schema building.
+ *
+ * Encapsulates all schema-level configuration options including
+ * introspection control, complexity limits, and depth limits.
+ */
+class SchemaConfig
+{
+    public bool $introspection_enabled;
+    public ?int $complexity_limit;
+    public ?int $depth_limit;
+
+    public function __construct(
+        bool $introspection_enabled,
+        ?int $complexity_limit = null,
+        ?int $depth_limit = null
+    ) { }
+
+    public function getIntrospectionEnabled(): bool { }
+    public function getComplexityLimit(): ?int { }
+    public function getDepthLimit(): ?int { }
+}
+
+/**
+ * Configuration for schemas with only Query type
+ */
+class QueryOnlyConfig
+{
+    public bool $introspection_enabled;
+    public ?int $complexity_limit;
+    public ?int $depth_limit;
+
+    public function __construct(
+        bool $introspection_enabled,
+        ?int $complexity_limit = null,
+        ?int $depth_limit = null
+    ) { }
+
+    public function getIntrospectionEnabled(): bool { }
+    public function getComplexityLimit(): ?int { }
+    public function getDepthLimit(): ?int { }
+}
+
+/**
+ * Configuration for schemas with Query and Mutation types
+ */
+class QueryMutationConfig
+{
+    public bool $introspection_enabled;
+    public ?int $complexity_limit;
+    public ?int $depth_limit;
+
+    public function __construct(
+        bool $introspection_enabled,
+        ?int $complexity_limit = null,
+        ?int $depth_limit = null
+    ) { }
+
+    public function getIntrospectionEnabled(): bool { }
+    public function getComplexityLimit(): ?int { }
+    public function getDepthLimit(): ?int { }
+}
+
+/**
+ * Configuration for fully-featured schemas with Query, Mutation, and Subscription types
+ */
+class FullSchemaConfig
+{
+    public bool $introspection_enabled;
+    public ?int $complexity_limit;
+    public ?int $depth_limit;
+
+    public function __construct(
+        bool $introspection_enabled,
+        ?int $complexity_limit = null,
+        ?int $depth_limit = null
+    ) { }
+
+    public function getIntrospectionEnabled(): bool { }
+    public function getComplexityLimit(): ?int { }
+    public function getDepthLimit(): ?int { }
+}
+
+/**
+ * JWT claims structure - can be extended based on needs
+ */
+class Claims
+{
+    public string $sub;
+    public int $exp;
+    public ?int $iat;
+    public ?int $nbf;
+    /** @var ?array<string> */
+    public ?array $aud;
+    public ?string $iss;
+
+    /**
+     * @param ?array<string> $aud
+     */
+    public function __construct(
+        string $sub,
+        int $exp,
+        ?int $iat = null,
+        ?int $nbf = null,
+        ?array $aud = null,
+        ?string $iss = null
+    ) { }
+
+    public function getSub(): string { }
+    public function getExp(): int { }
+    public function getIat(): ?int { }
+    public function getNbf(): ?int { }
+    /** @return ?array<string> */
+    public function getAud(): ?array { }
+    public function getIss(): ?string { }
+}
+
+/**
+ * Configuration for in-process background task execution.
+ */
+class BackgroundTaskConfig
+{
+    public int $max_queue_size;
+    public int $max_concurrent_tasks;
+    public int $drain_timeout_secs;
+
+    public function __construct(
+        int $max_queue_size,
+        int $max_concurrent_tasks,
+        int $drain_timeout_secs
+    ) { }
+
+    public function getMaxQueueSize(): int { }
+    public function getMaxConcurrentTasks(): int { }
+    public function getDrainTimeoutSecs(): int { }
+}
+
+class BackgroundJobMetadata
+{
+    public string $name;
+    public ?string $request_id;
+
+    public function __construct(
+        string $name,
+        ?string $request_id = null
+    ) { }
+
+    public function getName(): string { }
+    public function getRequestId(): ?string { }
+}
+
+class BackgroundJobError
+{
+    public string $message;
+
+    public function __construct(
+        string $message
+    ) { }
+
+    public function getMessage(): string { }
 }
 
 /**
@@ -930,139 +1063,6 @@ class ServerConfig
     public function getDiContainer(): ?string { }
 }
 
-/**
- * Represents an uploaded file from multipart/form-data requests.
- *
- * This struct provides efficient access to file content with automatic
- * base64 decoding and implements standard I/O traits for compatibility.
- *
- * # Example
- *
- * ```rust
- * use spikard::UploadFile;
- * use serde::Deserialize;
- *
- * #[derive(Deserialize)]
- * struct UploadRequest {
- *     file: UploadFile,
- *     description: String,
- * }
- *
- * // In a handler:
- * // let body: UploadRequest = ctx.json()?;
- * // let content = body.file.as_bytes();
- * // let filename = &body.file.filename;
- * ```
- */
-class UploadFile
-{
-    public string $filename;
-    public ?string $content_type;
-    public ?int $size;
-    public string $content;
-    public ?string $content_encoding;
-    public string $cursor;
-
-    public function __construct(
-        string $filename,
-        string $content,
-        string $cursor,
-        ?string $content_type = null,
-        ?int $size = null,
-        ?string $content_encoding = null
-    ) { }
-
-    public function getFilename(): string { }
-    public function getContentType(): ?string { }
-    public function getSize(): ?int { }
-    public function getContent(): string { }
-    public function getContentEncoding(): ?string { }
-    public function getCursor(): string { }
-}
-
-/**
- * Configuration for GraphQL schema building.
- *
- * Encapsulates all schema-level configuration options including
- * introspection control, complexity limits, and depth limits.
- */
-class SchemaConfig
-{
-    public bool $introspection_enabled;
-    public ?int $complexity_limit;
-    public ?int $depth_limit;
-
-    public function __construct(
-        bool $introspection_enabled,
-        ?int $complexity_limit = null,
-        ?int $depth_limit = null
-    ) { }
-
-    public function getIntrospectionEnabled(): bool { }
-    public function getComplexityLimit(): ?int { }
-    public function getDepthLimit(): ?int { }
-}
-
-/**
- * Configuration for schemas with only Query type
- */
-class QueryOnlyConfig
-{
-    public bool $introspection_enabled;
-    public ?int $complexity_limit;
-    public ?int $depth_limit;
-
-    public function __construct(
-        bool $introspection_enabled,
-        ?int $complexity_limit = null,
-        ?int $depth_limit = null
-    ) { }
-
-    public function getIntrospectionEnabled(): bool { }
-    public function getComplexityLimit(): ?int { }
-    public function getDepthLimit(): ?int { }
-}
-
-/**
- * Configuration for schemas with Query and Mutation types
- */
-class QueryMutationConfig
-{
-    public bool $introspection_enabled;
-    public ?int $complexity_limit;
-    public ?int $depth_limit;
-
-    public function __construct(
-        bool $introspection_enabled,
-        ?int $complexity_limit = null,
-        ?int $depth_limit = null
-    ) { }
-
-    public function getIntrospectionEnabled(): bool { }
-    public function getComplexityLimit(): ?int { }
-    public function getDepthLimit(): ?int { }
-}
-
-/**
- * Configuration for fully-featured schemas with Query, Mutation, and Subscription types
- */
-class FullSchemaConfig
-{
-    public bool $introspection_enabled;
-    public ?int $complexity_limit;
-    public ?int $depth_limit;
-
-    public function __construct(
-        bool $introspection_enabled,
-        ?int $complexity_limit = null,
-        ?int $depth_limit = null
-    ) { }
-
-    public function getIntrospectionEnabled(): bool { }
-    public function getComplexityLimit(): ?int { }
-    public function getDepthLimit(): ?int { }
-}
-
 enum Method: string
 {
     case Get = 'Get';
@@ -1095,10 +1095,10 @@ enum SecuritySchemeInfo: string
 
 class SpikardPhpApi
 {
-    public static function addCorsHeaders(\Spikard\Php\Response $response, string $origin, \Spikard\Php\CorsConfig $cors_config): void { }
     public static function schemaQueryOnly(): \Spikard\Php\QueryOnlyConfig { }
     public static function schemaQueryMutation(): \Spikard\Php\QueryMutationConfig { }
     public static function schemaFull(): \Spikard\Php\FullSchemaConfig { }
+    public static function addCorsHeaders(\Spikard\Php\Response $response, string $origin, \Spikard\Php\CorsConfig $cors_config): void { }
 }
 
 } // end namespace

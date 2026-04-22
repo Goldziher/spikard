@@ -16,48 +16,16 @@ use std::sync::Arc;
 
 #[derive(Clone, Default)]
 #[napi(object)]
-pub struct JsClaims {
-    pub sub: String,
-    pub exp: i64,
-    pub iat: Option<i64>,
-    pub nbf: Option<i64>,
-    pub aud: Option<Vec<String>>,
-    pub iss: Option<String>,
+pub struct JsUploadFile {
+    pub filename: String,
+    #[napi(js_name = "contentType")]
+    pub content_type: Option<String>,
+    pub size: Option<i64>,
+    pub content: Vec<u8>,
+    #[napi(js_name = "contentEncoding")]
+    pub content_encoding: Option<String>,
+    pub cursor: String,
 }
-
-#[derive(Clone, Default)]
-#[napi(object)]
-pub struct JsBackgroundTaskConfig {
-    #[napi(js_name = "maxQueueSize")]
-    pub max_queue_size: Option<i64>,
-    #[napi(js_name = "maxConcurrentTasks")]
-    pub max_concurrent_tasks: Option<i64>,
-    #[napi(js_name = "drainTimeoutSecs")]
-    pub drain_timeout_secs: Option<i64>,
-}
-
-#[derive(Clone, Default)]
-#[napi(object)]
-pub struct JsBackgroundJobMetadata {
-    pub name: Option<String>,
-    #[napi(js_name = "requestId")]
-    pub request_id: Option<String>,
-}
-
-#[derive(Clone, Default)]
-#[napi(object)]
-pub struct JsBackgroundJobError {
-    pub message: String,
-}
-
-#[derive(Clone)]
-#[napi]
-pub struct JsBackgroundHandle {
-    inner: Arc<spikard_http::BackgroundHandle>,
-}
-
-#[napi]
-impl JsBackgroundHandle {}
 
 #[derive(Clone, Default)]
 #[napi(object)]
@@ -130,18 +98,6 @@ pub struct JsRateLimitConfig {
 
 #[derive(Clone, Default)]
 #[napi(object)]
-pub struct JsProblemDetails {
-    #[napi(js_name = "typeUri")]
-    pub type_uri: String,
-    pub title: String,
-    pub status: u16,
-    pub detail: Option<String>,
-    pub instance: Option<String>,
-    pub extensions: HashMap<String, String>,
-}
-
-#[derive(Clone, Default)]
-#[napi(object)]
 pub struct JsJsonRpcMethodInfo {
     #[napi(js_name = "methodName")]
     pub method_name: String,
@@ -179,6 +135,196 @@ pub struct JsRoute {
     #[napi(js_name = "jsonrpcMethod")]
     pub jsonrpc_method: Option<JsJsonRpcMethodInfo>,
 }
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsProblemDetails {
+    #[napi(js_name = "typeUri")]
+    pub type_uri: String,
+    pub title: String,
+    pub status: u16,
+    pub detail: Option<String>,
+    pub instance: Option<String>,
+    pub extensions: HashMap<String, String>,
+}
+
+#[derive(Clone)]
+#[napi]
+pub struct JsGraphQLError {
+    inner: Arc<spikard_graphql::GraphQLError>,
+}
+
+#[napi]
+impl JsGraphQLError {
+    #[napi(js_name = "statusCode")]
+    pub fn status_code(&self) -> u16 {
+        self.inner.status_code()
+    }
+
+    #[napi(js_name = "toGraphqlResponse")]
+    pub fn to_graphql_response(&self) -> String {
+        String::from("[unimplemented: GraphQLError.to_graphql_response]")
+    }
+
+    #[napi(js_name = "toHttpResponse")]
+    pub fn to_http_response(&self) -> String {
+        String::from("[unimplemented: GraphQLError.to_http_response]")
+    }
+}
+
+#[derive(Clone)]
+#[napi]
+pub struct JsGraphQLRouteConfig {
+    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
+}
+
+#[napi]
+impl JsGraphQLRouteConfig {
+    #[napi]
+    pub fn path(&self, path: String) -> JsGraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().path(path)),
+        }
+    }
+
+    #[napi]
+    pub fn method(&self, method: String) -> JsGraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().method(method)),
+        }
+    }
+
+    #[napi(js_name = "enablePlayground")]
+    pub fn enable_playground(&self, enable: bool) -> JsGraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().enable_playground(enable)),
+        }
+    }
+
+    #[napi]
+    pub fn description(&self, description: String) -> JsGraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().description(description)),
+        }
+    }
+
+    #[napi(js_name = "getPath")]
+    pub fn get_path(&self) -> String {
+        self.inner.get_path().into()
+    }
+
+    #[napi(js_name = "getMethod")]
+    pub fn get_method(&self) -> String {
+        self.inner.get_method().into()
+    }
+
+    #[napi(js_name = "isPlaygroundEnabled")]
+    pub fn is_playground_enabled(&self) -> bool {
+        self.inner.is_playground_enabled()
+    }
+
+    #[napi(js_name = "getDescription")]
+    pub fn get_description(&self) -> Option<String> {
+        self.inner.get_description().map(Into::into)
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    #[napi]
+    pub fn default() -> JsGraphQLRouteConfig {
+        Self {
+            inner: Arc::new(spikard_graphql::GraphQLRouteConfig::default()),
+        }
+    }
+}
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsSchemaConfig {
+    #[napi(js_name = "introspectionEnabled")]
+    pub introspection_enabled: Option<bool>,
+    #[napi(js_name = "complexityLimit")]
+    pub complexity_limit: Option<i64>,
+    #[napi(js_name = "depthLimit")]
+    pub depth_limit: Option<i64>,
+}
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsQueryOnlyConfig {
+    #[napi(js_name = "introspectionEnabled")]
+    pub introspection_enabled: Option<bool>,
+    #[napi(js_name = "complexityLimit")]
+    pub complexity_limit: Option<i64>,
+    #[napi(js_name = "depthLimit")]
+    pub depth_limit: Option<i64>,
+}
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsQueryMutationConfig {
+    #[napi(js_name = "introspectionEnabled")]
+    pub introspection_enabled: Option<bool>,
+    #[napi(js_name = "complexityLimit")]
+    pub complexity_limit: Option<i64>,
+    #[napi(js_name = "depthLimit")]
+    pub depth_limit: Option<i64>,
+}
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsFullSchemaConfig {
+    #[napi(js_name = "introspectionEnabled")]
+    pub introspection_enabled: Option<bool>,
+    #[napi(js_name = "complexityLimit")]
+    pub complexity_limit: Option<i64>,
+    #[napi(js_name = "depthLimit")]
+    pub depth_limit: Option<i64>,
+}
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsClaims {
+    pub sub: String,
+    pub exp: i64,
+    pub iat: Option<i64>,
+    pub nbf: Option<i64>,
+    pub aud: Option<Vec<String>>,
+    pub iss: Option<String>,
+}
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsBackgroundTaskConfig {
+    #[napi(js_name = "maxQueueSize")]
+    pub max_queue_size: Option<i64>,
+    #[napi(js_name = "maxConcurrentTasks")]
+    pub max_concurrent_tasks: Option<i64>,
+    #[napi(js_name = "drainTimeoutSecs")]
+    pub drain_timeout_secs: Option<i64>,
+}
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsBackgroundJobMetadata {
+    pub name: Option<String>,
+    #[napi(js_name = "requestId")]
+    pub request_id: Option<String>,
+}
+
+#[derive(Clone, Default)]
+#[napi(object)]
+pub struct JsBackgroundJobError {
+    pub message: String,
+}
+
+#[derive(Clone)]
+#[napi]
+pub struct JsBackgroundHandle {
+    inner: Arc<spikard_http::BackgroundHandle>,
+}
+
+#[napi]
+impl JsBackgroundHandle {}
 
 #[derive(Clone, Default)]
 #[napi(object)]
@@ -365,152 +511,6 @@ pub struct JsServerConfig {
     pub di_container: Option<String>,
 }
 
-#[derive(Clone, Default)]
-#[napi(object)]
-pub struct JsUploadFile {
-    pub filename: String,
-    #[napi(js_name = "contentType")]
-    pub content_type: Option<String>,
-    pub size: Option<i64>,
-    pub content: Vec<u8>,
-    #[napi(js_name = "contentEncoding")]
-    pub content_encoding: Option<String>,
-    pub cursor: String,
-}
-
-#[derive(Clone)]
-#[napi]
-pub struct JsGraphQLError {
-    inner: Arc<spikard_graphql::GraphQLError>,
-}
-
-#[napi]
-impl JsGraphQLError {
-    #[napi(js_name = "statusCode")]
-    pub fn status_code(&self) -> u16 {
-        self.inner.status_code()
-    }
-
-    #[napi(js_name = "toGraphqlResponse")]
-    pub fn to_graphql_response(&self) -> String {
-        String::from("[unimplemented: GraphQLError.to_graphql_response]")
-    }
-
-    #[napi(js_name = "toHttpResponse")]
-    pub fn to_http_response(&self) -> String {
-        String::from("[unimplemented: GraphQLError.to_http_response]")
-    }
-}
-
-#[derive(Clone)]
-#[napi]
-pub struct JsGraphQLRouteConfig {
-    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
-}
-
-#[napi]
-impl JsGraphQLRouteConfig {
-    #[napi]
-    pub fn path(&self, path: String) -> JsGraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().path(path)),
-        }
-    }
-
-    #[napi]
-    pub fn method(&self, method: String) -> JsGraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().method(method)),
-        }
-    }
-
-    #[napi(js_name = "enablePlayground")]
-    pub fn enable_playground(&self, enable: bool) -> JsGraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().enable_playground(enable)),
-        }
-    }
-
-    #[napi]
-    pub fn description(&self, description: String) -> JsGraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().description(description)),
-        }
-    }
-
-    #[napi(js_name = "getPath")]
-    pub fn get_path(&self) -> String {
-        self.inner.get_path().into()
-    }
-
-    #[napi(js_name = "getMethod")]
-    pub fn get_method(&self) -> String {
-        self.inner.get_method().into()
-    }
-
-    #[napi(js_name = "isPlaygroundEnabled")]
-    pub fn is_playground_enabled(&self) -> bool {
-        self.inner.is_playground_enabled()
-    }
-
-    #[napi(js_name = "getDescription")]
-    pub fn get_description(&self) -> Option<String> {
-        self.inner.get_description().map(Into::into)
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    #[napi]
-    pub fn default() -> JsGraphQLRouteConfig {
-        Self {
-            inner: Arc::new(spikard_graphql::GraphQLRouteConfig::default()),
-        }
-    }
-}
-
-#[derive(Clone, Default)]
-#[napi(object)]
-pub struct JsSchemaConfig {
-    #[napi(js_name = "introspectionEnabled")]
-    pub introspection_enabled: Option<bool>,
-    #[napi(js_name = "complexityLimit")]
-    pub complexity_limit: Option<i64>,
-    #[napi(js_name = "depthLimit")]
-    pub depth_limit: Option<i64>,
-}
-
-#[derive(Clone, Default)]
-#[napi(object)]
-pub struct JsQueryOnlyConfig {
-    #[napi(js_name = "introspectionEnabled")]
-    pub introspection_enabled: Option<bool>,
-    #[napi(js_name = "complexityLimit")]
-    pub complexity_limit: Option<i64>,
-    #[napi(js_name = "depthLimit")]
-    pub depth_limit: Option<i64>,
-}
-
-#[derive(Clone, Default)]
-#[napi(object)]
-pub struct JsQueryMutationConfig {
-    #[napi(js_name = "introspectionEnabled")]
-    pub introspection_enabled: Option<bool>,
-    #[napi(js_name = "complexityLimit")]
-    pub complexity_limit: Option<i64>,
-    #[napi(js_name = "depthLimit")]
-    pub depth_limit: Option<i64>,
-}
-
-#[derive(Clone, Default)]
-#[napi(object)]
-pub struct JsFullSchemaConfig {
-    #[napi(js_name = "introspectionEnabled")]
-    pub introspection_enabled: Option<bool>,
-    #[napi(js_name = "complexityLimit")]
-    pub complexity_limit: Option<i64>,
-    #[napi(js_name = "depthLimit")]
-    pub depth_limit: Option<i64>,
-}
-
 #[napi(string_enum)]
 #[derive(Clone)]
 pub enum JsMethod {
@@ -584,12 +584,6 @@ impl Default for JsSecuritySchemeInfo {
     }
 }
 
-#[napi(js_name = "addCorsHeaders")]
-pub fn add_cors_headers(response: JsResponse, origin: String, cors_config: JsCorsConfig) -> () {
-    let _ = (response, origin, cors_config);
-    ()
-}
-
 #[napi(js_name = "schemaQueryOnly")]
 pub fn schema_query_only() -> JsQueryOnlyConfig {
     spikard_graphql::schema_query_only().into()
@@ -603,6 +597,315 @@ pub fn schema_query_mutation() -> JsQueryMutationConfig {
 #[napi(js_name = "schemaFull")]
 pub fn schema_full() -> JsFullSchemaConfig {
     spikard_graphql::schema_full().into()
+}
+
+#[napi(js_name = "addCorsHeaders")]
+pub fn add_cors_headers(response: JsResponse, origin: String, cors_config: JsCorsConfig) -> () {
+    let _ = (response, origin, cors_config);
+    ()
+}
+
+impl From<spikard::UploadFile> for JsUploadFile {
+    fn from(val: spikard::UploadFile) -> Self {
+        Self {
+            filename: val.filename,
+            content_type: val.content_type,
+            size: val.size.map(|v| v as i64),
+            content: val.content.to_vec(),
+            content_encoding: val.content_encoding,
+            cursor: format!("{:?}", val.cursor),
+        }
+    }
+}
+
+impl From<JsCorsConfig> for spikard_core::CorsConfig {
+    fn from(val: JsCorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins.unwrap_or_default(),
+            allowed_methods: val.allowed_methods.unwrap_or_default(),
+            allowed_headers: val.allowed_headers.unwrap_or_default(),
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::CorsConfig> for JsCorsConfig {
+    fn from(val: spikard_core::CorsConfig) -> Self {
+        Self {
+            allowed_origins: Some(val.allowed_origins),
+            allowed_methods: Some(val.allowed_methods),
+            allowed_headers: Some(val.allowed_headers),
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: Some(format!("{:?}", val.methods_joined_cache)),
+            headers_joined_cache: Some(format!("{:?}", val.headers_joined_cache)),
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<JsRouteMetadata> for spikard_core::RouteMetadata {
+    fn from(val: JsRouteMetadata) -> Self {
+        Self {
+            method: val.method.unwrap_or_default(),
+            path: val.path.unwrap_or_default(),
+            handler_name: val.handler_name.unwrap_or_default(),
+            request_schema: Default::default(),
+            response_schema: Default::default(),
+            parameter_schema: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async.unwrap_or_default(),
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: Default::default(),
+            static_response: Default::default(),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::RouteMetadata> for JsRouteMetadata {
+    fn from(val: spikard_core::RouteMetadata) -> Self {
+        Self {
+            method: Some(val.method),
+            path: Some(val.path),
+            handler_name: Some(val.handler_name),
+            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
+            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
+            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: Some(val.is_async),
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
+            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
+        }
+    }
+}
+
+impl From<JsCompressionConfig> for spikard_core::CompressionConfig {
+    fn from(val: JsCompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip.unwrap_or_default(),
+            brotli: val.brotli.unwrap_or_default(),
+            min_size: val.min_size.map(|v| v as usize).unwrap_or_default(),
+            quality: val.quality.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<spikard_core::CompressionConfig> for JsCompressionConfig {
+    fn from(val: spikard_core::CompressionConfig) -> Self {
+        Self {
+            gzip: Some(val.gzip),
+            brotli: Some(val.brotli),
+            min_size: Some(val.min_size as i64),
+            quality: Some(val.quality),
+        }
+    }
+}
+
+impl From<JsRateLimitConfig> for spikard_core::RateLimitConfig {
+    fn from(val: JsRateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second.map(|v| v as u64).unwrap_or_default(),
+            burst: val.burst.unwrap_or_default(),
+            ip_based: val.ip_based.unwrap_or_default(),
+        }
+    }
+}
+
+impl From<spikard_core::RateLimitConfig> for JsRateLimitConfig {
+    fn from(val: spikard_core::RateLimitConfig) -> Self {
+        Self {
+            per_second: Some(val.per_second as i64),
+            burst: Some(val.burst),
+            ip_based: Some(val.ip_based),
+        }
+    }
+}
+
+impl From<JsJsonRpcMethodInfo> for spikard_core::JsonRpcMethodInfo {
+    fn from(val: JsJsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: Default::default(),
+            result_schema: Default::default(),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+impl From<spikard_core::JsonRpcMethodInfo> for JsJsonRpcMethodInfo {
+    fn from(val: spikard_core::JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
+            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<JsRoute> for spikard_core::Route {
+    fn from(val: JsRoute) -> Self {
+        Self {
+            method: val.method.map(Into::into).unwrap_or_default(),
+            path: val.path.unwrap_or_default(),
+            handler_name: val.handler_name.unwrap_or_default(),
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async.unwrap_or_default(),
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body.unwrap_or_default(),
+            handler_dependencies: val.handler_dependencies.unwrap_or_default(),
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::Route> for JsRoute {
+    fn from(val: spikard_core::Route) -> Self {
+        Self {
+            method: Some(val.method.into()),
+            path: Some(val.path),
+            handler_name: Some(val.handler_name),
+            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
+            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
+            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: Some(val.is_async),
+            cors: val.cors.map(Into::into),
+            expects_json_body: Some(val.expects_json_body),
+            handler_dependencies: Some(val.handler_dependencies),
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+        }
+    }
+}
+
+impl From<JsProblemDetails> for spikard_core::ProblemDetails {
+    fn from(val: JsProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::ProblemDetails> for JsProblemDetails {
+    fn from(val: spikard_core::ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: val
+                .extensions
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+        }
+    }
+}
+
+impl From<JsSchemaConfig> for spikard_graphql::SchemaConfig {
+    fn from(val: JsSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled.unwrap_or_default(),
+            complexity_limit: val.complexity_limit.map(|v| v as usize),
+            depth_limit: val.depth_limit.map(|v| v as usize),
+        }
+    }
+}
+
+impl From<spikard_graphql::SchemaConfig> for JsSchemaConfig {
+    fn from(val: spikard_graphql::SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: Some(val.introspection_enabled),
+            complexity_limit: val.complexity_limit.map(|v| v as i64),
+            depth_limit: val.depth_limit.map(|v| v as i64),
+        }
+    }
+}
+
+impl From<JsQueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
+    fn from(val: JsQueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled.unwrap_or_default(),
+            complexity_limit: val.complexity_limit.map(|v| v as usize),
+            depth_limit: val.depth_limit.map(|v| v as usize),
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryOnlyConfig> for JsQueryOnlyConfig {
+    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: Some(val.introspection_enabled),
+            complexity_limit: val.complexity_limit.map(|v| v as i64),
+            depth_limit: val.depth_limit.map(|v| v as i64),
+        }
+    }
+}
+
+impl From<JsQueryMutationConfig> for spikard_graphql::QueryMutationConfig {
+    fn from(val: JsQueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled.unwrap_or_default(),
+            complexity_limit: val.complexity_limit.map(|v| v as usize),
+            depth_limit: val.depth_limit.map(|v| v as usize),
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryMutationConfig> for JsQueryMutationConfig {
+    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: Some(val.introspection_enabled),
+            complexity_limit: val.complexity_limit.map(|v| v as i64),
+            depth_limit: val.depth_limit.map(|v| v as i64),
+        }
+    }
+}
+
+impl From<JsFullSchemaConfig> for spikard_graphql::FullSchemaConfig {
+    fn from(val: JsFullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled.unwrap_or_default(),
+            complexity_limit: val.complexity_limit.map(|v| v as usize),
+            depth_limit: val.depth_limit.map(|v| v as usize),
+        }
+    }
+}
+
+impl From<spikard_graphql::FullSchemaConfig> for JsFullSchemaConfig {
+    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: Some(val.introspection_enabled),
+            complexity_limit: val.complexity_limit.map(|v| v as i64),
+            depth_limit: val.depth_limit.map(|v| v as i64),
+        }
+    }
 }
 
 impl From<spikard_http::Claims> for JsClaims {
@@ -665,216 +968,6 @@ impl From<JsBackgroundJobError> for spikard_http::BackgroundJobError {
 impl From<spikard_http::BackgroundJobError> for JsBackgroundJobError {
     fn from(val: spikard_http::BackgroundJobError) -> Self {
         Self { message: val.message }
-    }
-}
-
-impl From<JsCorsConfig> for spikard_http::CorsConfig {
-    fn from(val: JsCorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins.unwrap_or_default(),
-            allowed_methods: val.allowed_methods.unwrap_or_default(),
-            allowed_headers: val.allowed_headers.unwrap_or_default(),
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::CorsConfig> for JsCorsConfig {
-    fn from(val: spikard_http::CorsConfig) -> Self {
-        Self {
-            allowed_origins: Some(val.allowed_origins),
-            allowed_methods: Some(val.allowed_methods),
-            allowed_headers: Some(val.allowed_headers),
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: Some(format!("{:?}", val.methods_joined_cache)),
-            headers_joined_cache: Some(format!("{:?}", val.headers_joined_cache)),
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<JsRouteMetadata> for spikard_http::RouteMetadata {
-    fn from(val: JsRouteMetadata) -> Self {
-        Self {
-            method: val.method.unwrap_or_default(),
-            path: val.path.unwrap_or_default(),
-            handler_name: val.handler_name.unwrap_or_default(),
-            request_schema: Default::default(),
-            response_schema: Default::default(),
-            parameter_schema: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async.unwrap_or_default(),
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: Default::default(),
-            static_response: Default::default(),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::RouteMetadata> for JsRouteMetadata {
-    fn from(val: spikard_http::RouteMetadata) -> Self {
-        Self {
-            method: Some(val.method),
-            path: Some(val.path),
-            handler_name: Some(val.handler_name),
-            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
-            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
-            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: Some(val.is_async),
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
-            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
-        }
-    }
-}
-
-impl From<JsCompressionConfig> for spikard_http::CompressionConfig {
-    fn from(val: JsCompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip.unwrap_or_default(),
-            brotli: val.brotli.unwrap_or_default(),
-            min_size: val.min_size.map(|v| v as usize).unwrap_or_default(),
-            quality: val.quality.unwrap_or_default(),
-        }
-    }
-}
-
-impl From<spikard_http::CompressionConfig> for JsCompressionConfig {
-    fn from(val: spikard_http::CompressionConfig) -> Self {
-        Self {
-            gzip: Some(val.gzip),
-            brotli: Some(val.brotli),
-            min_size: Some(val.min_size as i64),
-            quality: Some(val.quality),
-        }
-    }
-}
-
-impl From<JsRateLimitConfig> for spikard_http::RateLimitConfig {
-    fn from(val: JsRateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second.map(|v| v as u64).unwrap_or_default(),
-            burst: val.burst.unwrap_or_default(),
-            ip_based: val.ip_based.unwrap_or_default(),
-        }
-    }
-}
-
-impl From<spikard_http::RateLimitConfig> for JsRateLimitConfig {
-    fn from(val: spikard_http::RateLimitConfig) -> Self {
-        Self {
-            per_second: Some(val.per_second as i64),
-            burst: Some(val.burst),
-            ip_based: Some(val.ip_based),
-        }
-    }
-}
-
-impl From<JsProblemDetails> for spikard_http::ProblemDetails {
-    fn from(val: JsProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::ProblemDetails> for JsProblemDetails {
-    fn from(val: spikard_http::ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: val
-                .extensions
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
-        }
-    }
-}
-
-impl From<JsJsonRpcMethodInfo> for spikard_http::JsonRpcMethodInfo {
-    fn from(val: JsJsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: Default::default(),
-            result_schema: Default::default(),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-impl From<spikard_http::JsonRpcMethodInfo> for JsJsonRpcMethodInfo {
-    fn from(val: spikard_http::JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
-            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<JsRoute> for spikard_http::Route {
-    fn from(val: JsRoute) -> Self {
-        Self {
-            method: val.method.map(Into::into).unwrap_or_default(),
-            path: val.path.unwrap_or_default(),
-            handler_name: val.handler_name.unwrap_or_default(),
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async.unwrap_or_default(),
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body.unwrap_or_default(),
-            handler_dependencies: val.handler_dependencies.unwrap_or_default(),
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::Route> for JsRoute {
-    fn from(val: spikard_http::Route) -> Self {
-        Self {
-            method: Some(val.method.into()),
-            path: Some(val.path),
-            handler_name: Some(val.handler_name),
-            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
-            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
-            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: Some(val.is_async),
-            cors: val.cors.map(Into::into),
-            expects_json_body: Some(val.expects_json_body),
-            handler_dependencies: Some(val.handler_dependencies),
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-        }
     }
 }
 
@@ -1222,100 +1315,7 @@ impl From<spikard_http::ServerConfig> for JsServerConfig {
     }
 }
 
-impl From<spikard::UploadFile> for JsUploadFile {
-    fn from(val: spikard::UploadFile) -> Self {
-        Self {
-            filename: val.filename,
-            content_type: val.content_type,
-            size: val.size.map(|v| v as i64),
-            content: val.content.to_vec(),
-            content_encoding: val.content_encoding,
-            cursor: format!("{:?}", val.cursor),
-        }
-    }
-}
-
-impl From<JsSchemaConfig> for spikard_graphql::SchemaConfig {
-    fn from(val: JsSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled.unwrap_or_default(),
-            complexity_limit: val.complexity_limit.map(|v| v as usize),
-            depth_limit: val.depth_limit.map(|v| v as usize),
-        }
-    }
-}
-
-impl From<spikard_graphql::SchemaConfig> for JsSchemaConfig {
-    fn from(val: spikard_graphql::SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: Some(val.introspection_enabled),
-            complexity_limit: val.complexity_limit.map(|v| v as i64),
-            depth_limit: val.depth_limit.map(|v| v as i64),
-        }
-    }
-}
-
-impl From<JsQueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
-    fn from(val: JsQueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled.unwrap_or_default(),
-            complexity_limit: val.complexity_limit.map(|v| v as usize),
-            depth_limit: val.depth_limit.map(|v| v as usize),
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryOnlyConfig> for JsQueryOnlyConfig {
-    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: Some(val.introspection_enabled),
-            complexity_limit: val.complexity_limit.map(|v| v as i64),
-            depth_limit: val.depth_limit.map(|v| v as i64),
-        }
-    }
-}
-
-impl From<JsQueryMutationConfig> for spikard_graphql::QueryMutationConfig {
-    fn from(val: JsQueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled.unwrap_or_default(),
-            complexity_limit: val.complexity_limit.map(|v| v as usize),
-            depth_limit: val.depth_limit.map(|v| v as usize),
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryMutationConfig> for JsQueryMutationConfig {
-    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: Some(val.introspection_enabled),
-            complexity_limit: val.complexity_limit.map(|v| v as i64),
-            depth_limit: val.depth_limit.map(|v| v as i64),
-        }
-    }
-}
-
-impl From<JsFullSchemaConfig> for spikard_graphql::FullSchemaConfig {
-    fn from(val: JsFullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled.unwrap_or_default(),
-            complexity_limit: val.complexity_limit.map(|v| v as usize),
-            depth_limit: val.depth_limit.map(|v| v as usize),
-        }
-    }
-}
-
-impl From<spikard_graphql::FullSchemaConfig> for JsFullSchemaConfig {
-    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: Some(val.introspection_enabled),
-            complexity_limit: val.complexity_limit.map(|v| v as i64),
-            depth_limit: val.depth_limit.map(|v| v as i64),
-        }
-    }
-}
-
-impl From<JsMethod> for spikard_http::Method {
+impl From<JsMethod> for spikard_core::Method {
     fn from(val: JsMethod) -> Self {
         match val {
             JsMethod::Get => Self::Get,
@@ -1330,17 +1330,17 @@ impl From<JsMethod> for spikard_http::Method {
     }
 }
 
-impl From<spikard_http::Method> for JsMethod {
-    fn from(val: spikard_http::Method) -> Self {
+impl From<spikard_core::Method> for JsMethod {
+    fn from(val: spikard_core::Method) -> Self {
         match val {
-            spikard_http::Method::Get => Self::Get,
-            spikard_http::Method::Post => Self::Post,
-            spikard_http::Method::Put => Self::Put,
-            spikard_http::Method::Patch => Self::Patch,
-            spikard_http::Method::Delete => Self::Delete,
-            spikard_http::Method::Head => Self::Head,
-            spikard_http::Method::Options => Self::Options,
-            spikard_http::Method::Trace => Self::Trace,
+            spikard_core::Method::Get => Self::Get,
+            spikard_core::Method::Post => Self::Post,
+            spikard_core::Method::Put => Self::Put,
+            spikard_core::Method::Patch => Self::Patch,
+            spikard_core::Method::Delete => Self::Delete,
+            spikard_core::Method::Head => Self::Head,
+            spikard_core::Method::Options => Self::Options,
+            spikard_core::Method::Trace => Self::Trace,
         }
     }
 }

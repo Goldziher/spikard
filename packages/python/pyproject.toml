@@ -1,12 +1,14 @@
 [build-system]
-requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
+requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "spikard"
 version = "0.13.0"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
+keywords = [ "framework", "http", "polyglot", "rust", "web" ]
 license = "MIT"
+authors = [ { name = "Na'aman Hirschfeld <nhirschfeld@gmail.com>" } ]
 requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
@@ -16,16 +18,11 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-authors = [
-    { name = "Na'aman Hirschfeld <nhirschfeld@gmail.com>" }
-]
-keywords = ["http", "web", "framework", "polyglot", "rust"]
+urls.repository = "https://github.com/Goldziher/spikard"
 homepage = "https://github.com/Goldziher/spikard"
-[project.urls]
-repository = "https://github.com/Goldziher/spikard"
 
 [tool.maturin]
 module-name = "spikard._spikard"
 manifest-path = "../../crates/spikard-py/Cargo.toml"
-features = ["pyo3/extension-module"]
-python-packages = ["spikard"]
+features = [ "pyo3/extension-module" ]
+python-packages = [ "spikard" ]

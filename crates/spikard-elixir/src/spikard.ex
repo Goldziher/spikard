@@ -2,12 +2,6 @@
 defmodule Spikard do
   @moduledoc "High-level API for spikard."
 
-  @doc "Add CORS headers to a successful response"
-  @spec add_cors_headers(String.t() | nil, String.t(), String.t() | nil) :: nil
-  def add_cors_headers(response, origin, cors_config) do
-    Spikard.Native.add_cors_headers(response, origin, cors_config)
-  end
-
   @doc "Create a simple schema configuration with only Query type."
   @spec schema_query_only() :: String.t() | nil
   def schema_query_only do
@@ -26,22 +20,28 @@ defmodule Spikard do
     Spikard.Native.schema_full()
   end
 
-  @doc "Method"
-  @spec backgroundtaskconfig_default() :: String.t() | nil
-  def backgroundtaskconfig_default do
-    Spikard.Native.backgroundtaskconfig_default()
+  @doc "Add CORS headers to a successful response"
+  @spec add_cors_headers(String.t() | nil, String.t(), String.t() | nil) :: nil
+  def add_cors_headers(response, origin, cors_config) do
+    Spikard.Native.add_cors_headers(response, origin, cors_config)
   end
 
-  @doc "Method"
-  @spec backgroundjobmetadata_default() :: String.t() | nil
-  def backgroundjobmetadata_default do
-    Spikard.Native.backgroundjobmetadata_default()
+  @doc "Get the raw file content as bytes."
+  @spec uploadfile_as_bytes(map()) :: binary()
+  def uploadfile_as_bytes(obj) do
+    Spikard.Native.uploadfile_as_bytes(obj)
   end
 
-  @doc "Method"
-  @spec backgroundjoberror_from(String.t()) :: map()
-  def backgroundjoberror_from(message) do
-    Spikard.Native.backgroundjoberror_from(message)
+  @doc "Read the file content as a UTF-8 string."
+  @spec uploadfile_read_to_string(map()) :: {:ok, String.t()} | {:error, String.t()}
+  def uploadfile_read_to_string(obj) do
+    Spikard.Native.uploadfile_read_to_string(obj)
+  end
+
+  @doc "Get the content type, defaulting to "application/octet-stream"."
+  @spec uploadfile_content_type_or_default(map()) :: String.t()
+  def uploadfile_content_type_or_default(obj) do
+    Spikard.Native.uploadfile_content_type_or_default(obj)
   end
 
   @doc "Get the cached joined methods string for preflight responses"
@@ -96,6 +96,39 @@ defmodule Spikard do
   @spec ratelimitconfig_default() :: String.t() | nil
   def ratelimitconfig_default do
     Spikard.Native.ratelimitconfig_default()
+  end
+
+  @doc "Method"
+  @spec route_default() :: String.t() | nil
+  def route_default do
+    Spikard.Native.route_default()
+  end
+
+  @doc "Create a route from metadata, using schema registry for deduplication"
+  @spec route_from_metadata(
+          String.t() | nil,
+          String.t()
+        ) :: {:ok, String.t() | nil} | {:error, String.t()}
+  def route_from_metadata(metadata, registry) do
+    Spikard.Native.route_from_metadata(metadata, registry)
+  end
+
+  @doc "Builder method to attach JSON-RPC method info to a route"
+  @spec route_with_jsonrpc_method(map(), map()) :: String.t() | nil
+  def route_with_jsonrpc_method(obj, info) do
+    Spikard.Native.route_with_jsonrpc_method(obj, info)
+  end
+
+  @doc "Check if this route has JSON-RPC metadata"
+  @spec route_is_jsonrpc_method(map()) :: boolean()
+  def route_is_jsonrpc_method(obj) do
+    Spikard.Native.route_is_jsonrpc_method(obj)
+  end
+
+  @doc "Get the JSON-RPC method name if present"
+  @spec route_jsonrpc_method_name(map()) :: String.t() | nil
+  def route_jsonrpc_method_name(obj) do
+    Spikard.Native.route_jsonrpc_method_name(obj)
   end
 
   @doc "Set the detail field"
@@ -179,139 +212,6 @@ defmodule Spikard do
   @spec problemdetails_to_json_pretty(map()) :: {:ok, String.t()} | {:error, String.t()}
   def problemdetails_to_json_pretty(obj) do
     Spikard.Native.problemdetails_to_json_pretty(obj)
-  end
-
-  @doc "Method"
-  @spec route_default() :: String.t() | nil
-  def route_default do
-    Spikard.Native.route_default()
-  end
-
-  @doc "Create a route from metadata, using schema registry for deduplication"
-  @spec route_from_metadata(
-          String.t() | nil,
-          String.t()
-        ) :: {:ok, String.t() | nil} | {:error, String.t()}
-  def route_from_metadata(metadata, registry) do
-    Spikard.Native.route_from_metadata(metadata, registry)
-  end
-
-  @doc "Builder method to attach JSON-RPC method info to a route"
-  @spec route_with_jsonrpc_method(map(), map()) :: String.t() | nil
-  def route_with_jsonrpc_method(obj, info) do
-    Spikard.Native.route_with_jsonrpc_method(obj, info)
-  end
-
-  @doc "Check if this route has JSON-RPC metadata"
-  @spec route_is_jsonrpc_method(map()) :: boolean()
-  def route_is_jsonrpc_method(obj) do
-    Spikard.Native.route_is_jsonrpc_method(obj)
-  end
-
-  @doc "Get the JSON-RPC method name if present"
-  @spec route_jsonrpc_method_name(map()) :: String.t() | nil
-  def route_jsonrpc_method_name(obj) do
-    Spikard.Native.route_jsonrpc_method_name(obj)
-  end
-
-  @doc "Method"
-  @spec grpcconfig_default() :: String.t() | nil
-  def grpcconfig_default do
-    Spikard.Native.grpcconfig_default()
-  end
-
-  @doc "Method"
-  @spec jsonrpcconfig_default() :: String.t() | nil
-  def jsonrpcconfig_default do
-    Spikard.Native.jsonrpcconfig_default()
-  end
-
-  @doc "Method"
-  @spec openapiconfig_default() :: String.t() | nil
-  def openapiconfig_default do
-    Spikard.Native.openapiconfig_default()
-  end
-
-  @doc "Create a response with a specific status code"
-  @spec response_with_status(String.t() | nil, non_neg_integer()) :: String.t() | nil
-  def response_with_status(content, status_code) do
-    Spikard.Native.response_with_status(content, status_code)
-  end
-
-  @doc "Set a header"
-  @spec response_set_header(map(), String.t(), String.t()) :: nil
-  def response_set_header(obj, key, value) do
-    Spikard.Native.response_set_header(obj, key, value)
-  end
-
-  @doc "Set a cookie in the response"
-  @spec response_set_cookie(
-          map(),
-          String.t(),
-          String.t(),
-          integer() | nil,
-          String.t() | nil,
-          String.t() | nil,
-          boolean(),
-          boolean(),
-          String.t() | nil
-        ) :: nil
-  def response_set_cookie(obj, key, value, max_age, domain, path, secure, http_only, same_site) do
-    Spikard.Native.response_set_cookie(obj, key, value, max_age, domain, path, secure, http_only, same_site)
-  end
-
-  @doc "Method"
-  @spec response_default() :: String.t() | nil
-  def response_default do
-    Spikard.Native.response_default()
-  end
-
-  @doc "Create a new SSE event with an event type and data"
-  @spec sseevent_with_type(String.t(), String.t()) :: map()
-  def sseevent_with_type(event_type, data) do
-    Spikard.Native.sseevent_with_type(event_type, data)
-  end
-
-  @doc "Set the event ID for client-side reconnection support"
-  @spec sseevent_with_id(map(), String.t()) :: map()
-  def sseevent_with_id(obj, id) do
-    Spikard.Native.sseevent_with_id(obj, id)
-  end
-
-  @doc "Set the retry timeout for client reconnection"
-  @spec sseevent_with_retry(map(), non_neg_integer()) :: map()
-  def sseevent_with_retry(obj, retry_ms) do
-    Spikard.Native.sseevent_with_retry(obj, retry_ms)
-  end
-
-  @doc "Method"
-  @spec serverconfig_default() :: String.t() | nil
-  def serverconfig_default do
-    Spikard.Native.serverconfig_default()
-  end
-
-  @doc "Create a new builder for ServerConfig"
-  @spec serverconfig_builder() :: String.t()
-  def serverconfig_builder do
-    Spikard.Native.serverconfig_builder()
-  end
-
-  @doc "Get the raw file content as bytes."
-  @spec uploadfile_as_bytes(map()) :: binary()
-  def uploadfile_as_bytes(obj) do
-    Spikard.Native.uploadfile_as_bytes(obj)
-  end
-
-  @doc "Read the file content as a UTF-8 string."
-  @spec uploadfile_read_to_string(map()) :: {:ok, String.t()} | {:error, String.t()}
-  def uploadfile_read_to_string(obj) do
-    Spikard.Native.uploadfile_read_to_string(obj)
-  end
-
-  @doc "Get the content type, defaulting to "application/octet-stream"."
-  @spec uploadfile_content_type_or_default(map()) :: String.t()
-  def uploadfile_content_type_or_default(obj) do
-    Spikard.Native.uploadfile_content_type_or_default(obj)
   end
 
   @doc "Convert error to HTTP status code"
@@ -432,5 +332,105 @@ defmodule Spikard do
   @spec fullschemaconfig_default() :: String.t() | nil
   def fullschemaconfig_default do
     Spikard.Native.fullschemaconfig_default()
+  end
+
+  @doc "Method"
+  @spec backgroundtaskconfig_default() :: String.t() | nil
+  def backgroundtaskconfig_default do
+    Spikard.Native.backgroundtaskconfig_default()
+  end
+
+  @doc "Method"
+  @spec backgroundjobmetadata_default() :: String.t() | nil
+  def backgroundjobmetadata_default do
+    Spikard.Native.backgroundjobmetadata_default()
+  end
+
+  @doc "Method"
+  @spec backgroundjoberror_from(String.t()) :: map()
+  def backgroundjoberror_from(message) do
+    Spikard.Native.backgroundjoberror_from(message)
+  end
+
+  @doc "Method"
+  @spec grpcconfig_default() :: String.t() | nil
+  def grpcconfig_default do
+    Spikard.Native.grpcconfig_default()
+  end
+
+  @doc "Method"
+  @spec jsonrpcconfig_default() :: String.t() | nil
+  def jsonrpcconfig_default do
+    Spikard.Native.jsonrpcconfig_default()
+  end
+
+  @doc "Method"
+  @spec openapiconfig_default() :: String.t() | nil
+  def openapiconfig_default do
+    Spikard.Native.openapiconfig_default()
+  end
+
+  @doc "Create a response with a specific status code"
+  @spec response_with_status(String.t() | nil, non_neg_integer()) :: String.t() | nil
+  def response_with_status(content, status_code) do
+    Spikard.Native.response_with_status(content, status_code)
+  end
+
+  @doc "Set a header"
+  @spec response_set_header(map(), String.t(), String.t()) :: nil
+  def response_set_header(obj, key, value) do
+    Spikard.Native.response_set_header(obj, key, value)
+  end
+
+  @doc "Set a cookie in the response"
+  @spec response_set_cookie(
+          map(),
+          String.t(),
+          String.t(),
+          integer() | nil,
+          String.t() | nil,
+          String.t() | nil,
+          boolean(),
+          boolean(),
+          String.t() | nil
+        ) :: nil
+  def response_set_cookie(obj, key, value, max_age, domain, path, secure, http_only, same_site) do
+    Spikard.Native.response_set_cookie(obj, key, value, max_age, domain, path, secure, http_only, same_site)
+  end
+
+  @doc "Method"
+  @spec response_default() :: String.t() | nil
+  def response_default do
+    Spikard.Native.response_default()
+  end
+
+  @doc "Create a new SSE event with an event type and data"
+  @spec sseevent_with_type(String.t(), String.t()) :: map()
+  def sseevent_with_type(event_type, data) do
+    Spikard.Native.sseevent_with_type(event_type, data)
+  end
+
+  @doc "Set the event ID for client-side reconnection support"
+  @spec sseevent_with_id(map(), String.t()) :: map()
+  def sseevent_with_id(obj, id) do
+    Spikard.Native.sseevent_with_id(obj, id)
+  end
+
+  @doc "Set the retry timeout for client reconnection"
+  @spec sseevent_with_retry(map(), non_neg_integer()) :: map()
+  def sseevent_with_retry(obj, retry_ms) do
+    Spikard.Native.sseevent_with_retry(obj, retry_ms)
+  end
+
+  @doc "Method"
+  @spec serverconfig_default() :: String.t() | nil
+  def serverconfig_default do
+    Spikard.Native.serverconfig_default()
+  end
+
+  @doc "Create a new builder for ServerConfig"
+  @spec serverconfig_builder() :: String.t()
+  def serverconfig_builder do
+    Spikard.Native.serverconfig_builder()
   end
 end

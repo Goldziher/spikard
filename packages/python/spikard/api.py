@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import spikard._spikard as _rust
 
 if TYPE_CHECKING:
-    from ._spikard import QueryMutationConfig, CorsConfig, QueryOnlyConfig, Response, FullSchemaConfig
+    from ._spikard import CorsConfig, FullSchemaConfig, QueryMutationConfig, QueryOnlyConfig, Response
 
 
 def _to_rust_response(value: Response | None) -> _rust.Response | None:
@@ -38,13 +38,6 @@ def _to_rust_cors_config(value: CorsConfig | None) -> _rust.CorsConfig | None:
     )
 
 
-def add_cors_headers(response: Response, origin: str, cors_config: CorsConfig) -> None:
-    """Add CORS headers to a successful response."""
-    _rust_response = _to_rust_response(response)
-    _rust_cors_config = _to_rust_cors_config(cors_config)
-    return _rust.add_cors_headers(_rust_response, origin, _rust_cors_config)  # type: ignore[arg-type]
-
-
 def schema_query_only() -> QueryOnlyConfig:
     """Create a simple schema configuration with only Query type."""
     return _rust.schema_query_only()
@@ -58,3 +51,10 @@ def schema_query_mutation() -> QueryMutationConfig:
 def schema_full() -> FullSchemaConfig:
     """Create a schema configuration with all three root types."""
     return _rust.schema_full()
+
+
+def add_cors_headers(response: Response, origin: str, cors_config: CorsConfig) -> None:
+    """Add CORS headers to a successful response."""
+    _rust_response = _to_rust_response(response)
+    _rust_cors_config = _to_rust_cors_config(cors_config)
+    return _rust.add_cors_headers(_rust_response, origin, _rust_cors_config)  # type: ignore[arg-type]

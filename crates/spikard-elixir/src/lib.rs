@@ -15,69 +15,15 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
-#[module = "Spikard.Claims"]
-pub struct Claims {
-    pub sub: String,
-    pub exp: usize,
-    pub iat: Option<usize>,
-    pub nbf: Option<usize>,
-    pub aud: Option<Vec<String>>,
-    pub iss: Option<String>,
+#[module = "Spikard.UploadFile"]
+pub struct UploadFile {
+    pub filename: String,
+    pub content_type: Option<String>,
+    pub size: Option<usize>,
+    pub content: Vec<u8>,
+    pub content_encoding: Option<String>,
+    pub cursor: String,
 }
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
-pub struct BackgroundTaskConfig {
-    pub max_queue_size: usize,
-    pub max_concurrent_tasks: usize,
-    pub drain_timeout_secs: u64,
-}
-
-impl BackgroundTaskConfig {
-    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
-        Self {
-            max_queue_size: opts.get("max_queue_size").and_then(|t| t.decode().ok()).unwrap_or(1024),
-            max_concurrent_tasks: opts
-                .get("max_concurrent_tasks")
-                .and_then(|t| t.decode().ok())
-                .unwrap_or(128),
-            drain_timeout_secs: opts
-                .get("drain_timeout_secs")
-                .and_then(|t| t.decode().ok())
-                .unwrap_or(30),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
-pub struct BackgroundJobMetadata {
-    pub name: String,
-    pub request_id: Option<String>,
-}
-
-impl BackgroundJobMetadata {
-    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
-        Self {
-            name: opts.get("name").and_then(|t| t.decode().ok()).unwrap_or_default(),
-            request_id: opts.get("request_id").and_then(|t| t.decode().ok()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
-#[module = "Spikard.BackgroundJobError"]
-pub struct BackgroundJobError {
-    pub message: String,
-}
-
-#[derive(Clone)]
-pub struct BackgroundHandle {
-    inner: Arc<spikard_http::BackgroundHandle>,
-}
-
-// SAFETY: See gen_opaque_resource in alef-backend-rustler for rationale.
-impl std::panic::RefUnwindSafe for BackgroundHandle {}
-
-impl rustler::Resource for BackgroundHandle {}
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
 pub struct CorsConfig {
@@ -198,17 +144,6 @@ impl RateLimitConfig {
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
-#[module = "Spikard.ProblemDetails"]
-pub struct ProblemDetails {
-    pub type_uri: String,
-    pub title: String,
-    pub status: u16,
-    pub detail: Option<String>,
-    pub instance: Option<String>,
-    pub extensions: HashMap<String, String>,
-}
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
 #[module = "Spikard.JsonRpcMethodInfo"]
 pub struct JsonRpcMethodInfo {
     pub method_name: String,
@@ -262,6 +197,182 @@ impl Route {
         }
     }
 }
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
+#[module = "Spikard.ProblemDetails"]
+pub struct ProblemDetails {
+    pub type_uri: String,
+    pub title: String,
+    pub status: u16,
+    pub detail: Option<String>,
+    pub instance: Option<String>,
+    pub extensions: HashMap<String, String>,
+}
+
+#[derive(Clone)]
+pub struct GraphQLError {
+    inner: Arc<spikard_graphql::GraphQLError>,
+}
+
+// SAFETY: See gen_opaque_resource in alef-backend-rustler for rationale.
+impl std::panic::RefUnwindSafe for GraphQLError {}
+
+impl rustler::Resource for GraphQLError {}
+
+#[derive(Clone)]
+pub struct GraphQLRouteConfig {
+    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
+}
+
+// SAFETY: See gen_opaque_resource in alef-backend-rustler for rationale.
+impl std::panic::RefUnwindSafe for GraphQLRouteConfig {}
+
+impl rustler::Resource for GraphQLRouteConfig {}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
+pub struct SchemaConfig {
+    pub introspection_enabled: bool,
+    pub complexity_limit: Option<usize>,
+    pub depth_limit: Option<usize>,
+}
+
+impl SchemaConfig {
+    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
+        Self {
+            introspection_enabled: opts
+                .get("introspection_enabled")
+                .and_then(|t| t.decode().ok())
+                .unwrap_or(true),
+            complexity_limit: opts.get("complexity_limit").and_then(|t| t.decode().ok()),
+            depth_limit: opts.get("depth_limit").and_then(|t| t.decode().ok()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
+pub struct QueryOnlyConfig {
+    pub introspection_enabled: bool,
+    pub complexity_limit: Option<usize>,
+    pub depth_limit: Option<usize>,
+}
+
+impl QueryOnlyConfig {
+    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
+        Self {
+            introspection_enabled: opts
+                .get("introspection_enabled")
+                .and_then(|t| t.decode().ok())
+                .unwrap_or(true),
+            complexity_limit: opts.get("complexity_limit").and_then(|t| t.decode().ok()),
+            depth_limit: opts.get("depth_limit").and_then(|t| t.decode().ok()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
+pub struct QueryMutationConfig {
+    pub introspection_enabled: bool,
+    pub complexity_limit: Option<usize>,
+    pub depth_limit: Option<usize>,
+}
+
+impl QueryMutationConfig {
+    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
+        Self {
+            introspection_enabled: opts
+                .get("introspection_enabled")
+                .and_then(|t| t.decode().ok())
+                .unwrap_or(true),
+            complexity_limit: opts.get("complexity_limit").and_then(|t| t.decode().ok()),
+            depth_limit: opts.get("depth_limit").and_then(|t| t.decode().ok()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
+pub struct FullSchemaConfig {
+    pub introspection_enabled: bool,
+    pub complexity_limit: Option<usize>,
+    pub depth_limit: Option<usize>,
+}
+
+impl FullSchemaConfig {
+    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
+        Self {
+            introspection_enabled: opts
+                .get("introspection_enabled")
+                .and_then(|t| t.decode().ok())
+                .unwrap_or(true),
+            complexity_limit: opts.get("complexity_limit").and_then(|t| t.decode().ok()),
+            depth_limit: opts.get("depth_limit").and_then(|t| t.decode().ok()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
+#[module = "Spikard.Claims"]
+pub struct Claims {
+    pub sub: String,
+    pub exp: usize,
+    pub iat: Option<usize>,
+    pub nbf: Option<usize>,
+    pub aud: Option<Vec<String>>,
+    pub iss: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
+pub struct BackgroundTaskConfig {
+    pub max_queue_size: usize,
+    pub max_concurrent_tasks: usize,
+    pub drain_timeout_secs: u64,
+}
+
+impl BackgroundTaskConfig {
+    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
+        Self {
+            max_queue_size: opts.get("max_queue_size").and_then(|t| t.decode().ok()).unwrap_or(1024),
+            max_concurrent_tasks: opts
+                .get("max_concurrent_tasks")
+                .and_then(|t| t.decode().ok())
+                .unwrap_or(128),
+            drain_timeout_secs: opts
+                .get("drain_timeout_secs")
+                .and_then(|t| t.decode().ok())
+                .unwrap_or(30),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
+pub struct BackgroundJobMetadata {
+    pub name: String,
+    pub request_id: Option<String>,
+}
+
+impl BackgroundJobMetadata {
+    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
+        Self {
+            name: opts.get("name").and_then(|t| t.decode().ok()).unwrap_or_default(),
+            request_id: opts.get("request_id").and_then(|t| t.decode().ok()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
+#[module = "Spikard.BackgroundJobError"]
+pub struct BackgroundJobError {
+    pub message: String,
+}
+
+#[derive(Clone)]
+pub struct BackgroundHandle {
+    inner: Arc<spikard_http::BackgroundHandle>,
+}
+
+// SAFETY: See gen_opaque_resource in alef-backend-rustler for rationale.
+impl std::panic::RefUnwindSafe for BackgroundHandle {}
+
+impl rustler::Resource for BackgroundHandle {}
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
 #[module = "Spikard.GrpcRequestData"]
@@ -543,117 +654,6 @@ impl ServerConfig {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifStruct)]
-#[module = "Spikard.UploadFile"]
-pub struct UploadFile {
-    pub filename: String,
-    pub content_type: Option<String>,
-    pub size: Option<usize>,
-    pub content: Vec<u8>,
-    pub content_encoding: Option<String>,
-    pub cursor: String,
-}
-
-#[derive(Clone)]
-pub struct GraphQLError {
-    inner: Arc<spikard_graphql::GraphQLError>,
-}
-
-// SAFETY: See gen_opaque_resource in alef-backend-rustler for rationale.
-impl std::panic::RefUnwindSafe for GraphQLError {}
-
-impl rustler::Resource for GraphQLError {}
-
-#[derive(Clone)]
-pub struct GraphQLRouteConfig {
-    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
-}
-
-// SAFETY: See gen_opaque_resource in alef-backend-rustler for rationale.
-impl std::panic::RefUnwindSafe for GraphQLRouteConfig {}
-
-impl rustler::Resource for GraphQLRouteConfig {}
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
-pub struct SchemaConfig {
-    pub introspection_enabled: bool,
-    pub complexity_limit: Option<usize>,
-    pub depth_limit: Option<usize>,
-}
-
-impl SchemaConfig {
-    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
-        Self {
-            introspection_enabled: opts
-                .get("introspection_enabled")
-                .and_then(|t| t.decode().ok())
-                .unwrap_or(true),
-            complexity_limit: opts.get("complexity_limit").and_then(|t| t.decode().ok()),
-            depth_limit: opts.get("depth_limit").and_then(|t| t.decode().ok()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
-pub struct QueryOnlyConfig {
-    pub introspection_enabled: bool,
-    pub complexity_limit: Option<usize>,
-    pub depth_limit: Option<usize>,
-}
-
-impl QueryOnlyConfig {
-    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
-        Self {
-            introspection_enabled: opts
-                .get("introspection_enabled")
-                .and_then(|t| t.decode().ok())
-                .unwrap_or(true),
-            complexity_limit: opts.get("complexity_limit").and_then(|t| t.decode().ok()),
-            depth_limit: opts.get("depth_limit").and_then(|t| t.decode().ok()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
-pub struct QueryMutationConfig {
-    pub introspection_enabled: bool,
-    pub complexity_limit: Option<usize>,
-    pub depth_limit: Option<usize>,
-}
-
-impl QueryMutationConfig {
-    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
-        Self {
-            introspection_enabled: opts
-                .get("introspection_enabled")
-                .and_then(|t| t.decode().ok())
-                .unwrap_or(true),
-            complexity_limit: opts.get("complexity_limit").and_then(|t| t.decode().ok()),
-            depth_limit: opts.get("depth_limit").and_then(|t| t.decode().ok()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, rustler::NifMap)]
-pub struct FullSchemaConfig {
-    pub introspection_enabled: bool,
-    pub complexity_limit: Option<usize>,
-    pub depth_limit: Option<usize>,
-}
-
-impl FullSchemaConfig {
-    pub fn new(opts: std::collections::HashMap<String, rustler::Term>) -> Self {
-        Self {
-            introspection_enabled: opts
-                .get("introspection_enabled")
-                .and_then(|t| t.decode().ok())
-                .unwrap_or(true),
-            complexity_limit: opts.get("complexity_limit").and_then(|t| t.decode().ok()),
-            depth_limit: opts.get("depth_limit").and_then(|t| t.decode().ok()),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize, rustler::NifUnitEnum)]
 pub enum Method {
     Get,
@@ -713,6 +713,21 @@ impl Default for SecuritySchemeInfo {
 }
 
 #[rustler::nif]
+pub fn schema_query_only() -> QueryOnlyConfig {
+    spikard_graphql::schema_query_only().into()
+}
+
+#[rustler::nif]
+pub fn schema_query_mutation() -> QueryMutationConfig {
+    spikard_graphql::schema_query_mutation().into()
+}
+
+#[rustler::nif]
+pub fn schema_full() -> FullSchemaConfig {
+    spikard_graphql::schema_full().into()
+}
+
+#[rustler::nif]
 pub fn add_cors_headers(response: Option<String>, origin: String, cors_config: Option<String>) -> () {
     let response_core: Option<spikard::Response> = response
         .map(|s| serde_json::from_str::<spikard::Response>(&s))
@@ -730,33 +745,21 @@ pub fn add_cors_headers(response: Option<String>, origin: String, cors_config: O
 }
 
 #[rustler::nif]
-pub fn schema_query_only() -> QueryOnlyConfig {
-    spikard_graphql::schema_query_only().into()
+pub fn uploadfile_as_bytes(obj: UploadFile) -> Vec<u8> {
+    spikard::UploadFile::from(obj).as_bytes().into()
 }
 
 #[rustler::nif]
-pub fn schema_query_mutation() -> QueryMutationConfig {
-    spikard_graphql::schema_query_mutation().into()
+pub fn uploadfile_read_to_string(obj: UploadFile) -> Result<String, String> {
+    let result = spikard::UploadFile::from(obj)
+        .read_to_string()
+        .map_err(|e| e.to_string())?;
+    Ok(result.into())
 }
 
 #[rustler::nif]
-pub fn schema_full() -> FullSchemaConfig {
-    spikard_graphql::schema_full().into()
-}
-
-#[rustler::nif]
-pub fn backgroundtaskconfig_default() -> BackgroundTaskConfig {
-    spikard::BackgroundTaskConfig::default().into()
-}
-
-#[rustler::nif]
-pub fn backgroundjobmetadata_default() -> BackgroundJobMetadata {
-    spikard::BackgroundJobMetadata::default().into()
-}
-
-#[rustler::nif]
-pub fn backgroundjoberror_from(message: String) -> BackgroundJobError {
-    spikard::BackgroundJobError::from(message).into()
+pub fn uploadfile_content_type_or_default(obj: UploadFile) -> String {
+    spikard::UploadFile::from(obj).content_type_or_default().into()
 }
 
 #[rustler::nif]
@@ -802,6 +805,31 @@ pub fn compressionconfig_default() -> CompressionConfig {
 #[rustler::nif]
 pub fn ratelimitconfig_default() -> RateLimitConfig {
     spikard::RateLimitConfig::default().into()
+}
+
+#[rustler::nif]
+pub fn route_default() -> Route {
+    spikard::Route::default().into()
+}
+
+#[rustler::nif]
+pub fn route_from_metadata(metadata: RouteMetadata, registry: String) -> Result<Route, String> {
+    Err(String::from("Not implemented: route_from_metadata"))
+}
+
+#[rustler::nif]
+pub fn route_with_jsonrpc_method(obj: Route, info: JsonRpcMethodInfo) -> Route {
+    spikard::Route::from(obj).with_jsonrpc_method(info.into()).into()
+}
+
+#[rustler::nif]
+pub fn route_is_jsonrpc_method(obj: Route) -> bool {
+    spikard::Route::from(obj).is_jsonrpc_method()
+}
+
+#[rustler::nif]
+pub fn route_jsonrpc_method_name(obj: Route) -> Option<String> {
+    spikard::Route::from(obj).jsonrpc_method_name()
 }
 
 #[rustler::nif]
@@ -878,119 +906,6 @@ pub fn problemdetails_to_json_pretty(obj: ProblemDetails) -> Result<String, Stri
         .to_json_pretty()
         .map_err(|e| e.to_string())?;
     Ok(result.into())
-}
-
-#[rustler::nif]
-pub fn route_default() -> Route {
-    spikard::Route::default().into()
-}
-
-#[rustler::nif]
-pub fn route_from_metadata(metadata: RouteMetadata, registry: String) -> Result<Route, String> {
-    Err(String::from("Not implemented: route_from_metadata"))
-}
-
-#[rustler::nif]
-pub fn route_with_jsonrpc_method(obj: Route, info: JsonRpcMethodInfo) -> Route {
-    spikard::Route::from(obj).with_jsonrpc_method(info.into()).into()
-}
-
-#[rustler::nif]
-pub fn route_is_jsonrpc_method(obj: Route) -> bool {
-    spikard::Route::from(obj).is_jsonrpc_method()
-}
-
-#[rustler::nif]
-pub fn route_jsonrpc_method_name(obj: Route) -> Option<String> {
-    spikard::Route::from(obj).jsonrpc_method_name()
-}
-
-#[rustler::nif]
-pub fn grpcconfig_default() -> GrpcConfig {
-    spikard::GrpcConfig::default().into()
-}
-
-#[rustler::nif]
-pub fn jsonrpcconfig_default() -> JsonRpcConfig {
-    spikard::JsonRpcConfig::default().into()
-}
-
-#[rustler::nif]
-pub fn openapiconfig_default() -> OpenApiConfig {
-    spikard::OpenApiConfig::default().into()
-}
-
-#[rustler::nif]
-pub fn response_with_status(content: String, status_code: u16) -> Response {
-    panic!("alef: response_with_status not auto-delegatable")
-}
-
-#[rustler::nif]
-pub fn response_set_header(obj: Response, key: String, value: String) -> () {
-    ()
-}
-
-#[rustler::nif]
-pub fn response_set_cookie(
-    obj: Response,
-    key: String,
-    value: String,
-    max_age: i64,
-    domain: String,
-    path: String,
-    secure: bool,
-    http_only: bool,
-    same_site: String,
-) -> () {
-    ()
-}
-
-#[rustler::nif]
-pub fn response_default() -> Response {
-    spikard::Response::default().into()
-}
-
-#[rustler::nif]
-pub fn sseevent_with_type(event_type: String, data: String) -> SseEvent {
-    panic!("alef: sseevent_with_type not auto-delegatable")
-}
-
-#[rustler::nif]
-pub fn sseevent_with_id(obj: SseEvent, id: String) -> SseEvent {
-    spikard::SseEvent::from(obj).with_id(id).into()
-}
-
-#[rustler::nif]
-pub fn sseevent_with_retry(obj: SseEvent, retry_ms: u64) -> SseEvent {
-    spikard::SseEvent::from(obj).with_retry(retry_ms).into()
-}
-
-#[rustler::nif]
-pub fn serverconfig_default() -> ServerConfig {
-    spikard::ServerConfig::default().into()
-}
-
-#[rustler::nif]
-pub fn serverconfig_builder() -> String {
-    String::from("[unimplemented: serverconfig_builder]")
-}
-
-#[rustler::nif]
-pub fn uploadfile_as_bytes(obj: UploadFile) -> Vec<u8> {
-    spikard::UploadFile::from(obj).as_bytes().into()
-}
-
-#[rustler::nif]
-pub fn uploadfile_read_to_string(obj: UploadFile) -> Result<String, String> {
-    let result = spikard::UploadFile::from(obj)
-        .read_to_string()
-        .map_err(|e| e.to_string())?;
-    Ok(result.into())
-}
-
-#[rustler::nif]
-pub fn uploadfile_content_type_or_default(obj: UploadFile) -> String {
-    spikard::UploadFile::from(obj).content_type_or_default().into()
 }
 
 #[rustler::nif]
@@ -1115,6 +1030,394 @@ pub fn fullschemaconfig_default() -> FullSchemaConfig {
     spikard::FullSchemaConfig::default().into()
 }
 
+#[rustler::nif]
+pub fn backgroundtaskconfig_default() -> BackgroundTaskConfig {
+    spikard::BackgroundTaskConfig::default().into()
+}
+
+#[rustler::nif]
+pub fn backgroundjobmetadata_default() -> BackgroundJobMetadata {
+    spikard::BackgroundJobMetadata::default().into()
+}
+
+#[rustler::nif]
+pub fn backgroundjoberror_from(message: String) -> BackgroundJobError {
+    spikard::BackgroundJobError::from(message).into()
+}
+
+#[rustler::nif]
+pub fn grpcconfig_default() -> GrpcConfig {
+    spikard::GrpcConfig::default().into()
+}
+
+#[rustler::nif]
+pub fn jsonrpcconfig_default() -> JsonRpcConfig {
+    spikard::JsonRpcConfig::default().into()
+}
+
+#[rustler::nif]
+pub fn openapiconfig_default() -> OpenApiConfig {
+    spikard::OpenApiConfig::default().into()
+}
+
+#[rustler::nif]
+pub fn response_with_status(content: String, status_code: u16) -> Response {
+    panic!("alef: response_with_status not auto-delegatable")
+}
+
+#[rustler::nif]
+pub fn response_set_header(obj: Response, key: String, value: String) -> () {
+    ()
+}
+
+#[rustler::nif]
+pub fn response_set_cookie(
+    obj: Response,
+    key: String,
+    value: String,
+    max_age: i64,
+    domain: String,
+    path: String,
+    secure: bool,
+    http_only: bool,
+    same_site: String,
+) -> () {
+    ()
+}
+
+#[rustler::nif]
+pub fn response_default() -> Response {
+    spikard::Response::default().into()
+}
+
+#[rustler::nif]
+pub fn sseevent_with_type(event_type: String, data: String) -> SseEvent {
+    panic!("alef: sseevent_with_type not auto-delegatable")
+}
+
+#[rustler::nif]
+pub fn sseevent_with_id(obj: SseEvent, id: String) -> SseEvent {
+    spikard::SseEvent::from(obj).with_id(id).into()
+}
+
+#[rustler::nif]
+pub fn sseevent_with_retry(obj: SseEvent, retry_ms: u64) -> SseEvent {
+    spikard::SseEvent::from(obj).with_retry(retry_ms).into()
+}
+
+#[rustler::nif]
+pub fn serverconfig_default() -> ServerConfig {
+    spikard::ServerConfig::default().into()
+}
+
+#[rustler::nif]
+pub fn serverconfig_builder() -> String {
+    String::from("[unimplemented: serverconfig_builder]")
+}
+
+impl From<spikard::UploadFile> for UploadFile {
+    fn from(val: spikard::UploadFile) -> Self {
+        Self {
+            filename: val.filename,
+            content_type: val.content_type,
+            size: val.size,
+            content: val.content.to_vec(),
+            content_encoding: val.content_encoding,
+            cursor: format!("{:?}", val.cursor),
+        }
+    }
+}
+
+impl From<CorsConfig> for spikard_core::CorsConfig {
+    fn from(val: CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::CorsConfig> for CorsConfig {
+    fn from(val: spikard_core::CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
+            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<RouteMetadata> for spikard_core::RouteMetadata {
+    fn from(val: RouteMetadata) -> Self {
+        Self {
+            method: val.method,
+            path: val.path,
+            handler_name: val.handler_name,
+            request_schema: Default::default(),
+            response_schema: Default::default(),
+            parameter_schema: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: Default::default(),
+            static_response: Default::default(),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::RouteMetadata> for RouteMetadata {
+    fn from(val: spikard_core::RouteMetadata) -> Self {
+        Self {
+            method: val.method,
+            path: val.path,
+            handler_name: val.handler_name,
+            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
+            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
+            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
+            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
+        }
+    }
+}
+
+impl From<CompressionConfig> for spikard_core::CompressionConfig {
+    fn from(val: CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard_core::CompressionConfig> for CompressionConfig {
+    fn from(val: spikard_core::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard_core::RateLimitConfig {
+    fn from(val: RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard_core::RateLimitConfig> for RateLimitConfig {
+    fn from(val: spikard_core::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<JsonRpcMethodInfo> for spikard_core::JsonRpcMethodInfo {
+    fn from(val: JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: Default::default(),
+            result_schema: Default::default(),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+impl From<spikard_core::JsonRpcMethodInfo> for JsonRpcMethodInfo {
+    fn from(val: spikard_core::JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
+            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<Route> for spikard_core::Route {
+    fn from(val: Route) -> Self {
+        Self {
+            method: val.method.into(),
+            path: val.path,
+            handler_name: val.handler_name,
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::Route> for Route {
+    fn from(val: spikard_core::Route) -> Self {
+        Self {
+            method: val.method.into(),
+            path: val.path,
+            handler_name: val.handler_name,
+            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
+            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
+            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+        }
+    }
+}
+
+impl From<ProblemDetails> for spikard_core::ProblemDetails {
+    fn from(val: ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::ProblemDetails> for ProblemDetails {
+    fn from(val: spikard_core::ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: val
+                .extensions
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+        }
+    }
+}
+
+impl From<SchemaConfig> for spikard_graphql::SchemaConfig {
+    fn from(val: SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
+    fn from(val: spikard_graphql::SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<QueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
+    fn from(val: QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
+    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<QueryMutationConfig> for spikard_graphql::QueryMutationConfig {
+    fn from(val: QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
+    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<FullSchemaConfig> for spikard_graphql::FullSchemaConfig {
+    fn from(val: FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
+    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
 impl From<spikard_http::Claims> for Claims {
     fn from(val: spikard_http::Claims) -> Self {
         Self {
@@ -1175,216 +1478,6 @@ impl From<BackgroundJobError> for spikard_http::BackgroundJobError {
 impl From<spikard_http::BackgroundJobError> for BackgroundJobError {
     fn from(val: spikard_http::BackgroundJobError) -> Self {
         Self { message: val.message }
-    }
-}
-
-impl From<CorsConfig> for spikard_http::CorsConfig {
-    fn from(val: CorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins,
-            allowed_methods: val.allowed_methods,
-            allowed_headers: val.allowed_headers,
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::CorsConfig> for CorsConfig {
-    fn from(val: spikard_http::CorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins,
-            allowed_methods: val.allowed_methods,
-            allowed_headers: val.allowed_headers,
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
-            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<RouteMetadata> for spikard_http::RouteMetadata {
-    fn from(val: RouteMetadata) -> Self {
-        Self {
-            method: val.method,
-            path: val.path,
-            handler_name: val.handler_name,
-            request_schema: Default::default(),
-            response_schema: Default::default(),
-            parameter_schema: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: Default::default(),
-            static_response: Default::default(),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::RouteMetadata> for RouteMetadata {
-    fn from(val: spikard_http::RouteMetadata) -> Self {
-        Self {
-            method: val.method,
-            path: val.path,
-            handler_name: val.handler_name,
-            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
-            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
-            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
-            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
-        }
-    }
-}
-
-impl From<CompressionConfig> for spikard_http::CompressionConfig {
-    fn from(val: CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<spikard_http::CompressionConfig> for CompressionConfig {
-    fn from(val: spikard_http::CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<RateLimitConfig> for spikard_http::RateLimitConfig {
-    fn from(val: RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<spikard_http::RateLimitConfig> for RateLimitConfig {
-    fn from(val: spikard_http::RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<ProblemDetails> for spikard_http::ProblemDetails {
-    fn from(val: ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::ProblemDetails> for ProblemDetails {
-    fn from(val: spikard_http::ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: val
-                .extensions
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
-        }
-    }
-}
-
-impl From<JsonRpcMethodInfo> for spikard_http::JsonRpcMethodInfo {
-    fn from(val: JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: Default::default(),
-            result_schema: Default::default(),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-impl From<spikard_http::JsonRpcMethodInfo> for JsonRpcMethodInfo {
-    fn from(val: spikard_http::JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
-            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<Route> for spikard_http::Route {
-    fn from(val: Route) -> Self {
-        Self {
-            method: val.method.into(),
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::Route> for Route {
-    fn from(val: spikard_http::Route) -> Self {
-        Self {
-            method: val.method.into(),
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
-            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
-            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-        }
     }
 }
 
@@ -1726,100 +1819,7 @@ impl From<spikard_http::ServerConfig> for ServerConfig {
     }
 }
 
-impl From<spikard::UploadFile> for UploadFile {
-    fn from(val: spikard::UploadFile) -> Self {
-        Self {
-            filename: val.filename,
-            content_type: val.content_type,
-            size: val.size,
-            content: val.content.to_vec(),
-            content_encoding: val.content_encoding,
-            cursor: format!("{:?}", val.cursor),
-        }
-    }
-}
-
-impl From<SchemaConfig> for spikard_graphql::SchemaConfig {
-    fn from(val: SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
-    fn from(val: spikard_graphql::SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<QueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
-    fn from(val: QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
-    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<QueryMutationConfig> for spikard_graphql::QueryMutationConfig {
-    fn from(val: QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
-    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<FullSchemaConfig> for spikard_graphql::FullSchemaConfig {
-    fn from(val: FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
-    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<Method> for spikard_http::Method {
+impl From<Method> for spikard_core::Method {
     fn from(val: Method) -> Self {
         match val {
             Method::Get => Self::Get,
@@ -1834,17 +1834,17 @@ impl From<Method> for spikard_http::Method {
     }
 }
 
-impl From<spikard_http::Method> for Method {
-    fn from(val: spikard_http::Method) -> Self {
+impl From<spikard_core::Method> for Method {
+    fn from(val: spikard_core::Method) -> Self {
         match val {
-            spikard_http::Method::Get => Self::Get,
-            spikard_http::Method::Post => Self::Post,
-            spikard_http::Method::Put => Self::Put,
-            spikard_http::Method::Patch => Self::Patch,
-            spikard_http::Method::Delete => Self::Delete,
-            spikard_http::Method::Head => Self::Head,
-            spikard_http::Method::Options => Self::Options,
-            spikard_http::Method::Trace => Self::Trace,
+            spikard_core::Method::Get => Self::Get,
+            spikard_core::Method::Post => Self::Post,
+            spikard_core::Method::Put => Self::Put,
+            spikard_core::Method::Patch => Self::Patch,
+            spikard_core::Method::Delete => Self::Delete,
+            spikard_core::Method::Head => Self::Head,
+            spikard_core::Method::Options => Self::Options,
+            spikard_core::Method::Trace => Self::Trace,
         }
     }
 }
@@ -1904,12 +1904,12 @@ fn schema_error_to_rustler_err(e: spikard_graphql::schema::SchemaError) -> Strin
 }
 
 fn on_load(env: rustler::Env, _info: rustler::Term) -> bool {
-    env.register::<BackgroundHandle>()
-        .expect("Failed to register resource type BackgroundHandle");
     env.register::<GraphQLError>()
         .expect("Failed to register resource type GraphQLError");
     env.register::<GraphQLRouteConfig>()
         .expect("Failed to register resource type GraphQLRouteConfig");
+    env.register::<BackgroundHandle>()
+        .expect("Failed to register resource type BackgroundHandle");
     true
 }
 

@@ -10,8 +10,6 @@ from .exceptions import (
     AuthorizationError,
     BuildingFailedError,
     ComplexityLimitExceededError,
-    ComplexityLimitExceededError,
-    DepthLimitExceededError,
     DepthLimitExceededError,
     ExecutionError,
     GraphQLError,
@@ -25,7 +23,6 @@ from .exceptions import (
     SchemaBuildError,
     SchemaError,
     SerializationError,
-    ValidationError,
     ValidationError,
 )
 from .options import (

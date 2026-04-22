@@ -18,6 +18,885 @@ use std::sync::Arc;
 
 #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[php_class]
+#[php(name = "Spikard\\Php\\UploadFile")]
+pub struct UploadFile {
+    /// Original filename from the client
+    #[php(prop, name = "filename")]
+    pub filename: String,
+    /// MIME type of the uploaded file
+    #[php(prop, name = "content_type")]
+    pub content_type: Option<String>,
+    /// Size of the file in bytes
+    #[php(prop, name = "size")]
+    pub size: Option<i64>,
+    /// File content (may be base64 encoded)
+    pub content: Vec<u8>,
+    /// Content encoding type
+    #[php(prop, name = "content_encoding")]
+    pub content_encoding: Option<String>,
+    /// Internal cursor for Read/Seek operations
+    #[php(prop, name = "cursor")]
+    pub cursor: String,
+}
+
+#[php_impl]
+impl UploadFile {
+    pub fn __construct(
+        filename: String,
+        content: Vec<u8>,
+        cursor: String,
+        content_type: Option<String>,
+        size: Option<i64>,
+        content_encoding: Option<String>,
+    ) -> Self {
+        Self {
+            filename,
+            content_type,
+            size,
+            content,
+            content_encoding,
+            cursor,
+        }
+    }
+
+    #[php(getter)]
+    pub fn get_content(&self) -> Vec<u8> {
+        self.content.clone()
+    }
+
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size.map(|v| v as usize),
+            content: self.content.clone(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        core_self.as_bytes().into()
+    }
+
+    pub fn read_to_string(&self) -> PhpResult<String> {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size.map(|v| v as usize),
+            content: self.content.clone(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        let result = core_self
+            .read_to_string()
+            .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
+        Ok(result)
+    }
+
+    pub fn content_type_or_default(&self) -> String {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size.map(|v| v as usize),
+            content: self.content.clone(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        core_self.content_type_or_default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\CorsConfig")]
+pub struct CorsConfig {
+    #[php(prop, name = "allowed_origins")]
+    pub allowed_origins: Vec<String>,
+    #[php(prop, name = "allowed_methods")]
+    pub allowed_methods: Vec<String>,
+    #[php(prop, name = "allowed_headers")]
+    pub allowed_headers: Vec<String>,
+    #[php(prop, name = "expose_headers")]
+    pub expose_headers: Option<Vec<String>>,
+    #[php(prop, name = "max_age")]
+    pub max_age: Option<u32>,
+    #[php(prop, name = "allow_credentials")]
+    pub allow_credentials: Option<bool>,
+    #[php(prop, name = "methods_joined_cache")]
+    pub methods_joined_cache: String,
+    #[php(prop, name = "headers_joined_cache")]
+    pub headers_joined_cache: String,
+}
+
+#[php_impl]
+impl CorsConfig {
+    pub fn __construct(
+        allowed_origins: Option<Vec<String>>,
+        allowed_methods: Option<Vec<String>>,
+        allowed_headers: Option<Vec<String>>,
+        expose_headers: Option<Vec<String>>,
+        max_age: Option<u32>,
+        allow_credentials: Option<bool>,
+        methods_joined_cache: Option<String>,
+        headers_joined_cache: Option<String>,
+    ) -> Self {
+        Self {
+            allowed_origins: allowed_origins.unwrap_or_default(),
+            allowed_methods: allowed_methods.unwrap_or_default(),
+            allowed_headers: allowed_headers.unwrap_or_default(),
+            expose_headers,
+            max_age,
+            allow_credentials,
+            methods_joined_cache: methods_joined_cache.unwrap_or_default(),
+            headers_joined_cache: headers_joined_cache.unwrap_or_default(),
+        }
+    }
+
+    pub fn allowed_methods_joined(&self) -> String {
+        let core_self = spikard_core::CorsConfig {
+            allowed_origins: self.allowed_origins.clone(),
+            allowed_methods: self.allowed_methods.clone(),
+            allowed_headers: self.allowed_headers.clone(),
+            expose_headers: self.expose_headers.clone(),
+            max_age: self.max_age,
+            allow_credentials: self.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        };
+        core_self.allowed_methods_joined().into()
+    }
+
+    pub fn allowed_headers_joined(&self) -> String {
+        let core_self = spikard_core::CorsConfig {
+            allowed_origins: self.allowed_origins.clone(),
+            allowed_methods: self.allowed_methods.clone(),
+            allowed_headers: self.allowed_headers.clone(),
+            expose_headers: self.expose_headers.clone(),
+            max_age: self.max_age,
+            allow_credentials: self.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        };
+        core_self.allowed_headers_joined().into()
+    }
+
+    pub fn is_origin_allowed(&self, origin: String) -> bool {
+        let core_self = spikard_core::CorsConfig {
+            allowed_origins: self.allowed_origins.clone(),
+            allowed_methods: self.allowed_methods.clone(),
+            allowed_headers: self.allowed_headers.clone(),
+            expose_headers: self.expose_headers.clone(),
+            max_age: self.max_age,
+            allow_credentials: self.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        };
+        core_self.is_origin_allowed(&origin)
+    }
+
+    pub fn is_method_allowed(&self, method: String) -> bool {
+        let core_self = spikard_core::CorsConfig {
+            allowed_origins: self.allowed_origins.clone(),
+            allowed_methods: self.allowed_methods.clone(),
+            allowed_headers: self.allowed_headers.clone(),
+            expose_headers: self.expose_headers.clone(),
+            max_age: self.max_age,
+            allow_credentials: self.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        };
+        core_self.is_method_allowed(&method)
+    }
+
+    pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
+        false
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> CorsConfig {
+        spikard_core::CorsConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\RouteMetadata")]
+pub struct RouteMetadata {
+    #[php(prop, name = "method")]
+    pub method: String,
+    #[php(prop, name = "path")]
+    pub path: String,
+    #[php(prop, name = "handler_name")]
+    pub handler_name: String,
+    #[php(prop, name = "request_schema")]
+    pub request_schema: Option<String>,
+    #[php(prop, name = "response_schema")]
+    pub response_schema: Option<String>,
+    #[php(prop, name = "parameter_schema")]
+    pub parameter_schema: Option<String>,
+    #[php(prop, name = "file_params")]
+    pub file_params: Option<String>,
+    #[php(prop, name = "is_async")]
+    pub is_async: bool,
+    pub cors: Option<CorsConfig>,
+    /// Name of the body parameter (defaults to "body" if not specified)
+    #[php(prop, name = "body_param_name")]
+    pub body_param_name: Option<String>,
+    /// List of dependency keys this handler requires (for DI)
+    #[php(prop, name = "handler_dependencies")]
+    pub handler_dependencies: Option<Vec<String>>,
+    /// JSON-RPC method metadata (if this route is exposed as a JSON-RPC method)
+    #[php(prop, name = "jsonrpc_method")]
+    pub jsonrpc_method: Option<String>,
+    /// Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}`
+    /// When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full
+    /// middleware pipeline for maximum throughput.
+    #[php(prop, name = "static_response")]
+    pub static_response: Option<String>,
+}
+
+#[php_impl]
+impl RouteMetadata {
+    pub fn __construct() -> PhpResult<Self> {
+        Err(PhpException::default(
+            "Not implemented: constructor for RouteMetadata requires complex params".to_string(),
+        ))
+    }
+
+    #[php(getter)]
+    pub fn get_cors(&self) -> Option<CorsConfig> {
+        self.cors.clone()
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> RouteMetadata {
+        spikard_core::RouteMetadata::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\CompressionConfig")]
+pub struct CompressionConfig {
+    /// Enable gzip compression
+    #[php(prop, name = "gzip")]
+    pub gzip: bool,
+    /// Enable brotli compression
+    #[php(prop, name = "brotli")]
+    pub brotli: bool,
+    /// Minimum response size to compress (bytes)
+    #[php(prop, name = "min_size")]
+    pub min_size: i64,
+    /// Compression quality (0-11 for brotli, 0-9 for gzip)
+    #[php(prop, name = "quality")]
+    pub quality: u32,
+}
+
+#[php_impl]
+impl CompressionConfig {
+    pub fn __construct(gzip: Option<bool>, brotli: Option<bool>, min_size: Option<i64>, quality: Option<u32>) -> Self {
+        Self {
+            gzip: gzip.unwrap_or(true),
+            brotli: brotli.unwrap_or(true),
+            min_size: min_size.unwrap_or_default(),
+            quality: quality.unwrap_or_default(),
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> CompressionConfig {
+        spikard_core::CompressionConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\RateLimitConfig")]
+pub struct RateLimitConfig {
+    /// Requests per second
+    #[php(prop, name = "per_second")]
+    pub per_second: i64,
+    /// Burst allowance
+    #[php(prop, name = "burst")]
+    pub burst: u32,
+    /// Use IP-based rate limiting
+    #[php(prop, name = "ip_based")]
+    pub ip_based: bool,
+}
+
+#[php_impl]
+impl RateLimitConfig {
+    pub fn __construct(per_second: Option<i64>, burst: Option<u32>, ip_based: Option<bool>) -> Self {
+        Self {
+            per_second: per_second.unwrap_or(100),
+            burst: burst.unwrap_or(200),
+            ip_based: ip_based.unwrap_or(true),
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> RateLimitConfig {
+        spikard_core::RateLimitConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\JsonRpcMethodInfo")]
+pub struct JsonRpcMethodInfo {
+    /// The JSON-RPC method name (e.g., "user.create")
+    #[php(prop, name = "method_name")]
+    pub method_name: String,
+    /// Optional description of what the method does
+    #[php(prop, name = "description")]
+    pub description: Option<String>,
+    /// Optional JSON Schema for method parameters
+    #[php(prop, name = "params_schema")]
+    pub params_schema: Option<String>,
+    /// Optional JSON Schema for the result
+    #[php(prop, name = "result_schema")]
+    pub result_schema: Option<String>,
+    /// Whether this method is deprecated
+    #[php(prop, name = "deprecated")]
+    pub deprecated: bool,
+    /// Tags for categorizing and grouping methods
+    #[php(prop, name = "tags")]
+    pub tags: Vec<String>,
+}
+
+#[php_impl]
+impl JsonRpcMethodInfo {
+    pub fn __construct(
+        method_name: String,
+        deprecated: bool,
+        tags: Vec<String>,
+        description: Option<String>,
+        params_schema: Option<String>,
+        result_schema: Option<String>,
+    ) -> Self {
+        Self {
+            method_name,
+            description,
+            params_schema,
+            result_schema,
+            deprecated,
+            tags,
+        }
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\Route")]
+pub struct Route {
+    #[php(prop, name = "method")]
+    pub method: String,
+    #[php(prop, name = "path")]
+    pub path: String,
+    #[php(prop, name = "handler_name")]
+    pub handler_name: String,
+    #[php(prop, name = "request_validator")]
+    pub request_validator: Option<String>,
+    #[php(prop, name = "response_validator")]
+    pub response_validator: Option<String>,
+    #[php(prop, name = "parameter_validator")]
+    pub parameter_validator: Option<String>,
+    #[php(prop, name = "file_params")]
+    pub file_params: Option<String>,
+    #[php(prop, name = "is_async")]
+    pub is_async: bool,
+    pub cors: Option<CorsConfig>,
+    /// Precomputed flag: true if this route expects a JSON request body
+    /// Used by middleware to validate Content-Type headers
+    #[php(prop, name = "expects_json_body")]
+    pub expects_json_body: bool,
+    /// List of dependency keys this handler requires (for DI)
+    #[php(prop, name = "handler_dependencies")]
+    pub handler_dependencies: Vec<String>,
+    /// Optional JSON-RPC method information
+    /// When present, this route can be exposed as a JSON-RPC method
+    pub jsonrpc_method: Option<JsonRpcMethodInfo>,
+}
+
+#[php_impl]
+impl Route {
+    pub fn __construct() -> PhpResult<Self> {
+        Err(PhpException::default(
+            "Not implemented: constructor for Route requires complex params".to_string(),
+        ))
+    }
+
+    #[php(getter)]
+    pub fn get_cors(&self) -> Option<CorsConfig> {
+        self.cors.clone()
+    }
+
+    #[php(getter)]
+    pub fn get_jsonrpc_method(&self) -> Option<JsonRpcMethodInfo> {
+        self.jsonrpc_method.clone()
+    }
+
+    pub fn with_jsonrpc_method(&self, info: &JsonRpcMethodInfo) -> Route {
+        panic!("alef: with_jsonrpc_method not auto-delegatable")
+    }
+
+    pub fn is_jsonrpc_method(&self) -> bool {
+        #[allow(clippy::needless_update)]
+        let core_self = spikard_core::Route {
+            method: match self.method.as_str() {
+                "Get" => spikard_core::Method::Get,
+                "Post" => spikard_core::Method::Post,
+                "Put" => spikard_core::Method::Put,
+                "Patch" => spikard_core::Method::Patch,
+                "Delete" => spikard_core::Method::Delete,
+                "Head" => spikard_core::Method::Head,
+                "Options" => spikard_core::Method::Options,
+                "Trace" => spikard_core::Method::Trace,
+                _ => spikard_core::Method::Get,
+            },
+            path: self.path.clone(),
+            handler_name: self.handler_name.clone(),
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: self.is_async,
+            cors: self.cors.clone().map(Into::into),
+            expects_json_body: self.expects_json_body,
+            handler_dependencies: self.handler_dependencies.clone(),
+            jsonrpc_method: self.jsonrpc_method.clone().map(Into::into),
+            ..Default::default()
+        };
+        core_self.is_jsonrpc_method()
+    }
+
+    pub fn jsonrpc_method_name(&self) -> Option<String> {
+        #[allow(clippy::needless_update)]
+        let core_self = spikard_core::Route {
+            method: match self.method.as_str() {
+                "Get" => spikard_core::Method::Get,
+                "Post" => spikard_core::Method::Post,
+                "Put" => spikard_core::Method::Put,
+                "Patch" => spikard_core::Method::Patch,
+                "Delete" => spikard_core::Method::Delete,
+                "Head" => spikard_core::Method::Head,
+                "Options" => spikard_core::Method::Options,
+                "Trace" => spikard_core::Method::Trace,
+                _ => spikard_core::Method::Get,
+            },
+            path: self.path.clone(),
+            handler_name: self.handler_name.clone(),
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: self.is_async,
+            cors: self.cors.clone().map(Into::into),
+            expects_json_body: self.expects_json_body,
+            handler_dependencies: self.handler_dependencies.clone(),
+            jsonrpc_method: self.jsonrpc_method.clone().map(Into::into),
+            ..Default::default()
+        };
+        core_self.jsonrpc_method_name().map(Into::into)
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> Route {
+        spikard_core::Route::default().into()
+    }
+
+    pub fn from_metadata(metadata: &RouteMetadata, registry: String) -> PhpResult<Route> {
+        Err(ext_php_rs::exception::PhpException::default(
+            "Not implemented: from_metadata".to_string(),
+        ))
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\ProblemDetails")]
+pub struct ProblemDetails {
+    /// A URI reference that identifies the problem type.
+    /// Defaults to "about:blank" when absent.
+    /// Should be a stable, human-readable identifier for the problem type.
+    #[php(prop, name = "type_uri")]
+    pub type_uri: String,
+    /// A short, human-readable summary of the problem type.
+    /// Should not change from occurrence to occurrence of the problem.
+    #[php(prop, name = "title")]
+    pub title: String,
+    /// The HTTP status code generated by the origin server.
+    /// This is advisory; the actual HTTP status code takes precedence.
+    #[php(prop, name = "status")]
+    pub status: u16,
+    /// A human-readable explanation specific to this occurrence of the problem.
+    #[php(prop, name = "detail")]
+    pub detail: Option<String>,
+    /// A URI reference that identifies the specific occurrence of the problem.
+    /// It may or may not yield further information if dereferenced.
+    #[php(prop, name = "instance")]
+    pub instance: Option<String>,
+    /// Extension members - problem-type-specific data.
+    /// For validation errors, this typically contains an "errors" array.
+    pub extensions: HashMap<String, String>,
+}
+
+#[php_impl]
+impl ProblemDetails {
+    pub fn __construct(
+        type_uri: String,
+        title: String,
+        status: u16,
+        extensions: HashMap<String, String>,
+        detail: Option<String>,
+        instance: Option<String>,
+    ) -> Self {
+        Self {
+            type_uri,
+            title,
+            status,
+            detail,
+            instance,
+            extensions,
+        }
+    }
+
+    #[php(getter)]
+    pub fn get_extensions(&self) -> HashMap<String, String> {
+        self.extensions.clone()
+    }
+
+    pub fn with_detail(&self, detail: String) -> ProblemDetails {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        core_self.with_detail(detail).into()
+    }
+
+    pub fn with_instance(&self, instance: String) -> ProblemDetails {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        core_self.with_instance(instance).into()
+    }
+
+    pub fn with_extension(&self, key: String, value: String) -> ProblemDetails {
+        panic!("alef: with_extension not auto-delegatable")
+    }
+
+    pub fn with_extensions(&self, extensions: String) -> ProblemDetails {
+        panic!("alef: with_extensions not auto-delegatable")
+    }
+
+    pub fn status_code(&self) -> String {
+        String::from("[unimplemented: status_code]")
+    }
+
+    pub fn to_json(&self) -> PhpResult<String> {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        let result = core_self
+            .to_json()
+            .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
+        Ok(result)
+    }
+
+    pub fn to_json_pretty(&self) -> PhpResult<String> {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        let result = core_self
+            .to_json_pretty()
+            .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
+        Ok(result)
+    }
+
+    pub fn from_validation_error(error: String) -> ProblemDetails {
+        panic!("alef: from_validation_error not auto-delegatable")
+    }
+
+    pub fn not_found(detail: String) -> ProblemDetails {
+        spikard_core::ProblemDetails::not_found(detail).into()
+    }
+
+    pub fn method_not_allowed(detail: String) -> ProblemDetails {
+        spikard_core::ProblemDetails::method_not_allowed(detail).into()
+    }
+
+    pub fn internal_server_error(detail: String) -> ProblemDetails {
+        spikard_core::ProblemDetails::internal_server_error(detail).into()
+    }
+
+    pub fn internal_server_error_debug(
+        detail: String,
+        exception: String,
+        traceback: String,
+        request_data: String,
+    ) -> ProblemDetails {
+        panic!("alef: internal_server_error_debug not auto-delegatable")
+    }
+
+    pub fn bad_request(detail: String) -> ProblemDetails {
+        spikard_core::ProblemDetails::bad_request(detail).into()
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+#[php(name = "Spikard\\Php\\GraphQLError")]
+pub struct GraphQLError {
+    inner: Arc<spikard_graphql::GraphQLError>,
+}
+
+#[php_impl]
+impl GraphQLError {
+    pub fn status_code(&self) -> u16 {
+        self.inner.status_code()
+    }
+
+    pub fn to_graphql_response(&self) -> String {
+        self.inner.to_graphql_response()
+    }
+
+    pub fn to_http_response(&self) -> String {
+        self.inner.to_http_response()
+    }
+}
+
+#[derive(Clone)]
+#[php_class]
+#[php(name = "Spikard\\Php\\GraphQLRouteConfig")]
+pub struct GraphQLRouteConfig {
+    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
+}
+
+#[php_impl]
+impl GraphQLRouteConfig {
+    pub fn path(&self, path: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().path(path)),
+        }
+    }
+
+    pub fn method(&self, method: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().method(method)),
+        }
+    }
+
+    pub fn enable_playground(&self, enable: bool) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().enable_playground(enable)),
+        }
+    }
+
+    pub fn description(&self, description: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new((*self.inner).clone().description(description)),
+        }
+    }
+
+    pub fn get_path(&self) -> String {
+        self.inner.get_path().into()
+    }
+
+    pub fn get_method(&self) -> String {
+        self.inner.get_method().into()
+    }
+
+    pub fn is_playground_enabled(&self) -> bool {
+        self.inner.is_playground_enabled()
+    }
+
+    pub fn get_description(&self) -> Option<String> {
+        self.inner.get_description().map(Into::into)
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new(spikard_graphql::GraphQLRouteConfig::default()),
+        }
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\SchemaConfig")]
+pub struct SchemaConfig {
+    /// Enable introspection queries
+    #[php(prop, name = "introspection_enabled")]
+    pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
+    #[php(prop, name = "complexity_limit")]
+    pub complexity_limit: Option<i64>,
+    /// Maximum query depth (None = unlimited)
+    #[php(prop, name = "depth_limit")]
+    pub depth_limit: Option<i64>,
+}
+
+#[php_impl]
+impl SchemaConfig {
+    pub fn __construct(
+        introspection_enabled: Option<bool>,
+        complexity_limit: Option<i64>,
+        depth_limit: Option<i64>,
+    ) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    pub fn set_introspection_enabled(&self, enabled: bool) -> SchemaConfig {
+        panic!("alef: set_introspection_enabled not auto-delegatable")
+    }
+
+    pub fn set_complexity_limit(&self, limit: i64) -> SchemaConfig {
+        panic!("alef: set_complexity_limit not auto-delegatable")
+    }
+
+    pub fn set_depth_limit(&self, limit: i64) -> SchemaConfig {
+        panic!("alef: set_depth_limit not auto-delegatable")
+    }
+
+    pub fn validate(&self) -> String {
+        String::from("[unimplemented: validate]")
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> SchemaConfig {
+        spikard_graphql::SchemaConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\QueryOnlyConfig")]
+pub struct QueryOnlyConfig {
+    /// Enable introspection queries
+    #[php(prop, name = "introspection_enabled")]
+    pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
+    #[php(prop, name = "complexity_limit")]
+    pub complexity_limit: Option<i64>,
+    /// Maximum query depth (None = unlimited)
+    #[php(prop, name = "depth_limit")]
+    pub depth_limit: Option<i64>,
+}
+
+#[php_impl]
+impl QueryOnlyConfig {
+    pub fn __construct(
+        introspection_enabled: Option<bool>,
+        complexity_limit: Option<i64>,
+        depth_limit: Option<i64>,
+    ) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> QueryOnlyConfig {
+        spikard_graphql::QueryOnlyConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\QueryMutationConfig")]
+pub struct QueryMutationConfig {
+    /// Enable introspection queries
+    #[php(prop, name = "introspection_enabled")]
+    pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
+    #[php(prop, name = "complexity_limit")]
+    pub complexity_limit: Option<i64>,
+    /// Maximum query depth (None = unlimited)
+    #[php(prop, name = "depth_limit")]
+    pub depth_limit: Option<i64>,
+}
+
+#[php_impl]
+impl QueryMutationConfig {
+    pub fn __construct(
+        introspection_enabled: Option<bool>,
+        complexity_limit: Option<i64>,
+        depth_limit: Option<i64>,
+    ) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> QueryMutationConfig {
+        spikard_graphql::QueryMutationConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
+#[php(name = "Spikard\\Php\\FullSchemaConfig")]
+pub struct FullSchemaConfig {
+    /// Enable introspection queries
+    #[php(prop, name = "introspection_enabled")]
+    pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
+    #[php(prop, name = "complexity_limit")]
+    pub complexity_limit: Option<i64>,
+    /// Maximum query depth (None = unlimited)
+    #[php(prop, name = "depth_limit")]
+    pub depth_limit: Option<i64>,
+}
+
+#[php_impl]
+impl FullSchemaConfig {
+    pub fn __construct(
+        introspection_enabled: Option<bool>,
+        complexity_limit: Option<i64>,
+        depth_limit: Option<i64>,
+    ) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    #[allow(clippy::should_implement_trait)]
+    pub fn default() -> FullSchemaConfig {
+        spikard_graphql::FullSchemaConfig::default().into()
+    }
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+#[php_class]
 #[php(name = "Spikard\\Php\\Claims")]
 #[allow(clippy::similar_names)]
 pub struct Claims {
@@ -142,562 +1021,6 @@ pub struct BackgroundHandle {
 
 #[php_impl]
 impl BackgroundHandle {}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\CorsConfig")]
-pub struct CorsConfig {
-    #[php(prop, name = "allowed_origins")]
-    pub allowed_origins: Vec<String>,
-    #[php(prop, name = "allowed_methods")]
-    pub allowed_methods: Vec<String>,
-    #[php(prop, name = "allowed_headers")]
-    pub allowed_headers: Vec<String>,
-    #[php(prop, name = "expose_headers")]
-    pub expose_headers: Option<Vec<String>>,
-    #[php(prop, name = "max_age")]
-    pub max_age: Option<u32>,
-    #[php(prop, name = "allow_credentials")]
-    pub allow_credentials: Option<bool>,
-    #[php(prop, name = "methods_joined_cache")]
-    pub methods_joined_cache: String,
-    #[php(prop, name = "headers_joined_cache")]
-    pub headers_joined_cache: String,
-}
-
-#[php_impl]
-impl CorsConfig {
-    pub fn __construct(
-        allowed_origins: Option<Vec<String>>,
-        allowed_methods: Option<Vec<String>>,
-        allowed_headers: Option<Vec<String>>,
-        expose_headers: Option<Vec<String>>,
-        max_age: Option<u32>,
-        allow_credentials: Option<bool>,
-        methods_joined_cache: Option<String>,
-        headers_joined_cache: Option<String>,
-    ) -> Self {
-        Self {
-            allowed_origins: allowed_origins.unwrap_or_default(),
-            allowed_methods: allowed_methods.unwrap_or_default(),
-            allowed_headers: allowed_headers.unwrap_or_default(),
-            expose_headers,
-            max_age,
-            allow_credentials,
-            methods_joined_cache: methods_joined_cache.unwrap_or_default(),
-            headers_joined_cache: headers_joined_cache.unwrap_or_default(),
-        }
-    }
-
-    pub fn allowed_methods_joined(&self) -> String {
-        let core_self = spikard_http::CorsConfig {
-            allowed_origins: self.allowed_origins.clone(),
-            allowed_methods: self.allowed_methods.clone(),
-            allowed_headers: self.allowed_headers.clone(),
-            expose_headers: self.expose_headers.clone(),
-            max_age: self.max_age,
-            allow_credentials: self.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        };
-        core_self.allowed_methods_joined().into()
-    }
-
-    pub fn allowed_headers_joined(&self) -> String {
-        let core_self = spikard_http::CorsConfig {
-            allowed_origins: self.allowed_origins.clone(),
-            allowed_methods: self.allowed_methods.clone(),
-            allowed_headers: self.allowed_headers.clone(),
-            expose_headers: self.expose_headers.clone(),
-            max_age: self.max_age,
-            allow_credentials: self.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        };
-        core_self.allowed_headers_joined().into()
-    }
-
-    pub fn is_origin_allowed(&self, origin: String) -> bool {
-        let core_self = spikard_http::CorsConfig {
-            allowed_origins: self.allowed_origins.clone(),
-            allowed_methods: self.allowed_methods.clone(),
-            allowed_headers: self.allowed_headers.clone(),
-            expose_headers: self.expose_headers.clone(),
-            max_age: self.max_age,
-            allow_credentials: self.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        };
-        core_self.is_origin_allowed(&origin)
-    }
-
-    pub fn is_method_allowed(&self, method: String) -> bool {
-        let core_self = spikard_http::CorsConfig {
-            allowed_origins: self.allowed_origins.clone(),
-            allowed_methods: self.allowed_methods.clone(),
-            allowed_headers: self.allowed_headers.clone(),
-            expose_headers: self.expose_headers.clone(),
-            max_age: self.max_age,
-            allow_credentials: self.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        };
-        core_self.is_method_allowed(&method)
-    }
-
-    pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
-        false
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> CorsConfig {
-        spikard_http::CorsConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\RouteMetadata")]
-pub struct RouteMetadata {
-    #[php(prop, name = "method")]
-    pub method: String,
-    #[php(prop, name = "path")]
-    pub path: String,
-    #[php(prop, name = "handler_name")]
-    pub handler_name: String,
-    #[php(prop, name = "request_schema")]
-    pub request_schema: Option<String>,
-    #[php(prop, name = "response_schema")]
-    pub response_schema: Option<String>,
-    #[php(prop, name = "parameter_schema")]
-    pub parameter_schema: Option<String>,
-    #[php(prop, name = "file_params")]
-    pub file_params: Option<String>,
-    #[php(prop, name = "is_async")]
-    pub is_async: bool,
-    pub cors: Option<CorsConfig>,
-    /// Name of the body parameter (defaults to "body" if not specified)
-    #[php(prop, name = "body_param_name")]
-    pub body_param_name: Option<String>,
-    /// List of dependency keys this handler requires (for DI)
-    #[php(prop, name = "handler_dependencies")]
-    pub handler_dependencies: Option<Vec<String>>,
-    /// JSON-RPC method metadata (if this route is exposed as a JSON-RPC method)
-    #[php(prop, name = "jsonrpc_method")]
-    pub jsonrpc_method: Option<String>,
-    /// Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}`
-    /// When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full
-    /// middleware pipeline for maximum throughput.
-    #[php(prop, name = "static_response")]
-    pub static_response: Option<String>,
-}
-
-#[php_impl]
-impl RouteMetadata {
-    pub fn __construct() -> PhpResult<Self> {
-        Err(PhpException::default(
-            "Not implemented: constructor for RouteMetadata requires complex params".to_string(),
-        ))
-    }
-
-    #[php(getter)]
-    pub fn get_cors(&self) -> Option<CorsConfig> {
-        self.cors.clone()
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> RouteMetadata {
-        spikard_http::RouteMetadata::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\CompressionConfig")]
-pub struct CompressionConfig {
-    /// Enable gzip compression
-    #[php(prop, name = "gzip")]
-    pub gzip: bool,
-    /// Enable brotli compression
-    #[php(prop, name = "brotli")]
-    pub brotli: bool,
-    /// Minimum response size to compress (bytes)
-    #[php(prop, name = "min_size")]
-    pub min_size: i64,
-    /// Compression quality (0-11 for brotli, 0-9 for gzip)
-    #[php(prop, name = "quality")]
-    pub quality: u32,
-}
-
-#[php_impl]
-impl CompressionConfig {
-    pub fn __construct(gzip: Option<bool>, brotli: Option<bool>, min_size: Option<i64>, quality: Option<u32>) -> Self {
-        Self {
-            gzip: gzip.unwrap_or(true),
-            brotli: brotli.unwrap_or(true),
-            min_size: min_size.unwrap_or_default(),
-            quality: quality.unwrap_or_default(),
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> CompressionConfig {
-        spikard_http::CompressionConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\RateLimitConfig")]
-pub struct RateLimitConfig {
-    /// Requests per second
-    #[php(prop, name = "per_second")]
-    pub per_second: i64,
-    /// Burst allowance
-    #[php(prop, name = "burst")]
-    pub burst: u32,
-    /// Use IP-based rate limiting
-    #[php(prop, name = "ip_based")]
-    pub ip_based: bool,
-}
-
-#[php_impl]
-impl RateLimitConfig {
-    pub fn __construct(per_second: Option<i64>, burst: Option<u32>, ip_based: Option<bool>) -> Self {
-        Self {
-            per_second: per_second.unwrap_or(100),
-            burst: burst.unwrap_or(200),
-            ip_based: ip_based.unwrap_or(true),
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> RateLimitConfig {
-        spikard_http::RateLimitConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\ProblemDetails")]
-pub struct ProblemDetails {
-    /// A URI reference that identifies the problem type.
-    /// Defaults to "about:blank" when absent.
-    /// Should be a stable, human-readable identifier for the problem type.
-    #[php(prop, name = "type_uri")]
-    pub type_uri: String,
-    /// A short, human-readable summary of the problem type.
-    /// Should not change from occurrence to occurrence of the problem.
-    #[php(prop, name = "title")]
-    pub title: String,
-    /// The HTTP status code generated by the origin server.
-    /// This is advisory; the actual HTTP status code takes precedence.
-    #[php(prop, name = "status")]
-    pub status: u16,
-    /// A human-readable explanation specific to this occurrence of the problem.
-    #[php(prop, name = "detail")]
-    pub detail: Option<String>,
-    /// A URI reference that identifies the specific occurrence of the problem.
-    /// It may or may not yield further information if dereferenced.
-    #[php(prop, name = "instance")]
-    pub instance: Option<String>,
-    /// Extension members - problem-type-specific data.
-    /// For validation errors, this typically contains an "errors" array.
-    pub extensions: HashMap<String, String>,
-}
-
-#[php_impl]
-impl ProblemDetails {
-    pub fn __construct(
-        type_uri: String,
-        title: String,
-        status: u16,
-        extensions: HashMap<String, String>,
-        detail: Option<String>,
-        instance: Option<String>,
-    ) -> Self {
-        Self {
-            type_uri,
-            title,
-            status,
-            detail,
-            instance,
-            extensions,
-        }
-    }
-
-    #[php(getter)]
-    pub fn get_extensions(&self) -> HashMap<String, String> {
-        self.extensions.clone()
-    }
-
-    pub fn with_detail(&self, detail: String) -> ProblemDetails {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        core_self.with_detail(detail).into()
-    }
-
-    pub fn with_instance(&self, instance: String) -> ProblemDetails {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        core_self.with_instance(instance).into()
-    }
-
-    pub fn with_extension(&self, key: String, value: String) -> ProblemDetails {
-        panic!("alef: with_extension not auto-delegatable")
-    }
-
-    pub fn with_extensions(&self, extensions: String) -> ProblemDetails {
-        panic!("alef: with_extensions not auto-delegatable")
-    }
-
-    pub fn status_code(&self) -> String {
-        String::from("[unimplemented: status_code]")
-    }
-
-    pub fn to_json(&self) -> PhpResult<String> {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        let result = core_self
-            .to_json()
-            .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
-        Ok(result)
-    }
-
-    pub fn to_json_pretty(&self) -> PhpResult<String> {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        let result = core_self
-            .to_json_pretty()
-            .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
-        Ok(result)
-    }
-
-    pub fn from_validation_error(error: String) -> ProblemDetails {
-        panic!("alef: from_validation_error not auto-delegatable")
-    }
-
-    pub fn not_found(detail: String) -> ProblemDetails {
-        spikard_http::ProblemDetails::not_found(detail).into()
-    }
-
-    pub fn method_not_allowed(detail: String) -> ProblemDetails {
-        spikard_http::ProblemDetails::method_not_allowed(detail).into()
-    }
-
-    pub fn internal_server_error(detail: String) -> ProblemDetails {
-        spikard_http::ProblemDetails::internal_server_error(detail).into()
-    }
-
-    pub fn internal_server_error_debug(
-        detail: String,
-        exception: String,
-        traceback: String,
-        request_data: String,
-    ) -> ProblemDetails {
-        panic!("alef: internal_server_error_debug not auto-delegatable")
-    }
-
-    pub fn bad_request(detail: String) -> ProblemDetails {
-        spikard_http::ProblemDetails::bad_request(detail).into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\JsonRpcMethodInfo")]
-pub struct JsonRpcMethodInfo {
-    /// The JSON-RPC method name (e.g., "user.create")
-    #[php(prop, name = "method_name")]
-    pub method_name: String,
-    /// Optional description of what the method does
-    #[php(prop, name = "description")]
-    pub description: Option<String>,
-    /// Optional JSON Schema for method parameters
-    #[php(prop, name = "params_schema")]
-    pub params_schema: Option<String>,
-    /// Optional JSON Schema for the result
-    #[php(prop, name = "result_schema")]
-    pub result_schema: Option<String>,
-    /// Whether this method is deprecated
-    #[php(prop, name = "deprecated")]
-    pub deprecated: bool,
-    /// Tags for categorizing and grouping methods
-    #[php(prop, name = "tags")]
-    pub tags: Vec<String>,
-}
-
-#[php_impl]
-impl JsonRpcMethodInfo {
-    pub fn __construct(
-        method_name: String,
-        deprecated: bool,
-        tags: Vec<String>,
-        description: Option<String>,
-        params_schema: Option<String>,
-        result_schema: Option<String>,
-    ) -> Self {
-        Self {
-            method_name,
-            description,
-            params_schema,
-            result_schema,
-            deprecated,
-            tags,
-        }
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\Route")]
-pub struct Route {
-    #[php(prop, name = "method")]
-    pub method: String,
-    #[php(prop, name = "path")]
-    pub path: String,
-    #[php(prop, name = "handler_name")]
-    pub handler_name: String,
-    #[php(prop, name = "request_validator")]
-    pub request_validator: Option<String>,
-    #[php(prop, name = "response_validator")]
-    pub response_validator: Option<String>,
-    #[php(prop, name = "parameter_validator")]
-    pub parameter_validator: Option<String>,
-    #[php(prop, name = "file_params")]
-    pub file_params: Option<String>,
-    #[php(prop, name = "is_async")]
-    pub is_async: bool,
-    pub cors: Option<CorsConfig>,
-    /// Precomputed flag: true if this route expects a JSON request body
-    /// Used by middleware to validate Content-Type headers
-    #[php(prop, name = "expects_json_body")]
-    pub expects_json_body: bool,
-    /// List of dependency keys this handler requires (for DI)
-    #[php(prop, name = "handler_dependencies")]
-    pub handler_dependencies: Vec<String>,
-    /// Optional JSON-RPC method information
-    /// When present, this route can be exposed as a JSON-RPC method
-    pub jsonrpc_method: Option<JsonRpcMethodInfo>,
-}
-
-#[php_impl]
-impl Route {
-    pub fn __construct() -> PhpResult<Self> {
-        Err(PhpException::default(
-            "Not implemented: constructor for Route requires complex params".to_string(),
-        ))
-    }
-
-    #[php(getter)]
-    pub fn get_cors(&self) -> Option<CorsConfig> {
-        self.cors.clone()
-    }
-
-    #[php(getter)]
-    pub fn get_jsonrpc_method(&self) -> Option<JsonRpcMethodInfo> {
-        self.jsonrpc_method.clone()
-    }
-
-    pub fn with_jsonrpc_method(&self, info: &JsonRpcMethodInfo) -> Route {
-        panic!("alef: with_jsonrpc_method not auto-delegatable")
-    }
-
-    pub fn is_jsonrpc_method(&self) -> bool {
-        #[allow(clippy::needless_update)]
-        let core_self = spikard_http::Route {
-            method: match self.method.as_str() {
-                "Get" => spikard_http::Method::Get,
-                "Post" => spikard_http::Method::Post,
-                "Put" => spikard_http::Method::Put,
-                "Patch" => spikard_http::Method::Patch,
-                "Delete" => spikard_http::Method::Delete,
-                "Head" => spikard_http::Method::Head,
-                "Options" => spikard_http::Method::Options,
-                "Trace" => spikard_http::Method::Trace,
-                _ => spikard_http::Method::Get,
-            },
-            path: self.path.clone(),
-            handler_name: self.handler_name.clone(),
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: self.is_async,
-            cors: self.cors.clone().map(Into::into),
-            expects_json_body: self.expects_json_body,
-            handler_dependencies: self.handler_dependencies.clone(),
-            jsonrpc_method: self.jsonrpc_method.clone().map(Into::into),
-            ..Default::default()
-        };
-        core_self.is_jsonrpc_method()
-    }
-
-    pub fn jsonrpc_method_name(&self) -> Option<String> {
-        #[allow(clippy::needless_update)]
-        let core_self = spikard_http::Route {
-            method: match self.method.as_str() {
-                "Get" => spikard_http::Method::Get,
-                "Post" => spikard_http::Method::Post,
-                "Put" => spikard_http::Method::Put,
-                "Patch" => spikard_http::Method::Patch,
-                "Delete" => spikard_http::Method::Delete,
-                "Head" => spikard_http::Method::Head,
-                "Options" => spikard_http::Method::Options,
-                "Trace" => spikard_http::Method::Trace,
-                _ => spikard_http::Method::Get,
-            },
-            path: self.path.clone(),
-            handler_name: self.handler_name.clone(),
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: self.is_async,
-            cors: self.cors.clone().map(Into::into),
-            expects_json_body: self.expects_json_body,
-            handler_dependencies: self.handler_dependencies.clone(),
-            jsonrpc_method: self.jsonrpc_method.clone().map(Into::into),
-            ..Default::default()
-        };
-        core_self.jsonrpc_method_name().map(Into::into)
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> Route {
-        spikard_http::Route::default().into()
-    }
-
-    pub fn from_metadata(metadata: &RouteMetadata, registry: String) -> PhpResult<Route> {
-        Err(ext_php_rs::exception::PhpException::default(
-            "Not implemented: from_metadata".to_string(),
-        ))
-    }
-}
 
 #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[php_class]
@@ -1356,329 +1679,6 @@ impl ServerConfig {
     }
 }
 
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\UploadFile")]
-pub struct UploadFile {
-    /// Original filename from the client
-    #[php(prop, name = "filename")]
-    pub filename: String,
-    /// MIME type of the uploaded file
-    #[php(prop, name = "content_type")]
-    pub content_type: Option<String>,
-    /// Size of the file in bytes
-    #[php(prop, name = "size")]
-    pub size: Option<i64>,
-    /// File content (may be base64 encoded)
-    pub content: Vec<u8>,
-    /// Content encoding type
-    #[php(prop, name = "content_encoding")]
-    pub content_encoding: Option<String>,
-    /// Internal cursor for Read/Seek operations
-    #[php(prop, name = "cursor")]
-    pub cursor: String,
-}
-
-#[php_impl]
-impl UploadFile {
-    pub fn __construct(
-        filename: String,
-        content: Vec<u8>,
-        cursor: String,
-        content_type: Option<String>,
-        size: Option<i64>,
-        content_encoding: Option<String>,
-    ) -> Self {
-        Self {
-            filename,
-            content_type,
-            size,
-            content,
-            content_encoding,
-            cursor,
-        }
-    }
-
-    #[php(getter)]
-    pub fn get_content(&self) -> Vec<u8> {
-        self.content.clone()
-    }
-
-    pub fn as_bytes(&self) -> Vec<u8> {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size.map(|v| v as usize),
-            content: self.content.clone(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        core_self.as_bytes().into()
-    }
-
-    pub fn read_to_string(&self) -> PhpResult<String> {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size.map(|v| v as usize),
-            content: self.content.clone(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        let result = core_self
-            .read_to_string()
-            .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
-        Ok(result)
-    }
-
-    pub fn content_type_or_default(&self) -> String {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size.map(|v| v as usize),
-            content: self.content.clone(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        core_self.content_type_or_default().into()
-    }
-}
-
-#[derive(Clone)]
-#[php_class]
-#[php(name = "Spikard\\Php\\GraphQLError")]
-pub struct GraphQLError {
-    inner: Arc<spikard_graphql::GraphQLError>,
-}
-
-#[php_impl]
-impl GraphQLError {
-    pub fn status_code(&self) -> u16 {
-        self.inner.status_code()
-    }
-
-    pub fn to_graphql_response(&self) -> String {
-        self.inner.to_graphql_response()
-    }
-
-    pub fn to_http_response(&self) -> String {
-        self.inner.to_http_response()
-    }
-}
-
-#[derive(Clone)]
-#[php_class]
-#[php(name = "Spikard\\Php\\GraphQLRouteConfig")]
-pub struct GraphQLRouteConfig {
-    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
-}
-
-#[php_impl]
-impl GraphQLRouteConfig {
-    pub fn path(&self, path: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().path(path)),
-        }
-    }
-
-    pub fn method(&self, method: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().method(method)),
-        }
-    }
-
-    pub fn enable_playground(&self, enable: bool) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().enable_playground(enable)),
-        }
-    }
-
-    pub fn description(&self, description: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new((*self.inner).clone().description(description)),
-        }
-    }
-
-    pub fn get_path(&self) -> String {
-        self.inner.get_path().into()
-    }
-
-    pub fn get_method(&self) -> String {
-        self.inner.get_method().into()
-    }
-
-    pub fn is_playground_enabled(&self) -> bool {
-        self.inner.is_playground_enabled()
-    }
-
-    pub fn get_description(&self) -> Option<String> {
-        self.inner.get_description().map(Into::into)
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new(spikard_graphql::GraphQLRouteConfig::default()),
-        }
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\SchemaConfig")]
-pub struct SchemaConfig {
-    /// Enable introspection queries
-    #[php(prop, name = "introspection_enabled")]
-    pub introspection_enabled: bool,
-    /// Maximum query complexity (None = unlimited)
-    #[php(prop, name = "complexity_limit")]
-    pub complexity_limit: Option<i64>,
-    /// Maximum query depth (None = unlimited)
-    #[php(prop, name = "depth_limit")]
-    pub depth_limit: Option<i64>,
-}
-
-#[php_impl]
-impl SchemaConfig {
-    pub fn __construct(
-        introspection_enabled: Option<bool>,
-        complexity_limit: Option<i64>,
-        depth_limit: Option<i64>,
-    ) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    pub fn set_introspection_enabled(&self, enabled: bool) -> SchemaConfig {
-        panic!("alef: set_introspection_enabled not auto-delegatable")
-    }
-
-    pub fn set_complexity_limit(&self, limit: i64) -> SchemaConfig {
-        panic!("alef: set_complexity_limit not auto-delegatable")
-    }
-
-    pub fn set_depth_limit(&self, limit: i64) -> SchemaConfig {
-        panic!("alef: set_depth_limit not auto-delegatable")
-    }
-
-    pub fn validate(&self) -> String {
-        String::from("[unimplemented: validate]")
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> SchemaConfig {
-        spikard_graphql::SchemaConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\QueryOnlyConfig")]
-pub struct QueryOnlyConfig {
-    /// Enable introspection queries
-    #[php(prop, name = "introspection_enabled")]
-    pub introspection_enabled: bool,
-    /// Maximum query complexity (None = unlimited)
-    #[php(prop, name = "complexity_limit")]
-    pub complexity_limit: Option<i64>,
-    /// Maximum query depth (None = unlimited)
-    #[php(prop, name = "depth_limit")]
-    pub depth_limit: Option<i64>,
-}
-
-#[php_impl]
-impl QueryOnlyConfig {
-    pub fn __construct(
-        introspection_enabled: Option<bool>,
-        complexity_limit: Option<i64>,
-        depth_limit: Option<i64>,
-    ) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> QueryOnlyConfig {
-        spikard_graphql::QueryOnlyConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\QueryMutationConfig")]
-pub struct QueryMutationConfig {
-    /// Enable introspection queries
-    #[php(prop, name = "introspection_enabled")]
-    pub introspection_enabled: bool,
-    /// Maximum query complexity (None = unlimited)
-    #[php(prop, name = "complexity_limit")]
-    pub complexity_limit: Option<i64>,
-    /// Maximum query depth (None = unlimited)
-    #[php(prop, name = "depth_limit")]
-    pub depth_limit: Option<i64>,
-}
-
-#[php_impl]
-impl QueryMutationConfig {
-    pub fn __construct(
-        introspection_enabled: Option<bool>,
-        complexity_limit: Option<i64>,
-        depth_limit: Option<i64>,
-    ) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> QueryMutationConfig {
-        spikard_graphql::QueryMutationConfig::default().into()
-    }
-}
-
-#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-#[php_class]
-#[php(name = "Spikard\\Php\\FullSchemaConfig")]
-pub struct FullSchemaConfig {
-    /// Enable introspection queries
-    #[php(prop, name = "introspection_enabled")]
-    pub introspection_enabled: bool,
-    /// Maximum query complexity (None = unlimited)
-    #[php(prop, name = "complexity_limit")]
-    pub complexity_limit: Option<i64>,
-    /// Maximum query depth (None = unlimited)
-    #[php(prop, name = "depth_limit")]
-    pub depth_limit: Option<i64>,
-}
-
-#[php_impl]
-impl FullSchemaConfig {
-    pub fn __construct(
-        introspection_enabled: Option<bool>,
-        complexity_limit: Option<i64>,
-        depth_limit: Option<i64>,
-    ) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    #[allow(clippy::should_implement_trait)]
-    pub fn default() -> FullSchemaConfig {
-        spikard_graphql::FullSchemaConfig::default().into()
-    }
-}
-
 // Method enum values
 pub const METHOD_GET: &str = "Get";
 pub const METHOD_POST: &str = "Post";
@@ -1707,12 +1707,6 @@ pub struct SpikardPhpApi;
 
 #[php_impl]
 impl SpikardPhpApi {
-    pub fn add_cors_headers(response: &Response, origin: String, cors_config: &CorsConfig) -> () {
-        let response_core: spikard::Response = response.clone().into();
-        let cors_config_core: spikard::CorsConfig = cors_config.clone().into();
-        spikard_http::cors::add_cors_headers(&response_core, &origin, &cors_config_core)
-    }
-
     pub fn schema_query_only() -> QueryOnlyConfig {
         spikard_graphql::schema_query_only().into()
     }
@@ -1723,6 +1717,326 @@ impl SpikardPhpApi {
 
     pub fn schema_full() -> FullSchemaConfig {
         spikard_graphql::schema_full().into()
+    }
+
+    pub fn add_cors_headers(response: &Response, origin: String, cors_config: &CorsConfig) -> () {
+        let response_core: spikard::Response = response.clone().into();
+        let cors_config_core: spikard::CorsConfig = cors_config.clone().into();
+        spikard_http::cors::add_cors_headers(&response_core, &origin, &cors_config_core)
+    }
+}
+
+impl From<spikard::UploadFile> for UploadFile {
+    fn from(val: spikard::UploadFile) -> Self {
+        Self {
+            filename: val.filename,
+            content_type: val.content_type,
+            size: val.size.map(|v| v as i64),
+            content: val.content.to_vec(),
+            content_encoding: val.content_encoding,
+            cursor: format!("{:?}", val.cursor),
+        }
+    }
+}
+
+impl From<CorsConfig> for spikard_core::CorsConfig {
+    fn from(val: CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::CorsConfig> for CorsConfig {
+    fn from(val: spikard_core::CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
+            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<RouteMetadata> for spikard_core::RouteMetadata {
+    fn from(val: RouteMetadata) -> Self {
+        Self {
+            method: val.method,
+            path: val.path,
+            handler_name: val.handler_name,
+            request_schema: Default::default(),
+            response_schema: Default::default(),
+            parameter_schema: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: Default::default(),
+            static_response: Default::default(),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::RouteMetadata> for RouteMetadata {
+    fn from(val: spikard_core::RouteMetadata) -> Self {
+        Self {
+            method: val.method,
+            path: val.path,
+            handler_name: val.handler_name,
+            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
+            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
+            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
+            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
+        }
+    }
+}
+
+impl From<CompressionConfig> for spikard_core::CompressionConfig {
+    fn from(val: CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size as usize,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard_core::CompressionConfig> for CompressionConfig {
+    fn from(val: spikard_core::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size as i64,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard_core::RateLimitConfig {
+    fn from(val: RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second as u64,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard_core::RateLimitConfig> for RateLimitConfig {
+    fn from(val: spikard_core::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second as i64,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<JsonRpcMethodInfo> for spikard_core::JsonRpcMethodInfo {
+    fn from(val: JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: Default::default(),
+            result_schema: Default::default(),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+impl From<spikard_core::JsonRpcMethodInfo> for JsonRpcMethodInfo {
+    fn from(val: spikard_core::JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
+            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+impl From<Route> for spikard_core::Route {
+    fn from(val: Route) -> Self {
+        Self {
+            method: match val.method.as_str() {
+                "Get" => spikard_core::Method::Get,
+                "Post" => spikard_core::Method::Post,
+                "Put" => spikard_core::Method::Put,
+                "Patch" => spikard_core::Method::Patch,
+                "Delete" => spikard_core::Method::Delete,
+                "Head" => spikard_core::Method::Head,
+                "Options" => spikard_core::Method::Options,
+                "Trace" => spikard_core::Method::Trace,
+                _ => spikard_core::Method::Get,
+            },
+            path: val.path,
+            handler_name: val.handler_name,
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+        }
+    }
+}
+
+impl From<spikard_core::Route> for Route {
+    fn from(val: spikard_core::Route) -> Self {
+        Self {
+            method: serde_json::to_value(val.method)
+                .ok()
+                .and_then(|s| s.as_str().map(String::from))
+                .unwrap_or_default(),
+            path: val.path,
+            handler_name: val.handler_name,
+            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
+            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
+            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+        }
+    }
+}
+
+impl From<ProblemDetails> for spikard_core::ProblemDetails {
+    fn from(val: ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::ProblemDetails> for ProblemDetails {
+    fn from(val: spikard_core::ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: val
+                .extensions
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+        }
+    }
+}
+
+impl From<SchemaConfig> for spikard_graphql::SchemaConfig {
+    fn from(val: SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit.map(|v| v as usize),
+            depth_limit: val.depth_limit.map(|v| v as usize),
+        }
+    }
+}
+
+impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
+    fn from(val: spikard_graphql::SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit.map(|v| v as i64),
+            depth_limit: val.depth_limit.map(|v| v as i64),
+        }
+    }
+}
+
+impl From<QueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
+    fn from(val: QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit.map(|v| v as usize),
+            depth_limit: val.depth_limit.map(|v| v as usize),
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
+    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit.map(|v| v as i64),
+            depth_limit: val.depth_limit.map(|v| v as i64),
+        }
+    }
+}
+
+impl From<QueryMutationConfig> for spikard_graphql::QueryMutationConfig {
+    fn from(val: QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit.map(|v| v as usize),
+            depth_limit: val.depth_limit.map(|v| v as usize),
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
+    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit.map(|v| v as i64),
+            depth_limit: val.depth_limit.map(|v| v as i64),
+        }
+    }
+}
+
+impl From<FullSchemaConfig> for spikard_graphql::FullSchemaConfig {
+    fn from(val: FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit.map(|v| v as usize),
+            depth_limit: val.depth_limit.map(|v| v as usize),
+        }
+    }
+}
+
+impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
+    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit.map(|v| v as i64),
+            depth_limit: val.depth_limit.map(|v| v as i64),
+        }
     }
 }
 
@@ -1786,227 +2100,6 @@ impl From<BackgroundJobError> for spikard_http::BackgroundJobError {
 impl From<spikard_http::BackgroundJobError> for BackgroundJobError {
     fn from(val: spikard_http::BackgroundJobError) -> Self {
         Self { message: val.message }
-    }
-}
-
-impl From<CorsConfig> for spikard_http::CorsConfig {
-    fn from(val: CorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins,
-            allowed_methods: val.allowed_methods,
-            allowed_headers: val.allowed_headers,
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::CorsConfig> for CorsConfig {
-    fn from(val: spikard_http::CorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins,
-            allowed_methods: val.allowed_methods,
-            allowed_headers: val.allowed_headers,
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
-            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<RouteMetadata> for spikard_http::RouteMetadata {
-    fn from(val: RouteMetadata) -> Self {
-        Self {
-            method: val.method,
-            path: val.path,
-            handler_name: val.handler_name,
-            request_schema: Default::default(),
-            response_schema: Default::default(),
-            parameter_schema: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: Default::default(),
-            static_response: Default::default(),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::RouteMetadata> for RouteMetadata {
-    fn from(val: spikard_http::RouteMetadata) -> Self {
-        Self {
-            method: val.method,
-            path: val.path,
-            handler_name: val.handler_name,
-            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
-            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
-            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
-            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
-        }
-    }
-}
-
-impl From<CompressionConfig> for spikard_http::CompressionConfig {
-    fn from(val: CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size as usize,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<spikard_http::CompressionConfig> for CompressionConfig {
-    fn from(val: spikard_http::CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size as i64,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<RateLimitConfig> for spikard_http::RateLimitConfig {
-    fn from(val: RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second as u64,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<spikard_http::RateLimitConfig> for RateLimitConfig {
-    fn from(val: spikard_http::RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second as i64,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<ProblemDetails> for spikard_http::ProblemDetails {
-    fn from(val: ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::ProblemDetails> for ProblemDetails {
-    fn from(val: spikard_http::ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: val
-                .extensions
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
-        }
-    }
-}
-
-impl From<JsonRpcMethodInfo> for spikard_http::JsonRpcMethodInfo {
-    fn from(val: JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: Default::default(),
-            result_schema: Default::default(),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-impl From<spikard_http::JsonRpcMethodInfo> for JsonRpcMethodInfo {
-    fn from(val: spikard_http::JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
-            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-impl From<Route> for spikard_http::Route {
-    fn from(val: Route) -> Self {
-        Self {
-            method: match val.method.as_str() {
-                "Get" => spikard_http::Method::Get,
-                "Post" => spikard_http::Method::Post,
-                "Put" => spikard_http::Method::Put,
-                "Patch" => spikard_http::Method::Patch,
-                "Delete" => spikard_http::Method::Delete,
-                "Head" => spikard_http::Method::Head,
-                "Options" => spikard_http::Method::Options,
-                "Trace" => spikard_http::Method::Trace,
-                _ => spikard_http::Method::Get,
-            },
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-        }
-    }
-}
-
-impl From<spikard_http::Route> for Route {
-    fn from(val: spikard_http::Route) -> Self {
-        Self {
-            method: serde_json::to_value(val.method)
-                .ok()
-                .and_then(|s| s.as_str().map(String::from))
-                .unwrap_or_default(),
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
-            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
-            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-        }
     }
 }
 
@@ -2346,99 +2439,6 @@ impl From<spikard_http::ServerConfig> for ServerConfig {
     }
 }
 
-impl From<spikard::UploadFile> for UploadFile {
-    fn from(val: spikard::UploadFile) -> Self {
-        Self {
-            filename: val.filename,
-            content_type: val.content_type,
-            size: val.size.map(|v| v as i64),
-            content: val.content.to_vec(),
-            content_encoding: val.content_encoding,
-            cursor: format!("{:?}", val.cursor),
-        }
-    }
-}
-
-impl From<SchemaConfig> for spikard_graphql::SchemaConfig {
-    fn from(val: SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit.map(|v| v as usize),
-            depth_limit: val.depth_limit.map(|v| v as usize),
-        }
-    }
-}
-
-impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
-    fn from(val: spikard_graphql::SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit.map(|v| v as i64),
-            depth_limit: val.depth_limit.map(|v| v as i64),
-        }
-    }
-}
-
-impl From<QueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
-    fn from(val: QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit.map(|v| v as usize),
-            depth_limit: val.depth_limit.map(|v| v as usize),
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
-    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit.map(|v| v as i64),
-            depth_limit: val.depth_limit.map(|v| v as i64),
-        }
-    }
-}
-
-impl From<QueryMutationConfig> for spikard_graphql::QueryMutationConfig {
-    fn from(val: QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit.map(|v| v as usize),
-            depth_limit: val.depth_limit.map(|v| v as usize),
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
-    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit.map(|v| v as i64),
-            depth_limit: val.depth_limit.map(|v| v as i64),
-        }
-    }
-}
-
-impl From<FullSchemaConfig> for spikard_graphql::FullSchemaConfig {
-    fn from(val: FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit.map(|v| v as usize),
-            depth_limit: val.depth_limit.map(|v| v as usize),
-        }
-    }
-}
-
-impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
-    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit.map(|v| v as i64),
-            depth_limit: val.depth_limit.map(|v| v as i64),
-        }
-    }
-}
-
 /// Convert a `spikard_graphql::error::GraphQLError` error to a PHP exception.
 #[allow(dead_code)]
 fn graph_q_l_error_to_php_err(e: spikard_graphql::error::GraphQLError) -> ext_php_rs::exception::PhpException {
@@ -2519,18 +2519,25 @@ fn schema_error_to_php_err(e: spikard_graphql::schema::SchemaError) -> ext_php_r
 #[php_module]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
     module
+        .class::<UploadFile>()
+        .class::<CorsConfig>()
+        .class::<RouteMetadata>()
+        .class::<CompressionConfig>()
+        .class::<RateLimitConfig>()
+        .class::<JsonRpcMethodInfo>()
+        .class::<Route>()
+        .class::<ProblemDetails>()
+        .class::<GraphQLError>()
+        .class::<GraphQLRouteConfig>()
+        .class::<SchemaConfig>()
+        .class::<QueryOnlyConfig>()
+        .class::<QueryMutationConfig>()
+        .class::<FullSchemaConfig>()
         .class::<Claims>()
         .class::<BackgroundTaskConfig>()
         .class::<BackgroundJobMetadata>()
         .class::<BackgroundJobError>()
         .class::<BackgroundHandle>()
-        .class::<CorsConfig>()
-        .class::<RouteMetadata>()
-        .class::<CompressionConfig>()
-        .class::<RateLimitConfig>()
-        .class::<ProblemDetails>()
-        .class::<JsonRpcMethodInfo>()
-        .class::<Route>()
         .class::<GrpcRequestData>()
         .class::<GrpcResponseData>()
         .class::<GrpcConfig>()
@@ -2546,12 +2553,5 @@ pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
         .class::<ApiKeyConfig>()
         .class::<StaticFilesConfig>()
         .class::<ServerConfig>()
-        .class::<UploadFile>()
-        .class::<GraphQLError>()
-        .class::<GraphQLRouteConfig>()
-        .class::<SchemaConfig>()
-        .class::<QueryOnlyConfig>()
-        .class::<QueryMutationConfig>()
-        .class::<FullSchemaConfig>()
         .class::<SpikardPhpApi>()
 }

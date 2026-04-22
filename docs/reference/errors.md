@@ -45,4 +45,3 @@ Error type for schema building operations
 | `DepthLimitExceeded` | Query depth limit exceeded: limit={limit}, actual={actual} | Depth limit exceeded |
 
 ---
-

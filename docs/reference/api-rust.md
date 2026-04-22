@@ -6,39 +6,6 @@ title: "Rust API Reference"
 
 ### Functions
 
-#### add_cors_headers()
-
-Add CORS headers to a successful response
-
-Adds appropriate CORS headers to the response based on the configuration.
-This function should be called for successful (non-error) responses to
-cross-origin requests.
-
-# Headers Added
-
-- `Access-Control-Allow-Origin` - The origin that is allowed (if valid)
-- `Access-Control-Expose-Headers` - Headers that are safe to expose to the client
-- `Access-Control-Allow-Credentials` - "true" if credentials are allowed
-
-**Signature:**
-
-```rust
-pub fn add_cors_headers(response: Response, origin: &str, cors_config: CorsConfig)
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response` | `Response` | Yes | Mutable reference to the response to modify |
-| `origin` | `String` | Yes | The origin from the request (e.g., `<https://example.com>`) |
-| `cors_config` | `CorsConfig` | Yes | CORS configuration to apply |
-
-**Returns:** `()`
-
-
----
-
 #### schema_query_only()
 
 Create a simple schema configuration with only Query type.
@@ -56,7 +23,6 @@ pub fn schema_query_only() -> QueryOnlyConfig
 ```
 
 **Returns:** `QueryOnlyConfig`
-
 
 ---
 
@@ -78,7 +44,6 @@ pub fn schema_query_mutation() -> QueryMutationConfig
 
 **Returns:** `QueryMutationConfig`
 
-
 ---
 
 #### schema_full()
@@ -99,6 +64,37 @@ pub fn schema_full() -> FullSchemaConfig
 
 **Returns:** `FullSchemaConfig`
 
+---
+
+#### add_cors_headers()
+
+Add CORS headers to a successful response
+
+Adds appropriate CORS headers to the response based on the configuration.
+This function should be called for successful (non-error) responses to
+cross-origin requests.
+
+## Headers Added
+
+- `Access-Control-Allow-Origin` - The origin that is allowed (if valid)
+- `Access-Control-Expose-Headers` - Headers that are safe to expose to the client
+- `Access-Control-Allow-Credentials` - "true" if credentials are allowed
+
+**Signature:**
+
+```rust
+pub fn add_cors_headers(response: Response, origin: &str, cors_config: CorsConfig)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `response` | `Response` | Yes | Mutable reference to the response to modify |
+| `origin` | `String` | Yes | The origin from the request (e.g., `<https://example.com>`) |
+| `cors_config` | `CorsConfig` | Yes | CORS configuration to apply |
+
+**Returns:** `()`
 
 ---
 
@@ -113,21 +109,19 @@ API Key authentication configuration
 | `keys` | `Vec<String>` | — | Valid API keys |
 | `header_name` | `String` | — | Header name to check (e.g., "X-API-Key") |
 
+---
+
+##### BackgroundHandle
 
 ---
 
-#### BackgroundHandle
-
-
----
-
-#### BackgroundJobError
+##### BackgroundJobError
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `message` | `String` | — | Message |
 
-##### Methods
+###### Methods
 
 ###### from()
 
@@ -137,17 +131,16 @@ API Key authentication configuration
 pub fn from(message: &str) -> BackgroundJobError
 ```
 
-
 ---
 
-#### BackgroundJobMetadata
+##### BackgroundJobMetadata
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | The name |
 | `request_id` | `Option<String>` | `None` | Request id |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -157,10 +150,9 @@ pub fn from(message: &str) -> BackgroundJobError
 pub fn default() -> BackgroundJobMetadata
 ```
 
-
 ---
 
-#### BackgroundTaskConfig
+##### BackgroundTaskConfig
 
 Configuration for in-process background task execution.
 
@@ -170,7 +162,7 @@ Configuration for in-process background task execution.
 | `max_concurrent_tasks` | `usize` | `128` | Maximum concurrent tasks |
 | `drain_timeout_secs` | `u64` | `30` | Drain timeout secs |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -180,10 +172,9 @@ Configuration for in-process background task execution.
 pub fn default() -> BackgroundTaskConfig
 ```
 
-
 ---
 
-#### Claims
+##### Claims
 
 JWT claims structure - can be extended based on needs
 
@@ -196,10 +187,9 @@ JWT claims structure - can be extended based on needs
 | `aud` | `Option<Vec<String>>` | `None` | Aud |
 | `iss` | `Option<String>` | `None` | Iss |
 
-
 ---
 
-#### CompressionConfig
+##### CompressionConfig
 
 Compression configuration shared across runtimes
 
@@ -210,7 +200,7 @@ Compression configuration shared across runtimes
 | `min_size` | `usize` | — | Minimum response size to compress (bytes) |
 | `quality` | `u32` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -220,10 +210,9 @@ Compression configuration shared across runtimes
 pub fn default() -> CompressionConfig
 ```
 
-
 ---
 
-#### ContactInfo
+##### ContactInfo
 
 Contact information
 
@@ -233,10 +222,9 @@ Contact information
 | `email` | `Option<String>` | `None` | Email |
 | `url` | `Option<String>` | `None` | Url |
 
-
 ---
 
-#### CorsConfig
+##### CorsConfig
 
 CORS configuration for a route
 
@@ -251,7 +239,7 @@ CORS configuration for a route
 | `methods_joined_cache` | `String` | — | Methods joined cache |
 | `headers_joined_cache` | `String` | — | Headers joined cache |
 
-##### Methods
+###### Methods
 
 ###### allowed_methods_joined()
 
@@ -311,10 +299,9 @@ pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool
 pub fn default() -> CorsConfig
 ```
 
-
 ---
 
-#### FullSchemaConfig
+##### FullSchemaConfig
 
 Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 
@@ -324,7 +311,7 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -334,18 +321,18 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 pub fn default() -> FullSchemaConfig
 ```
 
-
 ---
 
-#### GraphQlError
+##### GraphQlError
 
-##### Methods
+###### Methods
 
 ###### status_code()
 
 Convert error to HTTP status code
 
 Maps GraphQL error types to appropriate HTTP status codes:
+
 - 400: Bad Request for parse/request-handling errors
 - 401: Unauthorized for authentication errors
 - 403: Forbidden for authorization errors
@@ -368,7 +355,7 @@ Convert error to GraphQL error response JSON
 Returns a JSON object matching the GraphQL spec error format with
 structured extensions for HTTP integration.
 
-# Format
+## Format
 
 ```json
 {
@@ -391,14 +378,14 @@ structured extensions for HTTP integration.
 pub fn to_graphql_response(&self) -> String
 ```
 
-###### to_http_response()
+### to_http_response()
 
 Convert error to structured HTTP error response
 
 Returns a JSON object matching the project's error fixture format,
 suitable for direct HTTP response conversion.
 
-# Format
+## Format
 
 ```json
 {
@@ -421,19 +408,18 @@ suitable for direct HTTP response conversion.
 pub fn to_http_response(&self) -> String
 ```
 
-
 ---
 
-#### GraphQlRouteConfig
+### GraphQlRouteConfig
 
 Configuration for GraphQL routes
 
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Methods
+#### Methods
 
-###### path()
+##### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -521,17 +507,16 @@ pub fn get_description(&self) -> Option<String>
 pub fn default() -> GraphQlRouteConfig
 ```
 
-
 ---
 
-#### GrpcConfig
+##### GrpcConfig
 
 Configuration for gRPC support
 
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -563,9 +548,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_interval` | `u64` | — | HTTP/2 keepalive interval in seconds |
 | `keepalive_timeout` | `u64` | — | HTTP/2 keepalive timeout in seconds |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -573,14 +558,14 @@ concurrent stream limiting to the HTTP/2 transport layer:
 pub fn default() -> GrpcConfig
 ```
 
-
 ---
 
-#### GrpcRequestData
+##### GrpcRequestData
 
 gRPC request data passed to handlers
 
 Contains the parsed components of a gRPC request:
+
 - Service and method names from the request path
 - Serialized protobuf payload as bytes
 - Request metadata (headers)
@@ -592,10 +577,9 @@ Contains the parsed components of a gRPC request:
 | `payload` | `Vec<u8>` | — | Serialized protobuf message bytes |
 | `metadata` | `String` | — | gRPC metadata (similar to HTTP headers) |
 
-
 ---
 
-#### GrpcResponseData
+##### GrpcResponseData
 
 gRPC response data returned by handlers
 
@@ -607,10 +591,9 @@ in the response headers.
 | `payload` | `Vec<u8>` | — | Serialized protobuf message bytes |
 | `metadata` | `String` | — | gRPC metadata to include in response (similar to HTTP headers) |
 
-
 ---
 
-#### JsonRpcConfig
+##### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -621,7 +604,7 @@ JSON-RPC server configuration
 | `enable_batch` | `bool` | — | Enable batch request processing (default: true) |
 | `max_batch_size` | `usize` | — | Maximum number of requests in a batch (default: 100) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -631,10 +614,9 @@ JSON-RPC server configuration
 pub fn default() -> JsonRpcConfig
 ```
 
-
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -650,10 +632,9 @@ enabling discovery and documentation of RPC-compatible endpoints.
 | `deprecated` | `bool` | — | Whether this method is deprecated |
 | `tags` | `Vec<String>` | — | Tags for categorizing and grouping methods |
 
-
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
@@ -665,10 +646,9 @@ JWT authentication configuration
 | `issuer` | `Option<String>` | `None` | Required issuer claim |
 | `leeway` | `u64` | — | Leeway for expiration checks (seconds) |
 
-
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
@@ -677,10 +657,9 @@ License information
 | `name` | `String` | — | The name |
 | `url` | `Option<String>` | `None` | Url |
 
-
 ---
 
-#### OpenApiConfig
+##### OpenApiConfig
 
 OpenAPI configuration
 
@@ -698,7 +677,7 @@ OpenAPI configuration
 | `servers` | `Vec<ServerInfo>` | `vec![]` | Server definitions |
 | `security_schemes` | `HashMap<String, SecuritySchemeInfo>` | `HashMap::new()` | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -708,10 +687,9 @@ OpenAPI configuration
 pub fn default() -> OpenApiConfig
 ```
 
-
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -719,8 +697,10 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -734,9 +714,9 @@ Content-Type: application/problem+json
 | `instance` | `Option<String>` | `None` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `HashMap<String, String>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-##### Methods
+### Methods
 
-###### with_detail()
+#### with_detail()
 
 Set the detail field
 
@@ -746,7 +726,7 @@ Set the detail field
 pub fn with_detail(&self, detail: &str) -> ProblemDetails
 ```
 
-###### with_instance()
+##### with_instance()
 
 Set the instance field
 
@@ -781,6 +761,7 @@ pub fn with_extensions(&self, extensions: &str) -> ProblemDetails
 Create a validation error Problem Details from `ValidationError`
 
 This converts the FastAPI-style validation errors to RFC 9457 format:
+
 - `type`: <https://spikard.dev/errors/validation-error>
 - `title`: "Request Validation Failed"
 - `status`: 422
@@ -882,10 +863,9 @@ Returns an error if the serialization fails.
 pub fn to_json_pretty(&self) -> String
 ```
 
-
 ---
 
-#### QueryMutationConfig
+##### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -895,7 +875,7 @@ Configuration for schemas with Query and Mutation types
 | `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -905,10 +885,9 @@ Configuration for schemas with Query and Mutation types
 pub fn default() -> QueryMutationConfig
 ```
 
-
 ---
 
-#### QueryOnlyConfig
+##### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -918,7 +897,7 @@ Configuration for schemas with only Query type
 | `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -928,10 +907,9 @@ Configuration for schemas with only Query type
 pub fn default() -> QueryOnlyConfig
 ```
 
-
 ---
 
-#### RateLimitConfig
+##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -941,7 +919,7 @@ Rate limiting configuration shared across runtimes
 | `burst` | `u32` | `200` | Burst allowance |
 | `ip_based` | `bool` | `true` | Use IP-based rate limiting |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -951,10 +929,9 @@ Rate limiting configuration shared across runtimes
 pub fn default() -> RateLimitConfig
 ```
 
-
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -964,7 +941,7 @@ HTTP Response with custom status code, headers, and content
 | `status_code` | `u16` | — | HTTP status code (defaults to 200) |
 | `headers` | `HashMap<String, String>` | `HashMap::new()` | Response headers |
 
-##### Methods
+###### Methods
 
 ###### with_status()
 
@@ -1004,10 +981,9 @@ pub fn set_cookie(&self, key: &str, value: &str, max_age: Option<i64>, domain: O
 pub fn default() -> Response
 ```
 
-
 ---
 
-#### Route
+##### Route
 
 Route definition with compiled validators
 
@@ -1032,7 +1008,7 @@ enabling routes to optionally expose themselves as JSON-RPC methods.
 | `handler_dependencies` | `Vec<String>` | `vec![]` | List of dependency keys this handler requires (for DI) |
 | `jsonrpc_method` | `Option<JsonRpcMethodInfo>` | `None` | Optional JSON-RPC method information When present, this route can be exposed as a JSON-RPC method |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -1095,10 +1071,9 @@ Get the JSON-RPC method name if present
 pub fn jsonrpc_method_name(&self) -> Option<String>
 ```
 
-
 ---
 
-#### RouteMetadata
+##### RouteMetadata
 
 Route metadata extracted from bindings
 
@@ -1118,7 +1093,7 @@ Route metadata extracted from bindings
 | `jsonrpc_method` | `Option<String>` | `None` | JSON-RPC method metadata (if this route is exposed as a JSON-RPC method) |
 | `static_response` | `Option<String>` | `None` | Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}` When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full middleware pipeline for maximum throughput. |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -1128,10 +1103,9 @@ Route metadata extracted from bindings
 pub fn default() -> RouteMetadata
 ```
 
-
 ---
 
-#### SchemaConfig
+##### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -1144,7 +1118,7 @@ introspection control, complexity limits, and depth limits.
 | `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -1198,10 +1172,9 @@ Returns an error if the configuration is invalid (currently all configurations a
 pub fn validate(&self) -> String
 ```
 
-
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
@@ -1228,7 +1201,7 @@ Server configuration
 | `enable_http_trace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
 | `di_container` | `Option<String>` | `None` | Dependency injection container (requires 'di' feature) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -1248,10 +1221,9 @@ Create a new builder for ServerConfig
 pub fn builder() -> String
 ```
 
-
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
@@ -1260,19 +1232,19 @@ Server information
 | `url` | `String` | — | Url |
 | `description` | `Option<String>` | `None` | Human-readable description |
 
-
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1287,9 +1259,9 @@ retry: 3000
 | `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
 
-##### Methods
+### Methods
 
-###### with_type()
+#### with_type()
 
 Create a new SSE event with an event type and data
 
@@ -1302,7 +1274,7 @@ in their event listener.
 pub fn with_type(event_type: &str, data: &str) -> SseEvent
 ```
 
-###### with_id()
+##### with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -1328,10 +1300,9 @@ if the connection is lost. The client browser will automatically handle reconnec
 pub fn with_retry(&self, retry_ms: u64) -> SseEvent
 ```
 
-
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
@@ -1342,10 +1313,9 @@ Static file serving configuration
 | `index_file` | `bool` | — | Fallback to index.html for directories |
 | `cache_control` | `Option<String>` | `None` | Cache-Control header value |
 
-
 ---
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1361,7 +1331,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `content_encoding` | `Option<String>` | `None` | Content encoding type |
 | `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
-##### Methods
+###### Methods
 
 ###### as_bytes()
 
@@ -1399,10 +1369,9 @@ Get the content type, defaulting to "application/octet-stream".
 pub fn content_type_or_default(&self) -> String
 ```
 
-
 ---
 
-#### ValidatedParams
+##### ValidatedParams
 
 Validated parameters from request (path, query, headers, cookies)
 
@@ -1410,12 +1379,11 @@ Validated parameters from request (path, query, headers, cookies)
 |-------|------|---------|-------------|
 | `params` | `HashMap<String, String>` | — | Params |
 
-
 ---
 
-### Enums
+#### Enums
 
-#### Method
+##### Method
 
 HTTP method
 
@@ -1430,30 +1398,28 @@ HTTP method
 | `Options` | Options |
 | `Trace` | Trace |
 
-
 ---
 
-#### JsonRpcResponseType
+##### JsonRpcResponseType
 
 JSON-RPC 2.0 Response Type
 
 An enum that represents either a successful response or an error response.
 This is useful for untagged deserialization and handling both response types uniformly.
 
-# Variants
+## Variants
 
-* `Success(JsonRpcResponse)` - A successful response with a result
-* `Error(JsonRpcErrorResponse)` - An error response with error details
+- `Success(JsonRpcResponse)` - A successful response with a result
+- `Error(JsonRpcErrorResponse)` - An error response with error details
 
 | Value | Description |
 |-------|-------------|
 | `Success` | Successful response containing a result — Fields: `0`: `String` |
 | `Error` | Error response containing error details — Fields: `0`: `String` |
 
-
 ---
 
-#### JsonRpcRequestOrBatch
+### JsonRpcRequestOrBatch
 
 Represents either a single JSON-RPC request or a batch of requests
 
@@ -1464,7 +1430,6 @@ allowing different routing logic for each case.
 |-------|-------------|
 | `Single` | A single JSON-RPC request — Fields: `0`: `String` |
 | `Batch` | A batch (array) of JSON-RPC requests — Fields: `0`: `Vec<String>` |
-
 
 ---
 
@@ -1477,12 +1442,11 @@ Security scheme types
 | `Http` | Http — Fields: `scheme`: `String`, `bearer_format`: `String` |
 | `ApiKey` | Api key — Fields: `location`: `String`, `name`: `String` |
 
-
 ---
 
-### Errors
+#### Errors
 
-#### GraphQlError
+##### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1507,10 +1471,9 @@ converted to structured HTTP responses matching the project's error fixtures.
 | `DepthLimitExceeded` | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit. |
 | `InternalError` | Internal server error Occurs when an unexpected internal error happens. |
 
-
 ---
 
-#### SchemaError
+##### SchemaError
 
 Error type for schema building operations
 
@@ -1521,6 +1484,4 @@ Error type for schema building operations
 | `ComplexityLimitExceeded` | Complexity limit exceeded |
 | `DepthLimitExceeded` | Depth limit exceeded |
 
-
 ---
-

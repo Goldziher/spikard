@@ -1,1 +1,0 @@
-"""Benchmark harness package marker."""

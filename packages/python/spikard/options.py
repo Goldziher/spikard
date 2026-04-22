@@ -21,6 +21,14 @@ class Method(str, Enum):
     TRACE = "trace"
 
 
+class JwtConfig:
+    """Placeholder for JwtConfig type."""
+
+
+class ApiKeyConfig:
+    """Placeholder for ApiKeyConfig type."""
+
+
 class JsonRpcMethodInfo:
     """Placeholder for JsonRpcMethodInfo type."""
 
@@ -29,32 +37,9 @@ class ContactInfo:
     """Placeholder for ContactInfo type."""
 
 
-class ApiKeyConfig:
-    """Placeholder for ApiKeyConfig type."""
-
-
-class JwtConfig:
-    """Placeholder for JwtConfig type."""
-
-
 class LicenseInfo:
     """Placeholder for LicenseInfo type."""
 
-
-@dataclass
-class BackgroundTaskConfig:
-    """Configuration for in-process background task execution."""
-
-    max_queue_size: int = 1024
-    max_concurrent_tasks: int = 128
-    drain_timeout_secs: int = 30
-
-@dataclass
-class BackgroundJobMetadata:
-    """Background job metadata."""
-
-    name: str = ""
-    request_id: str | None = None
 
 @dataclass
 class CorsConfig:
@@ -68,6 +53,7 @@ class CorsConfig:
     allow_credentials: bool | None = None
     methods_joined_cache: str = ""
     headers_joined_cache: str = ""
+
 
 @dataclass
 class RouteMetadata:
@@ -147,6 +133,76 @@ class Route:
 
     jsonrpc_method: Any | None = None
     """Optional JSON-RPC method information"""
+
+
+@dataclass
+class SchemaConfig:
+    """Configuration for GraphQL schema building."""
+
+    introspection_enabled: bool = True
+    """Enable introspection queries"""
+
+    complexity_limit: int | None = None
+    """Maximum query complexity (None = unlimited)"""
+
+    depth_limit: int | None = None
+    """Maximum query depth (None = unlimited)"""
+
+
+class QueryOnlyConfig(TypedDict, total=False):
+    """Configuration for schemas with only Query type."""
+
+    introspection_enabled: bool
+    """Enable introspection queries"""
+
+    complexity_limit: int | None
+    """Maximum query complexity (None = unlimited)"""
+
+    depth_limit: int | None
+    """Maximum query depth (None = unlimited)"""
+
+
+class QueryMutationConfig(TypedDict, total=False):
+    """Configuration for schemas with Query and Mutation types."""
+
+    introspection_enabled: bool
+    """Enable introspection queries"""
+
+    complexity_limit: int | None
+    """Maximum query complexity (None = unlimited)"""
+
+    depth_limit: int | None
+    """Maximum query depth (None = unlimited)"""
+
+
+class FullSchemaConfig(TypedDict, total=False):
+    """Configuration for fully-featured schemas with Query, Mutation, and Subscription types."""
+
+    introspection_enabled: bool
+    """Enable introspection queries"""
+
+    complexity_limit: int | None
+    """Maximum query complexity (None = unlimited)"""
+
+    depth_limit: int | None
+    """Maximum query depth (None = unlimited)"""
+
+
+@dataclass
+class BackgroundTaskConfig:
+    """Configuration for in-process background task execution."""
+
+    max_queue_size: int = 1024
+    max_concurrent_tasks: int = 128
+    drain_timeout_secs: int = 30
+
+
+@dataclass
+class BackgroundJobMetadata:
+    """Background job metadata."""
+
+    name: str = ""
+    request_id: str | None = None
 
 
 @dataclass
@@ -309,56 +365,3 @@ class ServerConfig:
 
     di_container: str | None = None
     """Dependency injection container (requires 'di' feature)"""
-
-
-@dataclass
-class SchemaConfig:
-    """Configuration for GraphQL schema building."""
-
-    introspection_enabled: bool = True
-    """Enable introspection queries"""
-
-    complexity_limit: int | None = None
-    """Maximum query complexity (None = unlimited)"""
-
-    depth_limit: int | None = None
-    """Maximum query depth (None = unlimited)"""
-
-
-class QueryOnlyConfig(TypedDict, total=False):
-    """Configuration for schemas with only Query type."""
-
-    introspection_enabled: bool
-    """Enable introspection queries"""
-
-    complexity_limit: int | None
-    """Maximum query complexity (None = unlimited)"""
-
-    depth_limit: int | None
-    """Maximum query depth (None = unlimited)"""
-
-
-class QueryMutationConfig(TypedDict, total=False):
-    """Configuration for schemas with Query and Mutation types."""
-
-    introspection_enabled: bool
-    """Enable introspection queries"""
-
-    complexity_limit: int | None
-    """Maximum query complexity (None = unlimited)"""
-
-    depth_limit: int | None
-    """Maximum query depth (None = unlimited)"""
-
-
-class FullSchemaConfig(TypedDict, total=False):
-    """Configuration for fully-featured schemas with Query, Mutation, and Subscription types."""
-
-    introspection_enabled: bool
-    """Enable introspection queries"""
-
-    complexity_limit: int | None
-    """Maximum query complexity (None = unlimited)"""
-
-    depth_limit: int | None
-    """Maximum query depth (None = unlimited)"""

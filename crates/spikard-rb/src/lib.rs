@@ -41,212 +41,111 @@ fn json_to_ruby(handle: &Ruby, val: serde_json::Value) -> magnus::Value {
 }
 
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::Claims")]
-pub struct Claims {
-    pub sub: String,
-    pub exp: usize,
-    pub iat: Option<usize>,
-    pub nbf: Option<usize>,
-    pub aud: Option<Vec<String>>,
-    pub iss: Option<String>,
+#[magnus::wrap(class = "Spikard::UploadFile")]
+pub struct UploadFile {
+    pub filename: String,
+    pub content_type: Option<String>,
+    pub size: Option<usize>,
+    pub content: Vec<u8>,
+    pub content_encoding: Option<String>,
+    pub cursor: String,
 }
 
-unsafe impl IntoValueFromNative for Claims {}
+unsafe impl IntoValueFromNative for UploadFile {}
 
-impl magnus::TryConvert for Claims {
+impl magnus::TryConvert for UploadFile {
     fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &Claims = magnus::TryConvert::try_convert(val)?;
+        let r: &UploadFile = magnus::TryConvert::try_convert(val)?;
         Ok(r.clone())
     }
 }
-unsafe impl TryConvertOwned for Claims {}
+unsafe impl TryConvertOwned for UploadFile {}
 
-impl Claims {
+impl UploadFile {
     fn new(
-        sub: String,
-        exp: usize,
-        iat: Option<usize>,
-        nbf: Option<usize>,
-        aud: Option<Vec<String>>,
-        iss: Option<String>,
+        filename: String,
+        content: Vec<u8>,
+        cursor: String,
+        content_type: Option<String>,
+        size: Option<usize>,
+        content_encoding: Option<String>,
     ) -> Self {
         Self {
-            sub,
-            exp,
-            iat,
-            nbf,
-            aud,
-            iss,
+            filename,
+            content_type,
+            size,
+            content,
+            content_encoding,
+            cursor,
         }
     }
 
-    fn sub(&self) -> String {
-        self.sub.clone()
+    fn filename(&self) -> String {
+        self.filename.clone()
     }
 
-    fn exp(&self) -> usize {
-        self.exp
+    fn content_type(&self) -> Option<String> {
+        self.content_type.clone()
     }
 
-    fn iat(&self) -> Option<usize> {
-        self.iat
+    fn size(&self) -> Option<usize> {
+        self.size
     }
 
-    fn nbf(&self) -> Option<usize> {
-        self.nbf
+    fn content(&self) -> Vec<u8> {
+        self.content.clone()
     }
 
-    fn aud(&self) -> Option<Vec<String>> {
-        self.aud.clone()
+    fn content_encoding(&self) -> Option<String> {
+        self.content_encoding.clone()
     }
 
-    fn iss(&self) -> Option<String> {
-        self.iss.clone()
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::BackgroundTaskConfig")]
-#[serde(default)]
-pub struct BackgroundTaskConfig {
-    pub max_queue_size: usize,
-    pub max_concurrent_tasks: usize,
-    pub drain_timeout_secs: u64,
-}
-
-unsafe impl IntoValueFromNative for BackgroundTaskConfig {}
-
-impl magnus::TryConvert for BackgroundTaskConfig {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &BackgroundTaskConfig = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for BackgroundTaskConfig {}
-
-impl Default for BackgroundTaskConfig {
-    fn default() -> Self {
-        Self {
-            max_queue_size: Default::default(),
-            max_concurrent_tasks: Default::default(),
-            drain_timeout_secs: Default::default(),
-        }
-    }
-}
-
-impl BackgroundTaskConfig {
-    fn new(
-        max_queue_size: Option<usize>,
-        max_concurrent_tasks: Option<usize>,
-        drain_timeout_secs: Option<u64>,
-    ) -> Self {
-        Self {
-            max_queue_size: max_queue_size.unwrap_or(1024),
-            max_concurrent_tasks: max_concurrent_tasks.unwrap_or(128),
-            drain_timeout_secs: drain_timeout_secs.unwrap_or(30),
-        }
+    fn cursor(&self) -> String {
+        self.cursor.clone()
     }
 
-    fn max_queue_size(&self) -> usize {
-        self.max_queue_size
+    fn as_bytes(&self) -> Vec<u8> {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size,
+            content: self.content.clone().into(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        core_self.as_bytes().into()
     }
 
-    fn max_concurrent_tasks(&self) -> usize {
-        self.max_concurrent_tasks
+    fn read_to_string(&self) -> Result<String, Error> {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size,
+            content: self.content.clone().into(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        let result = core_self.read_to_string().map_err(|e| {
+            magnus::Error::new(
+                unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
+                e.to_string(),
+            )
+        })?;
+        Ok(result.into())
     }
 
-    fn drain_timeout_secs(&self) -> u64 {
-        self.drain_timeout_secs
+    fn content_type_or_default(&self) -> String {
+        let core_self = spikard::UploadFile {
+            filename: self.filename.clone(),
+            content_type: self.content_type.clone(),
+            size: self.size,
+            content: self.content.clone().into(),
+            content_encoding: self.content_encoding.clone(),
+            cursor: Default::default(),
+        };
+        core_self.content_type_or_default().into()
     }
 }
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::BackgroundJobMetadata")]
-#[serde(default)]
-pub struct BackgroundJobMetadata {
-    pub name: String,
-    pub request_id: Option<String>,
-}
-
-unsafe impl IntoValueFromNative for BackgroundJobMetadata {}
-
-impl magnus::TryConvert for BackgroundJobMetadata {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &BackgroundJobMetadata = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for BackgroundJobMetadata {}
-
-impl Default for BackgroundJobMetadata {
-    fn default() -> Self {
-        Self {
-            name: Default::default(),
-            request_id: Default::default(),
-        }
-    }
-}
-
-impl BackgroundJobMetadata {
-    fn new(name: Option<String>, request_id: Option<String>) -> Self {
-        Self {
-            name: name.unwrap_or_default(),
-            request_id,
-        }
-    }
-
-    fn name(&self) -> String {
-        self.name.clone()
-    }
-
-    fn request_id(&self) -> Option<String> {
-        self.request_id.clone()
-    }
-}
-
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::BackgroundJobError")]
-pub struct BackgroundJobError {
-    pub message: String,
-}
-
-unsafe impl IntoValueFromNative for BackgroundJobError {}
-
-impl magnus::TryConvert for BackgroundJobError {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &BackgroundJobError = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for BackgroundJobError {}
-
-impl BackgroundJobError {
-    fn new(message: String) -> Self {
-        Self { message }
-    }
-
-    fn message(&self) -> String {
-        self.message.clone()
-    }
-}
-
-#[derive(Clone)]
-#[magnus::wrap(class = "Spikard::BackgroundHandle")]
-pub struct BackgroundHandle {
-    inner: Arc<spikard_http::BackgroundHandle>,
-}
-
-unsafe impl IntoValueFromNative for BackgroundHandle {}
-
-impl magnus::TryConvert for BackgroundHandle {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &BackgroundHandle = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for BackgroundHandle {}
-
-impl BackgroundHandle {}
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[magnus::wrap(class = "Spikard::CorsConfig")]
@@ -343,7 +242,7 @@ impl CorsConfig {
     }
 
     fn allowed_methods_joined(&self) -> String {
-        let core_self = spikard_http::CorsConfig {
+        let core_self = spikard_core::CorsConfig {
             allowed_origins: self.allowed_origins.clone(),
             allowed_methods: self.allowed_methods.clone(),
             allowed_headers: self.allowed_headers.clone(),
@@ -357,7 +256,7 @@ impl CorsConfig {
     }
 
     fn allowed_headers_joined(&self) -> String {
-        let core_self = spikard_http::CorsConfig {
+        let core_self = spikard_core::CorsConfig {
             allowed_origins: self.allowed_origins.clone(),
             allowed_methods: self.allowed_methods.clone(),
             allowed_headers: self.allowed_headers.clone(),
@@ -371,7 +270,7 @@ impl CorsConfig {
     }
 
     fn is_origin_allowed(&self, origin: String) -> bool {
-        let core_self = spikard_http::CorsConfig {
+        let core_self = spikard_core::CorsConfig {
             allowed_origins: self.allowed_origins.clone(),
             allowed_methods: self.allowed_methods.clone(),
             allowed_headers: self.allowed_headers.clone(),
@@ -385,7 +284,7 @@ impl CorsConfig {
     }
 
     fn is_method_allowed(&self, method: String) -> bool {
-        let core_self = spikard_http::CorsConfig {
+        let core_self = spikard_core::CorsConfig {
             allowed_origins: self.allowed_origins.clone(),
             allowed_methods: self.allowed_methods.clone(),
             allowed_headers: self.allowed_headers.clone(),
@@ -648,143 +547,6 @@ impl RateLimitConfig {
 }
 
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::ProblemDetails")]
-pub struct ProblemDetails {
-    pub type_uri: String,
-    pub title: String,
-    pub status: u16,
-    pub detail: Option<String>,
-    pub instance: Option<String>,
-    pub extensions: HashMap<String, String>,
-}
-
-unsafe impl IntoValueFromNative for ProblemDetails {}
-
-impl magnus::TryConvert for ProblemDetails {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &ProblemDetails = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for ProblemDetails {}
-
-impl ProblemDetails {
-    fn new(
-        type_uri: String,
-        title: String,
-        status: u16,
-        extensions: HashMap<String, String>,
-        detail: Option<String>,
-        instance: Option<String>,
-    ) -> Self {
-        Self {
-            type_uri,
-            title,
-            status,
-            detail,
-            instance,
-            extensions,
-        }
-    }
-
-    fn type_uri(&self) -> String {
-        self.type_uri.clone()
-    }
-
-    fn title(&self) -> String {
-        self.title.clone()
-    }
-
-    fn status(&self) -> u16 {
-        self.status
-    }
-
-    fn detail(&self) -> Option<String> {
-        self.detail.clone()
-    }
-
-    fn instance(&self) -> Option<String> {
-        self.instance.clone()
-    }
-
-    fn extensions(&self) -> HashMap<String, String> {
-        self.extensions.clone()
-    }
-
-    fn with_detail(&self, detail: String) -> ProblemDetails {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        core_self.with_detail(detail).into()
-    }
-
-    fn with_instance(&self, instance: String) -> ProblemDetails {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        core_self.with_instance(instance).into()
-    }
-
-    fn with_extension(&self, key: String, value: String) -> ProblemDetails {
-        panic!("alef: with_extension not auto-delegatable")
-    }
-
-    fn with_extensions(&self, extensions: String) -> ProblemDetails {
-        panic!("alef: with_extensions not auto-delegatable")
-    }
-
-    fn status_code(&self) -> String {
-        String::from("[unimplemented: status_code]")
-    }
-
-    fn to_json(&self) -> Result<String, Error> {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        let result = core_self.to_json().map_err(|e| {
-            magnus::Error::new(
-                unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
-                e.to_string(),
-            )
-        })?;
-        Ok(result.into())
-    }
-
-    fn to_json_pretty(&self) -> Result<String, Error> {
-        let core_self = spikard_http::ProblemDetails {
-            type_uri: self.type_uri.clone(),
-            title: self.title.clone(),
-            status: self.status,
-            detail: self.detail.clone(),
-            instance: self.instance.clone(),
-            extensions: Default::default(),
-        };
-        let result = core_self.to_json_pretty().map_err(|e| {
-            magnus::Error::new(
-                unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
-                e.to_string(),
-            )
-        })?;
-        Ok(result.into())
-    }
-}
-
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 #[magnus::wrap(class = "Spikard::JsonRpcMethodInfo")]
 pub struct JsonRpcMethodInfo {
     pub method_name: String,
@@ -962,7 +724,7 @@ impl Route {
 
     fn is_jsonrpc_method(&self) -> bool {
         #[allow(clippy::needless_update)]
-        let core_self = spikard_http::Route {
+        let core_self = spikard_core::Route {
             method: self.method.clone().into(),
             path: self.path.clone(),
             handler_name: self.handler_name.clone(),
@@ -982,7 +744,7 @@ impl Route {
 
     fn jsonrpc_method_name(&self) -> Option<String> {
         #[allow(clippy::needless_update)]
-        let core_self = spikard_http::Route {
+        let core_self = spikard_core::Route {
             method: self.method.clone().into(),
             path: self.path.clone(),
             handler_name: self.handler_name.clone(),
@@ -1000,6 +762,674 @@ impl Route {
         core_self.jsonrpc_method_name()
     }
 }
+
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::ProblemDetails")]
+pub struct ProblemDetails {
+    pub type_uri: String,
+    pub title: String,
+    pub status: u16,
+    pub detail: Option<String>,
+    pub instance: Option<String>,
+    pub extensions: HashMap<String, String>,
+}
+
+unsafe impl IntoValueFromNative for ProblemDetails {}
+
+impl magnus::TryConvert for ProblemDetails {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &ProblemDetails = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for ProblemDetails {}
+
+impl ProblemDetails {
+    fn new(
+        type_uri: String,
+        title: String,
+        status: u16,
+        extensions: HashMap<String, String>,
+        detail: Option<String>,
+        instance: Option<String>,
+    ) -> Self {
+        Self {
+            type_uri,
+            title,
+            status,
+            detail,
+            instance,
+            extensions,
+        }
+    }
+
+    fn type_uri(&self) -> String {
+        self.type_uri.clone()
+    }
+
+    fn title(&self) -> String {
+        self.title.clone()
+    }
+
+    fn status(&self) -> u16 {
+        self.status
+    }
+
+    fn detail(&self) -> Option<String> {
+        self.detail.clone()
+    }
+
+    fn instance(&self) -> Option<String> {
+        self.instance.clone()
+    }
+
+    fn extensions(&self) -> HashMap<String, String> {
+        self.extensions.clone()
+    }
+
+    fn with_detail(&self, detail: String) -> ProblemDetails {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        core_self.with_detail(detail).into()
+    }
+
+    fn with_instance(&self, instance: String) -> ProblemDetails {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        core_self.with_instance(instance).into()
+    }
+
+    fn with_extension(&self, key: String, value: String) -> ProblemDetails {
+        panic!("alef: with_extension not auto-delegatable")
+    }
+
+    fn with_extensions(&self, extensions: String) -> ProblemDetails {
+        panic!("alef: with_extensions not auto-delegatable")
+    }
+
+    fn status_code(&self) -> String {
+        String::from("[unimplemented: status_code]")
+    }
+
+    fn to_json(&self) -> Result<String, Error> {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        let result = core_self.to_json().map_err(|e| {
+            magnus::Error::new(
+                unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
+                e.to_string(),
+            )
+        })?;
+        Ok(result.into())
+    }
+
+    fn to_json_pretty(&self) -> Result<String, Error> {
+        let core_self = spikard_core::ProblemDetails {
+            type_uri: self.type_uri.clone(),
+            title: self.title.clone(),
+            status: self.status,
+            detail: self.detail.clone(),
+            instance: self.instance.clone(),
+            extensions: Default::default(),
+        };
+        let result = core_self.to_json_pretty().map_err(|e| {
+            magnus::Error::new(
+                unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
+                e.to_string(),
+            )
+        })?;
+        Ok(result.into())
+    }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Spikard::GraphQLError")]
+pub struct GraphQLError {
+    inner: Arc<spikard_graphql::GraphQLError>,
+}
+
+unsafe impl IntoValueFromNative for GraphQLError {}
+
+impl magnus::TryConvert for GraphQLError {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &GraphQLError = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for GraphQLError {}
+
+impl GraphQLError {
+    fn status_code(&self) -> u16 {
+        self.inner.status_code()
+    }
+
+    fn to_graphql_response(&self) -> String {
+        String::from("[unimplemented: to_graphql_response]")
+    }
+
+    fn to_http_response(&self) -> String {
+        String::from("[unimplemented: to_http_response]")
+    }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Spikard::GraphQLRouteConfig")]
+pub struct GraphQLRouteConfig {
+    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
+}
+
+unsafe impl IntoValueFromNative for GraphQLRouteConfig {}
+
+impl magnus::TryConvert for GraphQLRouteConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &GraphQLRouteConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for GraphQLRouteConfig {}
+
+impl GraphQLRouteConfig {
+    fn path(&self, path: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new(self.inner.as_ref().clone().path(path)),
+        }
+    }
+
+    fn method(&self, method: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new(self.inner.as_ref().clone().method(method)),
+        }
+    }
+
+    fn enable_playground(&self, enable: bool) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new(self.inner.as_ref().clone().enable_playground(enable)),
+        }
+    }
+
+    fn description(&self, description: String) -> GraphQLRouteConfig {
+        Self {
+            inner: Arc::new(self.inner.as_ref().clone().description(description)),
+        }
+    }
+
+    fn get_path(&self) -> String {
+        self.inner.get_path().into()
+    }
+
+    fn get_method(&self) -> String {
+        self.inner.get_method().into()
+    }
+
+    fn is_playground_enabled(&self) -> bool {
+        self.inner.is_playground_enabled()
+    }
+
+    fn get_description(&self) -> Option<String> {
+        self.inner.get_description().map(Into::into)
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::SchemaConfig")]
+#[serde(default)]
+pub struct SchemaConfig {
+    pub introspection_enabled: bool,
+    pub complexity_limit: Option<usize>,
+    pub depth_limit: Option<usize>,
+}
+
+unsafe impl IntoValueFromNative for SchemaConfig {}
+
+impl magnus::TryConvert for SchemaConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &SchemaConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for SchemaConfig {}
+
+impl Default for SchemaConfig {
+    fn default() -> Self {
+        Self {
+            introspection_enabled: Default::default(),
+            complexity_limit: Default::default(),
+            depth_limit: Default::default(),
+        }
+    }
+}
+
+impl SchemaConfig {
+    fn new(introspection_enabled: Option<bool>, complexity_limit: Option<usize>, depth_limit: Option<usize>) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    fn introspection_enabled(&self) -> bool {
+        self.introspection_enabled
+    }
+
+    fn complexity_limit(&self) -> Option<usize> {
+        self.complexity_limit
+    }
+
+    fn depth_limit(&self) -> Option<usize> {
+        self.depth_limit
+    }
+
+    fn set_introspection_enabled(&self, enabled: bool) -> SchemaConfig {
+        let core_self = spikard_graphql::SchemaConfig {
+            introspection_enabled: self.introspection_enabled,
+            complexity_limit: self.complexity_limit,
+            depth_limit: self.depth_limit,
+        };
+        core_self.set_introspection_enabled(enabled).into()
+    }
+
+    fn set_complexity_limit(&self, limit: usize) -> SchemaConfig {
+        let core_self = spikard_graphql::SchemaConfig {
+            introspection_enabled: self.introspection_enabled,
+            complexity_limit: self.complexity_limit,
+            depth_limit: self.depth_limit,
+        };
+        core_self.set_complexity_limit(limit).into()
+    }
+
+    fn set_depth_limit(&self, limit: usize) -> SchemaConfig {
+        let core_self = spikard_graphql::SchemaConfig {
+            introspection_enabled: self.introspection_enabled,
+            complexity_limit: self.complexity_limit,
+            depth_limit: self.depth_limit,
+        };
+        core_self.set_depth_limit(limit).into()
+    }
+
+    fn validate(&self) -> String {
+        String::from("[unimplemented: validate]")
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::QueryOnlyConfig")]
+#[serde(default)]
+pub struct QueryOnlyConfig {
+    pub introspection_enabled: bool,
+    pub complexity_limit: Option<usize>,
+    pub depth_limit: Option<usize>,
+}
+
+unsafe impl IntoValueFromNative for QueryOnlyConfig {}
+
+impl magnus::TryConvert for QueryOnlyConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &QueryOnlyConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for QueryOnlyConfig {}
+
+impl Default for QueryOnlyConfig {
+    fn default() -> Self {
+        Self {
+            introspection_enabled: Default::default(),
+            complexity_limit: Default::default(),
+            depth_limit: Default::default(),
+        }
+    }
+}
+
+impl QueryOnlyConfig {
+    fn new(introspection_enabled: Option<bool>, complexity_limit: Option<usize>, depth_limit: Option<usize>) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    fn introspection_enabled(&self) -> bool {
+        self.introspection_enabled
+    }
+
+    fn complexity_limit(&self) -> Option<usize> {
+        self.complexity_limit
+    }
+
+    fn depth_limit(&self) -> Option<usize> {
+        self.depth_limit
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::QueryMutationConfig")]
+#[serde(default)]
+pub struct QueryMutationConfig {
+    pub introspection_enabled: bool,
+    pub complexity_limit: Option<usize>,
+    pub depth_limit: Option<usize>,
+}
+
+unsafe impl IntoValueFromNative for QueryMutationConfig {}
+
+impl magnus::TryConvert for QueryMutationConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &QueryMutationConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for QueryMutationConfig {}
+
+impl Default for QueryMutationConfig {
+    fn default() -> Self {
+        Self {
+            introspection_enabled: Default::default(),
+            complexity_limit: Default::default(),
+            depth_limit: Default::default(),
+        }
+    }
+}
+
+impl QueryMutationConfig {
+    fn new(introspection_enabled: Option<bool>, complexity_limit: Option<usize>, depth_limit: Option<usize>) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    fn introspection_enabled(&self) -> bool {
+        self.introspection_enabled
+    }
+
+    fn complexity_limit(&self) -> Option<usize> {
+        self.complexity_limit
+    }
+
+    fn depth_limit(&self) -> Option<usize> {
+        self.depth_limit
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::FullSchemaConfig")]
+#[serde(default)]
+pub struct FullSchemaConfig {
+    pub introspection_enabled: bool,
+    pub complexity_limit: Option<usize>,
+    pub depth_limit: Option<usize>,
+}
+
+unsafe impl IntoValueFromNative for FullSchemaConfig {}
+
+impl magnus::TryConvert for FullSchemaConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &FullSchemaConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for FullSchemaConfig {}
+
+impl Default for FullSchemaConfig {
+    fn default() -> Self {
+        Self {
+            introspection_enabled: Default::default(),
+            complexity_limit: Default::default(),
+            depth_limit: Default::default(),
+        }
+    }
+}
+
+impl FullSchemaConfig {
+    fn new(introspection_enabled: Option<bool>, complexity_limit: Option<usize>, depth_limit: Option<usize>) -> Self {
+        Self {
+            introspection_enabled: introspection_enabled.unwrap_or(true),
+            complexity_limit,
+            depth_limit,
+        }
+    }
+
+    fn introspection_enabled(&self) -> bool {
+        self.introspection_enabled
+    }
+
+    fn complexity_limit(&self) -> Option<usize> {
+        self.complexity_limit
+    }
+
+    fn depth_limit(&self) -> Option<usize> {
+        self.depth_limit
+    }
+}
+
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::Claims")]
+pub struct Claims {
+    pub sub: String,
+    pub exp: usize,
+    pub iat: Option<usize>,
+    pub nbf: Option<usize>,
+    pub aud: Option<Vec<String>>,
+    pub iss: Option<String>,
+}
+
+unsafe impl IntoValueFromNative for Claims {}
+
+impl magnus::TryConvert for Claims {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &Claims = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for Claims {}
+
+impl Claims {
+    fn new(
+        sub: String,
+        exp: usize,
+        iat: Option<usize>,
+        nbf: Option<usize>,
+        aud: Option<Vec<String>>,
+        iss: Option<String>,
+    ) -> Self {
+        Self {
+            sub,
+            exp,
+            iat,
+            nbf,
+            aud,
+            iss,
+        }
+    }
+
+    fn sub(&self) -> String {
+        self.sub.clone()
+    }
+
+    fn exp(&self) -> usize {
+        self.exp
+    }
+
+    fn iat(&self) -> Option<usize> {
+        self.iat
+    }
+
+    fn nbf(&self) -> Option<usize> {
+        self.nbf
+    }
+
+    fn aud(&self) -> Option<Vec<String>> {
+        self.aud.clone()
+    }
+
+    fn iss(&self) -> Option<String> {
+        self.iss.clone()
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::BackgroundTaskConfig")]
+#[serde(default)]
+pub struct BackgroundTaskConfig {
+    pub max_queue_size: usize,
+    pub max_concurrent_tasks: usize,
+    pub drain_timeout_secs: u64,
+}
+
+unsafe impl IntoValueFromNative for BackgroundTaskConfig {}
+
+impl magnus::TryConvert for BackgroundTaskConfig {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &BackgroundTaskConfig = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for BackgroundTaskConfig {}
+
+impl Default for BackgroundTaskConfig {
+    fn default() -> Self {
+        Self {
+            max_queue_size: Default::default(),
+            max_concurrent_tasks: Default::default(),
+            drain_timeout_secs: Default::default(),
+        }
+    }
+}
+
+impl BackgroundTaskConfig {
+    fn new(
+        max_queue_size: Option<usize>,
+        max_concurrent_tasks: Option<usize>,
+        drain_timeout_secs: Option<u64>,
+    ) -> Self {
+        Self {
+            max_queue_size: max_queue_size.unwrap_or(1024),
+            max_concurrent_tasks: max_concurrent_tasks.unwrap_or(128),
+            drain_timeout_secs: drain_timeout_secs.unwrap_or(30),
+        }
+    }
+
+    fn max_queue_size(&self) -> usize {
+        self.max_queue_size
+    }
+
+    fn max_concurrent_tasks(&self) -> usize {
+        self.max_concurrent_tasks
+    }
+
+    fn drain_timeout_secs(&self) -> u64 {
+        self.drain_timeout_secs
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::BackgroundJobMetadata")]
+#[serde(default)]
+pub struct BackgroundJobMetadata {
+    pub name: String,
+    pub request_id: Option<String>,
+}
+
+unsafe impl IntoValueFromNative for BackgroundJobMetadata {}
+
+impl magnus::TryConvert for BackgroundJobMetadata {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &BackgroundJobMetadata = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for BackgroundJobMetadata {}
+
+impl Default for BackgroundJobMetadata {
+    fn default() -> Self {
+        Self {
+            name: Default::default(),
+            request_id: Default::default(),
+        }
+    }
+}
+
+impl BackgroundJobMetadata {
+    fn new(name: Option<String>, request_id: Option<String>) -> Self {
+        Self {
+            name: name.unwrap_or_default(),
+            request_id,
+        }
+    }
+
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn request_id(&self) -> Option<String> {
+        self.request_id.clone()
+    }
+}
+
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+#[magnus::wrap(class = "Spikard::BackgroundJobError")]
+pub struct BackgroundJobError {
+    pub message: String,
+}
+
+unsafe impl IntoValueFromNative for BackgroundJobError {}
+
+impl magnus::TryConvert for BackgroundJobError {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &BackgroundJobError = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for BackgroundJobError {}
+
+impl BackgroundJobError {
+    fn new(message: String) -> Self {
+        Self { message }
+    }
+
+    fn message(&self) -> String {
+        self.message.clone()
+    }
+}
+
+#[derive(Clone)]
+#[magnus::wrap(class = "Spikard::BackgroundHandle")]
+pub struct BackgroundHandle {
+    inner: Arc<spikard_http::BackgroundHandle>,
+}
+
+unsafe impl IntoValueFromNative for BackgroundHandle {}
+
+impl magnus::TryConvert for BackgroundHandle {
+    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
+        let r: &BackgroundHandle = magnus::TryConvert::try_convert(val)?;
+        Ok(r.clone())
+    }
+}
+unsafe impl TryConvertOwned for BackgroundHandle {}
+
+impl BackgroundHandle {}
 
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 #[magnus::wrap(class = "Spikard::GrpcRequestData")]
@@ -1934,436 +2364,6 @@ impl ServerConfig {
     }
 }
 
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::UploadFile")]
-pub struct UploadFile {
-    pub filename: String,
-    pub content_type: Option<String>,
-    pub size: Option<usize>,
-    pub content: Vec<u8>,
-    pub content_encoding: Option<String>,
-    pub cursor: String,
-}
-
-unsafe impl IntoValueFromNative for UploadFile {}
-
-impl magnus::TryConvert for UploadFile {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &UploadFile = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for UploadFile {}
-
-impl UploadFile {
-    fn new(
-        filename: String,
-        content: Vec<u8>,
-        cursor: String,
-        content_type: Option<String>,
-        size: Option<usize>,
-        content_encoding: Option<String>,
-    ) -> Self {
-        Self {
-            filename,
-            content_type,
-            size,
-            content,
-            content_encoding,
-            cursor,
-        }
-    }
-
-    fn filename(&self) -> String {
-        self.filename.clone()
-    }
-
-    fn content_type(&self) -> Option<String> {
-        self.content_type.clone()
-    }
-
-    fn size(&self) -> Option<usize> {
-        self.size
-    }
-
-    fn content(&self) -> Vec<u8> {
-        self.content.clone()
-    }
-
-    fn content_encoding(&self) -> Option<String> {
-        self.content_encoding.clone()
-    }
-
-    fn cursor(&self) -> String {
-        self.cursor.clone()
-    }
-
-    fn as_bytes(&self) -> Vec<u8> {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size,
-            content: self.content.clone().into(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        core_self.as_bytes().into()
-    }
-
-    fn read_to_string(&self) -> Result<String, Error> {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size,
-            content: self.content.clone().into(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        let result = core_self.read_to_string().map_err(|e| {
-            magnus::Error::new(
-                unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
-                e.to_string(),
-            )
-        })?;
-        Ok(result.into())
-    }
-
-    fn content_type_or_default(&self) -> String {
-        let core_self = spikard::UploadFile {
-            filename: self.filename.clone(),
-            content_type: self.content_type.clone(),
-            size: self.size,
-            content: self.content.clone().into(),
-            content_encoding: self.content_encoding.clone(),
-            cursor: Default::default(),
-        };
-        core_self.content_type_or_default().into()
-    }
-}
-
-#[derive(Clone)]
-#[magnus::wrap(class = "Spikard::GraphQLError")]
-pub struct GraphQLError {
-    inner: Arc<spikard_graphql::GraphQLError>,
-}
-
-unsafe impl IntoValueFromNative for GraphQLError {}
-
-impl magnus::TryConvert for GraphQLError {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &GraphQLError = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for GraphQLError {}
-
-impl GraphQLError {
-    fn status_code(&self) -> u16 {
-        self.inner.status_code()
-    }
-
-    fn to_graphql_response(&self) -> String {
-        String::from("[unimplemented: to_graphql_response]")
-    }
-
-    fn to_http_response(&self) -> String {
-        String::from("[unimplemented: to_http_response]")
-    }
-}
-
-#[derive(Clone)]
-#[magnus::wrap(class = "Spikard::GraphQLRouteConfig")]
-pub struct GraphQLRouteConfig {
-    inner: Arc<spikard_graphql::GraphQLRouteConfig>,
-}
-
-unsafe impl IntoValueFromNative for GraphQLRouteConfig {}
-
-impl magnus::TryConvert for GraphQLRouteConfig {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &GraphQLRouteConfig = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for GraphQLRouteConfig {}
-
-impl GraphQLRouteConfig {
-    fn path(&self, path: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new(self.inner.as_ref().clone().path(path)),
-        }
-    }
-
-    fn method(&self, method: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new(self.inner.as_ref().clone().method(method)),
-        }
-    }
-
-    fn enable_playground(&self, enable: bool) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new(self.inner.as_ref().clone().enable_playground(enable)),
-        }
-    }
-
-    fn description(&self, description: String) -> GraphQLRouteConfig {
-        Self {
-            inner: Arc::new(self.inner.as_ref().clone().description(description)),
-        }
-    }
-
-    fn get_path(&self) -> String {
-        self.inner.get_path().into()
-    }
-
-    fn get_method(&self) -> String {
-        self.inner.get_method().into()
-    }
-
-    fn is_playground_enabled(&self) -> bool {
-        self.inner.is_playground_enabled()
-    }
-
-    fn get_description(&self) -> Option<String> {
-        self.inner.get_description().map(Into::into)
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::SchemaConfig")]
-#[serde(default)]
-pub struct SchemaConfig {
-    pub introspection_enabled: bool,
-    pub complexity_limit: Option<usize>,
-    pub depth_limit: Option<usize>,
-}
-
-unsafe impl IntoValueFromNative for SchemaConfig {}
-
-impl magnus::TryConvert for SchemaConfig {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &SchemaConfig = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for SchemaConfig {}
-
-impl Default for SchemaConfig {
-    fn default() -> Self {
-        Self {
-            introspection_enabled: Default::default(),
-            complexity_limit: Default::default(),
-            depth_limit: Default::default(),
-        }
-    }
-}
-
-impl SchemaConfig {
-    fn new(introspection_enabled: Option<bool>, complexity_limit: Option<usize>, depth_limit: Option<usize>) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    fn introspection_enabled(&self) -> bool {
-        self.introspection_enabled
-    }
-
-    fn complexity_limit(&self) -> Option<usize> {
-        self.complexity_limit
-    }
-
-    fn depth_limit(&self) -> Option<usize> {
-        self.depth_limit
-    }
-
-    fn set_introspection_enabled(&self, enabled: bool) -> SchemaConfig {
-        let core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_introspection_enabled(enabled).into()
-    }
-
-    fn set_complexity_limit(&self, limit: usize) -> SchemaConfig {
-        let core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_complexity_limit(limit).into()
-    }
-
-    fn set_depth_limit(&self, limit: usize) -> SchemaConfig {
-        let core_self = spikard_graphql::SchemaConfig {
-            introspection_enabled: self.introspection_enabled,
-            complexity_limit: self.complexity_limit,
-            depth_limit: self.depth_limit,
-        };
-        core_self.set_depth_limit(limit).into()
-    }
-
-    fn validate(&self) -> String {
-        String::from("[unimplemented: validate]")
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::QueryOnlyConfig")]
-#[serde(default)]
-pub struct QueryOnlyConfig {
-    pub introspection_enabled: bool,
-    pub complexity_limit: Option<usize>,
-    pub depth_limit: Option<usize>,
-}
-
-unsafe impl IntoValueFromNative for QueryOnlyConfig {}
-
-impl magnus::TryConvert for QueryOnlyConfig {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &QueryOnlyConfig = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for QueryOnlyConfig {}
-
-impl Default for QueryOnlyConfig {
-    fn default() -> Self {
-        Self {
-            introspection_enabled: Default::default(),
-            complexity_limit: Default::default(),
-            depth_limit: Default::default(),
-        }
-    }
-}
-
-impl QueryOnlyConfig {
-    fn new(introspection_enabled: Option<bool>, complexity_limit: Option<usize>, depth_limit: Option<usize>) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    fn introspection_enabled(&self) -> bool {
-        self.introspection_enabled
-    }
-
-    fn complexity_limit(&self) -> Option<usize> {
-        self.complexity_limit
-    }
-
-    fn depth_limit(&self) -> Option<usize> {
-        self.depth_limit
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::QueryMutationConfig")]
-#[serde(default)]
-pub struct QueryMutationConfig {
-    pub introspection_enabled: bool,
-    pub complexity_limit: Option<usize>,
-    pub depth_limit: Option<usize>,
-}
-
-unsafe impl IntoValueFromNative for QueryMutationConfig {}
-
-impl magnus::TryConvert for QueryMutationConfig {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &QueryMutationConfig = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for QueryMutationConfig {}
-
-impl Default for QueryMutationConfig {
-    fn default() -> Self {
-        Self {
-            introspection_enabled: Default::default(),
-            complexity_limit: Default::default(),
-            depth_limit: Default::default(),
-        }
-    }
-}
-
-impl QueryMutationConfig {
-    fn new(introspection_enabled: Option<bool>, complexity_limit: Option<usize>, depth_limit: Option<usize>) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    fn introspection_enabled(&self) -> bool {
-        self.introspection_enabled
-    }
-
-    fn complexity_limit(&self) -> Option<usize> {
-        self.complexity_limit
-    }
-
-    fn depth_limit(&self) -> Option<usize> {
-        self.depth_limit
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[magnus::wrap(class = "Spikard::FullSchemaConfig")]
-#[serde(default)]
-pub struct FullSchemaConfig {
-    pub introspection_enabled: bool,
-    pub complexity_limit: Option<usize>,
-    pub depth_limit: Option<usize>,
-}
-
-unsafe impl IntoValueFromNative for FullSchemaConfig {}
-
-impl magnus::TryConvert for FullSchemaConfig {
-    fn try_convert(val: magnus::Value) -> Result<Self, magnus::Error> {
-        let r: &FullSchemaConfig = magnus::TryConvert::try_convert(val)?;
-        Ok(r.clone())
-    }
-}
-unsafe impl TryConvertOwned for FullSchemaConfig {}
-
-impl Default for FullSchemaConfig {
-    fn default() -> Self {
-        Self {
-            introspection_enabled: Default::default(),
-            complexity_limit: Default::default(),
-            depth_limit: Default::default(),
-        }
-    }
-}
-
-impl FullSchemaConfig {
-    fn new(introspection_enabled: Option<bool>, complexity_limit: Option<usize>, depth_limit: Option<usize>) -> Self {
-        Self {
-            introspection_enabled: introspection_enabled.unwrap_or(true),
-            complexity_limit,
-            depth_limit,
-        }
-    }
-
-    fn introspection_enabled(&self) -> bool {
-        self.introspection_enabled
-    }
-
-    fn complexity_limit(&self) -> Option<usize> {
-        self.complexity_limit
-    }
-
-    fn depth_limit(&self) -> Option<usize> {
-        self.depth_limit
-    }
-}
-
 #[derive(Clone, Copy, PartialEq, Eq, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Method {
     Get,
@@ -2526,6 +2526,18 @@ impl magnus::TryConvert for SecuritySchemeInfo {
 unsafe impl IntoValueFromNative for SecuritySchemeInfo {}
 unsafe impl TryConvertOwned for SecuritySchemeInfo {}
 
+fn schema_query_only() -> QueryOnlyConfig {
+    spikard_graphql::schema_query_only().into()
+}
+
+fn schema_query_mutation() -> QueryMutationConfig {
+    spikard_graphql::schema_query_mutation().into()
+}
+
+fn schema_full() -> FullSchemaConfig {
+    spikard_graphql::schema_full().into()
+}
+
 fn add_cors_headers(response: String, origin: String, cors_config: String) -> () {
     let response: Response = {
         let core: spikard::Response = serde_json::from_str(&response)
@@ -2540,16 +2552,307 @@ fn add_cors_headers(response: String, origin: String, cors_config: String) -> ()
     ()
 }
 
-fn schema_query_only() -> QueryOnlyConfig {
-    spikard_graphql::schema_query_only().into()
+impl From<spikard::UploadFile> for UploadFile {
+    fn from(val: spikard::UploadFile) -> Self {
+        Self {
+            filename: val.filename,
+            content_type: val.content_type,
+            size: val.size,
+            content: val.content.to_vec(),
+            content_encoding: val.content_encoding,
+            cursor: format!("{:?}", val.cursor),
+        }
+    }
 }
 
-fn schema_query_mutation() -> QueryMutationConfig {
-    spikard_graphql::schema_query_mutation().into()
+impl From<CorsConfig> for spikard_core::CorsConfig {
+    fn from(val: CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: Default::default(),
+            headers_joined_cache: Default::default(),
+        }
+    }
 }
 
-fn schema_full() -> FullSchemaConfig {
-    spikard_graphql::schema_full().into()
+impl From<spikard_core::CorsConfig> for CorsConfig {
+    fn from(val: spikard_core::CorsConfig) -> Self {
+        Self {
+            allowed_origins: val.allowed_origins,
+            allowed_methods: val.allowed_methods,
+            allowed_headers: val.allowed_headers,
+            expose_headers: val.expose_headers,
+            max_age: val.max_age,
+            allow_credentials: val.allow_credentials,
+            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
+            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<RouteMetadata> for spikard_core::RouteMetadata {
+    fn from(val: RouteMetadata) -> Self {
+        Self {
+            method: val.method,
+            path: val.path,
+            handler_name: val.handler_name,
+            request_schema: Default::default(),
+            response_schema: Default::default(),
+            parameter_schema: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: Default::default(),
+            static_response: Default::default(),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::RouteMetadata> for RouteMetadata {
+    fn from(val: spikard_core::RouteMetadata) -> Self {
+        Self {
+            method: val.method,
+            path: val.path,
+            handler_name: val.handler_name,
+            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
+            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
+            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            body_param_name: val.body_param_name,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
+            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
+        }
+    }
+}
+
+impl From<CompressionConfig> for spikard_core::CompressionConfig {
+    fn from(val: CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<spikard_core::CompressionConfig> for CompressionConfig {
+    fn from(val: spikard_core::CompressionConfig) -> Self {
+        Self {
+            gzip: val.gzip,
+            brotli: val.brotli,
+            min_size: val.min_size,
+            quality: val.quality,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard_core::RateLimitConfig {
+    fn from(val: RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<spikard_core::RateLimitConfig> for RateLimitConfig {
+    fn from(val: spikard_core::RateLimitConfig) -> Self {
+        Self {
+            per_second: val.per_second,
+            burst: val.burst,
+            ip_based: val.ip_based,
+        }
+    }
+}
+
+impl From<JsonRpcMethodInfo> for spikard_core::JsonRpcMethodInfo {
+    fn from(val: JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: Default::default(),
+            result_schema: Default::default(),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+impl From<spikard_core::JsonRpcMethodInfo> for JsonRpcMethodInfo {
+    fn from(val: spikard_core::JsonRpcMethodInfo) -> Self {
+        Self {
+            method_name: val.method_name,
+            description: val.description,
+            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
+            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
+            deprecated: val.deprecated,
+            tags: val.tags,
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<Route> for spikard_core::Route {
+    fn from(val: Route) -> Self {
+        Self {
+            method: val.method.into(),
+            path: val.path,
+            handler_name: val.handler_name,
+            request_validator: Default::default(),
+            response_validator: Default::default(),
+            parameter_validator: Default::default(),
+            file_params: Default::default(),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<spikard_core::Route> for Route {
+    fn from(val: spikard_core::Route) -> Self {
+        Self {
+            method: val.method.into(),
+            path: val.path,
+            handler_name: val.handler_name,
+            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
+            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
+            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
+            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
+            is_async: val.is_async,
+            cors: val.cors.map(Into::into),
+            expects_json_body: val.expects_json_body,
+            handler_dependencies: val.handler_dependencies,
+            jsonrpc_method: val.jsonrpc_method.map(Into::into),
+        }
+    }
+}
+
+impl From<ProblemDetails> for spikard_core::ProblemDetails {
+    fn from(val: ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: Default::default(),
+        }
+    }
+}
+
+impl From<spikard_core::ProblemDetails> for ProblemDetails {
+    fn from(val: spikard_core::ProblemDetails) -> Self {
+        Self {
+            type_uri: val.type_uri,
+            title: val.title,
+            status: val.status,
+            detail: val.detail,
+            instance: val.instance,
+            extensions: val
+                .extensions
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+        }
+    }
+}
+
+impl From<SchemaConfig> for spikard_graphql::SchemaConfig {
+    fn from(val: SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
+    fn from(val: spikard_graphql::SchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<QueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
+    fn from(val: QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
+    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<QueryMutationConfig> for spikard_graphql::QueryMutationConfig {
+    fn from(val: QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
+    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<FullSchemaConfig> for spikard_graphql::FullSchemaConfig {
+    fn from(val: FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
+}
+
+impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
+    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
+        Self {
+            introspection_enabled: val.introspection_enabled,
+            complexity_limit: val.complexity_limit,
+            depth_limit: val.depth_limit,
+        }
+    }
 }
 
 impl From<spikard_http::Claims> for Claims {
@@ -2612,216 +2915,6 @@ impl From<BackgroundJobError> for spikard_http::BackgroundJobError {
 impl From<spikard_http::BackgroundJobError> for BackgroundJobError {
     fn from(val: spikard_http::BackgroundJobError) -> Self {
         Self { message: val.message }
-    }
-}
-
-impl From<CorsConfig> for spikard_http::CorsConfig {
-    fn from(val: CorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins,
-            allowed_methods: val.allowed_methods,
-            allowed_headers: val.allowed_headers,
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: Default::default(),
-            headers_joined_cache: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::CorsConfig> for CorsConfig {
-    fn from(val: spikard_http::CorsConfig) -> Self {
-        Self {
-            allowed_origins: val.allowed_origins,
-            allowed_methods: val.allowed_methods,
-            allowed_headers: val.allowed_headers,
-            expose_headers: val.expose_headers,
-            max_age: val.max_age,
-            allow_credentials: val.allow_credentials,
-            methods_joined_cache: format!("{:?}", val.methods_joined_cache),
-            headers_joined_cache: format!("{:?}", val.headers_joined_cache),
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<RouteMetadata> for spikard_http::RouteMetadata {
-    fn from(val: RouteMetadata) -> Self {
-        Self {
-            method: val.method,
-            path: val.path,
-            handler_name: val.handler_name,
-            request_schema: Default::default(),
-            response_schema: Default::default(),
-            parameter_schema: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: Default::default(),
-            static_response: Default::default(),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::RouteMetadata> for RouteMetadata {
-    fn from(val: spikard_http::RouteMetadata) -> Self {
-        Self {
-            method: val.method,
-            path: val.path,
-            handler_name: val.handler_name,
-            request_schema: val.request_schema.as_ref().map(|v| format!("{v:?}")),
-            response_schema: val.response_schema.as_ref().map(|v| format!("{v:?}")),
-            parameter_schema: val.parameter_schema.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            body_param_name: val.body_param_name,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.as_ref().map(|v| format!("{v:?}")),
-            static_response: val.static_response.as_ref().map(|v| format!("{v:?}")),
-        }
-    }
-}
-
-impl From<CompressionConfig> for spikard_http::CompressionConfig {
-    fn from(val: CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<spikard_http::CompressionConfig> for CompressionConfig {
-    fn from(val: spikard_http::CompressionConfig) -> Self {
-        Self {
-            gzip: val.gzip,
-            brotli: val.brotli,
-            min_size: val.min_size,
-            quality: val.quality,
-        }
-    }
-}
-
-impl From<RateLimitConfig> for spikard_http::RateLimitConfig {
-    fn from(val: RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<spikard_http::RateLimitConfig> for RateLimitConfig {
-    fn from(val: spikard_http::RateLimitConfig) -> Self {
-        Self {
-            per_second: val.per_second,
-            burst: val.burst,
-            ip_based: val.ip_based,
-        }
-    }
-}
-
-impl From<ProblemDetails> for spikard_http::ProblemDetails {
-    fn from(val: ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: Default::default(),
-        }
-    }
-}
-
-impl From<spikard_http::ProblemDetails> for ProblemDetails {
-    fn from(val: spikard_http::ProblemDetails) -> Self {
-        Self {
-            type_uri: val.type_uri,
-            title: val.title,
-            status: val.status,
-            detail: val.detail,
-            instance: val.instance,
-            extensions: val
-                .extensions
-                .into_iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
-        }
-    }
-}
-
-impl From<JsonRpcMethodInfo> for spikard_http::JsonRpcMethodInfo {
-    fn from(val: JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: Default::default(),
-            result_schema: Default::default(),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-impl From<spikard_http::JsonRpcMethodInfo> for JsonRpcMethodInfo {
-    fn from(val: spikard_http::JsonRpcMethodInfo) -> Self {
-        Self {
-            method_name: val.method_name,
-            description: val.description,
-            params_schema: val.params_schema.as_ref().map(|v| format!("{v:?}")),
-            result_schema: val.result_schema.as_ref().map(|v| format!("{v:?}")),
-            deprecated: val.deprecated,
-            tags: val.tags,
-        }
-    }
-}
-
-#[allow(clippy::needless_update)]
-impl From<Route> for spikard_http::Route {
-    fn from(val: Route) -> Self {
-        Self {
-            method: val.method.into(),
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: Default::default(),
-            response_validator: Default::default(),
-            parameter_validator: Default::default(),
-            file_params: Default::default(),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-            ..Default::default()
-        }
-    }
-}
-
-impl From<spikard_http::Route> for Route {
-    fn from(val: spikard_http::Route) -> Self {
-        Self {
-            method: val.method.into(),
-            path: val.path,
-            handler_name: val.handler_name,
-            request_validator: val.request_validator.as_ref().map(|v| format!("{v:?}")),
-            response_validator: val.response_validator.as_ref().map(|v| format!("{v:?}")),
-            parameter_validator: val.parameter_validator.as_ref().map(|v| format!("{v:?}")),
-            file_params: val.file_params.as_ref().map(|v| format!("{v:?}")),
-            is_async: val.is_async,
-            cors: val.cors.map(Into::into),
-            expects_json_body: val.expects_json_body,
-            handler_dependencies: val.handler_dependencies,
-            jsonrpc_method: val.jsonrpc_method.map(Into::into),
-        }
     }
 }
 
@@ -3163,100 +3256,7 @@ impl From<spikard_http::ServerConfig> for ServerConfig {
     }
 }
 
-impl From<spikard::UploadFile> for UploadFile {
-    fn from(val: spikard::UploadFile) -> Self {
-        Self {
-            filename: val.filename,
-            content_type: val.content_type,
-            size: val.size,
-            content: val.content.to_vec(),
-            content_encoding: val.content_encoding,
-            cursor: format!("{:?}", val.cursor),
-        }
-    }
-}
-
-impl From<SchemaConfig> for spikard_graphql::SchemaConfig {
-    fn from(val: SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
-    fn from(val: spikard_graphql::SchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<QueryOnlyConfig> for spikard_graphql::QueryOnlyConfig {
-    fn from(val: QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
-    fn from(val: spikard_graphql::QueryOnlyConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<QueryMutationConfig> for spikard_graphql::QueryMutationConfig {
-    fn from(val: QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
-    fn from(val: spikard_graphql::QueryMutationConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<FullSchemaConfig> for spikard_graphql::FullSchemaConfig {
-    fn from(val: FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
-    fn from(val: spikard_graphql::FullSchemaConfig) -> Self {
-        Self {
-            introspection_enabled: val.introspection_enabled,
-            complexity_limit: val.complexity_limit,
-            depth_limit: val.depth_limit,
-        }
-    }
-}
-
-impl From<Method> for spikard_http::Method {
+impl From<Method> for spikard_core::Method {
     fn from(val: Method) -> Self {
         match val {
             Method::Get => Self::Get,
@@ -3271,17 +3271,17 @@ impl From<Method> for spikard_http::Method {
     }
 }
 
-impl From<spikard_http::Method> for Method {
-    fn from(val: spikard_http::Method) -> Self {
+impl From<spikard_core::Method> for Method {
+    fn from(val: spikard_core::Method) -> Self {
         match val {
-            spikard_http::Method::Get => Self::Get,
-            spikard_http::Method::Post => Self::Post,
-            spikard_http::Method::Put => Self::Put,
-            spikard_http::Method::Patch => Self::Patch,
-            spikard_http::Method::Delete => Self::Delete,
-            spikard_http::Method::Head => Self::Head,
-            spikard_http::Method::Options => Self::Options,
-            spikard_http::Method::Trace => Self::Trace,
+            spikard_core::Method::Get => Self::Get,
+            spikard_core::Method::Post => Self::Post,
+            spikard_core::Method::Put => Self::Put,
+            spikard_core::Method::Patch => Self::Patch,
+            spikard_core::Method::Delete => Self::Delete,
+            spikard_core::Method::Head => Self::Head,
+            spikard_core::Method::Options => Self::Options,
+            spikard_core::Method::Trace => Self::Trace,
         }
     }
 }
@@ -3348,37 +3348,20 @@ fn schema_error_to_magnus_err(e: spikard_graphql::schema::SchemaError) -> magnus
 fn init(ruby: &Ruby) -> Result<(), Error> {
     let module = ruby.define_module("Spikard")?;
 
-    let class = module.define_class("Claims", ruby.class_object())?;
-    class.define_singleton_method("new", function!(Claims::new, 6))?;
-    class.define_method("sub", method!(Claims::sub, 0))?;
-    class.define_method("exp", method!(Claims::exp, 0))?;
-    class.define_method("iat", method!(Claims::iat, 0))?;
-    class.define_method("nbf", method!(Claims::nbf, 0))?;
-    class.define_method("aud", method!(Claims::aud, 0))?;
-    class.define_method("iss", method!(Claims::iss, 0))?;
-
-    let class = module.define_class("BackgroundTaskConfig", ruby.class_object())?;
-    class.define_singleton_method("new", function!(BackgroundTaskConfig::new, 3))?;
-    class.define_method("max_queue_size", method!(BackgroundTaskConfig::max_queue_size, 0))?;
+    let class = module.define_class("UploadFile", ruby.class_object())?;
+    class.define_singleton_method("new", function!(UploadFile::new, 6))?;
+    class.define_method("filename", method!(UploadFile::filename, 0))?;
+    class.define_method("content_type", method!(UploadFile::content_type, 0))?;
+    class.define_method("size", method!(UploadFile::size, 0))?;
+    class.define_method("content", method!(UploadFile::content, 0))?;
+    class.define_method("content_encoding", method!(UploadFile::content_encoding, 0))?;
+    class.define_method("cursor", method!(UploadFile::cursor, 0))?;
+    class.define_method("as_bytes", method!(UploadFile::as_bytes, 0))?;
+    class.define_method("read_to_string", method!(UploadFile::read_to_string, 0))?;
     class.define_method(
-        "max_concurrent_tasks",
-        method!(BackgroundTaskConfig::max_concurrent_tasks, 0),
+        "content_type_or_default",
+        method!(UploadFile::content_type_or_default, 0),
     )?;
-    class.define_method(
-        "drain_timeout_secs",
-        method!(BackgroundTaskConfig::drain_timeout_secs, 0),
-    )?;
-
-    let class = module.define_class("BackgroundJobMetadata", ruby.class_object())?;
-    class.define_singleton_method("new", function!(BackgroundJobMetadata::new, 2))?;
-    class.define_method("name", method!(BackgroundJobMetadata::name, 0))?;
-    class.define_method("request_id", method!(BackgroundJobMetadata::request_id, 0))?;
-
-    let class = module.define_class("BackgroundJobError", ruby.class_object())?;
-    class.define_singleton_method("new", function!(BackgroundJobError::new, 1))?;
-    class.define_method("message", method!(BackgroundJobError::message, 0))?;
-
-    let _class = module.define_class("BackgroundHandle", ruby.class_object())?;
 
     let class = module.define_class("CorsConfig", ruby.class_object())?;
     class.define_singleton_method("new", function!(CorsConfig::new, 8))?;
@@ -3425,22 +3408,6 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("burst", method!(RateLimitConfig::burst, 0))?;
     class.define_method("ip_based", method!(RateLimitConfig::ip_based, 0))?;
 
-    let class = module.define_class("ProblemDetails", ruby.class_object())?;
-    class.define_singleton_method("new", function!(ProblemDetails::new, 6))?;
-    class.define_method("type_uri", method!(ProblemDetails::type_uri, 0))?;
-    class.define_method("title", method!(ProblemDetails::title, 0))?;
-    class.define_method("status", method!(ProblemDetails::status, 0))?;
-    class.define_method("detail", method!(ProblemDetails::detail, 0))?;
-    class.define_method("instance", method!(ProblemDetails::instance, 0))?;
-    class.define_method("extensions", method!(ProblemDetails::extensions, 0))?;
-    class.define_method("with_detail", method!(ProblemDetails::with_detail, 1))?;
-    class.define_method("with_instance", method!(ProblemDetails::with_instance, 1))?;
-    class.define_method("with_extension", method!(ProblemDetails::with_extension, 2))?;
-    class.define_method("with_extensions", method!(ProblemDetails::with_extensions, 1))?;
-    class.define_method("status_code", method!(ProblemDetails::status_code, 0))?;
-    class.define_method("to_json", method!(ProblemDetails::to_json, 0))?;
-    class.define_method("to_json_pretty", method!(ProblemDetails::to_json_pretty, 0))?;
-
     let class = module.define_class("JsonRpcMethodInfo", ruby.class_object())?;
     class.define_singleton_method("new", function!(JsonRpcMethodInfo::new, 6))?;
     class.define_method("method_name", method!(JsonRpcMethodInfo::method_name, 0))?;
@@ -3467,6 +3434,112 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("with_jsonrpc_method", method!(Route::with_jsonrpc_method, 1))?;
     class.define_method("is_jsonrpc_method", method!(Route::is_jsonrpc_method, 0))?;
     class.define_method("jsonrpc_method_name", method!(Route::jsonrpc_method_name, 0))?;
+
+    let class = module.define_class("ProblemDetails", ruby.class_object())?;
+    class.define_singleton_method("new", function!(ProblemDetails::new, 6))?;
+    class.define_method("type_uri", method!(ProblemDetails::type_uri, 0))?;
+    class.define_method("title", method!(ProblemDetails::title, 0))?;
+    class.define_method("status", method!(ProblemDetails::status, 0))?;
+    class.define_method("detail", method!(ProblemDetails::detail, 0))?;
+    class.define_method("instance", method!(ProblemDetails::instance, 0))?;
+    class.define_method("extensions", method!(ProblemDetails::extensions, 0))?;
+    class.define_method("with_detail", method!(ProblemDetails::with_detail, 1))?;
+    class.define_method("with_instance", method!(ProblemDetails::with_instance, 1))?;
+    class.define_method("with_extension", method!(ProblemDetails::with_extension, 2))?;
+    class.define_method("with_extensions", method!(ProblemDetails::with_extensions, 1))?;
+    class.define_method("status_code", method!(ProblemDetails::status_code, 0))?;
+    class.define_method("to_json", method!(ProblemDetails::to_json, 0))?;
+    class.define_method("to_json_pretty", method!(ProblemDetails::to_json_pretty, 0))?;
+
+    let class = module.define_class("GraphQLError", ruby.class_object())?;
+    class.define_method("status_code", method!(GraphQLError::status_code, 0))?;
+    class.define_method("to_graphql_response", method!(GraphQLError::to_graphql_response, 0))?;
+    class.define_method("to_http_response", method!(GraphQLError::to_http_response, 0))?;
+
+    let class = module.define_class("GraphQLRouteConfig", ruby.class_object())?;
+    class.define_method("path", method!(GraphQLRouteConfig::path, 1))?;
+    class.define_method("method", method!(GraphQLRouteConfig::method, 1))?;
+    class.define_method("enable_playground", method!(GraphQLRouteConfig::enable_playground, 1))?;
+    class.define_method("description", method!(GraphQLRouteConfig::description, 1))?;
+    class.define_method("get_path", method!(GraphQLRouteConfig::get_path, 0))?;
+    class.define_method("get_method", method!(GraphQLRouteConfig::get_method, 0))?;
+    class.define_method(
+        "is_playground_enabled",
+        method!(GraphQLRouteConfig::is_playground_enabled, 0),
+    )?;
+    class.define_method("get_description", method!(GraphQLRouteConfig::get_description, 0))?;
+
+    let class = module.define_class("SchemaConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(SchemaConfig::new, 3))?;
+    class.define_method("introspection_enabled", method!(SchemaConfig::introspection_enabled, 0))?;
+    class.define_method("complexity_limit", method!(SchemaConfig::complexity_limit, 0))?;
+    class.define_method("depth_limit", method!(SchemaConfig::depth_limit, 0))?;
+    class.define_method(
+        "set_introspection_enabled",
+        method!(SchemaConfig::set_introspection_enabled, 1),
+    )?;
+    class.define_method("set_complexity_limit", method!(SchemaConfig::set_complexity_limit, 1))?;
+    class.define_method("set_depth_limit", method!(SchemaConfig::set_depth_limit, 1))?;
+    class.define_method("validate", method!(SchemaConfig::validate, 0))?;
+
+    let class = module.define_class("QueryOnlyConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(QueryOnlyConfig::new, 3))?;
+    class.define_method(
+        "introspection_enabled",
+        method!(QueryOnlyConfig::introspection_enabled, 0),
+    )?;
+    class.define_method("complexity_limit", method!(QueryOnlyConfig::complexity_limit, 0))?;
+    class.define_method("depth_limit", method!(QueryOnlyConfig::depth_limit, 0))?;
+
+    let class = module.define_class("QueryMutationConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(QueryMutationConfig::new, 3))?;
+    class.define_method(
+        "introspection_enabled",
+        method!(QueryMutationConfig::introspection_enabled, 0),
+    )?;
+    class.define_method("complexity_limit", method!(QueryMutationConfig::complexity_limit, 0))?;
+    class.define_method("depth_limit", method!(QueryMutationConfig::depth_limit, 0))?;
+
+    let class = module.define_class("FullSchemaConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(FullSchemaConfig::new, 3))?;
+    class.define_method(
+        "introspection_enabled",
+        method!(FullSchemaConfig::introspection_enabled, 0),
+    )?;
+    class.define_method("complexity_limit", method!(FullSchemaConfig::complexity_limit, 0))?;
+    class.define_method("depth_limit", method!(FullSchemaConfig::depth_limit, 0))?;
+
+    let class = module.define_class("Claims", ruby.class_object())?;
+    class.define_singleton_method("new", function!(Claims::new, 6))?;
+    class.define_method("sub", method!(Claims::sub, 0))?;
+    class.define_method("exp", method!(Claims::exp, 0))?;
+    class.define_method("iat", method!(Claims::iat, 0))?;
+    class.define_method("nbf", method!(Claims::nbf, 0))?;
+    class.define_method("aud", method!(Claims::aud, 0))?;
+    class.define_method("iss", method!(Claims::iss, 0))?;
+
+    let class = module.define_class("BackgroundTaskConfig", ruby.class_object())?;
+    class.define_singleton_method("new", function!(BackgroundTaskConfig::new, 3))?;
+    class.define_method("max_queue_size", method!(BackgroundTaskConfig::max_queue_size, 0))?;
+    class.define_method(
+        "max_concurrent_tasks",
+        method!(BackgroundTaskConfig::max_concurrent_tasks, 0),
+    )?;
+    class.define_method(
+        "drain_timeout_secs",
+        method!(BackgroundTaskConfig::drain_timeout_secs, 0),
+    )?;
+
+    let class = module.define_class("BackgroundJobMetadata", ruby.class_object())?;
+    class.define_singleton_method("new", function!(BackgroundJobMetadata::new, 2))?;
+    class.define_method("name", method!(BackgroundJobMetadata::name, 0))?;
+    class.define_method("request_id", method!(BackgroundJobMetadata::request_id, 0))?;
+
+    let class = module.define_class("BackgroundJobError", ruby.class_object())?;
+    class.define_singleton_method("new", function!(BackgroundJobError::new, 1))?;
+    class.define_method("message", method!(BackgroundJobError::message, 0))?;
+
+    let _class = module.define_class("BackgroundHandle", ruby.class_object())?;
 
     let class = module.define_class("GrpcRequestData", ruby.class_object())?;
     class.define_singleton_method("new", function!(GrpcRequestData::new, 4))?;
@@ -3592,83 +3665,10 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("enable_http_trace", method!(ServerConfig::enable_http_trace, 0))?;
     class.define_method("di_container", method!(ServerConfig::di_container, 0))?;
 
-    let class = module.define_class("UploadFile", ruby.class_object())?;
-    class.define_singleton_method("new", function!(UploadFile::new, 6))?;
-    class.define_method("filename", method!(UploadFile::filename, 0))?;
-    class.define_method("content_type", method!(UploadFile::content_type, 0))?;
-    class.define_method("size", method!(UploadFile::size, 0))?;
-    class.define_method("content", method!(UploadFile::content, 0))?;
-    class.define_method("content_encoding", method!(UploadFile::content_encoding, 0))?;
-    class.define_method("cursor", method!(UploadFile::cursor, 0))?;
-    class.define_method("as_bytes", method!(UploadFile::as_bytes, 0))?;
-    class.define_method("read_to_string", method!(UploadFile::read_to_string, 0))?;
-    class.define_method(
-        "content_type_or_default",
-        method!(UploadFile::content_type_or_default, 0),
-    )?;
-
-    let class = module.define_class("GraphQLError", ruby.class_object())?;
-    class.define_method("status_code", method!(GraphQLError::status_code, 0))?;
-    class.define_method("to_graphql_response", method!(GraphQLError::to_graphql_response, 0))?;
-    class.define_method("to_http_response", method!(GraphQLError::to_http_response, 0))?;
-
-    let class = module.define_class("GraphQLRouteConfig", ruby.class_object())?;
-    class.define_method("path", method!(GraphQLRouteConfig::path, 1))?;
-    class.define_method("method", method!(GraphQLRouteConfig::method, 1))?;
-    class.define_method("enable_playground", method!(GraphQLRouteConfig::enable_playground, 1))?;
-    class.define_method("description", method!(GraphQLRouteConfig::description, 1))?;
-    class.define_method("get_path", method!(GraphQLRouteConfig::get_path, 0))?;
-    class.define_method("get_method", method!(GraphQLRouteConfig::get_method, 0))?;
-    class.define_method(
-        "is_playground_enabled",
-        method!(GraphQLRouteConfig::is_playground_enabled, 0),
-    )?;
-    class.define_method("get_description", method!(GraphQLRouteConfig::get_description, 0))?;
-
-    let class = module.define_class("SchemaConfig", ruby.class_object())?;
-    class.define_singleton_method("new", function!(SchemaConfig::new, 3))?;
-    class.define_method("introspection_enabled", method!(SchemaConfig::introspection_enabled, 0))?;
-    class.define_method("complexity_limit", method!(SchemaConfig::complexity_limit, 0))?;
-    class.define_method("depth_limit", method!(SchemaConfig::depth_limit, 0))?;
-    class.define_method(
-        "set_introspection_enabled",
-        method!(SchemaConfig::set_introspection_enabled, 1),
-    )?;
-    class.define_method("set_complexity_limit", method!(SchemaConfig::set_complexity_limit, 1))?;
-    class.define_method("set_depth_limit", method!(SchemaConfig::set_depth_limit, 1))?;
-    class.define_method("validate", method!(SchemaConfig::validate, 0))?;
-
-    let class = module.define_class("QueryOnlyConfig", ruby.class_object())?;
-    class.define_singleton_method("new", function!(QueryOnlyConfig::new, 3))?;
-    class.define_method(
-        "introspection_enabled",
-        method!(QueryOnlyConfig::introspection_enabled, 0),
-    )?;
-    class.define_method("complexity_limit", method!(QueryOnlyConfig::complexity_limit, 0))?;
-    class.define_method("depth_limit", method!(QueryOnlyConfig::depth_limit, 0))?;
-
-    let class = module.define_class("QueryMutationConfig", ruby.class_object())?;
-    class.define_singleton_method("new", function!(QueryMutationConfig::new, 3))?;
-    class.define_method(
-        "introspection_enabled",
-        method!(QueryMutationConfig::introspection_enabled, 0),
-    )?;
-    class.define_method("complexity_limit", method!(QueryMutationConfig::complexity_limit, 0))?;
-    class.define_method("depth_limit", method!(QueryMutationConfig::depth_limit, 0))?;
-
-    let class = module.define_class("FullSchemaConfig", ruby.class_object())?;
-    class.define_singleton_method("new", function!(FullSchemaConfig::new, 3))?;
-    class.define_method(
-        "introspection_enabled",
-        method!(FullSchemaConfig::introspection_enabled, 0),
-    )?;
-    class.define_method("complexity_limit", method!(FullSchemaConfig::complexity_limit, 0))?;
-    class.define_method("depth_limit", method!(FullSchemaConfig::depth_limit, 0))?;
-
-    module.define_module_function("add_cors_headers", function!(add_cors_headers, 3))?;
     module.define_module_function("schema_query_only", function!(schema_query_only, 0))?;
     module.define_module_function("schema_query_mutation", function!(schema_query_mutation, 0))?;
     module.define_module_function("schema_full", function!(schema_full, 0))?;
+    module.define_module_function("add_cors_headers", function!(add_cors_headers, 3))?;
 
     Ok(())
 }
