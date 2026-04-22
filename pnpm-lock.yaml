@@ -21,6 +21,12 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
 
+  crates/spikard-node:
+    devDependencies:
+      '@napi-rs/cli':
+        specifier: ^3.6.2
+        version: 3.6.2(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.0)(@types/node@25.6.0)
+
   e2e/node:
     devDependencies:
       '@spikard/node':
