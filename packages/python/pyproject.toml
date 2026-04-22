@@ -4,7 +4,7 @@ requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "spikard"
-version = "0.13.0"
+version = "0.14.0"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
 keywords = [ "framework", "http", "polyglot", "rust", "web" ]
 license = "MIT"

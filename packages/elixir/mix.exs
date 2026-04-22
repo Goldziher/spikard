@@ -4,7 +4,7 @@ defmodule Spikard.MixProject do
   def project do
     [
       app: :spikard,
-      version: "0.13.0",
+      version: "0.14.0",
       elixir: "~> 1.14",
       rustler_crates: [spikard_rustler: [mode: :release]],
       description: "Rust-centric multi-language HTTP framework with polyglot bindings",

@@ -15,7 +15,7 @@ members = [
 exclude = ["e2e/*", "examples/*", "test_apps/*"]
 
 [workspace.package]
-version = "0.13.0"
+version = "0.14.0"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
@@ -43,10 +43,10 @@ prost-types = "0.14"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # Core library
-spikard = { version = "0.13.0", path = "crates/spikard" }
-spikard-core = { version = "0.13.0", path = "crates/spikard-core" }
-spikard-graphql = { version = "0.13.0", path = "crates/spikard-graphql" }
-spikard-http = { version = "0.13.0", path = "crates/spikard-http" }
+spikard = { version = "0.14.0", path = "crates/spikard" }
+spikard-core = { version = "0.14.0", path = "crates/spikard-core" }
+spikard-graphql = { version = "0.14.0", path = "crates/spikard-graphql" }
+spikard-http = { version = "0.14.0", path = "crates/spikard-http" }
 
 # Utilities
 thiserror = "2.0"

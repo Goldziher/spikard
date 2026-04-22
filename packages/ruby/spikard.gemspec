@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = 'spikard'
-  spec.version = '0.13.0'
+  spec.version = '0.14.0'
   spec.authors       = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
   spec.summary       = 'Rust-centric multi-language HTTP framework with polyglot bindings'
   spec.description   = 'Rust-centric multi-language HTTP framework with polyglot bindings'
