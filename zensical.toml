@@ -1,0 +1,315 @@
+[project]
+site_name = "Spikard"
+site_description = "A polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, PHP, and Rust"
+site_url = "https://spikard.dev"
+site_author = "Spikard Contributors"
+repo_name = "Goldziher/spikard"
+repo_url = "https://github.com/Goldziher/spikard"
+edit_uri = "edit/main/docs/"
+copyright = "Copyright &copy; 2023-2026 Spikard Contributors"
+
+extra_css = ["css/extra.css"]
+
+nav = [
+    # Landing & Getting Started
+    { "Home" = "index.md" },
+    { "Getting Started" = [
+        { "Installation" = "getting-started/installation.md" },
+        { "Quick Start" = "getting-started/quickstart.md" },
+        { "Init Command" = "getting-started/init-command.md" },
+    ] },
+
+    # Core Concepts & Features
+    { "Features" = "features.md" },
+    { "Concepts" = [
+        { "Architecture" = "concepts/architecture.md" },
+        { "Architecture Diagram" = "concepts/architecture-diagram.md" },
+        { "Runtime Model" = "concepts/runtime.md" },
+        { "Validation Engine" = "concepts/validation.md" },
+        { "Middleware & Extensions" = "concepts/middleware.md" },
+        { "Streaming & Async IO" = "concepts/streaming.md" },
+        { "Python Binding Architecture" = "python/architecture.md" },
+    ] },
+
+    # User Guides
+    { "Guides" = [
+        { "Routing Basics" = "guides/routing.md" },
+        { "Requests & Responses" = "guides/requests.md" },
+        { "Configuration" = "guides/configuration.md" },
+        { "Middleware" = "guides/middleware.md" },
+        { "Validation Flows" = "guides/validation.md" },
+        { "Dependency Injection" = "guides/dependency-injection.md" },
+        { "Deployment" = "guides/deployment.md" },
+        { "Code Generation" = "guides/code-generation.md" },
+        { "Testing" = "guides/testing.md" },
+        { "GraphQL" = "guides/graphql.md" },
+        { "gRPC Getting Started" = "guides/grpc-getting-started.md" },
+        { "gRPC Error Handling" = "guides/grpc-error-handling.md" },
+        { "gRPC Migration Guide" = "guides/grpc-migration-guide.md" },
+        { "Protobuf & gRPC" = "guides/protobuf-grpc.md" },
+    ] },
+
+    # Command Line
+    { "CLI" = "cli/usage.md" },
+
+    # Language Bindings
+    { "Bindings" = [
+        { "Python" = "reference/api-python.md" },
+        { "TypeScript & Node" = "reference/api-typescript.md" },
+        { "Ruby" = "reference/api-ruby.md" },
+        { "PHP" = "reference/api-php.md" },
+        { "Rust" = "reference/api-rust.md" },
+        { "Elixir" = "reference/api-elixir.md" },
+    ] },
+
+    # Practical Patterns
+    { "Playbooks" = [
+        { "Auth & Guards" = "playbooks/auth.md" },
+        { "Logging & Tracing" = "playbooks/logging.md" },
+        { "File Uploads" = "playbooks/uploads.md" },
+        { "Streaming & Real-Time" = "playbooks/streaming.md" },
+        { "Error Handling" = "playbooks/errors.md" },
+        { "Background Tasks" = "playbooks/background.md" },
+    ] },
+
+    # API Documentation
+    { "API Reference" = [
+        { "Types" = "reference/types.md" },
+        { "Configuration" = "reference/configuration.md" },
+        { "Errors" = "reference/errors.md" },
+    ] },
+
+    # Testing
+    { "Testing" = [
+        { "gRPC Fixtures" = "testing/grpc-fixtures.md" },
+    ] },
+
+    # Architecture Decisions
+    { "Architecture Decisions" = [
+        { "ADR Overview" = "adr/README.md" },
+        { "ADR 0001 - Architecture and Principles" = "adr/0001-architecture-and-principles.md" },
+        { "ADR 0002 - Runtime and Middleware" = "adr/0002-runtime-and-middleware.md" },
+        { "ADR 0003 - Validation and Fixtures" = "adr/0003-validation-and-fixtures.md" },
+        { "ADR 0004 - Code Generation" = "adr/0004-code-generation.md" },
+        { "ADR 0005 - Lifecycle Hooks" = "adr/0005-lifecycle-hooks.md" },
+        { "ADR 0006 - Streaming and Async Protocols" = "adr/0006-streaming-and-async-protocols.md" },
+        { "ADR 0007 - Observability and OTEL" = "adr/0007-observability-and-otel.md" },
+        { "ADR 0008 - Dependency Injection System" = "adr/0008-dependency-injection.md" },
+        { "ADR 0009 - Panic Shielding" = "adr/0009-panic-shielding.md" },
+        { "ADR 0010 - Protobuf/gRPC Code Generation" = "adr/0010-protobuf-grpc-code-generation.md" },
+        { "ADR 0011 - gRPC FFI Bindings Strategy" = "adr/0011-grpc-ffi-bindings-strategy.md" },
+        { "ADR 0012 - gRPC Testing Infrastructure" = "adr/0012-grpc-testing-infrastructure.md" },
+        { "ADR 0013 - GraphQL HTTP Integration" = "adr/0013-graphql-http-integration.md" },
+    ] },
+
+    # Performance Analysis
+    { "Benchmarks" = [
+        { "Overview" = "benchmarks/index.md" },
+        { "Results Dashboard" = "benchmarks/results.md" },
+        { "Methodology" = "benchmarks/methodology.md" },
+        { "Frameworks" = "benchmarks/frameworks.md" },
+        { "Running Benchmarks" = "benchmarks/running.md" },
+        { "Harness Design" = "benchmarks/harness-design.md" },
+    ] },
+
+    # Support
+    { "Troubleshooting" = "troubleshooting.md" },
+
+    # Community
+    { "Contributing" = "contributing.md" },
+    { "Changelog" = "changelog.md" },
+]
+
+[project.theme]
+name = "material"
+custom_dir = "docs/overrides"
+logo = "assets/logo.svg"
+favicon = "assets/favicon.ico"
+language = "en"
+features = [
+    "content.code.copy",
+    "content.code.annotate",
+    "content.tabs.link",
+    "content.action.edit",
+    "content.action.view",
+    "navigation.instant",
+    "navigation.instant.progress",
+    "navigation.path",
+    "navigation.prune",
+    "navigation.indexes",
+    "navigation.sections",
+    "navigation.tabs",
+    "navigation.tabs.sticky",
+    "navigation.tracking",
+    "navigation.top",
+    "navigation.footer",
+    "search.highlight",
+    "search.share",
+    "search.suggest",
+    "toc.follow",
+    "toc.integrate",
+    "announce.dismiss",
+]
+
+[project.theme.font]
+text = "Inter"
+code = "JetBrains Mono"
+
+[project.theme.icon]
+repo = "github"
+search = "search"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "custom"
+accent = "custom"
+
+[project.theme.palette.toggle]
+icon = "sun"
+name = "Switch to light mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "custom"
+accent = "custom"
+
+[project.theme.palette.toggle]
+icon = "moon"
+name = "Switch to dark mode"
+
+# Markdown Extensions
+[project.markdown_extensions.admonition]
+[project.markdown_extensions.attr_list]
+[project.markdown_extensions.def_list]
+[project.markdown_extensions.footnotes]
+[project.markdown_extensions.md_in_html]
+[project.markdown_extensions.tables]
+
+[project.markdown_extensions.toc]
+permalink = true
+toc_depth = 3
+
+[project.markdown_extensions.pymdownx.highlight]
+anchor_linenums = true
+line_spans = "__span"
+pygments_lang_class = true
+linenums = false
+use_pygments = true
+
+[project.markdown_extensions.pymdownx.inlinehilite]
+
+[project.markdown_extensions.pymdownx.superfences]
+custom_fences = [
+    { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
+
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
+combine_header_slug = true
+
+[project.markdown_extensions.pymdownx.tabbed.slugify]
+case = "lower"
+
+[project.markdown_extensions.pymdownx.tasklist]
+custom_checkbox = true
+
+[project.markdown_extensions.pymdownx.details]
+[project.markdown_extensions.pymdownx.keys]
+[project.markdown_extensions.pymdownx.mark]
+[project.markdown_extensions.pymdownx.smartsymbols]
+
+[project.markdown_extensions.pymdownx.emoji]
+emoji_index = "zensical.extensions.emoji.twemoji"
+emoji_generator = "zensical.extensions.emoji.to_svg"
+options = { custom_icons = ["docs/overrides/.icons"] }
+
+[project.markdown_extensions.pymdownx.snippets]
+base_path = ["docs/snippets", "docs", "."]
+check_paths = true
+
+# Plugins
+[project.plugins.search]
+[project.plugins.tags]
+
+[project.plugins.minify]
+minify_html = true
+
+[project.plugins.mkdocstrings]
+default_handler = "python"
+
+[project.plugins.mkdocstrings.handlers.python]
+paths = ["packages/python"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+show_source = true
+show_root_heading = true
+heading_level = 2
+show_category_heading = true
+show_if_no_docstring = false
+show_signature_annotations = true
+show_submodules = false
+docstring_style = "google"
+docstring_section_style = "spacy"
+
+[project.plugins.git-revision-date-localized]
+enable_creation_date = true
+type = "timeago"
+fallback_to_build_date = true
+enabled = true
+
+# Extra
+[project.extra]
+
+[project.extra.version]
+provider = "mike"
+default = "latest"
+alias = true
+
+[project.extra.analytics]
+provider = "google"
+property = ""
+
+[project.extra.status]
+new = "Recently added"
+deprecated = "Deprecated"
+
+[project.extra.repo]
+stars = true
+forks = true
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/Goldziher/spikard"
+name = "View on GitHub"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/python"
+link = "https://pypi.org/project/spikard/"
+name = "View on PyPI"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/npm"
+link = "https://www.npmjs.com/package/spikard"
+name = "View on npm"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/rust"
+link = "https://crates.io/crates/spikard"
+name = "View on crates.io"
+
+[[project.extra.social]]
+icon = "fontawesome/solid/gem"
+link = "https://rubygems.org/gems/spikard"
+name = "View on RubyGems"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/php"
+link = "https://packagist.org/packages/goldziher/spikard"
+name = "View on Packagist"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/discord"
+link = "https://discord.gg/pXxagNK2zN"
+name = "Chat on Discord"
