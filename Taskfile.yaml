@@ -658,19 +658,18 @@ tasks:
   build:py:
     desc: "Build Python bindings for development"
     cmds:
-      - uv pip install -e crates/spikard-py --config-settings='--build-option=--release'
+      - uv pip install -e packages/python --config-settings='--build-option=--release'
 
   build:py:debug:
     desc: "Build Python bindings in debug mode"
     cmds:
-      - uv pip install -e crates/spikard-py
+      - uv pip install -e packages/python
 
   build:py:wheel:
     desc: "Build Python bindings as wheel for testing (release mode)"
-    dir: crates/spikard-py
+    dir: packages/python
     cmds:
       - uv run maturin build --release --out ../../target/wheels
-      - uv pip install --force-reinstall ../../target/wheels/spikard_bindings-0.13.0-cp310-abi3-macosx_11_0_arm64.whl
 
   build:local:python:
     desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"
