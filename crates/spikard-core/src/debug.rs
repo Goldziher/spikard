@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 static DEBUG_ENABLED: AtomicBool = AtomicBool::new(false);
 
 /// Initialize debug logging based on environment and build mode
-pub fn init() {
+pub(crate) fn init() {
     let enabled = cfg!(debug_assertions) || std::env::var("SPIKARD_DEBUG").is_ok() || std::env::var("DEBUG").is_ok();
 
     eprintln!(
