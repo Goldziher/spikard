@@ -204,10 +204,8 @@ repos:
         files: ^packages/elixir/
         pass_filenames: false
 
-      # Alef
+  # Alef: verify generated bindings are up to date
+  - repo: https://github.com/kreuzberg-dev/alef
+    rev: v0.6.0
+    hooks:
       - id: alef-verify
-        name: Verify alef-generated bindings are up to date
-        entry: alef verify
-        language: system
-        files: (alef\.toml|crates/spikard.*/src/.*\.rs)
-        pass_filenames: false
