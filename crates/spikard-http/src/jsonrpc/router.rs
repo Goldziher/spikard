@@ -332,7 +332,7 @@ impl JsonRpcRouter {
 ///
 /// Used to distinguish between single and batch requests after parsing,
 /// allowing different routing logic for each case.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum JsonRpcRequestOrBatch {
     /// A single JSON-RPC request
     Single(JsonRpcRequest),
