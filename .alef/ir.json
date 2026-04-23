@@ -345,7 +345,8 @@
               "typed_default": null,
               "is_ref": true,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -375,7 +376,8 @@
               "typed_default": null,
               "is_ref": true,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -407,7 +409,8 @@
               "typed_default": null,
               "is_ref": true,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1413,7 +1416,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1443,7 +1447,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1473,7 +1478,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1503,7 +1509,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1533,7 +1540,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1563,7 +1571,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1681,7 +1690,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1711,7 +1721,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1743,7 +1754,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -1773,7 +1785,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -2568,7 +2581,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -3529,7 +3543,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             },
             {
               "name": "value",
@@ -3540,7 +3555,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": "Unit",
@@ -3568,7 +3584,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             },
             {
               "name": "value",
@@ -3579,7 +3596,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             },
             {
               "name": "max_age",
@@ -3592,7 +3610,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             },
             {
               "name": "domain",
@@ -3603,7 +3622,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             },
             {
               "name": "path",
@@ -3614,7 +3634,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             },
             {
               "name": "secure",
@@ -3627,7 +3648,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             },
             {
               "name": "http_only",
@@ -3640,7 +3662,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             },
             {
               "name": "same_site",
@@ -3651,7 +3674,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": "Unit",
@@ -3779,7 +3803,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -3811,7 +3836,8 @@
               "typed_default": null,
               "is_ref": false,
               "is_mut": false,
-              "newtype_wrapper": null
+              "newtype_wrapper": null,
+              "original_type": null
             }
           ],
           "return_type": {
@@ -4529,7 +4555,8 @@
           "typed_default": null,
           "is_ref": true,
           "is_mut": true,
-          "newtype_wrapper": null
+          "newtype_wrapper": null,
+          "original_type": null
         },
         {
           "name": "origin",
@@ -4540,7 +4567,8 @@
           "typed_default": null,
           "is_ref": true,
           "is_mut": false,
-          "newtype_wrapper": null
+          "newtype_wrapper": null,
+          "original_type": null
         },
         {
           "name": "cors_config",
@@ -4553,7 +4581,8 @@
           "typed_default": null,
           "is_ref": true,
           "is_mut": false,
-          "newtype_wrapper": null
+          "newtype_wrapper": null,
+          "original_type": null
         }
       ],
       "return_type": "Unit",

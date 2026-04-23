@@ -225,7 +225,6 @@ impl CorsConfig {
 
     #[pyo3(signature = (requested))]
     pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool {
-        let requested_refs: Vec<&str> = requested.iter().map(|s| s.as_str()).collect();
         let _ = requested;
         false
     }
@@ -1266,7 +1265,7 @@ impl JsonRpcConfig {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[pyclass(frozen, from_py_object)]
 pub struct OpenApiConfig {
     /// Enable OpenAPI generation (default: false for zero overhead)
@@ -1622,7 +1621,7 @@ impl StaticFilesConfig {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[pyclass(frozen, from_py_object)]
 #[allow(clippy::similar_names)]
 pub struct ServerConfig {
@@ -1783,6 +1782,27 @@ impl From<spikard_http::jsonrpc::JsonRpcResponseType> for JsonRpcResponseType {
     }
 }
 
+impl serde::Serialize for JsonRpcResponseType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.inner.serialize(serializer)
+    }
+}
+
+impl Default for JsonRpcResponseType {
+    fn default() -> Self {
+        Self {
+            inner: Default::default(),
+        }
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for JsonRpcResponseType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let inner = spikard_http::jsonrpc::JsonRpcResponseType::deserialize(deserializer)?;
+        Ok(Self { inner })
+    }
+}
+
 #[derive(Clone)]
 #[pyclass(frozen)]
 pub struct JsonRpcRequestOrBatch {
@@ -1801,6 +1821,27 @@ impl From<JsonRpcRequestOrBatch> for spikard_http::jsonrpc::JsonRpcRequestOrBatc
 impl From<spikard_http::jsonrpc::JsonRpcRequestOrBatch> for JsonRpcRequestOrBatch {
     fn from(val: spikard_http::jsonrpc::JsonRpcRequestOrBatch) -> Self {
         Self { inner: val }
+    }
+}
+
+impl serde::Serialize for JsonRpcRequestOrBatch {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.inner.serialize(serializer)
+    }
+}
+
+impl Default for JsonRpcRequestOrBatch {
+    fn default() -> Self {
+        Self {
+            inner: Default::default(),
+        }
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for JsonRpcRequestOrBatch {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let inner = spikard_http::jsonrpc::JsonRpcRequestOrBatch::deserialize(deserializer)?;
+        Ok(Self { inner })
     }
 }
 

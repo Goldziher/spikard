@@ -62,10 +62,10 @@ defmodule E2e.ServerConfigTest do
 
   describe "server_grpc_integration" do
     test "POST /api.Service/Method - Tests server with gRPC protocol integration" do
-      {:ok, response} = Req.post(client(), url: "/api.Service/Method", json: %{"data" => "test"}, headers: [{"Content-Type", "application/grpc"}, {"te", "trailers"}])
+      {:ok, response} = Req.post(client(), url: "/api.Service/Method", json: %{"data" => "test"}, headers: [{"te", "trailers"}, {"Content-Type", "application/grpc"}])
       assert response.status == 200
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
     end
   end
 

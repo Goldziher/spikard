@@ -51,5 +51,7 @@ def schema_full() -> FullSchemaConfig:
 def add_cors_headers(response: Response, origin: str, cors_config: CorsConfig) -> None:
     """Add CORS headers to a successful response."""
     _rust_response = _to_rust_response(response)
+    assert _rust_response is not None  # noqa: S101
     _rust_cors_config = _to_rust_cors_config(cors_config)
-    return _rust.add_cors_headers(_rust_response, origin, _rust_cors_config)  # type: ignore[arg-type]
+    assert _rust_cors_config is not None  # noqa: S101
+    return _rust.add_cors_headers(_rust_response, origin, _rust_cors_config)

@@ -13,21 +13,21 @@ defmodule E2e.GrpcTest do
 
   describe "grpc_call_with_metadata" do
     test "POST /api.Service/GetData - Tests gRPC call with request metadata headers" do
-      {:ok, response} = Req.post(client(), url: "/api.Service/GetData", json: %{"id" => "resource-1"}, headers: [{"te", "trailers"}, {"x-custom-metadata", "value123"}, {"Content-Type", "application/grpc"}, {"authorization", "Bearer token123"}])
+      {:ok, response} = Req.post(client(), url: "/api.Service/GetData", json: %{"id" => "resource-1"}, headers: [{"Content-Type", "application/grpc"}, {"te", "trailers"}, {"authorization", "Bearer token123"}, {"x-custom-metadata", "value123"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"data" => "result", "id" => "resource-1"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-response-metadata", do: v end) == "processed"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-response-metadata", do: v end) == "processed"
     end
   end
 
   describe "grpc_config_compression_enabled" do
     test "POST /api.Service/GetCompressedData - Tests gRPC compression is enabled for responses" do
-      {:ok, response} = Req.post(client(), url: "/api.Service/GetCompressedData", json: %{"request" => "get_data"}, headers: [{"grpc-encoding", "gzip"}, {"Content-Type", "application/grpc"}, {"te", "trailers"}])
+      {:ok, response} = Req.post(client(), url: "/api.Service/GetCompressedData", json: %{"request" => "get_data"}, headers: [{"te", "trailers"}, {"Content-Type", "application/grpc"}, {"grpc-encoding", "gzip"}])
       assert response.status == 200
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-encoding", do: v end) == "gzip"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-encoding", do: v end) == "gzip"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
     end
   end
@@ -46,17 +46,17 @@ defmodule E2e.GrpcTest do
       {:ok, response} = Req.post(client(), url: "/api.Service/SendLargeMessage", json: %{"data" => "large_payload_data"}, headers: [{"te", "trailers"}, {"Content-Type", "application/grpc"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"received_size" => 19}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
     end
   end
 
   describe "grpc_config_request_timeout" do
     test "POST /api.Service/TimedOperation - Tests gRPC request timeout configuration" do
-      {:ok, response} = Req.post(client(), url: "/api.Service/TimedOperation", json: %{"operation" => "process"}, headers: [{"Content-Type", "application/grpc"}, {"grpc-timeout", "5000m"}, {"te", "trailers"}])
+      {:ok, response} = Req.post(client(), url: "/api.Service/TimedOperation", json: %{"operation" => "process"}, headers: [{"grpc-timeout", "5000m"}, {"Content-Type", "application/grpc"}, {"te", "trailers"}])
       assert response.status == 200
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
     end
   end
 
@@ -65,14 +65,14 @@ defmodule E2e.GrpcTest do
       {:ok, response} = Req.post(client(), url: "/api.Service/SlowOperation", json: %{"duration_ms" => 60000}, headers: [{"grpc-timeout", "100m"}, {"Content-Type", "application/grpc"}, {"te", "trailers"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"code" => "DEADLINE_EXCEEDED", "message" => "Operation exceeded deadline"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "4"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "4"
     end
   end
 
   describe "grpc_error_invalid_argument" do
     test "POST /api.Service/ValidateInput - Tests gRPC INVALID_ARGUMENT error status response" do
-      {:ok, response} = Req.post(client(), url: "/api.Service/ValidateInput", json: %{"value" => -100}, headers: [{"te", "trailers"}, {"Content-Type", "application/grpc"}])
+      {:ok, response} = Req.post(client(), url: "/api.Service/ValidateInput", json: %{"value" => -100}, headers: [{"Content-Type", "application/grpc"}, {"te", "trailers"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"code" => "INVALID_ARGUMENT", "message" => "Value must be non-negative"}
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "3"
@@ -92,32 +92,32 @@ defmodule E2e.GrpcTest do
 
   describe "grpc_request_method_name_field" do
     test "POST /api.Service/GetData - Tests gRPC request includes method_name field" do
-      {:ok, response} = Req.post(client(), url: "/api.Service/GetData", json: %{"id" => "resource-1"}, headers: [{"te", "trailers"}, {"Content-Type", "application/grpc"}])
+      {:ok, response} = Req.post(client(), url: "/api.Service/GetData", json: %{"id" => "resource-1"}, headers: [{"Content-Type", "application/grpc"}, {"te", "trailers"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"data" => "result", "method" => "GetData"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
     end
   end
 
   describe "grpc_request_service_name_field" do
     test "POST /helloworld.Greeter/SayHello - Tests gRPC request includes service_name field" do
-      {:ok, response} = Req.post(client(), url: "/helloworld.Greeter/SayHello", json: %{"name" => "World"}, headers: [{"Content-Type", "application/grpc"}, {"te", "trailers"}])
+      {:ok, response} = Req.post(client(), url: "/helloworld.Greeter/SayHello", json: %{"name" => "World"}, headers: [{"te", "trailers"}, {"Content-Type", "application/grpc"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"message" => "Hello World", "service" => "helloworld.Greeter"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
     end
   end
 
   describe "grpc_request_with_custom_metadata" do
     test "POST /api.Service/ProcessWithMetadata - Tests gRPC request includes custom metadata in trailers" do
-      {:ok, response} = Req.post(client(), url: "/api.Service/ProcessWithMetadata", json: %{"data" => %{"key" => "value"}, "request_id" => "req-12345"}, headers: [{"te", "trailers"}, {"x-user-id", "user-42"}, {"x-request-id", "req-12345"}, {"x-trace-id", "trace-abc123"}, {"Content-Type", "application/grpc"}])
+      {:ok, response} = Req.post(client(), url: "/api.Service/ProcessWithMetadata", json: %{"data" => %{"key" => "value"}, "request_id" => "req-12345"}, headers: [{"Content-Type", "application/grpc"}, {"x-trace-id", "trace-abc123"}, {"x-user-id", "user-42"}, {"x-request-id", "req-12345"}, {"te", "trailers"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"processed" => true, "request_id" => "req-12345"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-response-trace-id", do: v end) == "trace-abc123"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
     end
   end
 
@@ -126,9 +126,9 @@ defmodule E2e.GrpcTest do
       {:ok, response} = Req.post(client(), url: "/api.Service/MetadataResponse", json: %{"request" => "test"}, headers: [{"Content-Type", "application/grpc"}, {"te", "trailers"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"result" => "success"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-metadata-key", do: v end) == "metadata-value"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-metadata-key", do: v end) == "metadata-value"
     end
   end
 
@@ -137,8 +137,8 @@ defmodule E2e.GrpcTest do
       {:ok, response} = Req.post(client(), url: "/helloworld.Greeter/SayHello", json: %{"name" => "World"}, headers: [{"Content-Type", "application/grpc"}, {"te", "trailers"}])
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"message" => "Hello World"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "grpc-status", do: v end) == "0"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/grpc"
     end
   end
 end

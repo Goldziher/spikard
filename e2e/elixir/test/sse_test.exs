@@ -71,8 +71,8 @@ defmodule E2e.SseTest do
     test "GET /events - Tests Server-Sent Events with simple text events" do
       {:ok, response} = Req.get(client(), url: "/events", headers: [{"Accept", "text/event-stream"}])
       assert response.status == 200
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "cache-control", do: v end) == "no-cache"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "text/event-stream"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "cache-control", do: v end) == "no-cache"
     end
   end
 end

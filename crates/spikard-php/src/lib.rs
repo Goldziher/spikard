@@ -1625,11 +1625,8 @@ impl SpikardPhpApi {
     }
 
     pub fn add_cors_headers(response: &Response, origin: String, cors_config: &CorsConfig) {
-        let response_json = serde_json::to_string(&response).map_err(|e| format!("{e}"))?;
-        let response_core: spikard::Response = serde_json::from_str(&response_json).map_err(|e| format!("{e}"))?;
-        let cors_config_json = serde_json::to_string(&cors_config).map_err(|e| format!("{e}"))?;
-        let cors_config_core: spikard::CorsConfig =
-            serde_json::from_str(&cors_config_json).map_err(|e| format!("{e}"))?;
+        let response_core: spikard::Response = response.clone().into();
+        let cors_config_core: spikard::CorsConfig = cors_config.clone().into();
         spikard_http::cors::add_cors_headers(&response_core, &origin, &cors_config_core)
     }
 }

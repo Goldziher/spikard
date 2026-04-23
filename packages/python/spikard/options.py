@@ -276,7 +276,7 @@ class OpenApiConfig:
     servers: list[ServerInfo] = field(default_factory=list)
     """Server definitions"""
 
-    security_schemes: dict[str, dict[str, Any]] = field(default_factory=dict)
+    security_schemes: dict[str, SecuritySchemeInfo] = field(default_factory=dict)
     """Security schemes (auto-detected from middleware if not provided)"""
 
 
@@ -356,3 +356,7 @@ class ServerConfig:
 
     di_container: str | None = None
     """Dependency injection container (requires 'di' feature)"""
+
+
+# Security scheme types.
+SecuritySchemeInfo = str | str | None

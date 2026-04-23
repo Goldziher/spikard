@@ -21,6 +21,10 @@ Parm = "Parm"
 # Correct English: plural of enumerable
 enumerables = "enumerables"
 Enumerables = "Enumerables"
+# Intentional test data: base64 substrings in JWT tokens
+Iz = "Iz"
+ND = "ND"
+Jod = "Jod"
 # Minified JS variables
 hte = "hte"
 Hte = "Hte"

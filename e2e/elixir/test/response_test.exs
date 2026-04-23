@@ -51,9 +51,9 @@ defmodule E2e.ResponseTest do
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"message" => "Complex response"}
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: v end) == "application/json"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-custom-header", do: v end) == "value1"
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-another-header", do: v end) == "value2"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-third-header", do: v end) == "value3"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-another-header", do: v end) == "value2"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-custom-header", do: v end) == "value1"
     end
   end
 
@@ -95,8 +95,8 @@ defmodule E2e.ResponseTest do
       {:ok, response} = Req.get(client(), url: "/data")
       assert response.status == 200
       assert Jason.decode!(response.body) == %{"data" => "value"}
-      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-total-count", do: v end) == "42"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-custom-header", do: v end) == "custom-value"
+      assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-total-count", do: v end) == "42"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: v end) != nil
     end
   end
