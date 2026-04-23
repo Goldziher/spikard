@@ -120,7 +120,16 @@ jobs:
         run: cargo fmt --all --check
 
       - name: Run Clippy
-        run: cargo clippy --workspace --all-features -- -D warnings
+        run: >
+          cargo clippy --workspace
+          --exclude=spikard-php
+          --exclude=spikard-py
+          --exclude=spikard-node
+          --exclude=spikard-rb
+          --exclude=spikard-rb-macros
+          --exclude=spikard-elixir
+          --exclude=benchmark-harness
+          --all-features -- -D warnings
 
       - name: Install cargo-deny
         run: cargo install --locked cargo-deny

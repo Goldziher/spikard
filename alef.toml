@@ -72,6 +72,17 @@ methods = [
   "SseEvent.with_type",
 ]
 types = [
+  # Not part of public API — closures, Arc<dyn Handler>, internal protocol types
+  "Route",
+  "RouteMetadata",
+  "BackgroundHandle",
+  "BackgroundJobError",
+  "Claims",
+  "GrpcRequestData",
+  "GrpcResponseData",
+  "JsonRpcRequestOrBatch",
+  "JsonRpcResponseType",
+  "ValidatedParams",
   # Internal implementation types
   "BackgroundJobFuture",
   "BackgroundRuntime",
@@ -157,6 +168,7 @@ types = [
   "RequestData",
 ]
 functions = [
+  "add_cors_headers",
   "api_key_auth_middleware",
   "assemble_openapi_spec",
   "auto_generate_parameter_schema",
