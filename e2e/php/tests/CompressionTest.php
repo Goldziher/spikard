@@ -30,8 +30,8 @@ final class CompressionTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["data" => "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "message" => "Brotli compressed payload"], $body);
-        $this->assertEquals("Accept-Encoding", $response->getHeaderLine("vary"));
         $this->assertEquals("br", $response->getHeaderLine("content-encoding"));
+        $this->assertEquals("Accept-Encoding", $response->getHeaderLine("vary"));
     }
 
     /** Serves a JSON payload compressed with gzip when the client advertises support. */

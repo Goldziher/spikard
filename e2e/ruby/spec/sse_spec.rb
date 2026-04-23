@@ -90,8 +90,8 @@ RSpec.describe 'sse' do
         headers: { 'Accept' => 'text/event-stream' }
       )
       expect(response.status).to eq(200)
-      expect(response.headers['cache-control']).to eq('no-cache')
       expect(response.headers['content-type']).to eq('text/event-stream')
+      expect(response.headers['cache-control']).to eq('no-cache')
     end
   end
 end

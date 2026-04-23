@@ -83,12 +83,12 @@ final class ServerConfigTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/api.Service/Method", [
             'json' => ["data" => "test"],
-            'headers' => ["Content-Type" => "application/grpc", "te" => "trailers"],
+            'headers' => ["te" => "trailers", "Content-Type" => "application/grpc"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
         $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
+        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
     }
 
     /** Tests server with both JWT and API key authentication configured */

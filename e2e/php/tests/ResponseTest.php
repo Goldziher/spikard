@@ -67,9 +67,9 @@ final class ResponseTest extends TestCase
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["message" => "Complex response"], $body);
         $this->assertEquals("application/json", $response->getHeaderLine("content-type"));
-        $this->assertEquals("value1", $response->getHeaderLine("x-custom-header"));
-        $this->assertEquals("value2", $response->getHeaderLine("x-another-header"));
         $this->assertEquals("value3", $response->getHeaderLine("x-third-header"));
+        $this->assertEquals("value2", $response->getHeaderLine("x-another-header"));
+        $this->assertEquals("value1", $response->getHeaderLine("x-custom-header"));
     }
 
     /** Tests response sets cookie with Set-Cookie header */
@@ -122,8 +122,8 @@ final class ResponseTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["data" => "value"], $body);
-        $this->assertEquals("42", $response->getHeaderLine("x-total-count"));
         $this->assertEquals("custom-value", $response->getHeaderLine("x-custom-header"));
+        $this->assertEquals("42", $response->getHeaderLine("x-total-count"));
         $this->assertTrue($response->hasHeader("x-request-id"));
     }
 }

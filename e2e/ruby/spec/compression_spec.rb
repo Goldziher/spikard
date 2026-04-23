@@ -21,8 +21,8 @@ RSpec.describe 'compression' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'data' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'message' => 'Brotli compressed payload' })
-      expect(response.headers['vary']).to eq('Accept-Encoding')
       expect(response.headers['content-encoding']).to eq('br')
+      expect(response.headers['vary']).to eq('Accept-Encoding')
     end
   end
 

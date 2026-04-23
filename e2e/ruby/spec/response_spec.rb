@@ -54,9 +54,9 @@ RSpec.describe 'response' do
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'message' => 'Complex response' })
       expect(response.headers['content-type']).to eq('application/json')
-      expect(response.headers['x-custom-header']).to eq('value1')
-      expect(response.headers['x-another-header']).to eq('value2')
       expect(response.headers['x-third-header']).to eq('value3')
+      expect(response.headers['x-another-header']).to eq('value2')
+      expect(response.headers['x-custom-header']).to eq('value1')
     end
   end
 
@@ -104,8 +104,8 @@ RSpec.describe 'response' do
       response = client.get('/data')
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'data' => 'value' })
-      expect(response.headers['x-total-count']).to eq('42')
       expect(response.headers['x-custom-header']).to eq('custom-value')
+      expect(response.headers['x-total-count']).to eq('42')
       expect(response.headers['x-request-id']).not_to be_nil
     end
   end

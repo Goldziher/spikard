@@ -3,6 +3,8 @@
 
 module Spikard
 
+  VERSION: String
+
   class UploadFile
     # Represents an uploaded file from multipart/form-data requests.
     #

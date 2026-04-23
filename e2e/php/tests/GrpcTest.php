@@ -26,14 +26,14 @@ final class GrpcTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/api.Service/GetData", [
             'json' => ["id" => "resource-1"],
-            'headers' => ["te" => "trailers", "x-custom-metadata" => "value123", "Content-Type" => "application/grpc", "authorization" => "Bearer token123"],
+            'headers' => ["Content-Type" => "application/grpc", "te" => "trailers", "authorization" => "Bearer token123", "x-custom-metadata" => "value123"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["data" => "result", "id" => "resource-1"], $body);
-        $this->assertEquals("processed", $response->getHeaderLine("x-response-metadata"));
         $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
         $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
+        $this->assertEquals("processed", $response->getHeaderLine("x-response-metadata"));
     }
 
     /** Tests gRPC compression is enabled for responses */
@@ -41,12 +41,12 @@ final class GrpcTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/api.Service/GetCompressedData", [
             'json' => ["request" => "get_data"],
-            'headers' => ["grpc-encoding" => "gzip", "Content-Type" => "application/grpc", "te" => "trailers"],
+            'headers' => ["te" => "trailers", "Content-Type" => "application/grpc", "grpc-encoding" => "gzip"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("gzip", $response->getHeaderLine("grpc-encoding"));
         $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
+        $this->assertEquals("gzip", $response->getHeaderLine("grpc-encoding"));
         $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
     }
 
@@ -73,8 +73,8 @@ final class GrpcTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["received_size" => 19], $body);
-        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
         $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
+        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
     }
 
     /** Tests gRPC request timeout configuration */
@@ -82,12 +82,12 @@ final class GrpcTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/api.Service/TimedOperation", [
             'json' => ["operation" => "process"],
-            'headers' => ["Content-Type" => "application/grpc", "grpc-timeout" => "5000m", "te" => "trailers"],
+            'headers' => ["grpc-timeout" => "5000m", "Content-Type" => "application/grpc", "te" => "trailers"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
         $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
+        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
     }
 
     /** Tests gRPC DEADLINE_EXCEEDED error when timeout occurs */
@@ -100,8 +100,8 @@ final class GrpcTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["code" => "DEADLINE_EXCEEDED", "message" => "Operation exceeded deadline"], $body);
-        $this->assertEquals("4", $response->getHeaderLine("grpc-status"));
         $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
+        $this->assertEquals("4", $response->getHeaderLine("grpc-status"));
     }
 
     /** Tests gRPC INVALID_ARGUMENT error status response */
@@ -109,7 +109,7 @@ final class GrpcTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/api.Service/ValidateInput", [
             'json' => ["value" => -100],
-            'headers' => ["te" => "trailers", "Content-Type" => "application/grpc"],
+            'headers' => ["Content-Type" => "application/grpc", "te" => "trailers"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
@@ -137,13 +137,13 @@ final class GrpcTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/api.Service/GetData", [
             'json' => ["id" => "resource-1"],
-            'headers' => ["te" => "trailers", "Content-Type" => "application/grpc"],
+            'headers' => ["Content-Type" => "application/grpc", "te" => "trailers"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["data" => "result", "method" => "GetData"], $body);
-        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
         $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
+        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
     }
 
     /** Tests gRPC request includes service_name field */
@@ -151,13 +151,13 @@ final class GrpcTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/helloworld.Greeter/SayHello", [
             'json' => ["name" => "World"],
-            'headers' => ["Content-Type" => "application/grpc", "te" => "trailers"],
+            'headers' => ["te" => "trailers", "Content-Type" => "application/grpc"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["message" => "Hello World", "service" => "helloworld.Greeter"], $body);
-        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
         $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
+        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
     }
 
     /** Tests gRPC request includes custom metadata in trailers */
@@ -165,14 +165,14 @@ final class GrpcTest extends TestCase
     {
         $response = $this->httpClient->request('POST', "/api.Service/ProcessWithMetadata", [
             'json' => ["data" => ["key" => "value"], "request_id" => "req-12345"],
-            'headers' => ["te" => "trailers", "x-user-id" => "user-42", "x-request-id" => "req-12345", "x-trace-id" => "trace-abc123", "Content-Type" => "application/grpc"],
+            'headers' => ["Content-Type" => "application/grpc", "x-trace-id" => "trace-abc123", "x-user-id" => "user-42", "x-request-id" => "req-12345", "te" => "trailers"],
         ]);
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["processed" => true, "request_id" => "req-12345"], $body);
-        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
         $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
         $this->assertEquals("trace-abc123", $response->getHeaderLine("x-response-trace-id"));
+        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
     }
 
     /** Tests gRPC response includes metadata in trailers */
@@ -185,9 +185,9 @@ final class GrpcTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["result" => "success"], $body);
-        $this->assertEquals("metadata-value", $response->getHeaderLine("x-metadata-key"));
-        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
         $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
+        $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
+        $this->assertEquals("metadata-value", $response->getHeaderLine("x-metadata-key"));
     }
 
     /** Tests unary gRPC call with successful response */
@@ -200,7 +200,7 @@ final class GrpcTest extends TestCase
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals(["message" => "Hello World"], $body);
-        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
         $this->assertEquals("0", $response->getHeaderLine("grpc-status"));
+        $this->assertEquals("application/grpc", $response->getHeaderLine("content-type"));
     }
 }

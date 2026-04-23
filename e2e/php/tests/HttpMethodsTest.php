@@ -54,8 +54,8 @@ final class HttpMethodsTest extends TestCase
         $response = $this->httpClient->request('HEAD', "/items/1");
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("85", $response->getHeaderLine("content-length"));
         $this->assertEquals("application/json", $response->getHeaderLine("content-type"));
+        $this->assertEquals("85", $response->getHeaderLine("content-length"));
     }
 
     /** Tests PATCH method for partial resource updates */

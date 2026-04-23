@@ -416,7 +416,7 @@ RSpec.describe 'query_params' do
 
   describe 'GET /query/multi-type' do
     it 'Tests multiple query parameters of different types in single request' do
-      response = client.get('/query/multi-type?age=30&score=95.5&active=true&name=john')
+      response = client.get('/query/multi-type?score=95.5&active=true&name=john&age=30')
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'active' => true, 'age' => 30, 'name' => 'john', 'score' => 95.5 })
     end

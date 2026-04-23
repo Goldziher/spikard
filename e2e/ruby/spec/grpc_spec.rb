@@ -18,13 +18,13 @@ RSpec.describe 'grpc' do
     it 'Tests gRPC call with request metadata headers' do
       response = client.post('/api.Service/GetData',
         json: { 'id' => 'resource-1' },
-        headers: { 'te' => 'trailers', 'x-custom-metadata' => 'value123', 'Content-Type' => 'application/grpc', 'authorization' => 'Bearer token123' }
+        headers: { 'Content-Type' => 'application/grpc', 'te' => 'trailers', 'authorization' => 'Bearer token123', 'x-custom-metadata' => 'value123' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'data' => 'result', 'id' => 'resource-1' })
-      expect(response.headers['x-response-metadata']).to eq('processed')
       expect(response.headers['content-type']).to eq('application/grpc')
       expect(response.headers['grpc-status']).to eq('0')
+      expect(response.headers['x-response-metadata']).to eq('processed')
     end
   end
 
@@ -32,11 +32,11 @@ RSpec.describe 'grpc' do
     it 'Tests gRPC compression is enabled for responses' do
       response = client.post('/api.Service/GetCompressedData',
         json: { 'request' => 'get_data' },
-        headers: { 'grpc-encoding' => 'gzip', 'Content-Type' => 'application/grpc', 'te' => 'trailers' }
+        headers: { 'te' => 'trailers', 'Content-Type' => 'application/grpc', 'grpc-encoding' => 'gzip' }
       )
       expect(response.status).to eq(200)
-      expect(response.headers['grpc-encoding']).to eq('gzip')
       expect(response.headers['grpc-status']).to eq('0')
+      expect(response.headers['grpc-encoding']).to eq('gzip')
       expect(response.headers['content-type']).to eq('application/grpc')
     end
   end
@@ -61,8 +61,8 @@ RSpec.describe 'grpc' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'received_size' => 19 })
-      expect(response.headers['grpc-status']).to eq('0')
       expect(response.headers['content-type']).to eq('application/grpc')
+      expect(response.headers['grpc-status']).to eq('0')
     end
   end
 
@@ -70,11 +70,11 @@ RSpec.describe 'grpc' do
     it 'Tests gRPC request timeout configuration' do
       response = client.post('/api.Service/TimedOperation',
         json: { 'operation' => 'process' },
-        headers: { 'Content-Type' => 'application/grpc', 'grpc-timeout' => '5000m', 'te' => 'trailers' }
+        headers: { 'grpc-timeout' => '5000m', 'Content-Type' => 'application/grpc', 'te' => 'trailers' }
       )
       expect(response.status).to eq(200)
-      expect(response.headers['content-type']).to eq('application/grpc')
       expect(response.headers['grpc-status']).to eq('0')
+      expect(response.headers['content-type']).to eq('application/grpc')
     end
   end
 
@@ -86,8 +86,8 @@ RSpec.describe 'grpc' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'code' => 'DEADLINE_EXCEEDED', 'message' => 'Operation exceeded deadline' })
-      expect(response.headers['grpc-status']).to eq('4')
       expect(response.headers['content-type']).to eq('application/grpc')
+      expect(response.headers['grpc-status']).to eq('4')
     end
   end
 
@@ -95,7 +95,7 @@ RSpec.describe 'grpc' do
     it 'Tests gRPC INVALID_ARGUMENT error status response' do
       response = client.post('/api.Service/ValidateInput',
         json: { 'value' => -100 },
-        headers: { 'te' => 'trailers', 'Content-Type' => 'application/grpc' }
+        headers: { 'Content-Type' => 'application/grpc', 'te' => 'trailers' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'code' => 'INVALID_ARGUMENT', 'message' => 'Value must be non-negative' })
@@ -121,12 +121,12 @@ RSpec.describe 'grpc' do
     it 'Tests gRPC request includes method_name field' do
       response = client.post('/api.Service/GetData',
         json: { 'id' => 'resource-1' },
-        headers: { 'te' => 'trailers', 'Content-Type' => 'application/grpc' }
+        headers: { 'Content-Type' => 'application/grpc', 'te' => 'trailers' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'data' => 'result', 'method' => 'GetData' })
-      expect(response.headers['grpc-status']).to eq('0')
       expect(response.headers['content-type']).to eq('application/grpc')
+      expect(response.headers['grpc-status']).to eq('0')
     end
   end
 
@@ -134,12 +134,12 @@ RSpec.describe 'grpc' do
     it 'Tests gRPC request includes service_name field' do
       response = client.post('/helloworld.Greeter/SayHello',
         json: { 'name' => 'World' },
-        headers: { 'Content-Type' => 'application/grpc', 'te' => 'trailers' }
+        headers: { 'te' => 'trailers', 'Content-Type' => 'application/grpc' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'message' => 'Hello World', 'service' => 'helloworld.Greeter' })
-      expect(response.headers['grpc-status']).to eq('0')
       expect(response.headers['content-type']).to eq('application/grpc')
+      expect(response.headers['grpc-status']).to eq('0')
     end
   end
 
@@ -147,13 +147,13 @@ RSpec.describe 'grpc' do
     it 'Tests gRPC request includes custom metadata in trailers' do
       response = client.post('/api.Service/ProcessWithMetadata',
         json: { 'data' => { 'key' => 'value' }, 'request_id' => 'req-12345' },
-        headers: { 'te' => 'trailers', 'x-user-id' => 'user-42', 'x-request-id' => 'req-12345', 'x-trace-id' => 'trace-abc123', 'Content-Type' => 'application/grpc' }
+        headers: { 'Content-Type' => 'application/grpc', 'x-trace-id' => 'trace-abc123', 'x-user-id' => 'user-42', 'x-request-id' => 'req-12345', 'te' => 'trailers' }
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'processed' => true, 'request_id' => 'req-12345' })
-      expect(response.headers['content-type']).to eq('application/grpc')
       expect(response.headers['grpc-status']).to eq('0')
       expect(response.headers['x-response-trace-id']).to eq('trace-abc123')
+      expect(response.headers['content-type']).to eq('application/grpc')
     end
   end
 
@@ -165,9 +165,9 @@ RSpec.describe 'grpc' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'result' => 'success' })
-      expect(response.headers['x-metadata-key']).to eq('metadata-value')
-      expect(response.headers['grpc-status']).to eq('0')
       expect(response.headers['content-type']).to eq('application/grpc')
+      expect(response.headers['grpc-status']).to eq('0')
+      expect(response.headers['x-metadata-key']).to eq('metadata-value')
     end
   end
 
@@ -179,8 +179,8 @@ RSpec.describe 'grpc' do
       )
       expect(response.status).to eq(200)
       expect(response.body).to eq({ 'message' => 'Hello World' })
-      expect(response.headers['content-type']).to eq('application/grpc')
       expect(response.headers['grpc-status']).to eq('0')
+      expect(response.headers['content-type']).to eq('application/grpc')
     end
   end
 end

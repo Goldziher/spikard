@@ -69,11 +69,11 @@ RSpec.describe 'server_config' do
     it 'Tests server with gRPC protocol integration' do
       response = client.post('/api.Service/Method',
         json: { 'data' => 'test' },
-        headers: { 'Content-Type' => 'application/grpc', 'te' => 'trailers' }
+        headers: { 'te' => 'trailers', 'Content-Type' => 'application/grpc' }
       )
       expect(response.status).to eq(200)
-      expect(response.headers['content-type']).to eq('application/grpc')
       expect(response.headers['grpc-status']).to eq('0')
+      expect(response.headers['content-type']).to eq('application/grpc')
     end
   end
 
