@@ -1,0 +1,33 @@
+# AI-Rulez Configuration (migrated to V4 TOML format)
+# Documentation: https://github.com/Goldziher/ai-rulez
+
+version = '4.0'
+name = 'spikard'
+description = 'Rust-centric multi-language HTTP framework providing core library, CLI, and tower-http runtime with polyglot bindings (Python/TypeScript/Ruby/PHP/Elixir). Type-safe web service toolkit with fixture-driven testing across all platforms.'
+gitignore = true
+presets = ['claude', 'gemini', 'codex']
+builtins = ['rust', 'python', 'pyo3', 'typescript', 'napi-rs', 'ruby', 'magnus', 'php', 'ext-php-rs', 'elixir', 'rustler', 'security', 'git-workflow', 'code-quality', 'testing', 'token-efficiency', 'default-commands']
+
+[header]
+style = 'minimal'
+
+[[includes]]
+name = 'kreuzberg-core'
+source = 'git@github.com:kreuzberg-dev/ai-rulez.git'
+path = 'modules/core'
+merge_strategy = 'local-override'
+local_override = '../kreuzberg-dev/ai-rulez'
+
+[[includes]]
+name = 'kreuzberg-cicd'
+source = 'git@github.com:kreuzberg-dev/ai-rulez.git'
+path = 'modules/cicd'
+merge_strategy = 'local-override'
+local_override = '../kreuzberg-dev/ai-rulez'
+
+[[includes]]
+name = 'kreuzberg-e2e-generator'
+source = 'git@github.com:kreuzberg-dev/ai-rulez.git'
+path = 'modules/e2e-generator'
+merge_strategy = 'local-override'
+local_override = '../kreuzberg-dev/ai-rulez'
