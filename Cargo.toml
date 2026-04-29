@@ -11,6 +11,7 @@ members = [
     "crates/spikard-node",
     "crates/spikard-php",
     "crates/spikard-py",
+    "crates/spikard-wasm",
     "tools/snippet-runner",
 ]
 exclude = ["e2e/*", "examples/*", "packages/dart/rust", "test_apps/*"]
