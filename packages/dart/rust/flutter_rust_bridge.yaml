@@ -1,0 +1,2 @@
+rust_root: .
+dart_output: ../lib/src/spikard_bridge_generated

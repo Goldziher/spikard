@@ -88,7 +88,6 @@ repos:
           "--exclude=spikard-rb-macros",
           "--exclude=spikard-elixir",
           "--exclude=spikard-ffi",
-          "--exclude=spikard-wasm",
           "--exclude=benchmark-harness",
           "--all-features",
           "--all-targets",
@@ -109,12 +108,16 @@ repos:
         args: ["check"]
 
   # JavaScript/TypeScript/JSON/CSS: biome (formatting + linting with autofixes)
+  # e2e/ is excluded — those files are alef-generated and already formatted by
+  # alef's own biome pass; running biome-format here a second time produces
+  # subtly different output (string escape handling) and breaks alef-verify.
   - repo: https://github.com/biomejs/pre-commit
     rev: v2.4.13
     hooks:
       - id: biome-format
-        exclude: ^tools/benchmark-harness/fixtures/
+        exclude: ^(tools/benchmark-harness/fixtures/|e2e/)
       - id: biome-lint
+        exclude: ^e2e/
 
   # Shell scripts: formatting and linting
   - repo: https://github.com/scop/pre-commit-shfmt

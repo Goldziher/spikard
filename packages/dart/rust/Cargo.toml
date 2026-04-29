@@ -1,0 +1,25 @@
+[package]
+name = "spikard-dart"
+version = "0.14.0"
+edition = "2024"
+license = "MIT"
+
+[package.metadata.cargo-machete]
+# Umbrella + sibling crates are pulled in so flutter_rust_bridge can resolve
+# every referenced type, but the generated Rust wrapper only `use`s a subset.
+ignored = ["spikard", "spikard-core", "spikard-graphql", "spikard-http"]
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+spikard = { path = "../../../crates/spikard", features = ["di"] }
+flutter_rust_bridge = "2.12.0"
+spikard-core = { path = "../spikard-core" }
+spikard-graphql = { path = "../spikard-graphql" }
+spikard-http = { path = "../spikard-http" }
+
+[lints.rust]
+# flutter_rust_bridge uses #[cfg(frb_expand)] internally during macro expansion.
+# Declare it as a known cfg so rustc does not emit unexpected_cfgs warnings.
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

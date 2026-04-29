@@ -406,10 +406,6 @@ tasks:
       - cd ../gleam && gleam test
     dir: packages/gleam
 
-  wasm:build:all:
-    desc: "Alias for rust:wasm:build:all (build all WASM targets)"
-    deps: [rust:wasm:build:all]
-
   # === Spikard-specific tasks (preserved; no alef equivalent) ===
   docs:snippets:list:
     desc: "List all discovered documentation snippets"

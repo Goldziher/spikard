@@ -5,6 +5,7 @@ members = [
     "crates/spikard-cli",
     "crates/spikard-codegen",
     "crates/spikard-core",
+    "crates/spikard-ffi",
     "crates/spikard-graphql",
     "crates/spikard-http",
     "crates/spikard-node",
@@ -12,7 +13,7 @@ members = [
     "crates/spikard-py",
     "tools/snippet-runner",
 ]
-exclude = ["e2e/*", "examples/*", "test_apps/*"]
+exclude = ["e2e/*", "examples/*", "packages/dart/rust", "test_apps/*"]
 
 [workspace.package]
 version = "0.14.0"

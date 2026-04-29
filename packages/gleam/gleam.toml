@@ -1,0 +1,11 @@
+name = "spikard"
+version = "0.14.0"
+description = "Rust-centric multi-language HTTP framework with polyglot bindings"
+licences = ["MIT"]
+target = "erlang"
+
+[dependencies]
+gleam_stdlib = ">= 0.34.0 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.0.0 and < 2.0.0"

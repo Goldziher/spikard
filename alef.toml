@@ -1,4 +1,4 @@
-version = "0.11.13"
+version = "0.11.18"
 languages = [
   "python",
   "node",
@@ -12,8 +12,11 @@ languages = [
   "kotlin",
   "dart",
   "gleam",
-  "wasm",
 ]
+# WASM removed for now: spikard-http depends on axum/tokio/mio which don't
+# compile to wasm32-unknown-unknown. Reinstate once spikard exposes a
+# wasm-safe DTO/validation crate (e.g. spikard-validation), or once alef can
+# scope wasm-crate deps to a subset of source crates.
 
 [crate]
 name = "spikard"
@@ -66,8 +69,6 @@ sources = [
 spikard-core = { path = "../spikard-core" }
 spikard-http = { path = "../spikard-http" }
 spikard-graphql = { path = "../spikard-graphql" }
-anyhow = "1.0"
-futures = "0.3"
 
 [exclude]
 methods = [
@@ -273,7 +274,6 @@ csharp = "packages/csharp/src/"
 kotlin = "packages/kotlin/src/main/kotlin/dev/spikard/"
 dart = "packages/dart/lib/src/"
 gleam = "packages/gleam/src/"
-wasm = "crates/spikard-wasm/src/"
 
 [python]
 module_name = "_spikard"
@@ -340,11 +340,6 @@ style = "frb"
 app_name = "spikard"
 nif_module = "Elixir.Spikard.Native"
 
-[wasm]
-# Spikard's server runtime cannot compile to WASM (axum/tokio/socket2 deps);
-# scope wasm bindings to DTO + validation surface only. Server/transport types
-# are already excluded globally above.
-
 [update.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
 update = "cd packages/kotlin && gradle dependencyUpdates --no-daemon"
@@ -373,7 +368,6 @@ csharp = "record"
 kotlin = "data-class"
 dart = "class"
 gleam = "type"
-wasm = "interface"
 
 [scaffold]
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -465,10 +459,6 @@ check = "cd packages/gleam && gleam format --check"
 precondition = "test -d crates/spikard-ffi/include"
 check = "find crates/spikard-ffi/include -name '*.h' | xargs clang-format --dry-run --Werror"
 
-[lint.wasm]
-precondition = "test -d crates/spikard-wasm"
-check = "cargo check -p spikard-wasm --target wasm32-unknown-unknown"
-
 [test.python]
 precondition = "command -v uv >/dev/null 2>&1"
 command = "uv run pytest packages/python/tests/"
@@ -527,11 +517,6 @@ before = "cd packages/elixir && mix deps.get && mix compile"
 command = "cd packages/gleam && gleam test"
 e2e = "cd e2e/gleam && gleam test"
 
-[test.wasm]
-precondition = "command -v wasm-pack >/dev/null 2>&1"
-before = "wasm-pack build crates/spikard-wasm --release --target bundler"
-e2e = "cd e2e/wasm && npm test"
-
 [e2e]
 fixtures = "fixtures"
 output = "e2e"
@@ -547,7 +532,6 @@ languages = [
   "kotlin",
   "dart",
   "gleam",
-  "wasm",
 ]
 
 [e2e.call]
@@ -601,10 +585,6 @@ path = "../../packages/dart"
 name = "spikard"
 path = "../../packages/gleam"
 
-[e2e.packages.wasm]
-name = "@spikard/wasm"
-path = "../../crates/spikard-wasm"
-
 [e2e.registry]
 output = "test_apps"
 github_repo = "https://github.com/Goldziher/spikard"
@@ -644,6 +624,3 @@ name = "spikard"
 
 [e2e.registry.packages.gleam]
 name = "spikard"
-
-[e2e.registry.packages.wasm]
-name = "@spikard/wasm"

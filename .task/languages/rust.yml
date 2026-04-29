@@ -13,7 +13,7 @@ vars:
   # Crates that build through alef (cdylib/staticlib/native NIFs/extensions) and
   # are excluded from the workspace clippy/build sweep so they don't get
   # double-built.
-  ALEF_EXCLUDES: "--exclude spikard-py --exclude spikard-node --exclude spikard-rb --exclude spikard-php --exclude spikard-elixir --exclude spikard-ffi --exclude spikard-wasm --exclude benchmark-harness"
+  ALEF_EXCLUDES: "--exclude spikard-py --exclude spikard-node --exclude spikard-rb --exclude spikard-php --exclude spikard-elixir --exclude spikard-ffi --exclude benchmark-harness"
 
 tasks:
   install:
@@ -81,12 +81,6 @@ tasks:
       RUSTFLAGS: "-C debuginfo=2"
     cmds:
       - cargo build --release --package spikard-ffi {{.CARGO_ARGS | default ""}}
-
-  wasm:build:all:
-    desc: "Build WASM bindings (web/bundler/nodejs/deno targets)"
-    dir: crates/spikard-wasm
-    cmds:
-      - pnpm run build:all
 
   test:
     desc: "Run all Rust tests"
