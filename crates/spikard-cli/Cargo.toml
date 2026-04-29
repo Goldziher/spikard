@@ -56,7 +56,7 @@ rmcp = { version = "1.5.0", features = [
     "transport-io",
 ], optional = true }
 serde.workspace = true
-serde-saphyr = "0.0.24"
+serde-saphyr = "0.0.25"
 serde_json.workspace = true
 spikard.workspace = true
 spikard-http = { workspace = true }
