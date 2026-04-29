@@ -87,6 +87,8 @@ repos:
           "--exclude=spikard-rb",
           "--exclude=spikard-rb-macros",
           "--exclude=spikard-elixir",
+          "--exclude=spikard-ffi",
+          "--exclude=spikard-wasm",
           "--exclude=benchmark-harness",
           "--all-features",
           "--all-targets",

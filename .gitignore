@@ -241,3 +241,9 @@ tools/benchmark-harness/apps/phalcon/tmp/
 *.pyd
 .gems/
 vendor/bundle/
+*.h.bak
+*.test
+*.class
+bin/
+obj/
+*.nupkg

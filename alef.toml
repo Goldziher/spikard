@@ -1,5 +1,19 @@
-version = "0.11.8"
-languages = ["python", "node", "ruby", "php", "elixir"]
+version = "0.11.13"
+languages = [
+  "python",
+  "node",
+  "ruby",
+  "php",
+  "elixir",
+  "ffi",
+  "go",
+  "java",
+  "csharp",
+  "kotlin",
+  "dart",
+  "gleam",
+  "wasm",
+]
 
 [crate]
 name = "spikard"
@@ -252,6 +266,14 @@ node = "crates/spikard-node/src/"
 ruby = "crates/spikard-rb/src/"
 php = "crates/spikard-php/src/"
 elixir = "crates/spikard-elixir/src/"
+ffi = "crates/spikard-ffi/src/"
+go = "packages/go/"
+java = "packages/java/src/main/java/"
+csharp = "packages/csharp/src/"
+kotlin = "packages/kotlin/src/main/kotlin/dev/spikard/"
+dart = "packages/dart/lib/src/"
+gleam = "packages/gleam/src/"
+wasm = "crates/spikard-wasm/src/"
 
 [python]
 module_name = "_spikard"
@@ -288,6 +310,56 @@ features = ["di"]
 app_name = "spikard"
 features = ["di"]
 
+[ffi]
+prefix = "spikard"
+header_name = "spikard.h"
+lib_name = "spikard_ffi"
+visitor_callbacks = false
+
+[go]
+module = "github.com/Goldziher/spikard"
+package_name = "spikard"
+
+[java]
+package = "dev.spikard"
+ffi_style = "panama"
+
+[csharp]
+namespace = "Spikard"
+
+[kotlin]
+package = "dev.spikard"
+target = "jvm"
+
+[dart]
+pubspec_name = "spikard"
+lib_name = "spikard"
+style = "frb"
+
+[gleam]
+app_name = "spikard"
+nif_module = "Elixir.Spikard.Native"
+
+[wasm]
+# Spikard's server runtime cannot compile to WASM (axum/tokio/socket2 deps);
+# scope wasm bindings to DTO + validation surface only. Server/transport types
+# are already excluded globally above.
+
+[update.kotlin]
+precondition = "command -v gradle >/dev/null 2>&1"
+update = "cd packages/kotlin && gradle dependencyUpdates --no-daemon"
+upgrade = "cd packages/kotlin && gradle dependencyUpdates --refresh-dependencies --no-daemon"
+
+[update.dart]
+precondition = "command -v dart >/dev/null 2>&1"
+update = "cd packages/dart && dart pub upgrade"
+upgrade = "cd packages/dart && dart pub upgrade --major-versions"
+
+[update.gleam]
+precondition = "command -v gleam >/dev/null 2>&1"
+update = "cd packages/gleam && gleam update"
+upgrade = "cd packages/gleam && gleam update"
+
 [dto]
 python = "dataclass"
 python_output = "typed-dict"
@@ -295,6 +367,13 @@ node = "interface"
 ruby = "struct"
 php = "readonly-class"
 elixir = "struct"
+go = "struct"
+java = "record"
+csharp = "record"
+kotlin = "data-class"
+dart = "class"
+gleam = "type"
+wasm = "interface"
 
 [scaffold]
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -353,6 +432,43 @@ check = "cd packages/php && vendor/bin/phpstan analyse"
 precondition = "command -v mix >/dev/null 2>&1"
 typecheck = "cd packages/elixir && mix dialyzer"
 
+[lint.go]
+precondition = "command -v go >/dev/null 2>&1"
+before = "cargo build --release -p spikard-ffi"
+check = "cd packages/go && go vet ./..."
+
+[lint.java]
+precondition = "command -v mvn >/dev/null 2>&1"
+check = "mvn -f packages/java/pom.xml -B -DskipTests verify"
+
+[lint.csharp]
+precondition = "command -v dotnet >/dev/null 2>&1"
+format = "cd packages/csharp && dotnet format"
+check = "cd packages/csharp && dotnet format --verify-no-changes"
+
+[lint.kotlin]
+precondition = "command -v gradle >/dev/null 2>&1"
+format = "cd packages/kotlin && gradle ktlintFormat --no-daemon"
+check = "cd packages/kotlin && gradle ktlintCheck --no-daemon"
+
+[lint.dart]
+precondition = "command -v dart >/dev/null 2>&1"
+format = "cd packages/dart && dart format ."
+check = "cd packages/dart && dart analyze"
+
+[lint.gleam]
+precondition = "command -v gleam >/dev/null 2>&1"
+format = "cd packages/gleam && gleam format"
+check = "cd packages/gleam && gleam format --check"
+
+[lint.ffi]
+precondition = "test -d crates/spikard-ffi/include"
+check = "find crates/spikard-ffi/include -name '*.h' | xargs clang-format --dry-run --Werror"
+
+[lint.wasm]
+precondition = "test -d crates/spikard-wasm"
+check = "cargo check -p spikard-wasm --target wasm32-unknown-unknown"
+
 [test.python]
 precondition = "command -v uv >/dev/null 2>&1"
 command = "uv run pytest packages/python/tests/"
@@ -376,10 +492,63 @@ e2e = "cd e2e/php && vendor/bin/phpunit"
 precondition = "command -v mix >/dev/null 2>&1"
 e2e = "cd e2e/elixir && mix test"
 
+[test.go]
+precondition = "command -v go >/dev/null 2>&1"
+before = "cargo build --release -p spikard-ffi"
+e2e = "cd e2e/go && go test ./... -count=1"
+
+[test.java]
+precondition = "command -v mvn >/dev/null 2>&1"
+before = "cargo build --release -p spikard-ffi"
+command = "cd e2e/java && mvn test -q"
+e2e = "cd e2e/java && mvn test -q"
+
+[test.csharp]
+precondition = "command -v dotnet >/dev/null 2>&1"
+before = "cargo build --release -p spikard-ffi"
+command = "dotnet test e2e/csharp"
+e2e = "dotnet test e2e/csharp"
+
+[test.kotlin]
+precondition = "command -v gradle >/dev/null 2>&1"
+before = "cargo build --release -p spikard-ffi"
+command = "cd packages/kotlin && gradle test --no-daemon"
+e2e = "cd e2e/kotlin && gradle test --no-daemon"
+
+[test.dart]
+precondition = "command -v dart >/dev/null 2>&1"
+before = "cargo build --release -p spikard-ffi"
+command = "cd packages/dart && dart pub get && dart test"
+e2e = "cd e2e/dart && dart pub get && dart test"
+
+[test.gleam]
+precondition = "command -v gleam >/dev/null 2>&1"
+before = "cd packages/elixir && mix deps.get && mix compile"
+command = "cd packages/gleam && gleam test"
+e2e = "cd e2e/gleam && gleam test"
+
+[test.wasm]
+precondition = "command -v wasm-pack >/dev/null 2>&1"
+before = "wasm-pack build crates/spikard-wasm --release --target bundler"
+e2e = "cd e2e/wasm && npm test"
+
 [e2e]
 fixtures = "fixtures"
 output = "e2e"
-languages = ["python", "node", "ruby", "php", "elixir"]
+languages = [
+  "python",
+  "node",
+  "ruby",
+  "php",
+  "elixir",
+  "go",
+  "java",
+  "csharp",
+  "kotlin",
+  "dart",
+  "gleam",
+  "wasm",
+]
 
 [e2e.call]
 function = "handle_request"
@@ -408,6 +577,34 @@ path = "../../packages/php"
 name = "spikard"
 path = "../../packages/elixir"
 
+[e2e.packages.go]
+module = "github.com/Goldziher/spikard"
+path = "../../packages/go"
+
+[e2e.packages.java]
+module = "dev.spikard"
+path = "../../packages/java"
+
+[e2e.packages.csharp]
+name = "Spikard"
+path = "../../packages/csharp/Spikard.csproj"
+
+[e2e.packages.kotlin]
+module = "dev.spikard"
+path = "../../packages/kotlin"
+
+[e2e.packages.dart]
+name = "spikard"
+path = "../../packages/dart"
+
+[e2e.packages.gleam]
+name = "spikard"
+path = "../../packages/gleam"
+
+[e2e.packages.wasm]
+name = "@spikard/wasm"
+path = "../../crates/spikard-wasm"
+
 [e2e.registry]
 output = "test_apps"
 github_repo = "https://github.com/Goldziher/spikard"
@@ -429,3 +626,24 @@ name = "spikard"
 
 [e2e.registry.packages.rust]
 name = "spikard"
+
+[e2e.registry.packages.go]
+name = "github.com/Goldziher/spikard"
+
+[e2e.registry.packages.java]
+name = "dev.spikard:spikard"
+
+[e2e.registry.packages.csharp]
+name = "Spikard"
+
+[e2e.registry.packages.kotlin]
+name = "dev.spikard:spikard"
+
+[e2e.registry.packages.dart]
+name = "spikard"
+
+[e2e.registry.packages.gleam]
+name = "spikard"
+
+[e2e.registry.packages.wasm]
+name = "@spikard/wasm"
