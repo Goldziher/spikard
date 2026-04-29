@@ -466,39 +466,33 @@ Beyond queries, define mutations for state-changing operations and subscriptions
 
 The GraphQL endpoint accepts POST requests with JSON bodies containing the query, variables, and operation name.
 
-```bash
-curl -X POST http://localhost:8000/graphql \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "{ hello }",
-    "operationName": null,
-    "variables": {}
-  }'
-```
+    curl -X POST http://localhost:8000/graphql \
+      -H "Content-Type: application/json" \
+      -d '{
+        "query": "{ hello }",
+        "operationName": null,
+        "variables": {}
+      }'
 
 With variables:
 
-```bash
-curl -X POST http://localhost:8000/graphql \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "query GetUser($id: ID!) { user(id: $id) { name } }",
-    "variables": {"id": "123"},
-    "operationName": "GetUser"
-  }'
-```
+    curl -X POST http://localhost:8000/graphql \
+      -H "Content-Type: application/json" \
+      -d '{
+        "query": "query GetUser($id: ID!) { user(id: $id) { name } }",
+        "variables": {"id": "123"},
+        "operationName": "GetUser"
+      }'
 
 With mutations:
 
-```bash
-curl -X POST http://localhost:8000/graphql \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "mutation CreateUser($name: String!) { createUser(name: $name) { id name } }",
-    "variables": {"name": "Bob"},
-    "operationName": "CreateUser"
-  }'
-```
+    curl -X POST http://localhost:8000/graphql \
+      -H "Content-Type: application/json" \
+      -d '{
+        "query": "mutation CreateUser($name: String!) { createUser(name: $name) { id name } }",
+        "variables": {"name": "Bob"},
+        "operationName": "CreateUser"
+      }'
 
 ## GraphQL Playground and IDE Integration
 
@@ -574,21 +568,19 @@ GraphQL follows the GraphQL-over-HTTP specification for error responses. The ser
 
 ### Error Response Structure
 
-```json
-{
-  "data": {
-    "user": null
-  },
-  "errors": [
     {
-      "message": "Field 'missing' not found on type 'User'",
-      "extensions": {
-        "code": "INTERNAL_ERROR"
-      }
+      "data": {
+        "user": null
+      },
+      "errors": [
+        {
+          "message": "Field 'missing' not found on type 'User'",
+          "extensions": {
+            "code": "INTERNAL_ERROR"
+          }
+        }
+      ]
     }
-  ]
-}
-```
 
 ### HTTP Status Codes
 

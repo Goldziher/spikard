@@ -4,7 +4,7 @@ priority: high
 
 # HTTP Framework Domain
 
-**Axum + Tower-HTTP middleware stack, request/response lifecycle**
+## Axum + Tower-HTTP middleware stack, request/response lifecycle
 
 ## Overview
 

@@ -4,7 +4,7 @@ priority: high
 
 # Handler Abstraction Domain
 
-**Unified handler trait across languages (Rust, Python, Node.js, Ruby, PHP)**
+## Unified handler trait across languages (Rust, Python, Node.js, Ruby, PHP)
 
 ## Overview
 

@@ -907,7 +907,7 @@ class ChatMessage(_message.Message):
     timestamp: int
 ```
 
-**Same generated file: service definitions section**
+## Same generated file: service definitions section
 
 ```python
 #!/usr/bin/env python3

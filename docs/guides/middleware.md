@@ -102,16 +102,14 @@ Normalize headers, coerce parameters, inject tenant/feature flags, or apply rate
 
 Middleware executes in the order it's registered. Request middleware runs top-to-bottom, response middleware runs bottom-to-top:
 
-```text
-Request flow:
-  → Middleware 1 (observability: log request)
-    → Middleware 2 (auth: verify token)
-      → Middleware 3 (rate limit: check limits)
-        → Handler
-      ← Middleware 3 (response shaping: compress)
-    ← Middleware 2 (auth: add headers)
-  ← Middleware 1 (observability: log response)
-```
+    Request flow:
+      → Middleware 1 (observability: log request)
+        → Middleware 2 (auth: verify token)
+          → Middleware 3 (rate limit: check limits)
+            → Handler
+          ← Middleware 3 (response shaping: compress)
+        ← Middleware 2 (auth: add headers)
+      ← Middleware 1 (observability: log response)
 
 Register middleware in order of importance:
 

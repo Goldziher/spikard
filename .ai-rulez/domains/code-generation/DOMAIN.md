@@ -4,7 +4,7 @@ priority: high
 
 # Code Generation Domain
 
-**OpenAPI, GraphQL, AsyncAPI, OpenRPC handler generation**
+## OpenAPI, GraphQL, AsyncAPI, OpenRPC handler generation
 
 ## Overview
 
