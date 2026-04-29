@@ -16,7 +16,7 @@ package main
 import "github.com/Goldziher/spikard"
 
 func main() {
-	// See https://github.com/kreuzberg-dev/spikard for usage examples.
+	// See https://github.com/Goldziher/spikard for usage examples.
 }
 ```
 

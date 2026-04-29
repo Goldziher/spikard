@@ -34,8 +34,8 @@ typealias ServerConfig = dev.spikard.ServerConfig
 typealias Method = dev.spikard.Method
 typealias SecuritySchemeInfo = dev.spikard.SecuritySchemeInfo
 
-typealias GraphQLError = dev.spikard.GraphQLErrorException
-typealias SchemaError = dev.spikard.SchemaErrorException
+typealias GraphQLErrorException = dev.spikard.GraphQLErrorException
+typealias SchemaErrorException = dev.spikard.SchemaErrorException
 
 object Spikard {
     /**

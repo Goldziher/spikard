@@ -1,5 +1,5 @@
 {
-	"name": "kreuzberg-dev/spikard",
+	"name": "goldziher/spikard",
 	"description": "Rust-centric multi-language HTTP framework with polyglot bindings",
 	"license": "MIT",
 	"type": "php-ext",

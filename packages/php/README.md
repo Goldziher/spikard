@@ -5,7 +5,7 @@ Rust-centric multi-language HTTP framework with polyglot bindings
 ## Installation
 
 ```bash
-composer require kreuzberg-dev/spikard
+composer require Goldziher/spikard
 ```
 
 ## Quick Start
@@ -15,7 +15,7 @@ composer require kreuzberg-dev/spikard
 
 use spikard_php;
 
-// See https://github.com/kreuzberg-dev/spikard for usage examples.
+// See https://github.com/Goldziher/spikard for usage examples.
 ```
 
 ## Documentation

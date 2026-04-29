@@ -14,7 +14,7 @@ See the build instructions in the main repository.
 #include "spikard.h"
 
 int main(void) {
-    // See https://github.com/kreuzberg-dev/spikard for usage examples.
+    // See https://github.com/Goldziher/spikard for usage examples.
     return 0;
 }
 ```

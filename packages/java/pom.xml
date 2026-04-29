@@ -241,6 +241,7 @@
                 </dependencies>
                 <configuration>
                     <configLocation>${project.basedir}/checkstyle.xml</configLocation>
+                    <propertiesLocation>${project.basedir}/checkstyle.properties</propertiesLocation>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <violationSeverity>warning</violationSeverity>
