@@ -41,7 +41,9 @@
 coverage.json
 packages/ruby/.simplecov
 .dSYM/
-.task/
+# task runtime cache only — versioned task includes live in .task/{config,languages,tools,workflows}/
+.task/checksum/
+.task/timestamp/
 .venv/
 .venv-codex/
 .vscode/

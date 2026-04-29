@@ -1,0 +1,188 @@
+version: "3"
+internal: true
+
+includes:
+  platforms: ../config/platforms.yml
+
+vars:
+  RUST_LOG: "{{.RUST_LOG | default \"info\"}}"
+  BUILD_PROFILE: "{{.BUILD_PROFILE | default \"release\"}}"
+  RUST_BACKTRACE: "{{.RUST_BACKTRACE | default \"1\"}}"
+  CARGO_TERM_COLOR: "always"
+
+  # Crates that build through alef (cdylib/staticlib/native NIFs/extensions) and
+  # are excluded from the workspace clippy/build sweep so they don't get
+  # double-built.
+  ALEF_EXCLUDES: "--exclude spikard-py --exclude spikard-node --exclude spikard-rb --exclude spikard-php --exclude spikard-elixir --exclude spikard-ffi --exclude spikard-wasm --exclude benchmark-harness"
+
+tasks:
+  install:
+    desc: "Install Rust toolchain and components"
+    cmds:
+      - rustup update stable
+      - rustup component add rustfmt clippy
+      - cmd: rustup component add llvm-tools
+        platforms: [windows]
+      - cargo install cargo-llvm-cov --locked
+      - cargo install cargo-edit --locked
+      - cargo --version
+      - rustc --version
+
+  build:
+    desc: "Build all Rust crates with {{.BUILD_PROFILE}} profile"
+    cmds:
+      - task: build:{{.BUILD_PROFILE | default "release"}}
+
+  build:dev:
+    desc: "Build all Rust crates in debug mode"
+    cmds:
+      - cargo build --workspace --all-features {{.ALEF_EXCLUDES}}
+
+  build:release:
+    desc: "Build all Rust crates in release mode"
+    cmds:
+      - cargo build --release --workspace --all-features {{.ALEF_EXCLUDES}}
+
+  build:ci:
+    desc: "Build for CI with debug info enabled"
+    env:
+      RUSTFLAGS: "-C debuginfo=2"
+    cmds:
+      - cargo build --release --workspace --all-features {{.ALEF_EXCLUDES}}
+
+  cli:build:
+    desc: "Build CLI binary"
+    cmds:
+      - cargo build --release --package spikard-cli {{if .TARGET}}--target {{.TARGET}}{{end}}
+
+  cli:build:dev:
+    desc: "Build CLI binary in debug mode"
+    cmds:
+      - cargo build --package spikard-cli
+
+  cli:install:
+    desc: "Install CLI binary"
+    cmds:
+      - cargo install --path crates/spikard-cli
+
+  ffi:build:
+    desc: "Build FFI library for go/java/csharp/kotlin/dart bindings"
+    cmds:
+      - cargo build --release --package spikard-ffi {{.CARGO_ARGS | default ""}}
+
+  ffi:build:dev:
+    desc: "Build FFI library in debug mode"
+    cmds:
+      - cargo build --package spikard-ffi {{.CARGO_ARGS | default ""}}
+
+  ffi:build:ci:
+    desc: "Build FFI library in CI mode (with debug info)"
+    env:
+      RUSTFLAGS: "-C debuginfo=2"
+    cmds:
+      - cargo build --release --package spikard-ffi {{.CARGO_ARGS | default ""}}
+
+  wasm:build:all:
+    desc: "Build WASM bindings (web/bundler/nodejs/deno targets)"
+    dir: crates/spikard-wasm
+    cmds:
+      - pnpm run build:all
+
+  test:
+    desc: "Run all Rust tests"
+    vars:
+      PYO3_PYTHON:
+        sh: uv run which python 2>/dev/null || command -v python3 || echo python
+      PYTHONHOME:
+        sh: uv run python -c "import sys; print(sys.base_prefix)" 2>/dev/null || echo ""
+    env:
+      PYO3_PYTHON: "{{.PYO3_PYTHON}}"
+      PYTHONHOME: "{{.PYTHONHOME}}"
+    cmds:
+      - cargo test --workspace --release {{.ALEF_EXCLUDES}}
+
+  test:ci:
+    desc: "Run Rust tests in CI mode"
+    env:
+      RUST_BACKTRACE: "{{.RUST_BACKTRACE}}"
+      CARGO_TERM_COLOR: "{{.CARGO_TERM_COLOR}}"
+    cmds:
+      - task: test
+
+  test:quick:
+    desc: "Run fast Rust tests (unit tests only)"
+    cmds:
+      - cargo test --lib --workspace {{.ALEF_EXCLUDES}}
+
+  lint:
+    desc: "Lint Rust code WITH auto-fix (cargo fmt + cargo clippy --fix)"
+    cmds:
+      - cargo fmt --all
+      - cargo clippy --workspace --fix --allow-dirty --allow-staged --all-features {{.ALEF_EXCLUDES}} -- -D warnings
+
+  lint:check:
+    desc: "Lint Rust code WITHOUT auto-fix (check-only)"
+    cmds:
+      - cargo fmt --all -- --check
+      - cargo clippy --workspace --all-features {{.ALEF_EXCLUDES}} -- -D warnings
+
+  format:
+    desc: "Format Rust code (with modifications)"
+    cmds:
+      - cargo fmt --all
+
+  format:check:
+    desc: "Check Rust formatting without modifications"
+    cmds:
+      - cargo fmt --all -- --check
+
+  licenses:
+    desc: "Check Rust dependency licenses with cargo-deny"
+    cmds:
+      - cargo deny check licenses
+
+  doc:
+    desc: "Generate Rust documentation and open in browser"
+    cmds:
+      - cargo doc --no-deps --open
+
+  doc:build:
+    desc: "Build Rust documentation (without opening)"
+    cmds:
+      - cargo doc --no-deps
+
+  clean:
+    desc: "Clean Rust build artifacts"
+    cmds:
+      - cargo clean
+
+  update:
+    desc: "Update Rust dependencies (compatible only)"
+    cmds:
+      - cargo update
+
+  upgrade:
+    desc: "Upgrade Rust dependencies aggressively (cargo upgrade --incompatible)"
+    cmds:
+      - cargo upgrade --incompatible
+      - cargo update
+
+  e2e:format:
+    desc: "Format generated Rust E2E sources"
+    cmds:
+      - cmd: cargo fmt --manifest-path e2e/rust/Cargo.toml
+        ignore_error: true
+
+  e2e:lint:
+    desc: "Lint Rust E2E crate with clippy"
+    cmds:
+      - cmd: cargo clippy -p e2e-rust -- -D warnings
+        ignore_error: true
+
+  e2e:test:
+    desc: "Run Rust E2E tests"
+    env:
+      RUST_TEST_THREADS: "1"
+    cmds:
+      - cmd: PYTHONPATH=packages/python cargo test --manifest-path e2e/rust/Cargo.toml --release
+        ignore_error: true

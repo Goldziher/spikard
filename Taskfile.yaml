@@ -1,620 +1,273 @@
 version: "3"
 
-vars:
-  BUNDLER_CMD:
-    sh: "command -v bundle || echo 'bundle'"
-  RUBY_CMD:
-    sh: "command -v ruby || echo 'ruby'"
-  RUBY_GEM_HOME: "{{.TASKFILE_DIR}}/packages/ruby/.gems"
-  RUBY_BUNDLE_PATH: "{{.TASKFILE_DIR}}/packages/ruby/vendor/bundle"
-  RUBY_ENV_PREFIX: "GEM_HOME={{.RUBY_GEM_HOME}} GEM_PATH={{.RUBY_GEM_HOME}} BUNDLE_PATH={{.RUBY_BUNDLE_PATH}}"
+# ============================================================================
+# spikard — Root Taskfile
+# ============================================================================
+# Primary development interface. Rust core tasks delegate to .task/languages/rust.yml.
+# Most binding language operations (setup, build, test, lint, format, clean,
+# update, upgrade, publish) are handled by alef.
+#
+# Common entry points:
+#   task setup          -> install all dependencies (rust + alef setup + prek)
+#   task build          -> build core + bindings (debug)
+#   task build:release  -> build core + bindings (release)
+#   task test           -> run all tests (rust + alef test)
+#   task test:e2e       -> generate + run e2e tests for all bindings
+#   task test:cov       -> tests with coverage
+#   task format         -> format all code (cargo fmt + alef fmt)
+#   task lint           -> run prek (full pre-commit chain)
+#   task update         -> compatible dependency updates everywhere
+#   task upgrade        -> aggressive upgrades
+#   task clean          -> remove all build artifacts
+#   task publish:*      -> alef publish validate/prepare/build/package
+#   task rust:*         -> Rust-specific tasks (.task/languages/rust.yml)
+#   task version:*      -> version sync via alef (.task/tools/version-sync.yml)
+# ============================================================================
+
+includes:
+  rust:
+    taskfile: ./.task/languages/rust.yml
+  version:
+    taskfile: ./.task/tools/version-sync.yml
+  _tools:
+    taskfile: ./.task/tools/general.yml
+    flatten: true
 
 env:
   DOCKER_BUILDKIT: 1
   BUILDKIT_PROGRESS: plain
-  RUBY: "{{.RUBY_CMD}}"
 
 silent: false
 
 tasks:
+  default:
+    desc: "List available tasks"
+    cmds:
+      - task --list
+
+  # === Setup ===
   setup:
-    desc: "Install all dependencies and initialize project (idempotent)"
+    desc: "Install all dependencies and setup development environment"
     cmds:
       - task: rust:install
-      - task: python:install
-      - task: js:install
-      - task: ruby:install
-      - task: elixir:install
-      - task: php:install
+      - alef setup
       - task: pre-commit:install
-      - task: python:build
-      - echo "Setup complete - safe to re-run anytime"
 
-  update:
-    desc: "Update all dependencies to latest versions"
-    cmds:
-      - echo "Updating Rust dependencies..."
-      - task: rust:update
-      - echo "Updating Python dependencies..."
-      - task: python:update
-      - echo "Updating TypeScript dependencies..."
-      - task: js:update
-      - echo "Updating Ruby dependencies..."
-      - task: ruby:update
-      - echo "Updating Elixir dependencies..."
-      - task: elixir:update
-      - echo "Updating PHP dependencies..."
-      - task: php:update
-      - echo "Updating prek dependencies..."
-      - prek autoupdate
-      - echo "Rebuilding Python bindings..."
-      - task: python:build
-      - echo "All dependencies updated"
-  version:sync:
-    desc: "Sync all package versions to the workspace version"
-    cmds:
-      - alef sync-versions
-  readme:generate:
-    desc: "Generate all README files from templates"
-    cmds:
-      - alef readme
-  readme:validate:
-    desc: "Validate that generated READMEs are up to date"
-    cmds:
-      - alef readme
-      - git diff --exit-code
-  docs:snippets:list:
-    desc: "List all discovered documentation snippets"
-    cmds:
-      - cargo run --package snippet-runner -- list --snippets docs
-  docs:snippets:validate:
-    desc: "Validate documentation snippets at syntax level"
-    cmds:
-      - cargo run --package snippet-runner -- validate --snippets docs --level syntax
+  # === Build ===
   build:
-    desc: "Build Rust core and language bindings"
+    desc: "Build core Rust library and all language bindings (debug)"
+    cmds:
+      - task: rust:build:dev
+      - alef build
+
+  build:release:
+    desc: "Build core Rust library and all language bindings (release)"
+    cmds:
+      - task: rust:build:release
+      - alef build --release
+
+  build:ci:
+    desc: "Build all in CI mode"
+    cmds:
+      - task: rust:build:ci
+
+  build:core:
+    desc: "Build Rust core library only"
     cmds:
       - task: rust:build
-      - task: python:build
-      - task: js:build
-      - task: ruby:build
-      - task: elixir:build
-      - task: php:build
+
+  build:bindings:
+    desc: "Build all language bindings (skip Rust core)"
+    cmds:
+      - alef build
+
+  build:cli:
+    desc: "Build the spikard CLI binary"
+    cmds:
+      - task: rust:cli:build
+
+  build:http:
+    desc: "Build HTTP server binary"
+    cmds:
+      - cargo build --release --package spikard-http
+
+  # === Test ===
   test:
-    desc: "Run test suites for all languages"
+    desc: "Run all test suites (Rust core + bindings)"
     cmds:
       - task: rust:test
-      - task: python:test
-      - task: js:test
-      - task: ruby:test
-      - task: elixir:test
-      - task: php:test
-      - task: test:e2e
+      - alef test
 
-  validate:fixtures:
-    desc: "Validate all gRPC streaming fixture files against schema"
+  test:bindings:
+    desc: "Run binding test suites only (skip Rust core)"
     cmds:
-      - python3 scripts/validate_fixtures.py
+      - alef test
 
-  test:grpc:fixtures:
-    desc: "Run gRPC streaming fixture tests across all languages"
-    deps:
-      - test:grpc:python
-      - test:grpc:typescript
-      - test:grpc:ruby
-      - test:grpc:php
-
-  test:grpc:python:
-    desc: "Run Python gRPC streaming fixture tests"
-    deps:
-      - build:py
-    dir: packages/python
+  test:e2e:
+    desc: "Generate and run e2e tests across all bindings"
     cmds:
-      - uv run pytest tests/test_grpc_fixtures.py -v --cov=spikard --cov-report=term-missing --cov-fail-under=80
+      - alef e2e generate
+      - alef test --e2e
 
-  test:grpc:typescript:
-    desc: "Run TypeScript gRPC streaming fixture tests"
-    deps:
-      - build:node
-    dir: packages/node
+  test:cov:
+    desc: "Run all tests with coverage"
     cmds:
-      - pnpm vitest run tests/grpc_fixtures.spec.ts --coverage
+      - task: rust:test:ci
+      - alef test --coverage
 
-  test:grpc:ruby:
-    desc: "Run Ruby gRPC streaming fixture tests"
-    deps:
-      - ruby:build
-    dir: packages/ruby
+  test:ci:
+    desc: "Run all tests with coverage (CI mode, alias for test:cov)"
     cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rspec spec/grpc_fixtures_spec.rb --format documentation"
+      - task: test:cov
 
-  test:grpc:php:
-    desc: "Run PHP gRPC streaming fixture tests"
-    deps:
-      - php:build
-    dir: packages/php
+  # === Lint & Format ===
+  lint:
+    desc: "Lint all code via prek (pre-commit framework)"
     cmds:
-      - php -d extension=../../target/release/libspikard_php.dylib vendor/bin/phpunit --configuration phpunit.xml --testsuite=grpc_fixtures --coverage-text
+      - prek run --all-files
+
+  lint:check:
+    desc: "Lint all code WITHOUT auto-fix (Rust + bindings)"
+    cmds:
+      - task: rust:lint:check
+      - alef lint
+
+  format:
+    desc: "Format all code (Rust + all bindings)"
+    cmds:
+      - cargo fmt --all
+      - alef fmt
+
+  fmt:
+    desc: "Format all code (alias for format)"
+    cmds:
+      - task: format
+
+  format:check:
+    desc: "Check code formatting without modifications"
+    cmds:
+      - task: rust:format:check
+
+  check:
+    desc: "Run all checks (format + lint, no modifications)"
+    cmds:
+      - task: format:check
+      - task: lint:check
+
+  # === Update / Upgrade ===
+  update:
+    desc: "Update dependencies (compatible only)"
+    cmds:
+      - task: rust:update
+      - alef update
+      - prek autoupdate
+
+  upgrade:
+    desc: "Upgrade dependencies aggressively (cargo upgrade --incompatible, pnpm up --latest, uv sync --upgrade, etc.)"
+    cmds:
+      - rustup update stable
+      - task: rust:upgrade
+      - alef update --latest
+      - prek autoupdate
+
+  # === Coverage ===
+  cov:rust:
+    desc: "Generate Rust coverage report"
+    cmds:
+      - task: rust:test:ci
+
+  cov:all:
+    desc: "Generate coverage for all languages"
+    cmds:
+      - task: rust:test:ci
+      - alef test --coverage
 
   verify:coverage:
     desc: "Verify code coverage thresholds across all language bindings"
     cmds:
       - python3 scripts/verify_coverage.py
 
-  check:
-    desc: "Run all checks without modifications (lint + format checks)"
+  # === Version ===
+  versions:sync:
+    desc: "Synchronize version from Cargo.toml to all package manifests"
     cmds:
-      - task: lint:check
-      - task: format:check
+      - task: version:sync
 
-  lint:
-    desc: "Run all linters with auto-fix enabled"
+  # === Alef lifecycle ===
+  alef:generate:
+    desc: "Run full alef pipeline (generate + stubs + scaffold + readme + docs + e2e)"
     cmds:
-      - task: rust:lint
-      - task: python:lint
-      - task: js:lint
-      - task: ruby:lint
-      - task: elixir:lint
-      - task: php:lint
+      - alef all --clean
 
-  lint:check:
-    desc: "Run all linters in check-only mode (no modifications)"
+  alef:verify:
+    desc: "Check bindings are up-to-date (CI mode)"
     cmds:
-      - task: rust:lint:check
-      - task: python:lint:check
-      - task: js:lint:check
-      - task: ruby:lint:check
-      - task: elixir:lint:check
-      - task: php:lint:check
+      - alef verify --exit-code
 
-  format:
-    desc: "Format all code with modifications"
+  alef:build:
+    desc: "Build all language bindings"
     cmds:
-      - task: rust:format
-      - task: python:format
-      - task: js:format
-      - task: ruby:format
-      - task: elixir:format
-      - task: php:format
+      - alef build
 
-  format:check:
-    desc: "Check code formatting without modifications"
+  alef:sync:
+    desc: "Sync version from Cargo.toml to all manifests"
     cmds:
-      - task: rust:format:check
-      - task: python:format:check
-      - task: js:format:check
-      - task: ruby:format:check
-      - task: elixir:format:check
-      - task: php:format:check
+      - alef sync-versions
 
-  python:install:
-    desc: "Install Python dependencies with uv"
-    cmds:
-      - uv sync --all-extras --all-groups --no-install-workspace
-
-  python:update:
-    desc: "Upgrade Python dependencies"
-    cmds:
-      - uv run uv-bump
-      - uv sync --all-extras --all-groups --no-install-workspace --upgrade
-
-  rust:install:
-    desc: "Install Rust toolchain and developer tools"
-    cmds:
-      - which cargo-binstall || cargo install cargo-binstall || echo "cargo-binstall install failed (optional)"
-      - which cargo-upgrade || cargo install cargo-upgrade || echo "cargo-upgrade install failed (optional)"
-
-  rust:update:
-    desc: "Upgrade Rust dependencies"
-    cmds:
-      - cargo upgrade --incompatible
-      - cargo update
-
-  ruby:install:
-    desc: "Install Ruby dependencies"
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} bundler --version >/dev/null 2>&1 || gem install bundler --no-document"
-      - "{{.RUBY_ENV_PREFIX}} {{.BUNDLER_CMD}} check || {{.RUBY_ENV_PREFIX}} {{.BUNDLER_CMD}} install --jobs 4 --retry 3"
-
-  ruby:update:
-    desc: "Update Ruby dependencies"
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.BUNDLER_CMD}} config set --local frozen false"
-      - "{{.RUBY_ENV_PREFIX}} {{.BUNDLER_CMD}} update --all"
-
-  ruby:build:
-    desc: "Build Ruby native extension"
-    deps:
-      - ruby:install
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.BUNDLER_CMD}} exec rake ext:build"
-
-  ruby:test:
-    desc: "Run Ruby specs"
-    deps:
-      - ruby:build
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.BUNDLER_CMD}} exec rspec"
-
-  pre-commit:install:
-    desc: "Install pre-commit hooks via Prek"
-    cmds:
-      - prek install
-      - prek install --hook-type commit-msg
-
-  pre-commit:update:
-    desc: "Update Prek hooks"
-    cmds:
-      - prek autoupdate
-  pre-commit:run:
-    desc: "Run Prek hooks across the repo"
-    cmds:
-      - prek run --all-files
-  docs:build:
-    desc: "Build documentation"
-    cmds:
-      - task: docs:snippets:validate
-      - uv run zensical build --clean --strict
-  docs:serve:
-    desc: "Serve documentation locally"
-    cmds:
-      - uv run zensical serve
-  docs:deploy:
-    desc: "Build and deploy documentation"
+  alef:docs:
+    desc: "Generate API reference documentation"
     cmds:
       - alef docs
-      - uv run zensical build --clean --strict
 
-  python:test:
-    desc: "Run Python integration tests"
-    deps:
-      - build:py
+  alef:extract:
+    desc: "Extract API surface from Rust source"
     cmds:
-      - PYTHONPATH=packages/python .venv/bin/python -m pytest packages/python/tests -v
+      - alef extract
 
-  test:python:
-    desc: "Alias for python:test"
+  alef:scaffold:
+    desc: "Generate package scaffolding (Cargo.toml, pyproject.toml, etc.)"
     cmds:
-      - task: python:test
+      - alef scaffold
 
-  python:lint:
-    desc: "Run Python linters with auto-fix"
+  # === E2E tests ===
+  e2e:generate:
+    desc: "Generate E2E tests for all languages from fixtures"
     cmds:
-      - uv run ruff check --fix .
-      - uv run mypy tools packages/python
+      - alef e2e generate
 
-  python:lint:check:
-    desc: "Check Python linters without auto-fix"
+  e2e:test:
+    desc: "Run E2E tests for all languages (alias for test:e2e)"
     cmds:
-      - uv run ruff check .
-      - uv run mypy tools packages/python
+      - task: test:e2e
 
-  python:format:
-    desc: "Format Python code with Ruff"
+  verify:tests:
+    desc: "Verify generated e2e tests are up to date"
     cmds:
-      - uv run ruff format .
+      - alef e2e generate
+      - git diff --exit-code e2e/
 
-  python:format:check:
-    desc: "Check Python formatting without modifications"
+  # === Publish ===
+  publish:validate:
+    desc: "Validate publish manifests are consistent"
     cmds:
-      - uv run ruff format --check .
+      - alef publish validate
 
-  python:build:
-    desc: "Alias for build:py"
+  publish:prepare:
+    desc: "Prepare packages for publishing (vendor deps, stage FFI)"
     cmds:
-      - task: build:py
+      - alef publish prepare
 
-  rust:test:
-    desc: "Run Rust workspace tests"
-    vars:
-      PYO3_PYTHON:
-        sh: uv run which python
-      PYTHONHOME:
-        sh: uv run python -c "import sys; print(sys.base_prefix)"
-    env:
-      PYO3_PYTHON: "{{.PYO3_PYTHON}}"
-      PYTHONHOME: "{{.PYTHONHOME}}"
+  publish:build:
+    desc: "Build release artifacts for all languages"
     cmds:
-      - cargo test --workspace --release
+      - alef publish build
 
-  test:rust:
-    desc: "Alias for rust:test"
+  publish:package:
+    desc: "Package built artifacts into distributable archives"
     cmds:
-      - task: rust:test
+      - alef publish package -o dist/
 
-  check:rust:
-    desc: "Fast check of Rust code (no codegen)"
-    cmds:
-      - ./scripts/rust/run-with-bindgen-env.sh cargo check --workspace --all-features
-
-  rust:lint:
-    desc: "Run Rust linter with auto-fix (clippy + format + deny)"
-    cmds:
-      - cargo fmt --all
-      - ./scripts/rust/run-with-bindgen-env.sh cargo clippy --workspace --all-features -- -D warnings
-      - cargo deny check licenses
-
-  rust:lint:check:
-    desc: "Check Rust code without auto-fix (clippy + format check + deny)"
-    cmds:
-      - cargo fmt --all --check
-      - ./scripts/rust/run-with-bindgen-env.sh cargo clippy --workspace --all-features -- -D warnings
-      - cargo deny check licenses
-
-  rust:format:
-    desc: "Format Rust code"
-    cmds:
-      - cargo fmt --all
-
-  rust:format:check:
-    desc: "Check Rust formatting without modifying files"
-    cmds:
-      - cargo fmt --all --check
-
-  node:install:
-    desc: "Install Node.js dependencies with pnpm"
-    cmds:
-      - corepack enable
-      - pnpm install --frozen-lockfile
-
-  js:install:
-    desc: "Alias for node:install"
-    cmds:
-      - task: node:install
-
-  node:update:
-    desc: "Update Node.js dependencies with pnpm"
-    cmds:
-      - corepack up
-      - corepack enable
-      - pnpm up --latest -r
-
-  js:update:
-    desc: "Alias for node:update"
-    cmds:
-      - task: node:update
-
-  node:lint:
-    desc: "Lint TypeScript code with auto-fix (biome + oxlint)"
-    cmds:
-      - pnpm biome check --write packages/node/src e2e/node --log-level=warn
-      - pnpm oxlint packages/node/src e2e/node
-
-  node:lint:check:
-    desc: "Check TypeScript linting without auto-fix"
-    cmds:
-      - pnpm biome check packages/node/src e2e/node --log-level=warn
-      - pnpm oxlint packages/node/src e2e/node
-
-  js:lint:
-    desc: "Alias for node:lint"
-    cmds:
-      - task: node:lint
-
-  js:lint:check:
-    desc: "Alias for node:lint:check"
-    cmds:
-      - task: node:lint:check
-
-  ruby:lint:
-    desc: "Lint Ruby code with auto-fix (rubocop + typecheck)"
-    deps:
-      - ruby:install
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rubocop --autocorrect-all"
-      - task: ruby:typecheck
-
-  ruby:lint:check:
-    desc: "Check Ruby linting without auto-fix (rubocop + typecheck)"
-    deps:
-      - ruby:install
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rubocop"
-      - task: ruby:typecheck
-
-  ruby:typecheck:
-    desc: "Run Steep static analysis against Ruby signatures"
-    deps:
-      - ruby:install
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec ruby -S steep check"
-
-  ruby:format:
-    desc: "Format Ruby code with Rubocop"
-    deps:
-      - ruby:install
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rubocop --autocorrect-all"
-
-  ruby:format:check:
-    desc: "Check Ruby formatting without modifications"
-    deps:
-      - ruby:install
-    dir: packages/ruby
-    cmds:
-      - "{{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rubocop"
-
-  elixir:install:
-    desc: "Install Elixir dependencies"
-    dir: packages/elixir
-    cmds:
-      - mix deps.get
-
-  elixir:update:
-    desc: "Update Elixir dependencies"
-    dir: packages/elixir
-    cmds:
-      - mix deps.update --all
-
-  elixir:vendor:
-    desc: "Vendor Rust NIF source into native/spikard_elixir"
-    cmds:
-      - ./scripts/ci/elixir/vendor-nif.sh
-
-  elixir:build:
-    desc: "Build Elixir with NIF"
-    deps:
-      - elixir:vendor
-      - elixir:install
-    dir: packages/elixir
-    cmds:
-      - SPIKARD_BUILD=1 mix compile --warnings-as-errors
-
-  elixir:test:
-    desc: "Run Elixir tests"
-    deps:
-      - elixir:build
-    dir: packages/elixir
-    cmds:
-      - SPIKARD_BUILD=1 mix test
-
-  elixir:lint:
-    desc: "Run Credo static analysis (auto-fix suggestions)"
-    deps:
-      - elixir:build
-    dir: packages/elixir
-    cmds:
-      - SPIKARD_BUILD=1 mix credo suggest --all --strict
-
-  elixir:lint:check:
-    desc: "Check Elixir linting without modifications (Credo check-only)"
-    deps:
-      - elixir:build
-    dir: packages/elixir
-    cmds:
-      - SPIKARD_BUILD=1 mix credo suggest --all --strict
-
-  elixir:format:
-    desc: "Format Elixir code"
-    dir: packages/elixir
-    cmds:
-      - SPIKARD_BUILD=1 mix format
-
-  elixir:format:check:
-    desc: "Check Elixir formatting without modifications"
-    dir: packages/elixir
-    cmds:
-      - SPIKARD_BUILD=1 mix format --check-formatted
-
-  elixir:dialyzer:
-    desc: "Run Dialyzer type checker"
-    deps:
-      - elixir:build
-    dir: packages/elixir
-    cmds:
-      - SPIKARD_BUILD=1 mix dialyzer
-
-  node:format:
-    desc: "Format TypeScript code with biome"
-    cmds:
-      - pnpm biome format --write packages/node/src e2e/node
-
-  node:format:check:
-    desc: "Check TypeScript formatting without modifying files"
-    cmds:
-      - pnpm biome format --check packages/node/src e2e/node
-
-  js:format:
-    desc: "Alias for node:format"
-    cmds:
-      - task: node:format
-
-  js:format:check:
-    desc: "Alias for node:format:check"
-    cmds:
-      - task: node:format:check
-
-  node:test:
-    desc: "Run vitest unit tests in packages/node"
-    dir: packages/node
-    cmds:
-      - pnpm test
-
-  js:test:
-    desc: "Alias for node:test"
-    cmds:
-      - task: node:test
-
-  php:install:
-    desc: "Install PHP dependencies via Composer"
-    cmds:
-      - COMPOSER_DISABLE_FUND=1 composer -d packages/php install --no-interaction --no-progress
-
-  php:update:
-    desc: "Update PHP dependencies"
-    cmds:
-      - COMPOSER_DISABLE_FUND=1 composer -d packages/php update --no-interaction --no-progress
-
-  php:test:
-    desc: "Run PHP test suite (pure PHP; extension compiled separately)"
-    deps:
-      - php:install
-      - php:build
-    vars:
-      PHP_EXTENSION_PATH:
-        sh: |
-          if [ -f target/release/libspikard_php.dylib ]; then echo target/release/libspikard_php.dylib; \
-          elif [ -f target/release/libspikard_php.so ]; then echo target/release/libspikard_php.so; \
-          elif [ -f target/release/spikard_php.dll ]; then echo target/release/spikard_php.dll; \
-          else echo ""; fi
-    cmds:
-      - php -d extension={{.PHP_EXTENSION_PATH}} packages/php/vendor/bin/phpunit --configuration packages/php/phpunit.xml --no-coverage
-
-  php:lint:
-    desc: "Run PHP static analysis WITH auto-fix (phpstan + php-cs-fixer)"
-    deps:
-      - php:install
-    cmds:
-      - composer -d packages/php run lint:fix
-
-  php:lint:check:
-    desc: "Run PHP static analysis WITHOUT auto-fix (check-only)"
-    deps:
-      - php:install
-    cmds:
-      - composer -d packages/php run lint
-
-  php:format:
-    desc: "Format PHP code (with modifications)"
-    deps:
-      - php:install
-    cmds:
-      - composer -d packages/php run format
-
-  php:format:check:
-    desc: "Check PHP formatting without modifications"
-    deps:
-      - php:install
-    cmds:
-      - composer -d packages/php run format:check
-
-  php:build:
-    desc: "Build PHP native extension"
-    deps:
-      - php:install
-    cmds:
-      - cargo build -p spikard-php --features extension-module --release
-      - echo "PHP extension built at target/release/libspikard_php.dylib"
-
-  php:build:pie-source:
-    desc: "Build PIE source bundle for PHP extension"
-    vars:
-      VERSION:
-        sh: grep '^version = ' Cargo.toml | head -1 | sed -E 's/version = "(.*)"/\1/'
-    cmds:
-      - mkdir -p build/php-releases
-      - chmod +x scripts/package_php_pie_source.sh
-      - ./scripts/package_php_pie_source.sh {{.VERSION}} build/php-releases
-      - echo "PIE bundle ready at build/php-releases/spikard-php-{{.VERSION}}-src.tgz"
-
+  # === PHP release (kept; no alef equivalent) ===
   release:php:dry-run:
     desc: "Test PHP release workflow without publishing (dry-run)"
     cmds:
@@ -635,267 +288,205 @@ tasks:
       - sh: command -v gh
         msg: "GitHub CLI (gh) is required for release workflows"
 
-  version:sync:php:
-    desc: "Sync PHP package version to workspace version"
+  # === Per-language lint/format/test (delegate to alef where possible) ===
+  go:lint:
+    desc: "Lint Go binding with golangci-lint"
     cmds:
-      - alef sync-versions
+      - golangci-lint run ./...
+    dir: packages/go
 
-  build:rust:
-    desc: "Build Rust workspace in release mode"
+  ruby:format:
+    desc: "Format Ruby binding with rubocop"
     cmds:
-      - cargo build --workspace --release
+      - bundle exec rubocop --autocorrect-all
+    dir: packages/ruby
 
-  rust:build:
-    desc: "Alias for build:rust"
+  ruby:lint:
+    desc: "Lint Ruby binding with rubocop and steep"
     cmds:
-      - task: build:rust
+      - bundle exec rubocop
+      - bundle exec steep check
+    dir: packages/ruby
 
-  build:rust:debug:
-    desc: "Build Rust workspace in debug mode"
+  php:format:
+    desc: "Format PHP binding with php-cs-fixer"
     cmds:
-      - cargo build --workspace
+      - composer -d packages/php run format
 
-  build:py:
-    desc: "Build Python bindings for development"
+  php:lint:
+    desc: "Lint PHP binding (phpstan + php-cs-fixer)"
     cmds:
-      - uv pip install -e packages/python --config-settings='--build-option=--release'
+      - composer -d packages/php run lint
 
-  build:py:debug:
-    desc: "Build Python bindings in debug mode"
+  csharp:format:
+    desc: "Format C# binding with dotnet format"
     cmds:
-      - uv pip install -e packages/python
+      - dotnet format
+    dir: packages/csharp
 
-  build:py:wheel:
-    desc: "Build Python bindings as wheel for testing (release mode)"
+  csharp:lint:
+    desc: "Lint C# binding with dotnet format --verify-no-changes"
+    cmds:
+      - dotnet format --verify-no-changes
+    dir: packages/csharp
+
+  csharp:build:release:
+    desc: "Build the C# binding in Release configuration"
+    dir: packages/csharp
+    cmds:
+      - dotnet build --configuration Release
+
+  csharp:package:
+    desc: "Pack the C# binding into a NuGet package"
+    dir: packages/csharp
+    cmds:
+      - dotnet pack --configuration Release {{.CLI_ARGS}}
+
+  java:build:release:
+    desc: "Build the Java binding via Maven (mvn package)"
+    dir: packages/java
+    cmds:
+      - mvn -B -DskipTests package
+
+  kotlin:format:
+    desc: "Format Kotlin binding with ktlint via gradle"
+    cmds:
+      - gradle ktlintFormat --no-daemon
+    dir: packages/kotlin
+
+  kotlin:lint:
+    desc: "Lint Kotlin binding with ktlint via gradle"
+    cmds:
+      - gradle ktlintCheck --no-daemon
+    dir: packages/kotlin
+
+  kotlin:test:
+    desc: "Run Kotlin binding tests"
+    cmds:
+      - cargo build --release -p spikard-ffi
+      - gradle test --no-daemon
+    dir: packages/kotlin
+
+  dart:format:
+    desc: "Format Dart binding with dart format"
+    cmds:
+      - dart format .
+    dir: packages/dart
+
+  dart:lint:
+    desc: "Lint Dart binding with dart analyze"
+    cmds:
+      - dart analyze
+    dir: packages/dart
+
+  dart:test:
+    desc: "Run Dart binding tests"
+    cmds:
+      - cargo build --release --manifest-path packages/dart/rust/Cargo.toml
+      - dart pub get
+      - dart test
+    dir: packages/dart
+
+  gleam:format:
+    desc: "Format Gleam binding with gleam format"
+    cmds:
+      - gleam format
+    dir: packages/gleam
+
+  gleam:lint:
+    desc: "Lint Gleam binding with gleam format --check"
+    cmds:
+      - gleam format --check
+    dir: packages/gleam
+
+  gleam:test:
+    desc: "Run Gleam binding tests"
+    cmds:
+      - cd ../elixir && mix deps.get && mix compile
+      - cd ../gleam && gleam test
+    dir: packages/gleam
+
+  wasm:build:all:
+    desc: "Alias for rust:wasm:build:all (build all WASM targets)"
+    deps: [rust:wasm:build:all]
+
+  # === Spikard-specific tasks (preserved; no alef equivalent) ===
+  docs:snippets:list:
+    desc: "List all discovered documentation snippets"
+    cmds:
+      - cargo run --package snippet-runner -- list --snippets docs
+
+  docs:snippets:validate:
+    desc: "Validate documentation snippets at syntax level"
+    cmds:
+      - cargo run --package snippet-runner -- validate --snippets docs --level syntax
+
+  docs:build:
+    desc: "Build documentation"
+    cmds:
+      - task: docs:snippets:validate
+      - uv run zensical build --clean --strict
+
+  docs:serve:
+    desc: "Serve documentation locally"
+    cmds:
+      - uv run zensical serve
+
+  docs:deploy:
+    desc: "Build and deploy documentation"
+    cmds:
+      - alef docs
+      - uv run zensical build --clean --strict
+
+  readme:generate:
+    desc: "Generate all README files from templates"
+    cmds:
+      - alef readme
+
+  readme:validate:
+    desc: "Validate that generated READMEs are up to date"
+    cmds:
+      - alef readme
+      - git diff --exit-code
+
+  validate:fixtures:
+    desc: "Validate all gRPC streaming fixture files against schema"
+    cmds:
+      - python3 scripts/validate_fixtures.py
+
+  test:grpc:fixtures:
+    desc: "Run gRPC streaming fixture tests across all languages"
+    deps:
+      - test:grpc:python
+      - test:grpc:typescript
+      - test:grpc:ruby
+      - test:grpc:php
+
+  test:grpc:python:
+    desc: "Run Python gRPC streaming fixture tests"
     dir: packages/python
     cmds:
-      - uv run maturin build --release --out ../../target/wheels
+      - uv run pytest tests/test_grpc_fixtures.py -v --cov=spikard --cov-report=term-missing --cov-fail-under=80
 
-  build:local:python:
-    desc: "Clean rebuild Python bindings for local testing (removes cached .so files)"
-    cmds:
-      - cargo clean
-      - rm -rf .venv/lib/python*/site-packages/_spikard
-      - task: build:py:debug
-
-  build:cli:
-    desc: "Build CLI binary"
-    cmds:
-      - cargo build --release --package spikard-cli
-
-  build:http:
-    desc: "Build HTTP server binary"
-    cmds:
-      - cargo build --release --package spikard-http
-
-  build:node:
-    desc: "Build Node.js native bindings with NAPI-RS"
-    dir: crates/spikard-node
-    cmds:
-      - pnpm run build
-
-  js:build:
-    desc: "Alias for build:node"
-    cmds:
-      - task: build:node
-
-  generate:tests:
-    desc: "Generate e2e test suites from fixtures"
-    cmds:
-      - alef e2e generate
-
-  alef:generate:
-    desc: "Generate all language bindings with alef"
-    cmds:
-      - alef all --clean
-
-  alef:verify:
-    desc: "Verify generated bindings are up to date"
-    cmds:
-      - alef verify
-
-  alef:extract:
-    desc: "Extract API surface from Rust source"
-    cmds:
-      - alef extract
-
-  alef:scaffold:
-    desc: "Generate package scaffolding (Cargo.toml, pyproject.toml, etc.)"
-    cmds:
-      - alef scaffold
-
-  alef:sync:
-    desc: "Sync version from Cargo.toml to all package manifests"
-    cmds:
-      - alef sync-versions
-
-  verify:tests:
-    desc: "Verify generated e2e tests are up to date"
-    cmds:
-      - alef e2e generate
-      - git diff --exit-code e2e/
-
-  clean:generated:
-    desc: "Remove all generated e2e test infrastructure"
-    cmds:
-      - rm -rf e2e/
-
-  test:e2e:rust:
-    desc: "Run Rust e2e tests (fixture-driven integration tests)"
-    cmds:
-      - PYTHONPATH=packages/python cargo test --manifest-path e2e/rust/Cargo.toml
-
-  test:e2e:python:
-    desc: "Run Python e2e tests (fixture-driven integration tests)"
-    dir: e2e/python
-    cmds:
-      - PYTHONPATH=../../packages/python:. ../../.venv/bin/python -m pytest tests/ -v
-
-  test:e2e:node:
-    desc: "Run Node.js e2e tests (fixture-driven integration tests with vitest)"
-    dir: e2e/node
-    deps:
-      - build:node
-    cmds:
-      - pnpm test
-
-  test:e2e:ruby:
-    desc: "Run Ruby e2e tests (fixture-driven integration tests)"
-    dir: e2e/ruby
-    cmds:
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} check || BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} install --jobs 4 --retry 3
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rake -C ../../packages/ruby ext:build
-      - BUNDLE_GEMFILE=../../packages/ruby/Gemfile {{.RUBY_ENV_PREFIX}} {{.RUBY_EXEC_PREFIX}} {{.BUNDLER_CMD}} exec rspec
-
-  test:e2e:php:
-    desc: "Run PHP e2e tests (fixture-driven integration tests)"
-    dir: e2e/php
-    deps:
-      - php:install
-      - php:build
-    vars:
-      PHP_EXTENSION_PATH:
-        sh: |
-          if [ -f ../../target/release/libspikard_php.dylib ]; then echo ../../target/release/libspikard_php.dylib; \
-          elif [ -f ../../target/release/libspikard_php.so ]; then echo ../../target/release/libspikard_php.so; \
-          elif [ -f ../../target/release/spikard_php.dll ]; then echo ../../target/release/spikard_php.dll; \
-          else echo ""; fi
-    cmds:
-      - php -d extension={{.PHP_EXTENSION_PATH}} ../../packages/php/vendor/bin/phpunit --configuration phpunit.xml
-
-  e2e:elixir:install:
-    desc: "Install Elixir e2e app dependencies"
-    dir: e2e/elixir
-    cmds:
-      - mix deps.get
-
-  test:e2e:elixir:
-    desc: "Run Elixir e2e tests (fixture-driven integration tests)"
-    dir: e2e/elixir
-    deps:
-      - elixir:build
-      - e2e:elixir:install
-    cmds:
-      - SPIKARD_BUILD=1 mix test
-
-  test:e2e:
-    desc: "Run all e2e fixture-driven integration tests"
-    cmds:
-      - task: test:e2e:rust
-      - task: test:e2e:python
-      - task: test:e2e:node
-      - task: test:e2e:ruby
-      - task: test:e2e:php
-      - task: test:e2e:elixir
-
-  build:js:
-    desc: "Build all JavaScript/TypeScript packages"
-    cmds:
-      - task: build:node
-
-  run:cli:
-    desc: "Run the CLI tool"
-    cmds:
-      - cargo run --package spikard-cli -- {{.CLI_ARGS}}
-
-  run:http:
-    desc: "Run the HTTP server"
-    cmds:
-      - cargo run --package spikard-http
-
-  cov:rust:
-    desc: "Generate Rust code coverage with 95% minimum enforcement via tarpaulin"
-    cmds:
-      - ./scripts/coverage/run-rust-tarpaulin.sh
-      - 'echo ""'
-      - echo "Rust coverage reports generated:"
-      - 'echo "  - HTML: target/tarpaulin/index.html"'
-      - 'echo "  - LCOV: target/tarpaulin/lcov.info"'
-      - 'echo ""'
-      - 'echo "Minimum threshold: 95%"'
-
-  cov:python:
-    desc: "Generate Python code coverage report with 80% minimum enforcement"
-    dir: packages/python
-    deps:
-      - build:py
-    cmds:
-      - uv run pytest tests/ --cov=spikard --cov-report=html --cov-report=term --cov-report=lcov:coverage.lcov --cov-fail-under=80
-      - 'echo ""'
-      - echo "Python coverage report generated:"
-      - 'echo "  - HTML: htmlcov/index.html"'
-      - 'echo "  - LCOV: coverage.lcov"'
-
-  cov:node:
-    desc: "Generate Node.js code coverage report with 80% minimum threshold"
+  test:grpc:typescript:
+    desc: "Run TypeScript gRPC streaming fixture tests"
     dir: packages/node
     cmds:
-      - pnpm test:cov
-      - echo ""
-      - echo "Node.js coverage report generated:"
-      - 'echo "  - HTML: coverage/index.html"'
-      - 'echo "  - LCOV: coverage/lcov.info"'
+      - pnpm vitest run tests/grpc_fixtures.spec.ts --coverage
 
-  cov:ruby:
-    desc: "Generate Ruby code coverage report with 80% minimum enforcement"
+  test:grpc:ruby:
+    desc: "Run Ruby gRPC streaming fixture tests"
     dir: packages/ruby
     cmds:
-      - bundle exec rspec
-      - echo ""
-      - echo "Ruby coverage report generated:"
-      - 'echo "  - HTML: coverage/index.html"'
-      - 'echo "  - LCOV: coverage/lcov.info"'
+      - bundle exec rspec spec/grpc_fixtures_spec.rb --format documentation
 
-  cov:php:
-    desc: "Generate PHP code coverage report"
+  test:grpc:php:
+    desc: "Run PHP gRPC streaming fixture tests"
     dir: packages/php
     cmds:
-      - composer test -- --coverage-html build/coverage/html --coverage-text
-      - echo ""
-      - echo "PHP coverage report generated:"
-      - 'echo "  - HTML: build/coverage/html/index.html"'
+      - php -d extension=../../target/release/libspikard_php.dylib vendor/bin/phpunit --configuration phpunit.xml --testsuite=grpc_fixtures --coverage-text
 
-  cov:all:
-    desc: "Generate coverage reports for all languages"
-    cmds:
-      - task: cov:rust
-      - task: cov:python
-      - task: cov:node
-      - task: cov:ruby
-
-  clean:
-    desc: "Clean build artifacts"
-    cmds:
-      - cargo clean
-      - rm -rf target/
-      - rm -rf .pytest_cache/
-      - rm -rf .mypy_cache/
-      - rm -rf .ruff_cache/
-      - find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-      - find . -type f -name "*.pyc" -delete
-      - find crates -type d -name "dist" -exec rm -rf {} + 2>/dev/null || true
-      - find crates -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
-
+  # === OpenAPI client codegen (spikard framework feature) ===
   codegen:python:
     desc: "Generate Python server code from OpenAPI schema"
     deps:
@@ -931,7 +522,7 @@ tasks:
       - task: codegen:python:lint
         vars:
           FILE: "{{.OUTPUT}}"
-      - echo "✅ Generated Python code validated successfully{{.COLON}} {{.OUTPUT}}"
+      - echo "Generated Python code validated successfully{{.COLON}} {{.OUTPUT}}"
     vars:
       COLON: ":"
 
@@ -977,10 +568,22 @@ tasks:
       - task: codegen:typescript:typecheck
         vars:
           FILE: "{{.OUTPUT}}"
-      - echo "✅ Generated TypeScript code validated successfully{{.COLON}} {{.OUTPUT}}"
+      - echo "Generated TypeScript code validated successfully{{.COLON}} {{.OUTPUT}}"
     vars:
       COLON: ":"
 
+  # === Local dev runners ===
+  run:cli:
+    desc: "Run the CLI tool"
+    cmds:
+      - cargo run --package spikard-cli -- {{.CLI_ARGS}}
+
+  run:http:
+    desc: "Run the HTTP server"
+    cmds:
+      - cargo run --package spikard-http
+
+  # === Published-package smoke tests ===
   test:apps:python:
     desc: "Run Python published package test app"
     dir: test_apps/python
@@ -1039,7 +642,18 @@ tasks:
     vars:
       VERSION: '{{.VERSION | default "0.6.0"}}'
 
-  default:
-    desc: "Show available tasks"
+  # === Clean ===
+  clean:
+    desc: "Remove build artifacts across all languages"
     cmds:
-      - task --list
+      - cargo clean
+      - alef clean
+      - rm -rf coverage.lcov dist/ .alef/
+      - rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/
+      - find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+      - find . -type f -name "*.pyc" -delete 2>/dev/null || true
+
+  clean:generated:
+    desc: "Remove all generated e2e test infrastructure"
+    cmds:
+      - rm -rf e2e/

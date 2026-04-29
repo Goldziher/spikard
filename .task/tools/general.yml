@@ -1,0 +1,41 @@
+version: "3"
+internal: true
+
+includes:
+  platforms: ../config/platforms.yml
+
+vars:
+  SCRIPTS_DIR: "{{.TASKFILE_DIR}}/../../scripts"
+
+tasks:
+  pre-commit:install:
+    desc: "Install prek pre-commit hooks for commit and commit-msg"
+    silent: false
+    cmds:
+      - cmd: prek install
+        ignore_error: false
+      - cmd: prek install --hook-type commit-msg
+        ignore_error: false
+
+  pre-commit:run:
+    desc: "Run prek pre-commit hooks on all files"
+    silent: false
+    cmds:
+      - cmd: prek run --all-files
+        ignore_error: false
+
+  pre-commit:uninstall:
+    desc: "Uninstall prek hooks"
+    silent: false
+    cmds:
+      - cmd: prek uninstall
+        ignore_error: true
+      - cmd: prek uninstall --hook-type commit-msg
+        ignore_error: true
+
+  pre-commit:autoupdate:
+    desc: "Update prek hooks to latest revisions"
+    silent: false
+    cmds:
+      - cmd: prek autoupdate
+        ignore_error: false
