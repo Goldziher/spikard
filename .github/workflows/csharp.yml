@@ -1,0 +1,32 @@
+name: C#
+
+on:
+  workflow_dispatch:
+  # C# bindings consume spikard-ffi via P/Invoke — alef-experimental.
+  # Re-enable on push/PR once alef-backend-csharp stabilizes.
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/csharp
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0"
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build spikard-ffi cdylib
+        run: cargo build --release -p spikard-ffi
+        working-directory: ${{ github.workspace }}
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Format check
+        run: dotnet format --verify-no-changes
+      - name: Test
+        run: dotnet test --configuration Release --no-build

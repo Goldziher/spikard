@@ -1,0 +1,29 @@
+name: Java
+
+on:
+  workflow_dispatch:
+  # Java bindings consume spikard-ffi via Panama FFM — alef-experimental.
+  # Re-enable on push/PR once alef-backend-java stabilizes.
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/java
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build spikard-ffi cdylib
+        run: cargo build --release -p spikard-ffi
+        working-directory: ${{ github.workspace }}
+      - name: Maven verify
+        env:
+          MAVEN_OPTS: "--enable-native-access=ALL-UNNAMED -Dsun.misc.unsafe.memory.access=allow"
+        run: mvn -B verify

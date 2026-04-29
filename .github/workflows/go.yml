@@ -1,0 +1,28 @@
+name: Go
+
+on:
+  workflow_dispatch:
+  # Go bindings consume spikard-ffi via cgo — alef-experimental.
+  # Re-enable on push/PR once alef-backend-go stabilizes.
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/go
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build spikard-ffi cdylib
+        run: cargo build --release -p spikard-ffi
+        working-directory: ${{ github.workspace }}
+      - name: Vet
+        run: go vet ./...
+      - name: Run tests
+        run: go test ./...

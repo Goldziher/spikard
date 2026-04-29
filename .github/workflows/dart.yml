@@ -1,10 +1,10 @@
 name: Dart
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+  # Dart bindings are alef-experimental — flutter_rust_bridge may produce
+  # broken codegen for some types. Re-enable on push/PR once alef-backend-dart
+  # stabilizes against spikard's surface.
 
 jobs:
   test:
