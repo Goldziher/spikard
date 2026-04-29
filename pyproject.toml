@@ -121,6 +121,14 @@ lint.per-file-ignores."packages/python/tests/*.py" = [
   "PLR0915",
   "SIM108",
 ]
+lint.per-file-ignores."scripts/**/*.py" = [
+  "C901",    # Complex function (CLI scripts have natural branching)
+  "D103",    # Missing docstring in public function
+  "EXE001",  # Shebang is present but file is not executable (CI scripts run via `python`)
+  "PLR0912", # Too many branches (CLI argparse dispatch)
+  "PLR0915", # Too many statements (CLI argparse dispatch)
+  "T201",    # print() is the standard CLI output
+]
 lint.per-file-ignores."tests/*.py" = [
   "B008",
   "C901",

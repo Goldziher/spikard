@@ -47,11 +47,11 @@ impl Response {
         &mut self,
         key: String,
         value: String,
+        secure: bool,
+        http_only: bool,
         max_age: Option<i64>,
         domain: Option<String>,
         path: Option<String>,
-        secure: bool,
-        http_only: bool,
         same_site: Option<String>,
     ) {
         let mut cookie_value = format!("{}={}", key, value);
@@ -155,11 +155,11 @@ mod tests {
         response.set_cookie(
             "session_id".to_string(),
             "abc123".to_string(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -172,11 +172,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
+            false,
+            false,
             Some(3600),
             None,
             None,
-            false,
-            false,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -190,11 +190,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
+            false,
+            false,
             None,
             Some("example.com".to_string()),
             None,
-            false,
-            false,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -207,11 +207,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
+            false,
+            false,
             None,
             None,
             Some("/app".to_string()),
-            false,
-            false,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -224,11 +224,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
-            None,
-            None,
-            None,
             true,
             false,
+            None,
+            None,
+            None,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -241,11 +241,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
-            None,
-            None,
-            None,
             false,
             true,
+            None,
+            None,
+            None,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -258,11 +258,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             Some("Strict".to_string()),
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -275,11 +275,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token123".to_string(),
+            true,
+            true,
             Some(3600),
             Some("example.com".to_string()),
             Some("/app".to_string()),
-            true,
-            true,
             Some("Lax".to_string()),
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -298,21 +298,21 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "old_token".to_string(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             None,
         );
         response.set_cookie(
             "session".to_string(),
             "new_token".to_string(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -334,11 +334,11 @@ mod tests {
         response.set_cookie(
             "name".to_string(),
             "value%3D123".to_string(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -352,11 +352,11 @@ mod tests {
             response.set_cookie(
                 "test".to_string(),
                 "value".to_string(),
-                None,
-                None,
-                None,
                 false,
                 false,
+                None,
+                None,
+                None,
                 Some(same_site.to_string()),
             );
             let cookie = response.headers.get("set-cookie").unwrap();
@@ -370,11 +370,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
+            false,
+            false,
             Some(0),
             None,
             None,
-            false,
-            false,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -387,11 +387,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
+            false,
+            false,
             Some(-1),
             None,
             None,
-            false,
-            false,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -537,11 +537,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "abc123".to_string(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             None,
         );
         let cookie_count = response.headers.iter().filter(|(k, _)| *k == "set-cookie").count();
@@ -554,11 +554,11 @@ mod tests {
         response.set_cookie(
             "empty".to_string(),
             "".to_string(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -571,11 +571,11 @@ mod tests {
         response.set_cookie(
             "data".to_string(),
             "key=value&other=123".to_string(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -588,11 +588,11 @@ mod tests {
         response.set_cookie(
             "test".to_string(),
             "value".to_string(),
+            true,
+            true,
             Some(3600),
             Some("example.com".to_string()),
             Some("/".to_string()),
-            true,
-            true,
             Some("Strict".to_string()),
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -615,11 +615,11 @@ mod tests {
         response.set_cookie(
             "long".to_string(),
             long_value.clone(),
-            None,
-            None,
-            None,
             false,
             false,
+            None,
+            None,
+            None,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -633,11 +633,11 @@ mod tests {
         response.set_cookie(
             "session".to_string(),
             "token".to_string(),
+            false,
+            false,
             Some(max_age_value),
             None,
             None,
-            false,
-            false,
             None,
         );
         let cookie = response.headers.get("set-cookie").unwrap();
@@ -680,11 +680,11 @@ mod tests {
         original.set_cookie(
             "session".to_string(),
             "token".to_string(),
+            true,
+            false,
             Some(3600),
             None,
             None,
-            true,
-            false,
             None,
         );
 

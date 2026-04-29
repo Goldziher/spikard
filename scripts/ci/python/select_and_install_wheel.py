@@ -117,7 +117,7 @@ def main() -> int:
     if chosen is None:
         chosen = candidates[0]
 
-    print(chosen)  # noqa: T201
+    print(chosen)
     return 0
 
 

@@ -13,7 +13,15 @@ documentation = "https://docs.rs/spikard-graphql"
 readme = "README.md"
 
 [package.metadata.cargo-machete]
-ignored = ["bytes", "futures", "spikard-core", "tower", "tracing"]
+ignored = [
+    "bytes",
+    "doc-comment",
+    "futures",
+    "spikard-core",
+    "tokio-test",
+    "tower",
+    "tracing",
+]
 
 [features]
 default = []

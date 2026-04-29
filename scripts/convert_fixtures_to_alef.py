@@ -176,7 +176,7 @@ def main() -> None:
         if not category_path.is_dir():
             continue
         category = category_path.name
-        if category.startswith("00-") or category.startswith("."):
+        if category.startswith(("00-", ".")):
             continue
 
         fixtures = process_category(category_path, category, seen_ids)

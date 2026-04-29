@@ -260,7 +260,7 @@ class GenericHandler(grpc.GenericRpcHandler):  # type: ignore[misc]
     def __init__(self, servicer: FixtureDrivenServicer) -> None:
         self.servicer = servicer
 
-    def service(self, handler_call_details: Any) -> Any:  # noqa: C901
+    def service(self, handler_call_details: Any) -> Any:
         """Route method call to appropriate handler based on streaming mode."""
         method_path = handler_call_details.method
 

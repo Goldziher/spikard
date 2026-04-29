@@ -8,6 +8,9 @@ readme = false
 keywords = ["http", "web", "framework", "polyglot", "rust"]
 categories = ["text-processing"]
 
+[package.metadata.cargo-machete]
+ignored = ["anyhow", "futures", "tokio"]
+
 [lib]
 crate-type = ["cdylib"]
 

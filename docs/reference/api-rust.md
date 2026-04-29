@@ -737,7 +737,7 @@ Set a cookie in the response
 **Signature:**
 
 ```rust
-pub fn set_cookie(&self, key: &str, value: &str, max_age: Option<i64>, domain: Option<String>, path: Option<String>, secure: bool, http_only: bool, same_site: Option<String>)
+pub fn set_cookie(&self, key: &str, value: &str, secure: bool, http_only: bool, max_age: Option<i64>, domain: Option<String>, path: Option<String>, same_site: Option<String>)
 ```
 
 ###### default()

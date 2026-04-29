@@ -737,7 +737,7 @@ Set a cookie in the response
 **Signature:**
 
 ```typescript
-setCookie(key: string, value: string, maxAge: number, domain: string, path: string, secure: boolean, httpOnly: boolean, sameSite: string): void
+setCookie(key: string, value: string, secure: boolean, httpOnly: boolean, maxAge: number, domain: string, path: string, sameSite: string): void
 ```
 
 ###### default()

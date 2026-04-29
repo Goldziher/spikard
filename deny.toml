@@ -117,6 +117,7 @@ exceptions = [
   { allow = ["CDLA-Permissive-2.0"], crate = "webpki-root-certs" },
   { allow = ["MPL-2.0"], crate = "ascii_utils" },
   { allow = ["MPL-2.0"], crate = "fast_chemail" },
+  { allow = ["bzip2-1.0.6"], crate = "libbz2-rs-sys" },
 ]
 
 # Some crates don't have (easily) machine readable licensing information,

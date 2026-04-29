@@ -753,7 +753,7 @@ Set a cookie in the response
 **Signature:**
 
 ```python
-def set_cookie(self, key: str, value: str, max_age: int, domain: str, path: str, secure: bool, http_only: bool, same_site: str) -> None
+def set_cookie(self, key: str, value: str, secure: bool, http_only: bool, max_age: int, domain: str, path: str, same_site: str) -> None
 ```
 
 ###### default()

@@ -737,7 +737,7 @@ Set a cookie in the response
 **Signature:**
 
 ```php
-public function setCookie(string $key, string $value, int $maxAge, string $domain, string $path, bool $secure, bool $httpOnly, string $sameSite): void
+public function setCookie(string $key, string $value, bool $secure, bool $httpOnly, int $maxAge, string $domain, string $path, string $sameSite): void
 ```
 
 ###### default()

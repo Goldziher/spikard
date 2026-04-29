@@ -737,7 +737,7 @@ Set a cookie in the response
 **Signature:**
 
 ```ruby
-def set_cookie(key, value, max_age, domain, path, secure, http_only, same_site)
+def set_cookie(key, value, secure, http_only, max_age, domain, path, same_site)
 ```
 
 ###### default()
