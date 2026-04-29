@@ -1,0 +1,72 @@
+name: WASM
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/spikard-wasm/**'
+      - 'crates/spikard-core/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/wasm.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'crates/spikard-wasm/**'
+      - 'crates/spikard-core/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - '.github/workflows/wasm.yml'
+
+concurrency:
+  group: wasm-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  wasm:
+    name: spikard-wasm
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: 0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            wasm-cargo-
+
+      - name: Check (host target)
+        run: cargo check -p spikard-wasm
+
+      - name: Check (wasm32-unknown-unknown, default features)
+        run: cargo check -p spikard-wasm --target wasm32-unknown-unknown
+
+      - name: Check (wasm32-unknown-unknown, no default features)
+        run: cargo check -p spikard-wasm --no-default-features --target wasm32-unknown-unknown
+
+      - name: Clippy
+        run: cargo clippy -p spikard-wasm -- -D warnings
+
+      - name: Test (host)
+        run: cargo test -p spikard-wasm
+
+      - name: Build release
+        run: cargo build -p spikard-wasm --target wasm32-unknown-unknown --release

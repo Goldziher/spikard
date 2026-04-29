@@ -17,8 +17,8 @@ typedef struct SPIKARDCompressionConfig SPIKARDCompressionConfig;
 typedef struct SPIKARDContactInfo SPIKARDContactInfo;
 typedef struct SPIKARDCorsConfig SPIKARDCorsConfig;
 typedef struct SPIKARDFullSchemaConfig SPIKARDFullSchemaConfig;
-typedef struct SPIKARDGraphQlError SPIKARDGraphQlError;
-typedef struct SPIKARDGraphQlRouteConfig SPIKARDGraphQlRouteConfig;
+typedef struct SPIKARDGraphQLError SPIKARDGraphQLError;
+typedef struct SPIKARDGraphQLRouteConfig SPIKARDGraphQLRouteConfig;
 typedef struct SPIKARDGrpcConfig SPIKARDGrpcConfig;
 typedef struct SPIKARDJsonRpcConfig SPIKARDJsonRpcConfig;
 typedef struct SPIKARDJsonRpcMethodInfo SPIKARDJsonRpcMethodInfo;
@@ -897,6 +897,22 @@ uintptr_t spikard_full_schema_config_depth_limit(const SPIKARDFullSchemaConfig *
 SPIKARDFullSchemaConfig *spikard_full_schema_config_default(void);
 
 /**
+ * Create a `BackgroundTaskConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_background_task_config_free`.
+ */
+SPIKARDBackgroundTaskConfig *spikard_background_task_config_from_json(const char *json);
+
+/**
+ * Serialize a `BackgroundTaskConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_background_task_config_to_json(const SPIKARDBackgroundTaskConfig *ptr);
+
+/**
  * Free a `BackgroundTaskConfig` handle.
  * # Safety
  * Pointer must have been returned by this library, or be null.
@@ -930,6 +946,22 @@ uint64_t spikard_background_task_config_drain_timeout_secs(const SPIKARDBackgrou
  * Returned pointers must be freed with the appropriate free function.
  */
 SPIKARDBackgroundTaskConfig *spikard_background_task_config_default(void);
+
+/**
+ * Create a `BackgroundJobMetadata` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_background_job_metadata_free`.
+ */
+SPIKARDBackgroundJobMetadata *spikard_background_job_metadata_from_json(const char *json);
+
+/**
+ * Serialize a `BackgroundJobMetadata` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_background_job_metadata_to_json(const SPIKARDBackgroundJobMetadata *ptr);
 
 /**
  * Free a `BackgroundJobMetadata` handle.
@@ -1390,6 +1422,22 @@ void spikard_response_set_cookie(SPIKARDResponse *this_,
  * Returned pointers must be freed with the appropriate free function.
  */
 SPIKARDResponse *spikard_response_default(void);
+
+/**
+ * Create a `SseEvent` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_sse_event_free`.
+ */
+SPIKARDSseEvent *spikard_sse_event_from_json(const char *json);
+
+/**
+ * Serialize a `SseEvent` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_sse_event_to_json(const SPIKARDSseEvent *ptr);
 
 /**
  * Free a `SseEvent` handle.

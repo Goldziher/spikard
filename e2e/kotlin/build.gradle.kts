@@ -4,7 +4,7 @@ plugins {
     kotlin("jvm") version "2.3.21"
 }
 
-group = "dev.kreuzberg"
+group = "dev.spikard"
 version = "0.1.0"
 
 java {
