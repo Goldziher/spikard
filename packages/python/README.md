@@ -13,7 +13,8 @@ pip install spikard
 ```python
 import spikard
 
-# TODO: add usage example
+# result = spikard.schema_query_only(...)
+# See the main repository's docs for full usage.
 ```
 
 ## Documentation

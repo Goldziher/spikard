@@ -13,7 +13,7 @@ gem install spikard
 ```ruby
 require 'spikard'
 
-# TODO: add usage example
+# See https://github.com/kreuzberg-dev/spikard for usage examples.
 ```
 
 ## Documentation

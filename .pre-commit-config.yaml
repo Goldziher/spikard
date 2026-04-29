@@ -206,6 +206,6 @@ repos:
 
   # Alef: verify generated bindings are up to date
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.6.0
+    rev: v0.11.6
     hooks:
       - id: alef-verify

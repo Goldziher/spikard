@@ -66,38 +66,6 @@ public static function schemaFull(): FullSchemaConfig
 
 ---
 
-#### addCorsHeaders()
-
-Add CORS headers to a successful response
-
-Adds appropriate CORS headers to the response based on the configuration.
-This function should be called for successful (non-error) responses to
-cross-origin requests.
-
-## Headers Added
-
-- `Access-Control-Allow-Origin` - The origin that is allowed (if valid)
-- `Access-Control-Expose-Headers` - Headers that are safe to expose to the client
-- `Access-Control-Allow-Credentials` - "true" if credentials are allowed
-
-**Signature:**
-
-```php
-public static function addCorsHeaders(Response $response, string $origin, CorsConfig $corsConfig): void
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `response` | `Response` | Yes | Mutable reference to the response to modify |
-| `origin` | `string` | Yes | The origin from the request (e.g., `<https://example.com>`) |
-| `corsConfig` | `CorsConfig` | Yes | CORS configuration to apply |
-
-**Returns:** `void`
-
----
-
 ### Types
 
 #### ApiKeyConfig
@@ -111,36 +79,14 @@ API Key authentication configuration
 
 ---
 
-##### BackgroundHandle
-
----
-
-##### BackgroundJobError
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `message` | `string` | — | Message |
-
-###### Methods
-
-###### from()
-
-**Signature:**
-
-```php
-public static function from(string $message): BackgroundJobError
-```
-
----
-
-##### BackgroundJobMetadata
+#### BackgroundJobMetadata
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `string` | — | The name |
 | `requestId` | `?string` | `null` | Request id |
 
-###### Methods
+##### Methods
 
 ###### default()
 
@@ -152,7 +98,7 @@ public static function default(): BackgroundJobMetadata
 
 ---
 
-##### BackgroundTaskConfig
+#### BackgroundTaskConfig
 
 Configuration for in-process background task execution.
 
@@ -162,7 +108,7 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `int` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `int` | `30` | Drain timeout secs |
 
-###### Methods
+##### Methods
 
 ###### default()
 
@@ -174,22 +120,7 @@ public static function default(): BackgroundTaskConfig
 
 ---
 
-##### Claims
-
-JWT claims structure - can be extended based on needs
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `sub` | `string` | — | Sub |
-| `exp` | `int` | — | Exp |
-| `iat` | `?int` | `null` | Iat |
-| `nbf` | `?int` | `null` | Nbf |
-| `aud` | `?array<string>` | `null` | Aud |
-| `iss` | `?string` | `null` | Iss |
-
----
-
-##### CompressionConfig
+#### CompressionConfig
 
 Compression configuration shared across runtimes
 
@@ -200,7 +131,7 @@ Compression configuration shared across runtimes
 | `minSize` | `int` | — | Minimum response size to compress (bytes) |
 | `quality` | `int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-###### Methods
+##### Methods
 
 ###### default()
 
@@ -212,7 +143,7 @@ public static function default(): CompressionConfig
 
 ---
 
-##### ContactInfo
+#### ContactInfo
 
 Contact information
 
@@ -224,7 +155,7 @@ Contact information
 
 ---
 
-##### CorsConfig
+#### CorsConfig
 
 CORS configuration for a route
 
@@ -239,7 +170,7 @@ CORS configuration for a route
 | `methodsJoinedCache` | `string` | — | Methods joined cache |
 | `headersJoinedCache` | `string` | — | Headers joined cache |
 
-###### Methods
+##### Methods
 
 ###### allowedMethodsJoined()
 
@@ -301,7 +232,7 @@ public static function default(): CorsConfig
 
 ---
 
-##### FullSchemaConfig
+#### FullSchemaConfig
 
 Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 
@@ -311,7 +242,7 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `?int` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `?int` | `null` | Maximum query depth (None = unlimited) |
 
-###### Methods
+##### Methods
 
 ###### default()
 
@@ -323,9 +254,9 @@ public static function default(): FullSchemaConfig
 
 ---
 
-##### GraphQlError
+#### GraphQlError
 
-###### Methods
+##### Methods
 
 ###### statusCode()
 
@@ -350,14 +281,14 @@ public function statusCode(): int
 
 ---
 
-##### GraphQlRouteConfig
+#### GraphQlRouteConfig
 
 Configuration for GraphQL routes
 
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-###### Methods
+##### Methods
 
 ###### path()
 
@@ -449,7 +380,7 @@ public static function default(): GraphQlRouteConfig
 
 ---
 
-##### GrpcConfig
+#### GrpcConfig
 
 Configuration for gRPC support
 
@@ -497,39 +428,6 @@ concurrent stream limiting to the HTTP/2 transport layer:
 ```php
 public static function default(): GrpcConfig
 ```
-
----
-
-##### GrpcRequestData
-
-gRPC request data passed to handlers
-
-Contains the parsed components of a gRPC request:
-
-- Service and method names from the request path
-- Serialized protobuf payload as bytes
-- Request metadata (headers)
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `serviceName` | `string` | — | Fully qualified service name (e.g., "mypackage.MyService") |
-| `methodName` | `string` | — | Method name (e.g., "GetUser") |
-| `payload` | `string` | — | Serialized protobuf message bytes |
-| `metadata` | `string` | — | gRPC metadata (similar to HTTP headers) |
-
----
-
-##### GrpcResponseData
-
-gRPC response data returned by handlers
-
-Contains the serialized protobuf response and any metadata to include
-in the response headers.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `payload` | `string` | — | Serialized protobuf message bytes |
-| `metadata` | `string` | — | gRPC metadata to include in response (similar to HTTP headers) |
 
 ---
 
@@ -852,95 +750,6 @@ public static function default(): Response
 
 ---
 
-##### Route
-
-Route definition with compiled validators
-
-Validators are `Arc`-wrapped to enable cheap cloning across route instances
-and to support schema deduplication via `SchemaRegistry`.
-
-The `jsonrpc_method` field is optional and has zero overhead when None,
-enabling routes to optionally expose themselves as JSON-RPC methods.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `method` | `Method` | `Method::Get` | Method (method) |
-| `path` | `string` | `"/"` | File path |
-| `handlerName` | `string` | `""` | Handler name |
-| `requestValidator` | `?string` | `null` | Request validator |
-| `responseValidator` | `?string` | `null` | Response validator |
-| `parameterValidator` | `?string` | `null` | Parameter validator |
-| `fileParams` | `?string` | `null` | File params |
-| `isAsync` | `bool` | `true` | Whether async |
-| `cors` | `?CorsConfig` | `null` | Cors (cors config) |
-| `expectsJsonBody` | `bool` | `false` | Precomputed flag: true if this route expects a JSON request body Used by middleware to validate Content-Type headers |
-| `handlerDependencies` | `array<string>` | `[]` | List of dependency keys this handler requires (for DI) |
-| `jsonrpcMethod` | `?JsonRpcMethodInfo` | `null` | Optional JSON-RPC method information When present, this route can be exposed as a JSON-RPC method |
-
-###### Methods
-
-###### default()
-
-**Signature:**
-
-```php
-public static function default(): Route
-```
-
-###### isJsonrpcMethod()
-
-Check if this route has JSON-RPC metadata
-
-**Signature:**
-
-```php
-public function isJsonrpcMethod(): bool
-```
-
-###### jsonrpcMethodName()
-
-Get the JSON-RPC method name if present
-
-**Signature:**
-
-```php
-public function jsonrpcMethodName(): ?string
-```
-
----
-
-##### RouteMetadata
-
-Route metadata extracted from bindings
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `method` | `string` | `"GET"` | Method |
-| `path` | `string` | `"/"` | File path |
-| `handlerName` | `string` | `""` | Handler name |
-| `requestSchema` | `?string` | `null` | Request schema |
-| `responseSchema` | `?string` | `null` | Response schema |
-| `parameterSchema` | `?string` | `null` | Parameter schema |
-| `fileParams` | `?string` | `null` | File params |
-| `isAsync` | `bool` | `true` | Whether async |
-| `cors` | `?CorsConfig` | `null` | Cors (cors config) |
-| `bodyParamName` | `?string` | `null` | Name of the body parameter (defaults to "body" if not specified) |
-| `handlerDependencies` | `?array<string>` | `null` | List of dependency keys this handler requires (for DI) |
-| `jsonrpcMethod` | `?string` | `null` | JSON-RPC method metadata (if this route is exposed as a JSON-RPC method) |
-| `staticResponse` | `?string` | `null` | Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}` When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full middleware pipeline for maximum throughput. |
-
-###### Methods
-
-###### default()
-
-**Signature:**
-
-```php
-public static function default(): RouteMetadata
-```
-
----
-
 ##### SchemaConfig
 
 Configuration for GraphQL schema building.
@@ -1140,16 +949,6 @@ public function contentTypeOrDefault(): string
 
 ---
 
-##### ValidatedParams
-
-Validated parameters from request (path, query, headers, cookies)
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `params` | `array<string, string>` | — | Params |
-
----
-
 #### Enums
 
 ##### Method
@@ -1169,40 +968,7 @@ HTTP method
 
 ---
 
-##### JsonRpcResponseType
-
-JSON-RPC 2.0 Response Type
-
-An enum that represents either a successful response or an error response.
-This is useful for untagged deserialization and handling both response types uniformly.
-
-## Variants
-
-- `Success(JsonRpcResponse)` - A successful response with a result
-- `Error(JsonRpcErrorResponse)` - An error response with error details
-
-| Value | Description |
-|-------|-------------|
-| `Success` | Successful response containing a result — Fields: `0`: `string` |
-| `Error` | Error response containing error details — Fields: `0`: `string` |
-
----
-
-### JsonRpcRequestOrBatch
-
-Represents either a single JSON-RPC request or a batch of requests
-
-Used to distinguish between single and batch requests after parsing,
-allowing different routing logic for each case.
-
-| Value | Description |
-|-------|-------------|
-| `Single` | A single JSON-RPC request — Fields: `0`: `string` |
-| `Batch` | A batch (array) of JSON-RPC requests — Fields: `0`: `array<string>` |
-
----
-
-#### SecuritySchemeInfo
+##### SecuritySchemeInfo
 
 Security scheme types
 

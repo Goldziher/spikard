@@ -2,8 +2,6 @@
 """E2e tests for category: request_id."""
 import re
 
-import pytest
-
 
 def test_request_id_header_is_preserved(client) -> None:
     """When the client supplies X-Request-ID the same value should appear on the response."""
@@ -13,18 +11,18 @@ def test_request_id_header_is_preserved(client) -> None:
             "X-Request-ID": "trace-123",
         },
     )
-    assert response.status_code == 200  # noqa: S101
+    assert response.status_code == 200
     data = response.json()
-    assert data == {"echo": "trace-123", "status": "preserved"}  # noqa: S101
-    assert response.headers["x-request-id"] == "trace-123"  # noqa: S101
+    assert data == {"echo": "trace-123", "status": "preserved"}
+    assert response.headers["x-request-id"] == "trace-123"
 
 def test_request_id_is_generated_when_not_provided(client) -> None:
     """Ensures the request ID middleware attaches a UUID to responses when the client does not send one."""
     response = client.get("/request-id/generated")
-    assert response.status_code == 200  # noqa: S101
+    assert response.status_code == 200
     data = response.json()
-    assert data == {"status": "generated"}  # noqa: S101
-    assert re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', response.headers["x-request-id"])  # noqa: S101
+    assert data == {"status": "generated"}
+    assert re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", response.headers["x-request-id"])
 
 def test_request_id_middleware_can_be_disabled(client) -> None:
     """When request ID generation is disabled the response should not contain X-Request-ID even if the client sends a header."""
@@ -34,8 +32,8 @@ def test_request_id_middleware_can_be_disabled(client) -> None:
             "X-Request-ID": "external-id",
         },
     )
-    assert response.status_code == 200  # noqa: S101
+    assert response.status_code == 200
     data = response.json()
-    assert data == {"status": "no-request-id"}  # noqa: S101
-    assert response.headers.get("x-request-id") is None  # noqa: S101
+    assert data == {"status": "no-request-id"}
+    assert response.headers.get("x-request-id") is None
 

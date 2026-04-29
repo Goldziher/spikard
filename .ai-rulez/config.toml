@@ -6,7 +6,20 @@ name = 'spikard'
 description = 'Rust-centric multi-language HTTP framework providing core library, CLI, and tower-http runtime with polyglot bindings (Python/TypeScript/Ruby/PHP/Elixir). Type-safe web service toolkit with fixture-driven testing across all platforms.'
 gitignore = true
 presets = ['claude', 'gemini', 'codex']
-builtins = ['rust', 'python', 'typescript', 'ruby', 'php', 'elixir', 'pyo3', 'napi-rs', 'magnus', 'ext-php-rs', 'rustler', 'default-commands']
+builtins = [
+  'rust',
+  'python',
+  'typescript',
+  'ruby',
+  'php',
+  'elixir',
+  'pyo3',
+  'napi-rs',
+  'magnus',
+  'ext-php-rs',
+  'rustler',
+  'default-commands',
+]
 
 [header]
 style = 'minimal'

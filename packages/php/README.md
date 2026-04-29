@@ -15,7 +15,7 @@ composer require kreuzberg-dev/spikard
 
 use spikard_php;
 
-// TODO: add usage example
+// See https://github.com/kreuzberg-dev/spikard for usage examples.
 ```
 
 ## Documentation

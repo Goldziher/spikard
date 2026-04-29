@@ -309,7 +309,7 @@ jobs:
 
       - name: Install alef
         uses: cargo-bins/cargo-binstall@main
-      - run: cargo binstall --no-confirm --locked alef-cli@0.6.0
+      - run: cargo binstall --no-confirm --locked alef-cli@0.11.6
 
       - name: Verify synchronized package versions
         run: |
@@ -337,7 +337,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/alef
-          key: alef-bin-0.6.0-${{ runner.os }}-${{ hashFiles('alef.toml') }}
+          key: alef-bin-0.11.6-${{ runner.os }}-${{ hashFiles('alef.toml') }}
 
       - name: Install cargo-binstall
         if: steps.cache-alef.outputs.cache-hit != 'true'
@@ -349,7 +349,7 @@ jobs:
         # from https://github.com/kreuzberg-dev/alef/releases via cargo-binstall.
         # If the release binary is unavailable (e.g. a new platform), binstall falls
         # back to compiling from source automatically.
-        run: cargo binstall --no-confirm --locked alef-cli@0.6.0
+        run: cargo binstall --no-confirm --locked alef-cli@0.11.6
 
       - name: Verify alef installation
         run: alef --help | head -1

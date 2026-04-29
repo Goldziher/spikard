@@ -23,28 +23,6 @@ CORS configuration for a route
 
 ---
 
-### RouteMetadata
-
-Route metadata extracted from bindings
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `method` | `str` | `"GET"` | Method |
-| `path` | `str` | `"/"` | File path |
-| `handler_name` | `str` | `""` | Handler name |
-| `request_schema` | `str | None` | `None` | Request schema |
-| `response_schema` | `str | None` | `None` | Response schema |
-| `parameter_schema` | `str | None` | `None` | Parameter schema |
-| `file_params` | `str | None` | `None` | File params |
-| `is_async` | `bool` | `True` | Whether async |
-| `cors` | `CorsConfig | None` | `None` | Cors (cors config) |
-| `body_param_name` | `str | None` | `None` | Name of the body parameter (defaults to "body" if not specified) |
-| `handler_dependencies` | `list[str] | None` | `None` | List of dependency keys this handler requires (for DI) |
-| `jsonrpc_method` | `str | None` | `None` | JSON-RPC method metadata (if this route is exposed as a JSON-RPC method) |
-| `static_response` | `str | None` | `None` | Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}` When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full middleware pipeline for maximum throughput. |
-
----
-
 ### CompressionConfig
 
 Compression configuration shared across runtimes
@@ -67,33 +45,6 @@ Rate limiting configuration shared across runtimes
 | `per_second` | `int` | `100` | Requests per second |
 | `burst` | `int` | `200` | Burst allowance |
 | `ip_based` | `bool` | `True` | Use IP-based rate limiting |
-
----
-
-### Route
-
-Route definition with compiled validators
-
-Validators are `Arc`-wrapped to enable cheap cloning across route instances
-and to support schema deduplication via `SchemaRegistry`.
-
-The `jsonrpc_method` field is optional and has zero overhead when None,
-enabling routes to optionally expose themselves as JSON-RPC methods.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `method` | `Method` | `Method.GET` | Method (method) |
-| `path` | `str` | `"/"` | File path |
-| `handler_name` | `str` | `""` | Handler name |
-| `request_validator` | `str | None` | `None` | Request validator |
-| `response_validator` | `str | None` | `None` | Response validator |
-| `parameter_validator` | `str | None` | `None` | Parameter validator |
-| `file_params` | `str | None` | `None` | File params |
-| `is_async` | `bool` | `True` | Whether async |
-| `cors` | `CorsConfig | None` | `None` | Cors (cors config) |
-| `expects_json_body` | `bool` | `False` | Precomputed flag: true if this route expects a JSON request body Used by middleware to validate Content-Type headers |
-| `handler_dependencies` | `list[str]` | `[]` | List of dependency keys this handler requires (for DI) |
-| `jsonrpc_method` | `JsonRpcMethodInfo | None` | `None` | Optional JSON-RPC method information When present, this route can be exposed as a JSON-RPC method |
 
 ---
 

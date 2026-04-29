@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/Goldziher/spikard'
   spec.license       = 'MIT'
   spec.required_ruby_version = '>= 3.2.0'
-  spec.metadata['keywords'] = ['http', 'web', 'framework', 'polyglot', 'rust'].join(',')
+  spec.metadata['keywords'] = %w[http web framework polyglot rust].join(',')
   spec.metadata['rubygems_mfa_required'] = 'true'
 
   spec.files         = Dir.glob(['lib/**/*', 'ext/**/*'])

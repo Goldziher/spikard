@@ -52,33 +52,6 @@ Rate limiting configuration shared across runtimes
 
 ---
 
-#### Route
-
-Route definition with compiled validators
-
-Validators are `Arc`-wrapped to enable cheap cloning across route instances
-and to support schema deduplication via `SchemaRegistry`.
-
-The `jsonrpc_method` field is optional and has zero overhead when None,
-enabling routes to optionally expose themselves as JSON-RPC methods.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `method` | `Method` | `Method::Get` | Method (method) |
-| `path` | `String` | `"/"` | File path |
-| `handler_name` | `String` | `""` | Handler name |
-| `request_validator` | `Option<String>` | `None` | Request validator |
-| `response_validator` | `Option<String>` | `None` | Response validator |
-| `parameter_validator` | `Option<String>` | `None` | Parameter validator |
-| `file_params` | `Option<String>` | `None` | File params |
-| `is_async` | `bool` | `true` | Whether async |
-| `cors` | `Option<CorsConfig>` | `None` | Cors (cors config) |
-| `expects_json_body` | `bool` | `false` | Precomputed flag: true if this route expects a JSON request body Used by middleware to validate Content-Type headers |
-| `handler_dependencies` | `Vec<String>` | `vec![]` | List of dependency keys this handler requires (for DI) |
-| `jsonrpc_method` | `Option<JsonRpcMethodInfo>` | `None` | Optional JSON-RPC method information When present, this route can be exposed as a JSON-RPC method |
-
----
-
 #### GraphQLRouteConfig
 
 Configuration for GraphQL routes
@@ -308,28 +281,6 @@ Server configuration
 
 #### Metadata Types
 
-##### RouteMetadata
-
-Route metadata extracted from bindings
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `method` | `String` | `"GET"` | Method |
-| `path` | `String` | `"/"` | File path |
-| `handler_name` | `String` | `""` | Handler name |
-| `request_schema` | `Option<String>` | `None` | Request schema |
-| `response_schema` | `Option<String>` | `None` | Response schema |
-| `parameter_schema` | `Option<String>` | `None` | Parameter schema |
-| `file_params` | `Option<String>` | `None` | File params |
-| `is_async` | `bool` | `true` | Whether async |
-| `cors` | `Option<CorsConfig>` | `None` | Cors (cors config) |
-| `body_param_name` | `Option<String>` | `None` | Name of the body parameter (defaults to "body" if not specified) |
-| `handler_dependencies` | `Vec<String>` | `None` | List of dependency keys this handler requires (for DI) |
-| `jsonrpc_method` | `Option<String>` | `None` | JSON-RPC method metadata (if this route is exposed as a JSON-RPC method) |
-| `static_response` | `Option<String>` | `None` | Optional static response configuration: `{"status": 200, "body": "OK", "content_type": "text/plain"}` When present, the handler is replaced by a `StaticResponseHandler` that bypasses the full middleware pipeline for maximum throughput. |
-
----
-
 ##### BackgroundJobMetadata
 
 | Field | Type | Default | Description |
@@ -410,79 +361,7 @@ Content-Type: application/problem+json
 
 ---
 
-#### Claims
-
-JWT claims structure - can be extended based on needs
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `sub` | `String` | — | Sub |
-| `exp` | `usize` | — | Exp |
-| `iat` | `Option<usize>` | `None` | Iat |
-| `nbf` | `Option<usize>` | `None` | Nbf |
-| `aud` | `Vec<String>` | `None` | Aud |
-| `iss` | `Option<String>` | `None` | Iss |
-
----
-
-##### BackgroundJobError
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `message` | `String` | — | Message |
-
----
-
-##### BackgroundHandle
-
-*Opaque type — fields are not directly accessible.*
-
----
-
-##### GrpcRequestData
-
-gRPC request data passed to handlers
-
-Contains the parsed components of a gRPC request:
-
-- Service and method names from the request path
-- Serialized protobuf payload as bytes
-- Request metadata (headers)
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `service_name` | `String` | — | Fully qualified service name (e.g., "mypackage.MyService") |
-| `method_name` | `String` | — | Method name (e.g., "GetUser") |
-| `payload` | `Vec<u8>` | — | Serialized protobuf message bytes |
-| `metadata` | `String` | — | gRPC metadata (similar to HTTP headers) |
-
----
-
-##### GrpcResponseData
-
-gRPC response data returned by handlers
-
-Contains the serialized protobuf response and any metadata to include
-in the response headers.
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `payload` | `Vec<u8>` | — | Serialized protobuf message bytes |
-| `metadata` | `String` | — | gRPC metadata to include in response (similar to HTTP headers) |
-
----
-
-##### ValidatedParams
-
-Validated parameters from request (path, query, headers, cookies)
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `params` | `HashMap<String, String>` | — | Params |
-
----
-
-##### ContactInfo
+#### ContactInfo
 
 Contact information
 

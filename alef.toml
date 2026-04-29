@@ -1,7 +1,9 @@
+version = "0.11.8"
 languages = ["python", "node", "ruby", "php", "elixir"]
 
 [crate]
 name = "spikard"
+core_import = "spikard"
 sources = []
 version_from = "Cargo.toml"
 workspace_root = "."
@@ -45,6 +47,13 @@ sources = [
   "crates/spikard-graphql/src/routes.rs",
   "crates/spikard-graphql/src/schema.rs",
 ]
+
+[crate.extra_dependencies]
+spikard-core = { path = "../spikard-core" }
+spikard-http = { path = "../spikard-http" }
+spikard-graphql = { path = "../spikard-graphql" }
+anyhow = "1.0"
+futures = "0.3"
 
 [exclude]
 methods = [
@@ -158,10 +167,8 @@ types = [
   # Traits (can't be instantiated in bindings)
   "SseEventProducer",
   "WebSocketHandler",
-  "GrpcHandler",
   # Internal enums with wrong module paths
   "ParameterSource",
-  "ContentTypeKind",
   "WebSocketMessage",
   "BackgroundSpawnError",
   # Types causing residual errors
@@ -239,19 +246,6 @@ functions = [
   "validate_method_name",
 ]
 
-[crate.extra_dependencies]
-spikard-core = { path = "../spikard-core" }
-spikard-http = { path = "../spikard-http" }
-spikard-graphql = { path = "../spikard-graphql" }
-anyhow = "1.0"
-futures = "0.3"
-
-[python.extra_dependencies]
-tokio = { version = "1", features = ["full"] }
-
-[node.extra_dependencies]
-tokio = { version = "1", features = ["full"] }
-
 [output]
 python = "crates/spikard-py/src/"
 node = "crates/spikard-node/src/"
@@ -268,9 +262,15 @@ features = ["di"]
 [python.stubs]
 output = "packages/python/spikard/"
 
+[python.extra_dependencies]
+tokio = { version = "1", features = ["full"] }
+
 [node]
 package_name = "@spikard/node"
 features = ["di"]
+
+[node.extra_dependencies]
+tokio = { version = "1", features = ["full"] }
 
 [ruby]
 gem_name = "spikard"
@@ -308,13 +308,73 @@ keywords = ["http", "web", "framework", "polyglot", "rust"]
 discord_url = ""
 banner_url = ""
 
+[publish]
+core_crate = "crates/spikard"
+
+[publish.languages.ruby]
+vendor_mode = "core-only"
+
+[publish.languages.elixir]
+vendor_mode = "core-only"
+nif_versions = ["2.16", "2.17"]
+
 [sync]
 extra_paths = []
 
 [[sync.text_replacements]]
 path = "crates/spikard-http/src/lib.rs"
-search = "version = \"\\d+\\.\\d+\\.\\d+\""
-replace = "version = \"{version}\""
+search = 'version = "\d+\.\d+\.\d+"'
+replace = 'version = "{version}"'
+
+[lint.python]
+precondition = "command -v ruff >/dev/null 2>&1"
+format = "ruff format packages/python/"
+check = "ruff check packages/python/"
+typecheck = "mypy packages/python/"
+
+[lint.node]
+precondition = "command -v pnpm >/dev/null 2>&1"
+format = "pnpm biome format --write packages/node/"
+check = "pnpm biome lint packages/node/"
+typecheck = "pnpm tsc --noEmit -p packages/node/tsconfig.json"
+
+[lint.ruby]
+precondition = "command -v bundle >/dev/null 2>&1"
+format = "cd packages/ruby && bundle exec rubocop -A"
+check = "cd packages/ruby && bundle exec rubocop"
+typecheck = "cd packages/ruby && bundle exec steep check"
+
+[lint.php]
+precondition = "command -v php >/dev/null 2>&1"
+format = "cd packages/php && vendor/bin/php-cs-fixer fix"
+check = "cd packages/php && vendor/bin/phpstan analyse"
+
+[lint.elixir]
+precondition = "command -v mix >/dev/null 2>&1"
+typecheck = "cd packages/elixir && mix dialyzer"
+
+[test.python]
+precondition = "command -v uv >/dev/null 2>&1"
+command = "uv run pytest packages/python/tests/"
+e2e = "uv run pytest e2e/python/"
+
+[test.node]
+precondition = "command -v pnpm >/dev/null 2>&1"
+command = "pnpm --filter @spikard/node test"
+e2e = "pnpm --filter @spikard/e2e-node test"
+
+[test.ruby]
+precondition = "command -v bundle >/dev/null 2>&1"
+e2e = "cd e2e/ruby && bundle exec rspec"
+
+[test.php]
+precondition = "command -v php >/dev/null 2>&1"
+command = "cd packages/php && vendor/bin/phpunit"
+e2e = "cd e2e/php && vendor/bin/phpunit"
+
+[test.elixir]
+precondition = "command -v mix >/dev/null 2>&1"
+e2e = "cd e2e/elixir && mix test"
 
 [e2e]
 fixtures = "fixtures"
@@ -369,57 +429,3 @@ name = "spikard"
 
 [e2e.registry.packages.rust]
 name = "spikard"
-
-[generate]
-bindings = true
-errors = true
-configs = true
-async_wrappers = true
-type_conversions = true
-package_metadata = true
-public_api = true
-reverse_conversions = true
-
-[test.python]
-command = "uv run pytest packages/python/tests/"
-e2e = "uv run pytest e2e/python/"
-
-[test.node]
-command = "pnpm --filter @spikard/node test"
-e2e = "pnpm --filter @spikard/e2e-node test"
-
-[test.ruby]
-command = "cd packages/ruby && bundle exec rspec"
-e2e = "cd e2e/ruby && bundle exec rspec"
-
-[test.php]
-command = "cd packages/php && vendor/bin/phpunit"
-e2e = "cd e2e/php && vendor/bin/phpunit"
-
-[test.elixir]
-command = "cd packages/elixir && mix test"
-e2e = "cd e2e/elixir && mix test"
-
-[lint.python]
-format = "ruff format packages/python/"
-check = "ruff check packages/python/"
-typecheck = "mypy packages/python/"
-
-[lint.node]
-format = "pnpm biome format --write packages/node/"
-check = "pnpm biome lint packages/node/"
-typecheck = "pnpm tsc --noEmit -p packages/node/tsconfig.json"
-
-[lint.ruby]
-format = "cd packages/ruby && bundle exec rubocop -A"
-check = "cd packages/ruby && bundle exec rubocop"
-typecheck = "cd packages/ruby && bundle exec steep check"
-
-[lint.php]
-format = "cd packages/php && vendor/bin/php-cs-fixer fix"
-check = "cd packages/php && vendor/bin/phpstan analyse"
-
-[lint.elixir]
-format = "cd packages/elixir && mix format"
-check = "cd packages/elixir && mix credo --strict"
-typecheck = "cd packages/elixir && mix dialyzer"
