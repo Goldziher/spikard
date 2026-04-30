@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Root `README.md` — project landing page with badges, language support matrix, quick-start examples, architecture sketch, and links to per-binding READMEs.
+
 ## [0.14.0] - 2026-04-22
 
 ### Added
