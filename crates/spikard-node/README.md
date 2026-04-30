@@ -42,21 +42,68 @@
   </a>
 </div>
 
-Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Gleam bindings via Erlang NIF with type-safe functional API.
+Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Native NAPI-RS bindings for Node.js with TypeScript type definitions.
 
 ## Installation
 
+**npm:**
+
 ```bash
-gleam add spikard
+npm install @spikard/node
+```
+
+**pnpm:**
+
+```bash
+pnpm add @spikard/node
+```
+
+**yarn:**
+
+```bash
+yarn add @spikard/node
 ```
 
 ### System Requirements
 
-- **Gleam 1.0+** and **Erlang/OTP 25+** required
+- **Node.js 18+** required (NAPI-RS native bindings)
+- Pre-built binaries for Linux (x86_64), macOS (arm64, x86_64), Windows (x86_64)
 
 ## Quick Start
 
-See the [spikard repository](https://github.com/Goldziher/spikard) for usage examples and guides.
+```typescript
+import { Spikard, type Request } from "spikard";
+import { z } from "zod";
+
+const UserSchema = z.object({ id: z.number(), name: z.string() });
+type User = z.infer<typeof UserSchema>;
+
+const app = new Spikard();
+
+app.addRoute(
+  { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
+  async (req: Request): Promise<User> => {
+    const id = Number(req.params["id"] ?? 0);
+    return { id, name: "Alice" };
+  },
+);
+
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    request_schema: UserSchema,
+    response_schema: UserSchema,
+    is_async: true,
+  },
+  async (req: Request): Promise<User> => UserSchema.parse(req.json()),
+);
+
+if (require.main === module) {
+  app.run({ port: 8000 });
+}
+```
 
 ## Features
 
@@ -66,6 +113,85 @@ See the [spikard repository](https://github.com/Goldziher/spikard) for usage exa
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
+
+## Routing
+
+```typescript
+import { Spikard, type Request } from "spikard";
+import { z } from "zod";
+
+const UserSchema = z.object({ id: z.number(), name: z.string() });
+type User = z.infer<typeof UserSchema>;
+
+const app = new Spikard();
+
+const health = async (): Promise<{ status: string }> => ({ status: "ok" });
+
+const createUser = async (req: Request): Promise<User> => {
+  return UserSchema.parse(req.json());
+};
+
+app.addRoute(
+  { method: "GET", path: "/health", handler_name: "health", is_async: true },
+  health,
+);
+
+app.addRoute(
+  {
+    method: "POST",
+    path: "/users",
+    handler_name: "createUser",
+    request_schema: UserSchema,
+    response_schema: UserSchema,
+    is_async: true,
+  },
+  createUser,
+);
+```
+
+## Validation
+
+```typescript
+import { Spikard, type Request } from "spikard";
+import { z } from "zod";
+
+const PaymentSchema = z.object({
+  id: z.string().uuid(),
+  amount: z.number().positive(),
+});
+type Payment = z.infer<typeof PaymentSchema>;
+
+const app = new Spikard();
+
+const createPayment = async (req: Request): Promise<Payment> => {
+  return PaymentSchema.parse(req.json());
+};
+
+app.addRoute(
+  {
+    method: "POST",
+    path: "/payments",
+    handler_name: "createPayment",
+    request_schema: PaymentSchema,
+    response_schema: PaymentSchema,
+    is_async: true,
+  },
+  createPayment,
+);
+```
+
+## Middleware
+
+```typescript
+import { Spikard, type Request } from "spikard";
+
+const app = new Spikard();
+
+app.onRequest(async (request: Request): Promise<Request> => {
+  console.log(`${request.method} ${request.path}`);
+  return request;
+});
+```
 
 ## Documentation
 
