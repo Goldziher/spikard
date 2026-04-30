@@ -18,7 +18,7 @@ classifiers = [
 dependencies = [ "pytest>=7.4", "pytest-asyncio>=0.23", "pytest-timeout>=2.1", "spikard" ]
 
 [tool.setuptools]
-packages = [  ]
+packages = []
 
 [tool.uv]
 sources.spikard = { workspace = true }
