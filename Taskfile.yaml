@@ -406,6 +406,43 @@ tasks:
       - cd ../gleam && gleam test
     dir: packages/gleam
 
+  swift:format:
+    desc: "Format Swift binding with swift format"
+    cmds:
+      - swift format --in-place --recursive Sources
+    dir: packages/swift
+
+  swift:lint:
+    desc: "Lint Swift binding with swift format lint"
+    cmds:
+      - swift format lint --recursive Sources
+    dir: packages/swift
+
+  swift:test:
+    desc: "Run Swift binding tests"
+    cmds:
+      - cargo build --release -p spikard-ffi
+      - swift test
+    dir: packages/swift
+
+  zig:format:
+    desc: "Format Zig binding with zig fmt"
+    cmds:
+      - zig fmt src
+    dir: packages/zig
+
+  zig:lint:
+    desc: "Lint Zig binding with zig fmt --check"
+    cmds:
+      - zig fmt --check src
+    dir: packages/zig
+
+  zig:test:
+    desc: "Run Zig binding tests"
+    cmds:
+      - zig build test
+    dir: packages/zig
+
   # === Spikard-specific tasks (preserved; no alef equivalent) ===
   docs:snippets:list:
     desc: "List all discovered documentation snippets"
