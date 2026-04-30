@@ -45,6 +45,7 @@ fn cli_init_command_creates_python_project_by_default() -> Result<()> {
 }
 
 #[test]
+#[allow(clippy::too_many_lines)]
 fn cli_init_command_creates_expected_project_structures_for_each_binding() -> Result<()> {
     let cases = [
         (

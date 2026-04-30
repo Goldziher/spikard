@@ -151,6 +151,7 @@ async fn spikard_mcp_stdio_can_initialize_a_project() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
+#[allow(clippy::too_many_lines)]
 async fn spikard_mcp_stdio_init_project_creates_expected_structures_for_each_binding() -> anyhow::Result<()> {
     let tmp = TempDir::new()?;
     let (mut client, mut child) = spawn_stdio_client().await?;
