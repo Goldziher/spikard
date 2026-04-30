@@ -1,0 +1,557 @@
+[
+	{
+		"id": "graphql_simple_query",
+		"description": "Tests simple GraphQL query execution returning data from the root query type",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" },
+						"variables": { "type": "object" },
+						"operationName": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { hello: String! }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "{ hello }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"hello": "world"
+					}
+				}
+			}
+		},
+		"tags": ["graphql_operations", "query", "simple"]
+	},
+	{
+		"id": "graphql_query_with_variables",
+		"description": "Tests GraphQL query that uses variables passed in the request body",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" },
+						"variables": { "type": "object" },
+						"operationName": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { user(id: ID!): User } type User { id: ID! name: String! }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "query GetUser($id: ID!) { user(id: $id) { id name } }",
+					"variables": { "id": "user-42" }
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"user": {
+							"id": "user-42",
+							"name": "Alice"
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_operations", "query", "variables"]
+	},
+	{
+		"id": "graphql_query_nested_fields",
+		"description": "Tests GraphQL query selecting nested fields at depth 2-3",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { order(id: ID!): Order } type Order { id: ID! customer: Customer items: [OrderItem!]! } type Customer { id: ID! name: String! address: Address } type Address { street: String! city: String! } type OrderItem { sku: String! quantity: Int! }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "{ order(id: \"ORD-1\") { id customer { name address { city } } items { sku quantity } } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"order": {
+							"id": "ORD-1",
+							"customer": {
+								"name": "Bob",
+								"address": {
+									"city": "Springfield"
+								}
+							},
+							"items": [{ "sku": "WIDGET-A", "quantity": 2 }]
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_operations", "query", "nested", "depth"]
+	},
+	{
+		"id": "graphql_mutation_create_object",
+		"description": "Tests GraphQL mutation with an input type that returns the newly created object",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" },
+						"variables": { "type": "object" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Mutation { createUser(input: CreateUserInput!): User! } input CreateUserInput { name: String! email: String! } type User { id: ID! name: String! email: String! } type Query { _placeholder: Boolean }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name email } }",
+					"variables": {
+						"input": {
+							"name": "Carol",
+							"email": "carol@example.com"
+						}
+					}
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"createUser": {
+							"id": "new-user-id",
+							"name": "Carol",
+							"email": "carol@example.com"
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_operations", "mutation", "input_type", "create"]
+	},
+	{
+		"id": "graphql_subscription_declaration",
+		"description": "Tests that a subscription operation type is declared and the initial response shape matches",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Subscription { messageAdded(roomId: ID!): Message! } type Message { id: ID! text: String! authorId: ID! } type Query { _placeholder: Boolean }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "subscription OnMessageAdded($roomId: ID!) { messageAdded(roomId: $roomId) { id text authorId } }",
+					"variables": { "roomId": "room-1" }
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"messageAdded": {
+							"id": "msg-1",
+							"text": "Hello room",
+							"authorId": "user-1"
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_operations", "subscription"]
+	},
+	{
+		"id": "graphql_introspection_query",
+		"description": "Tests that the __schema introspection query returns the schema type list",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { hello: String! }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "{ __schema { queryType { name } types { name kind } } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"__schema": {
+							"queryType": {
+								"name": "Query"
+							},
+							"types": [
+								{ "name": "Query", "kind": "OBJECT" },
+								{ "name": "String", "kind": "SCALAR" },
+								{ "name": "Boolean", "kind": "SCALAR" }
+							]
+						}
+					}
+				}
+			}
+		},
+		"tags": ["graphql_operations", "introspection", "__schema"]
+	},
+	{
+		"id": "graphql_invalid_syntax_rejected",
+		"description": "Tests that a query with invalid GraphQL syntax returns a syntax error in the errors array",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { hello: String! }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "{ hello { this is not valid syntax {{{"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "Syntax Error",
+							"locations": [{ "line": 1, "column": 10 }]
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_operations", "error", "syntax", "invalid"]
+	},
+	{
+		"id": "graphql_ops_complexity_limit_exceeded",
+		"description": "Tests that a query exceeding the configured complexity limit returns an error",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { users: [User!]! } type User { id: ID! friends: [User!]! }",
+						"max_complexity": 10
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "{ users { id friends { id friends { id friends { id friends { id } } } } } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "Query complexity exceeds maximum allowed complexity of 10"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_operations", "complexity", "limit", "error"]
+	},
+	{
+		"id": "graphql_ops_depth_limit_exceeded",
+		"description": "Tests that a query exceeding the configured depth limit returns an error",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { a: Level1 } type Level1 { b: Level2 } type Level2 { c: Level3 } type Level3 { d: Level4 } type Level4 { e: String }",
+						"max_depth": 3
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "{ a { b { c { d { e } } } } }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "Query depth exceeds maximum allowed depth of 3"
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_operations", "depth", "limit", "error"]
+	},
+	{
+		"id": "graphql_field_level_error_partial_data",
+		"description": "Tests that a field-level resolver error returns partial data alongside an errors array",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { user(id: ID!): User status: String! } type User { id: ID! name: String! avatar: String }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "{ user(id: \"missing-user\") { id name avatar } status }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"user": null,
+						"status": "ok"
+					},
+					"errors": [
+						{
+							"message": "User not found",
+							"path": ["user"]
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_operations", "partial_data", "errors", "field_error"]
+	},
+	{
+		"id": "graphql_multi_operation_with_operation_name",
+		"description": "Tests executing a specific named operation from a document containing multiple operations",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" },
+						"variables": { "type": "object" },
+						"operationName": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { ping: String! version: String! }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "query Ping { ping } query Version { version }",
+					"operationName": "Version"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"data": {
+						"version": "1.0.0"
+					}
+				}
+			}
+		},
+		"tags": ["graphql_operations", "multi_operation", "operationName"]
+	},
+	{
+		"id": "graphql_undefined_field_error",
+		"description": "Tests that querying a field that does not exist in the schema returns a validation error",
+		"category": "graphql_operations",
+		"http": {
+			"handler": {
+				"route": "/graphql",
+				"method": "POST",
+				"body_schema": {
+					"type": "object",
+					"properties": {
+						"query": { "type": "string" }
+					},
+					"required": ["query"]
+				},
+				"middleware": {
+					"graphql": {
+						"enabled": true,
+						"schema": "type Query { hello: String! }"
+					}
+				}
+			},
+			"request": {
+				"method": "POST",
+				"path": "/graphql",
+				"headers": { "Content-Type": "application/json" },
+				"body": {
+					"query": "{ hello nonExistentField }"
+				}
+			},
+			"expected_response": {
+				"status_code": 200,
+				"body": {
+					"errors": [
+						{
+							"message": "Cannot query field \"nonExistentField\" on type \"Query\"."
+						}
+					]
+				}
+			}
+		},
+		"tags": ["graphql_operations", "error", "validation", "undefined_field"]
+	}
+]
