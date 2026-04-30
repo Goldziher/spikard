@@ -1,0 +1,75 @@
+# Building Spikard
+
+The Swift package wraps a Rust library via [swift-bridge](https://github.com/chinedufn/swift-bridge).
+SwiftPM cannot invoke Cargo directly, so you must run the cargo build step first.
+
+## Workflow
+
+### 1. Build the Rust binding crate
+
+From the **repository root**:
+
+```sh
+cargo build -p spikard-swift
+```
+
+This compiles `target/debug/libspikard_swift.a` and runs
+`swift-bridge-build` in `build.rs`, which writes generated Swift and C sources
+into `target/debug/build/spikard-swift-*/out/`.
+
+### 2. Copy generated sources into the SwiftPM targets
+
+The package uses two internal targets:
+
+- `Sources/RustBridgeC/` — pure C target with the combined C header
+- `Sources/RustBridge/` — Swift bridge files that `import RustBridgeC`
+
+```sh
+OUT=$(ls -dt target/debug/build/spikard-swift-*/out 2>/dev/null | head -1)
+
+# Combine C headers into the RustBridgeC target
+cat "$OUT/SwiftBridgeCore.h" "$OUT/spikard-swift/spikard-swift.h" \
+    > packages/swift/Sources/RustBridgeC/RustBridgeC.h
+
+# Copy Swift bridge files, prepending "import RustBridgeC" so they see the C types
+printf "import RustBridgeC\n$(cat "$OUT/SwiftBridgeCore.swift")" \
+    > packages/swift/Sources/RustBridge/SwiftBridgeCore.swift
+printf "import RustBridgeC\n$(cat "$OUT/spikard-swift/spikard-swift.swift")" \
+    > packages/swift/Sources/RustBridge/spikard-swift.swift
+```
+
+If the glob `spikard-swift-*/out` matches multiple directories, `ls -dt ... | head -1`
+picks the most recently modified one.
+
+### 3. Build and test the Swift package
+
+```sh
+swift build --package-path packages/swift
+swift test --package-path packages/swift
+```
+
+## Release builds
+
+Replace `target/debug` with `target/release` and pass
+`--configuration release` to `swift build`:
+
+```sh
+cargo build --release -p spikard-swift
+OUT=$(ls -dt target/release/build/spikard-swift-*/out 2>/dev/null | head -1)
+
+cat "$OUT/SwiftBridgeCore.h" "$OUT/spikard-swift/spikard-swift.h" \
+    > packages/swift/Sources/RustBridgeC/RustBridgeC.h
+printf "import RustBridgeC\n$(cat "$OUT/SwiftBridgeCore.swift")" \
+    > packages/swift/Sources/RustBridge/SwiftBridgeCore.swift
+printf "import RustBridgeC\n$(cat "$OUT/spikard-swift/spikard-swift.swift")" \
+    > packages/swift/Sources/RustBridge/spikard-swift.swift
+
+swift build --package-path packages/swift --configuration release
+```
+
+## Notes
+
+- Files in `Sources/RustBridgeC/` and the generated Swift files in
+  `Sources/RustBridge/` are **generated artifacts** — overwritten by the copy step.
+- `Sources/RustBridge/RustBridge.swift` is a placeholder and is overwritten.
+- `target/` is in `.gitignore`; regenerate after every `cargo clean`.
