@@ -1,0 +1,354 @@
+[
+	{
+		"id": "ws_upgrade_handshake",
+		"description": "Tests WebSocket upgrade returns 101 Switching Protocols with correct Sec-WebSocket-Accept header",
+		"category": "websocket",
+		"http": {
+			"handler": {
+				"route": "/ws",
+				"method": "GET",
+				"middleware": {
+					"websocket": {
+						"enabled": true
+					}
+				}
+			},
+			"request": {
+				"method": "GET",
+				"path": "/ws",
+				"headers": {
+					"Upgrade": "websocket",
+					"Connection": "Upgrade",
+					"Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+					"Sec-WebSocket-Version": "13"
+				}
+			},
+			"expected_response": {
+				"status_code": 101,
+				"headers": {
+					"Upgrade": "websocket",
+					"Connection": "Upgrade",
+					"Sec-WebSocket-Accept": "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
+				}
+			}
+		},
+		"tags": ["websocket", "upgrade", "handshake", "101"]
+	},
+	{
+		"id": "ws_json_echo_round_trip",
+		"description": "Tests JSON message sent by client is echoed back unchanged",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/echo",
+				"behavior": "echo",
+				"message_schema": null
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"payload": { "type": "greeting", "text": "hello" }
+					},
+					{
+						"direction": "receive",
+						"payload": { "type": "greeting", "text": "hello" }
+					}
+				],
+				"close_code": 1000
+			}
+		},
+		"tags": ["websocket", "echo", "json", "round_trip"]
+	},
+	{
+		"id": "ws_schema_validated_message_rejected",
+		"description": "Tests that a message failing schema validation receives an error envelope instead of being processed",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/validated",
+				"behavior": "echo",
+				"message_schema": {
+					"type": "object",
+					"properties": {
+						"type": { "type": "string" },
+						"channel": { "type": "string" }
+					},
+					"required": ["type", "channel"],
+					"additionalProperties": false
+				}
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"payload": { "wrong_field": "value" }
+					},
+					{
+						"direction": "receive",
+						"payload": { "error": "Message validation failed" }
+					}
+				],
+				"close_code": 1000
+			}
+		},
+		"tags": ["websocket", "validation", "schema", "error"]
+	},
+	{
+		"id": "ws_on_connect_fires",
+		"description": "Tests that on_connect lifecycle callback is invoked when a WebSocket connection opens",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/lifecycle",
+				"behavior": "track_lifecycle",
+				"on_connect_action": "increment_connect_counter"
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"payload": { "type": "ping" }
+					},
+					{
+						"direction": "receive",
+						"payload": { "type": "pong", "connect_count": 1 }
+					}
+				],
+				"close_code": 1000
+			},
+			"expected": {
+				"connect_count": 1
+			}
+		},
+		"tags": ["websocket", "lifecycle", "on_connect"]
+	},
+	{
+		"id": "ws_on_disconnect_fires",
+		"description": "Tests that on_disconnect lifecycle callback is invoked after the connection closes",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/lifecycle",
+				"behavior": "track_lifecycle",
+				"on_disconnect_action": "increment_disconnect_counter"
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"payload": { "type": "bye" }
+					}
+				],
+				"close_code": 1000
+			},
+			"expected": {
+				"disconnect_count": 1
+			}
+		},
+		"tags": ["websocket", "lifecycle", "on_disconnect"]
+	},
+	{
+		"id": "ws_binary_frame_round_trip",
+		"description": "Tests that binary frames received from the client are echoed back verbatim",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/binary",
+				"behavior": "binary_echo"
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"frame_type": "binary",
+						"payload_base64": "SGVsbG8gV29ybGQ="
+					},
+					{
+						"direction": "receive",
+						"frame_type": "binary",
+						"payload_base64": "SGVsbG8gV29ybGQ="
+					}
+				],
+				"close_code": 1000
+			}
+		},
+		"tags": ["websocket", "binary", "echo", "frames"]
+	},
+	{
+		"id": "ws_ping_pong_heartbeat",
+		"description": "Tests that a Ping frame from the client receives a matching Pong frame response",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/heartbeat",
+				"behavior": "echo"
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"frame_type": "ping",
+						"payload_base64": "aGVhcnRiZWF0"
+					},
+					{
+						"direction": "receive",
+						"frame_type": "pong",
+						"payload_base64": "aGVhcnRiZWF0"
+					}
+				],
+				"close_code": 1000
+			}
+		},
+		"tags": ["websocket", "ping", "pong", "heartbeat"]
+	},
+	{
+		"id": "ws_close_normal_code_1000",
+		"description": "Tests that sending a close frame with code 1000 (normal closure) terminates the session cleanly",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/close",
+				"behavior": "echo"
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"frame_type": "close",
+						"close_code": 1000,
+						"close_reason": "Normal closure"
+					}
+				],
+				"close_code": 1000
+			}
+		},
+		"tags": ["websocket", "close", "normal", "1000"]
+	},
+	{
+		"id": "ws_close_abnormal_code_1006",
+		"description": "Tests that an abrupt connection drop is reported with close code 1006 (abnormal closure)",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/close",
+				"behavior": "echo"
+			},
+			"session": {
+				"messages": [],
+				"close_code": 1006,
+				"abnormal_close": true
+			}
+		},
+		"tags": ["websocket", "close", "abnormal", "1006"]
+	},
+	{
+		"id": "ws_message_ordering_preserved",
+		"description": "Tests that multiple sequential messages are processed and echoed back in the same order they were sent",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/ordered",
+				"behavior": "echo"
+			},
+			"session": {
+				"messages": [
+					{ "direction": "send", "payload": { "seq": 1, "data": "first" } },
+					{ "direction": "receive", "payload": { "seq": 1, "data": "first" } },
+					{ "direction": "send", "payload": { "seq": 2, "data": "second" } },
+					{ "direction": "receive", "payload": { "seq": 2, "data": "second" } },
+					{ "direction": "send", "payload": { "seq": 3, "data": "third" } },
+					{ "direction": "receive", "payload": { "seq": 3, "data": "third" } }
+				],
+				"close_code": 1000
+			}
+		},
+		"tags": ["websocket", "ordering", "sequential"]
+	},
+	{
+		"id": "ws_subscribe_pattern",
+		"description": "Tests schema-validated subscribe message pattern where client subscribes to a named channel",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/pubsub",
+				"behavior": "subscribe_ack",
+				"message_schema": {
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"enum": ["subscribe", "unsubscribe", "publish"]
+						},
+						"channel": {
+							"type": "string",
+							"minLength": 1
+						}
+					},
+					"required": ["type", "channel"]
+				}
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"payload": { "type": "subscribe", "channel": "chat" }
+					},
+					{
+						"direction": "receive",
+						"payload": { "type": "subscribed", "channel": "chat", "status": "ok" }
+					}
+				],
+				"close_code": 1000
+			}
+		},
+		"tags": ["websocket", "subscribe", "pubsub", "schema_validation"]
+	},
+	{
+		"id": "ws_invalid_json_error_response",
+		"description": "Tests that sending non-JSON text receives a structured error message",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/echo",
+				"behavior": "echo"
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"raw_text": "this is not valid json {"
+					},
+					{
+						"direction": "receive",
+						"payload": { "type": "error", "message": "Invalid JSON" }
+					}
+				],
+				"close_code": 1000
+			}
+		},
+		"tags": ["websocket", "error", "invalid_json"]
+	},
+	{
+		"id": "ws_handler_no_response",
+		"description": "Tests that when a handler returns None, no response frame is sent to the client",
+		"category": "websocket",
+		"websocket": {
+			"handler": {
+				"route": "/ws/sink",
+				"behavior": "no_response"
+			},
+			"session": {
+				"messages": [
+					{
+						"direction": "send",
+						"payload": { "type": "fire_and_forget", "data": "ignored" }
+					}
+				],
+				"close_code": 1000,
+				"expected_receive_count": 0
+			}
+		},
+		"tags": ["websocket", "no_response", "fire_and_forget"]
+	}
+]
