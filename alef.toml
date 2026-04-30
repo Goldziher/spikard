@@ -402,8 +402,162 @@ authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 keywords = ["http", "web", "framework", "polyglot", "rust"]
 
 [readme]
-discord_url = ""
-banner_url = ""
+template_dir = "templates/readme"
+snippets_dir = "docs/snippets"
+output_pattern = "packages/{language}/README.md"
+
+[readme.languages.python]
+template = "python.md"
+name = "Spikard"
+package_name = "spikard"
+badge_url = "https://img.shields.io/pypi/v/spikard?label=Python&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Native Python bindings with async/await support."
+package_manager = ["pip"]
+snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", request_data = "request_data.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md", config_server = "config_server.md", run_app = "run_app.md" }
+
+[readme.languages.typescript]
+template = "language_package.md"
+output_path = "crates/spikard-node/README.md"
+name = "Spikard"
+package_name = "@spikard/node"
+badge_url = "https://img.shields.io/npm/v/@spikard/node?label=TypeScript&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Native NAPI-RS bindings for Node.js with TypeScript type definitions."
+package_manager = ["npm", "pnpm", "yarn"]
+snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md" }
+
+[readme.languages.ruby]
+template = "language_package.md"
+name = "Spikard"
+package_name = "spikard"
+badge_url = "https://img.shields.io/gem/v/spikard?label=Ruby&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Ruby bindings via Magnus with idiomatic Ruby API."
+package_manager = ["rubygems", "bundler"]
+snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md" }
+
+[readme.languages.php]
+template = "language_package.md"
+name = "Spikard"
+package_name = "spikard/spikard"
+badge_url = "https://img.shields.io/packagist/v/spikard/spikard?label=PHP&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. PHP 8.2+ bindings via ext-php-rs."
+package_manager = ["composer"]
+snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md" }
+
+[readme.languages.elixir]
+template = "language_package.md"
+name = "Spikard"
+package_name = "spikard"
+badge_url = "https://img.shields.io/hexpm/v/spikard?label=Elixir&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Elixir bindings via Rustler NIF with OTP integration."
+package_manager = ["mix"]
+snippets = {}
+
+[readme.languages.ffi]
+template = "language_package.md"
+output_path = "crates/spikard-ffi/README.md"
+name = "Spikard FFI"
+package_name = "spikard-ffi"
+badge_url = "https://img.shields.io/badge/C%2FC%2B%2B-spikard--ffi-007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "C/C++ FFI bindings for the spikard HTTP framework. Stable ABI shared library for native integration, cross-language bridging (Go, Zig, Kotlin JNI), and embedding the Rust HTTP core into any C-compatible host."
+package_manager = ["cargo"]
+snippets = {}
+
+[readme.languages.go]
+template = "go.md"
+name = "Spikard"
+package_name = "github.com/Goldziher/spikard"
+badge_url = "https://img.shields.io/github/v/tag/Goldziher/spikard?label=Go&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Go bindings with CGO static linking and context-aware async support."
+package_manager = ["go get"]
+snippets = {}
+
+[readme.languages.java]
+template = "language_package.md"
+name = "Spikard"
+package_name = "dev.spikard:spikard"
+badge_url = "https://img.shields.io/maven-central/v/dev.spikard/spikard?label=Java&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Java bindings via JNI/Panama with type-safe API."
+package_manager = ["maven", "gradle"]
+snippets = {}
+
+[readme.languages.csharp]
+template = "language_package.md"
+name = "Spikard"
+package_name = "Spikard"
+badge_url = "https://img.shields.io/nuget/v/Spikard?label=C%23&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. .NET bindings with full async/await support and .NET 8.0+ compatibility."
+package_manager = ["nuget"]
+snippets = {}
+
+[readme.languages.kotlin]
+template = "language_package.md"
+name = "Spikard"
+package_name = "dev.spikard:spikard"
+badge_url = "https://img.shields.io/badge/Kotlin-spikard-007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Kotlin/JVM bindings with idiomatic data classes and coroutine-based async."
+package_manager = ["gradle", "maven"]
+snippets = {}
+
+[readme.languages.dart]
+template = "language_package.md"
+name = "Spikard"
+package_name = "spikard"
+badge_url = "https://img.shields.io/badge/Dart-spikard-007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Dart bindings via flutter_rust_bridge with isolate-safe Future/Stream APIs."
+package_manager = ["pub"]
+snippets = {}
+
+[readme.languages.gleam]
+template = "language_package.md"
+name = "Spikard"
+package_name = "spikard"
+badge_url = "https://img.shields.io/badge/Gleam-spikard-007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Gleam bindings via Erlang NIF with type-safe functional API."
+package_manager = ["gleam"]
+snippets = {}
+
+[readme.languages.wasm]
+template = "language_package.md"
+output_path = "crates/spikard-wasm/README.md"
+name = "Spikard WASM"
+package_name = "@spikard/wasm"
+badge_url = "https://img.shields.io/npm/v/@spikard/wasm?label=WASM&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. WebAssembly bindings for browsers, Deno, and Cloudflare Workers."
+package_manager = ["npm", "pnpm", "yarn"]
+snippets = {}
+
+[readme.languages.swift]
+template = "language_package.md"
+name = "Spikard"
+package_name = "Spikard"
+badge_url = "https://img.shields.io/badge/Swift-spikard-007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Swift bindings via swift-bridge for macOS and Linux."
+package_manager = ["spm"]
+snippets = {}
+
+[readme.languages.zig]
+template = "language_package.md"
+name = "Spikard"
+package_name = "spikard"
+badge_url = "https://img.shields.io/badge/Zig-spikard-007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Zig bindings via C FFI with comptime-safe wrapper."
+package_manager = ["zig"]
+snippets = {}
 
 [publish]
 core_crate = "crates/spikard"
