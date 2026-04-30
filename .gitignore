@@ -18,6 +18,17 @@
 .cargo/
 !.cargo/config.toml
 !packages/ruby/.cargo/config.toml
+# Dart build cache (e.g. e2e/dart/.dart_tool/, packages/dart/.dart_tool/)
+**/.dart_tool/
+# Swift build outputs
+**/.build/
+**/.swiftpm/
+# Zig build cache
+**/.zig-cache/
+**/zig-cache/
+**/zig-out/
+# Gradle (Kotlin) build cache
+**/.gradle/
 .claude/
 .coverage
 .coverage*
