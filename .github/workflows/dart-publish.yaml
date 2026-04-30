@@ -1,0 +1,69 @@
+# dart-publish.yaml
+#
+# WHY THIS IS A SEPARATE WORKFLOW
+# --------------------------------
+# pub.dev's trusted publisher for spikard.dev is configured with the tag pattern
+# "{{version}}" (no "v" prefix). Spikard's standard release tags are "v0.14.1"
+# etc. The OIDC ref-claim presented to pub.dev must match that pattern, so we
+# cannot publish from the v-prefixed tag trigger in publish.yaml.
+#
+# Solution: publish.yaml has a `tag-dart` job that, after a successful run,
+# pushes a bare-version tag (e.g. "0.14.1") derived from the release tag. That
+# push fires this workflow. The OIDC ref is now "refs/tags/0.14.1", which
+# matches pub.dev's expectation.
+
+name: Publish Dart package to pub.dev
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+
+concurrency:
+  group: dart-publish-${{ github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish-dart:
+    name: Publish Dart package to pub.dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Verify pubspec version matches tag
+        working-directory: packages/dart
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+        run: |
+          pubspec_version="$(grep '^version:' pubspec.yaml | awk '{print $2}')"
+          if [[ "${pubspec_version}" != "${TAG_VERSION}" ]]; then
+            echo "::error::pubspec.yaml version (${pubspec_version}) does not match tag (${TAG_VERSION})"
+            exit 1
+          fi
+          echo "Version match confirmed: ${pubspec_version}"
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        working-directory: packages/dart
+        run: dart pub get
+
+      - name: Validate package
+        working-directory: packages/dart
+        run: dart pub publish --dry-run
+
+      - name: Publish to pub.dev
+        uses: kreuzberg-dev/actions/publish-pub@v1.2.1
+        with:
+          working-directory: packages/dart

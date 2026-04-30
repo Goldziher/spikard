@@ -114,6 +114,13 @@ release_crates=false
 release_wasm=false
 release_homebrew=false
 release_elixir=false
+release_java=false
+release_kotlin=false
+release_csharp=false
+release_dart=false
+release_gleam=false
+release_swift=false
+release_zig=false
 
 set_all_targets() {
   release_python=true
@@ -125,6 +132,13 @@ set_all_targets() {
   release_wasm=true
   release_homebrew=true
   release_elixir=true
+  release_java=true
+  release_kotlin=true
+  release_csharp=true
+  release_dart=true
+  release_gleam=true
+  release_swift=true
+  release_zig=true
 }
 
 mapfile -t requested_targets < <(echo "${targets_value}" | tr ',' '\n')
@@ -150,6 +164,13 @@ for raw_target in "${requested_targets[@]}"; do
   wasm) release_wasm=true ;;
   homebrew) release_homebrew=true ;;
   elixir) release_elixir=true ;;
+  java) release_java=true ;;
+  kotlin) release_kotlin=true ;;
+  csharp) release_csharp=true ;;
+  dart) release_dart=true ;;
+  gleam) release_gleam=true ;;
+  swift) release_swift=true ;;
+  zig) release_zig=true ;;
   none)
     release_python=false
     release_node=false
@@ -160,9 +181,16 @@ for raw_target in "${requested_targets[@]}"; do
     release_wasm=false
     release_homebrew=false
     release_elixir=false
+    release_java=false
+    release_kotlin=false
+    release_csharp=false
+    release_dart=false
+    release_gleam=false
+    release_swift=false
+    release_zig=false
     ;;
   *)
-    echo "Unknown release target '${trimmed}'. Allowed: all, python, node, ruby, php, cli, crates, wasm, homebrew, elixir." >&2
+    echo "Unknown release target '${trimmed}'. Allowed: all, python, node, ruby, php, cli, crates, wasm, homebrew, elixir, java, kotlin, csharp, dart, gleam, swift, zig." >&2
     exit 1
     ;;
   esac
@@ -183,8 +211,15 @@ if [[ "${release_crates}" == "true" ]]; then enabled_targets+=("crates"); fi
 if [[ "${release_wasm}" == "true" ]]; then enabled_targets+=("wasm"); fi
 if [[ "${release_homebrew}" == "true" ]]; then enabled_targets+=("homebrew"); fi
 if [[ "${release_elixir}" == "true" ]]; then enabled_targets+=("elixir"); fi
+if [[ "${release_java}" == "true" ]]; then enabled_targets+=("java"); fi
+if [[ "${release_kotlin}" == "true" ]]; then enabled_targets+=("kotlin"); fi
+if [[ "${release_csharp}" == "true" ]]; then enabled_targets+=("csharp"); fi
+if [[ "${release_dart}" == "true" ]]; then enabled_targets+=("dart"); fi
+if [[ "${release_gleam}" == "true" ]]; then enabled_targets+=("gleam"); fi
+if [[ "${release_swift}" == "true" ]]; then enabled_targets+=("swift"); fi
+if [[ "${release_zig}" == "true" ]]; then enabled_targets+=("zig"); fi
 
-if [[ ${#enabled_targets[@]} -eq 9 ]]; then
+if [[ ${#enabled_targets[@]} -eq 16 ]]; then
   release_targets_summary="all"
 elif [[ ${#enabled_targets[@]} -eq 0 ]]; then
   release_targets_summary="none"
@@ -220,7 +255,14 @@ cat <<JSON >release-metadata.json
   "release_cli": ${release_cli},
   "release_crates": ${release_crates},
   "release_wasm": ${release_wasm},
-  "release_elixir": ${release_elixir}
+  "release_elixir": ${release_elixir},
+  "release_java": ${release_java},
+  "release_kotlin": ${release_kotlin},
+  "release_csharp": ${release_csharp},
+  "release_dart": ${release_dart},
+  "release_gleam": ${release_gleam},
+  "release_swift": ${release_swift},
+  "release_zig": ${release_zig}
 }
 JSON
 
@@ -253,3 +295,10 @@ append_output "release_crates" "${release_crates}"
 append_output "release_wasm" "${release_wasm}"
 append_output "release_elixir" "${release_elixir}"
 append_output "release_homebrew" "${release_homebrew}"
+append_output "release_java" "${release_java}"
+append_output "release_kotlin" "${release_kotlin}"
+append_output "release_csharp" "${release_csharp}"
+append_output "release_dart" "${release_dart}"
+append_output "release_gleam" "${release_gleam}"
+append_output "release_swift" "${release_swift}"
+append_output "release_zig" "${release_zig}"
