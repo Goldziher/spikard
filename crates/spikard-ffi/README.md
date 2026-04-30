@@ -46,17 +46,23 @@ C/C++ FFI bindings for the spikard HTTP framework. Stable ABI shared library for
 
 ## Installation
 
+
 ```bash
 cargo add spikard-ffi
 ```
 
+
 ### System Requirements
+
 
 - C99 or C++11 compiler; `spikard-ffi` static/shared library from [GitHub Releases](https://github.com/Goldziher/spikard/releases)
 
+
 ## Quick Start
 
+
 See the [spikard repository](https://github.com/Goldziher/spikard) for usage examples and guides.
+
 
 ## Features
 
@@ -66,6 +72,7 @@ See the [spikard repository](https://github.com/Goldziher/spikard) for usage exa
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
+
 
 ## Documentation
 
