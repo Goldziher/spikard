@@ -5,6 +5,17 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
     const test_step = b.step("test", "Run tests");
 
+    const asyncapi_module = b.createModule(.{
+        .root_source_file = b.path("src/asyncapi_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const asyncapi_tests = b.addTest(.{
+        .root_module = asyncapi_module,
+    });
+    const asyncapi_run = b.addRunArtifact(asyncapi_tests);
+    test_step.dependOn(&asyncapi_run.step);
+
     const auth_module = b.createModule(.{
         .root_source_file = b.path("src/auth_test.zig"),
         .target = target,
@@ -115,6 +126,17 @@ pub fn build(b: *std.Build) void {
     const edge_cases_run = b.addRunArtifact(edge_cases_tests);
     test_step.dependOn(&edge_cases_run.step);
 
+    const graphql_operations_module = b.createModule(.{
+        .root_source_file = b.path("src/graphql_operations_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const graphql_operations_tests = b.addTest(.{
+        .root_module = graphql_operations_module,
+    });
+    const graphql_operations_run = b.addRunArtifact(graphql_operations_tests);
+    test_step.dependOn(&graphql_operations_run.step);
+
     const graphql_schema_module = b.createModule(.{
         .root_source_file = b.path("src/graphql_schema_test.zig"),
         .target = target,
@@ -213,6 +235,17 @@ pub fn build(b: *std.Build) void {
     });
     const openapi_run = b.addRunArtifact(openapi_tests);
     test_step.dependOn(&openapi_run.step);
+
+    const openrpc_module = b.createModule(.{
+        .root_source_file = b.path("src/openrpc_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const openrpc_tests = b.addTest(.{
+        .root_module = openrpc_module,
+    });
+    const openrpc_run = b.addRunArtifact(openrpc_tests);
+    test_step.dependOn(&openrpc_run.step);
 
     const path_params_module = b.createModule(.{
         .root_source_file = b.path("src/path_params_test.zig"),
@@ -378,5 +411,16 @@ pub fn build(b: *std.Build) void {
     });
     const validation_errors_run = b.addRunArtifact(validation_errors_tests);
     test_step.dependOn(&validation_errors_run.step);
+
+    const websocket_module = b.createModule(.{
+        .root_source_file = b.path("src/websocket_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const websocket_tests = b.addTest(.{
+        .root_module = websocket_module,
+    });
+    const websocket_run = b.addRunArtifact(websocket_tests);
+    test_step.dependOn(&websocket_run.step);
 
 }
