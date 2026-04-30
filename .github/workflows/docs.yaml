@@ -40,6 +40,14 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install alef
+        # scripts/docs/build-docs.sh shells out to `alef` to render API surface
+        # docs. Install via cargo-binstall (matches the ci-validate pattern).
+        run: cargo binstall --no-confirm --locked alef-cli@0.12.7
+
       - name: Install dependencies
         run: bash scripts/docs/install-doc-deps.sh
 
