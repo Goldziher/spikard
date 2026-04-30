@@ -1923,7 +1923,9 @@ jobs:
         uses: kreuzberg-dev/actions/publish-maven-gradle@v1.2.1
         with:
           working-directory: packages/kotlin
-          gradle-task: publish
+          # vanniktech plugin task; closes + releases the Sonatype Central
+          # Portal staging in one shot via automaticRelease = true.
+          gradle-task: publishAndReleaseToMavenCentral
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
       - name: Dry run summary

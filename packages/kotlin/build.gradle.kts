@@ -1,9 +1,17 @@
+import com.vanniktech.maven.publish.JavaLibrary
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   `java-library`
   kotlin("jvm") version "2.3.21"
   `maven-publish`
+  signing
+  // Drives publishing to Maven Central via the new Sonatype Central Portal.
+  // Reads MAVEN_USERNAME / MAVEN_PASSWORD / signingInMemoryKey* from
+  // ORG_GRADLE_PROJECT_* env vars set by the publish-maven-gradle composite.
+  id("com.vanniktech.maven.publish") version "0.30.0"
   id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
 }
 
@@ -65,10 +73,35 @@ tasks.withType<Test>().configureEach {
   useJUnit()
 }
 
-publishing {
-  publications {
-    create<MavenPublication>("maven") {
-      from(components["java"])
+mavenPublishing {
+  publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
+  signAllPublications()
+
+  coordinates("dev.spikard", "spikard-kotlin", project.version.toString())
+
+  configure(JavaLibrary(javadocJar = JavadocJar.Empty(), sourcesJar = true))
+
+  pom {
+    name.set("Spikard Kotlin")
+    description.set("Kotlin/JVM bindings for the Spikard polyglot HTTP framework.")
+    url.set("https://github.com/Goldziher/spikard")
+    licenses {
+      license {
+        name.set("MIT")
+        url.set("https://opensource.org/licenses/MIT")
+      }
+    }
+    developers {
+      developer {
+        id.set("Goldziher")
+        name.set("Na'aman Hirschfeld")
+        email.set("nhirschfeld@gmail.com")
+      }
+    }
+    scm {
+      connection.set("scm:git:git://github.com/Goldziher/spikard.git")
+      developerConnection.set("scm:git:ssh://github.com:Goldziher/spikard.git")
+      url.set("https://github.com/Goldziher/spikard")
     }
   }
 }
