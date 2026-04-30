@@ -3,123 +3,153 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('cors', () => {
-  it('_cors_preflight_method_not_allowed: CORS preflight request for non-allowed method should be rejected', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/06_cors_preflight_method_not_allowed`;
-    const response = await fetch(mockUrl, { method: 'OPTIONS', headers: {
-      "Access-Control-Request-Headers": "Content-Type",
-      "Origin": "https://example.com",
-      "Access-Control-Request-Method": "DELETE",
-    } });
-    expect(response.status).toBe(403);
-  });
+describe("cors", () => {
+	it("_cors_preflight_method_not_allowed: CORS preflight request for non-allowed method should be rejected", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/06_cors_preflight_method_not_allowed`;
+		const response = await fetch(mockUrl, {
+			method: "OPTIONS",
+			headers: {
+				"Access-Control-Request-Headers": "Content-Type",
+				Origin: "https://example.com",
+				"Access-Control-Request-Method": "DELETE",
+			},
+		});
+		expect(response.status).toBe(403);
+	});
 
-  it('_cors_preflight_header_not_allowed: CORS preflight request with non-allowed header should be rejected', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/07_cors_preflight_header_not_allowed`;
-    const response = await fetch(mockUrl, { method: 'OPTIONS', headers: {
-      "Access-Control-Request-Method": "POST",
-      "Origin": "https://example.com",
-      "Access-Control-Request-Headers": "X-Custom-Header",
-    } });
-    expect(response.status).toBe(403);
-  });
+	it("_cors_preflight_header_not_allowed: CORS preflight request with non-allowed header should be rejected", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/07_cors_preflight_header_not_allowed`;
+		const response = await fetch(mockUrl, {
+			method: "OPTIONS",
+			headers: {
+				"Access-Control-Request-Method": "POST",
+				Origin: "https://example.com",
+				"Access-Control-Request-Headers": "X-Custom-Header",
+			},
+		});
+		expect(response.status).toBe(403);
+	});
 
-  it('_cors_max_age: CORS preflight response should include Access-Control-Max-Age', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/08_cors_max_age`;
-    const response = await fetch(mockUrl, { method: 'OPTIONS', headers: {
-      "Access-Control-Request-Method": "POST",
-      "Origin": "https://example.com",
-      "Access-Control-Request-Headers": "Content-Type",
-    } });
-    expect(response.status).toBe(204);
-    expect(response.headers.get('access-control-max-age')).toBe('3600');
-    expect(response.headers.get('access-control-allow-origin')).toBe('https://example.com');
-    expect(response.headers.get('access-control-allow-methods')).toBe('POST');
-    expect(response.headers.get('access-control-allow-headers')).toBe('Content-Type');
-  });
+	it("_cors_max_age: CORS preflight response should include Access-Control-Max-Age", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/08_cors_max_age`;
+		const response = await fetch(mockUrl, {
+			method: "OPTIONS",
+			headers: {
+				"Access-Control-Request-Method": "POST",
+				Origin: "https://example.com",
+				"Access-Control-Request-Headers": "Content-Type",
+			},
+		});
+		expect(response.status).toBe(204);
+		expect(response.headers.get("access-control-max-age")).toBe("3600");
+		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
+		expect(response.headers.get("access-control-allow-methods")).toBe("POST");
+		expect(response.headers.get("access-control-allow-headers")).toBe("Content-Type");
+	});
 
-  it('_cors_expose_headers: CORS response should include Access-Control-Expose-Headers for custom headers', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/09_cors_expose_headers`;
-    const response = await fetch(mockUrl, { method: 'GET', headers: {
-      "Origin": "https://example.com",
-    } });
-    expect(response.status).toBe(200);
-    expect(response.headers.get('x-total-count')).toBe('42');
-    expect(response.headers.get('x-request-id')).toBe('abc123');
-    expect(response.headers.get('access-control-allow-origin')).toBe('https://example.com');
-    expect(response.headers.get('access-control-expose-headers')).toBe('X-Total-Count, X-Request-Id');
-  });
+	it("_cors_expose_headers: CORS response should include Access-Control-Expose-Headers for custom headers", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/09_cors_expose_headers`;
+		const response = await fetch(mockUrl, {
+			method: "GET",
+			headers: {
+				Origin: "https://example.com",
+			},
+		});
+		expect(response.status).toBe(200);
+		expect(response.headers.get("x-total-count")).toBe("42");
+		expect(response.headers.get("x-request-id")).toBe("abc123");
+		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
+		expect(response.headers.get("access-control-expose-headers")).toBe("X-Total-Count, X-Request-Id");
+	});
 
-  it('_cors_origin_null: CORS request with \'null\' origin should be handled according to policy', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/10_cors_origin_null`;
-    const response = await fetch(mockUrl, { method: 'GET', headers: {
-      "Origin": "null",
-    } });
-    expect(response.status).toBe(403);
-    const data = await response.json();
-    expect(data).toEqual({ error: "Origin 'null' is not allowed" });
-  });
+	it("_cors_origin_null: CORS request with 'null' origin should be handled according to policy", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/10_cors_origin_null`;
+		const response = await fetch(mockUrl, {
+			method: "GET",
+			headers: {
+				Origin: "null",
+			},
+		});
+		expect(response.status).toBe(403);
+		const data = await response.json();
+		expect(data).toEqual({ error: "Origin 'null' is not allowed" });
+	});
 
-  it('cors_allow_credentials_flag: Tests CORS response with credentials flag when allowed', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_allow_credentials_flag`;
-    const response = await fetch(mockUrl, { method: 'GET', headers: {
-      "Origin": "https://example.com",
-    } });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ message: "Success" });
-    expect(response.headers.get('access-control-allow-origin')).toBe('https://example.com');
-    expect(response.headers.get('access-control-allow-credentials')).toBe('true');
-  });
+	it("cors_allow_credentials_flag: Tests CORS response with credentials flag when allowed", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_allow_credentials_flag`;
+		const response = await fetch(mockUrl, {
+			method: "GET",
+			headers: {
+				Origin: "https://example.com",
+			},
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ message: "Success" });
+		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
+		expect(response.headers.get("access-control-allow-credentials")).toBe("true");
+	});
 
-  it('cors_custom_allowed_headers_x_custom: Tests CORS allows custom X-Custom-Header in requests', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_custom_allowed_headers_x_custom`;
-    const response = await fetch(mockUrl, { method: 'OPTIONS', headers: {
-      "Access-Control-Request-Method": "POST",
-      "Origin": "https://example.com",
-      "Access-Control-Request-Headers": "X-Custom-Header",
-    } });
-    expect(response.status).toBe(204);
-    expect(response.headers.get('access-control-allow-origin')).toBe('https://example.com');
-    expect(response.headers.get('access-control-allow-methods')).toBe('POST');
-    expect(response.headers.get('access-control-allow-headers')).toBe('X-Custom-Header');
-  });
+	it("cors_custom_allowed_headers_x_custom: Tests CORS allows custom X-Custom-Header in requests", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_custom_allowed_headers_x_custom`;
+		const response = await fetch(mockUrl, {
+			method: "OPTIONS",
+			headers: {
+				"Access-Control-Request-Method": "POST",
+				Origin: "https://example.com",
+				"Access-Control-Request-Headers": "X-Custom-Header",
+			},
+		});
+		expect(response.status).toBe(204);
+		expect(response.headers.get("access-control-allow-origin")).toBe("https://example.com");
+		expect(response.headers.get("access-control-allow-methods")).toBe("POST");
+		expect(response.headers.get("access-control-allow-headers")).toBe("X-Custom-Header");
+	});
 
-  it('cors_request_blocked: Tests CORS request from disallowed origin', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_request_blocked`;
-    const response = await fetch(mockUrl, { method: 'GET', headers: {
-      "Origin": "https://malicious-site.com",
-    } });
-    expect(response.status).toBe(403);
-    const data = await response.json();
-    expect(data).toEqual({ detail: "CORS request from origin 'https://malicious-site.com' not allowed" });
-  });
+	it("cors_request_blocked: Tests CORS request from disallowed origin", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_request_blocked`;
+		const response = await fetch(mockUrl, {
+			method: "GET",
+			headers: {
+				Origin: "https://malicious-site.com",
+			},
+		});
+		expect(response.status).toBe(403);
+		const data = await response.json();
+		expect(data).toEqual({ detail: "CORS request from origin 'https://malicious-site.com' not allowed" });
+	});
 
-  it('cors_restricted_methods_post_get_only: Tests CORS allows only specific HTTP methods (POST, GET)', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_restricted_methods_post_get_only`;
-    const response = await fetch(mockUrl, { method: 'GET', headers: {
-      "Origin": "https://example.com",
-    } });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ message: "Success" });
-    expect(response.headers.get('access-control-allow-methods')).toBe('GET,POST');
-  });
+	it("cors_restricted_methods_post_get_only: Tests CORS allows only specific HTTP methods (POST, GET)", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_restricted_methods_post_get_only`;
+		const response = await fetch(mockUrl, {
+			method: "GET",
+			headers: {
+				Origin: "https://example.com",
+			},
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ message: "Success" });
+		expect(response.headers.get("access-control-allow-methods")).toBe("GET,POST");
+	});
 
-  it('cors_safelisted_headers_without_preflight: Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don\'t require preflight', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_safelisted_headers_without_preflight`;
-    const response = await fetch(mockUrl, { method: 'POST', headers: {
-      "Origin": "https://app.example.com",
-      "Accept": "application/json",
-      "Accept-Language": "en-US",
-      "Content-Type": "text/plain",
-    } });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ message: "Success" });
-    expect(response.headers.get('access-control-allow-origin')).toBe('https://app.example.com');
-    expect(response.headers.get('vary')).toBe('Origin');
-  });
+	it("cors_safelisted_headers_without_preflight: Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/cors_safelisted_headers_without_preflight`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			headers: {
+				Origin: "https://app.example.com",
+				Accept: "application/json",
+				"Accept-Language": "en-US",
+				"Content-Type": "text/plain",
+			},
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ message: "Success" });
+		expect(response.headers.get("access-control-allow-origin")).toBe("https://app.example.com");
+		expect(response.headers.get("vary")).toBe("Origin");
+	});
 });

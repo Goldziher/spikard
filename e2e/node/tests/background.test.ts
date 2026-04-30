@@ -3,20 +3,20 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('background', () => {
-  it('background_event_logging: Enqueues a background job that appends the posted event to shared state', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_event_logging`;
-    const response = await fetch(mockUrl, { method: 'POST', body: JSON.stringify({ event: "alpha" }) });
-    expect(response.status).toBe(202);
-    expect(response.headers.get('content-type')).toBe('application/json');
-  });
+describe("background", () => {
+	it("background_event_logging: Enqueues a background job that appends the posted event to shared state", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_event_logging`;
+		const response = await fetch(mockUrl, { method: "POST", body: JSON.stringify({ event: "alpha" }) });
+		expect(response.status).toBe(202);
+		expect(response.headers.get("content-type")).toBe("application/json");
+	});
 
-  it('background_event_logging_second_payload: Ensures background jobs handle different payloads', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_event_logging_second_payload`;
-    const response = await fetch(mockUrl, { method: 'POST', body: JSON.stringify({ event: "beta" }) });
-    expect(response.status).toBe(202);
-    expect(response.headers.get('content-type')).toBe('application/json');
-  });
+	it("background_event_logging_second_payload: Ensures background jobs handle different payloads", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_event_logging_second_payload`;
+		const response = await fetch(mockUrl, { method: "POST", body: JSON.stringify({ event: "beta" }) });
+		expect(response.status).toBe(202);
+		expect(response.headers.get("content-type")).toBe("application/json");
+	});
 });

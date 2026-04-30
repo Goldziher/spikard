@@ -3,33 +3,35 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('streaming', () => {
-  it('binary_log_download: Streams binary log segments with control bytes', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/binary_log_download`;
-    const response = await fetch(mockUrl, { method: 'GET' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual("LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n");
-    expect(response.headers.get('content-type')).toBe('application/octet-stream');
-  });
+describe("streaming", () => {
+	it("binary_log_download: Streams binary log segments with control bytes", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/binary_log_download`;
+		const response = await fetch(mockUrl, { method: "GET" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual("LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n");
+		expect(response.headers.get("content-type")).toBe("application/octet-stream");
+	});
 
-  it('chunked_csv_export: Streams CSV header and rows as discrete chunks', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/chunked_csv_export`;
-    const response = await fetch(mockUrl, { method: 'GET' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual("id,name,value\\n1,Alice,42\\n2,Bob,7\\n");
-    expect(response.headers.get('content-type')).toBe('text/csv');
-  });
+	it("chunked_csv_export: Streams CSV header and rows as discrete chunks", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/chunked_csv_export`;
+		const response = await fetch(mockUrl, { method: "GET" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual("id,name,value\\n1,Alice,42\\n2,Bob,7\\n");
+		expect(response.headers.get("content-type")).toBe("text/csv");
+	});
 
-  it('stream_json_lines: Streams newline-delimited JSON payload in small chunks', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/stream_json_lines`;
-    const response = await fetch(mockUrl, { method: 'GET' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual("{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n");
-    expect(response.headers.get('content-type')).toBe('application/x-ndjson');
-  });
+	it("stream_json_lines: Streams newline-delimited JSON payload in small chunks", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/stream_json_lines`;
+		const response = await fetch(mockUrl, { method: "GET" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual(
+			'{"index":0,"payload":"alpha"}\\n{"index":1,"payload":"beta"}\\n{"index":2,"payload":"gamma"}\\n',
+		);
+		expect(response.headers.get("content-type")).toBe("application/x-ndjson");
+	});
 });

@@ -3,47 +3,47 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from 'vitest';
-import { handle_request } from 'spikard-wasm';
+import { describe, it, expect } from "vitest";
+import { handle_request } from "spikard-wasm";
 
-describe('asyncapi', () => {
-  it('asyncapi_channel_extraction: Tests that channels are correctly extracted from an AsyncAPI 3.0.0 spec', async () => {
-    await handle_request(null);
-  });
+describe("asyncapi", () => {
+	it("asyncapi_channel_extraction: Tests that channels are correctly extracted from an AsyncAPI 3.0.0 spec", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_invalid_spec_bad_version: Tests that a spec with an invalid asyncapi version field is rejected with an error', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_invalid_spec_bad_version: Tests that a spec with an invalid asyncapi version field is rejected with an error", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_message_schema_validation_fail_missing_required: Tests that a message missing required fields is rejected by schema validation', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_message_schema_validation_fail_missing_required: Tests that a message missing required fields is rejected by schema validation", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_message_schema_validation_pass: Tests that a valid message passes schema validation against its channel definition', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_message_schema_validation_pass: Tests that a valid message passes schema validation against its channel definition", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_multi_channel_spec: Tests parsing of a spec with multiple channels each targeting different protocols', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_multi_channel_spec: Tests parsing of a spec with multiple channels each targeting different protocols", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_operation_extraction: Tests that send/receive operations are correctly extracted from an AsyncAPI 3.0.0 spec', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_operation_extraction: Tests that send/receive operations are correctly extracted from an AsyncAPI 3.0.0 spec", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_schema_ref_resolution: Tests that $ref references to components/messages are resolved during extraction', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_schema_ref_resolution: Tests that $ref references to components/messages are resolved during extraction", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_sse_binding_extraction: Tests that HTTP SSE binding is extracted from a channel with http bindings block', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_sse_binding_extraction: Tests that HTTP SSE binding is extracted from a channel with http bindings block", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_validate_summary_fields: Tests that validate_asyncapi_schema returns correct spec_version, title, api_version, and channel_count', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_validate_summary_fields: Tests that validate_asyncapi_schema returns correct spec_version, title, api_version, and channel_count", async () => {
+		await handle_request(null);
+	});
 
-  it('asyncapi_websocket_binding_extraction: Tests that WebSocket binding is extracted from a channel with ws bindings block', async () => {
-    await handle_request(null);
-  });
+	it("asyncapi_websocket_binding_extraction: Tests that WebSocket binding is extracted from a channel with ws bindings block", async () => {
+		await handle_request(null);
+	});
 });
