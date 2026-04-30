@@ -11,6 +11,9 @@ keywords = ["http", "wasm", "json-schema", "validation", "rfc7807"]
 categories = ["wasm", "web-programming"]
 readme = "README.md"
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
