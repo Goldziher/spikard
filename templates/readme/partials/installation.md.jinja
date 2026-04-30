@@ -1,0 +1,183 @@
+{% if package_manager | length == 1 %}
+{% set pm = package_manager[0] %}
+{% if pm == "pip" %}
+```bash
+pip install {{ package_name }}
+```
+
+{% elif pm == "npm" %}
+```bash
+npm install {{ package_name }}
+```
+
+{% elif pm == "go get" %}
+```bash
+go get {{ package_name }}
+```
+
+Build with the FFI static library — see [FFI build instructions](https://github.com/Goldziher/spikard#ffi-setup).
+
+{% elif pm == "maven" %}
+**Maven:**
+```xml
+<dependency>
+    <groupId>dev.spikard</groupId>
+    <artifactId>spikard</artifactId>
+    <version>{{ version }}</version>
+</dependency>
+```
+
+**Gradle:**
+```gradle
+implementation 'dev.spikard:spikard:{{ version }}'
+```
+
+{% elif pm == "rubygems" %}
+```bash
+gem install {{ package_name }}
+```
+
+{% elif pm == "composer" %}
+```bash
+composer require {{ package_name }}
+```
+
+{% elif pm == "mix" %}
+Add to `mix.exs`:
+
+```elixir
+def deps do
+  [
+    {:spikard, "~> {{ version }}"}
+  ]
+end
+```
+
+Run `mix deps.get`.
+
+{% elif pm == "nuget" %}
+```bash
+dotnet add package {{ package_name }}
+```
+
+{% elif pm == "cargo" %}
+```bash
+cargo add {{ package_name }}
+```
+
+{% elif pm == "spm" %}
+Add to `Package.swift`:
+
+```swift
+.package(url: "https://github.com/Goldziher/spikard", from: "{{ version }}")
+```
+
+{% elif pm == "pub" %}
+```bash
+dart pub add {{ package_name }}
+```
+
+{% elif pm == "gleam" %}
+```bash
+gleam add {{ package_name }}
+```
+
+{% elif pm == "zig" %}
+Add to `build.zig.zon`:
+
+```zig
+.dependencies = .{
+    .spikard = .{ .url = "<tarball-url>" },
+};
+```
+
+{% endif %}
+{% else %}
+{% for pm in package_manager %}
+{% if pm == "npm" %}
+**npm:**
+```bash
+npm install {{ package_name }}
+```
+
+{% elif pm == "pnpm" %}
+**pnpm:**
+```bash
+pnpm add {{ package_name }}
+```
+
+{% elif pm == "yarn" %}
+**yarn:**
+```bash
+yarn add {{ package_name }}
+```
+
+{% elif pm == "maven" %}
+**Maven:**
+```xml
+<dependency>
+    <groupId>dev.spikard</groupId>
+    <artifactId>spikard</artifactId>
+    <version>{{ version }}</version>
+</dependency>
+```
+
+{% elif pm == "gradle" %}
+**Gradle:**
+```gradle
+implementation 'dev.spikard:spikard:{{ version }}'
+```
+
+{% elif pm == "rubygems" %}
+**gem:**
+```bash
+gem install {{ package_name }}
+```
+
+{% elif pm == "bundler" %}
+**Bundler:**
+```ruby
+gem '{{ package_name }}'
+```
+
+{% endif %}
+{% endfor %}
+{% endif %}
+
+### System Requirements
+
+{% if language == "python" %}
+- **Python 3.10+** required
+- Pre-built wheels for Linux (x86_64, aarch64), macOS (arm64, x86_64), Windows (x86_64)
+{% elif language == "typescript" %}
+- **Node.js 18+** required (NAPI-RS native bindings)
+- Pre-built binaries for Linux (x86_64), macOS (arm64, x86_64), Windows (x86_64)
+{% elif language == "go" %}
+- **Go 1.21+** required; needs `spikard-ffi` static library at link time
+{% elif language == "java" %}
+- **Java 17+** required
+{% elif language == "ruby" %}
+- **Ruby 3.2+** required
+{% elif language == "php" %}
+- **PHP 8.2+** required
+{% elif language == "csharp" %}
+- **.NET 8.0+** required
+{% elif language == "elixir" %}
+- **Elixir 1.14+** and **Erlang/OTP 25+** required
+{% elif language == "wasm" %}
+- Modern browser with WebAssembly support, or Node.js 18+, or Deno 1.0+
+{% elif language == "kotlin" %}
+- **Kotlin 1.9+ / JVM 17+** required
+{% elif language == "dart" %}
+- **Dart 3.0+** required
+{% elif language == "gleam" %}
+- **Gleam 1.0+** and **Erlang/OTP 25+** required
+{% elif language == "swift" %}
+- **Swift 5.9+** / macOS 13+ or Linux required
+{% elif language == "zig" %}
+- **Zig 0.13+** required; needs `spikard-ffi` static library at link time
+{% elif language == "ffi" %}
+- C99 or C++11 compiler; `spikard-ffi` static/shared library from [GitHub Releases](https://github.com/Goldziher/spikard/releases)
+{% else %}
+- See [Installation Guide](https://github.com/Goldziher/spikard#installation) for requirements
+{% endif %}
