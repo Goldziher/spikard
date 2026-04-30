@@ -735,6 +735,7 @@ languages = [
   "ruby",
   "php",
   "elixir",
+  "rust",
   "go",
   "java",
   "csharp",
@@ -743,7 +744,9 @@ languages = [
   "gleam",
   "swift",
   "zig",
-  "wasm",
+  # wasm is excluded from the HTTP-handler fixture e2e suite: the wasm binding
+  # exports validateJsonSchema + problemDetails (schema/RFC-7807 surface), not the
+  # handle_request HTTP adapter. Add wasm-specific fixtures to re-enable.
 ]
 
 [e2e.call]
@@ -752,6 +755,9 @@ module = "spikard"
 result_var = "response"
 async = true
 method = "POST"
+
+[e2e.call.overrides.go]
+module = "github.com/Goldziher/spikard"
 
 [e2e.packages.python]
 name = "spikard"
@@ -806,8 +812,8 @@ name = "spikard"
 path = "../../packages/zig"
 
 [e2e.packages.wasm]
-name = "@spikard/wasm"
-path = "../../crates/spikard-wasm"
+name = "spikard-wasm"
+path = "../../crates/spikard-wasm/pkg"
 
 [e2e.registry]
 output = "test_apps"
