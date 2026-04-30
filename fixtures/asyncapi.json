@@ -1,0 +1,433 @@
+[
+	{
+		"id": "asyncapi_channel_extraction",
+		"description": "Tests that channels are correctly extracted from an AsyncAPI 3.0.0 spec",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": {
+					"title": "Chat API",
+					"version": "1.0.0"
+				},
+				"channels": {
+					"chat/messages": {
+						"address": "chat/messages",
+						"messages": {
+							"ChatMessage": {
+								"$ref": "#/components/messages/ChatMessage"
+							}
+						}
+					},
+					"user/events": {
+						"address": "user/events",
+						"messages": {
+							"UserEvent": {
+								"$ref": "#/components/messages/UserEvent"
+							}
+						}
+					}
+				},
+				"operations": {},
+				"components": {
+					"messages": {
+						"ChatMessage": {
+							"payload": {
+								"type": "object",
+								"properties": {
+									"text": { "type": "string" },
+									"user_id": { "type": "string" }
+								},
+								"required": ["text", "user_id"]
+							}
+						},
+						"UserEvent": {
+							"payload": {
+								"type": "object",
+								"properties": {
+									"event": { "type": "string" },
+									"user_id": { "type": "string" }
+								},
+								"required": ["event", "user_id"]
+							}
+						}
+					}
+				}
+			},
+			"expected": {
+				"channels_count": 2,
+				"channel_names": ["chat/messages", "user/events"]
+			}
+		},
+		"tags": ["asyncapi", "channels", "extraction"]
+	},
+	{
+		"id": "asyncapi_operation_extraction",
+		"description": "Tests that send/receive operations are correctly extracted from an AsyncAPI 3.0.0 spec",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": {
+					"title": "Notification API",
+					"version": "2.0.0"
+				},
+				"channels": {
+					"notifications": {
+						"address": "notifications",
+						"messages": {
+							"Notification": {
+								"$ref": "#/components/messages/Notification"
+							}
+						}
+					}
+				},
+				"operations": {
+					"receiveNotification": {
+						"action": "receive",
+						"channel": {
+							"$ref": "#/channels/notifications"
+						},
+						"messages": [{ "$ref": "#/channels/notifications/messages/Notification" }]
+					},
+					"sendAck": {
+						"action": "send",
+						"channel": {
+							"$ref": "#/channels/notifications"
+						}
+					}
+				},
+				"components": {
+					"messages": {
+						"Notification": {
+							"payload": {
+								"type": "object",
+								"properties": {
+									"id": { "type": "string" },
+									"body": { "type": "string" }
+								},
+								"required": ["id", "body"]
+							}
+						}
+					}
+				}
+			},
+			"expected": {
+				"channels_count": 1,
+				"operations": [{ "name": "receiveNotification", "action": "receive" }, { "name": "sendAck", "action": "send" }]
+			}
+		},
+		"tags": ["asyncapi", "operations", "send", "receive"]
+	},
+	{
+		"id": "asyncapi_message_schema_validation_pass",
+		"description": "Tests that a valid message passes schema validation against its channel definition",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": { "title": "Order API", "version": "1.0.0" },
+				"channels": {
+					"orders/new": {
+						"address": "orders/new",
+						"messages": {
+							"NewOrder": {
+								"payload": {
+									"type": "object",
+									"properties": {
+										"order_id": { "type": "string" },
+										"amount": { "type": "number" },
+										"currency": { "type": "string" }
+									},
+									"required": ["order_id", "amount", "currency"]
+								}
+							}
+						}
+					}
+				},
+				"operations": {},
+				"components": {}
+			},
+			"validation": {
+				"channel": "orders/new",
+				"message": "NewOrder",
+				"payload": {
+					"order_id": "ORD-001",
+					"amount": 99.99,
+					"currency": "USD"
+				}
+			},
+			"expected": {
+				"valid": true,
+				"errors": []
+			}
+		},
+		"tags": ["asyncapi", "validation", "message_schema", "pass"]
+	},
+	{
+		"id": "asyncapi_message_schema_validation_fail_missing_required",
+		"description": "Tests that a message missing required fields is rejected by schema validation",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": { "title": "Order API", "version": "1.0.0" },
+				"channels": {
+					"orders/new": {
+						"address": "orders/new",
+						"messages": {
+							"NewOrder": {
+								"payload": {
+									"type": "object",
+									"properties": {
+										"order_id": { "type": "string" },
+										"amount": { "type": "number" },
+										"currency": { "type": "string" }
+									},
+									"required": ["order_id", "amount", "currency"]
+								}
+							}
+						}
+					}
+				},
+				"operations": {},
+				"components": {}
+			},
+			"validation": {
+				"channel": "orders/new",
+				"message": "NewOrder",
+				"payload": {
+					"order_id": "ORD-002"
+				}
+			},
+			"expected": {
+				"valid": false,
+				"errors": ["amount is required", "currency is required"]
+			}
+		},
+		"tags": ["asyncapi", "validation", "message_schema", "fail", "required"]
+	},
+	{
+		"id": "asyncapi_websocket_binding_extraction",
+		"description": "Tests that WebSocket binding is extracted from a channel with ws bindings block",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": { "title": "Realtime API", "version": "1.0.0" },
+				"channels": {
+					"realtime/feed": {
+						"address": "realtime/feed",
+						"bindings": {
+							"ws": {
+								"method": "GET",
+								"headers": {
+									"type": "object",
+									"properties": {
+										"X-Stream-Token": { "type": "string" }
+									}
+								}
+							}
+						},
+						"messages": {
+							"FeedEvent": {
+								"payload": { "type": "object" }
+							}
+						}
+					}
+				},
+				"operations": {},
+				"components": {}
+			},
+			"expected": {
+				"channels_count": 1,
+				"bindings": [
+					{
+						"channel": "realtime/feed",
+						"protocol": "ws",
+						"method": "GET"
+					}
+				]
+			}
+		},
+		"tags": ["asyncapi", "websocket", "bindings", "ws"]
+	},
+	{
+		"id": "asyncapi_sse_binding_extraction",
+		"description": "Tests that HTTP SSE binding is extracted from a channel with http bindings block",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": { "title": "Events API", "version": "1.0.0" },
+				"channels": {
+					"events/stream": {
+						"address": "/events",
+						"bindings": {
+							"http": {
+								"method": "GET",
+								"headers": {
+									"type": "object",
+									"properties": {
+										"Accept": {
+											"type": "string",
+											"const": "text/event-stream"
+										}
+									}
+								}
+							}
+						},
+						"messages": {
+							"ServerEvent": {
+								"payload": { "type": "object" }
+							}
+						}
+					}
+				},
+				"operations": {},
+				"components": {}
+			},
+			"expected": {
+				"channels_count": 1,
+				"bindings": [
+					{
+						"channel": "events/stream",
+						"protocol": "http",
+						"method": "GET"
+					}
+				]
+			}
+		},
+		"tags": ["asyncapi", "sse", "bindings", "http"]
+	},
+	{
+		"id": "asyncapi_multi_channel_spec",
+		"description": "Tests parsing of a spec with multiple channels each targeting different protocols",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": { "title": "Multi-Channel API", "version": "1.0.0" },
+				"channels": {
+					"ws/chat": {
+						"address": "ws/chat",
+						"bindings": { "ws": {} },
+						"messages": { "ChatMsg": { "payload": { "type": "object" } } }
+					},
+					"amqp/orders": {
+						"address": "amqp/orders",
+						"bindings": { "amqp": {} },
+						"messages": { "Order": { "payload": { "type": "object" } } }
+					},
+					"mqtt/sensors": {
+						"address": "mqtt/sensors",
+						"bindings": { "mqtt": {} },
+						"messages": { "SensorReading": { "payload": { "type": "object" } } }
+					}
+				},
+				"operations": {},
+				"components": {}
+			},
+			"expected": {
+				"channels_count": 3,
+				"channel_names": ["amqp/orders", "mqtt/sensors", "ws/chat"]
+			}
+		},
+		"tags": ["asyncapi", "multi_channel"]
+	},
+	{
+		"id": "asyncapi_schema_ref_resolution",
+		"description": "Tests that $ref references to components/messages are resolved during extraction",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": { "title": "Ref Test API", "version": "1.0.0" },
+				"channels": {
+					"items": {
+						"address": "items",
+						"messages": {
+							"Item": { "$ref": "#/components/messages/Item" }
+						}
+					}
+				},
+				"operations": {},
+				"components": {
+					"messages": {
+						"Item": {
+							"name": "Item",
+							"payload": {
+								"type": "object",
+								"properties": {
+									"id": { "type": "integer" },
+									"name": { "type": "string" }
+								},
+								"required": ["id", "name"]
+							}
+						}
+					}
+				}
+			},
+			"expected": {
+				"channels_count": 1,
+				"resolved_messages": [
+					{
+						"name": "Item",
+						"schema_properties": ["id", "name"]
+					}
+				]
+			}
+		},
+		"tags": ["asyncapi", "ref_resolution", "components"]
+	},
+	{
+		"id": "asyncapi_invalid_spec_bad_version",
+		"description": "Tests that a spec with an invalid asyncapi version field is rejected with an error",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "2.0.0",
+				"info": { "title": "Old API", "version": "1.0.0" },
+				"channels": {}
+			},
+			"expected": {
+				"valid": false,
+				"errors": ["unsupported AsyncAPI version: 2.0.0, expected 3.0.0"]
+			}
+		},
+		"tags": ["asyncapi", "validation", "version", "error"]
+	},
+	{
+		"id": "asyncapi_validate_summary_fields",
+		"description": "Tests that validate_asyncapi_schema returns correct spec_version, title, api_version, and channel_count",
+		"category": "asyncapi",
+		"asyncapi": {
+			"spec": {
+				"asyncapi": "3.0.0",
+				"info": {
+					"title": "Inventory Service",
+					"version": "3.2.1"
+				},
+				"channels": {
+					"inventory/updates": {
+						"address": "inventory/updates",
+						"messages": {
+							"InventoryUpdate": {
+								"payload": { "type": "object" }
+							}
+						}
+					}
+				},
+				"operations": {},
+				"components": {}
+			},
+			"expected": {
+				"spec_version": "3.0.0",
+				"title": "Inventory Service",
+				"api_version": "3.2.1",
+				"channel_count": 1
+			}
+		},
+		"tags": ["asyncapi", "validate", "summary"]
+	}
+]
