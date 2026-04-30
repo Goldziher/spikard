@@ -335,7 +335,10 @@ class BackgroundTaskConfig {
 class BackgroundJobMetadata {
   final String name;
   final String? requestId;
-  BackgroundJobMetadata({required this.name, required this.requestId});
+  BackgroundJobMetadata({
+    required this.name,
+    required this.requestId,
+  });
 }
 
 /// Configuration for gRPC support
@@ -511,21 +514,31 @@ class ContactInfo {
   final String? name;
   final String? email;
   final String? url;
-  ContactInfo({required this.name, required this.email, required this.url});
+  ContactInfo({
+    required this.name,
+    required this.email,
+    required this.url,
+  });
 }
 
 /// License information
 class LicenseInfo {
   final String name;
   final String? url;
-  LicenseInfo({required this.name, required this.url});
+  LicenseInfo({
+    required this.name,
+    required this.url,
+  });
 }
 
 /// Server information
 class ServerInfo {
   final String url;
   final String? description;
-  ServerInfo({required this.url, required this.description});
+  ServerInfo({
+    required this.url,
+    required this.description,
+  });
 }
 
 /// HTTP Response with custom status code, headers, and content
@@ -618,7 +631,10 @@ class ApiKeyConfig {
 
   /// Header name to check (e.g., "X-API-Key")
   final String headerName;
-  ApiKeyConfig({required this.keys, required this.headerName});
+  ApiKeyConfig({
+    required this.keys,
+    required this.headerName,
+  });
 }
 
 /// Static file serving configuration
@@ -728,7 +744,16 @@ class ServerConfig {
 }
 
 /// HTTP method
-enum Method { get_, post, put, patch, delete, head, options, trace }
+enum Method {
+  get_,
+  post,
+  put,
+  patch,
+  delete,
+  head,
+  options,
+  trace;
+}
 
 /// Security scheme types
 sealed class SecuritySchemeInfo {}
@@ -736,13 +761,19 @@ sealed class SecuritySchemeInfo {}
 final class Http extends SecuritySchemeInfo {
   final String scheme;
   final String bearerFormat;
-  Http({required this.scheme, required this.bearerFormat});
+  Http({
+    required this.scheme,
+    required this.bearerFormat,
+  });
 }
 
 final class ApiKey extends SecuritySchemeInfo {
   final String location;
   final String name;
-  ApiKey({required this.location, required this.name});
+  ApiKey({
+    required this.location,
+    required this.name,
+  });
 }
 
 /// Errors that can occur during GraphQL operations
@@ -871,7 +902,10 @@ final class InvalidInput implements GraphQLError {
   final String details;
   @override
   String get message => 'Invalid input: {message}';
-  InvalidInput({required this.message, required this.details});
+  InvalidInput({
+    required this.message,
+    required this.details,
+  });
 }
 
 /// Query complexity limit exceeded
@@ -930,7 +964,10 @@ final class ComplexityLimitExceeded implements SchemaError {
   @override
   String get message =>
       'Query complexity limit exceeded: limit={limit}, actual={actual}';
-  ComplexityLimitExceeded({required this.limit, required this.actual});
+  ComplexityLimitExceeded({
+    required this.limit,
+    required this.actual,
+  });
 }
 
 /// Depth limit exceeded
@@ -940,7 +977,10 @@ final class DepthLimitExceeded implements SchemaError {
   @override
   String get message =>
       'Query depth limit exceeded: limit={limit}, actual={actual}';
-  DepthLimitExceeded({required this.limit, required this.actual});
+  DepthLimitExceeded({
+    required this.limit,
+    required this.actual,
+  });
 }
 
 class SpikardBridge {
