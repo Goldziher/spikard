@@ -1,4 +1,4 @@
-version = "0.12.0"
+version = "0.12.1"
 languages = [
   "python",
   "node",
@@ -351,6 +351,40 @@ module_name = "spikard"
 
 [wasm]
 package_name = "@spikard/wasm"
+# The main `spikard` facade crate is not wasm-safe — it pulls `spikard-http`,
+# which transitively requires `mio` (no wasm32 support). Point the wasm binding
+# at `spikard-core` instead, which is the wasm-safe schema validation surface.
+core_crate_override = "spikard-core"
+features = ["di"]
+# Exclude HTTP-server-only types (live in spikard-http, not spikard-core).
+# The wasm-safe surface is schema validation + RFC 7807 problem details only.
+exclude_types = [
+    "ApiKeyConfig",
+    "BackgroundJobMetadata",
+    "BackgroundTaskConfig",
+    "ContactInfo",
+    "GrpcConfig",
+    "JsonRpcConfig",
+    "JsonRpcMethodInfo",
+    "JwtConfig",
+    "LicenseInfo",
+    "OpenApiConfig",
+    "Response",
+    "SecuritySchemeInfo",
+    "ServerConfig",
+    "ServerInfo",
+    "SseEvent",
+    "StaticFilesConfig",
+    "UploadFile",
+    "GraphQLError",
+    "GraphQLRouteConfig",
+    "QueryMutationConfig",
+    "QueryOnlyConfig",
+    "CompressionConfig",
+    "CorsConfig",
+    "RateLimitConfig",
+    "Method",
+]
 
 [update.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
@@ -744,9 +778,11 @@ languages = [
   "gleam",
   "swift",
   "zig",
-  # wasm is excluded from the HTTP-handler fixture e2e suite: the wasm binding
-  # exports validateJsonSchema + problemDetails (schema/RFC-7807 surface), not the
-  # handle_request HTTP adapter. Add wasm-specific fixtures to re-enable.
+  # wasm is included; alef auto-skips HTTP-shaped fixtures (those with
+  # `mock_response` or `http.expected_response`) for the wasm target because
+  # the wasm binding exports validateJsonSchema + problemDetails only, not the
+  # handle_request HTTP adapter. Non-HTTP fixtures still generate runnable tests.
+  "wasm",
 ]
 
 [e2e.call]
