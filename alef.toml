@@ -12,11 +12,10 @@ languages = [
   "kotlin",
   "dart",
   "gleam",
+  "swift",
+  "zig",
+  "wasm",
 ]
-# WASM removed for now: spikard-http depends on axum/tokio/mio which don't
-# compile to wasm32-unknown-unknown. Reinstate once spikard exposes a
-# wasm-safe DTO/validation crate (e.g. spikard-validation), or once alef can
-# scope wasm-crate deps to a subset of source crates.
 
 [crate]
 name = "spikard"
@@ -268,12 +267,15 @@ ruby = "crates/spikard-rb/src/"
 php = "crates/spikard-php/src/"
 elixir = "crates/spikard-elixir/src/"
 ffi = "crates/spikard-ffi/src/"
+wasm = "crates/spikard-wasm/src/"
 go = "packages/go/"
 java = "packages/java/src/main/java/"
 csharp = "packages/csharp/src/"
 kotlin = "packages/kotlin/src/main/kotlin/dev/spikard/"
 dart = "packages/dart/lib/src/"
 gleam = "packages/gleam/src/"
+swift = "packages/swift/Sources/Spikard/"
+zig = "packages/zig/src/"
 
 [python]
 module_name = "_spikard"
@@ -340,6 +342,16 @@ style = "frb"
 app_name = "spikard"
 nif_module = "Elixir.Spikard.Native"
 
+[swift]
+module_name = "Spikard"
+package_name = "Spikard"
+
+[zig]
+module_name = "spikard"
+
+[wasm]
+package_name = "@spikard/wasm"
+
 [update.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
 update = "cd packages/kotlin && gradle dependencyUpdates --no-daemon"
@@ -355,6 +367,16 @@ precondition = "command -v gleam >/dev/null 2>&1"
 update = "cd packages/gleam && gleam update"
 upgrade = "cd packages/gleam && gleam update"
 
+[update.swift]
+precondition = "command -v swift >/dev/null 2>&1"
+update = "cd packages/swift && swift package update"
+upgrade = "cd packages/swift && swift package update"
+
+[update.zig]
+precondition = "command -v zig >/dev/null 2>&1"
+update = "cd packages/zig && zig build --fetch"
+upgrade = "cd packages/zig && zig build --fetch"
+
 [dto]
 python = "dataclass"
 python_output = "typed-dict"
@@ -368,6 +390,8 @@ csharp = "record"
 kotlin = "data-class"
 dart = "class"
 gleam = "type"
+swift = "struct"
+zig = "struct"
 
 [scaffold]
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -455,6 +479,21 @@ precondition = "command -v gleam >/dev/null 2>&1"
 format = "cd packages/gleam && gleam format"
 check = "cd packages/gleam && gleam format --check"
 
+[lint.swift]
+precondition = "command -v swift >/dev/null 2>&1"
+format = "swift format --in-place --recursive packages/swift/Sources"
+check = "swift format lint --recursive packages/swift/Sources"
+
+[lint.zig]
+precondition = "command -v zig >/dev/null 2>&1"
+format = "cd packages/zig && zig fmt src"
+check = "cd packages/zig && zig fmt --check src"
+
+[lint.wasm]
+precondition = "test -d crates/spikard-wasm/typescript"
+format = "npx oxfmt crates/spikard-wasm/typescript"
+check = "npx oxlint crates/spikard-wasm/typescript"
+
 [lint.ffi]
 precondition = "test -d crates/spikard-ffi/include"
 check = "find crates/spikard-ffi/include -name '*.h' | xargs clang-format --dry-run --Werror"
@@ -517,6 +556,22 @@ before = "cd packages/elixir && mix deps.get && mix compile"
 command = "cd packages/gleam && gleam test"
 e2e = "cd e2e/gleam && gleam test"
 
+[test.swift]
+precondition = "command -v swift >/dev/null 2>&1"
+before = "cargo build --release -p spikard-ffi"
+command = "cd packages/swift && swift test"
+e2e = "cd e2e/swift && swift test"
+
+[test.zig]
+precondition = "command -v zig >/dev/null 2>&1"
+command = "cd packages/zig && zig build test"
+e2e = "cd e2e/zig && zig build test"
+
+[test.wasm]
+precondition = "command -v wasm-pack >/dev/null 2>&1"
+before = "wasm-pack build crates/spikard-wasm --release --target bundler && cd e2e/wasm && npm install"
+e2e = "cd e2e/wasm && npm test"
+
 [e2e]
 fixtures = "fixtures"
 output = "e2e"
@@ -532,6 +587,9 @@ languages = [
   "kotlin",
   "dart",
   "gleam",
+  "swift",
+  "zig",
+  "wasm",
 ]
 
 [e2e.call]
@@ -585,6 +643,18 @@ path = "../../packages/dart"
 name = "spikard"
 path = "../../packages/gleam"
 
+[e2e.packages.swift]
+name = "Spikard"
+path = "../../packages/swift"
+
+[e2e.packages.zig]
+name = "spikard"
+path = "../../packages/zig"
+
+[e2e.packages.wasm]
+name = "@spikard/wasm"
+path = "../../crates/spikard-wasm"
+
 [e2e.registry]
 output = "test_apps"
 github_repo = "https://github.com/Goldziher/spikard"
@@ -624,3 +694,12 @@ name = "spikard"
 
 [e2e.registry.packages.gleam]
 name = "spikard"
+
+[e2e.registry.packages.swift]
+name = "Spikard"
+
+[e2e.registry.packages.zig]
+name = "spikard"
+
+[e2e.registry.packages.wasm]
+name = "@spikard/wasm"

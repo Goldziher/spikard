@@ -289,6 +289,36 @@ repos:
         files: ^packages/gleam/.*\.gleam$
         pass_filenames: false
 
+      # Swift
+      - id: swift-format
+        name: Swift formatting (swift format)
+        entry: bash -c 'command -v swift >/dev/null 2>&1 && swift format --in-place --recursive packages/swift/Sources || echo "skip - swift missing"'
+        language: system
+        files: ^packages/swift/.*\.swift$
+        pass_filenames: false
+
+      - id: swift-lint
+        name: Swift linting (swift format lint)
+        entry: bash -c 'command -v swift >/dev/null 2>&1 && swift format lint --recursive packages/swift/Sources || echo "skip - swift missing"'
+        language: system
+        files: ^packages/swift/.*\.swift$
+        pass_filenames: false
+
+      # Zig
+      - id: zig-format
+        name: Zig formatting (zig fmt)
+        entry: bash -c 'command -v zig >/dev/null 2>&1 && cd packages/zig && zig fmt src || echo "skip - zig missing"'
+        language: system
+        files: ^packages/zig/.*\.zig$
+        pass_filenames: false
+
+      - id: zig-lint
+        name: Zig check (zig fmt --check)
+        entry: bash -c 'command -v zig >/dev/null 2>&1 && cd packages/zig && zig fmt --check src || echo "skip - zig missing"'
+        language: system
+        files: ^packages/zig/.*\.zig$
+        pass_filenames: false
+
   # Alef: verify generated bindings are up to date and sync package versions
   - repo: https://github.com/kreuzberg-dev/alef
     rev: v0.11.18
