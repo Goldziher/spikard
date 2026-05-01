@@ -421,6 +421,20 @@ char *spikard_json_rpc_method_info_method_name(const SPIKARDJsonRpcMethodInfo *p
 char *spikard_json_rpc_method_info_description(const SPIKARDJsonRpcMethodInfo *ptr);
 
 /**
+ * Get the `params_schema` field from a `JsonRpcMethodInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_json_rpc_method_info_params_schema(const SPIKARDJsonRpcMethodInfo *ptr);
+
+/**
+ * Get the `result_schema` field from a `JsonRpcMethodInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_json_rpc_method_info_result_schema(const SPIKARDJsonRpcMethodInfo *ptr);
+
+/**
  * Get the `deprecated` field from a `JsonRpcMethodInfo`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -1346,6 +1360,13 @@ char *spikard_response_to_json(const SPIKARDResponse *ptr);
 void spikard_response_free(SPIKARDResponse *ptr);
 
 /**
+ * Get the `content` field from a `Response`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_response_content(const SPIKARDResponse *ptr);
+
+/**
  * Get the `status_code` field from a `Response`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -1421,6 +1442,13 @@ void spikard_sse_event_free(SPIKARDSseEvent *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_sse_event_event_type(const SPIKARDSseEvent *ptr);
+
+/**
+ * Get the `data` field from a `SseEvent`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_sse_event_data(const SPIKARDSseEvent *ptr);
 
 /**
  * Get the `id` field from a `SseEvent`.
