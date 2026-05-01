@@ -1075,6 +1075,25 @@ pub fn build_router_with_handlers_and_config_and_grpc(
         tracing::info!("OpenAPI documentation enabled at {}", openapi_json_path);
     }
 
+    if let Some(ref asyncapi_config) = config.asyncapi
+        && asyncapi_config.enabled
+    {
+        use crate::asyncapi::{AsyncApiState, handle_asyncapi_json, handle_asyncapi_parse, handle_asyncapi_validate};
+
+        let registered_spec = asyncapi_config
+            .spec
+            .as_ref()
+            .map(|s| Arc::new(s.clone()));
+        let state = AsyncApiState { registered_spec };
+
+        app = app
+            .route("/asyncapi/parse", post(handle_asyncapi_parse))
+            .route("/asyncapi/validate", post(handle_asyncapi_validate))
+            .route("/asyncapi.json", get(handle_asyncapi_json).with_state(state));
+
+        tracing::info!("AsyncAPI endpoints enabled: POST /asyncapi/parse, POST /asyncapi/validate, GET /asyncapi.json");
+    }
+
     if let Some(ref jsonrpc_config) = config.jsonrpc
         && jsonrpc_config.enabled
         && let Some(registry) = jsonrpc_registry

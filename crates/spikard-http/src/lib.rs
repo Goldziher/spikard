@@ -9,6 +9,7 @@
 //! Pure Rust HTTP server with language-agnostic handler trait.
 //! Language bindings (Python, Node, WASM) implement the Handler trait.
 
+pub mod asyncapi;
 pub mod auth;
 // wasm: BackgroundRuntime uses tokio::spawn + JoinSet — not available on wasm32
 #[cfg(not(target_arch = "wasm32"))]
@@ -50,6 +51,10 @@ use tokio::runtime::Runtime;
 #[cfg(test)]
 mod handler_trait_tests;
 
+pub use asyncapi::{
+    AsyncApiConfig, AsyncApiState, ParseResult, ParsedChannel, ParsedMessage, ParsedOperation,
+    ValidateRequest, ValidationResponse, parse_asyncapi_value, validate_message,
+};
 pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
 #[cfg(not(target_arch = "wasm32"))]
 pub use background::{
@@ -173,6 +178,8 @@ pub struct ServerConfig {
     pub graceful_shutdown: bool,
     /// Graceful shutdown timeout (seconds)
     pub shutdown_timeout: u64,
+    /// AsyncAPI HTTP endpoint configuration
+    pub asyncapi: Option<crate::asyncapi::AsyncApiConfig>,
     /// OpenAPI documentation configuration
     pub openapi: Option<crate::openapi::OpenApiConfig>,
     /// JSON-RPC configuration
@@ -216,6 +223,7 @@ impl Default for ServerConfig {
             static_files: Vec::new(),
             graceful_shutdown: true,
             shutdown_timeout: 30,
+            asyncapi: None,
             openapi: None,
             jsonrpc: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -378,6 +386,22 @@ impl ServerConfigBuilder {
     /// Set graceful shutdown timeout in seconds
     pub fn shutdown_timeout(mut self, timeout: u64) -> Self {
         self.config.shutdown_timeout = timeout;
+        self
+    }
+
+    /// Set AsyncAPI HTTP endpoint configuration
+    pub fn asyncapi(mut self, asyncapi: Option<crate::asyncapi::AsyncApiConfig>) -> Self {
+        self.config.asyncapi = asyncapi;
+        self
+    }
+
+    /// Register an AsyncAPI spec and enable the /asyncapi.json endpoint
+    pub fn with_asyncapi_spec(mut self, spec: serde_json::Value) -> Self {
+        let config = crate::asyncapi::AsyncApiConfig {
+            enabled: true,
+            spec: Some(spec),
+        };
+        self.config.asyncapi = Some(config);
         self
     }
 
