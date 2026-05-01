@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 import PackageDescription
 
 // NOTE: Run `cargo build -p spikard-swift` before `swift build`.
@@ -27,11 +27,7 @@ let package = Package(
     .target(
       name: "RustBridge",
       dependencies: ["RustBridgeC"],
-      path: "Sources/RustBridge",
-      linkerSettings: [
-        .linkedLibrary("spikard_swift"),
-        .unsafeFlags(["-L../../target/debug"]),
-      ]
+      path: "Sources/RustBridge"
     ),
     .target(name: "Spikard", dependencies: ["RustBridge"], path: "Sources/Spikard"),
     .testTarget(name: "SpikardTests", dependencies: ["Spikard"], path: "Tests/SpikardTests"),
