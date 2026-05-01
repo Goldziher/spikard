@@ -9,5 +9,5 @@ import RustBridge
 /// Dispatch an HTTP request. Stub implementation that returns an empty response.
 /// Replace with a real implementation once the swift-bridge layer is built.
 public func handleRequest() async throws -> Response {
-    return try await RustBridge.handleRequest()
+  return try await RustBridge.handleRequest()
 }

@@ -6,11 +6,17 @@ defmodule Spikard.MixProject do
       app: :spikard,
       version: "0.14.0",
       elixir: "~> 1.14",
-      rustler_crates: [spikard_rustler: [mode: :release]],
+      elixirc_paths: elixirc_paths(Mix.env()),
+      rustler_crates: [spikard_nif: [mode: :release]],
       description: "Rust-centric multi-language HTTP framework with polyglot bindings",
       package: package(),
       deps: deps()
     ]
+  end
+
+  defp elixirc_paths(_env) do
+    nif_src = Path.expand("../../crates/spikard-elixir/src", __DIR__)
+    ["lib", nif_src]
   end
 
   defp package do

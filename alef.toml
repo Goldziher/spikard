@@ -1,4 +1,4 @@
-version = "0.12.13"
+version = "0.12.16"
 languages = [
   "python",
   "node",
@@ -311,6 +311,10 @@ features = ["di"]
 [elixir]
 app_name = "spikard"
 features = ["di"]
+# UploadFile has Bytes/Cursor<Bytes> fields in the core type that don't have a
+# clean conversion from the binding's Vec<u8>/String layout — alef-codegen can't
+# auto-generate the From impl, so exclude this type from the elixir NIF.
+exclude_types = ["UploadFile"]
 
 [ffi]
 prefix = "spikard"
@@ -391,7 +395,13 @@ exclude_types = [
 [wasm.extra_dependencies]
 # Direct deps needed by hand-written src/dispatch.rs (the wasm-bindgen entry point
 # that drives axum::Router as a tower::Service).
-axum = { version = "0.8", default-features = false, features = ["http1", "json", "matched-path", "query", "tower-log"] }
+axum = { version = "0.8", default-features = false, features = [
+  "http1",
+  "json",
+  "matched-path",
+  "query",
+  "tower-log",
+] }
 http-body-util = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_bytes = "0.11"

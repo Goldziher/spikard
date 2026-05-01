@@ -35,10 +35,6 @@
 		"id": "06_cors_preflight_method_not_allowed",
 		"description": "CORS preflight request for non-allowed method should be rejected",
 		"category": "cors",
-		"skip": {
-			"languages": ["rust"],
-			"reason": "CORS preflight tests require CorsConfig middleware; not yet supported in Rust e2e generator"
-		},
 		"http": {
 			"handler": {
 				"route": "/api/data",
@@ -58,6 +54,13 @@
 							"optional": true
 						}
 					}
+				},
+				"middleware": {
+					"cors": {
+						"allow_origins": ["https://example.com"],
+						"allow_methods": ["GET"],
+						"allow_headers": ["Content-Type"]
+					}
 				}
 			},
 			"request": {
@@ -73,16 +76,16 @@
 				"status_code": 403
 			}
 		},
-		"tags": ["cors", "preflight", "method", "validation", "error"]
+		"tags": ["cors", "preflight", "method", "validation", "error"],
+		"skip": {
+			"languages": ["rust"],
+			"reason": "tower-http CorsLayer returns 200 (with no CORS headers) for invalid preflight rather than 403; browser enforces rejection. Not testable server-side."
+		}
 	},
 	{
 		"id": "07_cors_preflight_header_not_allowed",
 		"description": "CORS preflight request with non-allowed header should be rejected",
 		"category": "cors",
-		"skip": {
-			"languages": ["rust"],
-			"reason": "CORS preflight tests require CorsConfig middleware; not yet supported in Rust e2e generator"
-		},
 		"http": {
 			"handler": {
 				"route": "/api/data",
@@ -102,6 +105,13 @@
 							"optional": true
 						}
 					}
+				},
+				"middleware": {
+					"cors": {
+						"allow_origins": ["https://example.com"],
+						"allow_methods": ["POST"],
+						"allow_headers": ["Content-Type"]
+					}
 				}
 			},
 			"request": {
@@ -117,16 +127,16 @@
 				"status_code": 403
 			}
 		},
-		"tags": ["cors", "preflight", "headers", "validation", "error"]
+		"tags": ["cors", "preflight", "headers", "validation", "error"],
+		"skip": {
+			"languages": ["rust"],
+			"reason": "tower-http CorsLayer returns 200 (with no CORS headers) for invalid preflight rather than 403; browser enforces rejection. Not testable server-side."
+		}
 	},
 	{
 		"id": "08_cors_max_age",
 		"description": "CORS preflight response should include Access-Control-Max-Age",
 		"category": "cors",
-		"skip": {
-			"languages": ["rust"],
-			"reason": "CORS preflight tests require CorsConfig middleware; not yet supported in Rust e2e generator"
-		},
 		"http": {
 			"handler": {
 				"route": "/api/data",
@@ -145,6 +155,14 @@
 							"type": "string",
 							"optional": true
 						}
+					}
+				},
+				"middleware": {
+					"cors": {
+						"allow_origins": ["https://example.com"],
+						"allow_methods": ["POST"],
+						"allow_headers": ["Content-Type"],
+						"max_age": 3600
 					}
 				}
 			},
@@ -346,10 +364,6 @@
 		"id": "cors_custom_allowed_headers_x_custom",
 		"description": "Tests CORS allows custom X-Custom-Header in requests",
 		"category": "cors",
-		"skip": {
-			"languages": ["rust"],
-			"reason": "CORS preflight tests require CorsConfig middleware; not yet supported in Rust e2e generator"
-		},
 		"http": {
 			"handler": {
 				"route": "/api/data",
@@ -364,6 +378,13 @@
 							"type": "string",
 							"optional": true
 						}
+					}
+				},
+				"middleware": {
+					"cors": {
+						"allow_origins": ["https://example.com"],
+						"allow_methods": ["POST"],
+						"allow_headers": ["X-Custom-Header"]
 					}
 				}
 			},

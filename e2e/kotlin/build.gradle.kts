@@ -23,11 +23,12 @@ repositories {
 }
 
 dependencies {
-    testImplementation(files("../../packages/kotlin/build/libs/spikard-0.1.0.jar"))
+    testImplementation(files("../../packages/kotlin/build/libs/spikard-0.14.0.jar"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.3")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:6.0.3")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2")
+    testImplementation(kotlin("test"))
 }
 
 tasks.test {

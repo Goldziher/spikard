@@ -14,7 +14,13 @@ members = [
     "crates/spikard-wasm",
     "tools/snippet-runner",
 ]
-exclude = ["e2e/*", "examples/*", "packages/dart/rust", "test_apps/*"]
+exclude = [
+    "e2e/*",
+    "examples/*",
+    "packages/dart/rust",
+    "packages/elixir/native/spikard_nif",
+    "test_apps/*",
+]
 
 [workspace.package]
 version = "0.14.0"

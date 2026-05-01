@@ -41,10 +41,6 @@
 		"id": "static_server_returns_index_html_for_directory",
 		"description": "When index files are enabled the server should serve index.html when the directory root is requested.",
 		"category": "static_files",
-		"skip": {
-			"languages": ["rust"],
-			"reason": "Static file directory index tests require StaticFilesConfig middleware; route /app does not match request /app/"
-		},
 		"http": {
 			"handler": {
 				"route": "/app",
