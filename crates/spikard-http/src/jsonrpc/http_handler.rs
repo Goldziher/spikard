@@ -40,6 +40,8 @@
 
 use super::router::{JsonRpcRequestOrBatch, JsonRpcRouter};
 use crate::handler_trait::RequestData;
+// wasm: crate::server is gated not(target_arch = "wasm32"); use a local header extractor instead
+#[cfg(not(target_arch = "wasm32"))]
 use crate::server::request_extraction::extract_headers;
 use axum::{
     body::Body,
@@ -49,6 +51,21 @@ use axum::{
 };
 use std::collections::HashMap;
 use std::sync::Arc;
+
+/// Extract HTTP headers into a plain HashMap (wasm-only local copy).
+///
+/// On native targets this delegates to `crate::server::request_extraction::extract_headers`.
+/// On wasm32, `mod server` is gated out, so we provide a local implementation.
+#[cfg(target_arch = "wasm32")]
+fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, String> {
+    let mut map = HashMap::with_capacity(headers.len());
+    for (name, value) in headers.iter() {
+        if let Ok(val_str) = value.to_str() {
+            map.insert(name.as_str().to_string(), val_str.to_string());
+        }
+    }
+    map
+}
 
 /// State passed to the JSON-RPC HTTP handler
 ///

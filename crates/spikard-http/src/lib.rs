@@ -1,17 +1,25 @@
 #![allow(clippy::pedantic, clippy::nursery)]
 #![cfg_attr(test, allow(clippy::all))]
+// On wasm32 the server/background/grpc/sse/websocket modules are gated out, leaving
+// some helper functions used only by native code paths. Suppress dead-code warnings
+// crate-wide on wasm — those helpers ARE used on native builds.
+#![cfg_attr(target_arch = "wasm32", allow(dead_code))]
 //! Spikard HTTP Server
 //!
 //! Pure Rust HTTP server with language-agnostic handler trait.
 //! Language bindings (Python, Node, WASM) implement the Handler trait.
 
 pub mod auth;
+// wasm: BackgroundRuntime uses tokio::spawn + JoinSet — not available on wasm32
+#[cfg(not(target_arch = "wasm32"))]
 pub mod background;
 pub mod bindings;
 pub(crate) mod body_metadata;
 pub mod cors;
 #[cfg(feature = "di")]
 pub mod di_handler;
+// wasm: tonic server transport pulls hyper/mio; gate the whole module
+#[cfg(not(target_arch = "wasm32"))]
 pub mod grpc;
 pub mod handler_response;
 pub mod handler_trait;
@@ -21,18 +29,29 @@ pub(crate) mod middleware;
 pub mod openapi;
 pub(crate) mod query_parser;
 pub mod response;
+// wasm: axum::serve + tokio::net::TcpListener are not available on wasm32
+#[cfg(not(target_arch = "wasm32"))]
 pub mod server;
+// wasm: SSE sse_handler spawns a tokio task with time keepalive
+#[cfg(not(target_arch = "wasm32"))]
 pub mod sse;
+// wasm: axum-test spins a real server; axum::extract::ws needs tokio_tungstenite
+#[cfg(not(target_arch = "wasm32"))]
 pub mod testing;
+// wasm: axum::extract::ws depends on tokio_tungstenite which pulls mio
+#[cfg(not(target_arch = "wasm32"))]
 pub mod websocket;
 
 use serde::{Deserialize, Serialize};
+// wasm: tokio::runtime::Runtime requires the full tokio rt feature set
+#[cfg(not(target_arch = "wasm32"))]
 use tokio::runtime::Runtime;
 
 #[cfg(test)]
 mod handler_trait_tests;
 
 pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
+#[cfg(not(target_arch = "wasm32"))]
 pub use background::{
     BackgroundHandle, BackgroundJobError, BackgroundJobMetadata, BackgroundRuntime, BackgroundSpawnError,
     BackgroundTaskConfig,
@@ -40,6 +59,7 @@ pub use background::{
 pub use body_metadata::ResponseBodySize;
 #[cfg(feature = "di")]
 pub use di_handler::DependencyInjectingHandler;
+#[cfg(not(target_arch = "wasm32"))]
 pub use grpc::{
     GrpcConfig, GrpcHandler, GrpcHandlerResult, GrpcRegistry, GrpcRequestData, GrpcResponseData, MessageStream,
     StreamingRequest, StreamingResponse,
@@ -50,6 +70,7 @@ pub use jsonrpc::JsonRpcConfig;
 pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
 pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};
 pub use response::Response;
+#[cfg(not(target_arch = "wasm32"))]
 pub use server::Server;
 pub use spikard_core::errors::StructuredError;
 pub use spikard_core::parameters::ParameterSource;
@@ -58,8 +79,11 @@ pub use spikard_core::{
     CompressionConfig, CorsConfig, Method, ParameterValidator, ProblemDetails, RateLimitConfig, Route, RouteHandler,
     RouteMetadata, Router, SchemaRegistry, SchemaValidator, ValidationError, ValidationErrorDetail,
 };
+#[cfg(not(target_arch = "wasm32"))]
 pub use sse::{SseEvent, SseEventProducer, SseState, sse_handler};
+#[cfg(not(target_arch = "wasm32"))]
 pub use testing::{ResponseSnapshot, SnapshotError, snapshot_response};
+#[cfg(not(target_arch = "wasm32"))]
 pub use websocket::{WebSocketHandler, WebSocketState, websocket_handler};
 
 /// Reexport from spikard_core for convenience
@@ -122,6 +146,7 @@ pub struct ServerConfig {
     /// Port to bind to
     pub port: u16,
     /// Number of Tokio runtime worker threads used by binding-managed server runtimes
+    // wasm: field kept but only meaningful on native; wasm runtimes ignore it
     pub workers: usize,
 
     /// Enable request ID generation and propagation
@@ -133,14 +158,18 @@ pub struct ServerConfig {
     /// Enable compression middleware
     pub compression: Option<CompressionConfig>,
     /// Enable rate limiting
+    // wasm: RateLimitConfig is defined in spikard-core (pure data), so the field itself is
+    // wasm-compatible; tower_governor (the consumer) is native-only via target.cfg
     pub rate_limit: Option<RateLimitConfig>,
     /// JWT authentication configuration
     pub jwt_auth: Option<JwtConfig>,
     /// API Key authentication configuration
     pub api_key_auth: Option<ApiKeyConfig>,
     /// Static file serving configuration
+    // wasm: StaticFilesConfig is pure data; ServeDir (the consumer) is native-only
     pub static_files: Vec<StaticFilesConfig>,
     /// Enable graceful shutdown on SIGTERM/SIGINT
+    // wasm: field kept for API uniformity; graceful shutdown is a no-op on wasm
     pub graceful_shutdown: bool,
     /// Graceful shutdown timeout (seconds)
     pub shutdown_timeout: u64,
@@ -149,14 +178,20 @@ pub struct ServerConfig {
     /// JSON-RPC configuration
     pub jsonrpc: Option<crate::jsonrpc::JsonRpcConfig>,
     /// gRPC configuration
+    // wasm: GrpcConfig / mod grpc are native-only (tonic transport pulls mio)
+    #[cfg(not(target_arch = "wasm32"))]
     pub grpc: Option<crate::grpc::GrpcConfig>,
     /// Lifecycle hooks for request/response processing
     // Not serializable: contains function pointers/closures
     #[serde(skip)]
     pub lifecycle_hooks: Option<std::sync::Arc<LifecycleHooks>>,
     /// Background task executor configuration
+    // wasm: BackgroundTaskConfig is pure data (Serialize/Deserialize); the runtime is native-only
+    #[cfg(not(target_arch = "wasm32"))]
     pub background_tasks: BackgroundTaskConfig,
     /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
+    // wasm: tower-http TraceLayer is native-only (tower-http dep is native-only)
+    #[cfg(not(target_arch = "wasm32"))]
     pub enable_http_trace: bool,
     /// Dependency injection container (requires 'di' feature)
     // Not serializable: contains runtime dependency injection state
@@ -183,9 +218,12 @@ impl Default for ServerConfig {
             shutdown_timeout: 30,
             openapi: None,
             jsonrpc: None,
+            #[cfg(not(target_arch = "wasm32"))]
             grpc: None,
             lifecycle_hooks: None,
+            #[cfg(not(target_arch = "wasm32"))]
             background_tasks: BackgroundTaskConfig::default(),
+            #[cfg(not(target_arch = "wasm32"))]
             enable_http_trace: false,
             #[cfg(feature = "di")]
             di_container: None,
@@ -277,6 +315,7 @@ impl ServerConfigBuilder {
     }
 
     /// Enable or disable per-request HTTP tracing (tower-http `TraceLayer`)
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn enable_http_trace(mut self, enable: bool) -> Self {
         self.config.enable_http_trace = enable;
         self
@@ -355,6 +394,7 @@ impl ServerConfigBuilder {
     }
 
     /// Set gRPC configuration
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn grpc(mut self, grpc: Option<crate::grpc::GrpcConfig>) -> Self {
         self.config.grpc = grpc;
         self
@@ -367,6 +407,7 @@ impl ServerConfigBuilder {
     }
 
     /// Set background task executor configuration
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn background_tasks(mut self, config: BackgroundTaskConfig) -> Self {
         self.config.background_tasks = config;
         self
@@ -555,6 +596,9 @@ impl ServerConfigBuilder {
 ///
 /// `workers == 1` uses a current-thread runtime to minimize scheduling overhead.
 /// `workers > 1` uses a multi-thread runtime with an explicit worker thread count.
+///
+/// Not available on `wasm32-unknown-unknown` — the host runtime drives execution there.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn build_server_runtime(config: &ServerConfig) -> std::io::Result<Runtime> {
     let mut builder = if config.workers <= 1 {
         tokio::runtime::Builder::new_current_thread()

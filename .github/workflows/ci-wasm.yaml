@@ -72,6 +72,16 @@ jobs:
       - name: Check (wasm32-unknown-unknown, no default features)
         run: cargo check -p spikard-wasm --no-default-features --target wasm32-unknown-unknown
 
+      - name: Check spikard-http wasm feature (wasm32-unknown-unknown)
+        run: cargo check --target wasm32-unknown-unknown -p spikard-http --features wasm,di
+
+      - name: Verify wasm dep tree has no mio/socket2
+        run: |
+          if cargo tree --target wasm32-unknown-unknown -p spikard-http --features wasm,di --prefix none 2>&1 | grep -E "^(mio|socket2)( |$)"; then
+            echo "ERROR: mio or socket2 leaked into wasm dep tree"
+            exit 1
+          fi
+
       - name: Clippy
         run: cargo clippy -p spikard-wasm -- -D warnings
 

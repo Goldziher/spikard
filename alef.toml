@@ -1,4 +1,4 @@
-version = "0.12.7"
+version = "0.12.10"
 languages = [
   "python",
   "node",
@@ -351,45 +351,56 @@ module_name = "spikard"
 
 [wasm]
 package_name = "@spikard/wasm"
-# The main `spikard` facade crate is not wasm-safe — it pulls `spikard-http`,
-# which transitively requires `mio` (no wasm32 support). Point the wasm binding
-# at `spikard-core` instead, which is the wasm-safe schema validation surface.
-core_crate_override = "spikard-core"
+# After spikard-http gained a `wasm` feature that gates out server bootstrap
+# (axum::serve, tonic, tokio::net) the wasm binding can use the full HTTP
+# surface — Handler, Router, RequestData, Response, auth, validation, etc.
+# Override to spikard-http (not the `spikard` facade, which pulls graphql/tonic).
+core_crate_override = "spikard-http"
+# All three internal crates are excluded from extra_dependencies — spikard-http
+# is injected via core_crate_override (with the wasm feature), and it pulls
+# spikard-core transitively. spikard-graphql is not wasm-safe.
 exclude_extra_dependencies = ["spikard-core", "spikard-http", "spikard-graphql"]
-features = ["di"]
-# Exclude HTTP-server-only types (live in spikard-http, not spikard-core).
-# The wasm-safe surface is schema validation + RFC 7807 problem details only.
+features = ["di", "wasm"]
+# spikard-http re-exports types from spikard-core; the spikard facade re-exports
+# everything. Remap so generated paths reference spikard_http (the only crate in
+# the wasm binding's dep tree).
+source_crate_remaps = ["spikard-core", "spikard"]
+# Hand-written wasm-bindgen glue (e.g. handle_request entry point) lives in
+# crates/spikard-wasm/src/dispatch.rs; alef adds `pub mod dispatch; pub use
+# dispatch::*;` to the generated lib.rs.
+custom_rust_modules = ["dispatch"]
+# Only types that fundamentally cannot work on wasm32 stay excluded.
 exclude_types = [
-  "ApiKeyConfig",
   "BackgroundJobMetadata",
   "BackgroundTaskConfig",
-  "ContactInfo",
   "GrpcConfig",
-  "JsonRpcConfig",
-  "JsonRpcMethodInfo",
-  "JwtConfig",
-  "LicenseInfo",
-  "OpenApiConfig",
-  "Response",
-  "SecuritySchemeInfo",
-  "ServerConfig",
-  "ServerInfo",
   "SseEvent",
+  "SseEventProducer",
   "StaticFilesConfig",
+  "WebSocketHandler",
+  # UploadFile lives in the spikard facade (crates/spikard/src/upload.rs); the
+  # wasm binding depends on spikard-http directly, which doesn't re-export it.
   "UploadFile",
+  # spikard-graphql is not in the wasm dep tree
   "GraphQLError",
   "GraphQLRouteConfig",
   "QueryMutationConfig",
   "QueryOnlyConfig",
-  "CompressionConfig",
-  "CorsConfig",
-  "RateLimitConfig",
-  "Method",
-  "SchemaConfig",
-  "FullSchemaConfig",
-  "GraphQLError",
-  "SchemaError",
 ]
+
+[wasm.extra_dependencies]
+# Direct deps needed by hand-written src/dispatch.rs (the wasm-bindgen entry point
+# that drives axum::Router as a tower::Service).
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "matched-path", "query", "tower-log"] }
+http-body-util = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_bytes = "0.11"
+tower = "0.5"
+
+[wasm.exclude_fields]
+# Fields gated `#[cfg(not(target_arch = "wasm32"))]` in spikard-http's
+# ServerConfig — they don't exist on wasm32 so the binding must omit them.
+ServerConfig = ["grpc", "background_tasks", "enable_http_trace"]
 
 [update.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
