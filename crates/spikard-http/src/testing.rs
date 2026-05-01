@@ -296,9 +296,27 @@ impl WebSocketConnection {
         WebSocketMessage::from_ws_message(msg)
     }
 
-    /// Close the WebSocket connection.
-    pub async fn close(self) {
-        self.inner.close().await;
+    /// Close the WebSocket connection with code 1000 (Normal Closure) and no reason.
+    pub async fn close(self) -> Result<(), String> {
+        self.close_with(1000, None).await
+    }
+
+    /// Close the WebSocket connection with a specific RFC 6455 close code and optional reason.
+    ///
+    /// Common codes: 1000 Normal Closure, 1001 Going Away, 1002 Protocol Error.
+    pub async fn close_with(mut self, code: u16, reason: Option<String>) -> Result<(), String> {
+        use axum_test::WsMessage;
+        use tungstenite::protocol::frame::coding::CloseCode;
+        use tungstenite::protocol::frame::CloseFrame;
+
+        let frame = CloseFrame {
+            code: CloseCode::from(code),
+            reason: reason.unwrap_or_default().into(),
+        };
+        self.inner
+            .send_message(WsMessage::Close(Some(frame)))
+            .await;
+        Ok(())
     }
 }
 
@@ -309,8 +327,16 @@ pub enum WebSocketMessage {
     Text(String),
     /// A binary message.
     Binary(Vec<u8>),
-    /// A close message.
-    Close(Option<String>),
+    /// A close message with a numeric close code (RFC 6455) and optional reason text.
+    ///
+    /// Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received,
+    /// 1006 Abnormal Closure.
+    Close {
+        /// RFC 6455 close code.
+        code: u16,
+        /// Optional human-readable reason string.
+        reason: Option<String>,
+    },
     /// A ping message.
     Ping(Vec<u8>),
     /// A pong message.
@@ -328,10 +354,16 @@ impl WebSocketMessage {
         match msg {
             WsMessage::Text(text) => WebSocketMessage::Text(text.to_string()),
             WsMessage::Binary(data) => WebSocketMessage::Binary(data.to_vec()),
-            WsMessage::Close(frame) => WebSocketMessage::Close(frame.map(|f| f.reason.to_string())),
+            WsMessage::Close(Some(frame)) => {
+                let code: u16 = frame.code.into();
+                let reason_str = frame.reason.to_string();
+                let reason = if reason_str.is_empty() { None } else { Some(reason_str) };
+                WebSocketMessage::Close { code, reason }
+            }
+            // RFC 6455 §7.1.5: no close frame means no status code — use 1005
+            WsMessage::Close(None) | WsMessage::Frame(_) => WebSocketMessage::Close { code: 1005, reason: None },
             WsMessage::Ping(data) => WebSocketMessage::Ping(data.to_vec()),
             WsMessage::Pong(data) => WebSocketMessage::Pong(data.to_vec()),
-            WsMessage::Frame(_) => WebSocketMessage::Close(None),
         }
     }
 
@@ -363,7 +395,23 @@ impl WebSocketMessage {
 
     /// Check if this is a close message.
     pub fn is_close(&self) -> bool {
-        matches!(self, WebSocketMessage::Close(_))
+        matches!(self, WebSocketMessage::Close { .. })
+    }
+
+    /// Return the close code if this is a close message.
+    pub fn close_code(&self) -> Option<u16> {
+        match self {
+            WebSocketMessage::Close { code, .. } => Some(*code),
+            _ => None,
+        }
+    }
+
+    /// Return the close reason if this is a close message with a reason.
+    pub fn close_reason(&self) -> Option<&str> {
+        match self {
+            WebSocketMessage::Close { reason, .. } => reason.as_deref(),
+            _ => None,
+        }
     }
 }
 

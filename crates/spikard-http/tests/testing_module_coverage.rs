@@ -129,7 +129,7 @@ async fn websocket_testing_wrappers_roundtrip_and_message_helpers() {
     let msg = ws.receive_message().await;
     assert!(matches!(msg, WebSocketMessage::Pong(_)));
 
-    ws.close().await;
+    ws.close().await.expect("close failed");
 }
 
 #[tokio::test]

@@ -418,9 +418,11 @@ async fn handle_socket<H: WebSocketHandler>(mut socket: WebSocket, state: WebSoc
                 debug!("Received pong");
                 trace_ws("recv:pong");
             }
-            Ok(Message::Close(_)) => {
-                info!("Client closed connection");
-                trace_ws("recv:close");
+            Ok(Message::Close(close_frame)) => {
+                let code: u16 = close_frame.as_ref().map(|f| f.code).unwrap_or(1005);
+                let reason = close_frame.as_ref().map(|f| f.reason.as_str()).unwrap_or("");
+                info!("Client closed connection: code={} reason={:?}", code, reason);
+                trace_ws(&format!("recv:close code={} reason={:?}", code, reason));
                 break;
             }
             Err(e) => {

@@ -442,7 +442,7 @@ impl TestClient {
             }
         }
 
-        websocket.close().await;
+        let _ = websocket.close().await;
 
         if event.is_none() && errors.is_empty() && !complete_received {
             return Err(SnapshotError::Decompression(
@@ -536,10 +536,10 @@ async fn receive_graphql_protocol_message(websocket: &mut super::WebSocketConnec
                 });
             }
             super::WebSocketMessage::Ping(_) | super::WebSocketMessage::Pong(_) => continue,
-            super::WebSocketMessage::Close(reason) => {
+            super::WebSocketMessage::Close { code, reason } => {
                 return Err(SnapshotError::Decompression(format!(
-                    "GraphQL WebSocket connection closed before response: {:?}",
-                    reason
+                    "GraphQL WebSocket connection closed before response: code={} reason={:?}",
+                    code, reason
                 )));
             }
         }
