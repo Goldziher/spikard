@@ -435,6 +435,10 @@
 		"id": "22_501_not_implemented",
 		"description": "Unsupported HTTP method should return 501",
 		"category": "status_codes",
+		"skip": {
+			"languages": ["node"],
+			"reason": "TRACE HTTP method is not supported by the fetch API in Node.js"
+		},
 		"http": {
 			"handler": {
 				"route": "/data",

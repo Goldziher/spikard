@@ -322,6 +322,10 @@
 		"id": "20_content_length_mismatch",
 		"description": "Content-Length header mismatch with actual body size should fail",
 		"category": "content_types",
+		"skip": {
+			"languages": ["node"],
+			"reason": "Node.js fetch rejects requests where Content-Length mismatches the actual body before sending"
+		},
 		"http": {
 			"handler": {
 				"route": "/data",
