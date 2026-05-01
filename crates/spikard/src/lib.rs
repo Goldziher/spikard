@@ -44,73 +44,10 @@ use spikard_http::{
 };
 pub use upload::UploadFile;
 
-pub mod testing {
-    use super::{App, AppError};
-    use axum::Router as AxumRouter;
-    use axum::body::Body;
-    use axum::http::Request;
-    use axum_test::{TestServer as AxumTestServer, TestServerConfig, Transport};
-    pub use spikard_http::testing::{
-        MultipartFilePart, ResponseSnapshot, SnapshotError, SseEvent, SseStream, WebSocketConnection, WebSocketMessage,
-        build_multipart_body, encode_urlencoded_body,
-    };
-
-    /// Spikard-native test server wrapper that hides the Axum test harness.
-    ///
-    /// Tests can build an `App`, convert it into a `TestServer`, and then issue
-    /// HTTP/SSE/WebSocket requests without touching `axum-test` directly.
-    pub struct TestServer {
-        mock_server: AxumTestServer,
-        http_server: AxumTestServer,
-    }
-
-    impl TestServer {
-        /// Build a test server from an `App`.
-        ///
-        /// # Errors
-        ///
-        /// Returns an error if the application router construction fails.
-        pub fn from_app(app: App) -> Result<Self, AppError> {
-            let router = app.into_router()?;
-            Self::from_router(router)
-        }
-
-        /// Build a test server from an Axum router.
-        ///
-        /// # Errors
-        ///
-        /// Returns an error if test server construction fails.
-        pub fn from_router(router: AxumRouter) -> Result<Self, AppError> {
-            let mock_server =
-                AxumTestServer::try_new(router.clone()).map_err(|err| AppError::Server(err.to_string()))?;
-            let config = TestServerConfig {
-                transport: Some(Transport::HttpRandomPort),
-                ..Default::default()
-            };
-            let http_server =
-                AxumTestServer::try_new_with_config(router, config).map_err(|err| AppError::Server(err.to_string()))?;
-            Ok(Self {
-                mock_server,
-                http_server,
-            })
-        }
-
-        /// Execute an HTTP request and return a snapshot of the response.
-        ///
-        /// # Errors
-        ///
-        /// Returns an error if the request execution or response snapshot fails.
-        pub async fn call(&self, request: Request<Body>) -> Result<ResponseSnapshot, SnapshotError> {
-            let response = spikard_http::testing::call_test_server(&self.mock_server, request).await;
-            spikard_http::testing::snapshot_response(response).await
-        }
-
-        /// Open a WebSocket connection for the provided path.
-        pub async fn connect_websocket(&self, path: &str) -> WebSocketConnection {
-            spikard_http::testing::connect_websocket(&self.http_server, path).await
-        }
-    }
-}
+pub mod testing;
+pub use testing::{
+    GraphQLSubscriptionSnapshot, ResponseSnapshot, SnapshotError, TestClient, WebSocketConnection, WebSocketMessage,
+};
 
 /// Spikard application builder.
 pub struct App {

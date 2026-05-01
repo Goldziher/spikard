@@ -1,4 +1,4 @@
-version = "0.12.16"
+version = "0.13.1"
 languages = [
   "python",
   "node",
@@ -28,7 +28,7 @@ auto_path_mappings = false
 
 [[crate.source_crates]]
 name = "spikard"
-sources = ["crates/spikard/src/upload.rs"]
+sources = ["crates/spikard/src/upload.rs", "crates/spikard/src/testing.rs"]
 
 [[crate.source_crates]]
 name = "spikard-core"
@@ -54,6 +54,8 @@ sources = [
   "crates/spikard-http/src/openapi/mod.rs",
   "crates/spikard-http/src/sse.rs",
   "crates/spikard-http/src/websocket.rs",
+  "crates/spikard-http/src/testing.rs",
+  "crates/spikard-http/src/testing/test_client.rs",
 ]
 
 [[crate.source_crates]]
@@ -93,6 +95,25 @@ methods = [
   "Route.with_jsonrpc_method",
   "Response.with_status",
   "SseEvent.with_type",
+  # TestClient: from_router takes axum::Router (opaque external type — bindings use
+  # test_client_from_app free function instead). http_server returns Arc<TestServer>
+  # (internal axum-test type).
+  "TestClient.from_router",
+  "TestClient.http_server",
+  # WebSocketConnection: new() takes TestWebSocket (axum-test internal type).
+  # send_json/receive_json use generic type params that can't cross FFI.
+  # send_message/receive_message use WsMessage (axum-test external enum).
+  "WebSocketConnection.new",
+  "WebSocketConnection.send_json",
+  "WebSocketConnection.receive_json",
+  "WebSocketConnection.send_message",
+  "WebSocketConnection.receive_message",
+  # TestServer (spikard wrapper): from_router takes axum::Router; call takes
+  # axum::http::Request<Body>. The binding entry point is test_client_from_app.
+  "TestServer.from_router",
+  "TestServer.from_app",
+  "TestServer.call",
+  "TestServer.connect_websocket",
 ]
 types = [
   # Not part of public API — closures, Arc<dyn Handler>, internal protocol types
@@ -136,21 +157,21 @@ types = [
   "RegistryError",
   "ResolvedDependencies",
   "ResponseBodySize",
-  "ResponseSnapshot",
   "RouteInfo",
   "RpcMode",
   "SchemaBuilder",
-  "SnapshotError",
   "SseState",
-  "SseStream",
   "ValidatingHandler",
-  "WebSocketConnection",
   "WebSocketState",
   "WithoutBodyExtractionOptions",
   # Internal bindings types
   "RawResponse",
   "StaticAsset",
   "StructuredError",
+  # AsyncApiState is an axum server state type with Option<Arc<Value>> fields;
+  # alef generates invalid code (str.clone()) for this field mapping. It is an
+  # internal server-side type, not part of the user-facing binding API.
+  "AsyncApiState",
   # Internal protocol types
   "JsonRpcState",
   "JsonRpcMethodRegistry",
@@ -183,16 +204,30 @@ types = [
   "WebSocketHandler",
   # Internal enums with wrong module paths
   "ParameterSource",
-  "WebSocketMessage",
   "BackgroundSpawnError",
   # Types causing residual errors
   "RequestData",
+  # TestServer is the internal axum-test-based server (uses TestWebSocket etc.);
+  # bindings use TestClient + test_client_from_app instead.
+  "TestServer",
+  # WebSocketConnection wraps axum-test's TestWebSocket; its async receive_* methods
+  # hold a MutexGuard across await (not Send), causing compile errors in PyO3 bindings.
+  # GraphQL subscriptions are covered by TestClient.graphql_subscription instead.
+  "WebSocketConnection",
+  # SseStream.events() returns spikard_http::testing::SseEvent (data: String) which
+  # conflicts with the binding's SseEvent type (mapped from spikard_http::SseEvent,
+  # data: Value). Excluded until alef can map the two SseEvent variants independently.
+  "SseStream",
+  # TestSseEvent is the re-exported rename of spikard_http::testing::SseEvent in the
+  # spikard::testing module. Not exposed separately; SseStream carries it.
+  "TestSseEvent",
 ]
 functions = [
   "add_cors_headers",
   "api_key_auth_middleware",
   "assemble_openapi_spec",
   "auto_generate_parameter_schema",
+  "build_graphql_body",
   "build_router_with_handlers",
   "build_router_with_handlers_and_config",
   "build_router_with_handlers_and_config_and_grpc",
@@ -258,6 +293,21 @@ functions = [
   "validate_json_content_type",
   "validate_jsonrpc_method_name",
   "validate_method_name",
+  # Internal testing helpers — low-level plumbing, not part of the binding surface
+  "build_multipart_body",
+  "encode_urlencoded_body",
+  # test_client_from_app takes App (a Rust-only builder with closure handlers);
+  # bindings cannot construct App — each binding exposes its own factory method
+  # (language-native handler registration → TestClient) in the packages/ wrapper.
+  "test_client_from_app",
+  # AsyncAPI axum handler functions: take axum extractors (Json, State) that alef
+  # cannot map to binding types. These are route handlers, not user-facing API.
+  "handle_asyncapi_validate",
+  "handle_asyncapi_json",
+  "handle_asyncapi_parse",
+  # AsyncAPI helpers: internal implementation; not user-facing API.
+  "parse_asyncapi_value",
+  "validate_message",
 ]
 
 [output]
@@ -321,6 +371,17 @@ prefix = "spikard"
 header_name = "spikard.h"
 lib_name = "spikard_ffi"
 visitor_callbacks = false
+# TestClient and testing types: the FFI backend cannot automatically map
+# serde_json::Value and bytes::Bytes parameters for C-callable functions.
+# FFI consumers (Go, Java, C#) test via their own test frameworks, not via TestClient.
+exclude_types = [
+  "TestClient",
+  "ResponseSnapshot",
+  "SnapshotError",
+  "GraphQLSubscriptionSnapshot",
+  "WebSocketMessage",
+  "MultipartFilePart",
+]
 
 [go]
 module = "github.com/Goldziher/spikard"

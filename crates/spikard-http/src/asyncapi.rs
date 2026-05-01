@@ -96,16 +96,14 @@ pub fn parse_asyncapi_value(spec: &Value) -> Result<ParseResult, String> {
     // produce a friendly error for unsupported versions (e.g. "2.0.0").
     if let Some(version) = spec.get("asyncapi").and_then(Value::as_str) {
         if version != "3.0.0" {
-            return Err(format!(
-                "unsupported AsyncAPI version: {version}, expected 3.0.0"
-            ));
+            return Err(format!("unsupported AsyncAPI version: {version}, expected 3.0.0"));
         }
     } else if spec.get("asyncapi").is_none() {
         return Err("missing required field: asyncapi".to_string());
     }
 
-    let raw: AsyncApiSpec = serde_json::from_value(spec.clone())
-        .map_err(|e| format!("Failed to parse AsyncAPI spec: {e}"))?;
+    let raw: AsyncApiSpec =
+        serde_json::from_value(spec.clone()).map_err(|e| format!("Failed to parse AsyncAPI spec: {e}"))?;
 
     let AsyncApiSpec::V3_0_0(v3) = raw;
 
@@ -116,8 +114,8 @@ pub fn parse_asyncapi_value(spec: &Value) -> Result<ParseResult, String> {
     let api_version = v3.info.version.clone();
 
     // Re-serialize so we can use JSON pointer resolution
-    let spec_doc = serde_json::to_value(&v3)
-        .map_err(|e| format!("Failed to serialize AsyncAPI spec for $ref resolution: {e}"))?;
+    let spec_doc =
+        serde_json::to_value(&v3).map_err(|e| format!("Failed to serialize AsyncAPI spec for $ref resolution: {e}"))?;
 
     let channels = extract_channels(&v3, &spec_doc)?;
     let operations = extract_operations(&v3)?;
@@ -133,10 +131,7 @@ pub fn parse_asyncapi_value(spec: &Value) -> Result<ParseResult, String> {
     })
 }
 
-fn extract_channels(
-    v3: &asyncapiv3::spec::AsyncApiV3Spec,
-    spec_doc: &Value,
-) -> Result<Vec<ParsedChannel>, String> {
+fn extract_channels(v3: &asyncapiv3::spec::AsyncApiV3Spec, spec_doc: &Value) -> Result<Vec<ParsedChannel>, String> {
     use asyncapiv3::spec::common::Either;
 
     let mut channels = Vec::new();
@@ -144,10 +139,7 @@ fn extract_channels(
     for (name, channel_ref_or) in &v3.channels {
         match channel_ref_or {
             Either::Right(channel) => {
-                let address = channel
-                    .address
-                    .clone()
-                    .unwrap_or_else(|| name.clone());
+                let address = channel.address.clone().unwrap_or_else(|| name.clone());
                 let messages: Vec<String> = channel.messages.keys().cloned().collect();
                 // Pull bindings from raw spec_doc because asyncapiv3::ChannelBindings is TODO (empty struct)
                 let bindings = spec_doc
@@ -171,9 +163,7 @@ fn extract_channels(
     Ok(channels)
 }
 
-fn extract_operations(
-    v3: &asyncapiv3::spec::AsyncApiV3Spec,
-) -> Result<Vec<ParsedOperation>, String> {
+fn extract_operations(v3: &asyncapiv3::spec::AsyncApiV3Spec) -> Result<Vec<ParsedOperation>, String> {
     use asyncapiv3::spec::common::Either;
 
     let mut operations = Vec::new();
@@ -209,10 +199,7 @@ fn extract_operations(
     Ok(operations)
 }
 
-fn extract_messages(
-    v3: &asyncapiv3::spec::AsyncApiV3Spec,
-    spec_doc: &Value,
-) -> Result<Vec<ParsedMessage>, String> {
+fn extract_messages(v3: &asyncapiv3::spec::AsyncApiV3Spec, spec_doc: &Value) -> Result<Vec<ParsedMessage>, String> {
     use asyncapiv3::spec::common::Either;
     use asyncapiv3::spec::message::Message;
 
@@ -264,10 +251,7 @@ fn extract_messages(
     Ok(result)
 }
 
-fn extract_schema_from_message(
-    message: &asyncapiv3::spec::message::Message,
-    spec_doc: &Value,
-) -> Option<Value> {
+fn extract_schema_from_message(message: &asyncapiv3::spec::message::Message, spec_doc: &Value) -> Option<Value> {
     use asyncapiv3::spec::common::Either;
 
     let payload = message.payload.as_ref()?;
@@ -276,10 +260,7 @@ fn extract_schema_from_message(
             Either::Left(schema) => serde_json::to_value(schema).ok(),
             Either::Right(multi_format) => Some(multi_format.schema.clone()),
         },
-        Either::Left(reference) => {
-            resolve_ref_value(spec_doc, &reference.reference)
-                .map(normalize_schema_ref_value)
-        }
+        Either::Left(reference) => resolve_ref_value(spec_doc, &reference.reference).map(normalize_schema_ref_value),
     }
 }
 
@@ -297,17 +278,17 @@ pub fn validate_message(
     use asyncapiv3::spec::AsyncApiSpec;
     use asyncapiv3::spec::common::Either;
 
-    let raw: AsyncApiSpec = serde_json::from_value(spec.clone())
-        .map_err(|e| format!("Failed to parse AsyncAPI spec: {e}"))?;
+    let raw: AsyncApiSpec =
+        serde_json::from_value(spec.clone()).map_err(|e| format!("Failed to parse AsyncAPI spec: {e}"))?;
     let AsyncApiSpec::V3_0_0(v3) = raw;
 
-    let spec_doc = serde_json::to_value(&v3)
-        .map_err(|e| format!("Failed to serialize spec: {e}"))?;
+    let spec_doc = serde_json::to_value(&v3).map_err(|e| format!("Failed to serialize spec: {e}"))?;
 
     // Find the channel
-    let channel = v3.channels.get(channel_name).ok_or_else(|| {
-        format!("Channel '{channel_name}' not found in spec")
-    })?;
+    let channel = v3
+        .channels
+        .get(channel_name)
+        .ok_or_else(|| format!("Channel '{channel_name}' not found in spec"))?;
 
     let channel = match channel {
         Either::Right(c) => c,
@@ -315,9 +296,10 @@ pub fn validate_message(
     };
 
     // Find the message schema within the channel
-    let msg_ref_or = channel.messages.get(message_name).ok_or_else(|| {
-        format!("Message '{message_name}' not found on channel '{channel_name}'")
-    })?;
+    let msg_ref_or = channel
+        .messages
+        .get(message_name)
+        .ok_or_else(|| format!("Message '{message_name}' not found on channel '{channel_name}'"))?;
 
     let schema = match msg_ref_or {
         Either::Right(msg) => extract_schema_from_message(msg, &spec_doc),
@@ -337,13 +319,9 @@ pub fn validate_message(
     };
 
     // Validate using jsonschema
-    let compiled = jsonschema::validator_for(&schema)
-        .map_err(|e| format!("Failed to compile schema: {e}"))?;
+    let compiled = jsonschema::validator_for(&schema).map_err(|e| format!("Failed to compile schema: {e}"))?;
 
-    let errors: Vec<String> = compiled
-        .iter_errors(payload)
-        .map(|e| e.to_string())
-        .collect();
+    let errors: Vec<String> = compiled.iter_errors(payload).map(|e| e.to_string()).collect();
 
     Ok((errors.is_empty(), errors))
 }
@@ -429,9 +407,7 @@ pub struct ValidateRequest {
 /// `POST /asyncapi/parse`
 ///
 /// Accepts a raw AsyncAPI 3.0 spec JSON body, returns structured parse result.
-pub async fn handle_asyncapi_parse(
-    axum::extract::Json(body): axum::extract::Json<Value>,
-) -> Response {
+pub async fn handle_asyncapi_parse(axum::extract::Json(body): axum::extract::Json<Value>) -> Response {
     match parse_asyncapi_value(&body) {
         Ok(result) => (StatusCode::OK, axum::Json(result)).into_response(),
         Err(error) => problem_response(StatusCode::BAD_REQUEST, &error),
@@ -441,13 +417,9 @@ pub async fn handle_asyncapi_parse(
 /// `POST /asyncapi/validate`
 ///
 /// Validates a message payload against the declared channel schema.
-pub async fn handle_asyncapi_validate(
-    axum::extract::Json(body): axum::extract::Json<ValidateRequest>,
-) -> Response {
+pub async fn handle_asyncapi_validate(axum::extract::Json(body): axum::extract::Json<ValidateRequest>) -> Response {
     match validate_message(&body.spec, &body.channel, &body.message, &body.payload) {
-        Ok((valid, errors)) => {
-            (StatusCode::OK, axum::Json(ValidationResponse { valid, errors })).into_response()
-        }
+        Ok((valid, errors)) => (StatusCode::OK, axum::Json(ValidationResponse { valid, errors })).into_response(),
         Err(error) => problem_response(StatusCode::BAD_REQUEST, &error),
     }
 }
@@ -591,8 +563,7 @@ mod tests {
             "amount": 99.99,
             "currency": "USD"
         });
-        let (valid, errors) =
-            validate_message(&spec, "orders/new", "NewOrder", &payload).expect("validate");
+        let (valid, errors) = validate_message(&spec, "orders/new", "NewOrder", &payload).expect("validate");
         assert!(valid, "Expected valid, but got errors: {errors:?}");
         assert!(errors.is_empty());
     }
@@ -624,8 +595,7 @@ mod tests {
             "components": {}
         });
         let payload = serde_json::json!({ "order_id": "ORD-002" });
-        let (valid, errors) =
-            validate_message(&spec, "orders/new", "NewOrder", &payload).expect("validate");
+        let (valid, errors) = validate_message(&spec, "orders/new", "NewOrder", &payload).expect("validate");
         assert!(!valid, "Expected invalid");
         assert!(!errors.is_empty(), "Expected validation errors");
     }
@@ -781,8 +751,7 @@ mod tests {
                 }
             }
         });
-        let resolved =
-            resolve_ref_value(&doc, "#/components/schemas/A").expect("resolved schema");
+        let resolved = resolve_ref_value(&doc, "#/components/schemas/A").expect("resolved schema");
         assert_eq!(resolved["type"], "object");
         assert!(resolved["properties"].get("id").is_some());
     }

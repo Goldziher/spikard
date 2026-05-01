@@ -11,6 +11,7 @@
 #include <stdlib.h>
 /* Opaque type forward declarations */
 typedef struct SPIKARDApiKeyConfig SPIKARDApiKeyConfig;
+typedef struct SPIKARDAsyncApiConfig SPIKARDAsyncApiConfig;
 typedef struct SPIKARDBackgroundJobMetadata SPIKARDBackgroundJobMetadata;
 typedef struct SPIKARDBackgroundTaskConfig SPIKARDBackgroundTaskConfig;
 typedef struct SPIKARDCompressionConfig SPIKARDCompressionConfig;
@@ -18,6 +19,7 @@ typedef struct SPIKARDContactInfo SPIKARDContactInfo;
 typedef struct SPIKARDCorsConfig SPIKARDCorsConfig;
 typedef struct SPIKARDFullSchemaConfig SPIKARDFullSchemaConfig;
 typedef struct SPIKARDGraphQLRouteConfig SPIKARDGraphQLRouteConfig;
+typedef struct SPIKARDGraphQLSubscriptionSnapshot SPIKARDGraphQLSubscriptionSnapshot;
 typedef struct SPIKARDGrpcConfig SPIKARDGrpcConfig;
 typedef struct SPIKARDJsonRpcConfig SPIKARDJsonRpcConfig;
 typedef struct SPIKARDJsonRpcMethodInfo SPIKARDJsonRpcMethodInfo;
@@ -25,18 +27,29 @@ typedef struct SPIKARDJwtConfig SPIKARDJwtConfig;
 typedef struct SPIKARDLicenseInfo SPIKARDLicenseInfo;
 typedef struct SPIKARDMethod SPIKARDMethod;
 typedef struct SPIKARDOpenApiConfig SPIKARDOpenApiConfig;
+typedef struct SPIKARDParseRequest SPIKARDParseRequest;
+typedef struct SPIKARDParseResult SPIKARDParseResult;
+typedef struct SPIKARDParsedChannel SPIKARDParsedChannel;
+typedef struct SPIKARDParsedMessage SPIKARDParsedMessage;
+typedef struct SPIKARDParsedOperation SPIKARDParsedOperation;
 typedef struct SPIKARDProblemDetails SPIKARDProblemDetails;
 typedef struct SPIKARDQueryMutationConfig SPIKARDQueryMutationConfig;
 typedef struct SPIKARDQueryOnlyConfig SPIKARDQueryOnlyConfig;
 typedef struct SPIKARDRateLimitConfig SPIKARDRateLimitConfig;
 typedef struct SPIKARDResponse SPIKARDResponse;
+typedef struct SPIKARDResponseSnapshot SPIKARDResponseSnapshot;
 typedef struct SPIKARDSchemaConfig SPIKARDSchemaConfig;
 typedef struct SPIKARDSecuritySchemeInfo SPIKARDSecuritySchemeInfo;
 typedef struct SPIKARDServerConfig SPIKARDServerConfig;
 typedef struct SPIKARDServerInfo SPIKARDServerInfo;
+typedef struct SPIKARDSnapshotError SPIKARDSnapshotError;
 typedef struct SPIKARDSseEvent SPIKARDSseEvent;
 typedef struct SPIKARDStaticFilesConfig SPIKARDStaticFilesConfig;
+typedef struct SPIKARDTestClient SPIKARDTestClient;
 typedef struct SPIKARDUploadFile SPIKARDUploadFile;
+typedef struct SPIKARDValidateRequest SPIKARDValidateRequest;
+typedef struct SPIKARDValidationResponse SPIKARDValidationResponse;
+typedef struct SPIKARDWebSocketMessage SPIKARDWebSocketMessage;
 
 
 /**
@@ -880,6 +893,310 @@ uintptr_t spikard_full_schema_config_depth_limit(const SPIKARDFullSchemaConfig *
 SPIKARDFullSchemaConfig *spikard_full_schema_config_default(void);
 
 /**
+ * Create a `AsyncApiConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_async_api_config_free`.
+ */
+SPIKARDAsyncApiConfig *spikard_async_api_config_from_json(const char *json);
+
+/**
+ * Serialize a `AsyncApiConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_async_api_config_to_json(const SPIKARDAsyncApiConfig *ptr);
+
+/**
+ * Free a `AsyncApiConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_async_api_config_free(SPIKARDAsyncApiConfig *ptr);
+
+/**
+ * Get the `enabled` field from a `AsyncApiConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_async_api_config_enabled(const SPIKARDAsyncApiConfig *ptr);
+
+/**
+ * Get the `spec` field from a `AsyncApiConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_async_api_config_spec(const SPIKARDAsyncApiConfig *ptr);
+
+/**
+ * Create a `ParsedChannel` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_parsed_channel_free`.
+ */
+SPIKARDParsedChannel *spikard_parsed_channel_from_json(const char *json);
+
+/**
+ * Serialize a `ParsedChannel` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_parsed_channel_to_json(const SPIKARDParsedChannel *ptr);
+
+/**
+ * Free a `ParsedChannel` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_parsed_channel_free(SPIKARDParsedChannel *ptr);
+
+/**
+ * Get the `name` field from a `ParsedChannel`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_channel_name(const SPIKARDParsedChannel *ptr);
+
+/**
+ * Get the `address` field from a `ParsedChannel`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_channel_address(const SPIKARDParsedChannel *ptr);
+
+/**
+ * Get the `messages` field from a `ParsedChannel`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_channel_messages(const SPIKARDParsedChannel *ptr);
+
+/**
+ * Get the `bindings` field from a `ParsedChannel`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_channel_bindings(const SPIKARDParsedChannel *ptr);
+
+/**
+ * Create a `ParsedOperation` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_parsed_operation_free`.
+ */
+SPIKARDParsedOperation *spikard_parsed_operation_from_json(const char *json);
+
+/**
+ * Serialize a `ParsedOperation` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_parsed_operation_to_json(const SPIKARDParsedOperation *ptr);
+
+/**
+ * Free a `ParsedOperation` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_parsed_operation_free(SPIKARDParsedOperation *ptr);
+
+/**
+ * Get the `name` field from a `ParsedOperation`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_operation_name(const SPIKARDParsedOperation *ptr);
+
+/**
+ * Get the `action` field from a `ParsedOperation`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_operation_action(const SPIKARDParsedOperation *ptr);
+
+/**
+ * Get the `channel` field from a `ParsedOperation`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_operation_channel(const SPIKARDParsedOperation *ptr);
+
+/**
+ * Create a `ParsedMessage` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_parsed_message_free`.
+ */
+SPIKARDParsedMessage *spikard_parsed_message_from_json(const char *json);
+
+/**
+ * Serialize a `ParsedMessage` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_parsed_message_to_json(const SPIKARDParsedMessage *ptr);
+
+/**
+ * Free a `ParsedMessage` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_parsed_message_free(SPIKARDParsedMessage *ptr);
+
+/**
+ * Get the `name` field from a `ParsedMessage`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_message_name(const SPIKARDParsedMessage *ptr);
+
+/**
+ * Get the `schema` field from a `ParsedMessage`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_message_schema(const SPIKARDParsedMessage *ptr);
+
+/**
+ * Create a `ParseResult` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_parse_result_free`.
+ */
+SPIKARDParseResult *spikard_parse_result_from_json(const char *json);
+
+/**
+ * Serialize a `ParseResult` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_parse_result_to_json(const SPIKARDParseResult *ptr);
+
+/**
+ * Free a `ParseResult` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_parse_result_free(SPIKARDParseResult *ptr);
+
+/**
+ * Get the `spec_version` field from a `ParseResult`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parse_result_spec_version(const SPIKARDParseResult *ptr);
+
+/**
+ * Get the `title` field from a `ParseResult`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parse_result_title(const SPIKARDParseResult *ptr);
+
+/**
+ * Get the `api_version` field from a `ParseResult`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parse_result_api_version(const SPIKARDParseResult *ptr);
+
+/**
+ * Get the `channels` field from a `ParseResult`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parse_result_channels(const SPIKARDParseResult *ptr);
+
+/**
+ * Get the `operations` field from a `ParseResult`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parse_result_operations(const SPIKARDParseResult *ptr);
+
+/**
+ * Get the `messages` field from a `ParseResult`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parse_result_messages(const SPIKARDParseResult *ptr);
+
+/**
+ * Free a `ParseRequest` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_parse_request_free(SPIKARDParseRequest *ptr);
+
+/**
+ * Get the `spec` field from a `ParseRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parse_request_spec(const SPIKARDParseRequest *ptr);
+
+/**
+ * Free a `ValidationResponse` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_validation_response_free(SPIKARDValidationResponse *ptr);
+
+/**
+ * Get the `valid` field from a `ValidationResponse`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_validation_response_valid(const SPIKARDValidationResponse *ptr);
+
+/**
+ * Get the `errors` field from a `ValidationResponse`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_validation_response_errors(const SPIKARDValidationResponse *ptr);
+
+/**
+ * Free a `ValidateRequest` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_validate_request_free(SPIKARDValidateRequest *ptr);
+
+/**
+ * Get the `spec` field from a `ValidateRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_validate_request_spec(const SPIKARDValidateRequest *ptr);
+
+/**
+ * Get the `channel` field from a `ValidateRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_validate_request_channel(const SPIKARDValidateRequest *ptr);
+
+/**
+ * Get the `message` field from a `ValidateRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_validate_request_message(const SPIKARDValidateRequest *ptr);
+
+/**
+ * Get the `payload` field from a `ValidateRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_validate_request_payload(const SPIKARDValidateRequest *ptr);
+
+/**
  * Create a `BackgroundTaskConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -1045,6 +1362,13 @@ uint64_t spikard_grpc_config_keepalive_interval(const SPIKARDGrpcConfig *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 uint64_t spikard_grpc_config_keepalive_timeout(const SPIKARDGrpcConfig *ptr);
+
+/**
+ * Get the `max_stream_response_bytes` field from a `GrpcConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uintptr_t spikard_grpc_config_max_stream_response_bytes(const SPIKARDGrpcConfig *ptr);
 
 /**
  * # Safety
@@ -1775,6 +2099,13 @@ int32_t spikard_server_config_graceful_shutdown(const SPIKARDServerConfig *ptr);
 uint64_t spikard_server_config_shutdown_timeout(const SPIKARDServerConfig *ptr);
 
 /**
+ * Get the `asyncapi` field from a `ServerConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+SPIKARDAsyncApiConfig *spikard_server_config_asyncapi(const SPIKARDServerConfig *ptr);
+
+/**
  * Get the `openapi` field from a `ServerConfig`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -1789,11 +2120,62 @@ SPIKARDOpenApiConfig *spikard_server_config_openapi(const SPIKARDServerConfig *p
 SPIKARDJsonRpcConfig *spikard_server_config_jsonrpc(const SPIKARDServerConfig *ptr);
 
 /**
+ * Get the `grpc` field from a `ServerConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+SPIKARDGrpcConfig *spikard_server_config_grpc(const SPIKARDServerConfig *ptr);
+
+/**
+ * Get the `background_tasks` field from a `ServerConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+SPIKARDBackgroundTaskConfig *spikard_server_config_background_tasks(const SPIKARDServerConfig *ptr);
+
+/**
+ * Get the `enable_http_trace` field from a `ServerConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_server_config_enable_http_trace(const SPIKARDServerConfig *ptr);
+
+/**
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 SPIKARDServerConfig *spikard_server_config_default(void);
+
+/**
+ * Convert an integer to a `SnapshotError` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t spikard_snapshot_error_from_i32(int32_t value);
+
+/**
+ * Convert a `SnapshotError` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t spikard_snapshot_error_from_str(const char *name);
+
+/**
+ * Convert an integer to a `WebSocketMessage` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t spikard_web_socket_message_from_i32(int32_t value);
+
+/**
+ * Convert a `WebSocketMessage` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t spikard_web_socket_message_from_str(const char *name);
 
 /**
  * Convert an integer to a `Method` variant. Returns -1 on invalid input.

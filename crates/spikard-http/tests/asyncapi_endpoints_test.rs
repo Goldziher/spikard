@@ -14,14 +14,10 @@ use spikard_http::{AsyncApiConfig, ServerConfig};
 
 fn build_server_with_asyncapi(spec: Option<Value>) -> axum_test::TestServer {
     let config = ServerConfig {
-        asyncapi: Some(AsyncApiConfig {
-            enabled: true,
-            spec,
-        }),
+        asyncapi: Some(AsyncApiConfig { enabled: true, spec }),
         ..ServerConfig::default()
     };
-    let router =
-        build_router_with_handlers_and_config(vec![], config, vec![]).expect("router built");
+    let router = build_router_with_handlers_and_config(vec![], config, vec![]).expect("router built");
     axum_test::TestServer::new(router)
 }
 
@@ -265,7 +261,10 @@ async fn post_asyncapi_validate_missing_required_fields_returns_valid_false_with
     let body: Value = response.json();
     assert_eq!(body["valid"], false);
     let errors = body["errors"].as_array().expect("errors array");
-    assert!(!errors.is_empty(), "Expected validation errors for missing required fields");
+    assert!(
+        !errors.is_empty(),
+        "Expected validation errors for missing required fields"
+    );
 }
 
 #[tokio::test]

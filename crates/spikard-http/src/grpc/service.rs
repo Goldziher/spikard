@@ -302,8 +302,7 @@ impl GenericGrpcService {
         let response_stream: MessageStream = self.handler.call_bidi_stream(streaming_request).await?;
 
         // Apply cumulative byte cap if configured
-        let response_stream =
-            crate::grpc::streaming::limit_message_stream(response_stream, max_stream_response_bytes);
+        let response_stream = crate::grpc::streaming::limit_message_stream(response_stream, max_stream_response_bytes);
 
         let body = grpc_stream_body(response_stream);
         let response = Response::new(body);

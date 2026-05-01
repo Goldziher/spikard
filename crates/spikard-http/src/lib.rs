@@ -52,8 +52,8 @@ use tokio::runtime::Runtime;
 mod handler_trait_tests;
 
 pub use asyncapi::{
-    AsyncApiConfig, AsyncApiState, ParseResult, ParsedChannel, ParsedMessage, ParsedOperation,
-    ValidateRequest, ValidationResponse, parse_asyncapi_value, validate_message,
+    AsyncApiConfig, AsyncApiState, ParseResult, ParsedChannel, ParsedMessage, ParsedOperation, ValidateRequest,
+    ValidationResponse, parse_asyncapi_value, validate_message,
 };
 pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
 #[cfg(not(target_arch = "wasm32"))]

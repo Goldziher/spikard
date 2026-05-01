@@ -1080,10 +1080,7 @@ pub fn build_router_with_handlers_and_config_and_grpc(
     {
         use crate::asyncapi::{AsyncApiState, handle_asyncapi_json, handle_asyncapi_parse, handle_asyncapi_validate};
 
-        let registered_spec = asyncapi_config
-            .spec
-            .as_ref()
-            .map(|s| Arc::new(s.clone()));
+        let registered_spec = asyncapi_config.spec.as_ref().map(|s| Arc::new(s.clone()));
         let state = AsyncApiState { registered_spec };
 
         app = app

@@ -163,7 +163,10 @@ fn websocket_message_close_code_and_reason_helpers() {
     assert_eq!(close_with_reason.close_reason(), Some("going away"));
     assert!(close_with_reason.as_text().is_none());
 
-    let close_no_reason = WebSocketMessage::Close { code: 1005, reason: None };
+    let close_no_reason = WebSocketMessage::Close {
+        code: 1005,
+        reason: None,
+    };
     assert!(close_no_reason.is_close());
     assert_eq!(close_no_reason.close_code(), Some(1005));
     assert_eq!(close_no_reason.close_reason(), None);

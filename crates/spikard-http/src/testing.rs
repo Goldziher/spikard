@@ -69,7 +69,7 @@ impl ResponseSnapshot {
 }
 
 /// Possible errors while converting an Axum response into a snapshot.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum SnapshotError {
     /// Response header could not be decoded to UTF-8.
     InvalidHeader(String),
@@ -306,16 +306,14 @@ impl WebSocketConnection {
     /// Common codes: 1000 Normal Closure, 1001 Going Away, 1002 Protocol Error.
     pub async fn close_with(mut self, code: u16, reason: Option<String>) -> Result<(), String> {
         use axum_test::WsMessage;
-        use tungstenite::protocol::frame::coding::CloseCode;
         use tungstenite::protocol::frame::CloseFrame;
+        use tungstenite::protocol::frame::coding::CloseCode;
 
         let frame = CloseFrame {
             code: CloseCode::from(code),
             reason: reason.unwrap_or_default().into(),
         };
-        self.inner
-            .send_message(WsMessage::Close(Some(frame)))
-            .await;
+        self.inner.send_message(WsMessage::Close(Some(frame))).await;
         Ok(())
     }
 }
@@ -361,7 +359,10 @@ impl WebSocketMessage {
                 WebSocketMessage::Close { code, reason }
             }
             // RFC 6455 §7.1.5: no close frame means no status code — use 1005
-            WsMessage::Close(None) | WsMessage::Frame(_) => WebSocketMessage::Close { code: 1005, reason: None },
+            WsMessage::Close(None) | WsMessage::Frame(_) => WebSocketMessage::Close {
+                code: 1005,
+                reason: None,
+            },
             WsMessage::Ping(data) => WebSocketMessage::Ping(data.to_vec()),
             WsMessage::Pong(data) => WebSocketMessage::Pong(data.to_vec()),
         }
