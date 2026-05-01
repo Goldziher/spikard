@@ -270,6 +270,8 @@ pub struct JsGrpcConfig {
     pub keepalive_interval: Option<i64>,
     #[napi(js_name = "keepaliveTimeout")]
     pub keepalive_timeout: Option<i64>,
+    #[napi(js_name = "maxStreamResponseBytes")]
+    pub max_stream_response_bytes: Option<i64>,
 }
 
 #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
@@ -752,6 +754,7 @@ impl From<JsGrpcConfig> for spikard_http::GrpcConfig {
             enable_keepalive: val.enable_keepalive.unwrap_or_default(),
             keepalive_interval: val.keepalive_interval.map(|v| v as u64).unwrap_or_default(),
             keepalive_timeout: val.keepalive_timeout.map(|v| v as u64).unwrap_or_default(),
+            max_stream_response_bytes: val.max_stream_response_bytes.map(|v| v as usize),
         }
     }
 }
@@ -768,6 +771,7 @@ impl From<spikard_http::GrpcConfig> for JsGrpcConfig {
             enable_keepalive: Some(val.enable_keepalive),
             keepalive_interval: Some(val.keepalive_interval as i64),
             keepalive_timeout: Some(val.keepalive_timeout as i64),
+            max_stream_response_bytes: val.max_stream_response_bytes.map(|v| v as i64),
         }
     }
 }

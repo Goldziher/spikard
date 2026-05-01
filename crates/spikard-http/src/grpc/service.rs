@@ -94,6 +94,7 @@ impl GenericGrpcService {
     /// * `service_name` - Fully qualified service name
     /// * `method_name` - Method name
     /// * `request` - Tonic request containing the serialized protobuf message
+    /// * `max_stream_response_bytes` - Optional cumulative byte cap for the entire response stream
     ///
     /// # Returns
     ///
@@ -118,6 +119,7 @@ impl GenericGrpcService {
         service_name: String,
         method_name: String,
         request: Request<Bytes>,
+        max_stream_response_bytes: Option<usize>,
     ) -> Result<Response<axum::body::Body>, Status> {
         // Extract metadata and payload from Tonic request
         let (metadata, _extensions, payload) = request.into_parts();
@@ -132,6 +134,9 @@ impl GenericGrpcService {
 
         // Call the handler's server streaming method
         let message_stream: MessageStream = self.handler.call_server_stream(grpc_request).await?;
+
+        // Apply cumulative byte cap if configured
+        let message_stream = crate::grpc::streaming::limit_message_stream(message_stream, max_stream_response_bytes);
 
         let body = grpc_stream_body(message_stream);
 
@@ -242,6 +247,7 @@ impl GenericGrpcService {
     /// * `request` - Axum request with streaming body containing HTTP/2 framed protobuf messages
     /// * `max_message_size` - Maximum size per message (bytes)
     /// * `compression_enabled` - Whether compressed gRPC messages are accepted
+    /// * `max_stream_response_bytes` - Optional cumulative byte cap for the entire response stream
     ///
     /// # Returns
     ///
@@ -266,6 +272,7 @@ impl GenericGrpcService {
         request: Request<axum::body::Body>,
         max_message_size: usize,
         compression_enabled: bool,
+        max_stream_response_bytes: Option<usize>,
     ) -> Result<Response<axum::body::Body>, Status> {
         // Extract metadata and body from Tonic request
         let (metadata, _extensions, body) = request.into_parts();
@@ -293,6 +300,10 @@ impl GenericGrpcService {
 
         // Call the handler's bidirectional streaming method
         let response_stream: MessageStream = self.handler.call_bidi_stream(streaming_request).await?;
+
+        // Apply cumulative byte cap if configured
+        let response_stream =
+            crate::grpc::streaming::limit_message_stream(response_stream, max_stream_response_bytes);
 
         let body = grpc_stream_body(response_stream);
         let response = Response::new(body);

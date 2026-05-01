@@ -122,6 +122,7 @@ pub struct GrpcConfig {
     pub enable_keepalive: bool,
     pub keepalive_interval: i64,
     pub keepalive_timeout: i64,
+    pub max_stream_response_bytes: Option<i64>,
 }
 
 #[frb(mirror(JsonRpcConfig))]

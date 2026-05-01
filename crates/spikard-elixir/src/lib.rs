@@ -259,6 +259,7 @@ pub struct GrpcConfig {
     pub enable_keepalive: bool,
     pub keepalive_interval: u64,
     pub keepalive_timeout: u64,
+    pub max_stream_response_bytes: Option<usize>,
 }
 
 impl GrpcConfig {
@@ -290,6 +291,9 @@ impl GrpcConfig {
                 .get("keepalive_timeout")
                 .and_then(|t| t.decode().ok())
                 .unwrap_or_default(),
+            max_stream_response_bytes: opts
+                .get("max_stream_response_bytes")
+                .and_then(|t| t.decode().ok()),
         }
     }
 }
@@ -1152,6 +1156,7 @@ impl From<GrpcConfig> for spikard_http::GrpcConfig {
             enable_keepalive: val.enable_keepalive,
             keepalive_interval: val.keepalive_interval,
             keepalive_timeout: val.keepalive_timeout,
+            max_stream_response_bytes: val.max_stream_response_bytes,
         }
     }
 }
@@ -1168,6 +1173,7 @@ impl From<spikard_http::GrpcConfig> for GrpcConfig {
             enable_keepalive: val.enable_keepalive,
             keepalive_interval: val.keepalive_interval,
             keepalive_timeout: val.keepalive_timeout,
+            max_stream_response_bytes: val.max_stream_response_bytes,
         }
     }
 }

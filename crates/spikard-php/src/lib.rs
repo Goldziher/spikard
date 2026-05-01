@@ -832,6 +832,9 @@ pub struct GrpcConfig {
     /// HTTP/2 keepalive timeout in seconds
     #[php(prop, name = "keepalive_timeout")]
     pub keepalive_timeout: i64,
+    /// Total byte cap across an entire streaming response (None = unbounded)
+    #[php(prop, name = "max_stream_response_bytes")]
+    pub max_stream_response_bytes: Option<i64>,
 }
 
 #[php_impl]
@@ -845,6 +848,7 @@ impl GrpcConfig {
         enable_keepalive: Option<bool>,
         keepalive_interval: Option<i64>,
         keepalive_timeout: Option<i64>,
+        max_stream_response_bytes: Option<i64>,
     ) -> Self {
         Self {
             enabled: enabled.unwrap_or(true),
@@ -855,6 +859,7 @@ impl GrpcConfig {
             enable_keepalive: enable_keepalive.unwrap_or(true),
             keepalive_interval: keepalive_interval.unwrap_or_default(),
             keepalive_timeout: keepalive_timeout.unwrap_or_default(),
+            max_stream_response_bytes,
         }
     }
 
@@ -1704,6 +1709,7 @@ impl From<GrpcConfig> for spikard_http::GrpcConfig {
             enable_keepalive: val.enable_keepalive,
             keepalive_interval: val.keepalive_interval as u64,
             keepalive_timeout: val.keepalive_timeout as u64,
+            max_stream_response_bytes: val.max_stream_response_bytes.map(|v| v as usize),
         }
     }
 }
@@ -1720,6 +1726,7 @@ impl From<spikard_http::GrpcConfig> for GrpcConfig {
             enable_keepalive: val.enable_keepalive,
             keepalive_interval: val.keepalive_interval as i64,
             keepalive_timeout: val.keepalive_timeout as i64,
+            max_stream_response_bytes: val.max_stream_response_bytes.map(|v| v as i64),
         }
     }
 }

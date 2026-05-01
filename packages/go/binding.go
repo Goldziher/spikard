@@ -767,6 +767,8 @@ type GrpcConfig struct {
 	KeepaliveInterval uint64 `json:"keepalive_interval"`
 	// HTTP/2 keepalive timeout in seconds
 	KeepaliveTimeout uint64 `json:"keepalive_timeout"`
+	// Total byte cap across an entire streaming response (nil = unbounded)
+	MaxStreamResponseBytes *uint64 `json:"max_stream_response_bytes,omitempty"`
 }
 
 // GrpcConfigOption is an option function for GrpcConfig.
@@ -812,17 +814,23 @@ func WithGrpcConfigKeepaliveTimeout(v uint64) GrpcConfigOption {
 	return func(c *GrpcConfig) { c.KeepaliveTimeout = v }
 }
 
+// WithGrpcConfigMaxStreamResponseBytes sets the max_stream_response_bytes field.
+func WithGrpcConfigMaxStreamResponseBytes(v uint64) GrpcConfigOption {
+	return func(c *GrpcConfig) { c.MaxStreamResponseBytes = &v }
+}
+
 // NewGrpcConfig creates a GrpcConfig with optional parameters.
 func NewGrpcConfig(opts ...GrpcConfigOption) *GrpcConfig {
 	c := &GrpcConfig{
-		Enabled:              nil,
-		MaxMessageSize:       0,
-		EnableCompression:    nil,
-		RequestTimeout:       nil,
-		MaxConcurrentStreams: 0,
-		EnableKeepalive:      nil,
-		KeepaliveInterval:    0,
-		KeepaliveTimeout:     0,
+		Enabled:                nil,
+		MaxMessageSize:         0,
+		EnableCompression:      nil,
+		RequestTimeout:         nil,
+		MaxConcurrentStreams:   0,
+		EnableKeepalive:        nil,
+		KeepaliveInterval:      0,
+		KeepaliveTimeout:       0,
+		MaxStreamResponseBytes: nil,
 	}
 	for _, opt := range opts {
 		opt(c)

@@ -1028,6 +1028,7 @@ pub struct GrpcConfig {
     pub enable_keepalive: bool,
     pub keepalive_interval: u64,
     pub keepalive_timeout: u64,
+    pub max_stream_response_bytes: Option<usize>,
 }
 
 unsafe impl IntoValueFromNative for GrpcConfig {}
@@ -1051,6 +1052,7 @@ impl Default for GrpcConfig {
             enable_keepalive: Default::default(),
             keepalive_interval: Default::default(),
             keepalive_timeout: Default::default(),
+            max_stream_response_bytes: Default::default(),
         }
     }
 }
@@ -1065,6 +1067,7 @@ impl GrpcConfig {
         enable_keepalive: Option<bool>,
         keepalive_interval: Option<u64>,
         keepalive_timeout: Option<u64>,
+        max_stream_response_bytes: Option<usize>,
     ) -> Self {
         Self {
             enabled: enabled.unwrap_or(true),
@@ -1075,6 +1078,7 @@ impl GrpcConfig {
             enable_keepalive: enable_keepalive.unwrap_or(true),
             keepalive_interval: keepalive_interval.unwrap_or_default(),
             keepalive_timeout: keepalive_timeout.unwrap_or_default(),
+            max_stream_response_bytes,
         }
     }
 
@@ -2214,6 +2218,7 @@ impl From<GrpcConfig> for spikard_http::GrpcConfig {
             enable_keepalive: val.enable_keepalive,
             keepalive_interval: val.keepalive_interval,
             keepalive_timeout: val.keepalive_timeout,
+            max_stream_response_bytes: val.max_stream_response_bytes,
         }
     }
 }
@@ -2230,6 +2235,7 @@ impl From<spikard_http::GrpcConfig> for GrpcConfig {
             enable_keepalive: val.enable_keepalive,
             keepalive_interval: val.keepalive_interval,
             keepalive_timeout: val.keepalive_timeout,
+            max_stream_response_bytes: val.max_stream_response_bytes,
         }
     }
 }
@@ -2711,7 +2717,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("request_id", method!(BackgroundJobMetadata::request_id, 0))?;
 
     let class = module.define_class("GrpcConfig", ruby.class_object())?;
-    class.define_singleton_method("new", function!(GrpcConfig::new, 8))?;
+    class.define_singleton_method("new", function!(GrpcConfig::new, 9))?;
     class.define_method("enabled", method!(GrpcConfig::enabled, 0))?;
     class.define_method("max_message_size", method!(GrpcConfig::max_message_size, 0))?;
     class.define_method("enable_compression", method!(GrpcConfig::enable_compression, 0))?;

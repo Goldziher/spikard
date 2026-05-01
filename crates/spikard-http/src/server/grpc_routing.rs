@@ -104,6 +104,7 @@ pub async fn route_grpc_request(
                 method_name,
                 config.max_message_size,
                 config.enable_compression,
+                config.max_stream_response_bytes,
                 request,
             )
             .await
@@ -126,6 +127,7 @@ pub async fn route_grpc_request(
                 method_name,
                 config.max_message_size,
                 config.enable_compression,
+                config.max_stream_response_bytes,
                 request,
             )
             .await
@@ -241,6 +243,7 @@ async fn handle_server_streaming_request(
     method_name: String,
     max_message_size: usize,
     compression_enabled: bool,
+    max_stream_response_bytes: Option<usize>,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     // Convert the Axum request to bytes with the configured size limit
@@ -286,7 +289,7 @@ async fn handle_server_streaming_request(
 
     // Use the service bridge to handle the streaming request
     let tonic_response = match service
-        .handle_server_stream(service_name, method_name, tonic_request)
+        .handle_server_stream(service_name, method_name, tonic_request, max_stream_response_bytes)
         .await
     {
         Ok(resp) => resp,
@@ -413,6 +416,7 @@ async fn handle_client_streaming_request(
 /// * `method_name` - Method name (e.g., "Chat")
 /// * `max_message_size` - Maximum size per message in bytes
 /// * `compression_enabled` - Whether compressed gRPC request frames are accepted
+/// * `max_stream_response_bytes` - Optional cumulative byte cap for the entire response stream
 /// * `request` - Axum HTTP request with streaming body
 ///
 /// # Returns
@@ -424,6 +428,7 @@ async fn handle_bidirectional_streaming_request(
     method_name: String,
     max_message_size: usize,
     compression_enabled: bool,
+    max_stream_response_bytes: Option<usize>,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
     // Extract request parts - keep body as stream for frame parsing
@@ -453,6 +458,7 @@ async fn handle_bidirectional_streaming_request(
             tonic_request,
             max_message_size,
             compression_enabled,
+            max_stream_response_bytes,
         )
         .await
     {

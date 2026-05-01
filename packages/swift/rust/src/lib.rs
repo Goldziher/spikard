@@ -809,6 +809,7 @@ impl GrpcConfig {
         enable_keepalive: bool,
         keepalive_interval: u64,
         keepalive_timeout: u64,
+        max_stream_response_bytes: Option<usize>,
     ) -> GrpcConfig {
         let mut __target: spikard_http::GrpcConfig = ::std::default::Default::default();
         __target.enabled = enabled;
@@ -819,6 +820,7 @@ impl GrpcConfig {
         __target.enable_keepalive = enable_keepalive;
         __target.keepalive_interval = keepalive_interval;
         __target.keepalive_timeout = keepalive_timeout;
+        __target.max_stream_response_bytes = max_stream_response_bytes;
         GrpcConfig(__target)
     }
     pub fn enabled(&self) -> bool {
@@ -869,6 +871,9 @@ impl GrpcConfig {
             .ok()
             .and_then(|j| ::serde_json::from_value(j).ok())
             .unwrap_or_default()
+    }
+    pub fn max_stream_response_bytes(&self) -> Option<usize> {
+        self.0.max_stream_response_bytes
     }
 }
 

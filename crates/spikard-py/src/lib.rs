@@ -903,13 +903,16 @@ pub struct GrpcConfig {
     /// HTTP/2 keepalive timeout in seconds
     #[pyo3(get)]
     pub keepalive_timeout: u64,
+    /// Total byte cap across an entire streaming response (None = unbounded)
+    #[pyo3(get)]
+    pub max_stream_response_bytes: Option<usize>,
 }
 
 #[pymethods]
 impl GrpcConfig {
     #[allow(clippy::too_many_arguments)]
     #[must_use]
-    #[pyo3(signature = (enabled=None, max_message_size=None, enable_compression=None, max_concurrent_streams=None, enable_keepalive=None, keepalive_interval=None, keepalive_timeout=None, request_timeout=None))]
+    #[pyo3(signature = (enabled=None, max_message_size=None, enable_compression=None, max_concurrent_streams=None, enable_keepalive=None, keepalive_interval=None, keepalive_timeout=None, request_timeout=None, max_stream_response_bytes=None))]
     #[new]
     pub fn new(
         enabled: Option<bool>,
@@ -920,6 +923,7 @@ impl GrpcConfig {
         keepalive_interval: Option<u64>,
         keepalive_timeout: Option<u64>,
         request_timeout: Option<u64>,
+        max_stream_response_bytes: Option<usize>,
     ) -> Self {
         Self {
             enabled: enabled.unwrap_or(true),
@@ -930,6 +934,7 @@ impl GrpcConfig {
             enable_keepalive: enable_keepalive.unwrap_or(true),
             keepalive_interval: keepalive_interval.unwrap_or_default(),
             keepalive_timeout: keepalive_timeout.unwrap_or_default(),
+            max_stream_response_bytes,
         }
     }
 
@@ -1882,6 +1887,7 @@ impl From<GrpcConfig> for spikard_http::GrpcConfig {
             enable_keepalive: val.enable_keepalive,
             keepalive_interval: val.keepalive_interval,
             keepalive_timeout: val.keepalive_timeout,
+            max_stream_response_bytes: val.max_stream_response_bytes,
         }
     }
 }
@@ -1898,6 +1904,7 @@ impl From<spikard_http::GrpcConfig> for GrpcConfig {
             enable_keepalive: val.enable_keepalive,
             keepalive_interval: val.keepalive_interval,
             keepalive_timeout: val.keepalive_timeout,
+            max_stream_response_bytes: val.max_stream_response_bytes,
         }
     }
 }

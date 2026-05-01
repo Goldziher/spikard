@@ -77,10 +77,10 @@ use std::sync::Arc;
 ///   returns GOAWAY frames when exceeded. Applications should not rely on
 ///   custom enforcement of this limit.
 ///
-/// - **Stream Length Limits**: There is currently no built-in limit on the
-///   total number of messages in a stream. Handlers should implement their own
-///   message counting if needed. Future versions may add a `max_stream_response_bytes`
-///   field to limit total response size per stream.
+/// - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+///   total encoded bytes emitted across a server-streaming or bidi-streaming response.
+///   When the cumulative size exceeds the limit, the stream is terminated with
+///   `tonic::Status::resource_exhausted`. Defaults to `None` (unbounded).
 ///
 /// # Example
 ///
@@ -133,10 +133,6 @@ pub struct GrpcConfig {
     /// - **Streaming Requests**: In server streaming or bidi streaming, each logical
     ///   RPC consumes one stream slot. Message ordering within a stream follows
     ///   HTTP/2 frame ordering.
-    ///
-    /// # Future Enhancement
-    /// A future `max_stream_response_bytes` field may be added to limit the total
-    /// response size in streaming RPCs (separate from per-message limits).
     #[serde(default = "default_max_concurrent_streams")]
     pub max_concurrent_streams: u32,
 
@@ -151,8 +147,20 @@ pub struct GrpcConfig {
     /// HTTP/2 keepalive timeout in seconds
     #[serde(default = "default_keepalive_timeout")]
     pub keepalive_timeout: u64,
-    // Future extension point:
-    // pub max_stream_response_bytes: Option<usize>,  // Total bytes per streaming response
+
+    /// Total byte cap across an entire streaming response.
+    ///
+    /// When `Some(n)`, the streaming adapter aborts the stream with
+    /// `tonic::Status::resource_exhausted` once the cumulative encoded message
+    /// bytes exceed `n`. The stream yields the error item and then terminates.
+    ///
+    /// Per-message cap remains `max_message_size`. This limit applies to
+    /// server-streaming and bidirectional-streaming RPCs only; unary RPCs are
+    /// governed solely by `max_message_size`.
+    ///
+    /// Default: `None` (unbounded total response size).
+    #[serde(default)]
+    pub max_stream_response_bytes: Option<usize>,
 }
 
 impl Default for GrpcConfig {
@@ -166,6 +174,7 @@ impl Default for GrpcConfig {
             enable_keepalive: true,
             keepalive_interval: default_keepalive_interval(),
             keepalive_timeout: default_keepalive_timeout(),
+            max_stream_response_bytes: None,
         }
     }
 }
@@ -362,6 +371,7 @@ mod tests {
         assert!(config.enable_keepalive);
         assert_eq!(config.keepalive_interval, 75);
         assert_eq!(config.keepalive_timeout, 20);
+        assert!(config.max_stream_response_bytes.is_none());
     }
 
     #[test]
