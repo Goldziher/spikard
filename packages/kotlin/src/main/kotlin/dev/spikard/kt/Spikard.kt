@@ -5,63 +5,35 @@ package dev.spikard.kt
 import dev.spikard.Spikard as Bridge
 
 typealias UploadFile = dev.spikard.UploadFile
-
 typealias CorsConfig = dev.spikard.CorsConfig
-
 typealias CompressionConfig = dev.spikard.CompressionConfig
-
 typealias RateLimitConfig = dev.spikard.RateLimitConfig
-
 typealias JsonRpcMethodInfo = dev.spikard.JsonRpcMethodInfo
-
 typealias ProblemDetails = dev.spikard.ProblemDetails
-
-typealias GraphQLError = dev.spikard.GraphQLError
-
 typealias GraphQLRouteConfig = dev.spikard.GraphQLRouteConfig
-
 typealias SchemaConfig = dev.spikard.SchemaConfig
-
 typealias QueryOnlyConfig = dev.spikard.QueryOnlyConfig
-
 typealias QueryMutationConfig = dev.spikard.QueryMutationConfig
-
 typealias FullSchemaConfig = dev.spikard.FullSchemaConfig
-
 typealias BackgroundTaskConfig = dev.spikard.BackgroundTaskConfig
-
 typealias BackgroundJobMetadata = dev.spikard.BackgroundJobMetadata
-
 typealias GrpcConfig = dev.spikard.GrpcConfig
-
 typealias JsonRpcConfig = dev.spikard.JsonRpcConfig
-
 typealias OpenApiConfig = dev.spikard.OpenApiConfig
-
 typealias ContactInfo = dev.spikard.ContactInfo
-
 typealias LicenseInfo = dev.spikard.LicenseInfo
-
 typealias ServerInfo = dev.spikard.ServerInfo
-
 typealias Response = dev.spikard.Response
-
 typealias SseEvent = dev.spikard.SseEvent
-
 typealias JwtConfig = dev.spikard.JwtConfig
-
 typealias ApiKeyConfig = dev.spikard.ApiKeyConfig
-
 typealias StaticFilesConfig = dev.spikard.StaticFilesConfig
-
 typealias ServerConfig = dev.spikard.ServerConfig
 
 typealias Method = dev.spikard.Method
-
 typealias SecuritySchemeInfo = dev.spikard.SecuritySchemeInfo
 
 typealias GraphQLErrorException = dev.spikard.GraphQLErrorException
-
 typealias SchemaErrorException = dev.spikard.SchemaErrorException
 
 object Spikard {

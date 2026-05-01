@@ -227,8 +227,6 @@ class ProblemDetails {
   });
 }
 
-class GraphQLError {}
-
 /// Configuration for GraphQL routes
 ///
 /// Provides a builder pattern for configuring GraphQL route parameters
@@ -705,17 +703,8 @@ class ServerConfig {
   /// JSON-RPC configuration
   final JsonRpcConfig? jsonrpc;
 
-  /// gRPC configuration
-  final GrpcConfig? grpc;
-
   /// Lifecycle hooks for request/response processing
   final String? lifecycleHooks;
-
-  /// Background task executor configuration
-  final BackgroundTaskConfig backgroundTasks;
-
-  /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
-  final bool enableHttpTrace;
 
   /// Dependency injection container (requires 'di' feature)
   final String? diContainer;
@@ -735,10 +724,7 @@ class ServerConfig {
     required this.shutdownTimeout,
     required this.openapi,
     required this.jsonrpc,
-    required this.grpc,
     required this.lifecycleHooks,
-    required this.backgroundTasks,
-    required this.enableHttpTrace,
     required this.diContainer,
   });
 }

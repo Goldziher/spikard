@@ -68,9 +68,6 @@ pub struct ProblemDetails {
     pub extensions: std::collections::HashMap<String, String>,
 }
 
-#[frb(mirror(GraphQLError))]
-pub struct GraphQLError {}
-
 #[frb(mirror(GraphQLRouteConfig))]
 pub struct GraphQLRouteConfig {}
 
@@ -224,10 +221,7 @@ pub struct ServerConfig {
     pub shutdown_timeout: i64,
     pub openapi: Option<OpenApiConfig>,
     pub jsonrpc: Option<JsonRpcConfig>,
-    pub grpc: Option<GrpcConfig>,
     pub lifecycle_hooks: Option<String>,
-    pub background_tasks: BackgroundTaskConfig,
-    pub enable_http_trace: bool,
     pub di_container: Option<String>,
 }
 

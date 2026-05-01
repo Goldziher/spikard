@@ -79,10 +79,6 @@ pub type ProblemDetails {
   )
 }
 
-pub type GraphQLError {
-  GraphQLError
-}
-
 /// Configuration for GraphQL routes
 ///
 /// Provides a builder pattern for configuring GraphQL route parameters
@@ -299,10 +295,7 @@ pub type ServerConfig {
     shutdown_timeout: Int,
     openapi: Option(OpenApiConfig),
     jsonrpc: Option(JsonRpcConfig),
-    grpc: Option(GrpcConfig),
     lifecycle_hooks: Option(String),
-    background_tasks: BackgroundTaskConfig,
-    enable_http_trace: Bool,
     di_container: Option(String),
   )
 }

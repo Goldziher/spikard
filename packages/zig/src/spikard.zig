@@ -132,8 +132,6 @@ pub const ProblemDetails = struct {
     extensions: std.StringHashMap([:0]const u8),
 };
 
-pub const GraphQLError = struct {};
-
 /// Configuration for GraphQL routes
 ///
 /// Provides a builder pattern for configuring GraphQL route parameters
@@ -329,10 +327,7 @@ pub const ServerConfig = struct {
     shutdown_timeout: u64,
     openapi: ?OpenApiConfig,
     jsonrpc: ?JsonRpcConfig,
-    grpc: ?GrpcConfig,
     lifecycle_hooks: ?[:0]const u8,
-    background_tasks: BackgroundTaskConfig,
-    enable_http_trace: bool,
     di_container: ?[:0]const u8,
 };
 

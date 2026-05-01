@@ -17,7 +17,6 @@ typedef struct SPIKARDCompressionConfig SPIKARDCompressionConfig;
 typedef struct SPIKARDContactInfo SPIKARDContactInfo;
 typedef struct SPIKARDCorsConfig SPIKARDCorsConfig;
 typedef struct SPIKARDFullSchemaConfig SPIKARDFullSchemaConfig;
-typedef struct SPIKARDGraphQLError SPIKARDGraphQLError;
 typedef struct SPIKARDGraphQLRouteConfig SPIKARDGraphQLRouteConfig;
 typedef struct SPIKARDGrpcConfig SPIKARDGrpcConfig;
 typedef struct SPIKARDJsonRpcConfig SPIKARDJsonRpcConfig;
@@ -486,6 +485,13 @@ char *spikard_problem_details_detail(const SPIKARDProblemDetails *ptr);
 char *spikard_problem_details_instance(const SPIKARDProblemDetails *ptr);
 
 /**
+ * Get the `extensions` field from a `ProblemDetails`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_problem_details_extensions(const SPIKARDProblemDetails *ptr);
+
+/**
  * Set the detail field
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -556,43 +562,6 @@ char *spikard_problem_details_to_json(const SPIKARDProblemDetails *this_);
  * Returned pointers must be freed with the appropriate free function.
  */
 char *spikard_problem_details_to_json_pretty(const SPIKARDProblemDetails *this_);
-
-/**
- * Free a `GraphQLError` handle.
- * # Safety
- * Pointer must have been returned by this library, or be null.
- */
-void spikard_graph_ql_error_free(SPIKARDGraphQLError *ptr);
-
-/**
- * Convert error to HTTP status code
- *
- * Maps GraphQL error types to appropriate HTTP status codes:
- * - 400: Bad Request for parse/request-handling errors
- * - 401: Unauthorized for authentication errors
- * - 403: Forbidden for authorization errors
- * - 404: Not Found for resource not found
- * - 422: Unprocessable Entity for validation failures
- * - 429: Too Many Requests for rate limit errors
- * - 500: Internal Server Error for schema/serialization/internal errors
- * - 200: OK for GraphQL execution errors returned in GraphQL response body
- *
- * # Examples
- *
- * ```ignore
- * use spikard_graphql::error::GraphQLError;
- *
- * let error = GraphQLError::AuthenticationError("Invalid token".to_string());
- * assert_eq!(error.status_code(), 401);
- *
- * let error = GraphQLError::ExecutionError("Query failed".to_string());
- * assert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body
- * ```
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
- */
-uint16_t spikard_graph_ql_error_status_code(const SPIKARDGraphQLError *this_);
 
 /**
  * Free a `GraphQLRouteConfig` handle.
@@ -1790,27 +1759,6 @@ SPIKARDOpenApiConfig *spikard_server_config_openapi(const SPIKARDServerConfig *p
  * Pointer must be a valid handle returned by this library.
  */
 SPIKARDJsonRpcConfig *spikard_server_config_jsonrpc(const SPIKARDServerConfig *ptr);
-
-/**
- * Get the `grpc` field from a `ServerConfig`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-SPIKARDGrpcConfig *spikard_server_config_grpc(const SPIKARDServerConfig *ptr);
-
-/**
- * Get the `background_tasks` field from a `ServerConfig`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-SPIKARDBackgroundTaskConfig *spikard_server_config_background_tasks(const SPIKARDServerConfig *ptr);
-
-/**
- * Get the `enable_http_trace` field from a `ServerConfig`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-int32_t spikard_server_config_enable_http_trace(const SPIKARDServerConfig *ptr);
 
 /**
  * # Safety

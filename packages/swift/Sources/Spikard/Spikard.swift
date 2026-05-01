@@ -92,8 +92,6 @@ public typealias JsonRpcMethodInfo = RustBridge.JsonRpcMethodInfo
 /// ```
 public typealias ProblemDetails = RustBridge.ProblemDetails
 
-public typealias GraphQLError = RustBridge.GraphQLError
-
 /// Configuration for GraphQL routes
 ///
 /// Provides a builder pattern for configuring GraphQL route parameters

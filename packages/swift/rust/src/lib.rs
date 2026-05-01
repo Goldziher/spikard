@@ -89,10 +89,6 @@ mod ffi {
     }
 
     extern "Rust" {
-        type GraphQLError;
-    }
-
-    extern "Rust" {
         type GraphQLRouteConfig;
     }
 
@@ -305,10 +301,7 @@ mod ffi {
             shutdown_timeout: u64,
             openapi: Option<OpenApiConfig>,
             jsonrpc: Option<JsonRpcConfig>,
-            grpc: Option<GrpcConfig>,
             lifecycle_hooks: Option<String>,
-            background_tasks: BackgroundTaskConfig,
-            enable_http_trace: bool,
             di_container: Option<String>,
         ) -> ServerConfig;
         fn host(&self) -> String;
@@ -326,10 +319,7 @@ mod ffi {
         fn shutdown_timeout(&self) -> u64;
         fn openapi(&self) -> Option<OpenApiConfig>;
         fn jsonrpc(&self) -> Option<JsonRpcConfig>;
-        fn grpc(&self) -> Option<GrpcConfig>;
         fn lifecycle_hooks(&self) -> Option<String>;
-        fn background_tasks(&self) -> BackgroundTaskConfig;
-        fn enable_http_trace(&self) -> bool;
         fn di_container(&self) -> Option<String>;
     }
 
@@ -603,8 +593,6 @@ impl ProblemDetails {
         serde_json::to_string(&self.0.extensions).expect("serializable extensions")
     }
 }
-
-pub struct GraphQLError(pub spikard_graphql::GraphQLError);
 
 pub struct GraphQLRouteConfig(pub spikard_graphql::GraphQLRouteConfig);
 
@@ -1198,10 +1186,7 @@ impl ServerConfig {
         shutdown_timeout: u64,
         openapi: Option<OpenApiConfig>,
         jsonrpc: Option<JsonRpcConfig>,
-        grpc: Option<GrpcConfig>,
         lifecycle_hooks: Option<String>,
-        background_tasks: BackgroundTaskConfig,
-        enable_http_trace: bool,
         di_container: Option<String>,
     ) -> ServerConfig {
         let mut __target: spikard_http::ServerConfig = ::std::default::Default::default();
@@ -1236,9 +1221,6 @@ impl ServerConfig {
         if let Some(w) = jsonrpc {
             __target.jsonrpc = Some(w.0);
         }
-        if let Some(w) = grpc {
-            __target.grpc = Some(w.0);
-        }
         if let Some(s) = lifecycle_hooks {
             if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
                 if let Ok(t) = ::serde_json::from_value(v) {
@@ -1246,8 +1228,6 @@ impl ServerConfig {
                 }
             }
         }
-        __target.background_tasks = background_tasks.0;
-        __target.enable_http_trace = enable_http_trace;
         if let Some(s) = di_container {
             if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
                 if let Ok(t) = ::serde_json::from_value(v) {
@@ -1329,23 +1309,11 @@ impl ServerConfig {
     pub fn jsonrpc(&self) -> Option<JsonRpcConfig> {
         self.0.jsonrpc.clone().map(JsonRpcConfig)
     }
-    pub fn grpc(&self) -> Option<GrpcConfig> {
-        self.0.grpc.clone().map(GrpcConfig)
-    }
     pub fn lifecycle_hooks(&self) -> Option<String> {
         self.0
             .lifecycle_hooks
             .as_ref()
             .and_then(|v| serde_json::to_string(v).ok())
-    }
-    pub fn background_tasks(&self) -> BackgroundTaskConfig {
-        BackgroundTaskConfig(self.0.background_tasks.clone())
-    }
-    pub fn enable_http_trace(&self) -> bool {
-        ::serde_json::to_value(&self.0.enable_http_trace)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
     }
     pub fn di_container(&self) -> Option<String> {
         self.0.di_container.as_ref().and_then(|v| serde_json::to_string(v).ok())
