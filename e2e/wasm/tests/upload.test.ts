@@ -3,39 +3,39 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("upload", () => {
-	it("upload_file_as_bytes: Tests file upload read as byte array", async () => {
-		await handle_request(null);
-	});
+describe('upload', () => {
+  it('upload_file_as_bytes: Tests file upload read as byte array', async () => {
+    await handle_request(null);
+  });
 
-	it("upload_file_basic_success: Tests basic file upload with single file", async () => {
-		await handle_request(null);
-	});
+  it('upload_file_basic_success: Tests basic file upload with single file', async () => {
+    await handle_request(null);
+  });
 
-	it("upload_file_content_type_or_default: Tests file upload uses provided content_type or defaults", async () => {
-		await handle_request(null);
-	});
+  it('upload_file_content_type_or_default: Tests file upload uses provided content_type or defaults', async () => {
+    await handle_request(null);
+  });
 
-	it("upload_file_read_to_string: Tests file upload read as string", async () => {
-		await handle_request(null);
-	});
+  it('upload_file_read_to_string: Tests file upload read as string', async () => {
+    await handle_request(null);
+  });
 
-	it("upload_file_with_custom_content_type: Tests file upload preserves custom Content-Type", async () => {
-		await handle_request(null);
-	});
+  it('upload_file_with_custom_content_type: Tests file upload preserves custom Content-Type', async () => {
+    await handle_request(null);
+  });
 
-	it("upload_file_with_form_fields: Tests file upload with additional form fields", async () => {
-		await handle_request(null);
-	});
+  it('upload_file_with_form_fields: Tests file upload with additional form fields', async () => {
+    await handle_request(null);
+  });
 
-	it("upload_file_with_gzip_content_encoding: Tests file upload with gzip content encoding", async () => {
-		await handle_request(null);
-	});
+  it('upload_file_with_gzip_content_encoding: Tests file upload with gzip content encoding', async () => {
+    await handle_request(null);
+  });
 
-	it("upload_multiple_files: Tests uploading multiple files at once", async () => {
-		await handle_request(null);
-	});
+  it('upload_multiple_files: Tests uploading multiple files at once', async () => {
+    await handle_request(null);
+  });
 });

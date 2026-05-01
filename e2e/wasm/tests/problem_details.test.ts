@@ -3,39 +3,39 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("problem_details", () => {
-	it("problem_details_400_bad_request: Tests ProblemDetails for 400 Bad Request status", async () => {
-		await handle_request(null);
-	});
+describe('problem_details', () => {
+  it('problem_details_400_bad_request: Tests ProblemDetails for 400 Bad Request status', async () => {
+    await handle_request(null);
+  });
 
-	it("problem_details_401_unauthorized: Tests ProblemDetails for 401 Unauthorized status", async () => {
-		await handle_request(null);
-	});
+  it('problem_details_401_unauthorized: Tests ProblemDetails for 401 Unauthorized status', async () => {
+    await handle_request(null);
+  });
 
-	it("problem_details_403_forbidden: Tests ProblemDetails for 403 Forbidden status", async () => {
-		await handle_request(null);
-	});
+  it('problem_details_403_forbidden: Tests ProblemDetails for 403 Forbidden status', async () => {
+    await handle_request(null);
+  });
 
-	it("problem_details_500_internal_error: Tests ProblemDetails for 500 Internal Server Error status", async () => {
-		await handle_request(null);
-	});
+  it('problem_details_500_internal_error: Tests ProblemDetails for 500 Internal Server Error status', async () => {
+    await handle_request(null);
+  });
 
-	it("problem_details_standard_all_fields: Tests RFC 9457 ProblemDetails response with all standard fields", async () => {
-		await handle_request(null);
-	});
+  it('problem_details_standard_all_fields: Tests RFC 9457 ProblemDetails response with all standard fields', async () => {
+    await handle_request(null);
+  });
 
-	it("problem_details_with_extensions: Tests ProblemDetails includes custom extensions for additional context", async () => {
-		await handle_request(null);
-	});
+  it('problem_details_with_extensions: Tests ProblemDetails includes custom extensions for additional context', async () => {
+    await handle_request(null);
+  });
 
-	it("problem_details_with_instance: Tests ProblemDetails includes instance URI for context", async () => {
-		await handle_request(null);
-	});
+  it('problem_details_with_instance: Tests ProblemDetails includes instance URI for context', async () => {
+    await handle_request(null);
+  });
 
-	it("problem_details_with_type_uri: Tests ProblemDetails includes type URI for error classification", async () => {
-		await handle_request(null);
-	});
+  it('problem_details_with_type_uri: Tests ProblemDetails includes type URI for error classification', async () => {
+    await handle_request(null);
+  });
 });

@@ -3,51 +3,51 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("http_methods", () => {
-	it("delete_remove_resource: Tests DELETE method to remove a resource", async () => {
-		await handle_request(null);
-	});
+describe('http_methods', () => {
+  it('delete_remove_resource: Tests DELETE method to remove a resource', async () => {
+    await handle_request(null);
+  });
 
-	it("delete_resource_not_found: Tests DELETE on non-existent resource returns 404", async () => {
-		await handle_request(null);
-	});
+  it('delete_resource_not_found: Tests DELETE on non-existent resource returns 404', async () => {
+    await handle_request(null);
+  });
 
-	it("delete_with_response_body: Tests DELETE returning deleted resource data", async () => {
-		await handle_request(null);
-	});
+  it('delete_with_response_body: Tests DELETE returning deleted resource data', async () => {
+    await handle_request(null);
+  });
 
-	it("head_get_metadata_without_body: Tests HEAD method returns headers without response body", async () => {
-		await handle_request(null);
-	});
+  it('head_get_metadata_without_body: Tests HEAD method returns headers without response body', async () => {
+    await handle_request(null);
+  });
 
-	it("patch_partial_update: Tests PATCH method for partial resource updates", async () => {
-		await handle_request(null);
-	});
+  it('patch_partial_update: Tests PATCH method for partial resource updates', async () => {
+    await handle_request(null);
+  });
 
-	it("patch_update_multiple_fields: Tests PATCH updating multiple fields at once", async () => {
-		await handle_request(null);
-	});
+  it('patch_update_multiple_fields: Tests PATCH updating multiple fields at once', async () => {
+    await handle_request(null);
+  });
 
-	it("put_complete_resource_replacement: Tests PUT method for complete resource replacement", async () => {
-		await handle_request(null);
-	});
+  it('put_complete_resource_replacement: Tests PUT method for complete resource replacement', async () => {
+    await handle_request(null);
+  });
 
-	it("put_create_resource_if_doesn_t_exist: Tests PUT creating new resource at specific URI", async () => {
-		await handle_request(null);
-	});
+  it('put_create_resource_if_doesn_t_exist: Tests PUT creating new resource at specific URI', async () => {
+    await handle_request(null);
+  });
 
-	it("put_idempotent_operation: Tests PUT idempotency - repeated calls produce same result", async () => {
-		await handle_request(null);
-	});
+  it('put_idempotent_operation: Tests PUT idempotency - repeated calls produce same result', async () => {
+    await handle_request(null);
+  });
 
-	it("put_missing_required_field: Tests PUT with missing required fields returns 422", async () => {
-		await handle_request(null);
-	});
+  it('put_missing_required_field: Tests PUT with missing required fields returns 422', async () => {
+    await handle_request(null);
+  });
 
-	it("put_validation_error: Tests PUT with invalid data returns 422", async () => {
-		await handle_request(null);
-	});
+  it('put_validation_error: Tests PUT with invalid data returns 422', async () => {
+    await handle_request(null);
+  });
 });

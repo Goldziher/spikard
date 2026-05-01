@@ -3,15 +3,15 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("static_files", () => {
-	it("static_file_server_returns_text_file: Tests serving a plain text file with Cache-Control headers.", async () => {
-		await handle_request(null);
-	});
+describe('static_files', () => {
+  it('static_file_server_returns_text_file: Tests serving a plain text file with Cache-Control headers.', async () => {
+    await handle_request(null);
+  });
 
-	it("static_server_returns_index_html_for_directory: When index files are enabled the server should serve index.html when the directory root is requested.", async () => {
-		await handle_request(null);
-	});
+  it('static_server_returns_index_html_for_directory: When index files are enabled the server should serve index.html when the directory root is requested.', async () => {
+    await handle_request(null);
+  });
 });

@@ -3,83 +3,83 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("edge_cases", () => {
-	it("_utf8_query_parameter: Query parameter with UTF-8 characters should be handled correctly", async () => {
-		await handle_request(null);
-	});
+describe('edge_cases', () => {
+  it('_utf8_query_parameter: Query parameter with UTF-8 characters should be handled correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_percent_encoded_special_chars: Percent-encoded special characters should be decoded correctly", async () => {
-		await handle_request(null);
-	});
+  it('_percent_encoded_special_chars: Percent-encoded special characters should be decoded correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_empty_string_query_param_preserved: Empty string query parameter should be preserved, not treated as missing", async () => {
-		await handle_request(null);
-	});
+  it('_empty_string_query_param_preserved: Empty string query parameter should be preserved, not treated as missing', async () => {
+    await handle_request(null);
+  });
 
-	it("_large_integer_boundary: Very large integer at JavaScript MAX_SAFE_INTEGER boundary should be handled", async () => {
-		await handle_request(null);
-	});
+  it('_large_integer_boundary: Very large integer at JavaScript MAX_SAFE_INTEGER boundary should be handled', async () => {
+    await handle_request(null);
+  });
 
-	it("_float_precision_preservation: High-precision floating point numbers should be preserved without loss", async () => {
-		await handle_request(null);
-	});
+  it('_float_precision_preservation: High-precision floating point numbers should be preserved without loss', async () => {
+    await handle_request(null);
+  });
 
-	it("_negative_zero_handling: Negative zero (-0.0) should be handled correctly in numeric fields", async () => {
-		await handle_request(null);
-	});
+  it('_negative_zero_handling: Negative zero (-0.0) should be handled correctly in numeric fields', async () => {
+    await handle_request(null);
+  });
 
-	it("_extremely_long_string: Very long string values should be validated against maxLength", async () => {
-		await handle_request(null);
-	});
+  it('_extremely_long_string: Very long string values should be validated against maxLength', async () => {
+    await handle_request(null);
+  });
 
-	it("_unicode_normalization: Unicode characters with combining diacritics should be handled correctly", async () => {
-		await handle_request(null);
-	});
+  it('_unicode_normalization: Unicode characters with combining diacritics should be handled correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_emoji_in_strings: Emoji characters should be handled correctly in string fields", async () => {
-		await handle_request(null);
-	});
+  it('_emoji_in_strings: Emoji characters should be handled correctly in string fields', async () => {
+    await handle_request(null);
+  });
 
-	it("_scientific_notation_number: Numbers in scientific notation should be parsed correctly", async () => {
-		await handle_request(null);
-	});
+  it('_scientific_notation_number: Numbers in scientific notation should be parsed correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_leading_zeros_integer: Integer values with leading zeros should be parsed as decimal (not octal)", async () => {
-		await handle_request(null);
-	});
+  it('_leading_zeros_integer: Integer values with leading zeros should be parsed as decimal (not octal)', async () => {
+    await handle_request(null);
+  });
 
-	it("_deeply_nested_json_limit: Extremely deeply nested JSON should be rejected to prevent DoS", async () => {
-		await handle_request(null);
-	});
+  it('_deeply_nested_json_limit: Extremely deeply nested JSON should be rejected to prevent DoS', async () => {
+    await handle_request(null);
+  });
 
-	it("_array_with_holes: Array indices with gaps should be rejected in form data", async () => {
-		await handle_request(null);
-	});
+  it('_array_with_holes: Array indices with gaps should be rejected in form data', async () => {
+    await handle_request(null);
+  });
 
-	it("deeply_nested_structure_10_levels: Tests handling of deeply nested JSON objects", async () => {
-		await handle_request(null);
-	});
+  it('deeply_nested_structure_10_levels: Tests handling of deeply nested JSON objects', async () => {
+    await handle_request(null);
+  });
 
-	it("empty_and_null_value_handling: Tests distinction between null, empty, and missing values", async () => {
-		await handle_request(null);
-	});
+  it('empty_and_null_value_handling: Tests distinction between null, empty, and missing values', async () => {
+    await handle_request(null);
+  });
 
-	it("float_precision_and_rounding: Tests floating point precision and rounding behavior", async () => {
-		await handle_request(null);
-	});
+  it('float_precision_and_rounding: Tests floating point precision and rounding behavior', async () => {
+    await handle_request(null);
+  });
 
-	it("large_integer_boundary_values: Tests handling of very large integer values near system limits", async () => {
-		await handle_request(null);
-	});
+  it('large_integer_boundary_values: Tests handling of very large integer values near system limits', async () => {
+    await handle_request(null);
+  });
 
-	it("special_string_values_and_escaping: Tests handling of special characters, null bytes, and escape sequences", async () => {
-		await handle_request(null);
-	});
+  it('special_string_values_and_escaping: Tests handling of special characters, null bytes, and escape sequences', async () => {
+    await handle_request(null);
+  });
 
-	it("unicode_and_emoji_handling: Tests proper handling of Unicode characters and emojis", async () => {
-		await handle_request(null);
-	});
+  it('unicode_and_emoji_handling: Tests proper handling of Unicode characters and emojis', async () => {
+    await handle_request(null);
+  });
 });

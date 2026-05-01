@@ -3,71 +3,71 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("server_config", () => {
-	it("server_background_tasks_configuration: Tests server with background tasks configured", async () => {
-		await handle_request(null);
-	});
+describe('server_config', () => {
+  it('server_background_tasks_configuration: Tests server with background tasks configured', async () => {
+    await handle_request(null);
+  });
 
-	it("server_compression_enabled: Tests server compresses responses when enabled", async () => {
-		await handle_request(null);
-	});
+  it('server_compression_enabled: Tests server compresses responses when enabled', async () => {
+    await handle_request(null);
+  });
 
-	it("server_custom_host_port: Tests server configured with custom host and port", async () => {
-		await handle_request(null);
-	});
+  it('server_custom_host_port: Tests server configured with custom host and port', async () => {
+    await handle_request(null);
+  });
 
-	it("server_default_configuration: Tests server with default configuration (0.0.0.0:8080)", async () => {
-		await handle_request(null);
-	});
+  it('server_default_configuration: Tests server with default configuration (0.0.0.0:8080)', async () => {
+    await handle_request(null);
+  });
 
-	it("server_enable_http_trace_logging: Tests server with HTTP trace logging enabled", async () => {
-		await handle_request(null);
-	});
+  it('server_enable_http_trace_logging: Tests server with HTTP trace logging enabled', async () => {
+    await handle_request(null);
+  });
 
-	it("server_graceful_shutdown_enabled: Tests server graceful shutdown waits for in-flight requests", async () => {
-		await handle_request(null);
-	});
+  it('server_graceful_shutdown_enabled: Tests server graceful shutdown waits for in-flight requests', async () => {
+    await handle_request(null);
+  });
 
-	it("server_grpc_integration: Tests server with gRPC protocol integration", async () => {
-		await handle_request(null);
-	});
+  it('server_grpc_integration: Tests server with gRPC protocol integration', async () => {
+    await handle_request(null);
+  });
 
-	it("server_jwt_and_api_key_auth_combined: Tests server with both JWT and API key authentication configured", async () => {
-		await handle_request(null);
-	});
+  it('server_jwt_and_api_key_auth_combined: Tests server with both JWT and API key authentication configured', async () => {
+    await handle_request(null);
+  });
 
-	it("server_max_body_size_configuration: Tests server respects max body size limit", async () => {
-		await handle_request(null);
-	});
+  it('server_max_body_size_configuration: Tests server respects max body size limit', async () => {
+    await handle_request(null);
+  });
 
-	it("server_openapi_integration: Tests server with OpenAPI documentation integration", async () => {
-		await handle_request(null);
-	});
+  it('server_openapi_integration: Tests server with OpenAPI documentation integration', async () => {
+    await handle_request(null);
+  });
 
-	it("server_rate_limit_configuration: Tests server enforces rate limiting configuration", async () => {
-		await handle_request(null);
-	});
+  it('server_rate_limit_configuration: Tests server enforces rate limiting configuration', async () => {
+    await handle_request(null);
+  });
 
-	it("server_request_id_enabled: Tests server generates request IDs when enabled", async () => {
-		await handle_request(null);
-	});
+  it('server_request_id_enabled: Tests server generates request IDs when enabled', async () => {
+    await handle_request(null);
+  });
 
-	it("server_request_timeout_setting: Tests server respects request timeout configuration", async () => {
-		await handle_request(null);
-	});
+  it('server_request_timeout_setting: Tests server respects request timeout configuration', async () => {
+    await handle_request(null);
+  });
 
-	it("server_shutdown_timeout_setting: Tests server shutdown timeout configuration", async () => {
-		await handle_request(null);
-	});
+  it('server_shutdown_timeout_setting: Tests server shutdown timeout configuration', async () => {
+    await handle_request(null);
+  });
 
-	it("server_static_files_configuration: Tests server serves static files from configured directory", async () => {
-		await handle_request(null);
-	});
+  it('server_static_files_configuration: Tests server serves static files from configured directory', async () => {
+    await handle_request(null);
+  });
 
-	it("server_worker_count_configuration: Tests server with custom worker thread count", async () => {
-		await handle_request(null);
-	});
+  it('server_worker_count_configuration: Tests server with custom worker thread count', async () => {
+    await handle_request(null);
+  });
 });

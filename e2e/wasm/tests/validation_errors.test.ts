@@ -3,95 +3,95 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("validation_errors", () => {
-	it("_multiple_validation_errors: Multiple validation errors should be returned together in batch", async () => {
-		await handle_request(null);
-	});
+describe('validation_errors', () => {
+  it('_multiple_validation_errors: Multiple validation errors should be returned together in batch', async () => {
+    await handle_request(null);
+  });
 
-	it("_nested_error_path: Validation error in nested object should have correct path in loc", async () => {
-		await handle_request(null);
-	});
+  it('_nested_error_path: Validation error in nested object should have correct path in loc', async () => {
+    await handle_request(null);
+  });
 
-	it("array_item_validation_error: Tests validation error for invalid item within array", async () => {
-		await handle_request(null);
-	});
+  it('array_item_validation_error: Tests validation error for invalid item within array', async () => {
+    await handle_request(null);
+  });
 
-	it("array_max_items_constraint_violation: Tests validation error when array has more items than max_items", async () => {
-		await handle_request(null);
-	});
+  it('array_max_items_constraint_violation: Tests validation error when array has more items than max_items', async () => {
+    await handle_request(null);
+  });
 
-	it("array_min_items_constraint_violation: Tests validation error when array has fewer items than min_items", async () => {
-		await handle_request(null);
-	});
+  it('array_min_items_constraint_violation: Tests validation error when array has fewer items than min_items', async () => {
+    await handle_request(null);
+  });
 
-	it("body_field_type_error_string_for_float: Tests validation error when body field has wrong type", async () => {
-		await handle_request(null);
-	});
+  it('body_field_type_error_string_for_float: Tests validation error when body field has wrong type', async () => {
+    await handle_request(null);
+  });
 
-	it("header_validation_error: Tests validation error when required header is missing", async () => {
-		await handle_request(null);
-	});
+  it('header_validation_error: Tests validation error when required header is missing', async () => {
+    await handle_request(null);
+  });
 
-	it("invalid_boolean_value: Tests validation error when boolean value is invalid", async () => {
-		await handle_request(null);
-	});
+  it('invalid_boolean_value: Tests validation error when boolean value is invalid', async () => {
+    await handle_request(null);
+  });
 
-	it("invalid_datetime_format: Tests validation error when datetime format is invalid", async () => {
-		await handle_request(null);
-	});
+  it('invalid_datetime_format: Tests validation error when datetime format is invalid', async () => {
+    await handle_request(null);
+  });
 
-	it("invalid_enum_value: Tests validation error when value is not in allowed enum values", async () => {
-		await handle_request(null);
-	});
+  it('invalid_enum_value: Tests validation error when value is not in allowed enum values', async () => {
+    await handle_request(null);
+  });
 
-	it("invalid_uuid_format: Tests validation error when UUID format is invalid", async () => {
-		await handle_request(null);
-	});
+  it('invalid_uuid_format: Tests validation error when UUID format is invalid', async () => {
+    await handle_request(null);
+  });
 
-	it("malformed_json_body: Tests validation error when request body contains malformed JSON", async () => {
-		await handle_request(null);
-	});
+  it('malformed_json_body: Tests validation error when request body contains malformed JSON', async () => {
+    await handle_request(null);
+  });
 
-	it("missing_required_body_field: Tests validation error when required body field is missing", async () => {
-		await handle_request(null);
-	});
+  it('missing_required_body_field: Tests validation error when required body field is missing', async () => {
+    await handle_request(null);
+  });
 
-	it("missing_required_query_parameter: Tests validation error when required query param is missing", async () => {
-		await handle_request(null);
-	});
+  it('missing_required_query_parameter: Tests validation error when required query param is missing', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_validation_errors_2: Tests multiple validation errors returned in single response", async () => {
-		await handle_request(null);
-	});
+  it('multiple_validation_errors_2: Tests multiple validation errors returned in single response', async () => {
+    await handle_request(null);
+  });
 
-	it("nested_object_validation_error: Tests validation error in nested object field", async () => {
-		await handle_request(null);
-	});
+  it('nested_object_validation_error: Tests validation error in nested object field', async () => {
+    await handle_request(null);
+  });
 
-	it("numeric_constraint_violation_gt_greater_than: Tests validation error when value violates gt constraint", async () => {
-		await handle_request(null);
-	});
+  it('numeric_constraint_violation_gt_greater_than: Tests validation error when value violates gt constraint', async () => {
+    await handle_request(null);
+  });
 
-	it("numeric_constraint_violation_le_less_than_or_equal: Tests validation error when value violates le constraint", async () => {
-		await handle_request(null);
-	});
+  it('numeric_constraint_violation_le_less_than_or_equal: Tests validation error when value violates le constraint', async () => {
+    await handle_request(null);
+  });
 
-	it("query_param_type_error_string_provided_for_int: Tests validation error when string is provided for integer query param", async () => {
-		await handle_request(null);
-	});
+  it('query_param_type_error_string_provided_for_int: Tests validation error when string is provided for integer query param', async () => {
+    await handle_request(null);
+  });
 
-	it("string_max_length_constraint_violation: Tests validation error when string exceeds max_length", async () => {
-		await handle_request(null);
-	});
+  it('string_max_length_constraint_violation: Tests validation error when string exceeds max_length', async () => {
+    await handle_request(null);
+  });
 
-	it("string_min_length_constraint_violation: Tests validation error when string is shorter than min_length", async () => {
-		await handle_request(null);
-	});
+  it('string_min_length_constraint_violation: Tests validation error when string is shorter than min_length', async () => {
+    await handle_request(null);
+  });
 
-	it("string_regex_pattern_mismatch: Tests validation error when string doesn't match regex pattern", async () => {
-		await handle_request(null);
-	});
+  it('string_regex_pattern_mismatch: Tests validation error when string doesn\'t match regex pattern', async () => {
+    await handle_request(null);
+  });
 });

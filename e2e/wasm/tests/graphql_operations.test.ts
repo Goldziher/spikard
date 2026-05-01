@@ -3,55 +3,55 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("graphql_operations", () => {
-	it("graphql_field_level_error_partial_data: Tests that a field-level resolver error returns partial data alongside an errors array", async () => {
-		await handle_request(null);
-	});
+describe('graphql_operations', () => {
+  it('graphql_field_level_error_partial_data: Tests that a field-level resolver error returns partial data alongside an errors array', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_introspection_query: Tests that the __schema introspection query returns the schema type list", async () => {
-		await handle_request(null);
-	});
+  it('graphql_introspection_query: Tests that the __schema introspection query returns the schema type list', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_invalid_syntax_rejected: Tests that a query with invalid GraphQL syntax returns a syntax error in the errors array", async () => {
-		await handle_request(null);
-	});
+  it('graphql_invalid_syntax_rejected: Tests that a query with invalid GraphQL syntax returns a syntax error in the errors array', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_multi_operation_with_operation_name: Tests executing a specific named operation from a document containing multiple operations", async () => {
-		await handle_request(null);
-	});
+  it('graphql_multi_operation_with_operation_name: Tests executing a specific named operation from a document containing multiple operations', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_mutation_create_object: Tests GraphQL mutation with an input type that returns the newly created object", async () => {
-		await handle_request(null);
-	});
+  it('graphql_mutation_create_object: Tests GraphQL mutation with an input type that returns the newly created object', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_ops_complexity_limit_exceeded: Tests that a query exceeding the configured complexity limit returns an error", async () => {
-		await handle_request(null);
-	});
+  it('graphql_ops_complexity_limit_exceeded: Tests that a query exceeding the configured complexity limit returns an error', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_ops_depth_limit_exceeded: Tests that a query exceeding the configured depth limit returns an error", async () => {
-		await handle_request(null);
-	});
+  it('graphql_ops_depth_limit_exceeded: Tests that a query exceeding the configured depth limit returns an error', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_query_nested_fields: Tests GraphQL query selecting nested fields at depth 2-3", async () => {
-		await handle_request(null);
-	});
+  it('graphql_query_nested_fields: Tests GraphQL query selecting nested fields at depth 2-3', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_query_with_variables: Tests GraphQL query that uses variables passed in the request body", async () => {
-		await handle_request(null);
-	});
+  it('graphql_query_with_variables: Tests GraphQL query that uses variables passed in the request body', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_simple_query: Tests simple GraphQL query execution returning data from the root query type", async () => {
-		await handle_request(null);
-	});
+  it('graphql_simple_query: Tests simple GraphQL query execution returning data from the root query type', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_subscription_declaration: Tests that a subscription operation type is declared and the initial response shape matches", async () => {
-		await handle_request(null);
-	});
+  it('graphql_subscription_declaration: Tests that a subscription operation type is declared and the initial response shape matches', async () => {
+    await handle_request(null);
+  });
 
-	it("graphql_undefined_field_error: Tests that querying a field that does not exist in the schema returns a validation error", async () => {
-		await handle_request(null);
-	});
+  it('graphql_undefined_field_error: Tests that querying a field that does not exist in the schema returns a validation error', async () => {
+    await handle_request(null);
+  });
 });

@@ -3,15 +3,15 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("background", () => {
-	it("background_event_logging: Enqueues a background job that appends the posted event to shared state", async () => {
-		await handle_request(null);
-	});
+describe('background', () => {
+  it('background_event_logging: Enqueues a background job that appends the posted event to shared state', async () => {
+    await handle_request(null);
+  });
 
-	it("background_event_logging_second_payload: Ensures background jobs handle different payloads", async () => {
-		await handle_request(null);
-	});
+  it('background_event_logging_second_payload: Ensures background jobs handle different payloads', async () => {
+    await handle_request(null);
+  });
 });

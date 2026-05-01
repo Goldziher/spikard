@@ -3,19 +3,19 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("streaming", () => {
-	it("binary_log_download: Streams binary log segments with control bytes", async () => {
-		await handle_request(null);
-	});
+describe('streaming', () => {
+  it('binary_log_download: Streams binary log segments with control bytes', async () => {
+    await handle_request(null);
+  });
 
-	it("chunked_csv_export: Streams CSV header and rows as discrete chunks", async () => {
-		await handle_request(null);
-	});
+  it('chunked_csv_export: Streams CSV header and rows as discrete chunks', async () => {
+    await handle_request(null);
+  });
 
-	it("stream_json_lines: Streams newline-delimited JSON payload in small chunks", async () => {
-		await handle_request(null);
-	});
+  it('stream_json_lines: Streams newline-delimited JSON payload in small chunks', async () => {
+    await handle_request(null);
+  });
 });

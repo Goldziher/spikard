@@ -3,139 +3,139 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("headers", () => {
-	it("_bearer_token_format_valid: Authorization header with valid Bearer token format should be accepted", async () => {
-		await handle_request(null);
-	});
+describe('headers', () => {
+  it('_bearer_token_format_valid: Authorization header with valid Bearer token format should be accepted', async () => {
+    await handle_request(null);
+  });
 
-	it("_bearer_token_format_invalid: Authorization header with invalid Bearer token format should fail validation", async () => {
-		await handle_request(null);
-	});
+  it('_bearer_token_format_invalid: Authorization header with invalid Bearer token format should fail validation', async () => {
+    await handle_request(null);
+  });
 
-	it("_bearer_token_missing_prefix: Authorization header without Bearer prefix should fail validation", async () => {
-		await handle_request(null);
-	});
+  it('_bearer_token_missing_prefix: Authorization header without Bearer prefix should fail validation', async () => {
+    await handle_request(null);
+  });
 
-	it("_api_key_header_valid: X-API-Key header with valid format should be accepted", async () => {
-		await handle_request(null);
-	});
+  it('_api_key_header_valid: X-API-Key header with valid format should be accepted', async () => {
+    await handle_request(null);
+  });
 
-	it("_api_key_header_invalid: X-API-Key header with invalid format should fail validation", async () => {
-		await handle_request(null);
-	});
+  it('_api_key_header_invalid: X-API-Key header with invalid format should fail validation', async () => {
+    await handle_request(null);
+  });
 
-	it("accept_encoding_header: Tests Accept-Encoding header for compression negotiation", async () => {
-		await handle_request(null);
-	});
+  it('accept_encoding_header: Tests Accept-Encoding header for compression negotiation', async () => {
+    await handle_request(null);
+  });
 
-	it("accept_header_json: Tests Accept header for content negotiation", async () => {
-		await handle_request(null);
-	});
+  it('accept_header_json: Tests Accept header for content negotiation', async () => {
+    await handle_request(null);
+  });
 
-	it("accept_language_header: Tests Accept-Language header for locale/i18n", async () => {
-		await handle_request(null);
-	});
+  it('accept_language_header: Tests Accept-Language header for locale/i18n', async () => {
+    await handle_request(null);
+  });
 
-	it("authorization_header_missing: Tests missing Authorization header returns 403", async () => {
-		await handle_request(null);
-	});
+  it('authorization_header_missing: Tests missing Authorization header returns 403', async () => {
+    await handle_request(null);
+  });
 
-	it("authorization_header_success: Tests Authorization header with valid Digest scheme", async () => {
-		await handle_request(null);
-	});
+  it('authorization_header_success: Tests Authorization header with valid Digest scheme', async () => {
+    await handle_request(null);
+  });
 
-	it("authorization_header_wrong_scheme: Tests Authorization header with incorrect scheme returns 403", async () => {
-		await handle_request(null);
-	});
+  it('authorization_header_wrong_scheme: Tests Authorization header with incorrect scheme returns 403', async () => {
+    await handle_request(null);
+  });
 
-	it("basic_authentication_success: Tests Authorization header with Basic auth scheme", async () => {
-		await handle_request(null);
-	});
+  it('basic_authentication_success: Tests Authorization header with Basic auth scheme', async () => {
+    await handle_request(null);
+  });
 
-	it("bearer_token_authentication_missing: Tests missing Bearer token returns 401 Unauthorized", async () => {
-		await handle_request(null);
-	});
+  it('bearer_token_authentication_missing: Tests missing Bearer token returns 401 Unauthorized', async () => {
+    await handle_request(null);
+  });
 
-	it("bearer_token_authentication_success: Tests Authorization header with Bearer token scheme", async () => {
-		await handle_request(null);
-	});
+  it('bearer_token_authentication_success: Tests Authorization header with Bearer token scheme', async () => {
+    await handle_request(null);
+  });
 
-	it("content_type_header_application_json: Tests Content-Type header with JSON media type", async () => {
-		await handle_request(null);
-	});
+  it('content_type_header_application_json: Tests Content-Type header with JSON media type', async () => {
+    await handle_request(null);
+  });
 
-	it("header_case_insensitivity_access: Tests case-insensitive header access (Content-Type vs content-type)", async () => {
-		await handle_request(null);
-	});
+  it('header_case_insensitivity_access: Tests case-insensitive header access (Content-Type vs content-type)', async () => {
+    await handle_request(null);
+  });
 
-	it("header_regex_validation_fail: Tests header with regex pattern validation failure", async () => {
-		await handle_request(null);
-	});
+  it('header_regex_validation_fail: Tests header with regex pattern validation failure', async () => {
+    await handle_request(null);
+  });
 
-	it("header_regex_validation_success: Tests header with regex pattern validation success", async () => {
-		await handle_request(null);
-	});
+  it('header_regex_validation_success: Tests header with regex pattern validation success', async () => {
+    await handle_request(null);
+  });
 
-	it("header_validation_max_length_constraint_fail: Tests header validation with max_length constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('header_validation_max_length_constraint_fail: Tests header validation with max_length constraint failure', async () => {
+    await handle_request(null);
+  });
 
-	it("header_validation_min_length_constraint: Tests header validation with min_length constraint", async () => {
-		await handle_request(null);
-	});
+  it('header_validation_min_length_constraint: Tests header validation with min_length constraint', async () => {
+    await handle_request(null);
+  });
 
-	it("header_with_underscore_conversion_explicit: Tests X-Token header converted to x_token parameter", async () => {
-		await handle_request(null);
-	});
+  it('header_with_underscore_conversion_explicit: Tests X-Token header converted to x_token parameter', async () => {
+    await handle_request(null);
+  });
 
-	it("host_header: Tests Host header (standard HTTP header)", async () => {
-		await handle_request(null);
-	});
+  it('host_header: Tests Host header (standard HTTP header)', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_custom_headers: Tests multiple custom headers in single request", async () => {
-		await handle_request(null);
-	});
+  it('multiple_custom_headers: Tests multiple custom headers in single request', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_header_values_x_token: Tests multiple values for same header name (X-Token)", async () => {
-		await handle_request(null);
-	});
+  it('multiple_header_values_x_token: Tests multiple values for same header name (X-Token)', async () => {
+    await handle_request(null);
+  });
 
-	it("optional_header_with_none_default_missing: Tests optional header parameter with None default when not provided", async () => {
-		await handle_request(null);
-	});
+  it('optional_header_with_none_default_missing: Tests optional header parameter with None default when not provided', async () => {
+    await handle_request(null);
+  });
 
-	it("origin_header: Tests Origin header for CORS", async () => {
-		await handle_request(null);
-	});
+  it('origin_header: Tests Origin header for CORS', async () => {
+    await handle_request(null);
+  });
 
-	it("referer_header: Tests Referer header (standard misspelling)", async () => {
-		await handle_request(null);
-	});
+  it('referer_header: Tests Referer header (standard misspelling)', async () => {
+    await handle_request(null);
+  });
 
-	it("user_agent_header_custom_value: Tests User-Agent header with custom value", async () => {
-		await handle_request(null);
-	});
+  it('user_agent_header_custom_value: Tests User-Agent header with custom value', async () => {
+    await handle_request(null);
+  });
 
-	it("user_agent_header_default_value: Tests optional User-Agent header when not provided, uses testclient default", async () => {
-		await handle_request(null);
-	});
+  it('user_agent_header_default_value: Tests optional User-Agent header when not provided, uses testclient default', async () => {
+    await handle_request(null);
+  });
 
-	it("x_api_key_optional_header_missing: Tests optional X-API-Key header when not provided, returns fallback message", async () => {
-		await handle_request(null);
-	});
+  it('x_api_key_optional_header_missing: Tests optional X-API-Key header when not provided, returns fallback message', async () => {
+    await handle_request(null);
+  });
 
-	it("x_api_key_optional_header_success: Tests optional X-API-Key header with valid value", async () => {
-		await handle_request(null);
-	});
+  it('x_api_key_optional_header_success: Tests optional X-API-Key header with valid value', async () => {
+    await handle_request(null);
+  });
 
-	it("x_api_key_required_header_missing: Tests required X-API-Key header when not provided, returns 403", async () => {
-		await handle_request(null);
-	});
+  it('x_api_key_required_header_missing: Tests required X-API-Key header when not provided, returns 403', async () => {
+    await handle_request(null);
+  });
 
-	it("x_api_key_required_header_success: Tests required X-API-Key header with valid value", async () => {
-		await handle_request(null);
-	});
+  it('x_api_key_required_header_success: Tests required X-API-Key header with valid value', async () => {
+    await handle_request(null);
+  });
 });

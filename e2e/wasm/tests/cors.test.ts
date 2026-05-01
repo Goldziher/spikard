@@ -3,47 +3,47 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("cors", () => {
-	it("_cors_preflight_method_not_allowed: CORS preflight request for non-allowed method should be rejected", async () => {
-		await handle_request(null);
-	});
+describe('cors', () => {
+  it('_cors_preflight_method_not_allowed: CORS preflight request for non-allowed method should be rejected', async () => {
+    await handle_request(null);
+  });
 
-	it("_cors_preflight_header_not_allowed: CORS preflight request with non-allowed header should be rejected", async () => {
-		await handle_request(null);
-	});
+  it('_cors_preflight_header_not_allowed: CORS preflight request with non-allowed header should be rejected', async () => {
+    await handle_request(null);
+  });
 
-	it("_cors_max_age: CORS preflight response should include Access-Control-Max-Age", async () => {
-		await handle_request(null);
-	});
+  it('_cors_max_age: CORS preflight response should include Access-Control-Max-Age', async () => {
+    await handle_request(null);
+  });
 
-	it("_cors_expose_headers: CORS response should include Access-Control-Expose-Headers for custom headers", async () => {
-		await handle_request(null);
-	});
+  it('_cors_expose_headers: CORS response should include Access-Control-Expose-Headers for custom headers', async () => {
+    await handle_request(null);
+  });
 
-	it("_cors_origin_null: CORS request with 'null' origin should be handled according to policy", async () => {
-		await handle_request(null);
-	});
+  it('_cors_origin_null: CORS request with \'null\' origin should be handled according to policy', async () => {
+    await handle_request(null);
+  });
 
-	it("cors_allow_credentials_flag: Tests CORS response with credentials flag when allowed", async () => {
-		await handle_request(null);
-	});
+  it('cors_allow_credentials_flag: Tests CORS response with credentials flag when allowed', async () => {
+    await handle_request(null);
+  });
 
-	it("cors_custom_allowed_headers_x_custom: Tests CORS allows custom X-Custom-Header in requests", async () => {
-		await handle_request(null);
-	});
+  it('cors_custom_allowed_headers_x_custom: Tests CORS allows custom X-Custom-Header in requests', async () => {
+    await handle_request(null);
+  });
 
-	it("cors_request_blocked: Tests CORS request from disallowed origin", async () => {
-		await handle_request(null);
-	});
+  it('cors_request_blocked: Tests CORS request from disallowed origin', async () => {
+    await handle_request(null);
+  });
 
-	it("cors_restricted_methods_post_get_only: Tests CORS allows only specific HTTP methods (POST, GET)", async () => {
-		await handle_request(null);
-	});
+  it('cors_restricted_methods_post_get_only: Tests CORS allows only specific HTTP methods (POST, GET)', async () => {
+    await handle_request(null);
+  });
 
-	it("cors_safelisted_headers_without_preflight: Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight", async () => {
-		await handle_request(null);
-	});
+  it('cors_safelisted_headers_without_preflight: Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don\'t require preflight', async () => {
+    await handle_request(null);
+  });
 });

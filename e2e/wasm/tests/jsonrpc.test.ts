@@ -3,67 +3,67 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("jsonrpc", () => {
-	it("jsonrpc_batch_request: Tests JSON-RPC batch request with multiple calls", async () => {
-		await handle_request(null);
-	});
+describe('jsonrpc', () => {
+  it('jsonrpc_batch_request: Tests JSON-RPC batch request with multiple calls', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_call_with_positional_params: Tests JSON-RPC call with positional array parameters", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_call_with_positional_params: Tests JSON-RPC call with positional array parameters', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_config_batch_disabled: Tests JSON-RPC batch requests disabled returns error", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_config_batch_disabled: Tests JSON-RPC batch requests disabled returns error', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_config_custom_endpoint_path: Tests JSON-RPC server at custom endpoint path", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_config_custom_endpoint_path: Tests JSON-RPC server at custom endpoint path', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_config_max_batch_size: Tests JSON-RPC batch request respects maximum batch size", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_config_max_batch_size: Tests JSON-RPC batch request respects maximum batch size', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_deprecated_method_flag: Tests JSON-RPC method marked as deprecated", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_deprecated_method_flag: Tests JSON-RPC method marked as deprecated', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_error_response: Tests JSON-RPC error response with error object", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_error_response: Tests JSON-RPC error response with error object', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_invalid_params: Tests JSON-RPC error for invalid parameters", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_invalid_params: Tests JSON-RPC error for invalid parameters', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_method_not_found: Tests JSON-RPC error when method does not exist", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_method_not_found: Tests JSON-RPC error when method does not exist', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_method_parameter_validation: Tests JSON-RPC validates parameter types and values", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_method_parameter_validation: Tests JSON-RPC validates parameter types and values', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_method_with_params_schema: Tests JSON-RPC method params validated against schema", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_method_with_params_schema: Tests JSON-RPC method params validated against schema', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_method_with_result_schema: Tests JSON-RPC method result schema validation", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_method_with_result_schema: Tests JSON-RPC method result schema validation', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_notification_no_id: Tests JSON-RPC notification (no response expected)", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_notification_no_id: Tests JSON-RPC notification (no response expected)', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_notification_no_response: Tests JSON-RPC notification (no id) doesn't return response", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_notification_no_response: Tests JSON-RPC notification (no id) doesn\'t return response', async () => {
+    await handle_request(null);
+  });
 
-	it("jsonrpc_single_call_success: Tests single JSON-RPC 2.0 call with successful response", async () => {
-		await handle_request(null);
-	});
+  it('jsonrpc_single_call_success: Tests single JSON-RPC 2.0 call with successful response', async () => {
+    await handle_request(null);
+  });
 });

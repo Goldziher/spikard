@@ -3,67 +3,67 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("status_codes", () => {
-	it("_413_payload_too_large: Request with body exceeding max size should return 413", async () => {
-		await handle_request(null);
-	});
+describe('status_codes', () => {
+  it('_413_payload_too_large: Request with body exceeding max size should return 413', async () => {
+    await handle_request(null);
+  });
 
-	it("_ok_success: Tests standard 200 OK response for successful GET request", async () => {
-		await handle_request(null);
-	});
+  it('_ok_success: Tests standard 200 OK response for successful GET request', async () => {
+    await handle_request(null);
+  });
 
-	it("_created_resource_created: Tests 201 Created response for successful POST request", async () => {
-		await handle_request(null);
-	});
+  it('_created_resource_created: Tests 201 Created response for successful POST request', async () => {
+    await handle_request(null);
+  });
 
-	it("_accepted_request_accepted_for_processing: Tests 202 Accepted for async processing", async () => {
-		await handle_request(null);
-	});
+  it('_accepted_request_accepted_for_processing: Tests 202 Accepted for async processing', async () => {
+    await handle_request(null);
+  });
 
-	it("_no_content_success_with_no_body: Tests 204 No Content response for successful DELETE", async () => {
-		await handle_request(null);
-	});
+  it('_no_content_success_with_no_body: Tests 204 No Content response for successful DELETE', async () => {
+    await handle_request(null);
+  });
 
-	it("_414_uri_too_long: Request with excessively long URI should return 414", async () => {
-		await handle_request(null);
-	});
+  it('_414_uri_too_long: Request with excessively long URI should return 414', async () => {
+    await handle_request(null);
+  });
 
-	it("_431_request_header_fields_too_large: Request with excessively large headers should return 431", async () => {
-		await handle_request(null);
-	});
+  it('_431_request_header_fields_too_large: Request with excessively large headers should return 431', async () => {
+    await handle_request(null);
+  });
 
-	it("_501_not_implemented: Unsupported HTTP method should return 501", async () => {
-		await handle_request(null);
-	});
+  it('_501_not_implemented: Unsupported HTTP method should return 501', async () => {
+    await handle_request(null);
+  });
 
-	it("_503_service_unavailable: Service temporarily unavailable should return 503 with Retry-After", async () => {
-		await handle_request(null);
-	});
+  it('_503_service_unavailable: Service temporarily unavailable should return 503 with Retry-After', async () => {
+    await handle_request(null);
+  });
 
-	it("_not_modified_cached_content_valid: Tests 304 Not Modified for cached resources", async () => {
-		await handle_request(null);
-	});
+  it('_not_modified_cached_content_valid: Tests 304 Not Modified for cached resources', async () => {
+    await handle_request(null);
+  });
 
-	it("_temporary_redirect_method_preserved: Tests 307 temporary redirect with method preservation", async () => {
-		await handle_request(null);
-	});
+  it('_temporary_redirect_method_preserved: Tests 307 temporary redirect with method preservation', async () => {
+    await handle_request(null);
+  });
 
-	it("_bad_request_invalid_request: Tests 400 Bad Request for malformed request", async () => {
-		await handle_request(null);
-	});
+  it('_bad_request_invalid_request: Tests 400 Bad Request for malformed request', async () => {
+    await handle_request(null);
+  });
 
-	it("_not_found_resource_not_found: Tests 404 Not Found for non-existent resource", async () => {
-		await handle_request(null);
-	});
+  it('_not_found_resource_not_found: Tests 404 Not Found for non-existent resource', async () => {
+    await handle_request(null);
+  });
 
-	it("_request_timeout: Tests 408 status code when request takes too long", async () => {
-		await handle_request(null);
-	});
+  it('_request_timeout: Tests 408 status code when request takes too long', async () => {
+    await handle_request(null);
+  });
 
-	it("_unprocessable_entity_validation_error: Tests 422 for validation errors (Pydantic)", async () => {
-		await handle_request(null);
-	});
+  it('_unprocessable_entity_validation_error: Tests 422 for validation errors (Pydantic)', async () => {
+    await handle_request(null);
+  });
 });

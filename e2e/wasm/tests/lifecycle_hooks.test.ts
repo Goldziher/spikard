@@ -3,55 +3,55 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("lifecycle_hooks", () => {
-	it("hook_execution_order: Test that multiple hooks of the same type execute in registration order", async () => {
-		await handle_request(null);
-	});
+describe('lifecycle_hooks', () => {
+  it('hook_execution_order: Test that multiple hooks of the same type execute in registration order', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_hooks_all_phases: Test multiple lifecycle hooks across all five phases for a complete request lifecycle", async () => {
-		await handle_request(null);
-	});
+  it('multiple_hooks_all_phases: Test multiple lifecycle hooks across all five phases for a complete request lifecycle', async () => {
+    await handle_request(null);
+  });
 
-	it("onerror_error_logging: Test onError hook that logs server errors and formats error responses", async () => {
-		await handle_request(null);
-	});
+  it('onerror_error_logging: Test onError hook that logs server errors and formats error responses', async () => {
+    await handle_request(null);
+  });
 
-	it("onrequest_request_logging: Test onRequest hook that logs incoming requests and adds a request ID", async () => {
-		await handle_request(null);
-	});
+  it('onrequest_request_logging: Test onRequest hook that logs incoming requests and adds a request ID', async () => {
+    await handle_request(null);
+  });
 
-	it("onresponse_response_timing: Test onResponse hook that adds timing information to response headers", async () => {
-		await handle_request(null);
-	});
+  it('onresponse_response_timing: Test onResponse hook that adds timing information to response headers', async () => {
+    await handle_request(null);
+  });
 
-	it("onresponse_security_headers: Test onResponse hook that adds security headers to all responses", async () => {
-		await handle_request(null);
-	});
+  it('onresponse_security_headers: Test onResponse hook that adds security headers to all responses', async () => {
+    await handle_request(null);
+  });
 
-	it("prehandler_authentication_failed_short_circuit: Test preHandler hook that short-circuits on invalid authentication", async () => {
-		await handle_request(null);
-	});
+  it('prehandler_authentication_failed_short_circuit: Test preHandler hook that short-circuits on invalid authentication', async () => {
+    await handle_request(null);
+  });
 
-	it("prehandler_authentication_success: Test preHandler hook that validates authentication tokens", async () => {
-		await handle_request(null);
-	});
+  it('prehandler_authentication_success: Test preHandler hook that validates authentication tokens', async () => {
+    await handle_request(null);
+  });
 
-	it("prehandler_authorization_check: Test preHandler hook for role-based authorization after authentication", async () => {
-		await handle_request(null);
-	});
+  it('prehandler_authorization_check: Test preHandler hook for role-based authorization after authentication', async () => {
+    await handle_request(null);
+  });
 
-	it("prehandler_authorization_forbidden_short_circuit: Test preHandler hook that denies access for insufficient permissions", async () => {
-		await handle_request(null);
-	});
+  it('prehandler_authorization_forbidden_short_circuit: Test preHandler hook that denies access for insufficient permissions', async () => {
+    await handle_request(null);
+  });
 
-	it("prevalidation_rate_limit_exceeded_short_circuit: Test preValidation hook that short-circuits when rate limit is exceeded", async () => {
-		await handle_request(null);
-	});
+  it('prevalidation_rate_limit_exceeded_short_circuit: Test preValidation hook that short-circuits when rate limit is exceeded', async () => {
+    await handle_request(null);
+  });
 
-	it("prevalidation_rate_limiting: Test preValidation hook that implements rate limiting before validation", async () => {
-		await handle_request(null);
-	});
+  it('prevalidation_rate_limiting: Test preValidation hook that implements rate limiting before validation', async () => {
+    await handle_request(null);
+  });
 });

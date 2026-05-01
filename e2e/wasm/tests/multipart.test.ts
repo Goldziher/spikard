@@ -3,95 +3,95 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("multipart", () => {
-	it("_file_magic_number_png_success: File with correct PNG magic number and matching MIME type should be accepted", async () => {
-		await handle_request(null);
-	});
+describe('multipart', () => {
+  it('_file_magic_number_png_success: File with correct PNG magic number and matching MIME type should be accepted', async () => {
+    await handle_request(null);
+  });
 
-	it("_file_magic_number_jpeg_success: File with correct JPEG magic number and matching MIME type should be accepted", async () => {
-		await handle_request(null);
-	});
+  it('_file_magic_number_jpeg_success: File with correct JPEG magic number and matching MIME type should be accepted', async () => {
+    await handle_request(null);
+  });
 
-	it("_file_mime_spoofing_png_as_jpeg: File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)", async () => {
-		await handle_request(null);
-	});
+  it('_file_mime_spoofing_png_as_jpeg: File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)', async () => {
+    await handle_request(null);
+  });
 
-	it("_file_mime_spoofing_jpeg_as_png: File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)", async () => {
-		await handle_request(null);
-	});
+  it('_file_mime_spoofing_jpeg_as_png: File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)', async () => {
+    await handle_request(null);
+  });
 
-	it("_file_pdf_magic_number_success: File with correct PDF magic number should be accepted", async () => {
-		await handle_request(null);
-	});
+  it('_file_pdf_magic_number_success: File with correct PDF magic number should be accepted', async () => {
+    await handle_request(null);
+  });
 
-	it("_file_empty_buffer: File with empty buffer should fail validation", async () => {
-		await handle_request(null);
-	});
+  it('_file_empty_buffer: File with empty buffer should fail validation', async () => {
+    await handle_request(null);
+  });
 
-	it("content_type_validation_invalid_type: Tests file upload with disallowed content type", async () => {
-		await handle_request(null);
-	});
+  it('content_type_validation_invalid_type: Tests file upload with disallowed content type', async () => {
+    await handle_request(null);
+  });
 
-	it("empty_file_upload: Tests uploading a file with zero bytes", async () => {
-		await handle_request(null);
-	});
+  it('empty_file_upload: Tests uploading a file with zero bytes', async () => {
+    await handle_request(null);
+  });
 
-	it("file_list_upload_array_of_files: Tests uploading multiple files as a list parameter", async () => {
-		await handle_request(null);
-	});
+  it('file_list_upload_array_of_files: Tests uploading multiple files as a list parameter', async () => {
+    await handle_request(null);
+  });
 
-	it("file_size_validation_too_large: Tests file upload exceeding max size limit", async () => {
-		await handle_request(null);
-	});
+  it('file_size_validation_too_large: Tests file upload exceeding max size limit', async () => {
+    await handle_request(null);
+  });
 
-	it("file_upload_with_custom_headers: File upload with additional custom headers in the multipart section", async () => {
-		await handle_request(null);
-	});
+  it('file_upload_with_custom_headers: File upload with additional custom headers in the multipart section', async () => {
+    await handle_request(null);
+  });
 
-	it("file_upload_without_filename: Upload file content without providing a filename", async () => {
-		await handle_request(null);
-	});
+  it('file_upload_without_filename: Upload file content without providing a filename', async () => {
+    await handle_request(null);
+  });
 
-	it("form_data_without_files: Multipart form with only text fields, no file uploads", async () => {
-		await handle_request(null);
-	});
+  it('form_data_without_files: Multipart form with only text fields, no file uploads', async () => {
+    await handle_request(null);
+  });
 
-	it("image_file_upload: Tests uploading an image file (JPEG)", async () => {
-		await handle_request(null);
-	});
+  it('image_file_upload: Tests uploading an image file (JPEG)', async () => {
+    await handle_request(null);
+  });
 
-	it("mixed_files_and_form_data: Multipart request with both file uploads and regular form fields", async () => {
-		await handle_request(null);
-	});
+  it('mixed_files_and_form_data: Multipart request with both file uploads and regular form fields', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_file_uploads: Upload multiple files in a single multipart request", async () => {
-		await handle_request(null);
-	});
+  it('multiple_file_uploads: Upload multiple files in a single multipart request', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_values_for_same_field_name: Multiple files uploaded with the same field name (array-like behavior)", async () => {
-		await handle_request(null);
-	});
+  it('multiple_values_for_same_field_name: Multiple files uploaded with the same field name (array-like behavior)', async () => {
+    await handle_request(null);
+  });
 
-	it("optional_file_upload_missing: Tests optional file parameter when no file is provided", async () => {
-		await handle_request(null);
-	});
+  it('optional_file_upload_missing: Tests optional file parameter when no file is provided', async () => {
+    await handle_request(null);
+  });
 
-	it("optional_file_upload_provided: Tests optional file parameter when file is provided", async () => {
-		await handle_request(null);
-	});
+  it('optional_file_upload_provided: Tests optional file parameter when file is provided', async () => {
+    await handle_request(null);
+  });
 
-	it("pdf_file_upload: Tests uploading a PDF document", async () => {
-		await handle_request(null);
-	});
+  it('pdf_file_upload: Tests uploading a PDF document', async () => {
+    await handle_request(null);
+  });
 
-	it("required_file_upload_missing: Tests required file parameter when no file is provided", async () => {
-		await handle_request(null);
-	});
+  it('required_file_upload_missing: Tests required file parameter when no file is provided', async () => {
+    await handle_request(null);
+  });
 
-	it("simple_file_upload: Single file upload with text/plain content type", async () => {
-		await handle_request(null);
-	});
+  it('simple_file_upload: Single file upload with text/plain content type', async () => {
+    await handle_request(null);
+  });
 });

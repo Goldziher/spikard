@@ -3,15 +3,15 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("body_limits", () => {
-	it("body_over_limit_returns_413: Requests that exceed the configured max body size should be rejected with Payload Too Large.", async () => {
-		await handle_request(null);
-	});
+describe('body_limits', () => {
+  it('body_over_limit_returns_413: Requests that exceed the configured max body size should be rejected with Payload Too Large.', async () => {
+    await handle_request(null);
+  });
 
-	it("body_under_limit_succeeds: Ensures requests smaller than the configured body limit are accepted.", async () => {
-		await handle_request(null);
-	});
+  it('body_under_limit_succeeds: Ensures requests smaller than the configured body limit are accepted.', async () => {
+    await handle_request(null);
+  });
 });

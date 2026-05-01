@@ -3,111 +3,111 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("auth", () => {
-	it("api_key_authentication_invalid_key: Tests API key authentication failure when provided key is not in the valid keys list", async () => {
-		await handle_request(null);
-	});
+describe('auth', () => {
+  it('api_key_authentication_invalid_key: Tests API key authentication failure when provided key is not in the valid keys list', async () => {
+    await handle_request(null);
+  });
 
-	it("api_key_authentication_missing_header: Tests API key authentication failure when required header is not provided", async () => {
-		await handle_request(null);
-	});
+  it('api_key_authentication_missing_header: Tests API key authentication failure when required header is not provided', async () => {
+    await handle_request(null);
+  });
 
-	it("api_key_authentication_valid_key: Tests API key authentication with a valid API key in custom header", async () => {
-		await handle_request(null);
-	});
+  it('api_key_authentication_valid_key: Tests API key authentication with a valid API key in custom header', async () => {
+    await handle_request(null);
+  });
 
-	it("api_key_custom_header_x_api_token: Tests API key authentication with custom X-API-Token header", async () => {
-		await handle_request(null);
-	});
+  it('api_key_custom_header_x_api_token: Tests API key authentication with custom X-API-Token header', async () => {
+    await handle_request(null);
+  });
 
-	it("api_key_in_query_parameter: Tests API key authentication when key is provided as query parameter instead of header", async () => {
-		await handle_request(null);
-	});
+  it('api_key_in_query_parameter: Tests API key authentication when key is provided as query parameter instead of header', async () => {
+    await handle_request(null);
+  });
 
-	it("api_key_multiple_valid_keys: Tests API key authentication accepts multiple valid keys", async () => {
-		await handle_request(null);
-	});
+  it('api_key_multiple_valid_keys: Tests API key authentication accepts multiple valid keys', async () => {
+    await handle_request(null);
+  });
 
-	it("api_key_rotation_old_key_still_valid: Tests API key authentication during rotation period when old key remains valid alongside new key", async () => {
-		await handle_request(null);
-	});
+  it('api_key_rotation_old_key_still_valid: Tests API key authentication during rotation period when old key remains valid alongside new key', async () => {
+    await handle_request(null);
+  });
 
-	it("api_key_with_custom_header_name: Tests API key authentication with a custom header name (X-API-Token instead of X-API-Key)", async () => {
-		await handle_request(null);
-	});
+  it('api_key_with_custom_header_name: Tests API key authentication with a custom header name (X-API-Token instead of X-API-Key)', async () => {
+    await handle_request(null);
+  });
 
-	it("bearer_token_without_prefix: Tests JWT rejection when token is provided without 'Bearer ' prefix in Authorization header", async () => {
-		await handle_request(null);
-	});
+  it('bearer_token_without_prefix: Tests JWT rejection when token is provided without \'Bearer \' prefix in Authorization header', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_audience_claim_aud_field: Tests JWT validation of audience (aud) claim", async () => {
-		await handle_request(null);
-	});
+  it('jwt_audience_claim_aud_field: Tests JWT validation of audience (aud) claim', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_authentication_expired_token: Tests JWT authentication failure when token has expired (exp claim in the past)", async () => {
-		await handle_request(null);
-	});
+  it('jwt_authentication_expired_token: Tests JWT authentication failure when token has expired (exp claim in the past)', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_authentication_invalid_audience: Tests JWT authentication failure when token audience claim does not match required audience", async () => {
-		await handle_request(null);
-	});
+  it('jwt_authentication_invalid_audience: Tests JWT authentication failure when token audience claim does not match required audience', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_authentication_invalid_signature: Tests JWT authentication failure when token signature does not match the secret", async () => {
-		await handle_request(null);
-	});
+  it('jwt_authentication_invalid_signature: Tests JWT authentication failure when token signature does not match the secret', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_authentication_missing_authorization_header: Tests JWT authentication failure when Authorization header is not provided", async () => {
-		await handle_request(null);
-	});
+  it('jwt_authentication_missing_authorization_header: Tests JWT authentication failure when Authorization header is not provided', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_authentication_valid_token: Tests JWT authentication with a valid token containing correct signature and claims", async () => {
-		await handle_request(null);
-	});
+  it('jwt_authentication_valid_token: Tests JWT authentication with a valid token containing correct signature and claims', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_config_algorithm_rs256: Tests JWT validation with RS256 asymmetric algorithm", async () => {
-		await handle_request(null);
-	});
+  it('jwt_config_algorithm_rs256: Tests JWT validation with RS256 asymmetric algorithm', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_config_leeway_seconds: Tests JWT validation with leeway for clock skew", async () => {
-		await handle_request(null);
-	});
+  it('jwt_config_leeway_seconds: Tests JWT validation with leeway for clock skew', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_expiration_claim_exp_field: Tests JWT validation of expiration (exp) claim", async () => {
-		await handle_request(null);
-	});
+  it('jwt_expiration_claim_exp_field: Tests JWT validation of expiration (exp) claim', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_invalid_issuer: Tests JWT rejection when issuer claim doesn't match expected value", async () => {
-		await handle_request(null);
-	});
+  it('jwt_invalid_issuer: Tests JWT rejection when issuer claim doesn\'t match expected value', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_issuer_claim_iss_field: Tests JWT validation of issuer (iss) claim", async () => {
-		await handle_request(null);
-	});
+  it('jwt_issuer_claim_iss_field: Tests JWT validation of issuer (iss) claim', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_malformed_token_format: Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature)", async () => {
-		await handle_request(null);
-	});
+  it('jwt_malformed_token_format: Tests JWT rejection when token doesn\'t have the required 3-part structure (header.payload.signature)', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_missing_required_custom_claims: Tests JWT rejection when required custom claims (role, permissions) are missing", async () => {
-		await handle_request(null);
-	});
+  it('jwt_missing_required_custom_claims: Tests JWT rejection when required custom claims (role, permissions) are missing', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_not_before_claim_in_future: Tests JWT rejection when nbf (not before) claim is in the future", async () => {
-		await handle_request(null);
-	});
+  it('jwt_not_before_claim_in_future: Tests JWT rejection when nbf (not before) claim is in the future', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_subject_claim_sub_field: Tests JWT validation with subject (sub) claim", async () => {
-		await handle_request(null);
-	});
+  it('jwt_subject_claim_sub_field: Tests JWT validation with subject (sub) claim', async () => {
+    await handle_request(null);
+  });
 
-	it("jwt_with_multiple_audiences: Tests JWT validation when token has multiple audiences and one must match", async () => {
-		await handle_request(null);
-	});
+  it('jwt_with_multiple_audiences: Tests JWT validation when token has multiple audiences and one must match', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_authentication_schemes_jwt_precedence: Tests authentication when both JWT and API key are provided, JWT takes precedence", async () => {
-		await handle_request(null);
-	});
+  it('multiple_authentication_schemes_jwt_precedence: Tests authentication when both JWT and API key are provided, JWT takes precedence', async () => {
+    await handle_request(null);
+  });
 });

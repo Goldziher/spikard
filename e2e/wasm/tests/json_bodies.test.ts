@@ -3,203 +3,203 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("json_bodies", () => {
-	it("_nested_object_validation_success: Nested object in JSON body should validate correctly", async () => {
-		await handle_request(null);
-	});
+describe('json_bodies', () => {
+  it('_nested_object_validation_success: Nested object in JSON body should validate correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_nested_object_missing_field: Nested object missing required field should fail validation", async () => {
-		await handle_request(null);
-	});
+  it('_nested_object_missing_field: Nested object missing required field should fail validation', async () => {
+    await handle_request(null);
+  });
 
-	it("_nullable_property_null_value: Nullable property with null value should be accepted", async () => {
-		await handle_request(null);
-	});
+  it('_nullable_property_null_value: Nullable property with null value should be accepted', async () => {
+    await handle_request(null);
+  });
 
-	it("_schema_ref_definitions: JSON Schema $ref with definitions should validate correctly", async () => {
-		await handle_request(null);
-	});
+  it('_schema_ref_definitions: JSON Schema $ref with definitions should validate correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_allof_schema_composition: JSON Schema allOf composition should validate all schemas", async () => {
-		await handle_request(null);
-	});
+  it('_allof_schema_composition: JSON Schema allOf composition should validate all schemas', async () => {
+    await handle_request(null);
+  });
 
-	it("_additional_properties_false: Schema with additionalProperties false should reject extra fields", async () => {
-		await handle_request(null);
-	});
+  it('_additional_properties_false: Schema with additionalProperties false should reject extra fields', async () => {
+    await handle_request(null);
+  });
 
-	it("_oneof_schema_success: oneOf schema composition - exactly one schema must match", async () => {
-		await handle_request(null);
-	});
+  it('_oneof_schema_success: oneOf schema composition - exactly one schema must match', async () => {
+    await handle_request(null);
+  });
 
-	it("_oneof_schema_multiple_match_failure: oneOf schema composition - fails when multiple schemas match", async () => {
-		await handle_request(null);
-	});
+  it('_oneof_schema_multiple_match_failure: oneOf schema composition - fails when multiple schemas match', async () => {
+    await handle_request(null);
+  });
 
-	it("_oneof_schema_no_match_failure: oneOf schema composition - fails when no schemas match", async () => {
-		await handle_request(null);
-	});
+  it('_oneof_schema_no_match_failure: oneOf schema composition - fails when no schemas match', async () => {
+    await handle_request(null);
+  });
 
-	it("_anyof_schema_success: anyOf schema composition - at least one schema must match", async () => {
-		await handle_request(null);
-	});
+  it('_anyof_schema_success: anyOf schema composition - at least one schema must match', async () => {
+    await handle_request(null);
+  });
 
-	it("_anyof_schema_multiple_match_success: anyOf schema composition - succeeds when multiple schemas match", async () => {
-		await handle_request(null);
-	});
+  it('_anyof_schema_multiple_match_success: anyOf schema composition - succeeds when multiple schemas match', async () => {
+    await handle_request(null);
+  });
 
-	it("_anyof_schema_failure: anyOf schema composition - fails when no schemas match", async () => {
-		await handle_request(null);
-	});
+  it('_anyof_schema_failure: anyOf schema composition - fails when no schemas match', async () => {
+    await handle_request(null);
+  });
 
-	it("_not_schema_success: not schema - value must not match the schema", async () => {
-		await handle_request(null);
-	});
+  it('_not_schema_success: not schema - value must not match the schema', async () => {
+    await handle_request(null);
+  });
 
-	it("_not_schema_failure: not schema - fails when value matches the prohibited schema", async () => {
-		await handle_request(null);
-	});
+  it('_not_schema_failure: not schema - fails when value matches the prohibited schema', async () => {
+    await handle_request(null);
+  });
 
-	it("_const_validation_success: Field with const constraint matching exact value should succeed", async () => {
-		await handle_request(null);
-	});
+  it('_const_validation_success: Field with const constraint matching exact value should succeed', async () => {
+    await handle_request(null);
+  });
 
-	it("_const_validation_failure: Field with const constraint not matching exact value should fail", async () => {
-		await handle_request(null);
-	});
+  it('_const_validation_failure: Field with const constraint not matching exact value should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_minproperties_validation_success: Object with properties meeting minProperties constraint should succeed", async () => {
-		await handle_request(null);
-	});
+  it('_minproperties_validation_success: Object with properties meeting minProperties constraint should succeed', async () => {
+    await handle_request(null);
+  });
 
-	it("_minproperties_validation_failure: Object with fewer properties than minProperties should fail", async () => {
-		await handle_request(null);
-	});
+  it('_minproperties_validation_failure: Object with fewer properties than minProperties should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_maxproperties_validation_failure: Object with more properties than maxProperties should fail", async () => {
-		await handle_request(null);
-	});
+  it('_maxproperties_validation_failure: Object with more properties than maxProperties should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_dependencies_validation_success: Dependencies constraint - when A present, B is required and provided", async () => {
-		await handle_request(null);
-	});
+  it('_dependencies_validation_success: Dependencies constraint - when A present, B is required and provided', async () => {
+    await handle_request(null);
+  });
 
-	it("_dependencies_validation_failure: Dependencies constraint - when A present, B is required but missing", async () => {
-		await handle_request(null);
-	});
+  it('_dependencies_validation_failure: Dependencies constraint - when A present, B is required but missing', async () => {
+    await handle_request(null);
+  });
 
-	it("_deep_nesting_4_levels: Deeply nested object with 4+ levels should validate correctly", async () => {
-		await handle_request(null);
-	});
+  it('_deep_nesting_4_levels: Deeply nested object with 4+ levels should validate correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("array_of_objects_success: Tests array field containing objects", async () => {
-		await handle_request(null);
-	});
+  it('array_of_objects_success: Tests array field containing objects', async () => {
+    await handle_request(null);
+  });
 
-	it("array_of_primitive_values: Tests array field containing primitive values (strings, numbers)", async () => {
-		await handle_request(null);
-	});
+  it('array_of_primitive_values: Tests array field containing primitive values (strings, numbers)', async () => {
+    await handle_request(null);
+  });
 
-	it("body_with_query_parameters: Tests JSON body combined with query parameters", async () => {
-		await handle_request(null);
-	});
+  it('body_with_query_parameters: Tests JSON body combined with query parameters', async () => {
+    await handle_request(null);
+  });
 
-	it("boolean_field_success: Tests JSON object with boolean field", async () => {
-		await handle_request(null);
-	});
+  it('boolean_field_success: Tests JSON object with boolean field', async () => {
+    await handle_request(null);
+  });
 
-	it("date_field_success: Tests date field with ISO date format", async () => {
-		await handle_request(null);
-	});
+  it('date_field_success: Tests date field with ISO date format', async () => {
+    await handle_request(null);
+  });
 
-	it("datetime_field_success: Tests datetime field with ISO datetime format", async () => {
-		await handle_request(null);
-	});
+  it('datetime_field_success: Tests datetime field with ISO datetime format', async () => {
+    await handle_request(null);
+  });
 
-	it("deeply_nested_objects: Tests deeply nested JSON structure (3+ levels)", async () => {
-		await handle_request(null);
-	});
+  it('deeply_nested_objects: Tests deeply nested JSON structure (3+ levels)', async () => {
+    await handle_request(null);
+  });
 
-	it("empty_array_validation_fail: Tests array field with min_items constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('empty_array_validation_fail: Tests array field with min_items constraint failure', async () => {
+    await handle_request(null);
+  });
 
-	it("empty_json_object: Tests empty JSON object when all fields are optional", async () => {
-		await handle_request(null);
-	});
+  it('empty_json_object: Tests empty JSON object when all fields are optional', async () => {
+    await handle_request(null);
+  });
 
-	it("enum_field_invalid_value: Tests enum field with value not in enum", async () => {
-		await handle_request(null);
-	});
+  it('enum_field_invalid_value: Tests enum field with value not in enum', async () => {
+    await handle_request(null);
+  });
 
-	it("enum_field_success: Tests enum field with valid enum value", async () => {
-		await handle_request(null);
-	});
+  it('enum_field_success: Tests enum field with valid enum value', async () => {
+    await handle_request(null);
+  });
 
-	it("extra_fields_ignored_no_additionalproperties: Tests that extra fields not in model are ignored", async () => {
-		await handle_request(null);
-	});
+  it('extra_fields_ignored_no_additionalproperties: Tests that extra fields not in model are ignored', async () => {
+    await handle_request(null);
+  });
 
-	it("field_type_validation_invalid_type: Tests type validation error when field has wrong type", async () => {
-		await handle_request(null);
-	});
+  it('field_type_validation_invalid_type: Tests type validation error when field has wrong type', async () => {
+    await handle_request(null);
+  });
 
-	it("nested_object_success: Tests nested JSON objects", async () => {
-		await handle_request(null);
-	});
+  it('nested_object_success: Tests nested JSON objects', async () => {
+    await handle_request(null);
+  });
 
-	it("null_value_for_optional_field: Tests explicitly setting optional field to null", async () => {
-		await handle_request(null);
-	});
+  it('null_value_for_optional_field: Tests explicitly setting optional field to null', async () => {
+    await handle_request(null);
+  });
 
-	it("numeric_ge_validation_fail: Tests numeric field with ge (greater than or equal) constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('numeric_ge_validation_fail: Tests numeric field with ge (greater than or equal) constraint failure', async () => {
+    await handle_request(null);
+  });
 
-	it("numeric_le_validation_success: Tests numeric field with le (less than or equal) constraint at boundary", async () => {
-		await handle_request(null);
-	});
+  it('numeric_le_validation_success: Tests numeric field with le (less than or equal) constraint at boundary', async () => {
+    await handle_request(null);
+  });
 
-	it("optional_fields_omitted: Tests object with optional fields omitted", async () => {
-		await handle_request(null);
-	});
+  it('optional_fields_omitted: Tests object with optional fields omitted', async () => {
+    await handle_request(null);
+  });
 
-	it("patch_partial_update_2: Tests PATCH request with partial object update", async () => {
-		await handle_request(null);
-	});
+  it('patch_partial_update_2: Tests PATCH request with partial object update', async () => {
+    await handle_request(null);
+  });
 
-	it("required_field_missing_validation_error: Tests validation error when required field is missing", async () => {
-		await handle_request(null);
-	});
+  it('required_field_missing_validation_error: Tests validation error when required field is missing', async () => {
+    await handle_request(null);
+  });
 
-	it("simple_json_object_success: Tests simple JSON object with all required fields", async () => {
-		await handle_request(null);
-	});
+  it('simple_json_object_success: Tests simple JSON object with all required fields', async () => {
+    await handle_request(null);
+  });
 
-	it("string_max_length_validation_fail: Tests string field with max_length constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('string_max_length_validation_fail: Tests string field with max_length constraint failure', async () => {
+    await handle_request(null);
+  });
 
-	it("string_min_length_validation_fail: Tests string field with min_length constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('string_min_length_validation_fail: Tests string field with min_length constraint failure', async () => {
+    await handle_request(null);
+  });
 
-	it("string_pattern_validation_fail: Tests string field with regex pattern constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('string_pattern_validation_fail: Tests string field with regex pattern constraint failure', async () => {
+    await handle_request(null);
+  });
 
-	it("string_pattern_validation_success: Tests string field with regex pattern constraint success", async () => {
-		await handle_request(null);
-	});
+  it('string_pattern_validation_success: Tests string field with regex pattern constraint success', async () => {
+    await handle_request(null);
+  });
 
-	it("uuid_field_invalid_format: Tests UUID field with invalid UUID format", async () => {
-		await handle_request(null);
-	});
+  it('uuid_field_invalid_format: Tests UUID field with invalid UUID format', async () => {
+    await handle_request(null);
+  });
 
-	it("uuid_field_success: Tests UUID field with valid UUID format", async () => {
-		await handle_request(null);
-	});
+  it('uuid_field_success: Tests UUID field with valid UUID format', async () => {
+    await handle_request(null);
+  });
 });

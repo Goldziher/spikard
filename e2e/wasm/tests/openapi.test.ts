@@ -3,47 +3,47 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("openapi", () => {
-	it("openapi_basic_spec_generation: Tests OpenAPI specification is generated from route definitions", async () => {
-		await handle_request(null);
-	});
+describe('openapi', () => {
+  it('openapi_basic_spec_generation: Tests OpenAPI specification is generated from route definitions', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_contact_information: Tests OpenAPI spec includes contact information", async () => {
-		await handle_request(null);
-	});
+  it('openapi_contact_information: Tests OpenAPI spec includes contact information', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_disabled_returns_404: Tests OpenAPI returns 404 when explicitly disabled", async () => {
-		await handle_request(null);
-	});
+  it('openapi_disabled_returns_404: Tests OpenAPI returns 404 when explicitly disabled', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_enabled_flag_true: Tests OpenAPI can be explicitly enabled", async () => {
-		await handle_request(null);
-	});
+  it('openapi_enabled_flag_true: Tests OpenAPI can be explicitly enabled', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_json_endpoint_path: Tests OpenAPI JSON is served at configured endpoint", async () => {
-		await handle_request(null);
-	});
+  it('openapi_json_endpoint_path: Tests OpenAPI JSON is served at configured endpoint', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_license_information: Tests OpenAPI spec includes license information", async () => {
-		await handle_request(null);
-	});
+  it('openapi_license_information: Tests OpenAPI spec includes license information', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_redoc_path: Tests ReDoc UI is served at configured path", async () => {
-		await handle_request(null);
-	});
+  it('openapi_redoc_path: Tests ReDoc UI is served at configured path', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_security_schemes_definition: Tests OpenAPI spec includes security schemes", async () => {
-		await handle_request(null);
-	});
+  it('openapi_security_schemes_definition: Tests OpenAPI spec includes security schemes', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_servers_configuration: Tests OpenAPI spec includes configured servers", async () => {
-		await handle_request(null);
-	});
+  it('openapi_servers_configuration: Tests OpenAPI spec includes configured servers', async () => {
+    await handle_request(null);
+  });
 
-	it("openapi_swagger_ui_path: Tests Swagger UI is served at configured path", async () => {
-		await handle_request(null);
-	});
+  it('openapi_swagger_ui_path: Tests Swagger UI is served at configured path', async () => {
+    await handle_request(null);
+  });
 });

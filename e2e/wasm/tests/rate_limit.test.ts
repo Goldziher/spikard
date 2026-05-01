@@ -3,27 +3,27 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("rate_limit", () => {
-	it("rate_limit_below_threshold_succeeds: Verifies that requests below the configured rate limit are served normally.", async () => {
-		await handle_request(null);
-	});
+describe('rate_limit', () => {
+  it('rate_limit_below_threshold_succeeds: Verifies that requests below the configured rate limit are served normally.', async () => {
+    await handle_request(null);
+  });
 
-	it("rate_limit_burst_setting_allows_spike: Tests burst setting allows request spike beyond per_second rate", async () => {
-		await handle_request(null);
-	});
+  it('rate_limit_burst_setting_allows_spike: Tests burst setting allows request spike beyond per_second rate', async () => {
+    await handle_request(null);
+  });
 
-	it("rate_limit_exceeded_returns_429: Sends sequential requests until the configured limit is exceeded and validates the 429 response.", async () => {
-		await handle_request(null);
-	});
+  it('rate_limit_exceeded_returns_429: Sends sequential requests until the configured limit is exceeded and validates the 429 response.', async () => {
+    await handle_request(null);
+  });
 
-	it("rate_limit_ip_based_tracking: Tests rate limiting is applied per IP address", async () => {
-		await handle_request(null);
-	});
+  it('rate_limit_ip_based_tracking: Tests rate limiting is applied per IP address', async () => {
+    await handle_request(null);
+  });
 
-	it("rate_limit_per_second_setting_10_requests: Tests rate limit allows up to 10 requests per second", async () => {
-		await handle_request(null);
-	});
+  it('rate_limit_per_second_setting_10_requests: Tests rate limit allows up to 10 requests per second', async () => {
+    await handle_request(null);
+  });
 });

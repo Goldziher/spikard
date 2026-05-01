@@ -3,27 +3,27 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("background_tasks", () => {
-	it("background_task_cancellation: Tests background task cancellation via request", async () => {
-		await handle_request(null);
-	});
+describe('background_tasks', () => {
+  it('background_task_cancellation: Tests background task cancellation via request', async () => {
+    await handle_request(null);
+  });
 
-	it("background_task_custom_max_concurrent: Tests background task with custom max_concurrent setting", async () => {
-		await handle_request(null);
-	});
+  it('background_task_custom_max_concurrent: Tests background task with custom max_concurrent setting', async () => {
+    await handle_request(null);
+  });
 
-	it("background_task_custom_timeout: Tests background task with custom timeout configuration", async () => {
-		await handle_request(null);
-	});
+  it('background_task_custom_timeout: Tests background task with custom timeout configuration', async () => {
+    await handle_request(null);
+  });
 
-	it("background_task_error_handling: Tests background task error handling and retry behavior", async () => {
-		await handle_request(null);
-	});
+  it('background_task_error_handling: Tests background task error handling and retry behavior', async () => {
+    await handle_request(null);
+  });
 
-	it("background_task_multiple_concurrent: Tests multiple concurrent background tasks are queued", async () => {
-		await handle_request(null);
-	});
+  it('background_task_multiple_concurrent: Tests multiple concurrent background tasks are queued', async () => {
+    await handle_request(null);
+  });
 });

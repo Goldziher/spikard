@@ -3,79 +3,79 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("di", () => {
-	it("async_factory_dependency_success: Tests async factory that creates database pool asynchronously", async () => {
-		await handle_request(null);
-	});
+describe('di', () => {
+  it('async_factory_dependency_success: Tests async factory that creates database pool asynchronously', async () => {
+    await handle_request(null);
+  });
 
-	it("circular_dependency_detection_error: Tests that circular dependencies (A depends on B, B depends on A) are detected and rejected at registration time", async () => {
-		await handle_request(null);
-	});
+  it('circular_dependency_detection_error: Tests that circular dependencies (A depends on B, B depends on A) are detected and rejected at registration time', async () => {
+    await handle_request(null);
+  });
 
-	it("dependency_injection_in_lifecycle_hooks_success: Tests accessing dependencies in lifecycle hooks (onRequest, preHandler) for auth, logging, etc.", async () => {
-		await handle_request(null);
-	});
+  it('dependency_injection_in_lifecycle_hooks_success: Tests accessing dependencies in lifecycle hooks (onRequest, preHandler) for auth, logging, etc.', async () => {
+    await handle_request(null);
+  });
 
-	it("factory_dependency_success: Tests factory dependency that creates instances on-demand", async () => {
-		await handle_request(null);
-	});
+  it('factory_dependency_success: Tests factory dependency that creates instances on-demand', async () => {
+    await handle_request(null);
+  });
 
-	it("missing_dependency_error: Tests error when handler requires a dependency that was never registered", async () => {
-		await handle_request(null);
-	});
+  it('missing_dependency_error: Tests error when handler requires a dependency that was never registered', async () => {
+    await handle_request(null);
+  });
 
-	it("mixed_singleton_and_per_request_caching_success: Tests mixing singleton dependencies (shared across requests) with per-request dependencies (cached within request)", async () => {
-		await handle_request(null);
-	});
+  it('mixed_singleton_and_per_request_caching_success: Tests mixing singleton dependencies (shared across requests) with per-request dependencies (cached within request)', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_dependencies_with_cleanup_success: Tests cleanup for multiple dependencies with generator pattern, ensuring all are cleaned up in reverse resolution order", async () => {
-		await handle_request(null);
-	});
+  it('multiple_dependencies_with_cleanup_success: Tests cleanup for multiple dependencies with generator pattern, ensuring all are cleaned up in reverse resolution order', async () => {
+    await handle_request(null);
+  });
 
-	it("nested_dependencies_3_levels_success: Tests dependency resolution where auth depends on cache and db, which both depend on config", async () => {
-		await handle_request(null);
-	});
+  it('nested_dependencies_3_levels_success: Tests dependency resolution where auth depends on cache and db, which both depend on config', async () => {
+    await handle_request(null);
+  });
 
-	it("node_js_object_destructuring_injection_success: Tests Node.js/TypeScript-specific object destructuring pattern for dependency injection", async () => {
-		await handle_request(null);
-	});
+  it('node_js_object_destructuring_injection_success: Tests Node.js/TypeScript-specific object destructuring pattern for dependency injection', async () => {
+    await handle_request(null);
+  });
 
-	it("per_request_dependency_caching_success: Tests per-request caching where dependency is created once per request but shared by multiple usages within that request", async () => {
-		await handle_request(null);
-	});
+  it('per_request_dependency_caching_success: Tests per-request caching where dependency is created once per request but shared by multiple usages within that request', async () => {
+    await handle_request(null);
+  });
 
-	it("python_parameter_name_based_injection_success: Tests Python-specific parameter name-based dependency injection where dependencies are matched by parameter names", async () => {
-		await handle_request(null);
-	});
+  it('python_parameter_name_based_injection_success: Tests Python-specific parameter name-based dependency injection where dependencies are matched by parameter names', async () => {
+    await handle_request(null);
+  });
 
-	it("python_type_annotation_based_injection_success: Tests Python-specific type annotation-based dependency injection where dependencies are matched by type hints", async () => {
-		await handle_request(null);
-	});
+  it('python_type_annotation_based_injection_success: Tests Python-specific type annotation-based dependency injection where dependencies are matched by type hints', async () => {
+    await handle_request(null);
+  });
 
-	it("resource_cleanup_after_request_success: Tests generator pattern cleanup where dependency resources are cleaned up after handler completes", async () => {
-		await handle_request(null);
-	});
+  it('resource_cleanup_after_request_success: Tests generator pattern cleanup where dependency resources are cleaned up after handler completes', async () => {
+    await handle_request(null);
+  });
 
-	it("route_level_dependency_override_success: Tests route-level dependency override of app-level dependency for testing or special cases", async () => {
-		await handle_request(null);
-	});
+  it('route_level_dependency_override_success: Tests route-level dependency override of app-level dependency for testing or special cases', async () => {
+    await handle_request(null);
+  });
 
-	it("ruby_keyword_argument_injection_success: Tests Ruby-specific keyword argument pattern for dependency injection", async () => {
-		await handle_request(null);
-	});
+  it('ruby_keyword_argument_injection_success: Tests Ruby-specific keyword argument pattern for dependency injection', async () => {
+    await handle_request(null);
+  });
 
-	it("singleton_dependency_caching_success: Tests singleton dependency that is created once and shared across all requests", async () => {
-		await handle_request(null);
-	});
+  it('singleton_dependency_caching_success: Tests singleton dependency that is created once and shared across all requests', async () => {
+    await handle_request(null);
+  });
 
-	it("type_mismatch_in_dependency_resolution_error: Tests error when handler expects a different type than what the dependency provides", async () => {
-		await handle_request(null);
-	});
+  it('type_mismatch_in_dependency_resolution_error: Tests error when handler expects a different type than what the dependency provides', async () => {
+    await handle_request(null);
+  });
 
-	it("value_dependency_injection_success: Tests simple value injection (config, constants) into a handler", async () => {
-		await handle_request(null);
-	});
+  it('value_dependency_injection_success: Tests simple value injection (config, constants) into a handler', async () => {
+    await handle_request(null);
+  });
 });

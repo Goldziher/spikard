@@ -3,95 +3,95 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, it, expect } from "vitest";
-import { handle_request } from "spikard-wasm";
+import { describe, it, expect } from 'vitest';
+import { handle_request } from 'spikard-wasm';
 
-describe("url_encoded", () => {
-	it("_array_field_success: URL-encoded form with array field using bracket notation should parse correctly", async () => {
-		await handle_request(null);
-	});
+describe('url_encoded', () => {
+  it('_array_field_success: URL-encoded form with array field using bracket notation should parse correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_nested_object_bracket_notation: URL-encoded form with nested object using bracket notation should parse correctly", async () => {
-		await handle_request(null);
-	});
+  it('_nested_object_bracket_notation: URL-encoded form with nested object using bracket notation should parse correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_special_characters_field_names: URL-encoded form with special characters in field names should be handled correctly", async () => {
-		await handle_request(null);
-	});
+  it('_special_characters_field_names: URL-encoded form with special characters in field names should be handled correctly', async () => {
+    await handle_request(null);
+  });
 
-	it("_minlength_validation_failure: URL-encoded form field violating minLength constraint should fail", async () => {
-		await handle_request(null);
-	});
+  it('_minlength_validation_failure: URL-encoded form field violating minLength constraint should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_pattern_validation_failure: URL-encoded form field violating regex pattern should fail", async () => {
-		await handle_request(null);
-	});
+  it('_pattern_validation_failure: URL-encoded form field violating regex pattern should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_integer_minimum_validation_failure: URL-encoded integer field below minimum should fail", async () => {
-		await handle_request(null);
-	});
+  it('_integer_minimum_validation_failure: URL-encoded integer field below minimum should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_array_minitems_validation_failure: URL-encoded array with fewer items than minItems should fail", async () => {
-		await handle_request(null);
-	});
+  it('_array_minitems_validation_failure: URL-encoded array with fewer items than minItems should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_format_email_validation_failure: URL-encoded form with invalid email format should fail", async () => {
-		await handle_request(null);
-	});
+  it('_format_email_validation_failure: URL-encoded form with invalid email format should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_integer_type_coercion_failure: URL-encoded form with non-numeric value for integer field should fail", async () => {
-		await handle_request(null);
-	});
+  it('_integer_type_coercion_failure: URL-encoded form with non-numeric value for integer field should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("_additional_properties_strict_failure: URL-encoded form with extra fields when additionalProperties is false should fail", async () => {
-		await handle_request(null);
-	});
+  it('_additional_properties_strict_failure: URL-encoded form with extra fields when additionalProperties is false should fail', async () => {
+    await handle_request(null);
+  });
 
-	it("boolean_field_conversion: Tests conversion of form string value to boolean", async () => {
-		await handle_request(null);
-	});
+  it('boolean_field_conversion: Tests conversion of form string value to boolean', async () => {
+    await handle_request(null);
+  });
 
-	it("empty_string_value: Tests form field with empty string value", async () => {
-		await handle_request(null);
-	});
+  it('empty_string_value: Tests form field with empty string value', async () => {
+    await handle_request(null);
+  });
 
-	it("multiple_values_for_same_field: Tests form field with multiple values (array)", async () => {
-		await handle_request(null);
-	});
+  it('multiple_values_for_same_field: Tests form field with multiple values (array)', async () => {
+    await handle_request(null);
+  });
 
-	it("numeric_field_type_conversion: Tests conversion of form string value to numeric type", async () => {
-		await handle_request(null);
-	});
+  it('numeric_field_type_conversion: Tests conversion of form string value to numeric type', async () => {
+    await handle_request(null);
+  });
 
-	it("oauth2_password_grant_flow: Tests OAuth2 password grant with form data", async () => {
-		await handle_request(null);
-	});
+  it('oauth2_password_grant_flow: Tests OAuth2 password grant with form data', async () => {
+    await handle_request(null);
+  });
 
-	it("optional_field_missing_success: Tests form with optional field omitted", async () => {
-		await handle_request(null);
-	});
+  it('optional_field_missing_success: Tests form with optional field omitted', async () => {
+    await handle_request(null);
+  });
 
-	it("pattern_validation_fail: Tests form field with regex pattern constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('pattern_validation_fail: Tests form field with regex pattern constraint failure', async () => {
+    await handle_request(null);
+  });
 
-	it("required_field_missing_validation_error_2: Tests validation error when required form field is missing", async () => {
-		await handle_request(null);
-	});
+  it('required_field_missing_validation_error_2: Tests validation error when required form field is missing', async () => {
+    await handle_request(null);
+  });
 
-	it("simple_form_submission_success: Tests basic URL-encoded form with username and password", async () => {
-		await handle_request(null);
-	});
+  it('simple_form_submission_success: Tests basic URL-encoded form with username and password', async () => {
+    await handle_request(null);
+  });
 
-	it("special_characters_encoding: Tests URL encoding of special characters in form data", async () => {
-		await handle_request(null);
-	});
+  it('special_characters_encoding: Tests URL encoding of special characters in form data', async () => {
+    await handle_request(null);
+  });
 
-	it("string_max_length_validation_fail_2: Tests form field with max_length constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('string_max_length_validation_fail_2: Tests form field with max_length constraint failure', async () => {
+    await handle_request(null);
+  });
 
-	it("string_min_length_validation_fail_2: Tests form field with min_length constraint failure", async () => {
-		await handle_request(null);
-	});
+  it('string_min_length_validation_fail_2: Tests form field with min_length constraint failure', async () => {
+    await handle_request(null);
+  });
 });
